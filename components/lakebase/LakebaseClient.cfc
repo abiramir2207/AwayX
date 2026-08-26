@@ -295,6 +295,78 @@ USAGE:
 		<cfreturn sendRequest(method="delete", path=tablePath(arguments.table) & buildQueryString(arguments.filter))>
 	</cffunction>
 
+	<cffunction name="selectRowsJoin" access="public" returntype="array" output="false"
+		hint="Two-query 'belongs-to' join: fetches main table rows via selectRows(), then fetches the
+		related lookup/reference table rows filtered to the distinct foreign-key values found on the
+		main rows, and merges the lookup columns onto each main row. Does NOT rely on any server-side
+		foreign-key/embed configuration - only uses the same eq./in. filters selectRows already supports.
+		Intended for the common single-lookup-table join pattern (e.g. a status/description/name lookup),
+		not multi-table chains, has-many relationships, or joins where the WHERE clause filters on the
+		lookup table's own columns.">
+		<cfargument name="table"             type="string" required="true"  hint="main table">
+		<cfargument name="params"            type="struct" required="true"  hint="PostgREST params for the main table (select/filters/order/limit)">
+		<cfargument name="fkColumn"          type="string" required="true"  hint="foreign key column name on the main table rows">
+		<cfargument name="lookupTable"       type="string" required="true">
+		<cfargument name="lookupKeyColumn"   type="string" required="true"  hint="primary key column on the lookup table">
+		<cfargument name="lookupSelect"      type="string" required="true"  hint="comma-separated lookup columns to bring back (besides the key)">
+		<cfargument name="lookupAliasPrefix" type="string" required="false" default="" hint="optional prefix added to merged lookup column names to avoid collisions">
+
+		<cfset var mainRows = selectRows(arguments.table, arguments.params)>
+		<cfset var seen = structNew()>
+		<cfset var fkValues = arrayNew(1)>
+		<cfset var lookupParams = "">
+		<cfset var lookupRows = "">
+		<cfset var lookupByKey = structNew()>
+		<cfset var row = "">
+		<cfset var lrow = "">
+		<cfset var col = "">
+		<cfset var destCol = "">
+		<cfset var fkVal = "">
+
+		<cfif arrayLen(mainRows) EQ 0>
+			<cfreturn mainRows>
+		</cfif>
+
+		<cfloop array="#mainRows#" index="row">
+			<cfif structKeyExists(row, arguments.fkColumn) AND NOT isNull(row[arguments.fkColumn])>
+				<cfset fkVal = row[arguments.fkColumn]>
+				<cfif NOT structKeyExists(seen, fkVal)>
+					<cfset seen[fkVal] = true>
+					<cfset arrayAppend(fkValues, fkVal)>
+				</cfif>
+			</cfif>
+		</cfloop>
+
+		<cfif arrayLen(fkValues) EQ 0>
+			<cfreturn mainRows>
+		</cfif>
+
+		<cfset lookupParams = structNew()>
+		<cfset lookupParams["select"] = arguments.lookupKeyColumn & "," & arguments.lookupSelect>
+		<cfset lookupParams[lCase(arguments.lookupKeyColumn)] = "in.(" & arrayToList(fkValues) & ")">
+		<cfset lookupRows = selectRows(arguments.lookupTable, lookupParams)>
+
+		<cfloop array="#lookupRows#" index="lrow">
+			<cfif structKeyExists(lrow, arguments.lookupKeyColumn)>
+				<cfset lookupByKey[lrow[arguments.lookupKeyColumn]] = lrow>
+			</cfif>
+		</cfloop>
+
+		<cfloop array="#mainRows#" index="row">
+			<cfif structKeyExists(row, arguments.fkColumn) AND NOT isNull(row[arguments.fkColumn]) AND structKeyExists(lookupByKey, row[arguments.fkColumn])>
+				<cfset lrow = lookupByKey[row[arguments.fkColumn]]>
+				<cfloop collection="#lrow#" item="col">
+					<cfif col NEQ arguments.lookupKeyColumn>
+						<cfset destCol = len(arguments.lookupAliasPrefix) ? arguments.lookupAliasPrefix & col : col>
+						<cfset row[destCol] = lrow[col]>
+					</cfif>
+				</cfloop>
+			</cfif>
+		</cfloop>
+
+		<cfreturn mainRows>
+	</cffunction>
+
 	<!--- ================================================================= --->
 	<!--- STORED PROCEDURES / FUNCTIONS (/rpc)                               --->
 	<!--- ================================================================= --->
