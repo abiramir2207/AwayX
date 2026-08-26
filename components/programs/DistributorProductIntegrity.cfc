@@ -208,15 +208,41 @@
 			WHERE	Distributor_Product_Integrity_Rule_ID = #arguments.compIds#
 		</cfquery>
 		
-		<cfquery name="DeleteProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_products")>
+<cfif useLakebaseForDeleteProducts>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("distributor_product_integrity_products", {
+			"distributor_product_integrity_rule_id" = "eq.#arguments.compIds#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteProducts>
+<cfquery name="DeleteProducts" datasource="#application.datasource#">
 		DELETE FROM Distributor_Product_Integrity_Products
 		WHERE Distributor_Product_Integrity_Rule_ID = #arguments.compIds#
 		</cfquery>
+</cfif>
 		
-		<cfquery name="DeleteDistributors" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_distributors")>
+<cfif useLakebaseForDeleteDistributors>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("distributor_product_integrity_distributors", {
+			"distributor_product_integrity_rule_id" = "eq.#arguments.compIds#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteDistributors>
+<cfquery name="DeleteDistributors" datasource="#application.datasource#">
 		DELETE FROM Distributor_Product_Integrity_Distributors
 		WHERE Distributor_Product_Integrity_Rule_ID = #arguments.compIds#
 		</cfquery>
+</cfif>
 		
    	</cffunction>
 	

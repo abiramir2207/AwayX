@@ -25,9 +25,20 @@ p.warning {
 <cfif form.command EQ "PRGREPROCESS" AND isDefined("FORM.CheckedBoxes")>
   <cftry>
     <!--- 1. Delete all the BBIDs from the table BB_Program_Reprocess_List  --->
-    <cfquery name="delBBIDsInReprocessList" datasource="#application.datasource#">
+    <cfset useLakebaseFordelBBIDsInReprocessList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_reprocess_list")>
+<cfif useLakebaseFordelBBIDsInReprocessList>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_program_reprocess_list", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelBBIDsInReprocessList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelBBIDsInReprocessList>
+<cfquery name="delBBIDsInReprocessList" datasource="#application.datasource#">
       DELETE FROM BB_Program_Reprocess_List
     </cfquery>
+</cfif>
     <!--- 2. get all the Billback IDs from the form scope and insert it into the BB_Program_Reprocess_List table --->
     <cfloop index = "variables.bb_id" list = "#FORM.CheckedBoxes#"  delimiters = ",">
       <cfquery name="variables.qryBBLocked" datasource="#application.datasource#">

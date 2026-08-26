@@ -34,10 +34,24 @@
 	<cfif (isDefined("FORM.Submitted") AND (FORM.Submitted EQ "2"))>
 		<cfif (isDefined("FORM.selDelRec") AND FORM.selDelRec NEQ "")>
 			<cfset recToDelete = FORM.selDelRec />
-			<cfquery name="qryGetOCRTemplateSettingsID" datasource="#application.datasource#">
+			<cfset useLakebaseForqryGetOCRTemplateSettingsID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqryGetOCRTemplateSettingsID>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("ocr_upload_log", {
+			"ocr_upload_test_log_id" = "eq.#recToDelete#
+				DELETE FROM OCR_Upload_Test_Log WHERE OCR_Upload_Test_Log_ID = #recToDelete#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetOCRTemplateSettingsID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetOCRTemplateSettingsID>
+<cfquery name="qryGetOCRTemplateSettingsID" datasource="#application.datasource#">
 				DELETE FROM OCR_Upload_Log WHERE OCR_Upload_Test_Log_ID = #recToDelete#
 				DELETE FROM OCR_Upload_Test_Log WHERE OCR_Upload_Test_Log_ID = #recToDelete#
-			</cfquery>	
+			</cfquery>
+</cfif>	
  			<cfset recordDeleted = 1 />
 		</cfif>
 	</cfif>
@@ -305,10 +319,25 @@
 		</cfloop> --->
 		
 		
-		<cfquery name="qryGetOCRUploadLogData" datasource="#application.datasource#">
+		<cfset useLakebaseForqryGetOCRUploadLogData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqryGetOCRUploadLogData>
+	<cftry>
+		<cfset qryGetOCRUploadLogData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_test_log_id" = "eq.#OCRUploadTestLogID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetOCRUploadLogData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetOCRUploadLogData>
+<cfquery name="qryGetOCRUploadLogData" datasource="#application.datasource#">
 			SELECT * from OCR_Upload_Log WHERE
 			OCR_Upload_Test_Log_ID = #OCRUploadTestLogID#
-		</cfquery>	 
+		</cfquery>
+</cfif>	 
 	 
 		
 		This upload will load the below #qryGetOCRUploadLogData.RecordCount# files in the DB:<br><br>

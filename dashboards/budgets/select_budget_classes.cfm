@@ -3,10 +3,23 @@
 <!--- get all the budget classes that could be retrieved -------------------------------------  --->
 <!--- ----------------------------------------------------------------------------------------- --->
 <cfif isdefined('form.remember_budget_classes')>
-	<cfquery name="Update_budget_classes" datasource="#Application.Datasource#">
+	<cfset useLakebaseForUpdate_budget_classes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_class_selection")>
+<cfif useLakebaseForUpdate_budget_classes>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("budget_class_selection", {
+			"user_id" = "eq.#request.AccessStructure.user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_budget_classes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_budget_classes>
+<cfquery name="Update_budget_classes" datasource="#Application.Datasource#">
 		DELETE FROM Budget_Class_Selection
 		WHERE User_Id = '#request.AccessStructure.user_id#'
 	</cfquery>
+</cfif>
 	<cfif isdefined('form.budget_class_value') >
 		<cfloop list="#form.budget_class_value#" index="i" >
 			<cfquery name="Update_budget_classes" datasource="#Application.Datasource#">

@@ -1,10 +1,24 @@
 
  <!---Deletes any pre-existing information for the period from the table--->
+<cfset useLakebaseForDeletePrior = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_detail")>
+<cfif useLakebaseForDeletePrior>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("rp_invoice_detail", {
+			"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrior = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrior>
 <cfquery name="DeletePrior" datasource="#application.datasource#">
 DELETE FROM RP_Invoice_Detail
 WHERE Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 AND Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#' 
-</cfquery> 
+</cfquery>
+</cfif> 
 
 <!---Gets all distinct records--->
 <cfquery name="DistinctInvoiceDistItem" datasource="#application.datasource#">
@@ -59,7 +73,33 @@ AND Record_Type = 1
 	<cfset Total_Trade_Rate = DistributorPayment.Trade_Rate + BuyingGroupPayment.Trade_Rate>
 	
 		<!---Insert it all into the database--->
-		<cfquery name="InsertValues" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_detail")>
+<cfif useLakebaseForInsertValues>
+	<cftry>
+		<cfset application.oLakebase.insertRow("rp_invoice_detail", {
+			"distributor_id" = "#Distributor_ID#",
+			"item_number" = "#Item_Number#",
+			"fiscal_period_start_date" = "#FP_Start_Date#",
+			"fiscal_period_end_date" = "#FP_End_Date#",
+			"legacy_ship_to" = "#Legacy_Ship_To#",
+			"shared_ship_to" = "#Shared_Ship_To#",
+			"invoice_number" = "#Invoice_Number#",
+			"invoice_date" = "#Invoice_Date#",
+			"gross_sales" = "#GrossSales#",
+			"bg_trade_rate" = "#BuyingGroupPayment.Trade_Rate#",
+			"bg_item_earned" = "#BuyingGroupPayment.Item_Earned#",
+			"d_trade_rate" = "#DistributorPayment.Trade_Rate#",
+			"d_item_earned" = "#DistributorPayment.Item_Earned#",
+			"total_item_earned" = "#Total_Item_Earned#",
+			"total_trade_rate" = "#Total_Trade_Rate#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertValues>
+<cfquery name="InsertValues" datasource="#application.datasource#">
 		INSERT INTO RP_Invoice_Detail
 		(
 		Distributor_ID,
@@ -97,6 +137,7 @@ AND Record_Type = 1
 		'#Total_Trade_Rate#'
 		)
 		</cfquery>
+</cfif>
 	
 	</cfloop>
 

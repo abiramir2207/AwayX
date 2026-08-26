@@ -162,9 +162,20 @@
 									'#FORM.WorkSheetName#'		)
 			</CFQUERY>
 			
-			<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForDeletedTempData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation_temp")>
+<cfif useLakebaseForDeletedTempData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("gl_code_activation_temp", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletedTempData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletedTempData>
+<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
 				DELETE FROM GL_Code_Activation_Temp
 			</CFQUERY>
+</cfif>
 			
 			<CFQUERY NAME="DeleteValidTemp" DATASOURCE="#Application.Datasource#">
 				DELETE FROM Gl_Code_Activation_Valid_Temp 

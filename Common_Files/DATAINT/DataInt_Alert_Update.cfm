@@ -43,11 +43,25 @@
 				</cftry>
 			</cfif>
 			<cfif NOT useLakebaseForDeletealertData>
-				<CFQUERY NAME="deletealert_Data" datasource="#application.datasource#">
+				<cfset useLakebaseFordeletealert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_contacts")>
+<cfif useLakebaseFordeletealert_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("data_integration_contacts", {
+			"intra_id" = "eq.#intra#",
+			"email" = "eq.#form.email#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletealert_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletealert_Data>
+<CFQUERY NAME="deletealert_Data" datasource="#application.datasource#">
 					DELETE From Data_Integration_Contacts
 					Where intra_Id = #intra#
 					and email = '#form.email#'
 				</CFQUERY>
+</cfif>
 			</cfif>
 			<cfset message = message&"Record deleted: "&intra&" "&form.email&"<br>">
 		<cfelse>

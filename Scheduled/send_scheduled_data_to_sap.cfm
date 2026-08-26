@@ -116,7 +116,21 @@
 				<cfif arraylen(rUnits) GT 0>
 
 					<cfif mws eq 0>
-					  <CFQUERY NAME="deleteprogramperiods" datasource="#application.datasource#">
+					  <cfset useLakebaseFordeleteprogramperiods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
+<cfif useLakebaseFordeleteprogramperiods>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_period_dates", {
+			"contract_number" = "eq.#getProgramheader.contract_number#",
+			"program_discount_type_id" = "eq.#Discount_Type_ID#",
+			"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteprogramperiods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteprogramperiods>
+<CFQUERY NAME="deleteprogramperiods" datasource="#application.datasource#">
 						DELETE FROM
 						program_period_dates
 						where
@@ -124,6 +138,7 @@
 						and Program_Discount_Type_ID = #Discount_Type_ID#
 						and Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 					  </CFQUERY>
+</cfif>
 					 </cfif>
 
 					<cfloop index="i" from="1" to="#Arraylen(rUnits)#">
@@ -321,12 +336,30 @@
 							where Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 							and product_group = '#getDiscountTypeRates.product_group#'
 						</CFQUERY>
-						<CFQUERY NAME="getgrouprate" DBTYPE="query">
+						<cfset useLakebaseForgetgrouprate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getexcludedprogramrates")>
+<cfif useLakebaseForgetgrouprate>
+	<cftry>
+		<cfset getgrouprate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getexcludedprogramrates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#",
+				"product_group" = "eq.#getDiscountTypeRates.product_group#",
+				"pricing_level_id" = "eq.#getmaxpricinglevel.pricing_level#",
+				"select" = "rate"
+			}), "rate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetgrouprate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetgrouprate>
+<CFQUERY NAME="getgrouprate" DBTYPE="query">
 							select rate from getExcludedProgramRates
 							where Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 							and product_group = '#getDiscountTypeRates.product_group#'
 							and pricing_level_id = #getmaxpricinglevel.pricing_level#
 						</CFQUERY>
+</cfif>
 						<cfset tempxml = tempxml & "<Rate>#getgrouprate.rate#</Rate>">
 					</cfif>
 

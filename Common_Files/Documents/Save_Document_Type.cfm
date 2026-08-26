@@ -12,10 +12,23 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForDeleteData>
-		<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
+		<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_type")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("document_type", {
+			"doc_type_id" = "eq.#Form.Doc_Type_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
 			DELETE FROM Document_type
 			WHERE		Doc_Type_ID	=	'#Form.Doc_Type_ID#'
 		</CFQUERY>
+</cfif>
 	</cfif>
 	<CFLOCATION URL="create_Document_Type.cfm" ADDTOKEN="No">
 	<CFABORT>

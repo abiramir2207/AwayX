@@ -657,9 +657,22 @@ Description  :  Manager for Planner Program
 
 			<!--- add Contract_Operators entries --->
 			<!--- Delete first --->
-			<cfquery name="qDelContractOperators" datasource="#application.datasource#">
+			<cfset useLakebaseForqDelContractOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForqDelContractOperators>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_operators", {
+			"contract_main_id" = "eq.#New_Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDelContractOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDelContractOperators>
+<cfquery name="qDelContractOperators" datasource="#application.datasource#">
 				DELETE FROM Contract_Operators WHERE Contract_Main_ID = '#New_Contract_Main_ID#'
 			</cfquery>
+</cfif>
 
 			<!--- Insert Operators from Planner_Operators --->
 			<cfquery name="qAddContractOperators" datasource="#application.datasource#">
@@ -675,9 +688,23 @@ Description  :  Manager for Planner Program
 
 		<!--- loop over items to add to Contract_Products and discount tables--->
 		<!--- Delete Open Contract_Products entries --->
-		<cfquery name="qDeleteFixedContractProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteFixedContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqDeleteFixedContractProducts>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_products", {
+			"contract_main_id" = "eq.#New_Contract_Main_ID#",
+			"product_type_id" = "eq.0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteFixedContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteFixedContractProducts>
+<cfquery name="qDeleteFixedContractProducts" datasource="#application.datasource#">
 			DELETE FROM Contract_Products WHERE Contract_Main_ID = '#New_Contract_Main_ID#' AND Product_Type_ID = 0
 		</cfquery>
+</cfif>
 
 		<!--- Delete Contract_Products entries --->
 		<cfquery name="qDeleteFixedContractProducts" datasource="#application.datasource#">
@@ -685,19 +712,59 @@ Description  :  Manager for Planner Program
 		</cfquery>
 
 		<!--- Delete Program_Fixed_Component entries --->
-		<cfquery name="qDeleteFixedPriceComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteFixedPriceComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqDeleteFixedPriceComp>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_fixed_component", {
+			"program_id" = "eq.#New_Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteFixedPriceComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteFixedPriceComp>
+<cfquery name="qDeleteFixedPriceComp" datasource="#application.datasource#">
 			DELETE FROM Program_Fixed_Component WHERE Program_ID = '#New_Contract_Main_ID#'
 		</cfquery>
+</cfif>
 
 		<!--- Delete Program_Fixed_Price_Product_Data entries --->
-		<cfquery name="qDeleteFixedPriceData" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteFixedPriceData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForqDeleteFixedPriceData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_fixed_price_product_data", {
+			"program_id" = "eq.#New_Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteFixedPriceData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteFixedPriceData>
+<cfquery name="qDeleteFixedPriceData" datasource="#application.datasource#">
 			DELETE FROM Program_Fixed_Price_Product_Data WHERE Program_ID = '#New_Contract_Main_ID#'
 		</cfquery>
+</cfif>
 
 		<!--- Delete Contract_Products entries --->
-		<cfquery name="qDeleteRebateContractProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteRebateContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqDeleteRebateContractProducts>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_products", {
+			"contract_main_id" = "eq.#New_Contract_Main_ID#",
+			"product_type_id" = "eq.2"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteRebateContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteRebateContractProducts>
+<cfquery name="qDeleteRebateContractProducts" datasource="#application.datasource#">
 			DELETE FROM Contract_Products WHERE Contract_Main_ID = '#New_Contract_Main_ID#' AND Product_Type_ID = 2
 		</cfquery>
+</cfif>
 
 		<!--- Delete Program_Rebates_Component_Data entries --->
 		<cfquery name="qDeleteRebateCompData" datasource="#application.datasource#">
@@ -710,19 +777,59 @@ Description  :  Manager for Planner Program
 		</cfquery>
 
 		<!--- Delete Program_Rebates_Component entries --->
-		<cfquery name="qDeleteRebateComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteRebateComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForqDeleteRebateComp>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_rebates_component", {
+			"program_id" = "eq.#New_Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteRebateComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteRebateComp>
+<cfquery name="qDeleteRebateComp" datasource="#application.datasource#">
 			DELETE FROM Program_Rebates_Component WHERE Program_ID = '#New_Contract_Main_ID#'
 		</cfquery>
+</cfif>
 
 		<!--- Delete Program_Rebates_Product_Data entries --->
-		<cfquery name="qDeleteRebateProductData" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteRebateProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
+<cfif useLakebaseForqDeleteRebateProductData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_rebates_product_data", {
+			"program_id" = "eq.#New_Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteRebateProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteRebateProductData>
+<cfquery name="qDeleteRebateProductData" datasource="#application.datasource#">
 			DELETE FROM Program_Rebates_Product_Data WHERE Program_ID = '#New_Contract_Main_ID#'
 		</cfquery>
+</cfif>
 
 		<!--- Delete Contract_Products entries --->
-		<cfquery name="qDeleteLumpSumContractProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteLumpSumContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqDeleteLumpSumContractProducts>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_products", {
+			"contract_main_id" = "eq.#New_Contract_Main_ID#",
+			"product_type_id" = "eq.3"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteLumpSumContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteLumpSumContractProducts>
+<cfquery name="qDeleteLumpSumContractProducts" datasource="#application.datasource#">
 			DELETE FROM Contract_Products WHERE Contract_Main_ID = '#New_Contract_Main_ID#' AND Product_Type_ID = 3
 		</cfquery>
+</cfif>
 
 		<!--- Delete Program_Lump_Sum_Product_Data entries --->
 		<cfquery name="qDeleteLumpSumProduct" datasource="#application.datasource#">
@@ -730,9 +837,22 @@ Description  :  Manager for Planner Program
 		</cfquery>
 
 		<!--- Delete Program_Lump_Sums entries --->
-		<cfquery name="qDeleteLumpSumComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteLumpSumComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqDeleteLumpSumComp>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_lump_sums", {
+			"program_id" = "eq.#New_Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteLumpSumComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteLumpSumComp>
+<cfquery name="qDeleteLumpSumComp" datasource="#application.datasource#">
 			DELETE FROM Program_Lump_Sums WHERE Program_ID = '#New_Contract_Main_ID#'
 		</cfquery>
+</cfif>
 
 		<!--- Delete Program_Payment_Cycle entries --->
 		<cfquery name="qDeleteLumpSumComp" datasource="#application.datasource#">
@@ -1073,7 +1193,21 @@ Description  :  Manager for Planner Program
 
 					</cfif>
 
-					<cfquery name="qAddRebateProductData" datasource="#application.datasource#">
+					<cfset useLakebaseForqAddRebateProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
+<cfif useLakebaseForqAddRebateProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_rebates_product_data", {
+			"program_id" = "#New_Contract_Main_ID#",
+			"contract_products_id" = "#qSaveRebateContractProducts.Contract_Products_ID#",
+			"is_group" = "#bIsGroup#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddRebateProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddRebateProductData>
+<cfquery name="qAddRebateProductData" datasource="#application.datasource#">
 						INSERT INTO Program_Rebates_Product_Data
 							(
 								Program_ID,
@@ -1087,6 +1221,7 @@ Description  :  Manager for Planner Program
 								#bIsGroup#
 							)
 					</cfquery>
+</cfif>
 
 					<cfset local.thisSelectedUOM 	= stData["rebate_uom_" & ListGetAt(rIndx, 1, "_") & "_" & Replace(iIndx, "-", "_", "ALL")] />
 					<cfset local.thisNetWeight 		= stData["netWeight_" & Replace(iIndx, "-", "_", "ALL")] />
@@ -1797,9 +1932,22 @@ Description  :  Manager for Planner Program
 			bIsEDLP	= arguments.isEDLP;
 		</cfscript>
 
-		<cfquery name="local.qDel" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_qDel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_group_merchant_info")>
+<cfif useLakebaseForlocal_qDel>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_group_merchant_info", {
+			"program_id" = "eq.#stData.programId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qDel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qDel>
+<cfquery name="local.qDel" datasource="#application.datasource#">
 			DELETE FROM Contract_Group_Merchant_Info WHERE Program_ID = '#stData.programId#'
 		</cfquery>
+</cfif>
 
 		<cfloop index="iIndx" list="#stData.Product_List#">
 			<cfscript>
@@ -2622,11 +2770,27 @@ Description  :  Manager for Planner Program
 		<cfargument name="delStartDate"	required="true" type="string" />
 		<cfargument name="delEndDate"	    required="true" type="string" />
 
-        <cfquery name="local.qPerformanceType" datasource="#application.datasource#">
+        <cfset useLakebaseForlocal_qPerformanceType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_perf_types")>
+<cfif useLakebaseForlocal_qPerformanceType>
+	<cftry>
+		<cfset local.qPerformanceType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_perf_types", {
+				"planner_perf_types_id" = "eq.#arguments.perfTypeId#",
+				"select" = "allow_duplicate_programs"
+			}), "allow_duplicate_programs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qPerformanceType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qPerformanceType>
+<cfquery name="local.qPerformanceType" datasource="#application.datasource#">
             SELECT Allow_Duplicate_Programs
               FROM Planner_Perf_Types
              WHERE Planner_Perf_Types.Planner_Perf_Types_ID = '#arguments.perfTypeId#'
         </cfquery>
+</cfif>
 
         <!--- performance type does NOT allow duplicates --->
         <cfif local.qPerformanceType.Allow_Duplicate_Programs eq '1'>

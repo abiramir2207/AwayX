@@ -58,11 +58,24 @@
 		WHERE Contract_Main_ID = '#RejectEmailProgramId#'
 	</CFQUERY>
 
-	<CFQUERY NAME="deleteagree" datasource="#application.datasource#">
+	<cfset useLakebaseFordeleteagree = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_agree")>
+<cfif useLakebaseFordeleteagree>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_agree", {
+			"programid" = "eq.#RejectEmailProgramId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteagree = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteagree>
+<CFQUERY NAME="deleteagree" datasource="#application.datasource#">
 	delete from
 	Program_Agree
 	where ProgramId= '#RejectEmailProgramId#'
 	</CFQUERY>
+</cfif>
 </CFIF>
  <form name="FrmApproveAction" target="mywindowname" action="contract_edit_menu.cfm?CID=#URL.CID#" method="post">
 </form> 

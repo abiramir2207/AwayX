@@ -641,10 +641,24 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		</cfquery>
 
 		<!--- delete program product volume --->
-		<cfquery name="qryDeleteVolume" datasource="#application.datasource#" >
+		<cfset useLakebaseForqryDeleteVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqryDeleteVolume>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_product_volume", {
+			"program_id" = "eq.#ProgramId#",
+			"is_group" = "eq.0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryDeleteVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryDeleteVolume>
+<cfquery name="qryDeleteVolume" datasource="#application.datasource#" >
 			DELETE FROM Program_Product_Volume
 			WHERE Program_ID = #ProgramId# AND Is_Group = 0
 		</cfquery>
+</cfif>
 
 		<!--- insert into program product volume from temp table --->
 		<cfquery name="qryInsertVolume" datasource="#application.datasource#" >

@@ -56,12 +56,26 @@ Last Modified On:
 </cfquery>
 
 <!--- Keep the value of exceptions  ---> 
+<cfset useLakebaseForResetDeletedValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_template_display")>
+<cfif useLakebaseForResetDeletedValue>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("settings_template_display", {
+			"generic_type" = "eq.#Form.Generic_Type#",
+			"excluded_first_parent_id" = "is.null"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetDeletedValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetDeletedValue>
 <cfquery name="ResetDeletedValue" datasource="#application.datasource#">
 	delete from  Settings_Template_Display
 	where 	Generic_Type = '#Form.Generic_Type#'
 	and	Excluded_First_Parent_ID IS NULL
 
 </cfquery>
+</cfif>
 
 <!--- start:: reinsert settings with 0-hide value to Settings_Template_Display table---> 
 <cfoutput>

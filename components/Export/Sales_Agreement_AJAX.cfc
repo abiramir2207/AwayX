@@ -613,10 +613,23 @@
 		<cfargument name="Misc_Cost_Desc" type="Array" required="no" default="#Arraynew(1)#">
 		<cfargument name="Misc_Cost_Desc_CostNumber" type="Array" required="no" default="#Arraynew(1)#">
 
-		<cfquery name="DelExistingMiscCost" datasource="#Application.Datasource#">
+		<cfset useLakebaseForDelExistingMiscCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_misc_cost")>
+<cfif useLakebaseForDelExistingMiscCost>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("export_misc_cost", {
+			"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelExistingMiscCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelExistingMiscCost>
+<cfquery name="DelExistingMiscCost" datasource="#Application.Datasource#">
 			DELETE FROM Export_Misc_Cost
 			WHERE Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'
 		</cfquery>
+</cfif>
 		<!--- I am starting from index 2, because the array being passed somehow stores blank in the first index
 			  and therefore I replaced it with a 0 on that page (Sales_Agreement.cfm). I just dont use that array
 			  entry here --->

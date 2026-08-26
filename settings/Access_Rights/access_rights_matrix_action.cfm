@@ -26,9 +26,20 @@ WHERE Deleted = 0
 
 <CFSET getProfiles = CreateObject("component", "components.settings.profiles.profile").getAllProfiles()>
 
+<cfset useLakebaseForDeleteAllPriorCustomerTypeValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_customer_type_settings")>
+<cfif useLakebaseForDeleteAllPriorCustomerTypeValues>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("profile_customer_type_settings", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteAllPriorCustomerTypeValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteAllPriorCustomerTypeValues>
 <cfquery name="DeleteAllPriorCustomerTypeValues" datasource="#application.datasource#">
 	Delete from Profile_Customer_Type_Settings
 </cfquery>
+</cfif>
 
 <CFLOOP query="GetCustomerTypes">
 	<CFSET j = GetCustomerTypes.customer_type_id>

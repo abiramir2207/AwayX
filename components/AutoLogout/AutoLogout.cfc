@@ -123,15 +123,41 @@
 			
 			<cfset this_USERS_AUTO_LOGOUT_LIST_ID = get_USERS_AUTO_LOGOUT_LIST_ID._USERS_AUTO_LOGOUT_LIST_ID>
 			
-			<cfquery name="deleteUserFromAutoLogOut" datasource="#application.datasource#">
+			<cfset useLakebaseFordeleteUserFromAutoLogOut = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_auto_logout_list")>
+<cfif useLakebaseFordeleteUserFromAutoLogOut>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("_users_auto_logout_list", {
+			"_users_auto_logout_list_id" = "eq.#this_USERS_AUTO_LOGOUT_LIST_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteUserFromAutoLogOut = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteUserFromAutoLogOut>
+<cfquery name="deleteUserFromAutoLogOut" datasource="#application.datasource#">
 				DELETE FROM _Users_Auto_Logout_List
 				WHERE _Users_Auto_Logout_List_ID = '#this_USERS_AUTO_LOGOUT_LIST_ID#'
 			</cfquery>
+</cfif>
 			
-			<cfquery name="deleteUserFromAutoLogOutReason" datasource="#application.datasource#">
+			<cfset useLakebaseFordeleteUserFromAutoLogOutReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_auto_logout_reason")>
+<cfif useLakebaseFordeleteUserFromAutoLogOutReason>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("_users_auto_logout_reason", {
+			"_users_auto_logout_list_id" = "eq.#this_USERS_AUTO_LOGOUT_LIST_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteUserFromAutoLogOutReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteUserFromAutoLogOutReason>
+<cfquery name="deleteUserFromAutoLogOutReason" datasource="#application.datasource#">
 				DELETE FROM _Users_Auto_Logout_Reason
 				WHERE _Users_Auto_Logout_List_ID = '#this_USERS_AUTO_LOGOUT_LIST_ID#'
-			</cfquery>					
+			</cfquery>
+</cfif>					
 					
 	</cffunction>
 	

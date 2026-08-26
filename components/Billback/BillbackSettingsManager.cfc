@@ -571,12 +571,27 @@
 
 				<cfif qCheckFamily.recordcount>
 					<!--- IF "Auto_Match_Family=0" AND "Auto_Deviation_Family = 0" WE WILL DELETE THAT FAMILY RECORD --->
-					<CFQUERY NAME="qDeleteFamilyRecord" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForqDeleteFamilyRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_match_deviation_family")>
+<cfif useLakebaseForqDeleteFamilyRecord>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("auto_match_deviation_family", {
+			"family_id" = "eq.#Family_ID#",
+			"auto_match_family" = "eq.0",
+			"auto_deviation_family" = "eq.0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteFamilyRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteFamilyRecord>
+<CFQUERY NAME="qDeleteFamilyRecord" DATASOURCE="#Application.Datasource#">
 						DELETE  FROM Auto_Match_Deviation_Family
 						WHERE Family_ID = '#Family_ID#'
 						AND Auto_Match_Family = 0
 						AND Auto_Deviation_Family = 0
 					</CFQUERY>
+</cfif>
 
 					<cfset Action_Notes ="Record Removed">
 

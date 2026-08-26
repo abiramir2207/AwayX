@@ -241,17 +241,50 @@
 		</CFQUERY>
 </cfif>
 		
-		<CFQUERY NAME="DeleteMaster" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDeleteMaster = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_master_data")>
+<cfif useLakebaseForDeleteMaster>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("billback_upload_master_data", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteMaster = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteMaster>
+<CFQUERY NAME="DeleteMaster" DATASOURCE="#Application.Datasource#">
 			DELETE FROM Billback_Upload_Master_Data
 		</CFQUERY>
+</cfif>
 		
-		<CFQUERY NAME="DeleteDetail" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDeleteDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_details_data")>
+<cfif useLakebaseForDeleteDetail>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("billback_upload_details_data", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteDetail>
+<CFQUERY NAME="DeleteDetail" DATASOURCE="#Application.Datasource#">
 			DELETE FROM Billback_Upload_Details_Data
 		</CFQUERY>
+</cfif>
 		
-		<CFQUERY NAME="DeleteLog" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDeleteLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_log")>
+<cfif useLakebaseForDeleteLog>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("billback_upload_log", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteLog>
+<CFQUERY NAME="DeleteLog" DATASOURCE="#Application.Datasource#">
 			DELETE FROM Billback_Upload_Log
 		</CFQUERY>
+</cfif>
 		
 		<CFQUERY NAME="RunDTSs" DATASOURCE="#Application.Datasource#">
 			EXEC Billback_Call_DTS_Through_Job	

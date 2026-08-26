@@ -146,13 +146,35 @@
 									'#FORM.Fiscal_Year#'		)
 			</CFQUERY>
 			
-			<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForDeletedTempData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation_temp")>
+<cfif useLakebaseForDeletedTempData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("gl_code_activation_temp", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletedTempData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletedTempData>
+<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
 				DELETE FROM GL_Code_Activation_Temp
 			</CFQUERY>
+</cfif>
 			
-			<CFQUERY NAME="DeleteValidTemp" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForDeleteValidTemp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation_valid_temp")>
+<cfif useLakebaseForDeleteValidTemp>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("gl_code_activation_valid_temp", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteValidTemp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteValidTemp>
+<CFQUERY NAME="DeleteValidTemp" DATASOURCE="#Application.Datasource#">
 				DELETE FROM Gl_Code_Activation_Valid_Temp
 			</CFQUERY>
+</cfif>
 			
 			<CFQUERY NAME="RunDTS" DATASOURCE="#Application.Datasource#">
 				EXEC GL_Code_Call_DTS_Through_Job

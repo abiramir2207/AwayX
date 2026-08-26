@@ -63,10 +63,23 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForDeleteData>
-		<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
+		<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_details")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("document_details", {
+			"doc_id" = "eq.#Form.Doc_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
 			DELETE FROM Document_Details
 			WHERE		Doc_ID				=	'#Form.Doc_ID#'
 		</CFQUERY>
+</cfif>
 	</cfif>
 	<CFLOCATION URL="create_Document_Details.cfm" ADDTOKEN="No">
 	<CFABORT>
@@ -76,9 +89,25 @@
 
 <!--- <CFIF Form.Deleted EQ 1 AND Form.Doc_ID NEQ "">
 	<CFOUTPUT>
-	<CFQUERY NAME="Check_bef_deleted" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForCheck_bef_deleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForCheck_bef_deleted>
+	<cftry>
+		<cfset Check_bef_deleted = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"doc_id" = "eq.#FORM.Doc_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_bef_deleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_bef_deleted>
+<CFQUERY NAME="Check_bef_deleted" DATASOURCE = "#Application.Datasource#">
 		SELECT * from Contract_Attachments where DOC_ID = '#FORM.Doc_ID#' and Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFIF Check_bef_deleted.recordcount GT 0>
 		<BR><BR><BR><BR>
 		<TABLE ALIGN="CENTER">

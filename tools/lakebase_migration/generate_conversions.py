@@ -43,6 +43,10 @@ INSERT_RE = re.compile(
     r"INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*VALUES\s*\(([^)]*)\)",
     re.IGNORECASE | re.DOTALL,
 )
+DELETE_RE = re.compile(
+    r"DELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:WHERE\s+(.*?))?\s*;?\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 # Reject WHERE/SET clauses containing these - too risky to auto-generate.
 UNSAFE_RE = re.compile(
@@ -283,6 +287,41 @@ def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     return wrapper, None
 
 
+def gen_delete_wrapper(query_name: str, sql: str) -> tuple[str, str]:
+    sql = strip_cf_comments(sql)
+    if EMBEDDED_CFML_RE.search(sql):
+        return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
+    m = DELETE_RE.match(sql.strip())
+    if not m:
+        return None, "DELETE pattern did not match parser"
+    table, where = m.group(1), m.group(2)
+    if has_dynamic_identifier(table):
+        return None, "table name is a dynamic CFML variable (#...#) - review manually"
+    filters = {}
+    if where:
+        filters = parse_where_to_filters(where)
+        if filters is None:
+            return None, "WHERE clause too complex (OR/parens/functions) - review manually"
+
+    var_name = f"useLakebaseFor{query_name.replace('.', '_')}"
+    pg_table = table.lower()
+    filter_lines = "\n".join(f'\t\t\t"{k}" = {v},' for k, v in filters.items())
+    filter_block = "{\n" + filter_lines.rstrip(",") + "\n\t\t}" if filters else "{}"
+    wrapper = f'''<cfset {var_name} = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("{pg_table}")>
+<cfif {var_name}>
+\t<cftry>
+\t\t<cfset application.oLakebase.deleteRows("{pg_table}", {filter_block})>
+\t\t<cfcatch type="any">
+\t\t\t<cfset {var_name} = false>
+\t\t</cfcatch>
+\t</cftry>
+</cfif>
+<cfif NOT {var_name}>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>'''
+    return wrapper, None
+
+
 def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[str]):
     src = root / file_rel
     try:
@@ -310,8 +349,10 @@ def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[st
             wrapper, reason = gen_update_wrapper(qname, sql_stripped)
         elif re.match(r"INSERT", sql_stripped, re.IGNORECASE):
             wrapper, reason = gen_insert_wrapper(qname, sql_stripped)
+        elif re.match(r"DELETE", sql_stripped, re.IGNORECASE):
+            wrapper, reason = gen_delete_wrapper(qname, sql_stripped)
         else:
-            wrapper, reason = None, "DELETE/other - review manually"
+            wrapper, reason = None, "unsupported statement type - review manually"
 
         if wrapper:
             generated += 1

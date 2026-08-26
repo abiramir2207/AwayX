@@ -1119,11 +1119,24 @@ BEGIN
 	<cfset arguments.Vendor_Master_ID = '00000000-0000-0000-0000-000000000000'>
 </cfif>
 
+<cfset useLakebaseForqDeleteData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqDeleteData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("adv_quick_pay_billback_log", {
+			"user_id" = "eq.#arguments.unique_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteData>
 <cfquery name="qDeleteData" datasource="#application.datasource#">
 	DELETE
 	FROM ADV_Quick_Pay_Billback_Log
 	WHERE User_ID = '#arguments.unique_ID#'
 </cfquery>
+</cfif>
 
 
 <cfloop from="1" to="#listLen(arguments.Deduction_ID)#" index="ID">

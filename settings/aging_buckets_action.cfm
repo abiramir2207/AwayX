@@ -1,7 +1,18 @@
+<cfset useLakebaseFordeleteBuckets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_aging_buckets")>
+<cfif useLakebaseFordeleteBuckets>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("deduction_aging_buckets", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteBuckets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteBuckets>
 <cfquery name="deleteBuckets" datasource="#application.datasource#">
 DELETE
 FROM Deduction_Aging_Buckets
 </cfquery>
+</cfif>
 
 
 <cfif len(trim(FORM.BUCKET_1_LABEL)) GT 0>

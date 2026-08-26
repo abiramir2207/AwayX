@@ -2814,11 +2814,25 @@ and contract_products.deleted = 0
 					program_id = '#items[i].data#'
 			</cfquery>
 			<cfif qgetFav.recordcount gt 0> <!--- if not there, insert record --->
-				<cfquery name="qDelFav" datasource="#application.datasource#">
+				<cfset useLakebaseForqDelFav = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_favorites")>
+<cfif useLakebaseForqDelFav>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_favorites", {
+			"user_id" = "eq.#arguments.user_id#",
+			"program_id" = "eq.#items[i].data#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDelFav = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDelFav>
+<cfquery name="qDelFav" datasource="#application.datasource#">
 					delete from Program_Favorites where
 					User_ID = '#arguments.user_id#'
 					and program_id = '#items[i].data#'
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfloop>
 
@@ -3685,9 +3699,22 @@ and contract_products.deleted = 0
 		</cfquery>
 		<cfif (ProgramEZRates.Recordcount NEQ 0)>
 		<!---  Delete all the rows, if they already exists for the same contract numbers, incase of Reset and Approve Programs. --->
-			<cfquery name="delProgramEZRates" datasource="#application.datasource#">
+			<cfset useLakebaseFordelProgramEZRates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_template_ez_rate")>
+<cfif useLakebaseFordelProgramEZRates>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_template_ez_rate", {
+			"contract_main_id" = "eq.#arguments.contractMainID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelProgramEZRates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelProgramEZRates>
+<cfquery name="delProgramEZRates" datasource="#application.datasource#">
 				DELETE FROM Program_Template_EZ_Rate WHERE Contract_Main_ID = #arguments.contractMainID#
 			</cfquery>
+</cfif>
 
 			<cfloop query = "ProgramEZRates">
 				<cfquery name="insProgramEZRates" datasource="#application.datasource#">

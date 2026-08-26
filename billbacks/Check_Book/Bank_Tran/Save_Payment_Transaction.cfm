@@ -177,9 +177,20 @@
 
 <CFOUTPUT>
 <CFIF FORM.Category EQ "UnknownPayee">
-	<CFQUERY name = "delete_record" datasource = "#application.datasource#">
+	<cfset useLakebaseFordelete_record = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("unknownpayee_bank_info_temp")>
+<cfif useLakebaseFordelete_record>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("unknownpayee_bank_info_temp", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_record = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_record>
+<CFQUERY name = "delete_record" datasource = "#application.datasource#">
 		DELETE FROM unknownpayee_bank_info_temp
 	</CFQUERY>
+</cfif>
 </CFIF>
 <CFPARAM NAME= "Billback_title" DEFAULT="">
 <CFIF FORM.Billback_ID NEQ "">

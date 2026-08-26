@@ -585,12 +585,27 @@
 
 			<cfif len(trim(arguments.GLList)) GT 0>
 				<cfloop list="#arguments.GLList#" index="GL_Account_ID">
-					<cfquery name="DeletefromMapping" datasource="#application.datasource#">
+					<cfset useLakebaseForDeletefromMapping = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_component_mapping")>
+<cfif useLakebaseForDeletefromMapping>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("gl_component_mapping", {
+			"gl_account_id" = "eq.#GL_Account_ID#",
+			"component_name_id" = "eq.#arguments.compId#",
+			"discount_type_id" = "eq.1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletefromMapping = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletefromMapping>
+<cfquery name="DeletefromMapping" datasource="#application.datasource#">
 					DELETE FROM GL_Component_Mapping
 					WHERE GL_Account_ID = '#GL_Account_ID#'
 					AND Component_Name_ID = '#arguments.compId#'
 					AND Discount_Type_ID = 1
 					</cfquery>
+</cfif>
 				</cfloop>
 			</cfif>
 
@@ -1016,7 +1031,24 @@
 		 <cfset paidToArgs = arguments.paidTo />
 	  </cfif>
 
-	  <cfquery name="doesComponentExist" datasource="#application.datasource#">
+	  <cfset useLakebaseFordoesComponentExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_freight_rates")>
+<cfif useLakebaseFordoesComponentExist>
+	<cftry>
+		<cfset doesComponentExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_freight_rates", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.ProgramID#",
+				"component_name_id" = "eq.#arguments.componentId#",
+				"paid_to" = "eq.#paidToArgs#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordoesComponentExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordoesComponentExist>
+<cfquery name="doesComponentExist" datasource="#application.datasource#">
 	    select * from
 		Program_Fixed_Freight_Rates
 		where Program_Fixed_Freight_Rates.deleted = 0
@@ -1024,6 +1056,7 @@
 		and Component_Name_Id = #arguments.componentId#
 		and Paid_To = #paidToArgs#
 	  </cfquery>
+</cfif>
 
 	   <cfif doesComponentExist.RecordCount>
 	    <cfset componentIsNew = true />

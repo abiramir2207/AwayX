@@ -102,22 +102,48 @@
 <!--- This table stores the progress of the product count after margin the call --->
 <cffunction name="DeleteMarginLogInfo" output="false">
  <cfargument name="Program_ID" type="numeric" required="true" />
-	<cfquery name="qDeleteMarginLogInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeleteMarginLogInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_margin_log")>
+<cfif useLakebaseForqDeleteMarginLogInfo>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_margin_log", {
+			"program_id" = "eq.#arguments.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteMarginLogInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteMarginLogInfo>
+<cfquery name="qDeleteMarginLogInfo" datasource="#application.datasource#">
 		DELETE
 		FROM Program_Margin_Log
 		WHERE Program_ID = '#arguments.Program_ID#'
 	</cfquery>
+</cfif>
 	<cfreturn 1 />
 </cffunction>
 
 <!--- This table stores the status (Processing,Processed) and the user of the margin call --->
 <cffunction name="DeleteMarginLogStatusInfo" output="false">
  <cfargument name="Program_ID" type="numeric" required="true" />
-	<cfquery name="qDeleteMarginLogStatusInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeleteMarginLogStatusInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_margin_log_status")>
+<cfif useLakebaseForqDeleteMarginLogStatusInfo>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_margin_log_status", {
+			"program_id" = "eq.#arguments.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteMarginLogStatusInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteMarginLogStatusInfo>
+<cfquery name="qDeleteMarginLogStatusInfo" datasource="#application.datasource#">
 		DELETE
 		FROM Program_Margin_Log_Status
 		WHERE Program_ID = '#arguments.Program_ID#'
 	</cfquery>
+</cfif>
 	<cfreturn 1 />
 </cffunction>
 

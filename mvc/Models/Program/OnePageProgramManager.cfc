@@ -2001,11 +2001,25 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 				WHERE PRC.program_Id = #a.contractId# AND
 					PRC.Program_Rebates_Component_Name_ID = #a.compID#
 			</cfquery>
-			<cfquery name="qDeleteOneCPAComponent" datasource="#application.datasource#" result='qDelOneCPAComp'>
+			<cfset useLakebaseForqDeleteOneCPAComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForqDeleteOneCPAComponent>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_rebates_component", {
+			"program_id" = "eq.#a.contractId#",
+			"program_rebates_component_name_id" = "eq.#a.compID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteOneCPAComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteOneCPAComponent>
+<cfquery name="qDeleteOneCPAComponent" datasource="#application.datasource#" result='qDelOneCPAComp'>
 				DELETE FROM Program_Rebates_Component
 				WHERE program_Id = #a.contractId# AND
 					Program_Rebates_Component_Name_ID = #a.compID#
 			</cfquery>
+</cfif>
 			<!--- <cfdump var="#qDelOneCPACompProd#" output="c:\dump.log">
 			<cfdump var="#qDelOneCPAComp#" output="c:\dump.log"> --->
 			<cfscript>
@@ -2028,12 +2042,32 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 				var rate = st['#compId#'];
 				var dId = st['PROGRAM_REBATES_COMPONENT_DATA_ID_#rId#'];
 			</cfscript>
-			<cfquery name="qSaveCpaProdOverRide" datasource="#application.datasource#">
+			<cfset useLakebaseForqSaveCpaProdOverRide = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_data")>
+<cfif useLakebaseForqSaveCpaProdOverRide>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_rebates_component_data",
+			{
+				"program_rebates_component_data_id" = "eq.#dId#"
+			},
+			{
+				"rate" = "#rate#
+					--",
+				"unit_of_measure_id" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveCpaProdOverRide = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveCpaProdOverRide>
+<cfquery name="qSaveCpaProdOverRide" datasource="#application.datasource#">
 				UPDATE Program_Rebates_Component_Data
 				SET RATE = #rate#
 					--,Unit_Of_Measure_ID = 1
 				WHERE Program_Rebates_Component_Data_id = #dId#
 			</cfquery>
+</cfif>
 			<!--- UPDATE FIXED COMPONENTS--->
 			<cftry>
 			<cfquery name="qSaveFixedDsitPrice" datasource="#application.datasource#" result="qDistFixed">

@@ -50,17 +50,45 @@ WHERE Product_Group_Level_ID IN
 </cfquery>
 
 <!--- Delete prior selections --->
+<cfset useLakebaseForDeleteFromComponentProductRestriction = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_product_restriction")>
+<cfif useLakebaseForDeleteFromComponentProductRestriction>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("component_product_restriction", {
+			"discount_type_id" = "eq.#form.Discount_Type_ID#",
+			"component_id" = "eq.#form.Component_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteFromComponentProductRestriction = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteFromComponentProductRestriction>
 <cfquery name="DeleteFromComponentProductRestriction" datasource="#application.datasource#">
 DELETE FROM Component_Product_Restriction
 WHERE Discount_Type_ID = '#form.Discount_Type_ID#'
 AND Component_ID = '#form.Component_ID#'
 </cfquery>
+</cfif>
 <!--- Delete from mapping table --->
+<cfset useLakebaseForDeleteFromComponentProductsRestricted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
+<cfif useLakebaseForDeleteFromComponentProductsRestricted>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("component_products_restricted", {
+			"discount_type_id" = "eq.#form.Discount_Type_ID#",
+			"component_id" = "eq.#form.Component_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteFromComponentProductsRestricted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteFromComponentProductsRestricted>
 <cfquery name="DeleteFromComponentProductsRestricted" datasource="#application.datasource#">
 DELETE FROM Component_Products_Restricted
 WHERE Discount_Type_ID = '#form.Discount_Type_ID#'
 AND Component_ID = '#form.Component_ID#'
 </cfquery>
+</cfif>
 
 <cfif isDefined("form.CriteriaID")>
 <cfloop list="#CriteriaID#" index="Criteria_ID">

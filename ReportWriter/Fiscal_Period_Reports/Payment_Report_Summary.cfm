@@ -1,17 +1,48 @@
  <!---Deletes any pre-existing information for the period from the table--->
- <cfquery name="DeletePrior" datasource="#application.datasource#">
+ <cfset useLakebaseForDeletePrior = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_payment_report_summary")>
+<cfif useLakebaseForDeletePrior>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("rp_payment_report_summary", {
+			"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrior = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrior>
+<cfquery name="DeletePrior" datasource="#application.datasource#">
 DELETE FROM RP_Payment_Report_Summary
 WHERE Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 AND Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#' 
 </cfquery>
+</cfif>
 
 <!---Get data with which to populate Payment Report Summary--->
+<cfset useLakebaseFordataforPaymentReportSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_mapping_table")>
+<cfif useLakebaseFordataforPaymentReportSummary>
+	<cftry>
+		<cfset dataforPaymentReportSummary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_mapping_table", {
+				"fp_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fp_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"select" = "legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,invoice_detail_id,item_number,buying_group,upc"
+			}), "legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,invoice_detail_id,item_number,buying_group,upc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordataforPaymentReportSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordataforPaymentReportSummary>
 <cfquery name="dataforPaymentReportSummary" datasource="#application.datasource#">
 SELECT DISTINCT RP_Mapping_Table.Legacy_Ship_To, RP_Mapping_Table.Shared_Ship_To, RP_Mapping_Table.Shared_Invoice_Number, RP_Mapping_Table.Invoice_Line_Number, RP_Mapping_Table.QBrand_ID, RP_Mapping_Table.Invoice_Detail_ID, RP_Mapping_Table.Item_Number, RP_Mapping_Table.Buying_Group, RP_Mapping_Table.UPC
 FROM RP_Mapping_Table
 WHERE RP_Mapping_Table.FP_Start_Date = '#Fiscal_Period_Start_Date#'
 AND RP_Mapping_Table.FP_End_Date = '#Fiscal_Period_End_Date#' 
 </cfquery>
+</cfif>
 
 <cfloop query="dataforPaymentReportSummary">
 

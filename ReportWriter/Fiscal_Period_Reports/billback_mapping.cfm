@@ -1,9 +1,23 @@
  <!---Deletes any pre-existing information for the period from the table--->
+<cfset useLakebaseForDeletePrior = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_summary")>
+<cfif useLakebaseForDeletePrior>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("rp_billback_summary", {
+			"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrior = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrior>
 <cfquery name="DeletePrior" datasource="#application.datasource#">
 DELETE FROM RP_Billback_Summary
 WHERE Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 AND Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 </cfquery>
+</cfif>
 
 <!---Gets all distinct records--->
 <!---item/distributor--->

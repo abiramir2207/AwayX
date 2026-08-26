@@ -1,7 +1,18 @@
 
-<!--- <cfquery name="deleteData" datasource="#application.datasource#">
+<!--- <cfset useLakebaseFordeleteData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_cost_range_assignments")>
+<cfif useLakebaseFordeleteData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("deduction_cost_range_assignments", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteData>
+<cfquery name="deleteData" datasource="#application.datasource#">
 	DELETE FROM Deduction_Cost_Range_Assignments
-</cfquery> --->
+</cfquery>
+</cfif> --->
 
 <cfloop index="fieldname" list="#form.fieldnames#">
 	<cfif left(fieldname, 4) EQ "USER">

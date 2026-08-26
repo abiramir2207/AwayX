@@ -80,10 +80,23 @@
 	
 </CFIF>
 
+<cfset useLakebaseForDelete_Approved_Discounts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_product_discount")>
+<cfif useLakebaseForDelete_Approved_Discounts>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_product_discount", {
+			"billback_id" = "eq.#FORM.Billback_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Approved_Discounts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Approved_Discounts>
 <cfquery name="Delete_Approved_Discounts" datasource="#application.datasource#">
 DELETE FROM BB_Product_Discount
 WHERE Billback_ID = '#FORM.Billback_ID#'
 </cfquery>
+</cfif>
 
 <cfset local_bbid = FORM.Billback_ID>
 <cfinclude template="bb_menu_stats.cfm">

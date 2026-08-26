@@ -1,10 +1,23 @@
 
 <!--- Delete record --->
 <CFIF FORM.DeleteRecord EQ 1>
-	<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
+	<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_phase")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pm_phase", {
+			"pm_phase_id" = "eq.#Form.PM_Phase_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
 		DELETE FROM PM_Phase  
 		WHERE		PM_Phase_ID			=	'#Form.PM_Phase_ID#'
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="create_Phase.cfm" ADDTOKEN="No">
 	<CFABORT>
 </CFIF>

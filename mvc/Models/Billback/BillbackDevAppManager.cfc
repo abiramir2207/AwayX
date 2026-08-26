@@ -1171,10 +1171,23 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
         			 	AND (appSettings.getEditableClaimedDollarsQuantity() EQ 0 OR getDeviationHistory.BB_Level_Deviations_Override_Price_Flag EQ 1))
         			 	)
         			 AND getDeviationHistory.Billback_Status_ID LT 3>
-                    <cfquery name="delDeviationHistory" datasource="#application.datasource#">
+                    <cfset useLakebaseFordelDeviationHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
+<cfif useLakebaseFordelDeviationHistory>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_item_invoice_level", {
+			"billback_id" = "eq.#arguments.Billback_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelDeviationHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelDeviationHistory>
+<cfquery name="delDeviationHistory" datasource="#application.datasource#">
                       DELETE FROM BB_Item_Invoice_Level
                       WHERE Billback_ID = '#arguments.Billback_ID#'
                     </cfquery>
+</cfif>
             <cfelse>
                       <cfset useLakebaseForUpdBBItemInvoiceLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
 <cfif useLakebaseForUpdBBItemInvoiceLevel>

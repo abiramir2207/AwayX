@@ -190,9 +190,23 @@
 
 			<cfelse><!--- NO ERRORS --->
 
-				<cfquery name="updateErrorReason" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateErrorReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload_doc_error_details")>
+<cfif useLakebaseForupdateErrorReason>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("margin_targets_upload_doc_error_details", {
+			"doc_id" = "eq.#docId#",
+			"item" = "eq.#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateErrorReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateErrorReason>
+<cfquery name="updateErrorReason" datasource="#application.datasource#">
 					DELETE FROM Margin_Targets_Upload_Doc_Error_Details WHERE doc_id = #docId# AND item = '#item#'
 				</cfquery>
+</cfif>
 
 			</cfif>
 

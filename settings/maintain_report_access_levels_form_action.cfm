@@ -8,10 +8,23 @@
 
 <!--- Delete record --->
 <CFIF FORM.DeleteRecord EQ 1>
-	<CFQUERY NAME="Delete_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForDelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_access_levels")>
+<cfif useLakebaseForDelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("report_access_levels", {
+			"level_code" = "eq.#Form.Level_Code#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Data>
+<CFQUERY NAME="Delete_Data" datasource="#application.datasource#">
 		DELETE FROM report_access_levels
 		WHERE		level_code		=	'#Form.Level_Code#'
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="maintain_report_access_levels_form.cfm" ADDTOKEN="No">
 	<CFABORT>
 </CFIF>

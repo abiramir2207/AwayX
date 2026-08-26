@@ -1725,10 +1725,23 @@ program_description,default_pullback_rate,ProgramControl_Panel_Options_id
 		<cfargument name="PGOperatorCategoryIDList" required="true"  />
 		<cfargument name="userID" required="true"  />
 
-			<cfquery name="qDeleteRecaptureOperatorPGlist" datasource="#application.datasource#">
+			<cfset useLakebaseForqDeleteRecaptureOperatorPGlist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("recapture_program_operator_list")>
+<cfif useLakebaseForqDeleteRecaptureOperatorPGlist>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("recapture_program_operator_list", {
+			"contract_number" = "eq.#arguments.ContractNumber#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteRecaptureOperatorPGlist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteRecaptureOperatorPGlist>
+<cfquery name="qDeleteRecaptureOperatorPGlist" datasource="#application.datasource#">
 				DELETE FROM Recapture_Program_Operator_List
 				WHERE Contract_Number = '#arguments.ContractNumber#'
 			</cfquery>
+</cfif>
 
 			<cfloop list="#arguments.PGOperatorCategoryIDList#" index="i">
 				<cfquery name="qeRecaptureOperatorPGlist" datasource="#application.datasource#">

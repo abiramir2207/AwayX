@@ -90,10 +90,23 @@
 </cfif>
 		
 		<cfelse>
-			<cfquery name="DeleteRecord" datasource="#application.datasource#">
+			<cfset useLakebaseForDeleteRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_worksheet_volume")>
+<cfif useLakebaseForDeleteRecord>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_worksheet_volume", {
+			"bb_ws_volume_id" = "eq.#GetCurrentEntries.BB_WS_Volume_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteRecord>
+<cfquery name="DeleteRecord" datasource="#application.datasource#">
 			DELETE FROM BB_Worksheet_Volume
 			WHERE BB_WS_Volume_ID = '#GetCurrentEntries.BB_WS_Volume_ID#'
 			</cfquery>
+</cfif>
 		</cfif>
 	</cfloop>
 	
@@ -111,7 +124,23 @@
 		</cfoutput>
 		
 		<cfif (Cases NEQ 0 AND Pounds NEQ 0) AND isDeleted NEQ 1>
-		<cfquery name="InsertRecord" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_worksheet_volume")>
+<cfif useLakebaseForInsertRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_worksheet_volume", {
+			"billback_id" = "#Billback_ID#",
+			"program_id" = "#Program_ID#",
+			"product_id" = "#Product_ID#",
+			"pounds" = "#Pounds#",
+			"cases" = "#Cases#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertRecord>
+<cfquery name="InsertRecord" datasource="#application.datasource#">
 		INSERT INTO BB_Worksheet_Volume
 		(		
 		Billback_ID,
@@ -129,6 +158,7 @@
 		#Cases#
 		)
 		</cfquery>
+</cfif>
 		</cfif>
 	
 	</cfloop>

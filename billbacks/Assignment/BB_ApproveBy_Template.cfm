@@ -5,9 +5,20 @@
 
 <cfif form.subcommand EQ "save">
 
-		<cfquery name="DeleteData" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approveby_template")>
+<cfif useLakebaseForDeleteData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_approveby_template", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteData>
+<cfquery name="DeleteData" datasource="#application.datasource#">
 				DELETE  FROM BB_ApproveBy_Template
 		</cfquery>
+</cfif>
 
 	<cfloop from="1" to="#listlen(Form.FieldNames)#" index="A">
 
@@ -45,11 +56,27 @@
 <tbody>
 <cfloop query="qGetAnalysts">
 	<cfset selectedTemplates = ''>
-		<cfquery name="checkData" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approveby_template")>
+<cfif useLakebaseForcheckData>
+	<cftry>
+		<cfset checkData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approveby_template", {
+				"user_id" = "eq.#Analyst_User_ID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckData>
+<cfquery name="checkData" datasource="#application.datasource#">
 		SELECT first_parent_id 
 		FROM BB_ApproveBy_Template
 		WHERE User_ID = '#Analyst_User_ID#'
 		</cfquery>
+</cfif>
 		<cfset selectedTemplates = valueList(checkData.first_parent_id)>
 <tr>
 	<td style="background-color: ##F8F8F8;">#name_first# #name_last#</td>

@@ -122,9 +122,20 @@ FUNCTIONALITY:- This action page updates the DB with user input margin target da
 </cfif>
 </cfloop>
 <cfset approvalGroupType = CreateObject("component", "components.settings.ApprovalGroupManager").getGroupTypeInfo() />
+<cfset useLakebaseFordelete_group_costs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_local_costs")>
+<cfif useLakebaseFordelete_group_costs>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("group_local_costs", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_group_costs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_group_costs>
 <cfquery name="delete_group_costs" datasource="#application.datasource#">
 	delete from group_local_costs
 </cfquery>
+</cfif>
 <cfloop index="x" from="1" to="#arraylen(dataArray)#">
 	<cfquery name="update_targets" datasource="#application.datasource#">
 		UPDATE #approvalGroupType.tableName#

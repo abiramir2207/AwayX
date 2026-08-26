@@ -222,12 +222,38 @@ Usage:			N/A
 in update:   --->
 				
 			<cfif NotExistsCtr1 GTE 1 OR  NotExistsCtr2 GTE 1>
-				<cfquery name="delPrgIIIPartyDoubleDipExclusions" datasource="#application.datasource#">
+				<cfset useLakebaseFordelPrgIIIPartyDoubleDipExclusions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("iii_party_double_dip_exclusions")>
+<cfif useLakebaseFordelPrgIIIPartyDoubleDipExclusions>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("iii_party_double_dip_exclusions", {
+			"exclusion_type" = "eq.Program"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelPrgIIIPartyDoubleDipExclusions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelPrgIIIPartyDoubleDipExclusions>
+<cfquery name="delPrgIIIPartyDoubleDipExclusions" datasource="#application.datasource#">
 					DELETE FROM III_Party_Double_Dip_Exclusions WHERE Exclusion_Type = 'Program'
 				</cfquery>
+</cfif>
 				
 				 <cfloop index = "i" list = "#newPrgExcludeList#"  delimiters = ",">
-					<cfquery name="qInsertPrgExclusion" datasource="#application.datasource#">
+					<cfset useLakebaseForqInsertPrgExclusion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("iii_party_double_dip_exclusions")>
+<cfif useLakebaseForqInsertPrgExclusion>
+	<cftry>
+		<cfset application.oLakebase.insertRow("iii_party_double_dip_exclusions", {
+			"exclusion_type" = "Program",
+			"value" = "#i#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertPrgExclusion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertPrgExclusion>
+<cfquery name="qInsertPrgExclusion" datasource="#application.datasource#">
 						INSERT INTO III_Party_Double_Dip_Exclusions 
 						(
 							Exclusion_Type,	
@@ -239,6 +265,7 @@ in update:   --->
 							'#i#'	
 						)
 					</cfquery>
+</cfif>
 					<cfset wasSaved = "Program" />
 				</cfloop> 
 			</cfif>
@@ -263,12 +290,38 @@ in update:   --->
 			</cfloop>
 			
 			<cfif NotExistsCtr1 GTE 1 OR  NotExistsCtr2 GTE 1>
-				<cfquery name="delOprIIIPartyDoubleDipExclusions" datasource="#application.datasource#">
+				<cfset useLakebaseFordelOprIIIPartyDoubleDipExclusions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("iii_party_double_dip_exclusions")>
+<cfif useLakebaseFordelOprIIIPartyDoubleDipExclusions>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("iii_party_double_dip_exclusions", {
+			"exclusion_type" = "eq.Operator"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelOprIIIPartyDoubleDipExclusions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelOprIIIPartyDoubleDipExclusions>
+<cfquery name="delOprIIIPartyDoubleDipExclusions" datasource="#application.datasource#">
 					DELETE FROM III_Party_Double_Dip_Exclusions WHERE Exclusion_Type = 'Operator'
 				</cfquery>
+</cfif>
 				
 				 <cfloop index = "j" list = "#newOprExcludeList#"  delimiters = ",">
-					<cfquery name="qInsertOprExclusion" datasource="#application.datasource#">
+					<cfset useLakebaseForqInsertOprExclusion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("iii_party_double_dip_exclusions")>
+<cfif useLakebaseForqInsertOprExclusion>
+	<cftry>
+		<cfset application.oLakebase.insertRow("iii_party_double_dip_exclusions", {
+			"exclusion_type" = "Operator",
+			"value" = "#j#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertOprExclusion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertOprExclusion>
+<cfquery name="qInsertOprExclusion" datasource="#application.datasource#">
 						INSERT INTO III_Party_Double_Dip_Exclusions 
 						(
 							Exclusion_Type,	
@@ -280,6 +333,7 @@ in update:   --->
 							'#j#'	
 						)
 					</cfquery>
+</cfif>
 				</cfloop> 
 				<cfif (wasSaved EQ "Program")>
 					<cfset wasSaved = "Program_Operator" />

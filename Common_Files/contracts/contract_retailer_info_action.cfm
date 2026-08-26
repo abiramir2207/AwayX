@@ -1,8 +1,21 @@
 <!--- Delete all the entries for the program and insert the records --->
+<cfset useLakebaseFordelete_retail_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_group_merchant_info")>
+<cfif useLakebaseFordelete_retail_info>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_group_merchant_info", {
+			"program_id" = "eq.#Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_retail_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_retail_info>
 <cfquery name="delete_retail_info" datasource="#application.datasource#">
 	 DELETE FROM Contract_Group_Merchant_Info
 	 WHERE Program_ID = '#Program_ID#'
 </cfquery>
+</cfif>
 
 <!--- For Groups --->
 <cfif IsDefined("GroupCount")>

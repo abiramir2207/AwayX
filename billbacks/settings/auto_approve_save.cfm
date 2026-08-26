@@ -138,10 +138,23 @@ or auto approve distributor was selected and operator exceptions were added
 		</cfif>		
 	</cfquery>
 	
-	<cfquery name="qDeleteDistributorExceptions" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeleteDistributorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_appr_payee_exception")>
+<cfif useLakebaseForqDeleteDistributorExceptions>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("auto_appr_payee_exception", {
+			"payee_type" = "eq.1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteDistributorExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteDistributorExceptions>
+<cfquery name="qDeleteDistributorExceptions" datasource="#application.datasource#">
 		DELETE 	FROM Auto_Appr_Payee_Exception
 		WHERE	Payee_Type = 1
 	</cfquery>
+</cfif>
 </cfif>
 
 <!---now add them if they exist--->
@@ -149,12 +162,26 @@ or auto approve distributor was selected and operator exceptions were added
 
 	<cfloop index="indx" list="#form.Distributor_List#">
 	
-		<cfquery name="qAddDistributor" datasource="#application.datasource#">
+		<cfset useLakebaseForqAddDistributor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_appr_payee_exception")>
+<cfif useLakebaseForqAddDistributor>
+	<cftry>
+		<cfset application.oLakebase.insertRow("auto_appr_payee_exception", {
+			"payee_type" = "1",
+			"distributor_id" = "#indx#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddDistributor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddDistributor>
+<cfquery name="qAddDistributor" datasource="#application.datasource#">
 			INSERT INTO Auto_Appr_Payee_Exception
 				(Payee_Type, Distributor_ID)
 			VALUES
 				(1, '#indx#')
 		</cfquery>
+</cfif>
 		
 	</cfloop>
 	

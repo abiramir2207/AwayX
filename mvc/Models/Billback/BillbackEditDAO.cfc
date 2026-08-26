@@ -289,10 +289,23 @@ Usage:			N/A
 					(qGetUploadType.Uploaded_Billback EQ 2 AND qGetUploadType.Billback_Status_ID GTE 3
 					AND application.oApplicationAppSettingsManager.getApplicationAppSettings().getEditableClaimedDollarsQuantity() EQ 0)
 				)>
-				<cfquery name="qDeleteGridTableEntries" datasource="#application.datasource#">
+				<cfset useLakebaseForqDeleteGridTableEntries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
+<cfif useLakebaseForqDeleteGridTableEntries>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_item_invoice_level", {
+			"billback_id" = "eq.#this.strBillbackID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteGridTableEntries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteGridTableEntries>
+<cfquery name="qDeleteGridTableEntries" datasource="#application.datasource#">
 					DELETE FROM BB_Item_Invoice_Level
 					WHERE Billback_ID = '#this.strBillbackID#'
 				</cfquery>
+</cfif>
 		</cfif>
 
 		<!--- D34062 / Anand Rao / 14-Sep-2012; Do not Reset the Deviation_Ran_Date and Deviation_Ran_By, if it already Approved BB. --->

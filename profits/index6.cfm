@@ -19,9 +19,22 @@
 		</CFQUERY>
 		
 		<!--- First delete the old products that belonged to this rule... --->
-		<CFQUERY name="Delete_Products" datasource="#application.datasource#">
+		<cfset useLakebaseForDelete_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pricing_rule_products")>
+<cfif useLakebaseForDelete_Products>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pricing_rule_products", {
+			"pricing_rule_id" = "eq.#FORM.PRID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Products>
+<CFQUERY name="Delete_Products" datasource="#application.datasource#">
 		DELETE FROM Pricing_Rule_Products WHERE Pricing_Rule_ID = '#FORM.PRID#'
 		</CFQUERY>
+</cfif>
 		
 		<!--- Then save the new group of products to the Pricing_Rule_Products table --->
 		<CFLOOP index="item" list="#form.AA_PRODUCT_LIST#">

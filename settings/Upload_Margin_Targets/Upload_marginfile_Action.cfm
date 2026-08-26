@@ -106,9 +106,20 @@
 			</CFQUERY>
 			
 			 <CFIF form.filetype EQ 1>
-				<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForDeletedTempData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gdwl4_margin_targets_temp")>
+<cfif useLakebaseForDeletedTempData>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("gdwl4_margin_targets_temp", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletedTempData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletedTempData>
+<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
 					DELETE FROM GDWL4_Margin_Targets_Temp
 				</CFQUERY>
+</cfif>
 				<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
 					DELETE FROM GDWL4_Margin_Targets_Valid_Temp
 				</CFQUERY>

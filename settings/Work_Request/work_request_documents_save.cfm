@@ -35,19 +35,48 @@
 
 <!--- Delete record --->
 <CFIF FORM.DeleteRecord EQ 1>
-	<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
+	<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("work_request_document", {
+			"work_request_document" = "eq.#Form.Work_Request_Document#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
 		DELETE FROM Work_Request_Document  
 		WHERE		Work_Request_Document				=	'#Form.Work_Request_Document#'
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="work_request_documents.cfm" ADDTOKEN="No">
 	<CFABORT>
 </CFIF>
 
+<cfset useLakebaseForGet_Label_No = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGet_Label_No>
+	<cftry>
+		<cfset Get_Label_No = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#Form.Work_Request_ID#",
+				"select" = "ba_ticket_number"
+			}), "ba_ticket_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Label_No = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Label_No>
 <CFQUERY NAME="Get_Label_No" datasource="#application.datasource#">
 	Select		BA_Ticket_Number
 	From		Work_Request
 	Where Work_Request_ID = #Form.Work_Request_ID#
 </CFQUERY>
+</cfif>
 
 <!--- Get user name --->
 <cfset useLakebaseForGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>

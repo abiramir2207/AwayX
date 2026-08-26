@@ -74,10 +74,23 @@
 <cfset AvailableApprovalOptions = genSettingsManager.getApprovalTypeList()>
 <CFLOOP INDEX="ThisApprovalType" list="#AvailableApprovalOptions#">
 	<CFIF ThisApprovalType NEQ 3 AND ThisApprovalType NEQ 5 AND ThisApprovalType NEQ 6 AND ThisApprovalType NEQ 7>
-		<cfquery name="DeleteApprovalType" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteApprovalType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_list_group_approval_type")>
+<cfif useLakebaseForDeleteApprovalType>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("settings_list_group_approval_type", {
+			"approvaltype" = "eq.#ThisApprovalType#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteApprovalType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteApprovalType>
+<cfquery name="DeleteApprovalType" datasource="#application.datasource#">
 			delete from Settings_List_Group_Approval_Type
 			where ApprovalType = #ThisApprovalType#
 		</cfquery>
+</cfif>
 		<CFLOOP INDEX="GroupCount" FROM="1" TO="#application.returned_customer_setting.approval_group_count#" STEP="1">
 			<cfparam name="Form.Group_Approval_Type_#ThisApprovalType#_#GroupCount#_Profile" default="1">
 			<cfset Approval_TypeFieldValue = Evaluate("Form.Group_Approval_Type_#ThisApprovalType#_#GroupCount#_Profile")>

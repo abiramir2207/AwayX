@@ -1835,11 +1835,24 @@ Description:	This file is responsible for managing Billback data.
 			WHERE	Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
 </cfif>
-		<CFQUERY NAME="Delete_Billback_4" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDelete_Billback_4 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForDelete_Billback_4>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_approved", {
+			"billback_id" = "eq.#arguments.billbackId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_4 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_4>
+<CFQUERY NAME="Delete_Billback_4" DATASOURCE="#application.datasource#">
 			DELETE
 			FROM	BB_Approved
 			WHERE	Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
+</cfif>
 		<CFQUERY NAME="Delete_Billback_5" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Exclusion_TPA
 			SET		Deleted = 1
@@ -1880,11 +1893,29 @@ Description:	This file is responsible for managing Billback data.
 								BB_Product_Exclusion.BB_Program_Exclusion_ID = BB_Program_Exclusion.BB_Program_Exclusion_ID
 					)
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_7" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDelete_Billback_7 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_exclusion")>
+<cfif useLakebaseForDelete_Billback_7>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_program_exclusion",
+			{
+				"billback_id" = "eq.#arguments.billbackId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_7 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_7>
+<CFQUERY NAME="Delete_Billback_7" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Program_Exclusion
 			SET		Deleted = 1
 			WHERE	BB_Program_Exclusion.Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
+</cfif>
 		<!------ Delete BB Item Final, Final Detail, BB_Lump_Sums and Growth table ----->
 		<CFQUERY NAME="Delete_Billback_8" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Item_Final_Detail

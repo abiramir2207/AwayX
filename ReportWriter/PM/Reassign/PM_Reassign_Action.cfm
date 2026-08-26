@@ -164,11 +164,25 @@
 			<CFIF FORM.From_Owner_Position_ID NEQ "" AND FORM.To_Owner_Position_ID NEQ "">						
 				<CFIF IsExist_Already.recordcount GT 0>
 					<CFIF FORM.UPDATE EQ 1>				 
-						<CFQUERY NAME="Update_Owner" DATASOURCE="#Application.Datasource#">							
+						<cfset useLakebaseForUpdate_Owner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_owner_position")>
+<cfif useLakebaseForUpdate_Owner>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pm_owner_position", {
+			"pm_item_master_id" = "eq.#Item#",
+			"user_positions_id" = "eq.#FORM.From_Owner_Position_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Owner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Owner>
+<CFQUERY NAME="Update_Owner" DATASOURCE="#Application.Datasource#">							
 							DELETE FROM PM_Owner_Position
 							WHERE PM_Item_Master_ID = '#Item#' AND 
 							User_Positions_ID = '#FORM.From_Owner_Position_ID#'								
 						</CFQUERY>
+</cfif>
 					</CFIF>				
 				<CFELSE>
 					<CFIF FORM.UPDATE EQ 1>		

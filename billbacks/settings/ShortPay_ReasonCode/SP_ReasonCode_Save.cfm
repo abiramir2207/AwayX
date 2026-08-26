@@ -1,10 +1,23 @@
 
 <!--- Delete record --->
 <CFIF FORM.DeleteRecord EQ 1>
-	<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
+	<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_shortpay_reason")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_shortpay_reason", {
+			"bb_shortpay_reason_id" = "eq.#Form.RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
 		DELETE FROM BB_ShortPay_Reason  
 		WHERE		BB_ShortPay_Reason_ID			=	'#Form.RID#'
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 </CFIF>
 
 <CFIF Form.RID EQ "">

@@ -77,9 +77,22 @@
 <CFOUTPUT>
 <CFIF check_previous.recordcount GT 0>
 <CFIF check_previous.paid NEQ 1 and check_previous.Amount LT 0>
-	<CFQUERY name = "delete_unpaid" datasource = "#Application.datasource#">
+	<cfset useLakebaseFordelete_unpaid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseFordelete_unpaid>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("ledger_table", {
+			"ledger_id" = "eq.#check_previous.ledger_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_unpaid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_unpaid>
+<CFQUERY name = "delete_unpaid" datasource = "#Application.datasource#">
 		DELETE from Ledger_Table where Ledger_ID = #check_previous.ledger_ID# 
 	</CFQUERY>
+</cfif>
 </CFIF>
 </CFIF>
 </CFOUTPUT> 

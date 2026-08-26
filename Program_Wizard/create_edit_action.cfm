@@ -1355,10 +1355,23 @@ Processes form information from the previous page.
 
 		<!---30418 update Billback_Closing_Methods_Template :: start--->
 	<cfif Action neq "Copy">
-		<CFQUERY NAME="qDeleteClosingMethod" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForqDeleteClosingMethod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods_template")>
+<cfif useLakebaseForqDeleteClosingMethod>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("billback_closing_methods_template", {
+			"first_parent_id" = "eq.#getFisrParentID.First_Parent_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteClosingMethod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteClosingMethod>
+<CFQUERY NAME="qDeleteClosingMethod" DATASOURCE="#Application.Datasource#">
 			delete from Billback_Closing_Methods_Template
 			where  	First_Parent_ID = '#getFisrParentID.First_Parent_ID#'
 		</CFQUERY>
+</cfif>
 		<cfset FirstParentID = getFisrParentID.First_Parent_ID>
 		
 		<!--- AUDITING - CAPTURE CHANGES --->
@@ -2113,12 +2126,29 @@ Processes form information from the previous page.
 		WHERE ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="CF_SQL_INTEGER">
 	</cfquery>
 <cfif getFisrParentID.Auto_Renew_Option>
-	<cfquery name="getCurrentSelection" datasource="#application.datasource#">
+	<cfset useLakebaseForgetCurrentSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_auto_renew_options")>
+<cfif useLakebaseForgetCurrentSelection>
+	<cftry>
+		<cfset getCurrentSelection = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_auto_renew_options", {
+				"template_first_parent_id" = "eq.#getFisrParentID.First_Parent_ID#",
+				"deleted" = "eq.0",
+				"select" = "auto_renew_option_id"
+			}), "auto_renew_option_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentSelection>
+<cfquery name="getCurrentSelection" datasource="#application.datasource#">
 		SELECT	Auto_Renew_Option_ID
 		FROM	Template_Auto_Renew_Options
 		WHERE Template_First_Parent_ID = #getFisrParentID.First_Parent_ID#
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 	<cfset currentSelection = valuelist(getCurrentSelection.Auto_Renew_Option_ID)>
 	<cfloop from="1" to="4" index="Options">
 		<cfif listfind(currentSelection, Options) EQ 0>

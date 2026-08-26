@@ -47,21 +47,61 @@
 </cfif>
 <!--- Delete all the existing instances --->
 <CFTRANSACTION ACTION="BEGIN">
+<cfset useLakebaseFordeletecontractproducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseFordeletecontractproducts>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_products", {
+			"contract_main_id" = "eq.#FORM.Program_ID#",
+			"product_type_id" = "eq.10"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletecontractproducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletecontractproducts>
 <CFQUERY NAME="deletecontractproducts" datasource="#application.datasource#">
 	DELETE FROM contract_products
 	where contract_main_id = '#FORM.Program_ID#'
 	and Product_Type_ID = 10
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseFordeletebidrequestproductdata = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request_product")>
+<cfif useLakebaseFordeletebidrequestproductdata>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_bid_request_product", {
+			"program_id" = "eq.#FORM.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletebidrequestproductdata = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletebidrequestproductdata>
 <CFQUERY NAME="deletebidrequestproductdata" datasource="#application.datasource#">
 	DELETE FROM Program_Bid_Request_Product
 	where Program_ID = '#FORM.Program_ID#'
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseFordeletebidrequestcomponentdata = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bidrequest_component")>
+<cfif useLakebaseFordeletebidrequestcomponentdata>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_bidrequest_component", {
+			"program_id" = "eq.#FORM.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletebidrequestcomponentdata = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletebidrequestcomponentdata>
 <CFQUERY NAME="deletebidrequestcomponentdata" datasource="#application.datasource#">
 	DELETE FROM Program_Bidrequest_Component
 	where Program_ID = '#FORM.Program_ID#'
 </CFQUERY>
+</cfif>
 
 <!--- End Delete all the existing instances --->
 <CFSET insertproductids = "">

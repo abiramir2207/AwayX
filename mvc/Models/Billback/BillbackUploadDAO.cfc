@@ -447,18 +447,46 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 					Upload_ID = #qrySelectFields.Upload_ID# AND
 					Billback_Upload_III_PH_ID = #qrySelectFields.Billback_Upload_III_PH_ID#
 			</cfquery>
-			<cfquery name="delBBUploadHeaderLog" datasource="#application.datasource#">
+			<cfset useLakebaseFordelBBUploadHeaderLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_header_log")>
+<cfif useLakebaseFordelBBUploadHeaderLog>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_upload_header_log", {
+			"upload_id" = "eq.#qrySelectFields.Upload_ID#",
+			"bb_header_id" = "eq.#qrySelectFields.Billback_Upload_III_PH_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelBBUploadHeaderLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelBBUploadHeaderLog>
+<cfquery name="delBBUploadHeaderLog" datasource="#application.datasource#">
 				DELETE FROM  BB_Upload_Header_Log
 				WHERE
 					Upload_ID = #qrySelectFields.Upload_ID# AND
 					BB_Header_ID = #qrySelectFields.Billback_Upload_III_PH_ID#
 			</cfquery>
-			<cfquery name="delBBUploadDetailLog" datasource="#application.datasource#">
+</cfif>
+			<cfset useLakebaseFordelBBUploadDetailLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_detail_log")>
+<cfif useLakebaseFordelBBUploadDetailLog>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_upload_detail_log", {
+			"upload_id" = "eq.#qrySelectFields.Upload_ID#",
+			"bb_header_id" = "eq.#qrySelectFields.Billback_Upload_III_PH_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelBBUploadDetailLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelBBUploadDetailLog>
+<cfquery name="delBBUploadDetailLog" datasource="#application.datasource#">
 				DELETE FROM  BB_Upload_Detail_Log
 				WHERE
 					Upload_ID = #qrySelectFields.Upload_ID# AND
 					BB_Header_ID = #qrySelectFields.Billback_Upload_III_PH_ID#
 			</cfquery>
+</cfif>
 		</cfloop>
 		<cfquery name="updBBUploadHeaderErrorCorrection" datasource="#application.datasource#">
 			UPDATE BB_Upload_Header_Error_Correction

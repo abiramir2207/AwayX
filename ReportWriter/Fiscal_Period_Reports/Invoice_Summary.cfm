@@ -1,9 +1,23 @@
  <!---Deletes any pre-existing information for the period from the table--->
+<cfset useLakebaseForDeletePrior = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_summary")>
+<cfif useLakebaseForDeletePrior>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("rp_invoice_summary", {
+			"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrior = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrior>
 <cfquery name="DeletePrior" datasource="#application.datasource#">
 DELETE FROM RP_Invoice_Summary
 WHERE Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 AND Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 </cfquery>
+</cfif>
 
 <!---Gets all distinct records--->
 <cfquery name="DistinctInvoiceDistributors" datasource="#application.datasource#">
@@ -81,7 +95,30 @@ AND RP_Mapping_Table.FP_End_Date = '#Fiscal_Period_End_Date#'
 		</cfquery>
 				
 		<!---Insert it all into the database--->
-		<cfquery name="InsertValues" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_summary")>
+<cfif useLakebaseForInsertValues>
+	<cftry>
+		<cfset application.oLakebase.insertRow("rp_invoice_summary", {
+			"fiscal_period_start_date" = "#FP_Start_Date#",
+			"fiscal_period_end_date" = "#FP_End_Date#",
+			"legacy_ship_to" = "#Legacy_Ship_To#",
+			"shared_ship_to" = "#Shared_Ship_To#",
+			"distributor_id" = "#Distributor_ID#",
+			"invoice_number" = "#Invoice_Number#",
+			"invoice_date" = "#Invoice_Date#",
+			"bg_sales" = "#SalesforBGInvoice.BG_Sales#",
+			"dist_sales" = "#SalesforDistInvoice.Dist_Sales#",
+			"total_bg_dollars" = "#DollarsforBGforInvoice.BG_Payment_Amount#",
+			"total_dist_dollars" = "#DollarsforDistforInvoice.Dist_Payment_Amount#",
+			"purchase_order" = "#Purchase_Order#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertValues>
+<cfquery name="InsertValues" datasource="#application.datasource#">
 		INSERT INTO RP_Invoice_Summary
 		(
 		Fiscal_Period_Start_Date,
@@ -113,6 +150,7 @@ AND RP_Mapping_Table.FP_End_Date = '#Fiscal_Period_End_Date#'
 		'#Purchase_Order#'
 		)
 		</cfquery>
+</cfif>
 	
 	</cfloop>
 

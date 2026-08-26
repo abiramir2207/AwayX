@@ -1,14 +1,44 @@
 <!---Delete prio--->
-<!--- <cfquery name="DeletePrior" datasource="#application.datasource#">
+<!--- <cfset useLakebaseForDeletePrior = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_distributor_summary")>
+<cfif useLakebaseForDeletePrior>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("rp_distributor_summary", {
+			"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrior = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrior>
+<cfquery name="DeletePrior" datasource="#application.datasource#">
 DELETE FROM RP_Distributor_Summary
 WHERE Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 AND Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
-</cfquery>  --->
+</cfquery>
+</cfif>  --->
 
 <!---Want to do this for each set of report types.--->
+<cfset useLakebaseForGetTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_type")>
+<cfif useLakebaseForGetTypes>
+	<cftry>
+		<cfset GetTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_type", {
+				"deleted" = "eq.0",
+				"select" = "rp_type_id"
+			}), "rp_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypes>
 <cfquery name="GetTypes" datasource="#application.datasource#">
 SELECT DISTINCT RP_Type_ID FROM RP_Type WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 
 <cfloop query="GetTypes">

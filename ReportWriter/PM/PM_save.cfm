@@ -152,10 +152,23 @@
 </CFLOOP>
 	
 <!--- Delete all programs that belong to this project --->
+<cfset useLakebaseForDelete_Programs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_programs")>
+<cfif useLakebaseForDelete_Programs>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pm_programs", {
+			"pm_item_master_id" = "eq.#Form.RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Programs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Programs>
 <CFQUERY NAME="Delete_Programs" datasource="#application.datasource#">
 	DELETE FROM 	PM_Programs
 	WHERE 			PM_Item_Master_ID	=	'#Form.RID#'
 </CFQUERY>
+</cfif>
 
 
 <CFPARAM NAME="Form.PM_Contract_Number" DEFAULT="">
@@ -193,10 +206,23 @@
 
 
 <!--- Delete all brokers that belong to this project --->
+<cfset useLakebaseForDelete_QBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_qbrands")>
+<cfif useLakebaseForDelete_QBrands>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pm_qbrands", {
+			"pm_item_master_id" = "eq.#Form.RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_QBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_QBrands>
 <CFQUERY NAME="Delete_QBrands" datasource="#application.datasource#">
 	DELETE FROM 	PM_Qbrands
 	WHERE 			PM_Item_Master_ID	=	'#Form.RID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- Save the broker list --->
@@ -230,15 +256,41 @@
 </CFLOOP>
 
 <!--- Delete all brokers that belong to this project --->
+<cfset useLakebaseForDelete_Brokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_brokers")>
+<cfif useLakebaseForDelete_Brokers>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pm_brokers", {
+			"pm_item_master_id" = "eq.#Form.RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Brokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Brokers>
 <CFQUERY NAME="Delete_Brokers" datasource="#application.datasource#">
 	DELETE FROM 	PM_Brokers
 	WHERE 			PM_Item_Master_ID	=	'#Form.RID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- Save the broker list --->
 <CFLOOP INDEX="item" LIST="#Form.Broker_List#" DELIMITERS=",">
-	<CFQUERY NAME="Save_Brokers" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Brokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_brokers")>
+<cfif useLakebaseForSave_Brokers>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_brokers", {
+			"pm_item_master_id" = "#Form.RID#",
+			"bsa_foodservice_brokers_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Brokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Brokers>
+<CFQUERY NAME="Save_Brokers" datasource="#application.datasource#">
 		INSERT	INTO PM_Brokers
 				(
 					PM_Item_Master_ID,
@@ -250,18 +302,45 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 
 <!--- Delete all Distributors that belong to this project --->
+<cfset useLakebaseForDelete_Distributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_distributors")>
+<cfif useLakebaseForDelete_Distributors>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pm_distributors", {
+			"pm_item_master_id" = "eq.#Form.RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Distributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Distributors>
 <CFQUERY NAME="Delete_Distributors" datasource="#application.datasource#">
 	DELETE FROM 	PM_Distributors
 	WHERE 			PM_Item_Master_ID	=	'#Form.RID#'
 </CFQUERY>
+</cfif>
 
 <!--- Save the Distributor list --->
 <CFLOOP INDEX="item" LIST="#Form.Distributor_List#" DELIMITERS=",">
-	<CFQUERY NAME="Save_Distributors" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Distributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_distributors")>
+<cfif useLakebaseForSave_Distributors>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_distributors", {
+			"pm_item_master_id" = "#Form.RID#",
+			"bsa_foodservice_customers_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Distributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Distributors>
+<CFQUERY NAME="Save_Distributors" datasource="#application.datasource#">
 		INSERT	INTO PM_Distributors
 				(
 					PM_Item_Master_ID,
@@ -273,18 +352,45 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 <!--- Delete all Operators that belong to this project --->
+<cfset useLakebaseForDelete_Operators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_operators")>
+<cfif useLakebaseForDelete_Operators>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("pm_operators", {
+			"pm_item_master_id" = "eq.#Form.RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Operators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Operators>
 <CFQUERY NAME="Delete_Operators" datasource="#application.datasource#">
 	DELETE FROM 	PM_Operators
 	WHERE 			PM_Item_Master_ID	=	'#Form.RID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- Save the Operator list --->
 <CFLOOP INDEX="item" LIST="#Form.Operator_List#" DELIMITERS=",">
-	<CFQUERY NAME="Save_Operators" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Operators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_operators")>
+<cfif useLakebaseForSave_Operators>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_operators", {
+			"pm_item_master_id" = "#Form.RID#",
+			"bsa_operator_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Operators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Operators>
+<CFQUERY NAME="Save_Operators" datasource="#application.datasource#">
 		INSERT	INTO PM_Operators
 				(
 					PM_Item_Master_ID,
@@ -296,19 +402,46 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 <!--- Delete all Attached Documents that belong to this project --->
+<cfset useLakebaseForDelete_Attachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForDelete_Attachments>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_attachments", {
+			"project_id" = "eq.#Form.RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Attachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Attachments>
 <CFQUERY NAME="Delete_Attachments" datasource="#application.datasource#">
 	DELETE FROM 	Contract_Attachments
 	WHERE 			Project_ID	=	'#Form.RID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- Save the Attached Documents --->
 <CFIF isdefined("FORM.Doc_ID")>
 <CFLOOP INDEX="item" LIST="#Form.Doc_ID#" DELIMITERS=",">
-	<CFQUERY NAME="Save_Attachments" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Attachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForSave_Attachments>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"project_id" = "#Form.RID#",
+			"doc_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Attachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Attachments>
+<CFQUERY NAME="Save_Attachments" datasource="#application.datasource#">
 		INSERT	INTO Contract_Attachments
 				(
 					Project_ID,
@@ -320,6 +453,7 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 </CFIF>
 

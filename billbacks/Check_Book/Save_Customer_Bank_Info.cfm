@@ -78,10 +78,23 @@
 
 <!--- Delete record --->
 <CFIF FORM.DeleteRecord EQ 1>
-	<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
+	<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_bank_info")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("customer_bank_info", {
+			"bank_info_id" = "eq.#Form.Bank_Info_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
 		DELETE FROM Customer_Bank_Info  
 		WHERE		Bank_Info_Id			=	'#Form.Bank_Info_ID#'
 	</CFQUERY>
+</cfif>
 	<CFIF form.category EQ	'Distributor'>
 		<CFLOCATION URL="Distributor_Bank_Info.cfm" ADDTOKEN="No">
 	<CFELSEIF form.category EQ	'Operator'>
@@ -240,13 +253,33 @@
 	<CFIF FORM.Customer_Bank_Location EQ 0>
 	
 	
-	<CFQUERY name = "delete_c_s_z" datasource = "#Application.datasource#">
+	<cfset useLakebaseFordelete_c_s_z = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_bank_info")>
+<cfif useLakebaseFordelete_c_s_z>
+	<cftry>
+		<cfset application.oLakebase.updateRows("customer_bank_info",
+			{
+				"bank_info_id" = "eq.#Form.Bank_Info_ID#"
+			},
+			{
+				"customer_bank_city" = "",
+				"customer_bank_statecode" = "",
+				"customer_bank_zipcode" = ""
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_c_s_z = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_c_s_z>
+<CFQUERY name = "delete_c_s_z" datasource = "#Application.datasource#">
 		UPDATE Customer_Bank_Info
 		SET				Customer_Bank_City				=	'',
 						Customer_Bank_Statecode			=	'',
 						Customer_Bank_Zipcode			=	''
 		WHERE		Bank_Info_Id			=	'#Form.Bank_Info_ID#'							
 	</CFQUERY>
+</cfif>
 	</CFIF>
 <!--- Update the record --->
 	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">

@@ -464,10 +464,23 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 		Note: SP 'Capture_Customer_Groups" deletes the distributors which are in the "Contract_Distributors_Exceptions" table
 		from the "Contract_Distributors" table.
 		--->
-		<cfquery name="DelDistributorExceptions" datasource="#application.datasource#">
+		<cfset useLakebaseForDelDistributorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors_exceptions")>
+<cfif useLakebaseForDelDistributorExceptions>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("contract_distributors_exceptions", {
+			"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelDistributorExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelDistributorExceptions>
+<cfquery name="DelDistributorExceptions" datasource="#application.datasource#">
 			DELETE FROM Contract_Distributors_Exceptions
 			WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
 		</cfquery>
+</cfif>
 
 		<CFIF IsDefined("form.excludeDistributor") AND form.excludeDistributor neq "">
 			<CFLOOP INDEX="ListDistributor_ID" LIST="#request.app_general_functions.listRemoveDupes(excludeDistributor,",")#" DELIMITERS=",">
@@ -690,12 +703,31 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 			--->
 			<cfif ProdGroupDataManager.isGroupDeal(FORM.Contract_Main_ID) AND GetTemplateInfo.Custom_Fixed_Price_Options eq 0>
 				<!---if it's a group then flag to process when applying volume--->
-				<cfquery name="qFlagGroup" datasource="#application.datasource#">
+				<cfset useLakebaseForqFlagGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqFlagGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#"
+			},
+			{
+				"group_processed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFlagGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFlagGroup>
+<cfquery name="qFlagGroup" datasource="#application.datasource#">
 					UPDATE	Contract_Main
 					SET		Group_Processed = 1
 					WHERE	Deleted = 0
 					AND 	Contract_Main_ID = #Form.Contract_Main_ID#
 				</cfquery>
+</cfif>
 			</cfif>
 
 			<!---if it's a group being added then capture group customers--->

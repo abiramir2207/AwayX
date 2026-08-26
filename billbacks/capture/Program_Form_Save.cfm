@@ -613,10 +613,23 @@ For client who allow editing of claimed amount and claimed quantity, delete for 
 		(getPayeeType.Uploaded_Billback EQ 2 
 	 	AND (application.oApplicationAppSettingsManager.getApplicationAppSettings().getEditableClaimedDollarsQuantity() EQ 0 OR getPayeeType.BB_Level_Deviations_Override_Price_Flag EQ 1))
 	 	)>
-	<cfquery name="qDeleteGridTableEntries" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeleteGridTableEntries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
+<cfif useLakebaseForqDeleteGridTableEntries>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_item_invoice_level", {
+			"billback_id" = "eq.#FORM.Billback_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteGridTableEntries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteGridTableEntries>
+<cfquery name="qDeleteGridTableEntries" datasource="#application.datasource#">
 		DELETE FROM BB_Item_Invoice_Level
 		WHERE Billback_ID = '#FORM.Billback_ID#'
 	</cfquery>
+</cfif>
 </cfif>
 
 <SPAN CLASS="title2" ID="PleaseWaitMessage" ALIGN="CENTER">
