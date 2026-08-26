@@ -60,7 +60,7 @@ application.oLakebase.selectRows("deductions", {
 <cfif NOT useLakebaseForGet_Ded_Details><CFQUERY NAME="Get_Ded_Details" DATASOURCE="#Application.Datasource#">
 	SELECT <CFIF FORM.Form_Submitted EQ "">Top 1</CFIF>* FROM Deductions WHERE Deduction_ID = '#URL.Deduction_ID#'
 </CFQUERY>
-</CFQUERY>
+</cfif>
 
 <CFQUERY NAME="Have_children" DATASOURCE="#Application.Datasource#">
 	SELECT <CFIF FORM.Form_Submitted EQ "">Top 2</CFIF>* FROM Deductions WHERE DD_DedID = '#Get_Ded_Details.DD_DedID#' AND Deleted=0
@@ -308,7 +308,7 @@ application.oLakebase.selectRows("_users", {
 			FROM		_users
 			WHERE 		User_ID = '#Uploaded_By#'
 		</CFQUERY>
-</CFQUERY>
+</cfif>
 		<cfset ShowAttachCheckBox = comparenocase(URL.FROM, "print")/>
 		<TR BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#">				
 		<TD ALIGN="right"  VALIGN="TOP"><INPUT TYPE="Checkbox" NAME="Doc_ID" VALUE="#Doc_ID#" <CFIF ShowAttachCheckBox EQ 0>disabled</CFIF>>&nbsp;&nbsp;</TD>
@@ -648,27 +648,11 @@ application.oLakebase.selectRows("message_attachment", {
 </cfcatch>
 </cftry>
 </cfif>
-<cfif NOT useLakebaseForGet_Attach><cfset useLakebaseForGet_Attach = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("message_attachment")>
-<cfif useLakebaseForGet_Attach>
-<cftry>
-<cfset Get_Attach = application.oLakebase.toQuery(
-application.oLakebase.selectRows("message_attachment", {
-"select" = "attachment_desc",
-"message_log_id" = "eq.#Message_Log_ID#"
-}),
-"attachment_desc"
-)>
-<cfcatch type="any">
-<cfset useLakebaseForGet_Attach = false>
-</cfcatch>
-</cftry>
-</cfif>
 <cfif NOT useLakebaseForGet_Attach><CFQUERY NAME="Get_Attach" DATASOURCE="#Application.Datasource#">
 					SELECT 	Attachment_Desc 
 					FROM 	Message_Attachment 
 					WHERE 	Message_Log_ID = '#Message_Log_ID#'
 				</CFQUERY>
-</cfif>
 </cfif>
 				<TD>
 					<CFIF Get_Attach.Recordcount GT 0>
@@ -1241,7 +1225,7 @@ application.oLakebase.selectRows("deductions", {
 <cfif NOT useLakebaseForIsLocked><CFQUERY NAME="IsLocked" DATASOURCE="#Application.Datasource#">
 			SELECT Is_Locked,Locked_By FROM Deductions WHERE Deduction_ID = '#URL.Deduction_ID#'
 		</CFQUERY>
-</CFQUERY>
+</cfif>
 		
 		<CFIF IsLocked.Is_Locked EQ 1 AND IsLocked.Locked_By EQ "#request.AccessStructure.User_ID#">
 			<CFSET DeductionLockStatus = 1>

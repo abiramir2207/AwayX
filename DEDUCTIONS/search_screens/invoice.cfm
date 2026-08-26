@@ -408,7 +408,7 @@ application.oLakebase.selectRows("service_zones", {
 						WHERE len(Zone_Name) != 0 AND Deleted = 0
 						ORDER BY Zone_Name
 						</CFQUERY>
-</CFQUERY>
+</cfif>
 						<CFPARAM NAME="FORM.Zone_ID" DEFAULT="0">
 						<SELECT NAME="Zone_ID" style="width: 200px;">
 							<OPTION VALUE="0">**ALL** Zones</OPTION>
@@ -438,7 +438,7 @@ application.oLakebase.selectRows("service_regions", {
 						WHERE len(Region_Name) != 0 AND Deleted = 0
 						ORDER BY Region_Name
 						</CFQUERY>
-</CFQUERY>
+</cfif>
 						<CFPARAM NAME="FORM.Region_ID" DEFAULT="0">
 						<SELECT NAME="Region_ID" style="width: 200px;">
 							<OPTION VALUE="0">**ALL** Regions</OPTION>
@@ -464,7 +464,7 @@ application.oLakebase.selectRows("line_of_business", {
 <cfif NOT useLakebaseForGetFoodserviceLOBID><CFQUERY NAME="GetFoodserviceLOBID" Datasource="#application.datasource#">
 						SELECT Line_Of_Business_ID FROM Line_Of_Business WHERE Line_Of_Business IN (#ListQualify(application.returned_customer_setting.Line_Business_Default, "'", ",")#)
 					</CFQUERY>
-</CFQUERY>
+</cfif>
 					<TD><!--- Brokers --->
 						<span ID="searchItemLabel">Broker</span><BR>
 						<cfset useLakebaseForGetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
