@@ -134,6 +134,26 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 
 
 <!-------- unlock projects -------->
+<cfset useLakebaseForUnlock_Projects = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForUnlock_Projects>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_locked" = "eq.1",
+				"pm_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"pm_locked" = "0",
+				"pm_locked_by_user_id" = javaCast("null",""),
+				"pm_locked_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlock_Projects = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlock_Projects>
 <CFQUERY NAME="Unlock_Projects" DATASOURCE="#application.datasource#">
 	UPDATE	PM_Item_Master
 	SET		PM_Locked	=	0,
@@ -144,6 +164,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 			AND
 			PM_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->

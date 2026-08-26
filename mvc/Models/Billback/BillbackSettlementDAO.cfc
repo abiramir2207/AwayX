@@ -477,7 +477,33 @@ Usage:			N/A
 	<cffunction name="fnUnAssociateDeductionDAO" output="false" returntype="void">
 		<cfargument name="Deduction_ID" type="string"> 
 		<cfargument name="Billback_ID" type="string"> 
-		<cfquery name="UpdUnAssociateDDStep1" datasource="#Application.Datasource#"> 
+		<cfset useLakebaseForUpdUnAssociateDDStep1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdUnAssociateDDStep1>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#"
+			},
+			{
+				"dd_closure_id" = javaCast("null",""),
+				"dd_closure_type" = javaCast("null",""),
+				"dd_closed_by" = javaCast("null",""),
+				"dd_status" = "2",
+				"dd_date_closed" = javaCast("null",""),
+				"dd_resolution_code" = javaCast("null",""),
+				"cleared_amount" = javaCast("null",""),
+				"updated_date" = "#now()#",
+				"split_by_billback_id" = javaCast("null",""),
+				"dd_closure_sent" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdUnAssociateDDStep1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdUnAssociateDDStep1>
+<cfquery name="UpdUnAssociateDDStep1" datasource="#Application.Datasource#"> 
 			UPDATE 
 				Deductions 
 			SET 
@@ -494,6 +520,7 @@ Usage:			N/A
 			WHERE 
 				Deduction_ID = '#arguments.Deduction_ID#'
 		</cfquery>
+</cfif>
 		<cfset useLakebaseForUpdUnAssociateDDStep2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
 <cfif useLakebaseForUpdUnAssociateDDStep2>
 	<cftry>

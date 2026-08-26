@@ -59,6 +59,46 @@
 </cfquery>
 
 <!--- save the payee type in the bb table --->
+<cfset useLakebaseForsavePayeeType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForsavePayeeType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#form.billback_id#"
+			},
+			{
+				"billback_payee_type_id" = "#form.selected_bb_payee_type#",
+				"deviation_ran_date" = javaCast("null",""),
+				"auto_deviation_on" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsavePayeeType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsavePayeeType>
+<cfset useLakebaseForsavepayeetype = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForsavepayeetype>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#form.billback_id#"
+			},
+			{
+				"billback_payee_type_id" = "#form.selected_bb_payee_type#",
+				"deviation_ran_date" = javaCast("null",""),
+				"auto_deviation_on" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsavepayeetype = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsavepayeetype>
 <cfquery name="savePayeeType" datasource="#application.datasource#">
 	UPDATE Billback
 	SET Billback_Payee_Type_ID = '#form.selected_bb_payee_type#',
@@ -68,6 +108,8 @@
 		Deviation_Ran_By = NULL 
 	WHERE Billback_ID = '#form.billback_id#'
 </cfquery>
+</cfif>
+</cfif>
 
 <cfset billbackAssignmentManager = CreateOBject("component", "components.billback.BillbackAssignmentManager") />
 <cfset billbackSummaryManager = CreateOBject("component", "components.billback.billbackSummaryManager") />

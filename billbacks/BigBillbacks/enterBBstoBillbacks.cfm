@@ -697,12 +697,31 @@ WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
 </cfif>
 
+<cfset useLakebaseForqResetDeviationRanInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqResetDeviationRanInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"deviation_ran_date" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqResetDeviationRanInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqResetDeviationRanInfo>
 <cfquery name="qResetDeviationRanInfo" datasource="#application.datasource#">
 	UPDATE 	Billback
 	SET 	Deviation_Ran_Date = NULL,
 			Deviation_Ran_By = NULL 
 	WHERE 	Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <script language="javascript">
 	document.all.KnownProgramForm.Data_Action_ID.value = 5;

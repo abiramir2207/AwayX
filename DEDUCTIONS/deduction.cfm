@@ -142,11 +142,29 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 <cfinclude template="/deductions/Get_Lock_Status.cfm">
 
 	<cfif FormType IS "RemoveShipTo">
-		<cfquery name="UpdateDeductions" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDeductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"distributor_id" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDeductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDeductions>
+<cfquery name="UpdateDeductions" datasource="#application.datasource#">
 			UPDATE Deductions
 			SET Distributor_ID = null
 			WHERE Deduction_ID = '#Deduction_ID#'
 		</cfquery>
+</cfif>
 	</cfif>
 
 <!---Gets data about deduction--->

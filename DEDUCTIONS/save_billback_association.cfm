@@ -498,12 +498,32 @@ TODO: if the billback is already a split child, create one sibling and give the 
 </CFIF>
 
 <!--- Deduction and BB one to one logic --->
+<cfset useLakebaseForUnAssociateBBWithOtherDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUnAssociateBBWithOtherDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"dd_closure_id" = "eq.#Billback_ID#",
+				"dd_closure_type" = "eq.1"
+			},
+			{
+				"dd_closure_id" = javaCast("null",""),
+				"dd_closure_type" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnAssociateBBWithOtherDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnAssociateBBWithOtherDD>
 <CFQUERY NAME="UnAssociateBBWithOtherDD" DATASOURCE="#Application.Datasource#">
 	UPDATE 	Deductions
 	SET 	DD_Closure_ID = NULL,
 			DD_Closure_Type = NULL
 	WHERE 	DD_Closure_ID = '#Billback_ID#' AND DD_Closure_Type = 1
 </CFQUERY>
+</cfif>
 
 <cfset useLakebaseForCheckStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
 <cfif useLakebaseForCheckStatus>

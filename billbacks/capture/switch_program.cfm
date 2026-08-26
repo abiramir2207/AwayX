@@ -224,6 +224,25 @@
 <CFSET Progress_Type = 1>
 <CFINCLUDE TEMPLATE = "BB_In_Progress_Check.cfm">
 
+<cfset useLakebaseForClearDev = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForClearDev>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"deviation_ran_date" = javaCast("null",""),
+				"auto_deviation_on" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForClearDev = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForClearDev>
 <cfquery name="ClearDev" datasource="#application.datasource#">
 	UPDATE 	Billback 
 	SET 	Deviation_Ran_Date = NULL,
@@ -231,6 +250,7 @@
 			Deviation_Ran_By = NULL
 	WHERE	Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <cftransaction>
 <CFSET LoadBillbackID = Billback_ID>

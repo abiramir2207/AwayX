@@ -2,12 +2,31 @@
 
 <CFIF FORM.Form_Submitted EQ 1>
 	
-	<CFQUERY NAME="del_Supervisor_Assigned" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseFordel_Supervisor_Assigned = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseFordel_Supervisor_Assigned>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_analyst",
+			{
+				"supervisor_id" = "not.is.null",
+				"deleted" = "eq.0"
+			},
+			{
+				"supervisor_id" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordel_Supervisor_Assigned = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordel_Supervisor_Assigned>
+<CFQUERY NAME="del_Supervisor_Assigned" DATASOURCE="#Application.Datasource#">
 		UPDATE 		DD_Analyst 				
 		SET			Supervisor_ID = NULL		
 		WHERE		Supervisor_ID is Not null 
 					AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<CFLOOP INDEX="LoopCount" FROM="1" TO="#FORM.Record_count#">
 	

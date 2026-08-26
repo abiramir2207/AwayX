@@ -64,13 +64,33 @@
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 	<!--- Unlock all locked deductions under this user --->
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-	<CFQUERY NAME="UnlockDDUnderThisUser" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUnlockDDUnderThisUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUnlockDDUnderThisUser>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"locked_by" = "eq.#request.AccessStructure.user_ID#",
+				"dd_locked_by_match_central" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by" = ""
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlockDDUnderThisUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlockDDUnderThisUser>
+<CFQUERY NAME="UnlockDDUnderThisUser" DATASOURCE="#Application.Datasource#">
 		UPDATE	Deductions
 		SET 	Is_Locked=0,
 				Locked_By=''
 		WHERE	Locked_By = '#request.AccessStructure.user_ID#'
 			AND DD_Locked_By_Match_Central = 0
 	</CFQUERY>
+</cfif>
 
 	<cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
 <cfif useLakebaseForDeductionsProfilesSettings>

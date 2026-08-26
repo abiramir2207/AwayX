@@ -355,11 +355,29 @@
 </cfif>
 
 		<!--- UPDATE ALL TEMPLATES THAT USE THE LABEL SET THAT IS GETTING DELETED --->
-		<cfquery name="renameLabelSet2" datasource="#this.dsn#">
+		<cfset useLakebaseForrenameLabelSet2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForrenameLabelSet2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"label_set_default" = "eq.#arguments.LabelSetName#"
+			},
+			{
+				"label_set_default" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrenameLabelSet2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrenameLabelSet2>
+<cfquery name="renameLabelSet2" datasource="#this.dsn#">
 			UPDATE Program_Control_Panel_Options
 			SET Label_Set_Default = NULL
 			WHERE Label_Set_Default = '#arguments.LabelSetName#'
 		</cfquery>
+</cfif>
 
 		<cfreturn notice>
 

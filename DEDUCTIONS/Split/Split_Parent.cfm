@@ -1110,12 +1110,31 @@ input, select
 						WHERE Deduction_ID = '#CheckAssociation.DD_Closure_ID#'
 					</CFQUERY>			
 				</CFIF>			
-				<CFQUERY NAME="UpdateDD" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForUpdateDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Parent_ID#"
+			},
+			{
+				"dd_closure_id" = javaCast("null",""),
+				"dd_closure_type" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDD>
+<CFQUERY NAME="UpdateDD" DATASOURCE="#Application.Datasource#">
 					UPDATE Deductions 
 					SET DD_Closure_ID = NULL,
 						DD_Closure_Type = NULL 				
 					WHERE Deduction_ID = '#Parent_ID#'
 				</CFQUERY>
+</cfif>
 			</CFIF>
 			<!--- END Check Parent has any BB or Credit associated and if any update it with null --->
 			<CFSET AliveChildCount = 0>
@@ -1404,7 +1423,25 @@ input, select
 			<!--- Update reason code of the parent --->	
 			<CFIF (Get_DD_Values.DD_Status GT "2" AND Get_DD_Values.DD_Status NEQ 7) OR Get_DD_Values.DD_Resolution_Code NEQ "">
 				<CFIF ResetParentReasonCode EQ 1>
-					<CFQUERY NAME="Update_Parent" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForUpdate_Parent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdate_Parent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#DD_Parent_ID#"
+			},
+			{
+				"dd_status" = "2",
+				"dd_resolution_code" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Parent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Parent>
+<CFQUERY NAME="Update_Parent" DATASOURCE="#Application.Datasource#">
 						UPDATE 	Deductions
 						
 						SET 	DD_Status 			=	'2',
@@ -1412,6 +1449,7 @@ input, select
 								
 						WHERE 	Deduction_ID='#DD_Parent_ID#'
 					</CFQUERY>
+</cfif>
 				</CFIF>		
 			</CFIF>
 			--->

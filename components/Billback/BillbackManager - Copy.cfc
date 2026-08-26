@@ -1783,13 +1783,33 @@ Description:	This file is responsible for managing Billback data.
 			WHERE	Exclusion_Deducted_From_BB_ID = '#arguments.billbackId#'
 					AND Applied = 1
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_2" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDelete_Billback_2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_adjustment")>
+<cfif useLakebaseForDelete_Billback_2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_adjustment",
+			{
+				"adjustment_deducted_from_bb_id" = "eq.#arguments.billbackId#",
+				"applied" = "eq.1"
+			},
+			{
+				"adjustment_deducted_from_bb_id" = javaCast("null",""),
+				"applied" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_2>
+<CFQUERY NAME="Delete_Billback_2" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Adjustment
 			SET		Adjustment_deducted_From_BB_ID = NULL,
 					Applied = 0
 			WHERE	Adjustment_deducted_From_BB_ID = '#arguments.billbackId#'
 					AND	Applied = 1
 		</CFQUERY>
+</cfif>
 		<cfset useLakebaseForDelete_Billback_3 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_adjustment")>
 <cfif useLakebaseForDelete_Billback_3>
 	<cftry>
@@ -2032,7 +2052,33 @@ Description:	This file is responsible for managing Billback data.
 		</CFQUERY>
 </cfif>
 	<!--- 	delete 'Manually configured Auto Pay' Pullbacks --->
-		<CFQUERY NAME="unapplyPBLog" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForunapplyPBLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_pb_log")>
+<cfif useLakebaseForunapplyPBLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_auto_report_pb_log",
+			{
+				"applied_to_billback_id" = "eq.#arguments.BillbackID#",
+				"applied" = "eq.1"
+			},
+			{
+				"applied" = "0",
+				"unapplied_by" = "#arguments.userId#",
+				"unapplied_date" = "#now()#",
+				"applied_to_billback_id" = javaCast("null",""),
+				"adjustment_dollars_ineligible_vol" = "0",
+				"pb_corp_rate" = "0",
+				"net_dollars" = "0",
+				"corp_program_id" = javaCast("null",""),
+				"corp_program_number" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunapplyPBLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunapplyPBLog>
+<CFQUERY NAME="unapplyPBLog" DATASOURCE="#application.datasource#">
 					Update BB_Auto_Report_PB_Log
 					SET Applied = 0,
 						Unapplied_by = '#arguments.userId#',
@@ -2046,6 +2092,7 @@ Description:	This file is responsible for managing Billback data.
 					WHERE BB_Auto_Report_PB_Log.Applied_To_Billback_Id = '#arguments.BillbackID#' AND
 						  BB_Auto_Report_PB_Log.Applied = 1
 		</CFQUERY>
+</cfif>
 		<cfset useLakebaseForremovePBLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_pb_log")>
 <cfif useLakebaseForremovePBLog>
 	<cftry>

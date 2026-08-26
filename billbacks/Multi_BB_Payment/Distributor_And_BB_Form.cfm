@@ -109,7 +109,27 @@ TABLE.BorderTable TD Validate
 <CFPARAM NAME="FORM.LockSubmit" DEFAULT="0">
 
 <CFIF FORM.Billback_ID EQ "">
-	<CFQUERY NAME="UnlockAnyLocked" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUnlockAnyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForUnlockAnyLocked>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"bb_is_locked" = "eq.1",
+				"bb_locked_by_match_central" = "eq.0"
+			},
+			{
+				"bb_is_locked" = "0",
+				"bb_locked_by_user_id" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlockAnyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlockAnyLocked>
+<CFQUERY NAME="UnlockAnyLocked" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Billback_Allied
 		
 		SET 	BB_Is_Locked = 0,
@@ -119,6 +139,7 @@ TABLE.BorderTable TD Validate
 				BB_Is_Locked = 1
 		AND BB_Locked_By_Match_Central = 0
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 
