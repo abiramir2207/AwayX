@@ -4425,13 +4425,31 @@
     <cffunction Name="UpdateGroupStatus" access="private" output="false">
 	 <cfargument name="ProgramID" type="string" required="true" />
 
-			<cfquery name="checkGroupProgram" datasource="#application.datasource#">
+			<cfset useLakebaseForcheckGroupProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForcheckGroupProgram>
+	<cftry>
+		<cfset checkGroupProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.ProgramID#",
+				"is_group" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "contract_products_id"
+			}), "contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckGroupProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckGroupProgram>
+<cfquery name="checkGroupProgram" datasource="#application.datasource#">
 				SELECT Contract_Products_id
 				FROM Contract_Products
 				WHERE Contract_MAIN_ID = '#arguments.ProgramID#'
 				AND Is_Group = 1
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 
 			 <cfif checkGroupProgram.Recordcount GT 0>
 				<cfquery name="qFlagGroup" datasource="#application.datasource#">

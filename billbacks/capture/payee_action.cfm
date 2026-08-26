@@ -533,7 +533,20 @@
         <cfset FORM.Associated_Ship_To = FORM.multiDistList />
         </cfif>
         
-				<cfquery name="insertDistList" datasource="#application.datasource#">
+				<cfset useLakebaseForinsertDistList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>
+<cfif useLakebaseForinsertDistList>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_distributor_list", {
+			"billback_id" = "#form.billback_ID#",
+			"distributor_id" = "#form.Associated_Ship_To#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertDistList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertDistList>
+<cfquery name="insertDistList" datasource="#application.datasource#">
 				  INSERT INTO
 				  Billback_Distributor_List
 				  (	Billback_ID,
@@ -543,6 +556,7 @@
 				   '#form.Associated_Ship_To#'
 				  )
 				</cfquery>
+</cfif>
                <!--- </cfif> --->
 			 </cfif>
 				<!---############    Multi distributors on a BB get populated END END--->
