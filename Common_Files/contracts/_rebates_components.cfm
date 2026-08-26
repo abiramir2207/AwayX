@@ -275,29 +275,12 @@ and perhaps other issues as well. Added a margin so that the text does not overl
               <!--- D11147 BJF Component product restrictions        Set product restriction query here so there are fewer iterations --->
               <cfif appsettings.getComponent_Product_Restrictions_On()>
                      <cfset CompID = desRebateData.aComp[index].compNameId>
-                     <cfset useLakebaseForQuery_#CompID# = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
-<cfif useLakebaseForQuery_#CompID#>
-	<cftry>
-		<cfset Query_#CompID# = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("component_products_restricted", {
-				"discount_type_id" = "eq.2 --Rebate",
-				"component_id" = "eq.#CompID#",
-				"select" = "product_id"
-			}), "product_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForQuery_#CompID# = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForQuery_#CompID#>
-<cfquery name="Query_#CompID#" datasource="#application.datasource#">
+                     <cfquery name="Query_#CompID#" datasource="#application.datasource#">
                             SELECT Product_ID
                             FROM Component_Products_Restricted
                             WHERE Discount_Type_ID = 2 --Rebate
                             AND Component_ID = '#CompID#'
                      </cfquery>
-</cfif>
               </cfif>
               <cfset componentNamePopupWidth = 200 />
               <cfset componentColSpan = 1 />
@@ -325,27 +308,11 @@ and perhaps other issues as well. Added a margin so that the text does not overl
                      <cfset thisTmpAllowanceCode = 0 />
               </cfif>
               <!---TSF - Label 11426: Display Allowance Code in the Component Title--->
-              <cfset useLakebaseForqGetAllowanceCodeNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetactivecomps")>
-<cfif useLakebaseForqGetAllowanceCodeNumber>
-	<cftry>
-		<cfset qGetAllowanceCodeNumber = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("qgetactivecomps", {
-				"allowance_code_id" = "eq.#thisTmpAllowanceCode#",
-				"select" = "allowance_code_number"
-			}), "allowance_code_number"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetAllowanceCodeNumber = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetAllowanceCodeNumber>
-<cfquery name="qGetAllowanceCodeNumber" dbtype="query">
+              <cfquery name="qGetAllowanceCodeNumber" dbtype="query">
                      SELECT Allowance_Code_Number
                      FROM   qGetActiveComps
                      WHERE  Allowance_Code_ID = #thisTmpAllowanceCode#
               </cfquery>
-</cfif>
               <cfset componentTDLen = componentTDLen + 1 />
               <th class="header" nowrap>
                      <cfif URL.EZTemplate EQ 1>
@@ -455,29 +422,12 @@ and perhaps other issues as well. Added a margin so that the text does not overl
 
               <cfif isDefined("qCompName.Alternate_Recapture_Rate") and qCompName.Alternate_Recapture_Rate EQ 1>
 
-                     <cfset useLakebaseForAlternateRateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
-<cfif useLakebaseForAlternateRateSettings>
-	<cftry>
-		<cfset AlternateRateSettings = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
-				"program_rebates_component_name_id" = "eq.#qCompName.Program_Rebates_Component_Name_ID#",
-				"status" = "eq.0",
-				"select" = "alternate_recapture_rate_label"
-			}), "alternate_recapture_rate_label"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForAlternateRateSettings = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForAlternateRateSettings>
-<cfquery name="AlternateRateSettings" datasource="#application.datasource#">
+                     <cfquery name="AlternateRateSettings" datasource="#application.datasource#">
                             SELECT Alternate_Recapture_Rate_Label
                             FROM Alternate_Recapture_Rate_Setting
                             WHERE Program_Rebates_Component_Name_ID = #qCompName.Program_Rebates_Component_Name_ID#
                             AND Status = 0
                      </cfquery>
-</cfif>
                      <cfset Alternate_Rate_width = #component_width# + 11>
                      <cfloop query="AlternateRateSettings">
                             <th class="header">
@@ -727,26 +677,11 @@ and perhaps other issues as well. Added a margin so that the text does not overl
                             	  <input name="volume_#i#" type="hidden" value="#desRebateData.aProd[i].volume#" />
                                   #replace(desRebateData.aProd[i].description,'/','-', 'ALL')#<br>
                                   <cfif GetSettings.Include_Competitive_Data_Tracking EQ 1>
-                                         <cfset useLakebaseForgetcompetitiveinfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcompetitiveproductsinfo")>
-<cfif useLakebaseForgetcompetitiveinfo>
-	<cftry>
-		<cfset getcompetitiveinfo = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("getcompetitiveproductsinfo", {
-				"product_id" = "eq.#desRebateData.aProd[i].masterItemId#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetcompetitiveinfo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetcompetitiveinfo>
-<cfquery name="getcompetitiveinfo" dbtype="query">
+                                         <cfquery name="getcompetitiveinfo" dbtype="query">
                                                 SELECT *
                                                 FROM getCompetitiveProductsInfo
                                                 WHERE product_id = '#desRebateData.aProd[i].masterItemId#'
                                          </cfquery>
-</cfif>
                                          <!---
                                          I removed the height from the customtag below. On IE 10, and IE 9 we do not need the height but do need the width.
                                          In fact if the height is added on IE 10, then that exact height is applied and if the data size is more than the height, then
@@ -844,26 +779,11 @@ and perhaps other issues as well. Added a margin so that the text does not overl
                                   <!---guard against empty strings--->
                                   <cfset variables.tmpSaveImageId = 'save_rate_'&desRebateData.aCompVal[i][index].contractProdID&'_All' />
                                   <cfif EzButton_Disable EQ 1 and listfind(form.Product_List, desRebateData.aProd[i].masterItemId,",")>
-                                 <cfset useLakebaseForGetEZSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getezbuttondefaultrates")>
-<cfif useLakebaseForGetEZSettings>
-	<cftry>
-		<cfset GetEZSettings = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("getezbuttondefaultrates", {
-				"bsa_foodservice_items_master_id" = "eq.#desRebateData.aProd[i].masterItemId#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetEZSettings = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetEZSettings>
-<cfquery name="GetEZSettings" dbtype="query">
+                                 <cfquery name="GetEZSettings" dbtype="query">
                                         select *
                                         from GetEZButtonDefaultRates
                                         where BSA_Foodservice_Items_Master_ID ='#desRebateData.aProd[i].masterItemId#'
                                  </cfquery>
-</cfif>
                                  <!---D60905 :: EZ rate UOM issue--->
                             	<cfset templateProductEZUOM = GetEZSettings.Unit_Of_Measure_Id/>
                                          <cfif GetEZSettings.recordcount GT 0>
@@ -1493,27 +1413,11 @@ and perhaps other issues as well. Added a margin so that the text does not overl
                                          Changed/Added: added condition to display Other value in text box.--->
                                          <cfset other_value = "">
                                          <cfif (CompetitorList.Program_Bid_Won_By_ID NEQ #desRebateData.aProd[i].Competitor_Name_ID#) AND (len(desRebateData.aProd[i].Competitor_Name_ID) GT 0) AND #desRebateData.aProd[i].Competitor_Name_ID# NEQ 0>
-                                                <cfset useLakebaseForPull_other_comp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
-<cfif useLakebaseForPull_other_comp>
-	<cftry>
-		<cfset Pull_other_comp = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("program_bid_won_by", {
-				"program_bid_won_by_id" = "eq.#desRebateData.aProd[i].Competitor_Name_ID#",
-				"select" = "program_bid_won_by_description"
-			}), "program_bid_won_by_description"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForPull_other_comp = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForPull_other_comp>
-<cfquery name="Pull_other_comp" datasource="#application.datasource#">
+                                                <cfquery name="Pull_other_comp" datasource="#application.datasource#">
                                                        SELECT Program_Bid_Won_By_Description
                                                        FROM  Program_Bid_Won_By
                                                        WHERE Program_Bid_Won_By_ID = #desRebateData.aProd[i].Competitor_Name_ID#
                                                 </cfquery>
-</cfif>
                                                 <cfset other_value = #Pull_other_comp.Program_Bid_Won_By_Description#>
                                          </cfif>
                                          <input type="text" name="CompetitorSourceOther_#stripProdId#" id="CompetitorSourceOther_#stripProdId#"

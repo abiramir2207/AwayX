@@ -19,26 +19,11 @@
 			<cfset cache_window = createtimespan(0,0,0,0)>
 		</cfif>
 		
-		<cfset useLakebaseForgetDataLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
-<cfif useLakebaseForgetDataLabel>
-	<cftry>
-		<cfset getDataLabel = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("customer_settings", {
-				"select" = "generic_setting_id#"
-			}), "generic_setting_id#"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetDataLabel = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetDataLabel>
-<cfquery name="getDataLabel" datasource="#application.datasource#" cachedwithin="#cache_window#">
+		<cfquery name="getDataLabel" datasource="#application.datasource#" cachedwithin="#cache_window#">
 			SELECT #attributes.generic_setting_id# 
 			FROM 
 						Customer_Settings
 		</cfquery>
-</cfif>
 		
 		<cfif getDataLabel.recordcount EQ 0>
 			<CFSET "caller.returned_customer_setting.#attributes.return_variable_name#" = default_customer_setting>

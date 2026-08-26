@@ -266,48 +266,16 @@
 
 		<cfset FieldChanged = 1 />	<!--- By defalut assuming field has changed, if not after comparission, then this is set to 0--->
 
-		<cfset useLakebaseForqGetFieldInfoParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForqGetFieldInfoParent>
-	<cftry>
-		<cfset qGetFieldInfoParent = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_main", {
-				"contract_main_id" = "eq.#arguments.Parent_Contract_Main_ID#",
-				"select" = "fieldnametocheck#"
-			}), "fieldnametocheck#"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetFieldInfoParent = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetFieldInfoParent>
-<CFQUERY NAME="qGetFieldInfoParent" datasource="#application.datasource#">
+		<CFQUERY NAME="qGetFieldInfoParent" datasource="#application.datasource#">
 			SELECT #arguments.FieldNametoCheck#
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#arguments.Parent_Contract_Main_ID#'
 		</CFQUERY>
-</cfif>
-		<cfset useLakebaseForqGetFieldInfoChild = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForqGetFieldInfoChild>
-	<cftry>
-		<cfset qGetFieldInfoChild = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_main", {
-				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#",
-				"select" = "fieldnametocheck#"
-			}), "fieldnametocheck#"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetFieldInfoChild = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetFieldInfoChild>
-<CFQUERY NAME="qGetFieldInfoChild" datasource="#application.datasource#">
+		<CFQUERY NAME="qGetFieldInfoChild" datasource="#application.datasource#">
 			SELECT #arguments.FieldNametoCheck#
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#arguments.Child_Contract_Main_ID#'
 		</CFQUERY>
-</cfif>
 
 		<cfif qGetFieldInfoParent.recordCount OR qGetFieldInfoChild.recordCount>
 			<cfif (Evaluate("qGetFieldInfoParent.#arguments.FieldNametoCheck#") EQ Evaluate("qGetFieldInfoChild.#arguments.FieldNametoCheck#"))>
@@ -329,31 +297,12 @@
 		<!--- It is incremented becoz this function is called only if there is change and if there is a change and doesnt require approval scheme then in
 		Program_Revision_Changes the value is 1 for that field else if approval is req and it is type A then it should be 2 and so on --->
 
-		<cfset useLakebaseForqUpdateRevisionChanges = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_revision_changes")>
-<cfif useLakebaseForqUpdateRevisionChanges>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_revision_changes",
-			{
-				"contract_main_id" = "eq.#arguments.programId#",
-				"deleted" = "eq.0"
-			},
-			{
-				"fieldname#" = "#RevisionTypeNum#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqUpdateRevisionChanges = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqUpdateRevisionChanges>
-<cfquery name="qUpdateRevisionChanges" datasource="#application.datasource#">
+		<cfquery name="qUpdateRevisionChanges" datasource="#application.datasource#">
 			Update	Program_Revision_Changes
 			SET		#arguments.FieldName# = #RevisionTypeNum#
 			WHERE 	Contract_Main_ID = #arguments.programId#
 			AND		Deleted = 0
 		</cfquery>
-</cfif>
 
 		<cfreturn RevisionTypeNum />
 	</cffunction>

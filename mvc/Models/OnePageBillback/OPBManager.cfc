@@ -10,27 +10,11 @@
 		<cfset UserPositionList = CreateObject("component", "components.user.UserManager").getPositionId(request.AccessStructure.user_id, 0, 1) />
 		<cfset HQUser = CreateObject("component", "components.user.UserManager").getUserIsHQ(request.AccessStructure.user_id, 0) />
 
-	<cfset useLakebaseForGet_Profile_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
-<cfif useLakebaseForGet_Profile_Settings>
-	<cftry>
-		<cfset Get_Profile_Settings = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("profiles_settings", {
-				"profiles_id" = "eq.#request.Accessstructure.Profiles_ID#",
-				"select" = "*"
-			}), "*"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGet_Profile_Settings = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGet_Profile_Settings>
-<cfquery NAME="Get_Profile_Settings" datasource="#application.datasource#">
+	<cfquery NAME="Get_Profile_Settings" datasource="#application.datasource#">
 		SELECT	Profiles_Settings.*
 		FROM	Profiles_Settings
 		WHERE	Profiles_ID= '#request.Accessstructure.Profiles_ID#'
 	</cfquery>
-</cfif>
 
 		<cfif not HQUser>
 			<cfquery name="qPositionsBelowMe" datasource="#application.datasource#">
@@ -453,49 +437,18 @@
 			AND  Deleted = 0
 		</cfquery>
 
-		<cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
-<cfif useLakebaseForDeductionsProfilesSettings>
-	<cftry>
-		<cfset DeductionsProfilesSettings = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("deductions_profiles_settings", {
-				"profiles_id" = "eq.#request.accessstructure.profiles_id#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForDeductionsProfilesSettings = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForDeductionsProfilesSettings>
-<cfquery NAME="DeductionsProfilesSettings" datasource="#application.datasource#">
+		<cfquery NAME="DeductionsProfilesSettings" datasource="#application.datasource#">
 			SELECT *
 			FROM Deductions_Profiles_Settings
 			WHERE Profiles_ID = #request.accessstructure.profiles_id#
 		</cfquery>
-</cfif>
 
-		<cfset useLakebaseForUserHasAssignments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
-<cfif useLakebaseForUserHasAssignments>
-	<cftry>
-		<cfset UserHasAssignments = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("dd_analyst", {
-				"analyst_user_id" = "eq.#request.AccessStructure.User_ID#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUserHasAssignments = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUserHasAssignments>
-<cfquery NAME="UserHasAssignments" datasource="#Application.datasource#">
+		<cfquery NAME="UserHasAssignments" datasource="#Application.datasource#">
 			 SELECT *
 			 FROM DD_Analyst
 			 WHERE Analyst_User_ID = '#request.AccessStructure.User_ID#'
 			 AND Deleted=0
 		</cfquery>
-</cfif>
 
 		<cfquery NAME="IaASupervisor" datasource="#Application.datasource#">
 			SELECT *
@@ -920,24 +873,10 @@ AND ( 1= 2
 <cfif len(arguments.stForm.Doc_ID)>
 <cfloop query="getBillbacks">
 	<cfloop list="#arguments.stForm.Doc_ID#" index="Doc_ID" delimiters=",">
-		<cfset useLakebaseForinsertDocs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
-<cfif useLakebaseForinsertDocs>
-	<cftry>
-		<cfset application.oLakebase.insertRow("contract_attachments", {
-			"billback_id" = "#getBillbacks.Billback_ID#",
-			"doc_id" = "#Doc_ID#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForinsertDocs = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForinsertDocs>
-<cfquery name="insertDocs" datasource="#application.datasource#">
+		<cfquery name="insertDocs" datasource="#application.datasource#">
 			INSERT INTO Contract_Attachments (	Billback_ID,	Doc_ID )
 			VALUES	( '#getBillbacks.Billback_ID#',	'#Doc_ID#')
 		</cfquery>
-</cfif>
 	</cfloop>
 </cfloop>
 </cfif>
@@ -1683,25 +1622,10 @@ INTO ##tmp_billbacks
 		<cfset DDMgr = createObject("Component","components.Deduction.DeductionManager").init()>
 		<cfset workItemInfo = DDMgr.getDeduction(arguments.ID)>
 
-		<cfset useLakebaseForAutoCloseReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_auto_close")>
-<cfif useLakebaseForAutoCloseReason>
-	<cftry>
-		<cfset AutoCloseReason = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("dd_auto_close", {
-				"select" = "dd_reason_code_id"
-			}), "dd_reason_code_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForAutoCloseReason = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForAutoCloseReason>
-<cfquery name="AutoCloseReason" datasource="#application.datasource#">
+		<cfquery name="AutoCloseReason" datasource="#application.datasource#">
 			SELECT DD_Reason_Code_ID
 			FROM DD_Auto_Close
 		</cfquery>
-</cfif>
 
 		<cfquery name="GetReasonCodes" datasource="#application.datasource#">
 			SELECT DD_Reason_Code_ID, DD_Reason_Code_Description
@@ -1763,27 +1687,11 @@ INTO ##tmp_billbacks
 			ORDER BY DD_Classification_Desc
 		</cfquery>
 
-	<cfset useLakebaseForqGetDefaultClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallclass")>
-<cfif useLakebaseForqGetDefaultClass>
-	<cftry>
-		<cfset qGetDefaultClass = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("getallclass", {
-				"is_default" = "eq.1",
-				"select" = "dd_classification_id"
-			}), "dd_classification_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetDefaultClass = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetDefaultClass>
-<cfquery name="qGetDefaultClass" dbtype="query">
+	<cfquery name="qGetDefaultClass" dbtype="query">
 		SELECT DD_Classification_ID
 		FROM getAllClass
 		WHERE IS_Default = 1
 	</cfquery>
-</cfif>
 
 <cfreturn qGetDefaultClass>
 
@@ -1817,29 +1725,12 @@ INTO ##tmp_billbacks
 	<cfargument name="count" required="true">
 	<cfset docInfo = ArrayNew(1)>
 
-	<cfset useLakebaseForqGetAllDocIds = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_details")>
-<cfif useLakebaseForqGetAllDocIds>
-	<cftry>
-		<cfset qGetAllDocIds = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("document_details", {
-				"uploaded_by" = "eq.#request.AccessStructure.user_id#",
-				"order" = "uploaded_date.desc",
-				"select" = "count# doc_id,doc_uni_name"
-			}), "count# doc_id,doc_uni_name"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetAllDocIds = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetAllDocIds>
-<cfquery name="qGetAllDocIds" datasource="#application.datasource#">
+	<cfquery name="qGetAllDocIds" datasource="#application.datasource#">
 		SELECT TOP #arguments.count# Doc_ID,Doc_Uni_Name
 		FROM Document_Details
 		WHERE  Uploaded_By = '#request.AccessStructure.user_id#'
 		ORDER BY Uploaded_Date DESC
 	</cfquery>
-</cfif>
 
 	<cfset ArrayAppend(docInfo, valueList(qGetAllDocIds.Doc_ID))>
 	<cfset ArrayAppend(docInfo, valueList(qGetAllDocIds.Doc_Uni_Name))>

@@ -1,3 +1,6 @@
 tools/lakebase_migration/proposed/
 tools/lakebase_migration/migration_report.csv
 tools/lakebase_migration/__pycache__/
+tools/lakebase_migration/*.log
+tools/lakebase_migration/*_check*.txt
+tools/lakebase_migration/*_diff*.txt

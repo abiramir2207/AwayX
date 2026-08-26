@@ -32,26 +32,11 @@
 
 	<cfset var qGetDistributors = "" />
 
-	<cfset useLakebaseForqGetDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
-<cfif useLakebaseForqGetDistributors>
-	<cftry>
-		<cfset qGetDistributors = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_distributors", {
-				"program_id" = "eq.#arguments.contractId#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetDistributors = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetDistributors>
-<cfquery name="qGetDistributors" datasource="#application.datasource#">
+	<cfquery name="qGetDistributors" datasource="#application.datasource#">
 		SELECT	*
 		FROM Contract_Distributors
 		WHERE Program_Id = #arguments.contractId#
 	</cfquery>
-</cfif>
 
 	<cfreturn qGetDistributors />
 
@@ -169,27 +154,9 @@
 	<cfargument name="val" type="any" required="false" default="0" />
 	<cfargument name="field" type="any" required="false" default="0" />
 	<cfargument name="contractId" type="numeric" required="false" default="0" />
-		<cfset useLakebaseForqSaveInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForqSaveInfo>
-	<cftry>
-		<cfset application.oLakebase.updateRows("contract_main",
-			{
-				"contract_main_id" = "eq.#arguments.contractId#"
-			},
-			{
-				"field#" = "#arguments.val#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqSaveInfo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqSaveInfo>
-<cfquery name="qSaveInfo" datasource="#application.datasource#">
+		<cfquery name="qSaveInfo" datasource="#application.datasource#">
 			Update Contract_main SET #arguments.field# = '#arguments.val#' WHERE Contract_Main_Id = #arguments.contractId#
 		</cfquery>
-</cfif>
 
 	<cfreturn arguments />
 
@@ -235,27 +202,11 @@
 	<cfargument name="plId" type="any" required="false" default="0" />
 
 		<cfif trim(arguments.plId) NEQ ''>
-			<cfset useLakebaseForqgetPL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
-<cfif useLakebaseForqgetPL>
-	<cftry>
-		<cfset qgetPL = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("price_list_header", {
-				"price_list_header_id" = "eq.#arguments.plId#",
-				"select" = "price_list_id,tier,gpo_name"
-			}), "price_list_id,tier,gpo_name"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqgetPL = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqgetPL>
-<cfquery name="qgetPL" datasource="#application.datasource#">
+			<cfquery name="qgetPL" datasource="#application.datasource#">
 				select Price_list_id,Tier ,GPO_Name
 				from Price_list_header
 				Where Price_List_Header_ID = '#arguments.plId#'
 			</cfquery>
-</cfif>
 		<cfelse>
 			<cfset qgetPL = querynew('Price_list_id,Tier,GPO_Name','varchar,integer,varchar') />
 		</cfif>
@@ -399,29 +350,11 @@
 		<cfset thisGroupLevel = qGetDistGroupLevelID.Distributor_Group_Level_ID / > --->
 
 
-		<cfset useLakebaseFordeletedCurrentDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
-<cfif useLakebaseFordeletedCurrentDistributors>
-	<cftry>
-		<cfset application.oLakebase.updateRows("contract_distributors",
-			{
-				"contract_main_id" = "eq.#Form.Contract_Main_ID#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseFordeletedCurrentDistributors = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseFordeletedCurrentDistributors>
-<CFQUERY NAME="deletedCurrentDistributors" datasource="#application.datasource#">
+		<CFQUERY NAME="deletedCurrentDistributors" datasource="#application.datasource#">
 			UPDATE Contract_Distributors
 			SET Deleted = 1
 			WHERE Contract_Main_ID = '#Form.Contract_Main_ID#'
 		</CFQUERY>
-</cfif>
 
 		 <!--- <cfif qGetDistGroupLevelID.recordcount>
 		 	AND Distributor_Group_Level_ID = #thisGroupLevel#
@@ -462,28 +395,12 @@
 				<cfparam name="FORM.Dynamic_Static_Groups" default="0" />
 				<cfparam name="FORM.SelectedWarehouse_#stripCustId#" default="0" />
 				<cfparam name="FORM.DefaultWarehouse_#stripCustId#" default="0" />
-						<cfset useLakebaseForisitgroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
-<cfif useLakebaseForisitgroup>
-	<cftry>
-		<cfset isitgroup = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("bsa_foodservice_customers", {
-				"bsa_foodservice_customers_id" = "eq.#ListDistributor_ID#",
-				"ship_to" = "eq.Group"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForisitgroup = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForisitgroup>
-<cfquery name="isitgroup" datasource="#application.datasource#">
+						<cfquery name="isitgroup" datasource="#application.datasource#">
 							SELECT *
 							FROM 	BSA_Foodservice_Customers
 							WHERE BSA_Foodservice_Customers_ID = '#ListDistributor_ID#'
 							AND 	ship_to = 'Group'
 						</cfquery>
-</cfif>
 						<cfif isitgroup.recordcount>
 							<cfset form.Is_Group = 1>
 						<cfelse>
@@ -492,27 +409,11 @@
 				<!--- D56899 END --->
 				<!---handle for groups--->
 				<cfif form.Is_Group eq 1>
-					<cfset useLakebaseForqGetDistributorGroupLevelID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_distributor")>
-<cfif useLakebaseForqGetDistributorGroupLevelID>
-	<cftry>
-		<cfset qGetDistributorGroupLevelID = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("distributor_group_distributor", {
-				"distributor_id" = "eq.#ListDistributor_ID#",
-				"select" = "distributor_group_level_id"
-			}), "distributor_group_level_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetDistributorGroupLevelID = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetDistributorGroupLevelID>
-<cfquery name="qGetDistributorGroupLevelID" datasource="#application.datasource#">
+					<cfquery name="qGetDistributorGroupLevelID" datasource="#application.datasource#">
 						SELECT	Distributor_Group_Level_ID
 						FROM   Distributor_Group_Distributor
 						WHERE Distributor_ID = '#ListDistributor_ID#'
 					</cfquery>
-</cfif>
 
 					<cfset thisGroupLevel = qGetDistributorGroupLevelID.Distributor_Group_Level_ID / >
 					<cfset thisGroupId = ListDistributor_ID />
@@ -529,27 +430,7 @@
 
 			<!--- D56899 START--->
 				<cfif form.Is_Group EQ 0>
-					<cfset useLakebaseForDeleteDuplicates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
-<cfif useLakebaseForDeleteDuplicates>
-	<cftry>
-		<cfset application.oLakebase.updateRows("contract_distributors",
-			{
-				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
-				"bsa_foodservice_customers_id" = "eq.#ListDistributor_ID#",
-				"captured_from_group" = "eq.1",
-				"deleted" = "eq.0"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForDeleteDuplicates = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForDeleteDuplicates>
-<cfquery name="DeleteDuplicates" datasource="#application.datasource#">
+					<cfquery name="DeleteDuplicates" datasource="#application.datasource#">
 						UPDATE Contract_Distributors
 						SET DELETED = 1
 						WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
@@ -557,7 +438,6 @@
 						AND Captured_From_Group = 1
 						AND Deleted = 0
 					</cfquery>
-</cfif>
 				</cfif>
 			<!--- D56899 END--->
 
@@ -1720,53 +1600,16 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 				 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
 
 			<CFIF GPOGet_Existing.Program_Fixed_Price_Product_Data_ID EQ 0 OR GPOGet_Existing.recordcount EQ 0>
-				<cfset useLakebaseForInsertNewGPOProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
-<cfif useLakebaseForInsertNewGPOProduct>
-	<cftry>
-		<cfset application.oLakebase.insertRow("program_fixed_price_product_data", {
-			"program_id" = "#a.contractId#",
-			"contract_products_id" = "#contractProductsId#",
-			"fixed_price_value" = "#FixedPriceValue#",
-			"unit_of_measure_id" = "#a.Unit_Of_Measure_ID#",
-			"program_fixed_component_id" = "#a.FixedCompId#",
-			"market_price_rate" = "#prdRate#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertNewGPOProduct = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertNewGPOProduct>
-<CFQUERY NAME="InsertNewGPOProduct" datasource="#application.datasource#">
+				<CFQUERY NAME="InsertNewGPOProduct" datasource="#application.datasource#">
 					INSERT INTO Program_Fixed_Price_Product_Data
 					(Program_ID, Contract_Products_ID, Fixed_Price_Value, Unit_Of_Measure_ID, Program_Fixed_Component_ID, Market_Price_Rate)
 					VALUES
 					('#a.contractId#', '#contractProductsId#', '#FixedPriceValue#', #a.Unit_Of_Measure_ID#, #a.FixedCompId#, #prdRate#)
 				</CFQUERY>
-</cfif>
 			<CFELSE>
 				<CFIF GPOGet_Existing.Program_Fixed_Price_Product_Data_ID NEQ 0>
 					<!--- Make sure to check if user entered a value on tier 1.  That is an override --->
-					<cfset useLakebaseForupdateFixedPriceDataGPO = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
-<cfif useLakebaseForupdateFixedPriceDataGPO>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_fixed_price_product_data",
-			{
-				"program_fixed_price_product_data_id" = "eq.#GPOGet_Existing.Program_Fixed_Price_Product_Data_ID#"
-			},
-			{
-				"fixed_price_value" = "#FixedPriceValue#",
-				"unit_of_measure_id" = "#a.Unit_Of_Measure_ID#",
-				"market_price_rate" = "#prdRate#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateFixedPriceDataGPO = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateFixedPriceDataGPO>
-<CFQUERY NAME="updateFixedPriceDataGPO" datasource="#application.datasource#">
+					<CFQUERY NAME="updateFixedPriceDataGPO" datasource="#application.datasource#">
 						UPDATE Program_Fixed_Price_Product_Data
 						SET
 							Fixed_Price_Value 	= '#FixedPriceValue#',
@@ -1774,7 +1617,6 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 							Market_Price_Rate	= #prdRate#
 						WHERE Program_Fixed_Price_Product_Data_ID = '#GPOGet_Existing.Program_Fixed_Price_Product_Data_ID#'
 					</CFQUERY>
-</cfif>
 				</CFIF>
 			</CFIF>
 
@@ -1886,23 +1728,7 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 	</cffunction>
 
 	<cffunction name="getGPOList" hint="" access="remote" output="false" returntype="string" returnformat="JSON">
-			<cfset useLakebaseForqGetGPOList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_gpo")>
-<cfif useLakebaseForqGetGPOList>
-	<cftry>
-		<cfset qGetGPOList = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("operator_gpo", {
-				"deleted" = "eq.0",
-				"order" = "gpo_key.asc",
-				"select" = "operator_gpo_id,gpo_key,gpo_name"
-			}), "operator_gpo_id,gpo_key,gpo_name"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetGPOList = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetGPOList>
-<cfquery name="qGetGPOList" datasource="#application.datasource#">
+			<cfquery name="qGetGPOList" datasource="#application.datasource#">
 				SELECT  Operator_GPO_ID,
 						GPO_Key
 						,GPO_Name
@@ -1910,7 +1736,6 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 				 where deleted = 0
 				Order by GPO_Key ASC
 			</cfquery>
-</cfif>
 
 		<cfreturn application.util.query.toAgGridJSON(qGetGPOList, 'Operator_GPO_ID,GPO_Key,GPO_Name')  />
 	</cffunction>
@@ -2373,31 +2198,12 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 
 		<cfset variables.data = deserializeJSON(arguments.data) >
 
-		<!--- <cfset useLakebaseForqDelRebateComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
-<cfif useLakebaseForqDelRebateComps>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_rebates_component",
-			{
-				"program_id" = "eq.#arguments.contractId#",
-				"program_rebates_component_name_id" = "eq.#variables.data.compid#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqDelRebateComps = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqDelRebateComps>
-<cfquery name="qDelRebateComps" datasource="#application.datasource#">
+		<!--- <cfquery name="qDelRebateComps" datasource="#application.datasource#">
 			Update Program_Rebates_Component
 			Set deleted = 1
 			WHERE Program_Id = #arguments.contractId# AND
 				Program_Rebates_Component_Name_Id = #variables.data.compid#
-		</cfquery>
-</cfif> --->
+		</cfquery> --->
 
 		<cfif variables.data.selected>
 			<cfquery name="qInsRebateComps" datasource="#application.datasource#">
@@ -2449,29 +2255,11 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 	<cffunction name="saveCPAFixedComp" hint="" access="remote" output="false" returntype="string" returnformat="JSON">
 		<cfargument name="contractId" type="numeric" required="false" default="0" />
 		<cfargument name="Claim_Mechanics" type="numeric" required="false" default="0" />
-		<!--- <cfset useLakebaseForqDelFixedComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
-<cfif useLakebaseForqDelFixedComps>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_fixed_component",
-			{
-				"program_id" = "eq.#arguments.contractId#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqDelFixedComps = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqDelFixedComps>
-<cfquery name="qDelFixedComps" datasource="#application.datasource#">
+		<!--- <cfquery name="qDelFixedComps" datasource="#application.datasource#">
 			Update Program_Fixed_Component
 			Set deleted = 1
 			WHERE Program_Id = #arguments.contractId#
-		</cfquery>
-</cfif> --->
+		</cfquery> --->
 			<cfquery name="qInsFixedComps" datasource="#application.datasource#">
 				INSERT INTO Program_Fixed_Component
 						(Program_ID,Program_Fixed_Component_Name_Id,Fixed_Component_Paid_To, Claim_Mechanics, GL_account_Id)
