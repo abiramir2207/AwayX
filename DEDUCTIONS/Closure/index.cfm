@@ -434,12 +434,28 @@ function showGLAccountCode(DD_Id)
 										Deleted = 0
 							</CFQUERY>
 						</CFIF>
-						<CFQUERY NAME="GetBusinessSegment" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForGetBusinessSegment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForGetBusinessSegment>
+	<cftry>
+		<cfset GetBusinessSegment = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBusinessSegment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBusinessSegment>
+<CFQUERY NAME="GetBusinessSegment" DATASOURCE="#Application.Datasource#">
 							SELECT 	*
 							FROM 	Business_Segment
 							WHERE 	Active = 1 AND
 									Deleted = 0
 						</CFQUERY>
+</cfif>
 						<SPAN ID="Sel_Bus_Seg" <CFIF GetProgramDetails.Program_ID NEQ "">STYLE="DISPLAY:NONE"</CFIF>>
 						<SELECT NAME="Business_Segment_ID" ONCHANGE="Javascript: getQBrandList()">
 							<OPTION VALUE= "">

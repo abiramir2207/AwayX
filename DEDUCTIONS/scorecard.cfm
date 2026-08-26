@@ -142,12 +142,29 @@
 			ORDER BY Is_Default ASC
 		</cfquery>
 	<CFELSE>
-		<cfquery name="GetClass" datasource="#application.datasource#">
+		<cfset useLakebaseForGetClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForGetClass>
+	<cftry>
+		<cfset GetClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_classification", {
+				"deleted" = "eq.0",
+				"order" = "is_default.asc",
+				"select" = "dd_classification_desc,dd_classification_id,is_default"
+			}), "dd_classification_desc,dd_classification_id,is_default"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetClass>
+<cfquery name="GetClass" datasource="#application.datasource#">
 			SELECT DD_Classification_Desc, DD_Classification_ID, Is_Default
 			FROM DD_Classification
 			WHERE Deleted = 0
 			ORDER BY Is_Default ASC
 		</cfquery>
+</cfif>
 	</CFIF>
 
 	<CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
@@ -207,9 +224,24 @@
 	</CFLOOP>
 
 		<!--- DELETE THIS LATER --->
-		<CFQUERY NAME="GetRFASubDiv" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetRFASubDiv = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_agree_status")>
+<cfif useLakebaseForGetRFASubDiv>
+	<cftry>
+		<cfset GetRFASubDiv = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_agree_status", {
+				"select" = "program_agree_status_id,program_agree_status_desc"
+			}), "program_agree_status_id,program_agree_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRFASubDiv = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRFASubDiv>
+<CFQUERY NAME="GetRFASubDiv" DATASOURCE="#Application.Datasource#">
 			SELECT Program_Agree_Status_ID,Program_Agree_Status_Desc FROM Program_Agree_Status
 		</CFQUERY>
+</cfif>
 
 
 	<style>
@@ -257,9 +289,25 @@
 
 		</CFOUTPUT>
 
-	<cfquery name="UserHasAssignments" datasource="#application.datasource#">
+	<cfset useLakebaseForUserHasAssignments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForUserHasAssignments>
+	<cftry>
+		<cfset UserHasAssignments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"analyst_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUserHasAssignments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUserHasAssignments>
+<cfquery name="UserHasAssignments" datasource="#application.datasource#">
 		SELECT * FROM DD_Analyst WHERE Analyst_User_ID = '#request.AccessStructure.User_ID#' AND Deleted=0
 	</cfquery>
+</cfif>
 
 	<cfswitch expression="#URL.ScorecardToShow#">
 		<cfcase value="Age">

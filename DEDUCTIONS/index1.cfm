@@ -31,13 +31,30 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForDefaultSC>
-	<CFQUERY NAME="Default_SC" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDefault_SC = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard_customize")>
+<cfif useLakebaseForDefault_SC>
+	<cftry>
+		<cfset Default_SC = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("scorecard_customize", {
+				"scorecard_id" = "eq.4",
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefault_SC = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefault_SC>
+<CFQUERY NAME="Default_SC" DATASOURCE="#Application.Datasource#">
 		SELECT 	*
 		FROM 	Scorecard_Customize
 		WHERE 	Scorecard_ID = '4'
 		AND		USER_ID = '#request.AccessStructure.User_ID#'
 		AND 	Deleted = 0
 	</CFQUERY>
+</cfif>
 </cfif>
 
 <cfset stDeductionLabels = createObject("component", "components.settings.Labels.Labels").init().GetDeductionLabelsStruct() />

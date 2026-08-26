@@ -98,6 +98,25 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 
+<cfset useLakebaseForUnlockDDUnderThisUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUnlockDDUnderThisUser>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"locked_by" = "eq.#request.AccessStructure.user_ID#",
+				"dd_locked_by_match_central" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by" = ""
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlockDDUnderThisUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlockDDUnderThisUser>
 <CFQUERY NAME="UnlockDDUnderThisUser" DATASOURCE="#Application.Datasource#">
 	UPDATE	Deductions
 	SET 	Is_Locked=0,
@@ -105,6 +124,7 @@
 	WHERE	Locked_By = '#request.AccessStructure.user_ID#'
 		AND DD_Locked_By_Match_Central = 0
 </CFQUERY>
+</cfif>
 
 <cfset headercolor="FFE083">
 
@@ -126,7 +146,24 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForDefaultSC>
-	<CFQUERY NAME="Default_SC" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDefault_SC = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard_customize")>
+<cfif useLakebaseForDefault_SC>
+	<cftry>
+		<cfset Default_SC = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("scorecard_customize", {
+				"scorecard_id" = "eq.4",
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0",
+				"select" = "scorecard_grouping_id,scorecard_display_id"
+			}), "scorecard_grouping_id,scorecard_display_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefault_SC = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefault_SC>
+<CFQUERY NAME="Default_SC" DATASOURCE="#Application.Datasource#">
 		SELECT 		Scorecard_Grouping_ID,
 					Scorecard_Display_ID
 
@@ -136,6 +173,7 @@
 					USER_ID = '#request.AccessStructure.User_ID#' AND
 					Deleted = 0
 	</CFQUERY>
+</cfif>
 </cfif>
 
 <CFIF Default_SC.recordcount GT 0>

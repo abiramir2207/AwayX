@@ -73,18 +73,52 @@
 <cfif form.ReassignBy>
 <!--- REASSIGN DEDUCTIONS --->
 <CFLOOP LIST="#FORM.Deduction_ID#" INDEX="DD_DedID">
-	<CFQUERY NAME="GetDDDet" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetDDDet = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetDDDet>
+	<cftry>
+		<cfset GetDDDet = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#DD_DedID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDDDet = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDDDet>
+<CFQUERY NAME="GetDDDet" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Deductions WHERE Deduction_ID = '#DD_DedID#'
 	</CFQUERY>
+</cfif>
 	
 	<CFIF GetDDDet.Is_locked EQ 1 AND GetDDDet.Locked_By NEQ request.AccessStructure.User_ID>
 		<CFSET UnSuccessful = "#UnSuccessful##DD_DedID#,">
 	<CFELSE>
-		<CFQUERY NAME="LockBeforeReassign" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForLockBeforeReassign = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockBeforeReassign>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#DD_DedID#"
+			},
+			{
+				"is_locked" = "1",
+				"locked_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockBeforeReassign = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockBeforeReassign>
+<CFQUERY NAME="LockBeforeReassign" DATASOURCE="#Application.Datasource#">
 			UPDATE 	Deductions
 			SET 	Is_Locked = 1,Locked_By = '#request.AccessStructure.User_ID#'
 			WHERE 	Deduction_ID = '#DD_DedID#'
 		</CFQUERY>
+</cfif>
 
 		<CFQUERY NAME="Store_Data" DATASOURCE="#Application.Datasource#">
 			INSERT INTO		DD_Reassign (	Deduction_ID,
@@ -111,11 +145,30 @@
 			WHERE 	Deduction_ID = '#DD_DedID#' AND Deleted=0
 		</CFQUERY>
 		<CFIF DD_DedID NEQ FORM.URLDeduction_ID>
-			<CFQUERY NAME="UnLock" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForUnLock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUnLock>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#DD_DedID#"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by" = ""
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnLock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnLock>
+<CFQUERY NAME="UnLock" DATASOURCE="#Application.Datasource#">
 				UPDATE 	Deductions
 				SET 	Is_Locked = 0,Locked_By = ''
 				WHERE 	Deduction_ID = '#DD_DedID#'
 			</CFQUERY>
+</cfif>
 		</CFIF>
 	</CFIF>
 </CFLOOP>

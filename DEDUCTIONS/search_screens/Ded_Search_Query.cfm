@@ -139,9 +139,25 @@ SELECT * FROM Deductions_Profiles_Settings WHERE Profiles_ID = '#Get_Profile_Set
 </cfif>
 <!---
 <CFIF FORM.DD_Aging NEQ "">
-	<CFQUERY NAME="Get_Aging" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGet_Aging = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_aging")>
+<cfif useLakebaseForGet_Aging>
+	<cftry>
+		<cfset Get_Aging = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_aging", {
+				"deleted" = "eq.0",
+				"tier_number" = "eq.#FORM.DD_Aging#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Aging = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Aging>
+<CFQUERY NAME="Get_Aging" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM DD_AGING WHERE Deleted=0 AND Tier_Number = '#FORM.DD_Aging#'
 	</CFQUERY>
+</cfif>
 	<CFSET Aging_Start = Get_Aging.Start_Range>
 	<CFSET Aging_End = Get_Aging.End_Range>
 </CFIF> --->

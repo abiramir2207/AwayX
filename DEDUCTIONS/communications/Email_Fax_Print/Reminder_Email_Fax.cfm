@@ -60,11 +60,27 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForGetDedDetails>
-		<CFQUERY NAME="Get_Ded_Details" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGet_Ded_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGet_Ded_Details>
+	<cftry>
+		<cfset Get_Ded_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#URL.Deduction_ID#",
+				"select" = "dd_dedid,sp_number"
+			}), "dd_dedid,sp_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Ded_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Ded_Details>
+<CFQUERY NAME="Get_Ded_Details" DATASOURCE="#Application.Datasource#">
 			SELECT DD_DedID,SP_Number
 			FROM Deductions
 			WHERE Deduction_ID = '#URL.Deduction_ID#'
 		</CFQUERY>
+</cfif>
 	</cfif>
 	<CFIF Get_Ded_Details.Sp_Number EQ "">
 		<CFSET Get_Ded_Details.Sp_Number = "000">

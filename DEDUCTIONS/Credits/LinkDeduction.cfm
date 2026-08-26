@@ -457,11 +457,26 @@ FORM.FormSubmitted = 2, means show multi selection form
 	<CFLOOP QUERY="GetEqualDD">
 		<CFSET Current_Item_Selected = 0 />
 		<CFIF URL.FromDeduction EQ 1>
-		<cfquery name="qCurrentCreditSelectedAlready" dbtype="query">
+		<cfset useLakebaseForqCurrentCreditSelectedAlready = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("associatedcredit")>
+<cfif useLakebaseForqCurrentCreditSelectedAlready>
+	<cftry>
+		<cfset qCurrentCreditSelectedAlready = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("associatedcredit", {
+				"credit_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCurrentCreditSelectedAlready = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCurrentCreditSelectedAlready>
+<cfquery name="qCurrentCreditSelectedAlready" dbtype="query">
 			SELECT	*
 			FROM	AssociatedCredit
 			WHERE	Credit_ID = '#Deduction_ID#'
 		</cfquery>
+</cfif>
 		<cfif qCurrentCreditSelectedAlready.recordcount>
 			<CFSET Current_Item_Selected = 1 />
 		</cfif>

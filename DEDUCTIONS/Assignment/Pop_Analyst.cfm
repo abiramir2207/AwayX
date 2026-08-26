@@ -139,13 +139,32 @@ function close_window()
 		</cfif>
 		
 		<CFLOOP LIST="#FORM.Cust_Analyst#" INDEX="Item">
-			<CFQUERY NAME="Update_Cust" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForUpdate_Cust = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForUpdate_Cust>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_analyst",
+			{
+				"dd_analyst_id" = "eq.#Item#",
+				"deleted" = "eq.0"
+			},
+			{
+				"ass_customer" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Cust = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Cust>
+<CFQUERY NAME="Update_Cust" DATASOURCE="#Application.Datasource#">
 				UPDATE 	DD_Analyst
 				
 				SET		Ass_Customer = 1
 				
 				WHERE	DD_Analyst_ID	=	'#Item#' AND Deleted=0
 			</CFQUERY>
+</cfif>
 		</CFLOOP>
 		
 		<SCRIPT language="JavaScript">
@@ -153,9 +172,26 @@ function close_window()
 		</SCRIPT>
 		
 	</CFIF>
-	<CFQUERY NAME="Decide_Location" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDecide_Location = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForDecide_Location>
+	<cftry>
+		<cfset Decide_Location = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"deleted" = "eq.0",
+				"supervisor_id" = "not.is.null",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDecide_Location = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDecide_Location>
+<CFQUERY NAME="Decide_Location" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM DD_Analyst WHERE Deleted=0 AND Supervisor_ID IS NOT NULL
 	</CFQUERY>
+</cfif>
 
 	<CFIF Decide_Location.recordcount GT 0>
 		<CFLOCATION URL="index2.cfm" ADDTOKEN="No">
@@ -199,18 +235,52 @@ function close_window()
 	</CFQUERY>
 	
 	<CFIF not isdefined("URL.FromCust")>
-		<CFQUERY NAME="Default_Ana" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDefault_Ana = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForDefault_Ana>
+	<cftry>
+		<cfset Default_Ana = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"default_analyst" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "dd_analyst_id"
+			}), "dd_analyst_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefault_Ana = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefault_Ana>
+<CFQUERY NAME="Default_Ana" DATASOURCE="#Application.Datasource#">
 			SELECT 	DD_Analyst_ID 
 			FROM 	DD_Analyst
 			WHERE	Default_Analyst = 1 AND Deleted=0
 		</CFQUERY>
+</cfif>
 		<CFSET Sel_List = VALUELIST(Default_Ana.DD_Analyst_ID)>
 	<CFELSE>
-		<CFQUERY NAME="Assigned_with_Cust" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForAssigned_with_Cust = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForAssigned_with_Cust>
+	<cftry>
+		<cfset Assigned_with_Cust = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"ass_customer" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "dd_analyst_id"
+			}), "dd_analyst_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAssigned_with_Cust = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAssigned_with_Cust>
+<CFQUERY NAME="Assigned_with_Cust" DATASOURCE="#Application.Datasource#">
 			SELECT 	DD_Analyst_ID		
 			FROM 	DD_Analyst
 			WHERE	Ass_Customer = 1 AND Deleted=0
 		</CFQUERY>
+</cfif>
 		<CFSET Sel_List = VALUELIST(Assigned_with_Cust.DD_Analyst_ID)>
 	</CFIF>
 	

@@ -49,12 +49,28 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForGetDDDetails>
-		<CFQUERY NAME="Get_DD_Details" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGet_DD_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGet_DD_Details>
+	<cftry>
+		<cfset Get_DD_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#URL.Deduction_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_DD_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_DD_Details>
+<CFQUERY NAME="Get_DD_Details" DATASOURCE="#Application.Datasource#">
 			SELECT 	*
 			FROM 	Deductions
 			WHERE 	Deduction_ID = '#URL.Deduction_ID#' AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 	</cfif>
 
 	<cfset useLakebaseForCheckForChild = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
@@ -69,12 +85,28 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForCheckForChild>
-		<CFQUERY NAME="Check_for_Child" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForCheck_for_Child = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForCheck_for_Child>
+	<cftry>
+		<cfset Check_for_Child = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_dedid" = "eq.#Get_DD_Details.DD_DedID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_for_Child = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_for_Child>
+<CFQUERY NAME="Check_for_Child" DATASOURCE="#Application.Datasource#">
 			SELECT 	*
 			FROM 	Deductions
 			WHERE 	DD_DedID = '#Get_DD_Details.DD_DedID#' AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 	</cfif>
 	
 	<CFIF Check_for_Child.recordcount GT 1>
@@ -334,9 +366,26 @@ input, select
 								<CFSET AccessPremission = 1>					
 							</CFIF>
 						<CFELSEIF DeductionsProfilesSettings.DD_Approve EQ 1>
-							<CFQUERY NAME="IsDeductionAnalyst" DATASOURCE="#Application.Datasource#">
+							<cfset useLakebaseForIsDeductionAnalyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForIsDeductionAnalyst>
+	<cftry>
+		<cfset IsDeductionAnalyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"analyst_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0",
+				"is_supervisor" = "neq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsDeductionAnalyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsDeductionAnalyst>
+<CFQUERY NAME="IsDeductionAnalyst" DATASOURCE="#Application.Datasource#">
 								SELECT * FROM DD_Analyst WHERE Analyst_User_ID = '#request.AccessStructure.User_ID#' AND Deleted=0 AND Is_Supervisor <> 1
 							</CFQUERY>
+</cfif>
 							<CFIF IsDeductionAnalyst.Recordcount EQ 0>
 								<CFSET AccessPremission = 1>
 							</CFIF>						
@@ -1011,12 +1060,31 @@ input, select
 						WHERE Deduction_ID = '#CheckAssociation.DD_Closure_ID#'
 					</CFQUERY>			
 				</CFIF>			
-				<CFQUERY NAME="UpdateDD" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForUpdateDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Parent_ID#"
+			},
+			{
+				"dd_closure_id" = javaCast("null",""),
+				"dd_closure_type" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDD>
+<CFQUERY NAME="UpdateDD" DATASOURCE="#Application.Datasource#">
 					UPDATE Deductions 
 					SET DD_Closure_ID = NULL,
 						DD_Closure_Type = NULL 				
 					WHERE Deduction_ID = '#Parent_ID#'
 				</CFQUERY>
+</cfif>
 			</CFIF>
 			<!--- END Check Parent has any BB or Credit associated and if any update it with null --->
 			<CFSET AliveChildCount = 0>
@@ -1273,7 +1341,25 @@ input, select
 			<!--- Update reason code of the parent --->	
 			<CFIF (Get_DD_Values.DD_Status GT "2" AND Get_DD_Values.DD_Status NEQ 7) OR Get_DD_Values.DD_Resolution_Code NEQ "">
 				<CFIF ResetParentReasonCode EQ 1>
-					<CFQUERY NAME="Update_Parent" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForUpdate_Parent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdate_Parent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#DD_Parent_ID#"
+			},
+			{
+				"dd_status" = "2",
+				"dd_resolution_code" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Parent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Parent>
+<CFQUERY NAME="Update_Parent" DATASOURCE="#Application.Datasource#">
 						UPDATE 	Deductions
 						
 						SET 	DD_Status 			=	'2',
@@ -1281,6 +1367,7 @@ input, select
 								
 						WHERE 	Deduction_ID='#DD_Parent_ID#'
 					</CFQUERY>
+</cfif>
 				</CFIF>		
 			</CFIF>
 			--->

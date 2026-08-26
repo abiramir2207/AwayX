@@ -89,11 +89,28 @@ TABLE.underline TD
 			</cftry>
 		</cfif>
 		<cfif NOT useLakebaseForGetAttach>
-			<CFQUERY NAME="Get_Attach" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForGet_Attach = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("message_attachment")>
+<cfif useLakebaseForGet_Attach>
+	<cftry>
+		<cfset Get_Attach = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("message_attachment", {
+				"message_log_id" = "eq.#Message_Log_ID#",
+				"attachment_desc" = "neq.Cover Sheet",
+				"select" = "attachment_desc"
+			}), "attachment_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Attach = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Attach>
+<CFQUERY NAME="Get_Attach" DATASOURCE="#Application.Datasource#">
 				SELECT 	Attachment_Desc
 				FROM 	Message_Attachment
 				WHERE 	Message_Log_ID = '#Message_Log_ID#' AND Attachment_Desc <> 'Cover Sheet'
 			</CFQUERY>
+</cfif>
 		</cfif>
 		<TD VALIGN="Top">
 			<CFIF Get_Attach.Recordcount GT 0>

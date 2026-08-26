@@ -26,9 +26,25 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForDeductionIsCredit>
-	<cfquery name="Deduction_IsCredit" datasource="#application.datasource#" >
+	<cfset useLakebaseForDeduction_IsCredit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForDeduction_IsCredit>
+	<cftry>
+		<cfset Deduction_IsCredit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "is_credit,dd_closure_sent"
+			}), "is_credit,dd_closure_sent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeduction_IsCredit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeduction_IsCredit>
+<cfquery name="Deduction_IsCredit" datasource="#application.datasource#" >
 	select is_credit, DD_Closure_Sent from deductions where deduction_id = '#Deduction_ID#'
 	</cfquery>
+</cfif>
 </cfif>
 <cfset Original_Deduction_ID = Deduction_ID />
 

@@ -155,11 +155,29 @@ SELECT	Document_Details.*,
 		</CFIF>
 
 
-	<CFQUERY NAME="Deleted_All" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDeleted_All = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForDeleted_All>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"deduction_id" = "eq.#Form.Deduction_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleted_All = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleted_All>
+<CFQUERY NAME="Deleted_All" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Contract_Attachments
 		SET		Deleted = 1
 		WHERE 	Deduction_ID = '#Form.Deduction_ID#'
 	</CFQUERY>
+</cfif>
 
 
 	<CFIF FinalSelection NEQ "">

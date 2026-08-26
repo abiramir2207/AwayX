@@ -33,7 +33,27 @@
 </cfquery>
 
 <cfloop query="BBsClosedByDeduction">
-	<cfquery name="ReopenBillbacks" datasource="#application.datasource#">
+	<cfset useLakebaseForReopenBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForReopenBillbacks>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#BBsClosedByDeduction.Billback_ID#"
+			},
+			{
+				"bb_payment_header_sent" = "0",
+				"bb_payment_detail_sent" = "0",
+				"bb_payment_user_sent" = "0",
+				"bb_reopened_multiplier" = "-1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForReopenBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForReopenBillbacks>
+<cfquery name="ReopenBillbacks" datasource="#application.datasource#">
 	UPDATE Billback
 	SET BB_Payment_Header_Sent = 0,
 		BB_Payment_Detail_Sent = 0,
@@ -41,6 +61,7 @@
 		BB_Reopened_Multiplier = -1
 	WHERE Billback.Billback_ID = '#BBsClosedByDeduction.Billback_ID#'
 	</cfquery>
+</cfif>
 </cfloop>
 
 

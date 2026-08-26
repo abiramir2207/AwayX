@@ -77,11 +77,26 @@
 </cfif>
 
 <cfif Edit IS 1>
+<cfset useLakebaseForGetReminder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_reminders")>
+<cfif useLakebaseForGetReminder>
+	<cftry>
+		<cfset GetReminder = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_reminders", {
+				"dd_reminder_id" = "eq.#DD_Reminder_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetReminder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetReminder>
 <cfquery name="GetReminder" datasource="#application.datasource#">
 SELECT *
 FROM DD_Reminders
 WHERE DD_Reminder_ID = '#DD_Reminder_ID#'
 </cfquery>
+</cfif>
 </cfif>
 
 <!--- reminder date --->
@@ -117,11 +132,27 @@ WHERE DD_Reminder_ID = '#DD_Reminder_ID#'
 	<td>Reminder Type:  </td>
 	<td>
 
-	<cfquery name="GetTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGetTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_reminder_type")>
+<cfif useLakebaseForGetTypes>
+	<cftry>
+		<cfset GetTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_reminder_type", {
+				"deleted" = "eq.0",
+				"order" = "dd_type_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypes>
+<cfquery name="GetTypes" datasource="#application.datasource#">
 	SELECT * From DD_Reminder_Type
 	WHERE Deleted = 0
 	ORDER BY DD_Type_Name
 	</cfquery>
+</cfif>
 
 		<select name="DD_Reminder_Type" onfocus="skipcycle=true" onblur="skipcycle=false">
 			<cfloop query="GetTypes">

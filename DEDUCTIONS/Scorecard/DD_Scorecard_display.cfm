@@ -550,9 +550,26 @@ Non HQ (Analyst / Supervisor)			Based on analyst assignment only
 			</CFIF>
 
 			<CFIF Is_Locked EQ 1>
-				<CFQUERY NAME="GetLockedBy" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetLockedBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetLockedBy>
+	<cftry>
+		<cfset GetLockedBy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Locked_By#",
+				"deleted" = "eq.0",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockedBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockedBy>
+<CFQUERY NAME="GetLockedBy" DATASOURCE="#Application.Datasource#">
 					SELECT Name_First,Name_Last FROM _Users WHERE User_ID = '#Locked_By#' AND Deleted=0
 				</CFQUERY>
+</cfif>
 				<IMG SRC="/images/lock.gif" TITLE="This deduction is locked by user #ucase(GetLockedBy.Name_First)# #ucase(GetLockedBy.Name_Last)#" height="16" width="12">
 			<CFELSE>
 			&nbsp;
@@ -560,9 +577,25 @@ Non HQ (Analyst / Supervisor)			Based on analyst assignment only
 		</TD>
 		<!--- <TD WIDTH="20">&nbsp;
 				<CFIF DD_IsParent EQ 1>
-					<CFQUERY NAME="Check_Child" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForCheck_Child = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForCheck_Child>
+	<cftry>
+		<cfset Check_Child = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_dedid" = "eq.#DD_DedID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Child = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Child>
+<CFQUERY NAME="Check_Child" DATASOURCE="#Application.Datasource#">
 						SELECT * FROM Deductions WHERE DD_DedID = '#DD_DedID#' AND Deleted=0
 					</CFQUERY>
+</cfif>
 					<CFIF Check_Child.Recordcount GT 1>
 						<CFSET ChildCount = Check_Child.Recordcount - 1>
 						<img src="/Images/parent_New.gif" alt="Splitted into #ChildCount# deductions." width="13" height="13" border="0">
@@ -616,9 +649,28 @@ Non HQ (Analyst / Supervisor)			Based on analyst assignment only
 					<CFSET DD_Type = "Deduction">
 				</CFIF>
 				<CFIF DD_Closure_Sent EQ 1 OR Ack_received_Closure EQ 1 OR Ack_received_Reopen EQ 1 OR DD_Reopened_Sent EQ 1>
-					<CFQUERY NAME="DD_SentDate" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForDD_SentDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForDD_SentDate>
+	<cftry>
+		<cfset DD_SentDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure_detail", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"interfaced_on" = "not.is.null",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "interfaced_on"
+			}), "interfaced_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDD_SentDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDD_SentDate>
+<CFQUERY NAME="DD_SentDate" DATASOURCE="#Application.Datasource#">
 					SELECT TOP 1 Interfaced_On FROM DD_Closure_Detail WHERE Deduction_ID = '#Deduction_ID#' AND Interfaced_On IS NOT NULL AND Deleted = 0
 					</CFQUERY>
+</cfif>
 				<CFELSEIF Rebill_Ack_Status EQ 3 OR Rebill_Ack_Status EQ 2>
 					<CFSET DD_SentDate.Interfaced_On = Rebill_Sent_On>
 				</CFIF>

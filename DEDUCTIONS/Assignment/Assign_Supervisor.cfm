@@ -92,9 +92,25 @@
 		<!--- 
 		<CFLOOP LIST = "#FORM.Analyst_ID#" INDEX="Item">
 					
-			<CFQUERY NAME="Check_Et" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCheck_Et = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForCheck_Et>
+	<cftry>
+		<cfset Check_Et = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"analyst_user_id" = "eq.#Item#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Et = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Et>
+<CFQUERY NAME="Check_Et" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM DD_Analyst WHERE Analyst_User_ID = '#Item#' AND Deleted=0
 			</CFQUERY>
+</cfif>
 			
 			<CFIF Check_Et.recordcount EQ 0>
 				<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
@@ -168,13 +184,31 @@
 		<CFQUERY NAME="Delete_All" DATASOURCE="#Application.Datasource#">
 			UPDATE 	DD_Analyst SET 	Deleted = 1	WHERE Deleted = 0	
 		</CFQUERY>
-		<CFQUERY NAME="update_Ass" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForupdate_Ass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_assignment")>
+<cfif useLakebaseForupdate_Ass>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_assignment",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdate_Ass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdate_Ass>
+<CFQUERY NAME="update_Ass" DATASOURCE="#Application.Datasource#">
 			UPDATE 	DD_Assignment
 			
 			SET 	Deleted = 1
 			
 			WHERE 	DELETED = 0
 		</CFQUERY>
+</cfif>
 		
 		<CFQUERY NAME="ReassignDeductions" DATASOURCE="#Application.Datasource#">
 			UPDATE 	Deductions
@@ -183,12 +217,46 @@
 		</CFQUERY>
 	</CFIF>
 	
-	<CFQUERY NAME="Decide_Location" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDecide_Location = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForDecide_Location>
+	<cftry>
+		<cfset Decide_Location = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"deleted" = "eq.0",
+				"is_default_supervisor" = "eq.1",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDecide_Location = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDecide_Location>
+<CFQUERY NAME="Decide_Location" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM DD_Analyst WHERE Deleted=0 AND Is_Default_Supervisor = 1
 	</CFQUERY>
-	<CFQUERY NAME="Decide_Location2" DATASOURCE="#Application.Datasource#">
+</cfif>
+	<cfset useLakebaseForDecide_Location2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForDecide_Location2>
+	<cftry>
+		<cfset Decide_Location2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"deleted" = "eq.0",
+				"default_analyst" = "eq.1",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDecide_Location2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDecide_Location2>
+<CFQUERY NAME="Decide_Location2" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM DD_Analyst WHERE Deleted=0 AND Default_Analyst = 1
 	</CFQUERY>
+</cfif>
 	<CFIF Decide_Location.recordcount GT 0 AND Decide_Location2.recordcount GT 0>
 		<CFLOCATION URL="index2.cfm" ADDTOKEN="No">
 	<CFELSE>

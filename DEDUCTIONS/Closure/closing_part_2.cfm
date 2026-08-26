@@ -97,22 +97,68 @@
 </cfquery>
 </cfif>
 
+<cfset useLakebaseForWhoRebills = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForWhoRebills>
+	<cftry>
+		<cfset WhoRebills = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {
+				"select" = "rebill"
+			}), "rebill"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForWhoRebills = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForWhoRebills>
 <cfquery name="WhoRebills" datasource="#application.datasource#">
 	SELECT Rebill
 	FROM Deduction_Settings
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForGetDeductionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetDeductionInfo>
+	<cftry>
+		<cfset GetDeductionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDeductionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDeductionInfo>
 <cfquery name="GetDeductionInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Deductions
 	WHERE Deduction_ID = '#Deduction_ID#'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForGetClosureInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetClosureInfo>
+	<cftry>
+		<cfset GetClosureInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "dd_closure_id,dd_closure_type,distributor_id,dd_amount"
+			}), "dd_closure_id,dd_closure_type,distributor_id,dd_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetClosureInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetClosureInfo>
 <cfquery name="GetClosureInfo" datasource="#application.datasource#">
 	SELECT DD_Closure_ID, DD_Closure_Type, Distributor_ID, DD_Amount
 	FROM Deductions
 	WHERE Deduction_ID = '#Deduction_ID#'
 </cfquery>
+</cfif>
 
 <cfif ClosingAction IS "Rebill">
 	<cfif WhoRebills.Rebill Is 2>

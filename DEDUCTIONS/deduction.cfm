@@ -110,23 +110,61 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 	<cfif Isdefined("FORM.SubmitLockStatus")>
-		<CFQUERY name="LockDD" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#FORM.Deduction_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "#FORM.Lock_Status#",
+				"locked_by" = "#Locked_By#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+<CFQUERY name="LockDD" DATASOURCE="#Application.Datasource#">
 			UPDATE 	Deductions
 			SET 	Is_Locked = #FORM.Lock_Status#,
 								Locked_By = '#Locked_By#'
 			WHERE 	Deduction_ID = '#FORM.Deduction_ID#'
 			AND Deleted=0
 		</CFQUERY>
+</cfif>
 	</cfif>
 
 <cfinclude template="/deductions/Get_Lock_Status.cfm">
 
 	<cfif FormType IS "RemoveShipTo">
-		<cfquery name="UpdateDeductions" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDeductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"distributor_id" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDeductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDeductions>
+<cfquery name="UpdateDeductions" datasource="#application.datasource#">
 			UPDATE Deductions
 			SET Distributor_ID = null
 			WHERE Deduction_ID = '#Deduction_ID#'
 		</cfquery>
+</cfif>
 	</cfif>
 
 <!---Gets data about deduction--->
@@ -134,18 +172,49 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 
 	<cfif FormType IS "AddDistributor" AND len(trim(form.Distributor_List)) GT 0 AND form.Distributor_List NEQ "">
 
-		<CFQUERY name="GetPriorAnalyst" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetPriorAnalyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetPriorAnalyst>
+	<cftry>
+		<cfset GetPriorAnalyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "analyst_user_id"
+			}), "analyst_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPriorAnalyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPriorAnalyst>
+<CFQUERY name="GetPriorAnalyst" DATASOURCE="#Application.Datasource#">
 			SELECT Analyst_User_ID
 			FROM Deductions
 			WHERE Deduction_ID = '#Deduction_ID#'
 		</CFQUERY>
+</cfif>
 
 		<cfif appSettings.getDDReassignAnalystWhileChangingPayTo()>
-			<CFQUERY name="GetDistInfo" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForGetDistInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistInfo>
+	<cftry>
+		<cfset GetDistInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#form.Distributor_List#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistInfo>
+<CFQUERY name="GetDistInfo" DATASOURCE="#Application.Datasource#">
 				SELECT *
 				FROM BSA_Foodservice_Customers
 				WHERE BSA_Foodservice_Customers_ID = '#form.Distributor_List#'
 			</CFQUERY>
+</cfif>
 			<CFQUERY name="GetAnalyst" DATASOURCE="#Application.Datasource#">
 				SELECT Analyst_User_ID
 				FROM DD_Assignment
@@ -254,12 +323,31 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 			AND Reassigned_By = '#request.AccessStructure.User_ID#'
 			AND Deleted = 0
 		</CFQUERY>
-		<CFQUERY name="BrokerUpdate" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForBrokerUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_broker_reassign")>
+<cfif useLakebaseForBrokerUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_broker_reassign",
+			{
+				"latest_insert" = "eq.1",
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"latest_insert" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBrokerUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBrokerUpdate>
+<CFQUERY name="BrokerUpdate" DATASOURCE="#Application.Datasource#">
 			UPDATE DD_Broker_Reassign
 			SET Latest_Insert = 0
 			WHERE Latest_Insert = 1
 			AND Deduction_ID = '#Deduction_ID#'
 		</CFQUERY>
+</cfif>
 		<CFQUERY name="InsHistory" DATASOURCE="#Application.Datasource#">
 			INSERT INTO DD_Broker_Reassign (Deduction_ID,<cfif len(trim(CurrentBroker))>From_Broker_ID,</cfif>To_Broker_ID,Reassigned_By,Latest_Insert)
 			VALUES ('#Deduction_ID#',<cfif len(trim(CurrentBroker))>'#CurrentBroker#',</cfif>'#Broker_List#','#request.AccessStructure.User_ID#',1)
@@ -272,15 +360,44 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 
 	</cfif>
 
-	<cfquery name="GetDistributor" datasource="#application.datasource#">
+	<cfset useLakebaseForGetDistributor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetDistributor>
+	<cftry>
+		<cfset GetDistributor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "distributor_id,distributor_bill_to_id,dd_stage,dd_status"
+			}), "distributor_id,distributor_bill_to_id,dd_stage,dd_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributor>
+<cfquery name="GetDistributor" datasource="#application.datasource#">
 		SELECT Distributor_ID, Distributor_Bill_To_ID, DD_Stage, DD_Status
 		FROM Deductions
 		WHERE Deduction_ID = '#Deduction_ID#'
 	</cfquery>
-	<cfquery name="DeductionSettings" datasource="#application.datasource#">
+</cfif>
+	<cfset useLakebaseForDeductionSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForDeductionSettings>
+	<cftry>
+		<cfset DeductionSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeductionSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeductionSettings>
+<cfquery name="DeductionSettings" datasource="#application.datasource#">
 		SELECT *
 		FROM Deduction_Settings
 	</cfquery>
+</cfif>
 
 	<cfif CenterToShow neq  "setToNew">
 <!---No longer new, mark as opened--->
@@ -291,11 +408,29 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 			DD_Stage = CASE WHEN DD_Stage IS NULL THEN (SELECT DD_Stage_ID FROM DD_Stage WHERE Deleted  = 0 AND Is_Default = 1) ELSE DD_Stage END
 			WHERE Deduction_ID = '#Deduction_ID#'
 		</cfquery>
-		<cfquery name="SetClearedAmount" datasource="#application.datasource#">
+		<cfset useLakebaseForSetClearedAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForSetClearedAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"cleared_amount" = "#Deduction_Info.DD_Amount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSetClearedAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSetClearedAmount>
+<cfquery name="SetClearedAmount" datasource="#application.datasource#">
 			UPDATE Deductions
 			SET Cleared_Amount = #Deduction_Info.DD_Amount#
 			WHERE Deduction_ID = '#Deduction_ID#'
 		</cfquery>
+</cfif>
 	</cfif>
 	</cfif>
 
@@ -681,12 +816,28 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 				<cfset  ApprovalRebillPermission = 1>
 			</cfif>
 		<cfif appSettings.getDDChangeClassificationBeforeRFA()>
-			<CFQUERY name="GetDefault" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForGetDefault = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForGetDefault>
+	<cftry>
+		<cfset GetDefault = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_classification", {
+				"is_default" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDefault = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDefault>
+<CFQUERY name="GetDefault" DATASOURCE="#Application.Datasource#">
 				SELECT *
 				FROM DD_Classification
 				WHERE Is_Default = 1
 				AND Deleted = 0
 			</CFQUERY>
+</cfif>
 			<cfif Deduction_Info.DD_Classification_ID EQ GetDefault.DD_Classification_ID OR Deduction_Info.DD_Classification_ID EQ "">
 				<cfset  ApprovalPermission = 0>
 			</cfif>
@@ -1022,12 +1173,29 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 <!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
 <!---/////////////////////////////////////////// LEFT MENU SECTION 3 ////////////////////////////////////////////////////--->
 <!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
-	<CFQUERY name="DisableIfParent" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDisableIfParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForDisableIfParent>
+	<cftry>
+		<cfset DisableIfParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_parent_id" = "eq.#Deduction_Info.Deduction_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDisableIfParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDisableIfParent>
+<CFQUERY name="DisableIfParent" DATASOURCE="#Application.Datasource#">
 		SELECT TOP 1 *
 		FROM Deductions
 		WHERE DD_Parent_ID = '#Deduction_Info.Deduction_ID#'
 		AND Deleted = 0
 	</CFQUERY>
+</cfif>
 
 	<cfif ((Deduction_Info.DD_Status LT 3 OR DeductionsProfilesSettings.DD_Approve IS 1) AND (Deduction_Info.DD_Status LT 4 OR Deduction_Info.DD_Status EQ 7))
 			OR (Appsettings.getDDAllowNegativeAmountCredits() AND Deduction_Info.DD_Status EQ 8 AND Deduction_Info.Is_Credit EQ 1)>
@@ -1346,12 +1514,29 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 	</td>
 	<td width="100%" style="border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; padding: 0" valign="center">
 	<cfif appSettings.get_Setting('Custom_Deduction_workflow') neq '1' AND ((Deduction_Info.DD_Status LT 3 OR DeductionsProfilesSettings.DD_Approve IS 1) AND (Deduction_Info.DD_Status LT 4 OR Deduction_Info.DD_Status EQ 7)) OR Deduction_Info.DD_Status EQ 8 AND DeductionsProfilesSettings.DD_ACCESS_LEVEL GT 1>
-	<cfquery name="GetStages" datasource="#application.datasource#">
+	<cfset useLakebaseForGetStages = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_stage")>
+<cfif useLakebaseForGetStages>
+	<cftry>
+		<cfset GetStages = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_stage", {
+				"deleted" = "eq.0",
+				"order" = "dd_stage_description.asc",
+				"select" = "dd_stage_description,dd_stage_id"
+			}), "dd_stage_description,dd_stage_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStages = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStages>
+<cfquery name="GetStages" datasource="#application.datasource#">
 		SELECT DISTINCT DD_Stage_Description, DD_Stage_ID
 		FROM DD_Stage
 		WHERE Deleted = 0
 		ORDER BY DD_Stage_Description
 	</cfquery>
+</cfif>
 	<cfif DeductionsProfilesSettings.DD_ACCESS_LEVEL GT 1>
 		<select name="DD_Stage_ID" <cfif LockStatus NEQ 1>DISABLED</cfif> STYLE="WIDTH: 123px">
 			<cfloop query="GetStages">
@@ -1363,11 +1548,27 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 		(<a href="javascript: void(0);" onclick="NewWindow('action_comments.cfm?Deduction_ID=#Deduction_ID#&DD_Ded_Action_ID=#GetCompletedActions.DD_Ded_Action_ID#&UpdateAction=0&DD_Stage_ID='+document.ChangeStage.DD_Stage_ID.options[document.ChangeStage.DD_Stage_ID.selectedIndex].value, 'Action_Comments', 450, 400, 'yes', 'yes')">Add</a>)
 	</cfif>
 	<cfelse>
-		<cfquery name="GetStatusDescription" datasource="#application.datasource#">
+		<cfset useLakebaseForGetStatusDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_stage")>
+<cfif useLakebaseForGetStatusDescription>
+	<cftry>
+		<cfset GetStatusDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_stage", {
+				"dd_stage_id" = "eq.#Deduction_Info.DD_Stage#",
+				"select" = "dd_stage_description"
+			}), "dd_stage_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatusDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatusDescription>
+<cfquery name="GetStatusDescription" datasource="#application.datasource#">
 			SELECT DD_Stage_Description
 			FROM DD_Stage
 			WHERE DD_Stage_ID = '#Deduction_Info.DD_Stage#'
 		</cfquery>
+</cfif>
 		Current Action: #GetStatusDescription.DD_Stage_Description#
 	</cfif>
 	</tr>

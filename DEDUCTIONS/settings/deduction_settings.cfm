@@ -246,9 +246,22 @@ function oneDecimal(textObject)	{
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
 
 <!--- Gets the date that this setting was updated --->
+<cfset useLakebaseForGet_Deduction_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForGet_Deduction_Settings>
+	<cftry>
+		<cfset Get_Deduction_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Deduction_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Deduction_Settings>
 <CFQUERY NAME="Get_Deduction_Settings" DATASOURCE="#application.datasource#">
 SELECT * FROM Deduction_Settings
 </CFQUERY>
+</cfif>
 <!---
  	--Deduction_Settings.Trade,
 	--Deduction_Settings.Auto_Close,
@@ -256,9 +269,25 @@ SELECT * FROM Deduction_Settings
  --->
 
 <cfif len(trim(Get_Deduction_Settings.ChangedBy)) GT 0>
-	<cfquery name="GetChangerName" datasource="#application.datasource#">
+	<cfset useLakebaseForGetChangerName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetChangerName>
+	<cftry>
+		<cfset GetChangerName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Deduction_Settings.ChangedBy#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetChangerName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetChangerName>
+<cfquery name="GetChangerName" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last FROM _Users WHERE User_ID = '#Get_Deduction_Settings.ChangedBy#'
 	</cfquery>
+</cfif>
 	<cfset FirstName = GetChangerName.Name_First>
 	<cfset LastName = GetChangerName.Name_Last>
 <cfelse>

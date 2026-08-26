@@ -172,13 +172,33 @@ You cannot update a locked deduction.
 <cfabort>
 <cfelse>
 <!--- Lock the deduction for this user --->
-		<CFQUERY NAME="LockDD" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "1",
+				"locked_by" = "#request.AccessStructure.user_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+<CFQUERY NAME="LockDD" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Deductions
 		SET 	Is_Locked = 1,
 				Locked_By = '#request.AccessStructure.user_ID#'
 		WHERE 	Deduction_ID = '#Deduction_ID#'
 		AND Deleted=0
 		</CFQUERY>
+</cfif>
 		<!--- reinclude lock include --->
 		<cfinclude template="/deductions/Get_Lock_Status.cfm">
 <!--- end locking code --->
@@ -209,9 +229,26 @@ You cannot update a locked deduction.
 
 		<TD nowrap ><B><FONT size="3">
 				<cfif Deduction_Info.DD_Status IS 3>
-					<CFQUERY NAME="CheckForAgreed" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForCheckForAgreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_agreed_info")>
+<cfif useLakebaseForCheckForAgreed>
+	<cftry>
+		<cfset CheckForAgreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_agreed_info", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForAgreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForAgreed>
+<CFQUERY NAME="CheckForAgreed" DATASOURCE="#Application.Datasource#">
 					SELECT TOP 1 * FROM DD_Agreed_Info WHERE Deduction_ID = '#Deduction_ID#' AND Deleted = 0
 					</CFQUERY>
+</cfif>
 					<CFIF CheckForAgreed.RecordCount GT 0 AND Get_Profile_Settings.DD_RFA_Agreed EQ 1>
 						AGREE
 					<CFELSE>

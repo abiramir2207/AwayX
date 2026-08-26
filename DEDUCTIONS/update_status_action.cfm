@@ -486,7 +486,24 @@ Please note that many fields from the parent may not be defined if the user does
 
 			<cffile action="upload" destination="#Application.Doc_Path#\Data_Files\Uploaded\Documents\Uploaded_Doc\" nameconflict="makeunique">
 		
-			<CFQUERY NAME="GetPosition" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForGetPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForGetPosition>
+	<cftry>
+		<cfset GetPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPosition>
+<CFQUERY NAME="GetPosition" DATASOURCE="#Application.Datasource#">
 				SELECT 	User_Positions_ID
 				
 				FROM 	User_Position_Holders
@@ -494,7 +511,8 @@ Please note that many fields from the parent may not be defined if the user does
 				WHERE 	User_ID = '#request.AccessStructure.user_id#' AND 
 				User_Position_Type = 'P' AND
 						Deleted = 0
-			</CFQUERY>	
+			</CFQUERY>
+</cfif>	
 		<!--- Insert the record --->
 			<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 				SET NOCOUNT ON
@@ -546,11 +564,29 @@ Please note that many fields from the parent may not be defined if the user does
 	<!--- END UPLOAD DOCUMENT --->
 	
 	<!--- Unlock Deduction --->
-	<CFQUERY NAME="LockDD" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"is_locked" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+<CFQUERY NAME="LockDD" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Deductions
 		SET 	Is_Locked = 0		
 		WHERE 	Deduction_ID = '#Deduction_ID#'
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 	<!--- Unlock Deduction --->
 	
 	<BR><BR><BR><BR>

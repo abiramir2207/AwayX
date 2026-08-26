@@ -79,9 +79,25 @@
   <cfelse>
     <cfset reasonHere = 2>
   </cfif>
-  <cfquery name="Get_all" datasource="#Application.Datasource#">
+  <cfset useLakebaseForGet_all = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_type")>
+<cfif useLakebaseForGet_all>
+	<cftry>
+		<cfset Get_all = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_type", {
+				"deleted" = "eq.0",
+				"deductiontype_id" = "neq.#FORM.DeductionType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_all = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_all>
+<cfquery name="Get_all" datasource="#Application.Datasource#">
     SELECT * FROM Deduction_Type WHERE Deleted=0 AND DeductionType_ID <> '#FORM.DeductionType_ID#'
   </cfquery>
+</cfif>
   <form name="DeleteAction" action="DeleteDefault.cfm" method="Post">
   <cfoutput>
   <input type="Hidden" name="DelActSubmitted" value="0">

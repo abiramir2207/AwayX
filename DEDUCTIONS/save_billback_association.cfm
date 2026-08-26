@@ -231,6 +231,22 @@ TODO: if the billback is already a split child, create one sibling and give the 
 </CFIF>
 
 <!------ deallocate any previous associations ----->
+<cfset useLakebaseForCheckPreviousAssoci = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForCheckPreviousAssoci>
+	<cftry>
+		<cfset CheckPreviousAssoci = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"dd_closure_type" = "eq.1",
+				"dd_closure_id" = "not.is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckPreviousAssoci = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckPreviousAssoci>
 <CFQUERY NAME="CheckPreviousAssoci" DATASOURCE="#Application.Datasource#">
 	SELECT 	* 
 	FROM 	Deductions 
@@ -238,6 +254,7 @@ TODO: if the billback is already a split child, create one sibling and give the 
 	AND		DD_Closure_Type = 1 
 	AND		DD_Closure_ID IS NOT NULL
 </CFQUERY>
+</cfif>
 <CFIF CheckPreviousAssoci.RecordCount GT 0>	
 	<CFQUERY NAME="UpdateBBBit" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Billback 
@@ -417,12 +434,31 @@ TODO: if the billback is already a split child, create one sibling and give the 
 		<CFSET LoopCount = LoopCount + 1>
 		<!---Insert into reason code and  relocate to closure--->
 		<CFIF LoopCount EQ 1>
-			<cfquery name="AddReason" datasource="#application.datasource#">
+			<cfset useLakebaseForAddReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForAddReason>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"dd_closure_id" = "#BBIDItem#",
+				"dd_closure_type" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAddReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAddReason>
+<cfquery name="AddReason" datasource="#application.datasource#">
 				UPDATE 	Deductions
 				Set 	DD_Closure_ID = '#BBIDItem#',
 						DD_Closure_Type = 1
 				WHERE 	Deduction_ID = '#Deduction_ID#'
 			</cfquery>
+</cfif>
 		</CFIF>
 		<CFQUERY NAME="InsData" DATASOURCE="#Application.Datasource#">
 			INSERT INTO DD_Closure_Detail (Deduction_ID,DD_Closure_ID) VALUES ('#Deduction_ID#','#BBIDItem#')
@@ -469,9 +505,24 @@ TODO: if the billback is already a split child, create one sibling and give the 
 	WHERE 	DD_Closure_ID = '#Billback_ID#' AND DD_Closure_Type = 1
 </CFQUERY>
 
+<cfset useLakebaseForCheckStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckStatus>
+	<cftry>
+		<cfset CheckStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckStatus>
 <CFQUERY NAME="CheckStatus" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback WHERE Billback_ID = '#Billback_ID#'
 </CFQUERY>
+</cfif>
 <CFIF CheckStatus.Billback_Status_ID EQ 3>
 	<!---Insert into reason code and  relocate to closure--->
 	<cfquery name="AddReason" datasource="#application.datasource#">

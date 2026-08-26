@@ -8,9 +8,25 @@
 	<!--- <CFDUMP VAR="#FORM#"> --->
 	
 	<CFIF isdefined("FORM.Analyst_ID")>
-		<CFQUERY NAME="GetSupervisor" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetSupervisor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForGetSupervisor>
+	<cftry>
+		<cfset GetSupervisor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"is_supervisor" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSupervisor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSupervisor>
+<CFQUERY NAME="GetSupervisor" DATASOURCE="#Application.Datasource#">
 			SELECT * FROM DD_Analyst WHERE Is_Supervisor = 1 AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		<CFIF GetSupervisor.RecordCount GT 0>			
 			<CFSET SupervisorList = VALUELIST(GetSupervisor.Analyst_User_ID)>
 			<CFSET FORM.Analyst_ID = LISTAPPEND(FORM.Analyst_ID,SupervisorList,",")>
@@ -87,21 +103,55 @@
 		
 			<CFLOOP LIST="#RemoveAnalyst#" INDEX="Item">
 			
-				<CFQUERY NAME="GetID" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetID>
+	<cftry>
+		<cfset GetID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"analyst_user_id" = "eq.#Item#",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetID>
+<CFQUERY NAME="GetID" DATASOURCE="#Application.Datasource#">
 					SELECT Deduction_ID FROM Deductions WHERE Analyst_User_ID = '#Item#'
 				</CFQUERY>
+</cfif>
 				
 				<CFIF GetID.RecordCount GT 0>
 					<CFSET ReassignedID = VALUELIST(GetID.Deduction_ID)>					
 					<CFSET CurrentLoop = Item>
 					
-					<CFQUERY NAME="ReassignDeductions" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForReassignDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForReassignDeductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"analyst_user_id" = "eq.#Item#"
+			},
+			{
+				"analyst_user_id" = "#FORM.New_Analyst#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForReassignDeductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForReassignDeductions>
+<CFQUERY NAME="ReassignDeductions" DATASOURCE="#Application.Datasource#">
 						UPDATE 	Deductions
 						
 						SET 	Analyst_User_ID = '#FORM.New_Analyst#'
 						
 						WHERE	Analyst_User_ID = '#Item#'
 					</CFQUERY>
+</cfif>
 					
 					<CFLOOP LIST="#ReassignedID#" INDEX="LoopItem">
 						<CFQUERY NAME="ReassignLog" DATASOURCE="#Application.Datasource#">
@@ -142,9 +192,25 @@
 		</CFQUERY>
 	</CFIF>
 	
-	<CFQUERY NAME="Decide_Location" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDecide_Location = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_assignment")>
+<cfif useLakebaseForDecide_Location>
+	<cftry>
+		<cfset Decide_Location = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_assignment", {
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDecide_Location = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDecide_Location>
+<CFQUERY NAME="Decide_Location" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM DD_Assignment WHERE Deleted=0
 	</CFQUERY>
+</cfif>
 	<CFIF Decide_Location.recordcount GT 0>
 		<CFLOCATION URL="index2.cfm" ADDTOKEN="No">
 	<CFELSE>
