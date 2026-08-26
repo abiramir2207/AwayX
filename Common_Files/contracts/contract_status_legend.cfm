@@ -2749,11 +2749,27 @@
     <!---62343 8.0 - Blended Rate, CF END--->
     <cfset createdByString = "" />
     <!------ get the created by user name ----->
-    <cfquery name="CreatedUser" datasource="#application.datasource#">
+    <cfset useLakebaseForCreatedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCreatedUser>
+	<cftry>
+		<cfset CreatedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Creator_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreatedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreatedUser>
+<cfquery name="CreatedUser" datasource="#application.datasource#">
         SELECT Name_First, Name_Last
         FROM _Users
         WHERE User_ID = '#CSLGetContractInfo.Creator_ID#'
     </cfquery>
+</cfif>
     <CFIF CreatedUser.recordcount GT 0>
         <cfset createdByString = "#CreatedUser.Name_First# #CreatedUser.Name_Last# #Dateformat(CSLGetContractInfo.contract_created_date,'mm/dd/yyyy')#" />
     </CFIF>

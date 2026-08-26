@@ -72,9 +72,25 @@
 	<CFSET MONTH=LEFT(Comm_Month_Year,1)>
 	<CFSET YEAR=200&left(reverse(Comm_Month_Year),1)>
 
-	<CFQUERY NAME="Get_Maturity_Date_Code" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Maturity_Date_Code = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_datecode")>
+<cfif useLakebaseForGet_Maturity_Date_Code>
+	<cftry>
+		<cfset Get_Maturity_Date_Code = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_datecode", {
+				"commodities_datecode" = "eq.#MONTH#",
+				"select" = "commodities_datecode_name"
+			}), "commodities_datecode_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Maturity_Date_Code = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Maturity_Date_Code>
+<CFQUERY NAME="Get_Maturity_Date_Code" datasource="#application.datasource#">
 	Select COMMODITIES_DATECODE_NAME FROM Commodities_Datecode WHERE COMMODITIES_DATECODE='#MONTH#'
 	</CFQUERY>
+</cfif>
 
 	<BR><BR><BR><BR><BR><BR><BR><BR><BR><BR>
 	<CENTER>

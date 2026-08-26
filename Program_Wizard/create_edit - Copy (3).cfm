@@ -125,10 +125,25 @@ If you added a new setting to this file, please also add the new setting to belo
 </cfif>
 
 
+<cfset useLakebaseForqCheckOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqCheckOptions>
+	<cftry>
+		<cfset qCheckOptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckOptions>
 <cfquery name="qCheckOptions" datasource="#application.datasource#">
 	SELECT 	TOP 1 *
 	FROM 	Program_Control_Panel_Options
 </cfquery>
+</cfif>
 
 <cfset lumpSumCapMin = 0>
 <cfset approvalGroupManager = CreateObject("component", "components.settings.ApprovalGroupManager").init() />

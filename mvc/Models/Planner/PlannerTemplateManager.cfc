@@ -509,11 +509,26 @@ Description  :  Manager for Planner Templates
 				WHERE Planner_Template_ID = '#arguments.id#'
 			</cfquery>
 			<!--- AUDITING - CAPTURE CHANGES --->
-			<cfquery name="variables.qUpdated" datasource="#application.datasource#">
+			<cfset useLakebaseForvariables_qUpdated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template")>
+<cfif useLakebaseForvariables_qUpdated>
+	<cftry>
+		<cfset variables.qUpdated = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template", {
+				"planner_template_id" = "eq.#arguments.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qUpdated = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qUpdated>
+<cfquery name="variables.qUpdated" datasource="#application.datasource#">
 				SELECT *
 				FROM Planner_Template
 				WHERE Planner_Template_ID = '#arguments.id#'
 			</cfquery>
+</cfif>
 			<cfscript>
 				variables.udf = createObject( "component", "components.udf" );
 				variables.udf.WriteSettingsAudit( variables.qOriginal, variables.qUpdated, "Planner_Template", arguments.id, "#variables.qUpdated.Planner_Type# - #variables.qUpdated.Planner_Description#", "" );

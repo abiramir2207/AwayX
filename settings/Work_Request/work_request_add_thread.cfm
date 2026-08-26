@@ -62,10 +62,25 @@
 			ORDER BY Release_Version DESC
 	</cfquery> 
 
-	<cfquery name="SupportEmail" datasource="#application.datasource#">
+	<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email,mappunchcompany"
+			}), "ba_support_email,mappunchcompany"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+<cfquery name="SupportEmail" datasource="#application.datasource#">
 			SELECT BA_Support_Email,MapPunchCompany
 			FROM _Application_Settings
 	</cfquery>
+</cfif>
 </cfoutput>
 
 	<!--- send to punchlist --->

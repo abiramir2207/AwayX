@@ -70,33 +70,13 @@
 			var a = arguments;
 			var qRediLockData	= queryNew("");
 		</cfscript>
-		 <cfset useLakebaseForqgetRediUNLOCKByMe = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("redi_ec_header")>
-<cfif useLakebaseForqgetRediUNLOCKByMe>
-	<cftry>
-		<cfset application.oLakebase.updateRows("redi_ec_header",
-			{
-				"user_id_locked" = "eq.#request.AccessStructure.User_ID#"
-			},
-			{
-				"locked" = "0",
-				"user_id_locked" = javaCast("null",""),
-				"locked_date" = "#now()#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqgetRediUNLOCKByMe = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqgetRediUNLOCKByMe>
-<cfquery name="qgetRediUNLOCKByMe" datasource="#application.datasource#">
+		 <cfquery name="qgetRediUNLOCKByMe" datasource="#application.datasource#">
 			 UPDATE REDI_EC_Header
 			 SET Locked = 0,
 			 User_Id_Locked = NULL,
 			 Locked_Date = getDate()
 			 WHERE User_Id_Locked = '#request.AccessStructure.User_ID#'
 	    </cfquery>
-</cfif>
 	    
 	    <cfreturn qRediLockData />
 	</cffunction>

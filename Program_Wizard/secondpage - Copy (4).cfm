@@ -518,13 +518,30 @@ function confirmCompletion(){
 		<!---Generic type is bid request or off invoice--->
 		</cfif>
 
-		<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForGetCurrencyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForGetCurrencyTypes>
+	<cftry>
+		<cfset GetCurrencyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "currency_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrencyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrencyTypes>
+<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Currency
 			WHERE 	Deleted = 0
 			AND 	Active = 1
 			ORDER BY Currency_Name
 		</cfquery>
+</cfif>
 		<cfset DefaultValue2 = 0>
 
 		<cfset NoDefaultValue2 = GetCurrencyTypes.Recordcount>
@@ -1845,9 +1862,25 @@ function confirmCompletion(){
 		<tr>
 			<th colspan="3"><hr>Margin - Items to Exclude</th>
 		</tr>
-		<cfquery name="getTemplateParentID" datasource="#application.datasource#">
+		<cfset useLakebaseForgetTemplateParentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetTemplateParentID>
+	<cftry>
+		<cfset getTemplateParentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#ID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateParentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateParentID>
+<cfquery name="getTemplateParentID" datasource="#application.datasource#">
 			SELECT First_Parent_ID FROM Program_Control_Panel_Options WHERE ProgramControl_Panel_Options_ID = #ID#
 		</cfquery>
+</cfif>
 
 		<cfloop query="qGetActiveExcludeItems">
 			<cfset qGetActiveExcludeTemplate = ExcludeItemsManager.getItemExclusionTemplates(qGetActiveExcludeItems.Margin_Item_Exclusion_ID) />
@@ -2685,12 +2718,28 @@ function confirmCompletion(){
 								<cfelseif (InThisTemplate.Recordcount AND NOT InThisTemplate.Program_Perf_Req_Checked)>
 									<cfset selReqVal = 0>
 								</cfif>
-								<cfquery name="InPerfReq" datasource="#application.datasource#">
+								<cfset useLakebaseForInPerfReq = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_perf_req_labels")>
+<cfif useLakebaseForInPerfReq>
+	<cftry>
+		<cfset InPerfReq = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_perf_req_labels", {
+				"program_perf_req_id" = "eq.#GetPerformanceRequirements.Program_Perf_Req_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForInPerfReq = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInPerfReq>
+<cfquery name="InPerfReq" datasource="#application.datasource#">
 									select *
 									from Program_Perf_Req_Labels
 									where Program_Perf_Req_ID = #GetPerformanceRequirements.Program_Perf_Req_ID#
 									and deleted = 0
 								</cfquery>
+</cfif>
 								<select name="Requirement_#Program_Perf_Req_ID#_Display" class="wd70">
 										<option value="0" <cfif selReqVal EQ 0>selected</cfif>>Neither</option>
 									<cfif InPerfReq.Recordcount>

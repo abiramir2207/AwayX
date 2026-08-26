@@ -80,7 +80,26 @@
 						Deleted = 0
 			</CFQUERY>
 			
-			<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForDataInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_files_upload")>
+<cfif useLakebaseForDataInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("generic_files_upload", {
+			"generic_files_uni_name" = "#Build_File_Name#",
+			"generic_files_file_path" = "#Margin_File_Path#",
+			"server_name" = "#application.WebServerName#",
+			"generic_files_title" = "#DateStampedMarginName#",
+			"generic_file_type" = "#form.filetype#",
+			"generic_worksheet_name" = "#form.sheet_name#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"generic_files_upload_process_status_id" = "2"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDataInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDataInsert>
+<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
 				INSERT INTO 
 				
 				Generic_Files_Upload	
@@ -104,6 +123,7 @@
 									'#request.AccessStructure.User_ID#',
 									2	)
 			</CFQUERY>
+</cfif>
 			
 			 <CFIF form.filetype EQ 1>
 				<cfset useLakebaseForDeletedTempData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gdwl4_margin_targets_temp")>

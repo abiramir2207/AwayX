@@ -371,11 +371,27 @@ URL on email notifications
 				<!--- auto logout user --->
 		</CFIF>
 		<!--- update position --->
-		<CFQUERY NAME="getExistingUserPosition" datasource="#application.datasource#">
+		<cfset useLakebaseForgetExistingUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetExistingUserPosition>
+	<cftry>
+		<cfset getExistingUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExistingUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExistingUserPosition>
+<CFQUERY NAME="getExistingUserPosition" datasource="#application.datasource#">
 			SELECT *
 			FROM User_Position_Holders
 			WHERE User_ID = '#FORM.User_ID#' AND DELETED = 0
 		</CFQUERY>
+</cfif>
 		<cfif form.ClassCodesOn EQ 0>
 			<!------ update business segments ----->
 			<cfset useLakebaseForqDeleteUserBusinessSegment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
@@ -654,12 +670,30 @@ URL on email notifications
 					WHERE User_ID = '#FORM.User_ID#' AND User_Position_Type = 'S'
 					AND User_Positions_ID NOT IN (#USER_SEC_POSITIONS_ID#)
 					</CFQUERY>
-					<CFQUERY NAME="GETSECONDARYUSERPOSITIONS" datasource="#application.datasource#">
+					<cfset useLakebaseForGETSECONDARYUSERPOSITIONS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForGETSECONDARYUSERPOSITIONS>
+	<cftry>
+		<cfset GETSECONDARYUSERPOSITIONS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#FORM.User_ID#",
+				"user_position_type" = "eq.S",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGETSECONDARYUSERPOSITIONS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGETSECONDARYUSERPOSITIONS>
+<CFQUERY NAME="GETSECONDARYUSERPOSITIONS" datasource="#application.datasource#">
 						SELECT 	User_Positions_ID
 						FROM 	User_Position_Holders
 						WHERE 	User_ID = '#FORM.User_ID#' AND User_Position_Type = 'S'
 						AND DELETED = 0
 						</CFQUERY>
+</cfif>
 						<cfif GETSECONDARYUSERPOSITIONS.RecordCount GT 0>
 							<cfset SecValueList = ValueList(GETSECONDARYUSERPOSITIONS.User_Positions_ID)>
 						<cfelse>

@@ -409,11 +409,27 @@
 	<cffunction name="getUsedAllowanceCodes" output="false" returntype="string">
 		
 		<!--- get the Allowance Codes --->
-		<cfquery name="qGetAllowanceCodes" datasource="#application.datasource#">			
+		<cfset useLakebaseForqGetAllowanceCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operating_group")>
+<cfif useLakebaseForqGetAllowanceCodes>
+	<cftry>
+		<cfset qGetAllowanceCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operating_group", {
+				"deleted" = "eq.0",
+				"select" = "allowance_code_id"
+			}), "allowance_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllowanceCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllowanceCodes>
+<cfquery name="qGetAllowanceCodes" datasource="#application.datasource#">			
 			SELECT 	DISTINCT Allowance_Code_ID
 			FROM 	Operating_Group			
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn ValueList(qGetAllowanceCodes.Allowance_Code_ID) />
 		

@@ -30,11 +30,26 @@
 		From		Purge_Log_Settings
 		</CFQUERY>
 <cfset cont = Get_maxSettings.gg>
+<cfset useLakebaseForGet_PreviousSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("purge_log_settings")>
+<cfif useLakebaseForGet_PreviousSettings>
+	<cftry>
+		<cfset Get_PreviousSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("purge_log_settings", {
+				"purge_log_settings_id" = "eq.#cont#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_PreviousSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_PreviousSettings>
 <CFQUERY NAME="Get_PreviousSettings" datasource="#application.datasource#">
 		Select		* 
 		From		Purge_Log_Settings
 		where Purge_Log_Settings_id = '#cont#'
 		</CFQUERY>
+</cfif>
 
 <cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
 <cfif useLakebaseForGet_Settings>

@@ -301,11 +301,26 @@
 <cfset qGetAllDiscountTypes = templateManager.getAllComponentDiscountTypes(url.id)>
 
 <!--- GET PAYMENT TYPES --->
+<cfset useLakebaseForGetPaymentPaidToTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_paid_to_types")>
+<cfif useLakebaseForGetPaymentPaidToTypes>
+	<cftry>
+		<cfset GetPaymentPaidToTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_paid_to_types", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPaymentPaidToTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPaymentPaidToTypes>
 <cfquery name="GetPaymentPaidToTypes" datasource="#application.datasource#">
 	SELECT distinct *
 	FROM Payment_Paid_To_Types
 	WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset fixedprice_freight = template.getFixedFreight()>
 <cfset qGetAllDiscountTypes = templateManager.getAllComponentDiscountTypes(url.id)>
@@ -342,11 +357,26 @@
 			)
 		</cfquery>
 
-		<cfquery name="qGetTemplateComponents" dbtype="query">
+		<cfset useLakebaseForqGetTemplateComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalltemplatediscountcomponents")>
+<cfif useLakebaseForqGetTemplateComponents>
+	<cftry>
+		<cfset qGetTemplateComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalltemplatediscountcomponents", {
+				"discount_type_id" = "eq.#DISCOUNT_TYPE_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplateComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplateComponents>
+<cfquery name="qGetTemplateComponents" dbtype="query">
 			SELECT	*
 			FROM	qGetAllTemplateDiscountComponents
 			WHERE	DISCOUNT_TYPE_ID = #DISCOUNT_TYPE_ID#
 		</cfquery>
+</cfif>
 
 	<cfloop query="qGetTemplateComponents">
 	<cfif Component_Selected>

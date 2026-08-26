@@ -104,11 +104,27 @@ SELECT DISTINCT StateCode, State, StateFIPS
 
 <cfset GetCounties = QueryNew("County")>
 <CFIF GetOperatorMap.recordcount GT 0 AND url.state NEQ 0>
-	<cfquery name="GetCounties" dbtype="query">
+	<cfset useLakebaseForGetCounties = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getoperatormap")>
+<cfif useLakebaseForGetCounties>
+	<cftry>
+		<cfset GetCounties = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getoperatormap", {
+				"order" = "county.asc",
+				"select" = "county,countyfips"
+			}), "county,countyfips"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCounties = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCounties>
+<cfquery name="GetCounties" dbtype="query">
 		SELECT DISTINCT County, CountyFIPS
 		FROM GetOperatorMap
 		ORDER BY County
 	</cfquery>
+</cfif>
 </CFIF>
 
 <cfset GetOperators = QueryNew("Operator_Name")>

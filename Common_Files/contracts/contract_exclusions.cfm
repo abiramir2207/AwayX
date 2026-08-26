@@ -99,7 +99,22 @@
 		<cfinclude template="replicate_program_action.cfm">
 
 
-		<cfquery name="saveExclusion" datasource="#application.datasource#">
+		<cfset useLakebaseForsaveExclusion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForsaveExclusion>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_exclusions", {
+			"original_program_id" = "#Program_ID#",
+			"revision_program_id" = "#Renewed_Program_ID#",
+			"start_date" = "#form.start_date#",
+			"end_date" = "#form.end_date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveExclusion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveExclusion>
+<cfquery name="saveExclusion" datasource="#application.datasource#">
 			INSERT INTO Program_Exclusions
 			(
 				Original_Program_ID, 
@@ -115,6 +130,7 @@
 				'#form.end_date#'
 			)
 		</cfquery>
+</cfif>
 		<cflocation url="contract_exclusions.cfm?CID=#URL.CID#">
 	</cfcase>
 	

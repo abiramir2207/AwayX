@@ -217,11 +217,27 @@
 	<cfargument name="plId" type="any" required="false" default="0" />
 
 		<cfif trim(arguments.plId) NEQ ''>
-			<cfquery name="qgetPL" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetPL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForqgetPL>
+	<cftry>
+		<cfset qgetPL = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"price_list_header_id" = "eq.#arguments.plId#",
+				"select" = "price_list_id,tier,gpo_name"
+			}), "price_list_id,tier,gpo_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetPL = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetPL>
+<cfquery name="qgetPL" datasource="#application.datasource#">
 				select Price_list_id,Tier ,GPO_Name
 				from Price_list_header
 				Where Price_List_Header_ID = '#arguments.plId#'
 			</cfquery>
+</cfif>
 		<cfelse>
 			<cfset qgetPL = querynew('Price_list_id,Tier,GPO_Name','varchar,integer,varchar') />
 		</cfif>
@@ -789,13 +805,30 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 <cffunction name="getAllOperators" hint="" access="public" output="false" returntype="query">
 	<cfargument name="contractId" type="numeric" required="false" default="0" />
 
-		<cfquery name="qGetAllOperators" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAllOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators") AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForqGetAllOperators>
+	<cftry>
+		<cfset qGetAllOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_operators", {
+				"contract_main_id" = "eq.#arguments.contractId#",
+				"is_group" = "eq.0",
+				"select" = "bsa_operator_id"
+			}, "bsa_operator_id", "bsa_operator", "bsa_operator_id", "*"), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllOperators>
+<cfquery name="qGetAllOperators" datasource="#application.datasource#">
 			Select o.*
 			FROM  Contract_operators CO
 			INNER JOIN BSA_Operator O ON co.BSA_Operator_Id = O.BSA_Operator_Id
 			WHERE Contract_Main_Id  ='#arguments.contractId#' AND
 				Co.Is_Group = 0
 		</cfquery>
+</cfif>
 	<cfreturn qGetAllOperators />
 </cffunction>
 
@@ -1019,7 +1052,24 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 	<cfargument name="data" type="string" required="false" default="" />
 	<cfargument name="field" type="string" required="false" default="0" />
 	<cfset variables.data = deserializeJSON(arguments.data) >
-		<cfquery name="qGetExisting" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetExisting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gpo_program_tier_data")>
+<cfif useLakebaseForqGetExisting>
+	<cftry>
+		<cfset qGetExisting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gpo_program_tier_data", {
+				"contract_main_id" = "eq.#arguments.contractId#",
+				"gpo_program_tier_data_id" = "eq.#variables.data.id#",
+				"order" = "tier_number.asc",
+				"select" = "contract_main_id,gpo_program_tier_data_id"
+			}), "contract_main_id,gpo_program_tier_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetExisting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetExisting>
+<cfquery name="qGetExisting" datasource="#application.datasource#">
 			 select Contract_Main_ID,
 			 		GPO_Program_Tier_Data_ID
 			from GPO_Program_Tier_Data
@@ -1027,6 +1077,7 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 				GPO_Program_Tier_Data_ID = '#variables.data.id#'
 			Order by Tier_Number
 		</cfquery>
+</cfif>
 
 		<cfif qGetExisting.recordcount GT 0>
 			<cfquery name="qUpdExisting" datasource="#application.datasource#">
@@ -1044,12 +1095,31 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 					GPO_Program_Tier_Data_ID = '#variables.data.id#'
 			</cfquery>
 		<cfelse>
-			<cfquery name="qGetInsert" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gpo_program_tier_data")>
+<cfif useLakebaseForqGetInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gpo_program_tier_data", {
+			"contract_main_id" = "#arguments.contractId#",
+			"tier_number" = "#variables.data.tierNum#",
+			"tier_number_desc" = "TIER #variables.data.tierNum#",
+			"range_start" = "#variables.data.start#",
+			"range_end" = "#variables.data.end#",
+			"rate" = "#variables.data.rate#",
+			"rate_desc" = "#variables.data.rate_desc#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInsert>
+<cfquery name="qGetInsert" datasource="#application.datasource#">
 				 INSERT INTO GPO_Program_Tier_Data
 				(Contract_Main_ID, Tier_Number, Tier_Number_Desc, Range_Start, Range_End, Rate, Rate_Desc)
 				VALUES
 				(#arguments.contractId#, '#variables.data.tierNum#', 'TIER #variables.data.tierNum#', '#variables.data.start#', '#variables.data.end#', '#variables.data.rate#', '#variables.data.rate_desc#')
 			</cfquery>
+</cfif>
 				<!--- Make sure the sequence is OK --->
 			<cfquery name="qUpdTierSequence" datasource="#application.datasource#">
 				update Tier
@@ -1689,12 +1759,27 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 			</CFQUERY>
 
 			<CFIF GPOGet_Existing.recordcount EQ 0>
-				<CFQUERY NAME="saveGPOContractProducts" datasource="#application.datasource#">
+				<cfset useLakebaseForsaveGPOContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForsaveGPOContractProducts>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"bsa_foodservice_items_master_id" = "#a.item#",
+			"contract_main_id" = "#a.contractId#",
+			"product_type_id" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveGPOContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveGPOContractProducts>
+<CFQUERY NAME="saveGPOContractProducts" datasource="#application.datasource#">
 					INSERT INTO Contract_Products
 					(BSA_Foodservice_Items_Master_ID, Contract_Main_ID, Product_Type_ID)
 					VALUES
 					('#a.item#', '#a.contractId#', 1)
 				</CFQUERY>
+</cfif>
 				<cfset contractProductsId = saveGPOContractProducts.Contract_Products_ID />
 			<cfelse>
 				<cfset contractProductsId = GPOGet_Existing.Contract_Products_ID />

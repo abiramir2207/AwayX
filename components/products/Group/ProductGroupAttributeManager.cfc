@@ -129,11 +129,27 @@
          WHERE Template_ID =  #arguments.TemplateID#     */
  --->    
 		<cfif arguments.programID >
-			<cfquery name="GetContractInfo" datasource="#application.datasource#"> 
+			<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "template_filters_id"
+			}), "template_filters_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#"> 
 			   	SELECT Template_Filters_ID
 	    		FROM Contract_Main
 	    		WHERE Contract_Main_ID = '#arguments.programID#'  
      		</cfquery>
+</cfif>
 		</cfif>
       
       <cfset useLakebaseForqGetGroupTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_template")>

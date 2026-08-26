@@ -117,13 +117,32 @@
 			<cfset getClaimRatesPrograms(arguments.effectiveDate, arguments.paidTo) />
 		</cfif>
 
-		<cfquery name="qConfig" datasource="#application.datasource#">
+		<cfset useLakebaseForqConfig = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("claim_rates_setting")>
+<cfif useLakebaseForqConfig>
+	<cftry>
+		<cfset qConfig = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("claim_rates_setting", {
+				"deleted" = "eq.0",
+				"default_setting" = "eq.1",
+				"order" = "config_id.desc",
+				"limit" = "1",
+				"select" = "config_id,config_name"
+			}), "config_id,config_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqConfig = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqConfig>
+<cfquery name="qConfig" datasource="#application.datasource#">
 			SELECT TOP 1 Config_ID, Config_Name
 			FROM CLAIM_RATES_SETTING
 			WHERE Deleted = 0
 			AND default_setting = 1
 			ORDER BY Config_ID DESC
 		</cfquery>
+</cfif>
 
 		<cfscript>
 		objProgramManager = CreateObject("component","mvc.Models.Program.ProgramManager");

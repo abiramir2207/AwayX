@@ -515,12 +515,29 @@ ORDER BY Invoice_Header.Invoice_Date DESC
 	<cfset DatedContractMain = GetContractMain.Contract_Main_ID>
 	
 	<!---Calculate the rate * the volume in the--->
-	<cfquery name="GetRate" datasource="#application.datasource#">
+	<cfset useLakebaseForGetRate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("tc_rebate_product")>
+<cfif useLakebaseForGetRate>
+	<cftry>
+		<cfset GetRate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("tc_rebate_product", {
+				"contract_main_id" = "eq.#DatedContractMain#",
+				"product_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "rate,unit_of_measure_id"
+			}), "rate,unit_of_measure_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRate>
+<cfquery name="GetRate" datasource="#application.datasource#">
 	SELECT Rate, Unit_of_Measure_ID
 	FROM TC_Rebate_Product
 	WHERE Contract_Main_ID = '#DatedContractMain#'
 	AND Product_ID = '#BSA_Foodservice_Items_Master_ID#'
 	</cfquery>
+</cfif>
 	
 	<!---Sets rate to 0 if it is null--->
 	<cfif len(trim(GetRate.Rate)) GT 0>

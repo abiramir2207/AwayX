@@ -840,11 +840,27 @@
 	<cffunction name="getProgramDistributorExceptions" access="public" returntype="query" output="false">
 		<cfargument name="programId" type="string" required="false" default="" />
 
-		<cfquery name="qGetProgramDistributorExceptions" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramDistributorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors_exceptions")>
+<cfif useLakebaseForqGetProgramDistributorExceptions>
+	<cftry>
+		<cfset qGetProgramDistributorExceptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors_exceptions", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramDistributorExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramDistributorExceptions>
+<cfquery name="qGetProgramDistributorExceptions" datasource="#application.datasource#">
 				SELECT DISTINCT BSA_Foodservice_Customers_ID
 					FROM	Contract_Distributors_Exceptions
 				WHERE Contract_Main_ID = '#arguments.programId#'
 		</cfquery>
+</cfif>
 		<cfreturn qGetProgramDistributorExceptions />
 	</cffunction>
 

@@ -49,25 +49,6 @@
 <!--- Unlock all locked deductions under this user --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
-<cfset useLakebaseForUnlockDDUnderThisUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForUnlockDDUnderThisUser>
-	<cftry>
-		<cfset application.oLakebase.updateRows("deductions",
-			{
-				"locked_by" = "eq.#request.AccessStructure.user_ID#",
-				"dd_locked_by_match_central" = "eq.0"
-			},
-			{
-				"is_locked" = "0",
-				"locked_by" = ""
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUnlockDDUnderThisUser = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUnlockDDUnderThisUser>
 <CFQUERY NAME="UnlockDDUnderThisUser" DATASOURCE="#Application.Datasource#">
 	UPDATE	Deductions
 	SET 	Is_Locked=0,
@@ -75,7 +56,6 @@
 	WHERE	Locked_By = '#request.AccessStructure.user_ID#'
 		AND DD_Locked_By_Match_Central = 0
 </CFQUERY>
-</cfif>
 
 <cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
 <cfif useLakebaseForDeductionsProfilesSettings>
@@ -120,10 +100,25 @@ SELECT * FROM Deductions_Profiles_Settings WHERE Profiles_ID = '#Get_Profile_Set
 	COLUMN_NAME = 'usdanoi_enabled'
 </cfquery>
 <CFIF checkForSettingColumnExistance.recordcount GT 0>
-	<cfquery name="isUSDANOI_enabled" datasource="#application.datasource#">
+	<cfset useLakebaseForisUSDANOI_enabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForisUSDANOI_enabled>
+	<cftry>
+		<cfset isUSDANOI_enabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "usdanoi_enabled"
+			}), "usdanoi_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisUSDANOI_enabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisUSDANOI_enabled>
+<cfquery name="isUSDANOI_enabled" datasource="#application.datasource#">
 		SELECT usdanoi_enabled
 		FROM _Application_Settings
 	</cfquery>
+</cfif>
 
 	<cfif isUSDANOI_enabled.recordcount GT 0>
 		<cfif isUSDANOI_enabled.usdanoi_enabled EQ 1>

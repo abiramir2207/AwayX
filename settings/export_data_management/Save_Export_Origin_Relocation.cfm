@@ -19,10 +19,25 @@
 	</cfloop>
 
 	<cfif Trim(form.txtAddLookupItemOriginCode) neq "" AND Trim(txtAddLookupExportOriginTo) neq "" AND Trim(txtAddLookupExportRelocationCost) neq "">
-				<CFQUERY NAME="InsRelocationCost" datasource="#application.datasource#">
+				<cfset useLakebaseForInsRelocationCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_origin_relocation")>
+<cfif useLakebaseForInsRelocationCost>
+	<cftry>
+		<cfset application.oLakebase.insertRow("export_lookup_origin_relocation", {
+			"item_origin_code" = "#form.txtAddLookupItemOriginCode#",
+			"export_origin_to" = "#form.txtAddLookupExportOriginTo#",
+			"export_origin_relocation_cost" = "#form.txtAddLookupExportRelocationCost#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsRelocationCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsRelocationCost>
+<CFQUERY NAME="InsRelocationCost" datasource="#application.datasource#">
 					INSERT INTO Export_Lookup_Origin_Relocation(Item_Origin_Code,Export_Origin_To,Export_Origin_Relocation_Cost)
 					VALUES('#form.txtAddLookupItemOriginCode#','#form.txtAddLookupExportOriginTo#','#form.txtAddLookupExportRelocationCost#')
 				</CFQUERY>
+</cfif>
 	</cfif>
 </cfoutput>
 

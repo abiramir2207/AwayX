@@ -46,12 +46,30 @@
 		<CFSET IDGENERATOR_DESTINATIONFIELD = "Company_Technology_ID">		
 		<CFINCLUDE TEMPLATE="../keyGenerator.cfm">
 
-		<CFQUERY NAME="CreateTechInfoRecord" datasource="#application.datasource#" DBTYPE="ODBC">
+		<cfset useLakebaseForCreateTechInfoRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_technology")>
+<cfif useLakebaseForCreateTechInfoRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("company_technology", {
+			"company_technology_id" = "#Generated.Company_Technology_ID#",
+			"company_main_id" = "#Generated.Company_Main_ID#",
+			"http_port" = "80",
+			"ftp_port" = "21",
+			"smtp_port" = "25",
+			"ssl_port" = "443"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreateTechInfoRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreateTechInfoRecord>
+<CFQUERY NAME="CreateTechInfoRecord" datasource="#application.datasource#" DBTYPE="ODBC">
 			INSERT INTO Company_Technology
 			(Company_Technology_ID, Company_Main_ID, HTTP_Port, FTP_Port, SMTP_Port, SSL_Port)
 			VALUES
 			('#Generated.Company_Technology_ID#', '#Generated.Company_Main_ID#', '80', '21', '25', '443')
 		</CFQUERY>
+</cfif>
 
 		<CFSET IDGENERATOR_GENERATEDIDVARIABLENAME = "Generated.Company_Billing_ID">
 		<CFSET IDGENERATOR_DESTINATIONTABLE = "Company_Billing">		

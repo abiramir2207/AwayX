@@ -348,11 +348,28 @@ From	awayX_Operator_Location_Type
 		Changed to query to have a where clause to look for active = 1 and
 		Deleted = 0 and pick the records from awayx_Operator_type table
  ------------------------------------------------------------------------------>
+<cfset useLakebaseForGet_Operator_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("awayx_operator_type")>
+<cfif useLakebaseForGet_Operator_Type>
+	<cftry>
+		<cfset Get_Operator_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("awayx_operator_type", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "operator_type"
+			}), "operator_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Type>
 <CFQUERY NAME="Get_Operator_Type" datasource="#application.datasource#">
 	SELECT	Distinct Operator_Type
 	FROM awayX_Operator_Type
 	WHERE Active = 1 AND Deleted = 0
 </CFQUERY>
+</cfif>
 <cfif application.operatorVariableAvailable>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the list of Operator_Category																	 --->

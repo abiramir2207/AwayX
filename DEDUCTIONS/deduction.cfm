@@ -142,29 +142,11 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 <cfinclude template="/deductions/Get_Lock_Status.cfm">
 
 	<cfif FormType IS "RemoveShipTo">
-		<cfset useLakebaseForUpdateDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForUpdateDeductions>
-	<cftry>
-		<cfset application.oLakebase.updateRows("deductions",
-			{
-				"deduction_id" = "eq.#Deduction_ID#"
-			},
-			{
-				"distributor_id" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdateDeductions = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdateDeductions>
-<cfquery name="UpdateDeductions" datasource="#application.datasource#">
+		<cfquery name="UpdateDeductions" datasource="#application.datasource#">
 			UPDATE Deductions
 			SET Distributor_ID = null
 			WHERE Deduction_ID = '#Deduction_ID#'
 		</cfquery>
-</cfif>
 	</cfif>
 
 <!---Gets data about deduction--->
@@ -226,12 +208,29 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 			</cfif>
 			</CFQUERY>
 					<cfif GetAnalyst.Analyst_User_ID EQ "">
-						<CFQUERY name="GetMarket" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForGetMarket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForGetMarket>
+	<cftry>
+		<cfset GetMarket = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"bsa_foodservice_brokers_id" = "eq.#GetDistInfo.BSA_Foodservice_Brokers_ID#",
+				"deleted" = "eq.0",
+				"select" = "service_market_id"
+			}), "service_market_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMarket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMarket>
+<CFQUERY name="GetMarket" DATASOURCE="#Application.Datasource#">
 							SELECT  Service_Market_ID
 							FROM	BSA_Foodservice_Brokers
 							WHERE 	BSA_Foodservice_Brokers_ID = '#GetDistInfo.BSA_Foodservice_Brokers_ID#'
 							AND DELETED = 0
 						</CFQUERY>
+</cfif>
 								<cfif GetMarket.Service_Market_ID EQ 0 OR GetMarket.Service_Market_ID EQ "">
 										<CFQUERY name="GetAnalyst" DATASOURCE="#Application.Datasource#">
 											SELECT Analyst_User_ID
@@ -268,11 +267,26 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 					</cfif>
 		</cfif>
 
-		<CFQUERY name="GetCurrentDetail" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetCurrentDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetCurrentDetail>
+	<cftry>
+		<cfset GetCurrentDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentDetail>
+<CFQUERY name="GetCurrentDetail" DATASOURCE="#Application.Datasource#">
 			SELECT *
 			FROM Deductions
 			WHERE Deduction_ID = '#Deduction_ID#'
 		</CFQUERY>
+</cfif>
 
 
 
@@ -290,11 +304,27 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 					Distributor_ID = '#form.Distributor_List#'
 				WHERE 	Deduction_ID = '#Deduction_ID#'
 			</CFQUERY>
-			<CFQUERY name="Get_Broker" DATASOURCE="#application.datasource#">
+			<cfset useLakebaseForGet_Broker = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGet_Broker>
+	<cftry>
+		<cfset Get_Broker = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#form.Distributor_List#",
+				"select" = "bsa_foodservice_brokers_id"
+			}), "bsa_foodservice_brokers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Broker = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Broker>
+<CFQUERY name="Get_Broker" DATASOURCE="#application.datasource#">
 				SELECT BSA_Foodservice_Brokers_ID
 				FROM BSA_Foodservice_Customers
 				WHERE BSA_Foodservice_Customers_ID = '#form.Distributor_List#'
 			</CFQUERY>
+</cfif>
 
 			<cfset  Broker_List = valuelist(Get_Broker.BSA_Foodservice_Brokers_ID)>
 			<cfset  FormType = "AddBroker">
@@ -560,12 +590,29 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 	</cfif>
 	<cfset  backgroundcolor = GetColor.ColorID>
 	<cfset  fontcolor = GetColor.FontID>
-	<CFQUERY name="CheckForAgreed" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckForAgreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_agreed_info")>
+<cfif useLakebaseForCheckForAgreed>
+	<cftry>
+		<cfset CheckForAgreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_agreed_info", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForAgreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForAgreed>
+<CFQUERY name="CheckForAgreed" DATASOURCE="#Application.Datasource#">
 		SELECT TOP 1 *
 		FROM DD_Agreed_Info
 		WHERE Deduction_ID = '#Deduction_ID#'
 		AND Deleted = 0
 	</CFQUERY>
+</cfif>
 
 <!---Begin top display--->
 <TABLE border="0" cellpadding="4" style="border-collapse: collapse" id="table2" cellspacing="4">

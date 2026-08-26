@@ -176,12 +176,29 @@
 
 		<cfargument name="programId" required="true" default="" />
 
-		<cfquery name="qStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForqStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForqStatus>
+	<cftry>
+		<cfset qStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "bid_request_status_id"
+			}), "bid_request_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqStatus>
+<cfquery name="qStatus" datasource="#application.datasource#">
 			SELECT 	Bid_Request_Status_ID
 			FROM	Program_Bid_Request
 			WHERE	Deleted = 0
 			AND		Program_ID = #arguments.programId#
 		</cfquery>
+</cfif>
 
 		<cfreturn qStatus />
 

@@ -118,7 +118,29 @@ Description  :  Upload from home page
 				 )
 		)>
 		<!--- IN IF --->
-			<cfquery name="updateOCRUploadLogStatusError1" datasource="#application.datasource#">
+			<cfset useLakebaseForupdateOCRUploadLogStatusError1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatusError1>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2.CF_Error",
+				"ocr_upload_status" = "Empty structure was returned from docparser because the invoice file did not have the required keyword",
+				"debug_dev_status" = "Empty structure was returned from docparser",
+				"processtries" = "1",
+				"updated_date" = "#now()#",
+				"error_tool_tip" = "Please try again with a different source type. The invoice file format did not match the format of the selected source type"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatusError1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatusError1>
+<cfquery name="updateOCRUploadLogStatusError1" datasource="#application.datasource#">
 					UPDATE OCR_Upload_Log 
 						SET 
 							OCR_Step = '2.CF_Error',
@@ -128,7 +150,8 @@ Description  :  Upload from home page
 							Updated_Date = getDate(),
 							Error_Tool_Tip = 'Please try again with a different source type. The invoice file format did not match the format of the selected source type'
 					WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-				</cfquery>	<!--- ((isStruct(structFileContent) AND StructIsEmpty(structFileContent))  OR 
+				</cfquery>
+</cfif>	<!--- ((isStruct(structFileContent) AND StructIsEmpty(structFileContent))  OR 
  		 		 (isarray(structFileContent) AND ArrayIsEmpty(structFileContent))  OR 	 --->
 		 <cfelseif ( qGetOCRUploadExtracted.OCR_Step EQ '2' AND		 
  		  		 	(isDefined("getFileContent.FileContent") AND 

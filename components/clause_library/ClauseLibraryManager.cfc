@@ -104,7 +104,23 @@
 
 	<cffunction name="getAll" output="false" returntype="query">
 
-		<cfquery name="qGetAll" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_library")>
+<cfif useLakebaseForqGetAll>
+	<cftry>
+		<cfset qGetAll = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("clause_library", {
+				"deleted" = "eq.0",
+				"clause_library_status" = "eq.1",
+				"select" = "clause_library_id,clause_library_parent_id,clause_library_title,clause_library_body,clause_library_body_french,created_by,updated_by,updated_date"
+			}), "clause_library_id,clause_library_parent_id,clause_library_title,clause_library_body,clause_library_body_french,created_by,updated_by,updated_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAll = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAll>
+<cfquery name="qGetAll" datasource="#application.datasource#">
 			SELECT 	Clause_Library_ID,
 					Clause_Library_Parent_ID,
 					Clause_Library_Title,
@@ -117,6 +133,7 @@
 			WHERE 	Deleted = 0
 			AND		Clause_Library_Status = 1
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetAll />
 

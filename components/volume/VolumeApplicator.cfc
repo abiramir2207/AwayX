@@ -827,12 +827,28 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 		<cfset prodLen = ArrayLen(prodArray)>
 		<cfloop index="i" from="1" to="#prodLen#">
 			<!---get the paid sum for these operator/product combinations--->
-			<cfquery name="qGetOperatorSums" dbtype="query">
+			<cfset useLakebaseForqGetOperatorSums = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalloperatorsums")>
+<cfif useLakebaseForqGetOperatorSums>
+	<cftry>
+		<cfset qGetOperatorSums = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalloperatorsums", {
+				"product_id" = "eq.#prodArray[i].productId#",
+				"select" = "paid_cs,paid_lb"
+			}), "paid_cs,paid_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOperatorSums = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOperatorSums>
+<cfquery name="qGetOperatorSums" dbtype="query">
 				SELECT	Paid_CS,
 						Paid_LB
 				FROM 	qGetAllOperatorSums
 				WHERE	Product_ID = '#prodArray[i].productId#'
 			</cfquery>
+</cfif>
 			
 			<cfset tmpClaimVolume = 0 />
 			<!---handle for UOM if we get a record set back--->

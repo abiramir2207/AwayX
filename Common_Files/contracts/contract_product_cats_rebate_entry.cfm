@@ -412,7 +412,23 @@ TABLE.Maintable TD
 							<TD nowrap>#getAllCategoryProducts.Type_Code_Desc#</TD>
 							<TD NOWRAP>#getAllCategoryProducts.Brand#</TD>
 
-							<cfquery name="getThisProductInfo" datasource="#application.datasource#">
+							<cfset useLakebaseForgetThisProductInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_category_product_rates_volumes")>
+<cfif useLakebaseForgetThisProductInfo>
+	<cftry>
+		<cfset getThisProductInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_category_product_rates_volumes", {
+				"program_id" = "eq.#FORM.Program_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#getAllCategoryProducts.BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProductInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProductInfo>
+<cfquery name="getThisProductInfo" datasource="#application.datasource#">
 								SELECT *
 								FROM Program_Product_Category_Product_Rates_Volumes
 								WHERE
@@ -422,6 +438,7 @@ TABLE.Maintable TD
 									AND 
 									Deleted 								= 	0								
 							</cfquery>
+</cfif>
 							
 							<CFIF getThisProductInfo.recordcount EQ 0>
 								<CFSET thisProdRate 		= 0>

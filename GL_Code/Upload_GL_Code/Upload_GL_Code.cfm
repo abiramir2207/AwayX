@@ -81,11 +81,29 @@
 			<TD>
 				<B><FONT COLOR="Red" SIZE="3">
 					<CFIF CheckProcessStatus.GL_Code_Process_Status_ID EQ 3>
-						<CFQUERY NAME="UpdateActivateBit" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForUpdateActivateBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForUpdateActivateBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"gl_code_upload_id" = "eq.#CheckProcessStatus.GL_Code_Upload_ID#"
+			},
+			{
+				"activate_tonight" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateActivateBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateActivateBit>
+<CFQUERY NAME="UpdateActivateBit" DATASOURCE="#Application.Datasource#">
 							UPDATE 	GL_Code_Upload 
 							SET 	Activate_Tonight = 0
 							WHERE 	GL_Code_Upload_ID = #CheckProcessStatus.GL_Code_Upload_ID#
 						</CFQUERY>
+</cfif>
 						Upload failed.
 					<CFELSEIF CheckProcessStatus.GL_Code_Process_Status_ID EQ 5>
 						Upload Process completed successfully. This Upload will be activated on the date mentioned.

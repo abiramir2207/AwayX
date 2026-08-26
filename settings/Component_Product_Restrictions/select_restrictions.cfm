@@ -186,11 +186,26 @@ function isNextRow(maxCols, currCols)
 </cfscript>
 <cfset maxColsPerRow = 3>
 
-			<cfquery name="GetCriteriaDetails" dbtype="query">
+			<cfset useLakebaseForGetCriteriaDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductgroupattributes")>
+<cfif useLakebaseForGetCriteriaDetails>
+	<cftry>
+		<cfset GetCriteriaDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductgroupattributes", {
+				"product_group_level_id" = "eq.#RestrictedProductCriteria.Component_Product_Restriction_Criteria#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCriteriaDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCriteriaDetails>
+<cfquery name="GetCriteriaDetails" dbtype="query">
 				SELECT	*
 				FROM	qGetProductGroupAttributes
 				 WHERE	Product_Group_Level_ID = #RestrictedProductCriteria.Component_Product_Restriction_Criteria#
 			</cfquery>
+</cfif>
 			
 			<cfset useLakebaseForExistingSelections = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_product_restriction")>
 <cfif useLakebaseForExistingSelections>

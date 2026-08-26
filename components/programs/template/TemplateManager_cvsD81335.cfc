@@ -959,9 +959,25 @@ DEPENDENCIES:
 	<cffunction name="getThisTemplateIDList" output="false">
 		<cfargument name="id" required="true" type="numeric" />
 
-		<CFQUERY NAME="GetTemplateID" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetTemplateID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetTemplateID>
+	<cftry>
+		<cfset GetTemplateID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.id#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateID>
+<CFQUERY NAME="GetTemplateID" DATASOURCE="#Application.Datasource#">
 			SELECT ProgramType_ID FROM Contract_Main WHERE Contract_Main_ID = #arguments.id#
 		</CFQUERY>
+</cfif>
 
 		<CFSET ParentsList = this.getThisTemplateParentsID(GetTemplateID.ProgramType_ID)>
 		<CFSET ChildrenList = this.getThisTemplateChildrenID(GetTemplateID.ProgramType_ID)>

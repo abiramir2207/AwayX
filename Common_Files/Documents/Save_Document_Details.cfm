@@ -254,10 +254,24 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForAttachDoc>
-		<CFQUERY NAME="Attach_doc" datasource="#application.datasource#">
+		<cfset useLakebaseForAttach_doc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForAttach_doc>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"deduction_id" = "#url.Deduction_ID#",
+			"doc_id" = "#DocId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForAttach_doc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAttach_doc>
+<CFQUERY NAME="Attach_doc" datasource="#application.datasource#">
 			INSERT INTO Contract_Attachments (	Deduction_ID,	Doc_ID )
 			VALUES	( '#url.Deduction_ID#',	'#DocId#')
 		</CFQUERY>
+</cfif>
 	</cfif>
 </cfif>
 

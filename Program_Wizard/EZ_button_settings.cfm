@@ -159,11 +159,26 @@
 			</td>
 		</tr>
 		</cfoutput>
-		<cfquery name="getdiscounttypes" dbtype="query">
+		<cfset useLakebaseForgetdiscounttypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_discounttypes")>
+<cfif useLakebaseForgetdiscounttypes>
+	<cftry>
+		<cfset getdiscounttypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_discounttypes", {
+				"discount_type_id" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetdiscounttypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetdiscounttypes>
+<cfquery name="getdiscounttypes" dbtype="query">
 			SELECT * 
 			FROM 		template_discounttypes
 			WHERE 	Discount_Type_ID = 2  
 		</cfquery>
+</cfif>
 
 	    <cfif LockedBy_Current_User EQ 1>
 	     	<cfset vars.disabled = "">

@@ -1999,11 +1999,27 @@
 			<cfelse>
 				<cfset splitNum = "#loopCount#">
 			</cfif>
-			<cfquery name="qGetDDAmount" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetDDAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForqGetDDAmount>
+	<cftry>
+		<cfset qGetDDAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#DDID#",
+				"select" = "dd_amount"
+			}), "dd_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDDAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDDAmount>
+<cfquery name="qGetDDAmount" datasource="#application.datasource#">
 				SELECT DD_Amount
 				FROM Deductions
 				WHERE Deduction_ID = '#DDID#'
 			</cfquery>
+</cfif>
 			<cfquery name="qGetBBInfo" datasource="#application.datasource#">
 				SELECT BB.Billback_ID
 				FROM Billback BB INNER JOIN BB_Approved BBA ON BBA.Billback_ID = BB.Billback_ID

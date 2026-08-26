@@ -518,27 +518,7 @@
 					</CFQUERY>
 </cfif>
 					
-					<cfset useLakebaseForUn_Lock_BB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
-<cfif useLakebaseForUn_Lock_BB>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_allied",
-			{
-				"billback_id" = "eq.#Update_BBID#",
-				"bb_locked_by_user_id" = "eq.#request.AccessStructure.user_id#",
-				"bb_locked_by_match_central" = "eq.0"
-			},
-			{
-				"bb_is_locked" = "0",
-				"bb_locked_by_user_id" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUn_Lock_BB = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUn_Lock_BB>
-<CFQUERY NAME="Un_Lock_BB" DATASOURCE="#Application.Datasource#">
+					<CFQUERY NAME="Un_Lock_BB" DATASOURCE="#Application.Datasource#">
 						UPDATE 		Billback_Allied
 						
 						SET 		BB_Is_Locked = 0,
@@ -548,8 +528,7 @@
 									AND BB_Locked_By_User_ID = '#request.AccessStructure.user_id#'
 									AND BB_Locked_By_Match_Central = 0
 									
-					</CFQUERY>
-</cfif>								
+					</CFQUERY>								
 				<CFELSE>
 					<CFSET Unsuccess_Count = Unsuccess_Count + 1>
 					<CFIF Unsuccess_Count EQ 1>

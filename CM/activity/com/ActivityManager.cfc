@@ -33,12 +33,29 @@
 			</cfquery>
 			
 			<!---query products--->
-			<cfquery name="qGetProductId" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetProductId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_product")>
+<cfif useLakebaseForqGetProductId>
+	<cftry>
+		<cfset qGetProductId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_product", {
+				"cm_activity_id" = "eq.#arguments.id#",
+				"deleted" = "eq.0",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductId>
+<cfquery name="qGetProductId" datasource="#application.datasource#">
 				SELECT	Product_ID
 				FROM	CM_Activity_Product						
 				WHERE	CM_Activity_Product.CM_Activity_ID = #arguments.id#
 				AND		deleted = 0
 			</cfquery>
+</cfif>
 			
 			<!---query distributors--->
 			<cfset useLakebaseForqGetDistributorId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_customer")>

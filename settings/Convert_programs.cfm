@@ -332,11 +332,26 @@
 					WHERE	Budget_Program_Selection.Program_ID = <cfqueryparam value="#Contract_Main_ID#" cfsqltype="CF_SQL_INTEGER" />
 				</cfquery>
 				<!---GET Budgets on the Program --->
-				<cfquery name="pgmBudgets" datasource="#Application.Datasource#">
+				<cfset useLakebaseForpgmBudgets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_program_selection")>
+<cfif useLakebaseForpgmBudgets>
+	<cftry>
+		<cfset pgmBudgets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_program_selection", {
+				"program_id" = "eq.#List_program.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForpgmBudgets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForpgmBudgets>
+<cfquery name="pgmBudgets" datasource="#Application.Datasource#">
 					SELECT *
 					FROM Budget_Program_Selection
 					WHERE Program_id = #List_program.Contract_Main_ID#
 				</cfquery>
+</cfif>
 				<cfif pgmBudgets.recordcount>
 					<cfset programBudgets = ValueList(pgmBudgets.Budget_ID)>
 				<cfelse>

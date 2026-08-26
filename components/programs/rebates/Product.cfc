@@ -272,11 +272,27 @@
    		<cfargument name="BSA_Foodservice_Items_Master_ID" type="string" required="true" default="">
 
 		<!---query to get net weight--->
-		<cfquery name="qGetNetWeight" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetNetWeight = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqGetNetWeight>
+	<cftry>
+		<cfset qGetNetWeight = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"select" = "net_weight"
+			}), "net_weight"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetNetWeight = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetNetWeight>
+<cfquery name="qGetNetWeight" datasource="#application.datasource#">
 			SELECT 	Net_Weight
 			FROM 	BSA_Foodservice_Items_Master
 			WHERE 	BSA_Foodservice_Items_Master_ID = '#arguments.BSA_Foodservice_Items_Master_ID#'
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetNetWeight.Net_Weight />
 

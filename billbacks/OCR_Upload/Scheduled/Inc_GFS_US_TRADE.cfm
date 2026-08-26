@@ -414,7 +414,28 @@ Description  :  Include template for GFS US TRADE
 				FROM
 					##tblGFSFileData 
 			</cfquery>
-			<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
+			<cfset useLakebaseForupdateOCRUploadLogStatus4 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatus4>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "4",
+				"ocr_upload_status" = "Transferred file to DB processing",
+				"debug_dev_status" = "Transferred file to DB processing.",
+				"db_input_filename" = "#qGetOCRUploadExtracted.File_Name#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatus4 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatus4>
+<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
 				UPDATE OCR_Upload_Log 
 					SET 
 						OCR_Step = '4',
@@ -423,7 +444,8 @@ Description  :  Include template for GFS US TRADE
 						DB_Input_FileName = '#qGetOCRUploadExtracted.File_Name#',
 						Updated_Date = getDate()
 				WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-			</cfquery>	  
+			</cfquery>
+</cfif>	  
 			<!--- <cffile action="move" source="#postPDFFile#" destination="#archiveLocation#">   --->
 			<cfelse>
 					<cfquery name="updateOCRUploadLogStatusError1" datasource="#application.datasource#">

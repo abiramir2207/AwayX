@@ -359,7 +359,22 @@
 			<cfset totalOverhead = 0>
 			<cfloop list="#compoundedIndependent#" delimiters="," index="thisCompIndep">
 			
-				<cfquery name="qGetProductPricingOverheads" dbtype="query">
+				<cfset useLakebaseForqGetProductPricingOverheads = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetpricingoverheads")>
+<cfif useLakebaseForqGetProductPricingOverheads>
+	<cftry>
+		<cfset qGetProductPricingOverheads = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetpricingoverheads", {
+				"fp_product_id" = "eq.#currentProductId#",
+				"componded_independent" = "eq.#thisCompIndep#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductPricingOverheads = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductPricingOverheads>
+<cfquery name="qGetProductPricingOverheads" dbtype="query">
 					SELECT	*
 					FROM	qGetPricingOverheads
 					WHERE
@@ -367,6 +382,7 @@
 							AND
 							Componded_Independent = #thisCompIndep#
 				</cfquery>
+</cfif>
 				
 				<cfset totalOverhead = totalOverhead + this.calcOverhead(totalPrice, qGetProductPricingOverheads, thisCompIndep)>
 				

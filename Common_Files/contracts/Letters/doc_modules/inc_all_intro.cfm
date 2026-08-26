@@ -171,11 +171,27 @@ FUNCTIONALITY:
 	<cfset tableHeaderDistributor.setWidths(jArr)>
   
   	<!--- Do we wish to display the Warehouses? [begin] IF Freight_Component_Type[1] NEQ 0 display whs IF Freight_Component_Type[1] EQ 1 display Frt Bkt --->
-  	<cfquery name="thisTag.qGetFreightComponentType" datasource="#application.datasource#">
+  	<cfset useLakebaseForthisTag_qGetFreightComponentType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForthisTag_qGetFreightComponentType>
+	<cftry>
+		<cfset thisTag.qGetFreightComponentType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#thisTag.CMID#",
+				"select" = "freight_component_type"
+			}), "freight_component_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetFreightComponentType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetFreightComponentType>
+<cfquery name="thisTag.qGetFreightComponentType" datasource="#application.datasource#">
       SELECT	Contract_main_Aux_Data.Freight_Component_Type
       FROM		Contract_main_Aux_Data
       WHERE		Contract_main_Aux_Data.Contract_Main_ID = #thisTag.CMID#
 		</cfquery>
+</cfif>
     <!--- Do we wish to display the Frt Bkts? [end] IF Freight_Component_Type[1] NEQ 0 display whs IF Freight_Component_Type[1] EQ 1 display Frt Bkt --->
   
   	<!--- IF we a distributor list OR are perhaps working with a letter BY distributor... [begin] --->

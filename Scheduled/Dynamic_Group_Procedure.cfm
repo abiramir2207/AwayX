@@ -97,11 +97,31 @@
 	<CFSET program_id = Renewed_Program_ID>
 	<CFINCLUDE TEMPLATE = "/Common_Files/Contracts/Contract_layered_approve_action_Auto.cfm">
 	
-	<CFQUERY NAME="SetProcessed" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForSetProcessed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dynamic_group_processed_program")>
+<cfif useLakebaseForSetProcessed>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dynamic_group_processed_program",
+			{
+				"is_processed" = "eq.0",
+				"contract_main_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_processed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSetProcessed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSetProcessed>
+<CFQUERY NAME="SetProcessed" DATASOURCE="#Application.Datasource#">
 		UPDATE Dynamic_Group_Processed_Program
 		SET Is_Processed = 1
 		WHERE Is_processed = 0 AND Contract_Main_ID = '#Program_ID#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 </cfloop>
 <cfset useLakebaseForResetUpdatedBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_members")>
 <cfif useLakebaseForResetUpdatedBit>

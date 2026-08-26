@@ -133,30 +133,7 @@ Change_Approved_Void_Status.cfm
 	</CFQUERY>
 	
 	
-	<cfset useLakebaseForDeleteAllo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
-<cfif useLakebaseForDeleteAllo>
-	<cftry>
-		<cfset application.oLakebase.updateRows("gl_code_allocation",
-			{
-				"billback_id" = "eq.#URL.BBID#",
-				"deleted" = "eq.0"
-			},
-			{
-				"deleted" = "1",
-				"allocation_saved" = "0",
-				"payment_requested" = "0",
-				"approved" = "0",
-				"approved_date" = javaCast("null",""),
-				"approved_by" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForDeleteAllo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForDeleteAllo>
-<CFQUERY NAME="DeleteAllo" DATASOURCE="#Application.Datasource#">
+	<CFQUERY NAME="DeleteAllo" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		SET 	Deleted = 1,
 				Allocation_Saved = 0,
@@ -168,7 +145,6 @@ Change_Approved_Void_Status.cfm
 		WHERE 	Billback_ID = '#URL.BBID#' AND				
 				Deleted = 0
 	</CFQUERY>
-</cfif>
 	
 	<!------ 
 	FORM.resubmitBillback (1=WIP status, 2=Approved Status)

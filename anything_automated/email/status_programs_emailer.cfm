@@ -9,12 +9,27 @@ and
 (User_Positions.Position_Label != 'NULL' AND User_Positions.Position_Label != '') 
 </cfquery>
 
+<cfset useLakebaseForgetGSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGSettings>
+	<cftry>
+		<cfset getGSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_broker_email"
+			}), "send_broker_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGSettings>
 <cfquery name="getGSettings" datasource="#application.datasource#">
 				SELECT
 					send_broker_email
 				FROM
 					General_Settings
 </cfquery>
+</cfif>
 
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = genSettingsManager.get()>

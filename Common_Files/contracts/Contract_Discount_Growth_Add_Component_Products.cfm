@@ -1430,11 +1430,26 @@ METHOD="post" name="compProductTierRates" ID="compProductTierRates" STYLE="DISPL
 
 <cfset ExistingPricingLevelList = "">
 
-	<CFQUERY NAME="getAllUOMs" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllUOMs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetAllUOMs>
+	<cftry>
+		<cfset getAllUOMs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "neq.3"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllUOMs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllUOMs>
+<CFQUERY NAME="getAllUOMs" datasource="#application.datasource#">
 		SELECT *
 		FROM Units_Of_Measure
 		where Unit_Of_Measure_ID <> 3
 	</CFQUERY>
+</cfif>
 
 	<!--- Add products to products collection in the structure --->
 	<CFLOOP QUERY="getComponentProducts">
@@ -1690,12 +1705,28 @@ METHOD="post" name="compProductTierRates" ID="compProductTierRates" STYLE="DISPL
 		<cfset thisUOM = Evaluate("FORM.Tier_#tierfieldname#_Product_Rate_#fieldname#_UOM")>
 
 		<cfif EzButton_Disable EQ 1 AND (thisRate EQ 0 or len(trim(thisUOM)) EQ 0)>
-			<cfquery name="getEZButtonRate" dbtype="query">
+			<cfset useLakebaseForgetEZButtonRate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getezbuttondefaultrates")>
+<cfif useLakebaseForgetEZButtonRate>
+	<cftry>
+		<cfset getEZButtonRate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getezbuttondefaultrates", {
+				"bsa_foodservice_items_master_id" = "eq.#ThisProductData.BSA_Foodservice_Items_Master_ID#",
+				"tier_number" = "eq.#ThisLevelStruct.Tier_Number#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEZButtonRate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEZButtonRate>
+<cfquery name="getEZButtonRate" dbtype="query">
 				select *
 				from GetEZButtonDefaultRates
 				where BSA_Foodservice_Items_Master_ID = '#ThisProductData.BSA_Foodservice_Items_Master_ID#'
 				and tier_number = '#ThisLevelStruct.Tier_Number#'
 			</cfquery>
+</cfif>
 			<cfset thisRate = getEZButtonRate.growth_rate>
 			<cfset thisUOM = getEZButtonRate.Unit_Of_Measure_ID>
 		</cfif>

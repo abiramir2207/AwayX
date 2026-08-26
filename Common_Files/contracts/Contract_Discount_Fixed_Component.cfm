@@ -550,13 +550,30 @@ Get first component that has a claim mechanics which is not auto pay
 </cfif>
 
 <!--- D45016 :: Restrict access at component level for all discount types START--->
-	<cfquery name="getAllFixedComponentsAccess" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllFixedComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_profile")>
+<cfif useLakebaseForgetAllFixedComponentsAccess>
+	<cftry>
+		<cfset getAllFixedComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"allow_user_to_view" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllFixedComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllFixedComponentsAccess>
+<cfquery name="getAllFixedComponentsAccess" datasource="#application.datasource#">
 			SELECT 	*
 			FROM		Program_Fixed_Component_Profile
 			WHERE	Deleted = 0
 			AND 		Profiles_ID = #request.AccessStructure.Profiles_ID#
 			AND 		Allow_User_To_View = 1
 	</cfquery>
+</cfif>
 <!--- D45016 :: Restrict access at component level for all discount types END--->
 
 <!---
@@ -2450,10 +2467,25 @@ function editfreightrates(prodid,compId,num,paidTo)
 </cfsilent>
 
 <cfif Display_Basis_Treatment_Code>
-	<cfquery name="qComponentNames" dbtype="query">
+	<cfset useLakebaseForqComponentNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getfixedcomponentnames")>
+<cfif useLakebaseForqComponentNames>
+	<cftry>
+		<cfset qComponentNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getfixedcomponentnames", {
+				"select" = "program_fixed_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+			}), "program_fixed_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqComponentNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqComponentNames>
+<cfquery name="qComponentNames" dbtype="query">
 		SELECT	Program_Fixed_Component_Name_ID Component_Name_ID, Allowance_Code_ID Component_Allowance_Code_ID
 		FROM	GetFixedComponentNames
 	</cfquery>
+</cfif>
 	<cfinclude template="Contract_Basis_Tratment_Code.cfm" />
 </cfif>
 

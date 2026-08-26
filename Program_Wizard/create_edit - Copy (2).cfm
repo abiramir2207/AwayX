@@ -125,10 +125,25 @@ If you added a new setting to this file, please also add the new setting to belo
 </cfif>
 
 
+<cfset useLakebaseForqCheckOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqCheckOptions>
+	<cftry>
+		<cfset qCheckOptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckOptions>
 <cfquery name="qCheckOptions" datasource="#application.datasource#">
 	SELECT 	TOP 1 *
 	FROM 	Program_Control_Panel_Options
 </cfquery>
+</cfif>
 
 <cfset lumpSumCapMin = 0>
 <cfset approvalGroupManager = CreateObject("component", "components.settings.ApprovalGroupManager").init() />
@@ -1535,13 +1550,31 @@ function expandTable(objectID)
 	<cfif getGeneralSettings.Use_Discount_ID IS 1>
 
 	<!---Gets values to populate pull down--->
-	<cfquery name="GetsDiscountIDTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGetsDiscountIDTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetsDiscountIDTypes>
+	<cftry>
+		<cfset GetsDiscountIDTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "isdefault.desc",
+				"select" = "discount_identifier_desc,discount_identifier_id,discount_identifier_number,isdefault"
+			}), "discount_identifier_desc,discount_identifier_id,discount_identifier_number,isdefault"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetsDiscountIDTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetsDiscountIDTypes>
+<cfquery name="GetsDiscountIDTypes" datasource="#application.datasource#">
 		SELECT 		Discount_Identifier_Desc, Discount_Identifier_ID, Discount_Identifier_Number, isDefault
 		FROM 		Discount_Identifier
 		WHERE 		Deleted = 0
 					AND Active = 1
 		ORDER BY 	IsDefault Desc
 	</cfquery>
+</cfif>
 	<CFIF fromSettings_management eq 1>
 		<cfset SettingsTemplateForm(NameField="Discount_Identifier_ID",NameFieldDesc="Discount Identifier")>
   	<CFELSE>

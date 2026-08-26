@@ -86,11 +86,27 @@ order by state_id,state_name
 <cfparam name="GoToDistributorSearch" default="0">
 
 <!--- is this user a USDA exclusive user...if so limit their selection --->
- <cfquery name="getUSDAUserStatus" datasource="#application.datasource#">
+ <cfset useLakebaseForgetUSDAUserStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUSDAUserStatus>
+	<cftry>
+		<cfset getUSDAUserStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "is_usda_user,user_usda_state_id,user_usda_county_id,user_usda_operator_id,user_usda_distributor_id,user_usda_distributor_id_list,user_usda_broker_id_list,user_usda_operator_id_list"
+			}), "is_usda_user,user_usda_state_id,user_usda_county_id,user_usda_operator_id,user_usda_distributor_id,user_usda_distributor_id_list,user_usda_broker_id_list,user_usda_operator_id_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUSDAUserStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUSDAUserStatus>
+<cfquery name="getUSDAUserStatus" datasource="#application.datasource#">
  	SELECT Is_USDA_User, user_usda_state_id, user_usda_county_id, user_usda_operator_id, user_usda_distributor_id, user_usda_distributor_id_list, user_usda_broker_id_list, user_usda_operator_id_list
 	FROM _Users
 	WHERE User_ID = '#request.AccessStructure.User_ID#'
   </cfquery>
+</cfif>
   
   
   

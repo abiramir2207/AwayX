@@ -477,12 +477,29 @@ Data from include of \settings\Access_Rights\approval_tree\get_positions_underne
 	drop table ##tmp_billacks_cannot_see
 	</cfif>
 </CFQUERY>
+<cfset useLakebaseForgetManualRejectProfileCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForgetManualRejectProfileCount>
+	<cftry>
+		<cfset getManualRejectProfileCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles_settings", {
+				"manual_reject_billback" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetManualRejectProfileCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetManualRejectProfileCount>
 <CFQUERY NAME="getManualRejectProfileCount" DATASOURCE="#application.datasource#" cachedafter="#cacheSpan#">
 	SELECT 1
 	FROM Profiles_Settings
 	WHERE Manual_Reject_Billback = 1
 	AND Deleted = 0
 </CFQUERY>
+</cfif>
 </CFSILENT>
 	<TABLE CLASS="normal-home" border="0" CELLPADDING="0" CELLSPACING="0" width="100%" HEIGHT="96%" valign="top">
 		<CFOUTPUT QUERY="get_All_Status_Count">

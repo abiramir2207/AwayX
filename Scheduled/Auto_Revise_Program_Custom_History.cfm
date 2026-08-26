@@ -35,11 +35,28 @@
 	<cfset New_Pgm_Start_Date 	= Programs_Custom_Revision.New_Start_Date	/>	
 	<cfset New_Pgm_End_Date 	= Programs_Custom_Revision.New_End_Date	/>
 
-	<cfquery name="Getcompany" datasource="#application.datasource#">
+	<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 		SELECT Top 1 Company_Main_ID
 		FROM 	Company_Main
 		WHERE	Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 	
@@ -276,11 +293,25 @@
 			AND		Program_Fixed_Price_Product_Data.Program_Fixed_Component_ID = '#qGetProgramFixedCompIDRemove.Program_Fixed_Component_ID#'			
 		</cfquery>	
 	
-		<cfquery name="qRemoveVol" datasource="#application.datasource#">
+		<cfset useLakebaseForqRemoveVol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqRemoveVol>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_product_volume", {
+			"program_id" = "eq.#RENEWED_PROGRAM_ID#",
+			"bsa_foodservice_items_master_id" = "eq.#qGetDiscountDataToRemove.BSA_Foodservice_Items_Master_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqRemoveVol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqRemoveVol>
+<cfquery name="qRemoveVol" datasource="#application.datasource#">
 			DELETE FROM	Program_Product_Volume
 			WHERE	Program_ID = '#RENEWED_PROGRAM_ID#'
 			AND		BSA_Foodservice_Items_Master_ID = '#qGetDiscountDataToRemove.BSA_Foodservice_Items_Master_ID#'
 		</cfquery>
+</cfif>
 		
 	</cfloop>
 	<!--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// --->

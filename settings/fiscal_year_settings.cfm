@@ -79,11 +79,26 @@
 <p></p>
 <CFIF getFiscalCalendar.recordcount EQ 0>
 <CFELSE>
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#getFiscalCalendar.Last_Updated_By_User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT *
 		FROM _Users
 		WHERE User_ID = '#getFiscalCalendar.Last_Updated_By_User_ID#'
 	</CFQUERY>
+</cfif>
 
 	<TABLE BGCOLOR="White" style="border-color:Orange;border-style:solid;" CELLPADDING="3" CELLSPACING="0">
 	<TR>

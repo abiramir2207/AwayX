@@ -53,11 +53,26 @@ td.label { text-align:right; padding-right:10px; font-weight:bold; }
 <cfif busSegMgr.isEnabled>
   <cfset qSegments = busSegMgr.obj.getActive( userId = request.AccessStructure.User_ID )>
   <div class="general"><label class="labelg">#formlabels.segment#<span id="error_business_segment_id"></span></label><select name="business_segment_id" #form.read_only# class="input131" <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>><option value="0">select</option>
-  <cfquery name="qSortedSegments" dbtype="query">
+  <cfset useLakebaseForqSortedSegments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qsegments")>
+<cfif useLakebaseForqSortedSegments>
+	<cftry>
+		<cfset qSortedSegments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qsegments", {
+				"order" = "business_unit_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSortedSegments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSortedSegments>
+<cfquery name="qSortedSegments" dbtype="query">
     SELECT  *
     FROM  qSegments
     ORDER BY BUSINESS_UNIT_DESC
   </cfquery>
+</cfif>
               <cfloop query="qSortedSegments"><option <cfif form.business_segment_id eq qSortedSegments.business_segment_id>selected</cfif> value="#qSortedSegments.business_segment_id#">#qSortedSegments.Business_Unit_Desc#<!--- #qSegments.Business_Unit_Id#---></option>
               </cfloop>
             </select></div>

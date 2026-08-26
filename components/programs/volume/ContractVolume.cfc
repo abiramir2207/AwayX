@@ -2345,12 +2345,28 @@
 		<cfset product_volume = 0>
 		<CFIF Arguments.loadForecast EQ 1>
 			<!------------- forecast Volume ---------------->
-			<CFQUERY NAME="This_Forecast_Volume" DBTYPE="query">
+			<cfset useLakebaseForThis_Forecast_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_forecast_volume")>
+<cfif useLakebaseForThis_Forecast_Volume>
+	<cftry>
+		<cfset This_Forecast_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_forecast_volume", {
+				"product_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Forecast_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Forecast_Volume>
+<CFQUERY NAME="This_Forecast_Volume" DBTYPE="query">
 				SELECT		Volume
 				FROM		Get_Forecast_Volume
 				WHERE
 							Product_ID = '#Product_ID#'
 			</CFQUERY>
+</cfif>
 			<CFIF This_Forecast_Volume.RecordCount EQ 0>
 				<!---- nothing to be done -------->							
 				<cfset product_volume = "">

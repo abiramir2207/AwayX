@@ -150,6 +150,23 @@
 </CFQUERY>
 
 <!--- Dev Note: CPM 9254 - Welcome Letter Enhancements  --->
+<cfset useLakebaseForgetWelcomeLetters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_details")>
+<cfif useLakebaseForgetWelcomeLetters>
+	<cftry>
+		<cfset getWelcomeLetters = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("document_details", {
+				"is_welcome_letter" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "doc_title.asc",
+				"select" = "doc_title,doc_uni_name"
+			}), "doc_title,doc_uni_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetWelcomeLetters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetWelcomeLetters>
 <CFQUERY NAME="getWelcomeLetters" datasource="#application.datasource#">
 	Select		doc_title, doc_uni_name
 	From		document_details
@@ -157,6 +174,7 @@
 	AND 		deleted = 0
 	Order By 	doc_title ASC
 </CFQUERY>
+</cfif>
 
 
 <cfquery name="getLabelSets" datasource="#application.datasource#">

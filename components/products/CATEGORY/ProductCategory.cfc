@@ -32,7 +32,23 @@
 		 
 		<cfset var categoryFilters = "" />
 		
-		<cfquery name="qGetCategoryFilters" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCategoryFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_category_filter")>
+<cfif useLakebaseForqGetCategoryFilters>
+	<cftry>
+		<cfset qGetCategoryFilters = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_category_filter", {
+				"deleted" = "eq.0",
+				"programcontrol_panel_options_id" = "eq.#arguments.controlPanelOptionId#",
+				"select" = "category_id"
+			}), "category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCategoryFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCategoryFilters>
+<cfquery name="qGetCategoryFilters" datasource="#application.datasource#">
 		
 			SELECT 	Category_ID
 			FROM 	Product_Category_Filter
@@ -40,6 +56,7 @@
 			AND		ProgramControl_Panel_Options_ID = #arguments.controlPanelOptionId#		
 			
 		</cfquery>
+</cfif>
 		
 		<cfset categoryFilters = ValueList(qGetCategoryFilters.Category_ID) />
 		

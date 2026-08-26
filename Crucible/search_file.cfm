@@ -85,11 +85,26 @@ function searchDataFile()
 	<tr bgcolor="#ffffff" valign="top">
 	<td><cfoutput><strong>#DateFormat(Weekly_Report_Date, "mm/dd/yyyy")#</strong>&nbsp;</cfoutput></td>
 	<td>
-	<cfquery name="qGetFileNames" dbtype="query">
+	<cfset useLakebaseForqGetFileNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qsearch")>
+<cfif useLakebaseForqGetFileNames>
+	<cftry>
+		<cfset qGetFileNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qsearch", {
+				"crucible_weekly_report_id" = "eq.#Crucible_Weekly_Report_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFileNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFileNames>
+<cfquery name="qGetFileNames" dbtype="query">
 		SELECT	*
 		FROM	qSearch
 		WHERE	Crucible_Weekly_Report_ID = #Crucible_Weekly_Report_ID#
 	</cfquery>
+</cfif>
 	<cfloop query="qGetFileNames">
 	<cfset sDownloadFilePath = "#sAPP_Relative_Path#/#Weekly_Report_Folder#/#Folder_Name#.#sCompressed_File_Extension#" />
 	<CF_smallLink 

@@ -107,6 +107,22 @@ Label 42223 - Unable to upload documents to Billbacks:
 
 <CFSET Access_Position_List = ValueList(qGetAccess_Position_List.Below_User_Positions_ID)>
 
+<cfset useLakebaseForGetPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForGetPosition>
+	<cftry>
+		<cfset GetPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPosition>
 <CFQUERY NAME="GetPosition" DATASOURCE="#Application.Datasource#">
 	SELECT 	User_Positions_ID
 
@@ -115,6 +131,7 @@ Label 42223 - Unable to upload documents to Billbacks:
 	WHERE 	User_ID = '#request.AccessStructure.user_id#' AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 <CFSET UserPositionID = GetPosition.User_Positions_ID>
 <!---Tim Ford: Label 24072: Get_Doc_Details query was slowing down the upload documents page. --->
 <cfif URL.bFromSettings eq 2>
@@ -613,9 +630,24 @@ function CheckLength()
 						</cftry>
 					</cfif>
 					<cfif NOT useLakebaseForListDocType2>
-						<CFQUERY NAME = "List_Doc_Type" DATASOURCE = "#Application.Datasource#">
+						<cfset useLakebaseForList_Doc_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_type")>
+<cfif useLakebaseForList_Doc_Type>
+	<cftry>
+		<cfset List_Doc_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("document_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForList_Doc_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForList_Doc_Type>
+<CFQUERY NAME = "List_Doc_Type" DATASOURCE = "#Application.Datasource#">
 							SELECT * from Document_Type WHERE Deleted = 0
 						</CFQUERY>
+</cfif>
 					</cfif>
 					<TR>
 						<TD VALIGN="top" ALIGN="right" NOWRAP><B>Document Type</B></TD>

@@ -36,27 +36,6 @@
 <CFSET This_User_Position_ID = getThisUserPosition.User_Positions_ID>
 
 
-<cfset useLakebaseForUpdateLock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
-<cfif useLakebaseForUpdateLock>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_allied",
-			{
-				"billback_id" = "eq.#BBID#",
-				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
-				"bb_locked_by_match_central" = "eq.0"
-			},
-			{
-				"bb_is_locked" = "0",
-				"bb_locked_by_user_id" = javaCast("null",""),
-				"bb_lock_date" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdateLock = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdateLock>
 <CFQUERY NAME="UpdateLock" DATASOURCE="#Application.Datasource#">
 	UPDATE 	Billback_Allied 
 	SET 	BB_Is_Locked = 0,
@@ -66,7 +45,6 @@
 			BB_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 		AND BB_Locked_By_Match_Central = 0
 </CFQUERY>
-</cfif>
  
  <!--- Dev Note: Clay 9710 - Add Expected Amount to BB Copy   --->
 <CFQUERY NAME="InsertNewBB" DATASOURCE="#Application.Datasource#">

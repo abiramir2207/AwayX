@@ -31,31 +31,12 @@ Deviation_Do_All.cfm
 <CFINCLUDE TEMPLATE="Deviation_Display_Style.cfm">
 
 <!--- Ana: D15311 -- Clear the Deviation Ran Details --->
-<cfset useLakebaseForClearDev = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
-<cfif useLakebaseForClearDev>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback",
-			{
-				"billback_id" = "eq.#Billback_ID#"
-			},
-			{
-				"deviation_ran_date" = javaCast("null",""),
-				"deviation_ran_by" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForClearDev = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForClearDev>
 <cfquery name="ClearDev" datasource="#application.datasource#">
 	UPDATE 	Billback 
 	SET 	Deviation_Ran_Date = NULL,
 			Deviation_Ran_By = NULL
 	WHERE	Billback_ID = '#Billback_ID#'
 </cfquery>
-</cfif>
 
 <CFINCLUDE TEMPLATE="Validation_Req.cfm">
 

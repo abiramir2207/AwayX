@@ -25,9 +25,25 @@ Description  :  This file is scheduled from the application via mass price chang
 		<cfset MPCManager = createObject("component","mvc.Models.Program.Upload.MassPriceChange") />
 
 		<!--- get effective date --->
-		<cfquery name="qGetEffectiveDate" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetEffectiveDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mass_price_products")>
+<cfif useLakebaseForqGetEffectiveDate>
+	<cftry>
+		<cfset qGetEffectiveDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("mass_price_products", {
+				"limit" = "1",
+				"select" = "effective_date"
+			}), "effective_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetEffectiveDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetEffectiveDate>
+<cfquery name="qGetEffectiveDate" datasource="#application.datasource#">
 			Select top 1 Effective_Date from Mass_Price_Products
 		</cfquery>
+</cfif>
 
 		<!--- get user ID --->
 		<cfquery name="qGetScheduledUser" datasource="#application.datasource#" >

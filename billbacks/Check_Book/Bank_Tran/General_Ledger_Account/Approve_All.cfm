@@ -75,13 +75,29 @@
 			</CFLOOP>
 		</CFIF>
 	<CFELSE>
-		<CFQUERY NAME="Check_Lock" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForCheck_Lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForCheck_Lock>
+	<cftry>
+		<cfset Check_Lock = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_allied", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_is_locked"
+			}), "bb_is_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Lock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Lock>
+<CFQUERY NAME="Check_Lock" DATASOURCE="#Application.Datasource#">
 			SELECT 	BB_Is_Locked 
 			
 			FROM 	Billback_Allied
 			
 			WHERE 	Billback_ID	= '#Billback_ID#' 
 		</CFQUERY>
+</cfif>
 		
 		<CFIF Check_Lock.BB_Is_Locked EQ 0>
 	

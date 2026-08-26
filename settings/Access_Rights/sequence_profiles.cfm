@@ -68,31 +68,11 @@ padding: 5px;}
 
 <!--- if Profile consel is locked by you and failed to unlock it UPDATE statement will unlock the profile Console --->
 	    	<cfif get_profile_lock_info.Locked_By_User_ID EQ '#trim(request.AccessStructure.user_id)#'>
-	    		    <cfset useLakebaseForUpdate_profile_lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
-<cfif useLakebaseForUpdate_profile_lock>
-	<cftry>
-		<cfset application.oLakebase.updateRows("profiles",
-			{
-				"deleted" = "eq.0"
-			},
-			{
-				"is_locked" = "0",
-				"locked_by_user_id" = javaCast("null",""),
-				"lock_date" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdate_profile_lock = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdate_profile_lock>
-<cfquery name="Update_profile_lock" datasource="#application.datasource#">
+	    		    <cfquery name="Update_profile_lock" datasource="#application.datasource#">
 	    			UPDATE profiles
 	    			SET Is_locked = 0, Locked_By_User_ID =  null, Lock_Date = null
 	    			WHERE deleted = 0
 	    			</cfquery>
-</cfif>
 	    	</cfif>
 
 

@@ -477,33 +477,7 @@ Usage:			N/A
 	<cffunction name="fnUnAssociateDeductionDAO" output="false" returntype="void">
 		<cfargument name="Deduction_ID" type="string"> 
 		<cfargument name="Billback_ID" type="string"> 
-		<cfset useLakebaseForUpdUnAssociateDDStep1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForUpdUnAssociateDDStep1>
-	<cftry>
-		<cfset application.oLakebase.updateRows("deductions",
-			{
-				"deduction_id" = "eq.#arguments.Deduction_ID#"
-			},
-			{
-				"dd_closure_id" = javaCast("null",""),
-				"dd_closure_type" = javaCast("null",""),
-				"dd_closed_by" = javaCast("null",""),
-				"dd_status" = "2",
-				"dd_date_closed" = javaCast("null",""),
-				"dd_resolution_code" = javaCast("null",""),
-				"cleared_amount" = javaCast("null",""),
-				"updated_date" = "#now()#",
-				"split_by_billback_id" = javaCast("null",""),
-				"dd_closure_sent" = "0"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdUnAssociateDDStep1 = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdUnAssociateDDStep1>
-<cfquery name="UpdUnAssociateDDStep1" datasource="#Application.Datasource#"> 
+		<cfquery name="UpdUnAssociateDDStep1" datasource="#Application.Datasource#"> 
 			UPDATE 
 				Deductions 
 			SET 
@@ -520,7 +494,6 @@ Usage:			N/A
 			WHERE 
 				Deduction_ID = '#arguments.Deduction_ID#'
 		</cfquery>
-</cfif>
 		<cfset useLakebaseForUpdUnAssociateDDStep2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
 <cfif useLakebaseForUpdUnAssociateDDStep2>
 	<cftry>
@@ -1009,10 +982,25 @@ Usage:			N/A
 				<cfset RegularBBProgram = VALUELIST(BBProgram.Billback_Program_ID)>
 			</cfif>
 	
-	 		<cfquery name="AdjustmentSettings" datasource="#application.datasource#">
+	 		<cfset useLakebaseForAdjustmentSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForAdjustmentSettings>
+	<cftry>
+		<cfset AdjustmentSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "adjustment_from_program_without_pullback,adjustment_from_program_with_pullback"
+			}), "adjustment_from_program_without_pullback,adjustment_from_program_with_pullback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAdjustmentSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAdjustmentSettings>
+<cfquery name="AdjustmentSettings" datasource="#application.datasource#">
 				SELECT 	Adjustment_From_Program_WithOut_PullBack, Adjustment_From_Program_With_PullBack
 				FROM 	Billback_Settings				
-			</cfquery>	
+			</cfquery>
+</cfif>	
 	
 			<cfif AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack NEQ AdjustmentSettings.Adjustment_From_Program_With_PullBack AND
 			(
@@ -1282,11 +1270,27 @@ Usage:			N/A
 	xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	<cfif appsettings.getBillbackModifyAgree() EQ 1>
 		<!--- Check If modify agree is 1 --->
-		<cfquery name="getBBInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForgetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetBBInfo>
+	<cftry>
+		<cfset getBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_modify_agree"
+			}), "bb_modify_agree"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBInfo>
+<cfquery name="getBBInfo" datasource="#application.datasource#">
 			select BB_Modify_Agree
 			from billback
 			where Billback_Id = '#Billback_ID#'
 		</cfquery>
+</cfif>
 	
 		<cfif getBBInfo.BB_Modify_Agree EQ 1>
 		<cfinclude template="save_modifyagree_BBchanges.cfm">
@@ -1375,7 +1379,26 @@ Usage:			N/A
 				<!--- Get closing method of a child billback and set that closing method for the parent --->
 				<cfset qGetChildBBClosingMethod = getAnyClosingMethodChildBB(checkForSplits.BB_Parent_ID)>
 
-				<cfquery name="UpdBBParent" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdBBParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdBBParent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#arguments.Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"billback_status_id" = "3",
+				"bb_closing_method" = "#qGetChildBBClosingMethod.BB_Closing_Method#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdBBParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdBBParent>
+<cfquery name="UpdBBParent" datasource="#application.datasource#">
 					UPDATE
 						Billback
 					SET Billback_Status_ID = 3,
@@ -1383,7 +1406,8 @@ Usage:			N/A
 					WHERE 
 						Billback_ID = '#arguments.Billback_ID#'  AND
 						Deleted = 0
-				</cfquery>	
+				</cfquery>
+</cfif>	
 			</cfif>
 		</cfif>				
 		

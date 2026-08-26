@@ -526,9 +526,24 @@
 
         <!--- 2015 january 22 - chrisn: introduced _SETTINGS table with multiple rows feature for 2015 internal settings storage --->
 
-        <cfquery name="getCols" datasource="#application.datasource#">
+        <cfset useLakebaseForgetCols = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_settings")>
+<cfif useLakebaseForgetCols>
+	<cftry>
+		<cfset getCols = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_settings", {
+				"select" = "input_name,value"
+			}), "input_name,value"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCols = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCols>
+<cfquery name="getCols" datasource="#application.datasource#">
             SELECT Input_Name, Value FROM _Settings
         </cfquery>
+</cfif>
 
         <cfparam name="request.accessStructure.name_first" default="">
         <cfparam name="request.accessStructure.name_last"  default="">

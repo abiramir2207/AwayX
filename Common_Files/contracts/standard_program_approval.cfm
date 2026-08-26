@@ -167,10 +167,25 @@
 <cfset ProductMarginCount = getProductMarginCount.Recordcount>
 
 <CFOUTPUT query="getAllProductMargins" group="group_id">
-	<CFQUERY name="getGroupvalues" dbtype="query">
+	<cfset useLakebaseForgetGroupvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForgetGroupvalues>
+	<cftry>
+		<cfset getGroupvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getAllProductMargins.group_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupvalues>
+<CFQUERY name="getGroupvalues" dbtype="query">
 	select * from getAllGroupMargins
 	where Type_Code_Desc_Id = '#getAllProductMargins.group_id#'
 	</CFQUERY>
+</cfif>
 
 	<!--- add variation to group margin --->
 	<cfif trim(getGroupvalues.Group_ID_Margin) EQ "">

@@ -157,10 +157,30 @@
 
 			<cfif error> <!--- HAVE ERRORS --->
 
-				<cfquery name="insertErrorReason" datasource="#application.datasource#">
+				<cfset useLakebaseForinsertErrorReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload_doc_error_details")>
+<cfif useLakebaseForinsertErrorReason>
+	<cftry>
+		<cfset application.oLakebase.insertRow("margin_targets_upload_doc_error_details", {
+			"doc_id" = "#docId#",
+			"item" = "#item#",
+			"distribution_channel" = "#Distribution_Channel#",
+			"net_sales_target_value" = "#Net_Sales_Target_Value#",
+			"net_sales_floor_value" = "#Net_Sales_Floor_Value#",
+			"gm_target_value" = "#GM_Target_Value#",
+			"gm_floor_value" = "#GM_Floor_Value#",
+			"reason" = "#reason#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertErrorReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertErrorReason>
+<cfquery name="insertErrorReason" datasource="#application.datasource#">
 					INSERT INTO Margin_Targets_Upload_Doc_Error_Details (doc_id, item, Distribution_Channel, Net_Sales_Target_Value, Net_Sales_Floor_Value, GM_Target_Value, GM_Floor_Value, reason)
 					VALUES (#docId#,'#item#', '#Distribution_Channel#', '#Net_Sales_Target_Value#', '#Net_Sales_Floor_Value#', '#GM_Target_Value#', '#GM_Floor_Value#','#reason#')
 				</cfquery>
+</cfif>
 
 				<cfset useLakebaseForupdateDocTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload_doc_details")>
 <cfif useLakebaseForupdateDocTable>

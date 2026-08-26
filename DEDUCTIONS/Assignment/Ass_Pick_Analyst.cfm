@@ -73,9 +73,25 @@
 		
 		<CFLOOP LIST = "#FORM.Analyst_ID#" INDEX="Item">
 					
-			<CFQUERY NAME="Check_Et" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCheck_Et = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForCheck_Et>
+	<cftry>
+		<cfset Check_Et = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"analyst_user_id" = "eq.#Item#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Et = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Et>
+<CFQUERY NAME="Check_Et" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM DD_Analyst WHERE Analyst_User_ID = '#Item#' AND Deleted=0
 			</CFQUERY>
+</cfif>
 			
 			<CFIF Check_Et.recordcount EQ 0>
 				<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
@@ -167,7 +183,22 @@
 </cfif>
 					
 					<CFLOOP LIST="#ReassignedID#" INDEX="LoopItem">
-						<CFQUERY NAME="ReassignLog" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForReassignLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_reassign")>
+<cfif useLakebaseForReassignLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_reassign", {
+			"deduction_id" = "#LoopItem#",
+			"from_analyst" = "#CurrentLoop#",
+			"to_analyst" = "#FORM.New_Analyst#",
+			"by_analyst" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForReassignLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForReassignLog>
+<CFQUERY NAME="ReassignLog" DATASOURCE="#Application.Datasource#">
 							INSERT INTO 
 							DD_Reassign 	(	Deduction_ID,
 												From_Analyst,
@@ -179,6 +210,7 @@
 												'#FORM.New_Analyst#',
 												'#request.AccessStructure.User_ID#'	)
 						</CFQUERY>
+</cfif>
 					</CFLOOP>
 					
 				</CFIF>

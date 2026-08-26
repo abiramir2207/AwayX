@@ -69,10 +69,25 @@
 </TABLE>
 
 <!--- get margin approval method --->
+<cfset useLakebaseFormargin_approval_method = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseFormargin_approval_method>
+	<cftry>
+		<cfset margin_approval_method = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_approval_method"
+			}), "program_margin_approval_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormargin_approval_method = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormargin_approval_method>
 <cfquery name="margin_approval_method" datasource="#application.datasource#">
 	SELECT program_margin_approval_method
 	FROM General_Settings	
 </cfquery>
+</cfif>
 
 <cfset fileName = "">
 <cfif application.returned_customer_setting.approval_on_type_code EQ 1>

@@ -1208,11 +1208,29 @@ FROM        Billback_Settings
 				<cfset DiscountList = VALUELIST(GetDiscountsfromBillback.BB_Product_Type_ID, ',')>
 	
 				<!--- Update db with discount list --->
-				<CFQUERY name="UpdateProgramWithDiscountList" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdateProgramWithDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForUpdateProgramWithDiscountList>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program",
+			{
+				"billback_program_id" = "eq.#Billback_Program_ID#"
+			},
+			{
+				"discount_list" = "#DiscountList#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateProgramWithDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateProgramWithDiscountList>
+<CFQUERY name="UpdateProgramWithDiscountList" datasource="#application.datasource#">
 					UPDATE 	Billback_Program
 					SET 	Discount_List = '#DiscountList#'
 					WHERE 	Billback_Program_ID = '#Billback_Program_ID#'
 				</CFQUERY>
+</cfif>
 			<CFELSE>
 				<CFSET DiscountList = Discount_List>
 			</cfif>

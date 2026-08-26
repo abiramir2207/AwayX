@@ -83,10 +83,23 @@ or auto approve operator was selected and operator exceptions were added
 		</cfif>		
 	</cfquery>
 	
-	<cfquery name="qDeleteOperatorExceptions" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeleteOperatorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_appr_payee_exception")>
+<cfif useLakebaseForqDeleteOperatorExceptions>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("auto_appr_payee_exception", {
+			"payee_type" = "eq.2"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteOperatorExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteOperatorExceptions>
+<cfquery name="qDeleteOperatorExceptions" datasource="#application.datasource#">
 		DELETE 	FROM Auto_Appr_Payee_Exception
 		WHERE	Payee_Type = 2
 	</cfquery>
+</cfif>
 	
 </cfif>
 

@@ -1270,10 +1270,25 @@ Inorder to make sure that products in level 2 and level 3 are a sub set of Level
 <cfset GetOffinvoiceComponents = offinvoiceCompObj.getActive(arAllowList, arDisAllowList) />
 
 <cfif Display_Basis_Treatment_Code>
-	<cfquery name="qComponentNames" dbtype="query">
+	<cfset useLakebaseForqComponentNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getoffinvoicecomponents")>
+<cfif useLakebaseForqComponentNames>
+	<cftry>
+		<cfset qComponentNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getoffinvoicecomponents", {
+				"select" = "program_offinvoice_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+			}), "program_offinvoice_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqComponentNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqComponentNames>
+<cfquery name="qComponentNames" dbtype="query">
 		SELECT	Program_OffInvoice_Component_Name_ID Component_Name_ID, Allowance_Code_ID Component_Allowance_Code_ID
 		FROM	GetOffinvoiceComponents
 	</cfquery>
+</cfif>
 	<cfinclude template="Contract_Basis_Tratment_Code.cfm" />
 </cfif>
 

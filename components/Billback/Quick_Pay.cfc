@@ -255,11 +255,26 @@ WHERE CM.Contract_Main_ID = #arguments.ContractMainID#
 	<cfset currentUserPositionID = userManager.getPositionId(UserID)>
 
 <cfif len(arguments.form.vendor_id)>
-	<cfquery name="qVendorGUID" datasource="#Application.Datasource#">
+	<cfset useLakebaseForqVendorGUID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForqVendorGUID>
+	<cftry>
+		<cfset qVendorGUID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#arguments.form.Vendor_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqVendorGUID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqVendorGUID>
+<cfquery name="qVendorGUID" datasource="#Application.Datasource#">
 		SELECT *
 		FROM Vendor_Master
 		WHERE Vendor_ID = '#arguments.form.Vendor_ID#'
 	</cfquery>
+</cfif>
 	<cfset VendorGUID = qVendorGUID.Vendor_master_ID>
 </cfif>
 	<cfquery name="qInsertIntoLog" datasource="#Application.Datasource#">

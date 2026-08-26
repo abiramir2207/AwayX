@@ -25,11 +25,29 @@
 		<CFIF len(getThisProgramsStatus.Revision_Of_Contract_Main_ID) GT 0>
 			<cfset checkParentStats = LayeredProgramManager.checkParentStats(getThisProgramsStatus.Revision_Of_Contract_Main_ID)>
 			<CFIF checkParentStats.Contract_Status_Type_IDX EQ getThisProgramsStatus.Contract_Status_Type_IDX>
-				<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
+				<cfset useLakebaseFordeleteParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFordeleteParent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#checkParentStats.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteParent>
+<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
 					UPDATE Contract_main
 					SET deleted = 1
 					where contract_main_id = '#checkParentStats.Contract_Main_ID#'
 				</CFQUERY>
+</cfif>
 			</CFIF>
 		</CFIF>
 

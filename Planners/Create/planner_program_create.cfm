@@ -709,10 +709,25 @@ compNameId	rate	uom	Component_Paid_To	PaymentCycle	lump_sum_apply_to
 
 
 
+<cfset useLakebaseForgGetExpMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetplannerprofiledata")>
+<cfif useLakebaseForgGetExpMargin>
+	<cftry>
+		<cfset gGetExpMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetplannerprofiledata", {
+				"select" = "planner_expected_margin"
+			}), "planner_expected_margin"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgGetExpMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgGetExpMargin>
 <cfquery name="gGetExpMargin" dbtype="query">
     SELECT DISTINCT Planner_Expected_Margin
     FROM qGetPlannerProfileData
 </cfquery>
+</cfif>
 
 
 <cfif form.bCopy eq 1>

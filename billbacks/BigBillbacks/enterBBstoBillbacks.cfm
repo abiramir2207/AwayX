@@ -110,7 +110,25 @@ AND Deleted = 0
 	
 		<cfloop list="#BigBillbackSummaryInfo.ComponentNameIDs#" index="ComponentNameIDs">
 		<!--- First check to see if Rebate comp is already there --->
-		<cfquery name="IsRebateCompAlreadyThere" datasource="#application.datasource#">
+		<cfset useLakebaseForIsRebateCompAlreadyThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_rebate_component")>
+<cfif useLakebaseForIsRebateCompAlreadyThere>
+	<cftry>
+		<cfset IsRebateCompAlreadyThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_rebate_component", {
+				"billback_id" = "eq.#Billback_ID#",
+				"billback_program_id" = "eq.#BigBillbackSummaryInfo.Program_ID#",
+				"program_rebates_component_name_id" = "eq.#ComponentNameIDs#",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_name_id"
+			}), "program_rebates_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsRebateCompAlreadyThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsRebateCompAlreadyThere>
+<cfquery name="IsRebateCompAlreadyThere" datasource="#application.datasource#">
 		SELECT Program_Rebates_Component_Name_ID
 		FROM Billback_Program_Rebate_Component
 		WHERE Billback_ID = '#Billback_ID#'
@@ -118,6 +136,7 @@ AND Deleted = 0
 		AND Program_Rebates_Component_Name_ID = #ComponentNameIDs#
 		AND Deleted = 0
 		</cfquery>
+</cfif>
 	
 		<cfif IsRebateCompAlreadyThere.Recordcount LT 1>
 		<!--- Get component name --->
@@ -330,11 +349,29 @@ AND Deleted = 0
 		<!--- Need to update volume --->
 		<cfset NewProductQuantity = IsProductAlreadyThere.BB_Product_Quantity + Volume>
 		
-		<cfquery name="UpdateVolumeforProduct" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateVolumeforProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForUpdateVolumeforProduct>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_product_id" = "eq.#BillbackProductID#"
+			},
+			{
+				"bb_product_quantity" = "#NewProductQuantity#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateVolumeforProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateVolumeforProduct>
+<cfquery name="UpdateVolumeforProduct" datasource="#application.datasource#">
 		UPDATE Billback_Product
 		SET BB_Product_Quantity = '#NewProductQuantity#'
 		WHERE Billback_Product_ID = '#BillbackProductID#'
 		</cfquery>
+</cfif>
 	
 	</cfif>
 	
@@ -404,11 +441,29 @@ AND Deleted = 0
 	<cfset NewProductAmount = IsProductDetailAlreadyThere.BB_Rate + BigBBProdAmount>
 	
 	
-	<cfquery name="UpdateProductAmount" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdateProductAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForUpdateProductAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product_detail",
+			{
+				"billback_product_detail_id" = "eq.#BillbackProductDetailID#"
+			},
+			{
+				"bb_rate" = "#NewProductAmount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateProductAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateProductAmount>
+<cfquery name="UpdateProductAmount" datasource="#application.datasource#">
 	UPDATE Billback_Product_Detail
 	SET BB_Rate = '#NewProductAmount#'
 	WHERE Billback_Product_Detail_ID = '#BillbackProductDetailID#'
 	</cfquery>
+</cfif>
 	
 	</cfif>
 	
@@ -642,31 +697,12 @@ WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
 </cfif>
 
-<cfset useLakebaseForqResetDeviationRanInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
-<cfif useLakebaseForqResetDeviationRanInfo>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback",
-			{
-				"billback_id" = "eq.#Billback_ID#"
-			},
-			{
-				"deviation_ran_date" = javaCast("null",""),
-				"deviation_ran_by" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqResetDeviationRanInfo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqResetDeviationRanInfo>
 <cfquery name="qResetDeviationRanInfo" datasource="#application.datasource#">
 	UPDATE 	Billback
 	SET 	Deviation_Ran_Date = NULL,
 			Deviation_Ran_By = NULL 
 	WHERE 	Billback_ID = '#Billback_ID#'
 </cfquery>
-</cfif>
 
 <script language="javascript">
 	document.all.KnownProgramForm.Data_Action_ID.value = 5;

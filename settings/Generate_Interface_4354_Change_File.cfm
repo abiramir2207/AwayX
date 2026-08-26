@@ -48,12 +48,26 @@
 <cfif form.programNumberList NEQ "" AND alreadyRunning EQ 0 AND form.generateNow EQ 1>
 	
 	
-	<cfquery name="qInsertIntoInterfaceTable" datasource="#application.datasource#">
+	<cfset useLakebaseForqInsertIntoInterfaceTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("icm_interface_4354_changes")>
+<cfif useLakebaseForqInsertIntoInterfaceTable>
+	<cftry>
+		<cfset application.oLakebase.insertRow("icm_interface_4354_changes", {
+			"created_by" = "#request.AccessStructure.User_ID#",
+			"user_email" = "#request.AccessStructure.User_Email#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertIntoInterfaceTable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertIntoInterfaceTable>
+<cfquery name="qInsertIntoInterfaceTable" datasource="#application.datasource#">
 		INSERT INTO ICM_Interface_4354_Changes
 		(Created_By, User_Email)
 		VALUES 
 		('#request.AccessStructure.User_ID#', '#request.AccessStructure.User_Email#')
 	</cfquery>
+</cfif>
 	
 	<!------ get the latest id, I don't want to use trigger :(, so assuming there will be only one with status = 1 ----->
 	<cfset useLakebaseForqGetLatestId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("icm_interface_4354_changes")>
@@ -90,11 +104,27 @@
 	<cfloop list="#form.programNumberList#" index="thisId">
 	
 		<!------ add to table and start job ----->
-		<cfquery name="qGetContractNumber" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetContractNumber>
+	<cftry>
+		<cfset qGetContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#thisId#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetContractNumber>
+<cfquery name="qGetContractNumber" datasource="#application.datasource#">
 			SELECT	DISTINCT Contract_Number
 			FROM	Contract_Main
 			WHERE	Contract_Main.Contract_Main_ID = #thisId#
 		</cfquery>
+</cfif>
 		<cfset contract_Number = qGetContractNumber.Contract_Number>
 		<cfset useLakebaseForqInsertIntoInterfaceFile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("icm_interface_4354_changes_detail")>
 <cfif useLakebaseForqInsertIntoInterfaceFile>

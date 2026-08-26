@@ -81,12 +81,27 @@
 
 	<CFPARAM NAME="URL.Payment_Trans_ID" DEFAULT="#Get_Trans_ID.Payment_Trans_ID#">
 	
-	<CFQUERY NAME="Get_Data" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_data_export_1", {
+				"payment_data_export_1_id" = "eq.#Payment_Data_Export_1_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
+<CFQUERY NAME="Get_Data" DATASOURCE="#Application.Datasource#">
 		SELECT 		* 
 		FROM 		Payment_Data_Export_1
 			
 		WHERE 		Payment_Data_Export_1_ID = '#Payment_Data_Export_1_ID#'
 	</CFQUERY>
+</cfif>
 
 </CFOUTPUT>
 

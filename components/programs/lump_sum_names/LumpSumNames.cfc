@@ -483,12 +483,27 @@
 
 			<cfif len(trim(arguments.GLList)) GT 0>
 				<cfloop list="#arguments.GLList#" index="GL_Account_ID">
-					<cfquery name="DeletefromMapping" datasource="#application.datasource#">
+					<cfset useLakebaseForDeletefromMapping = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_component_mapping")>
+<cfif useLakebaseForDeletefromMapping>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("gl_component_mapping", {
+			"gl_account_id" = "eq.#GL_Account_ID#",
+			"component_name_id" = "eq.#arguments.compId#",
+			"discount_type_id" = "eq.3"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletefromMapping = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletefromMapping>
+<cfquery name="DeletefromMapping" datasource="#application.datasource#">
 					DELETE FROM GL_Component_Mapping
 					WHERE GL_Account_ID = '#GL_Account_ID#'
 					AND Component_Name_ID = '#arguments.compId#'
 					AND Discount_Type_ID = 3
 					</cfquery>
+</cfif>
 				</cfloop>
 			</cfif>
 

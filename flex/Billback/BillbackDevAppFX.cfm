@@ -272,26 +272,7 @@ make decisions based on that.
 							</cfloop>
 						</cfcase>
 						<cfcase value="RESET">
-							<cfset useLakebaseForupdBBOperatorLocationReset = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
-<cfif useLakebaseForupdBBOperatorLocationReset>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
-			{
-				"billback_id" = "eq.#URL.bbid#"
-			},
-			{
-				"denied" = "0",
-				"updated_date" = javaCast("null",""),
-				"updated_by" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdBBOperatorLocationReset = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdBBOperatorLocationReset>
-<cfquery name="updBBOperatorLocationReset" datasource="#application.datasource#">
+							<cfquery name="updBBOperatorLocationReset" datasource="#application.datasource#">
 					            UPDATE Billback_Operator_Location_Detail 
 					            SET 
 									Denied = 0,
@@ -299,7 +280,6 @@ make decisions based on that.
 									Updated_By = NULL
 					            WHERE Billback_ID = '#URL.bbid#'
 							</cfquery>
-</cfif>
 						</cfcase>
 						<cfcase value="GOTODEV">
 							<cfset displayOperDupScreen = 0 />
@@ -423,29 +403,7 @@ make decisions based on that.
 		<cfelse>
 		<!--- IF USER VISITS THE DEVIATION SCREEN FROM THE BB SEARCH SCREEN --->
 			<!--- 2) update all the other records in billbacks not locked through match central as unlocked --->
-	        <cfset useLakebaseForunlockLockedBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
-<cfif useLakebaseForunlockLockedBillbacks>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_allied",
-			{
-				"bb_is_locked" = "eq.1",
-				"bb_locked_by_user_id" = "eq.#URL.UserID#",
-				"billback_id" = "neq.#URL.bbid#",
-				"bb_locked_by_match_central" = "eq.0"
-			},
-			{
-				"bb_is_locked" = "0",
-				"bb_locked_by_user_id" = javaCast("null",""),
-				"bb_lock_date" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForunlockLockedBillbacks = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForunlockLockedBillbacks>
-<cfquery name="unlockLockedBillbacks" datasource="#application.datasource#">
+	        <cfquery name="unlockLockedBillbacks" datasource="#application.datasource#">
 	          UPDATE Billback_Allied
 	          SET    BB_Is_Locked = 0,
 	                 BB_Locked_By_User_ID = NULL,
@@ -455,7 +413,6 @@ make decisions based on that.
 	                 Billback_id <> '#URL.bbid#' AND
 	                 BB_Locked_By_Match_Central = 0
 	        </cfquery>
-</cfif>
 	        
 	        <!--- 2) update the record as locked by the current user --->
 	        <cfquery name="updLockBillback" datasource="#application.datasource#">
@@ -556,12 +513,31 @@ make decisions based on that.
 				    		    <cfprocresult name="getDeviation">  
 				          </cfstoredproc>
 				          <!--- Update the deviation history that it was run --->
-				          <cfquery name="updDeviationHistory" datasource="#application.datasource#">
+				          <cfset useLakebaseForupdDeviationHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdDeviationHistory>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#URL.bbid#"
+			},
+			{
+				"deviation_ran_by" = "#URL.UserID#",
+				"deviation_ran_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdDeviationHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdDeviationHistory>
+<cfquery name="updDeviationHistory" datasource="#application.datasource#">
 					            UPDATE Billback 
 					            SET Deviation_Ran_By = '#URL.UserID#',
 					                Deviation_Ran_Date = getdate()
 					            WHERE Billback_ID = '#URL.bbid#'
 				          </cfquery>
+</cfif>
 				    </cflock>
 					<cfcatch>
 						<cfif cfcatch.type EQ 'LOCK'>

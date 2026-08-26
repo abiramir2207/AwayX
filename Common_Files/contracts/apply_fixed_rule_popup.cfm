@@ -240,13 +240,28 @@
 	
 	<!---get just selected rules then query that record set to get a distinct list--->
 	<cfset qGetRulesToQuery = fixedRules.getComponentRules(form.compRuleIds) />
-	<cfquery name="qGetRules" dbtype="query">
+	<cfset useLakebaseForqGetRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetrulestoquery")>
+<cfif useLakebaseForqGetRules>
+	<cftry>
+		<cfset qGetRules = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetrulestoquery", {
+				"select" = "program_fixed_component_rule_id,fixed_component_rule_desc,unit_of_measure_id,joined_rule_id"
+			}), "program_fixed_component_rule_id,fixed_component_rule_desc,unit_of_measure_id,joined_rule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRules>
+<cfquery name="qGetRules" dbtype="query">
 		SELECT	DISTINCT Program_fixed_Component_Rule_ID,
 				Fixed_Component_Rule_Desc,
 				Unit_Of_Measure_ID,
 				Joined_Rule_Id
 		FROM	qGetRulesToQuery
 	</cfquery>
+</cfif>
 	<font color="##000066" size="3"><b>Apply Business Rules</b></font> 
 	<hr color="navy">
 	<table border="0" cellpadding="1" cellspacing="0" CLASS="Maintable" bgcolor="ffce84" width="700">

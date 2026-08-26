@@ -2317,12 +2317,32 @@ Processes form information from the previous page.
 		</cfloop>
 <!--- if template setting "Optional Dates for Program"  is OFF we excute below code --->
 <cfelse>
-	<cfquery name="updateOptinalDate" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateOptinalDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_optional_dates")>
+<cfif useLakebaseForupdateOptinalDate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("template_optional_dates",
+			{
+				"first_parent_id" = "eq.#getFisrParentID.First_Parent_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOptinalDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOptinalDate>
+<cfquery name="updateOptinalDate" datasource="#application.datasource#">
 		UPDATE Template_Optional_dates
 		SET Deleted = 1, updated_date = getdate()
 		WHERE First_Parent_ID = #getFisrParentID.First_Parent_ID#
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 </cfif>
 <!---60410 : Fiscal Year Selection and Auto Renew END--->
 

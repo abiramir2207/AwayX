@@ -180,12 +180,28 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 
 	<cffunction name="loadDDStageInfo" returntype="void" output="false">
 		<cfargument name="ddStageID" required="true" type="numeric" />
-		<cfquery name="qLoadDDStageInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqLoadDDStageInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_stage")>
+<cfif useLakebaseForqLoadDDStageInfo>
+	<cftry>
+		<cfset qLoadDDStageInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_stage", {
+				"deleted" = "eq.0",
+				"dd_stage_id" = "eq.#arguments.ddStageID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLoadDDStageInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLoadDDStageInfo>
+<cfquery name="qLoadDDStageInfo" datasource="#application.datasource#">
 			select *
 			from dd_stage
 			where deleted = 0
 			and dd_stage_id = #arguments.ddStageID#
 		</cfquery>
+</cfif>
 		<cfif qLoadDDStageInfo.Is_Auto_Reminded eq 1 >
 			<cfset theReminderSetting = true />
 		<cfelse>
@@ -724,32 +740,12 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 		</CFQUERY>
 </cfif>
 
-		<cfset useLakebaseForResetBB_Credit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
-<cfif useLakebaseForResetBB_Credit>
-	<cftry>
-		<cfset application.oLakebase.updateRows("dd_closure_detail",
-			{
-				"deduction_id" = "eq.#arguments.Deduction_ID#",
-				"deleted" = "eq.0"
-			},
-			{
-				"interfaced_on" = javaCast("null",""),
-				"ack_received" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForResetBB_Credit = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForResetBB_Credit>
-<CFQUERY NAME="ResetBB_Credit" DATASOURCE="#Application.Datasource#">
+		<CFQUERY NAME="ResetBB_Credit" DATASOURCE="#Application.Datasource#">
 			UPDATE DD_Closure_Detail
 			SET Interfaced_On = NULL,
 			Ack_Received = NULL
 			WHERE Deduction_ID = '#arguments.Deduction_ID#' AND Deleted = 0
 		</CFQUERY>
-</cfif>
 
 		<cfquery name="UpdateDeduction" datasource="#application.datasource#">
 		UPDATE Deductions
@@ -972,11 +968,29 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 		</cfquery>
 
 		<!---Close any reminders associated with this--->
-		<cfquery name="CloseReminders" datasource="#application.datasource#">
+		<cfset useLakebaseForCloseReminders = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_reminders")>
+<cfif useLakebaseForCloseReminders>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_reminders",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCloseReminders = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCloseReminders>
+<cfquery name="CloseReminders" datasource="#application.datasource#">
 		UPDATE DD_Reminders
 		SET Deleted = 1
 		WHERE Deduction_ID = '#arguments.Deduction_ID#'
 		</cfquery>
+</cfif>
 
 		<!------
 		D16950 G. Close from application should update the parent balance amount on parent credits
@@ -1338,28 +1352,7 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			as we already have existing code which removes existing billback/credit association,
 			it is easier and less risk to do the same way to re-set the write-off
 			----->
-			<cfset useLakebaseForResetWriteOff = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForResetWriteOff>
-	<cftry>
-		<cfset application.oLakebase.updateRows("deductions",
-			{
-				"deduction_id" = "eq.#arguments.deductionId#",
-				"is_write_off" = "eq.1"
-			},
-			{
-				"is_write_off" = "0",
-				"write_off_by" = javaCast("null",""),
-				"write_off_date" = javaCast("null",""),
-				"write_off_toopen_reason" = "Deduction is getting associated to credit"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForResetWriteOff = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForResetWriteOff>
-<CFQUERY NAME="ResetWriteOff" DATASOURCE="#Application.Datasource#">
+			<CFQUERY NAME="ResetWriteOff" DATASOURCE="#Application.Datasource#">
 				UPDATE 	Deductions
 				SET 	Is_Write_Off = 0,
 						Write_Off_By = NULL,
@@ -1368,7 +1361,6 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 				WHERE 	Deduction_ID = '#arguments.deductionId#'
 				AND		Is_Write_Off = 1
 			</CFQUERY>
-</cfif>
 
 
 			<cfset RemoveClosureFromCreditForThisDeduction(arguments.deductionId) />

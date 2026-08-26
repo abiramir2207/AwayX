@@ -43,6 +43,23 @@ WHERE	operator_id = '#operator_id#'
 <!--- ----------------------------------------------------------------------------------------- --->
 <!--- distributor sources --------------------------------------------------------------------- --->
 <!--- ----------------------------------------------------------------------------------------- --->
+<cfset useLakebaseForget_distributor_sources = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_operator_tt_distributor_sources")>
+<cfif useLakebaseForget_distributor_sources>
+	<cftry>
+		<cfset get_distributor_sources = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_operator_tt_distributor_sources", {
+				"operator_id" = "eq.#operator_id#",
+				"os_date_period" = "eq.#os_date_period#",
+				"deleted" = "eq.0",
+				"select" = "ttds_distributor_source_id,os_operator_summary_id,ttds_distributor_sold_to,ttds_distributor_name,ttds_distributor_region,ttds_cases,ttds_share,ttds_dollars,deleted,created_date,operator_id,os_date_period"
+			}), "ttds_distributor_source_id,os_operator_summary_id,ttds_distributor_sold_to,ttds_distributor_name,ttds_distributor_region,ttds_cases,ttds_share,ttds_dollars,deleted,created_date,operator_id,os_date_period"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_distributor_sources = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_distributor_sources>
 <cfquery name="get_distributor_sources" datasource="#Application.Datasource#">
 
 SELECT	ttds_distributor_source_ID,
@@ -67,6 +84,7 @@ WHERE	operator_id = '#operator_id#'
 		deleted = 0
 
 </cfquery>
+</cfif>
 
 
 <!--- ----------------------------------------------------------------------------------------- --->

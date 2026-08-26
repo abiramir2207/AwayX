@@ -44,11 +44,27 @@ This is check various conditions from the enter.cfm page and the home.cfm page.
 		<cfif this.surveyOn EQ 1 >
 			<cfset SurveyUserChk =  CreateObject("component", "components.survey.surveymanager").SurveryUserChk("#arguments.userID#") />
 			<cfif SurveyUserChk.Recordcount EQ 0>
-				<cfquery name="qSurveryUserEntry" datasource="#application.datasource#">
+				<cfset useLakebaseForqSurveryUserEntry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("survey_settings")>
+<cfif useLakebaseForqSurveryUserEntry>
+	<cftry>
+		<cfset application.oLakebase.insertRow("survey_settings", {
+			"userid" = "#arguments.userID#",
+			"surveyresponse" = "0",
+			"surveypopupcount" = "0",
+			"loginpgentry" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSurveryUserEntry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSurveryUserEntry>
+<cfquery name="qSurveryUserEntry" datasource="#application.datasource#">
 					Insert	Into Survey_Settings 
 							( userID, SurveyResponse, SurveyPopupCount, LoginPgEntry )
 					Values	('#arguments.userID#', 0, 0, 1)
 				</cfquery>
+</cfif>
 			<cfelse>
 				<cfif SurveyUserChk.SurveyResponse EQ 0 AND SurveyUserChk.SurveyPopupCount LT this.surveyMaxDisplayCount >
 					<cfset ExcededMaxPopup = 0 />

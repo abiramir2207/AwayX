@@ -166,11 +166,27 @@
 				<!--- Date	Change END --->					
 
 				<!--- Volume Change START --->	
-							<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
+							<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
+<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 									Select		Volume_UOT_ID
 									From		_Users_Settings
 									Where		User_ID		=		'#request.AccessStructure.Company_Main_ID#'
 							</CFQUERY>
+</cfif>
 							<cfset ParentVolQty 	= CreateObject("component", "components.programs.volume.ProgramVolume").getProgramQty(#url.parentid#, #url.programspan#, #Get_Settings.Volume_UOT_ID#) />
 							<cfset ChildVolQty 	= CreateObject("component", "components.programs.volume.ProgramVolume").getProgramQty(#url.programid#, #url.programspan#, #Get_Settings.Volume_UOT_ID#) />
 										

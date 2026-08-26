@@ -101,6 +101,11 @@ def is_simple_value(v: str) -> bool:
         return False
     if re.search(r"\b[A-Za-z_]\w*\s*\(", inner):
         return False
+    # a literal double-quote inside the value (e.g. query["Col Name"][row] array
+    # access) can't be safely re-escaped inside the generated double-quoted CFML
+    # string wrapper - reject rather than risk corrupting the quoting.
+    if '"' in inner:
+        return False
     return True
 
 
@@ -137,7 +142,8 @@ COND_RE = re.compile(
 
 
 def col_name(qualified: str) -> str:
-    return qualified.strip().split(".")[-1].lower()
+    name = qualified.strip().split(".")[-1].lower()
+    return name.strip("[]")
 
 
 def has_dynamic_identifier(*parts: str) -> bool:

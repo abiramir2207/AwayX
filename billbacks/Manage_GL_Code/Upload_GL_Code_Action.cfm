@@ -203,9 +203,22 @@
 			<CFLOCATION URL="index.cfm?Show_Tab=4&ProcessWait=1" ADDTOKEN="No">
 		</CFIF>
 	<CFELSEIF FORM.DeleteRecord EQ 1>
-		<CFQUERY NAME="Permanent_Delete" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForPermanent_Delete = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForPermanent_Delete>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("gl_code_upload", {
+			"gl_code_upload_id" = "eq.#RID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForPermanent_Delete = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPermanent_Delete>
+<CFQUERY NAME="Permanent_Delete" DATASOURCE="#Application.Datasource#">
 			DELETE FROM GL_Code_Upload WHERE GL_Code_Upload_ID = '#RID#'
 		</CFQUERY>
+</cfif>
 		<CFLOCATION URL="index.cfm?Show_Tab=4" ADDTOKEN="No">
 	</CFIF>
 </CFIF>

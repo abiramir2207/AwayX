@@ -444,7 +444,25 @@
 		<cfset UserPositionList = CreateObject("component", "components.user.UserManager").getPositionId(request.AccessStructure.user_id, 0, 1) />
 		<cfset DD_Status_toHide	= CreateObject("component", "components.Deduction.settings.DeductionSettingsManager").DD_Status_Control(request.AccessStructure.profiles_id) />
 
-		<cfquery NAME="HQPosition" datasource="#Application.datasource#">
+		<cfset useLakebaseForHQPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForHQPosition>
+	<cftry>
+		<cfset HQPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"service_zone_id" = "is.null",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHQPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHQPosition>
+<cfquery NAME="HQPosition" datasource="#Application.datasource#">
 			SELECT 	User_Positions_ID
 			FROM 	User_Positions
 			WHERE 	Service_Zone_ID IS NULL
@@ -452,6 +470,7 @@
 			AND  Service_Market_ID IS NULL
 			AND  Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
 <cfif useLakebaseForDeductionsProfilesSettings>

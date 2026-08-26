@@ -36,10 +36,26 @@
 	<cfset New_Pgm_Start_Date 	= Programs_Custom_Revision.New_Start_Date	/>
 	<cfset New_Pgm_End_Date 	= Programs_Custom_Revision.New_End_Date	/>
 
-	<cfquery name="Getcompany" datasource="#application.datasource#">
+	<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 		SELECT Top 1 Company_Main_ID
 		FROM Company_Main
 	</cfquery>
+</cfif>
 
 	<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 

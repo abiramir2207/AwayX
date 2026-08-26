@@ -1370,7 +1370,22 @@ Slotting increase: <strong>#DollarFormat(local.slottingIncrease)#</strong><br>
             ORDER BY RowID, Kind_ID
         </cfquery>
 
-        <cfquery name="local.qDemo" datasource="#application.datasource#">
+        <cfset useLakebaseForlocal_qDemo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_target_approval_info_demo")>
+<cfif useLakebaseForlocal_qDemo>
+	<cftry>
+		<cfset local.qDemo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_target_approval_info_demo", {
+				"planner_id" = "eq.#arguments.id#",
+				"select" = "group_guid,group_number,group_desc,target_demo,planner_demo,variance_demo"
+			}), "group_guid,group_number,group_desc,target_demo,planner_demo,variance_demo"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qDemo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qDemo>
+<cfquery name="local.qDemo" datasource="#application.datasource#">
             SELECT Group_GUID,
                 Group_Number,
                 Group_Desc,
@@ -1380,6 +1395,7 @@ Slotting increase: <strong>#DollarFormat(local.slottingIncrease)#</strong><br>
             FROM Planner_Target_Approval_Info_Demo
             WHERE Planner_ID = #arguments.id#
         </cfquery>
+</cfif>
 
         <cfquery name="local.qNo_Members" datasource="#application.datasource#">
             SELECT cm.Contract_Main_ID,

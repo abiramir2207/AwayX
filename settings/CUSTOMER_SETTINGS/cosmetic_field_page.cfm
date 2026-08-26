@@ -74,9 +74,22 @@
 	#array_column_name[loopcount]#, #array_data_type[loopcount]#<br>
 </cfloop>
 </cfoutput>--->
+<cfset useLakebaseForvalues_func_fields = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForvalues_func_fields>
+	<cftry>
+		<cfset values_func_fields = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvalues_func_fields = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvalues_func_fields>
 <CFQUERY name = "values_func_fields" datasource="#application.datasource#">
 	SELECT * from customer_settings
 </CFQUERY>
+</cfif>
 
 
 

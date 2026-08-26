@@ -244,7 +244,26 @@ TABLE.UNDERLINED TD
 							Deleted = 0
 				</CFQUERY>
 
-				<CFQUERY NAME="GetSCOA" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetSCOA = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetSCOA>
+	<cftry>
+		<cfset GetSCOA = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"fiscal_year" = "eq.#Fiscal_Year#",
+				"a_r" = "eq.#A_R#",
+				"fund_number" = "eq.#Fund_Number#",
+				"product_group" = "eq.#Pref_Prod_Grp#",
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSCOA = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSCOA>
+<CFQUERY NAME="GetSCOA" DATASOURCE="#Application.Datasource#">
 					SELECT 	* 
 					FROM 	GL_Code_Activation 
 					WHERE 	Fiscal_Year = '#Fiscal_Year#' AND
@@ -254,6 +273,7 @@ TABLE.UNDERLINED TD
 							Current_Active_Data = 1 AND				
 							Deleted = 0
 				</CFQUERY>
+</cfif>
 				 
 				<CFSET SCOA_String = "#GetSCOA.COMPANY#-#GetSCOA.LOCATION#-#GetSCOA.COST_CENTER#-#GetSCOA.NATURAL_ACCT#-#GetSCOA.CHANNEL#-#GetSCOA.PRODUCT_GROUP#-#GetSCOA.FUND_NUMBER#">
 				<CFIF SavedAlready NEQ 1>
@@ -438,7 +458,24 @@ TABLE.UNDERLINED TD
 				</CFIF>				
 			</CFIF>
 			<CFIF SavedAlready NEQ 1>
-			<CFQUERY NAME="InsertFailureInAllocation" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForInsertFailureInAllocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForInsertFailureInAllocation>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_allocation", {
+			"billback_id" = "#Billback_ID#",
+			"allocation_method" = "1",
+			"nomatching_record" = "1",
+			"reason_id" = "#InvalidReason#",
+			"program_id_list" = "#Program_List#",
+			"pending_status" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertFailureInAllocation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertFailureInAllocation>
+<CFQUERY NAME="InsertFailureInAllocation" DATASOURCE="#Application.Datasource#">
 				INSERT INTO 
 				Gl_Code_Allocation	(	Billback_ID,
 										Allocation_Method,
@@ -454,6 +491,7 @@ TABLE.UNDERLINED TD
 										'#Program_List#',
 										1				)
 			</CFQUERY>
+</cfif>
 			</CFIF>
 			<TR>
 				<TD COLSPAN="100%" STYLE="border-bottom: none">

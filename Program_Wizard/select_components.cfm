@@ -801,11 +801,26 @@ function alert_in_use(component) {
 
 			<tr>
 			<td colspan="100%" style="border-left:1px solid ##93BEE2;border-right:1px solid ##93BEE2;border-bottom:1px solid ##93BEE2;">
-			<cfquery name="qGetTemplateComponents" dbtype="query">
+			<cfset useLakebaseForqGetTemplateComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalltemplatediscountcomponents")>
+<cfif useLakebaseForqGetTemplateComponents>
+	<cftry>
+		<cfset qGetTemplateComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalltemplatediscountcomponents", {
+				"discount_type_id" = "eq.#DISCOUNT_TYPE_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplateComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplateComponents>
+<cfquery name="qGetTemplateComponents" dbtype="query">
 				SELECT	*
 				FROM	qGetAllTemplateDiscountComponents
 				WHERE	DISCOUNT_TYPE_ID = #DISCOUNT_TYPE_ID#
 			</cfquery>
+</cfif>
 
 			<cfset vars = StructNew()>
 

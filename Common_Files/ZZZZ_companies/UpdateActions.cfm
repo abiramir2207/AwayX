@@ -33,7 +33,35 @@
 	
 	<CFCASE VALUE="TechnologyInformation">
 		
-		<CFQUERY NAME="UpdateTechnologyInfo" datasource="#application.datasource#" DBTYPE="ODBC">
+		<cfset useLakebaseForUpdateTechnologyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_technology")>
+<cfif useLakebaseForUpdateTechnologyInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("company_technology",
+			{
+				"company_main_id" = "eq.#Form.Company_Main_ID#"
+			},
+			{
+				"edi_version" = "#Form.EDI_Version#",
+				"edi_sets" = "#Form.EDI_Sets#",
+				"schedule" = "#Form.Schedule#",
+				"db_platform" = "#Form.DB_Platform#",
+				"operating_system" = "#Form.Operating_System#",
+				"operating_system_rev" = "#Form.OS_Version#",
+				"email_system" = "#Form.Email_System#",
+				"proxy_firewall" = "#Form.Proxy#",
+				"http_port" = "#Form.HTTP_Port#",
+				"ftp_port" = "#Form.FTP_Port#",
+				"smtp_port" = "#Form.SMTP_Port#",
+				"ssl_port" = "#Form.SSL_Port#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTechnologyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTechnologyInfo>
+<CFQUERY NAME="UpdateTechnologyInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 			UPDATE Company_Technology
 			SET
 				EDI_Version				= 	'#Form.EDI_Version#',
@@ -51,6 +79,7 @@
 			WHERE 
 				Company_Main_ID = '#Form.Company_Main_ID#'
 		</CFQUERY>
+</cfif>
 
 		<CFIF isdefined("Form.RTS")>
 			<CFLOCATION URL="company_info_summary.cfm?Company_Main_ID=#Form.Company_Main_ID#">

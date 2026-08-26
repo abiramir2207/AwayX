@@ -276,12 +276,29 @@
 	<cfset Business_Segment_ID_List = ValueList(qGetBusSegments.Business_Segment_ID, ",")>
 </cfif>
 <!--- D38387 Programs not routing for approval START --->
-	 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
+	 <cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+<CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	     SELECT User_Positions_ID
 	     FROM User_Position_Holders
 	     WHERE User_ID = '#request.AccessStructure.user_id#' 
 	     AND Deleted = 0
 	 </CFQUERY>
+</cfif>
 	 <CFSET GP_Supplied_Position = ValueList(getUserPosition.User_Positions_ID)>
 	 
  	<CFQUERY NAME="getThisRegionsSubMarketPostions" datasource="#application.datasource#">
@@ -326,9 +343,25 @@
 		
 	
 		<!--- Get all the rows that has the cases as 1, which means it is not user edited and we need to update it with the forecast values. --->	
-		<cfquery name="qChkUserChanged" dbtype="query">
+		<cfset useLakebaseForqChkUserChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproductvolumechk")>
+<cfif useLakebaseForqChkUserChanged>
+	<cftry>
+		<cfset qChkUserChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproductvolumechk", {
+				"cases_temp" = "eq.1",
+				"user_edited" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqChkUserChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqChkUserChanged>
+<cfquery name="qChkUserChanged" dbtype="query">
 			SELECT * FROM getProductVolumeChk WHERE cases_Temp = 1 and user_edited = 0
 		</cfquery>
+</cfif>
 		
 		<!--- 
 			Check to see if the 2 recordcounts are different, meaning there is atleast 
@@ -686,10 +719,25 @@ cannot use <cfflush> inside "cfsavecontent" tag.
 I am not using the form variable passed because it is possible (not common) that one or more programs
 fail the conditions in the query (getRevisionData) and so do not get processed.
 --->
+<cfset useLakebaseForqGetProgramIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrevisiondata")>
+<cfif useLakebaseForqGetProgramIDs>
+	<cftry>
+		<cfset qGetProgramIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrevisiondata", {
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramIDs>
 <cfquery name="qGetProgramIDs" dbtype="query">
 	SELECT Contract_Main_ID 
 	FROM getRevisionData
 </cfquery>
+</cfif>
 
 <!--- Earlier, we only had one "cfsavecontent" tag above. Now, we need to show a progress bar.
 For progress bar, we need to use "cfflush". "cfflush" cannot be inside the "cfsavecontent" tag.

@@ -309,9 +309,25 @@
 <cfset qTemplateBusinessSegments = queryNew("") />
 <cfif (isBusinessSegEnabledForProduct EQ 1 AND appSettings.Filter_Business_Segments EQ 1)>
 	<cfset bBusinessSettingONinTemplate = 1 />
-	<cfquery name="qGetTemplateID" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetTemplateID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetTemplateID>
+	<cftry>
+		<cfset qGetTemplateID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#URL.prgID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplateID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplateID>
+<cfquery name="qGetTemplateID" datasource="#application.datasource#">
 		SELECT ProgramType_ID FROM Contract_Main WHERE Contract_Main_ID = #URL.prgID#
 	</cfquery>
+</cfif>
 	<cfif qGetTemplateID.RecordCount GTE 1 >
 		<cfset qTemplateBusinessSegments  = businessSegManager.getBusinessSegmentTemplateSettings(qGetTemplateID.ProgramType_ID) />
 	</cfif>
@@ -1098,11 +1114,27 @@ function save_Documents()
 			<TR>
 			</cfif>
 
-			<cfquery name="GetLinesOfBiz" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
+			<cfset useLakebaseForGetLinesOfBiz = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLinesOfBiz>
+	<cftry>
+		<cfset GetLinesOfBiz = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"deleted" = "eq.0",
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLinesOfBiz = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLinesOfBiz>
+<cfquery name="GetLinesOfBiz" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
 				SELECT *
 				FROM Line_Of_Business WHERE Deleted = 0
 				ORDER BY Line_Of_Business_Name
 			</cfquery>
+</cfif>
 
 
 			<cfif 	application.returned_customer_setting.lob_search_switch EQ 1

@@ -23,7 +23,23 @@
 	
 	<cffunction name="getFormulaTypes" output="false" >
 
-			<CFQUERY NAME="qGetFormulaTypes" DATASOURCE="#APPLICATION.DATASOURCE#">
+			<cfset useLakebaseForqGetFormulaTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_formula_types")>
+<cfif useLakebaseForqGetFormulaTypes>
+	<cftry>
+		<cfset qGetFormulaTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_formula_types", {
+				"active" = "eq.1",
+				"order" = "formula_type_description.desc",
+				"select" = "fp_formula_type_id,fp_formula_type,formula_type_description,market_table,notes,calc_type,calc_days"
+			}), "fp_formula_type_id,fp_formula_type,formula_type_description,market_table,notes,calc_type,calc_days"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFormulaTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFormulaTypes>
+<CFQUERY NAME="qGetFormulaTypes" DATASOURCE="#APPLICATION.DATASOURCE#">
 				SELECT FP_Formula_Type_ID,
 						FP_Formula_Type,
 						Formula_Type_Description,
@@ -35,6 +51,7 @@
 				WHERE active = 1
 				order by Formula_Type_Description DESC
 			</CFQUERY>
+</cfif>
 		<cfreturn qGetFormulaTypes >
 	</cffunction>
 	

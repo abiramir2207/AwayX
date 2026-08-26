@@ -11,9 +11,26 @@
 	SELECT * FROM BB_Lump_Sums WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR"> AND Deleted = 0
 </CFQUERY>
 
+<cfset useLakebaseForqSchedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqSchedBB>
+	<cftry>
+		<cfset qSchedBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "scheduled_auto_bb"
+			}), "scheduled_auto_bb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSchedBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSchedBB>
 <CFQUERY NAME="qSchedBB" DATASOURCE="#Application.Datasource#">
 	SELECT Scheduled_Auto_BB FROM Billback WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 <CFIF CheckForLump.RecordCount GT 0>
 	<CFQUERY NAME="CheckAlreadySaved" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM BB_Lump_Sum_Allocation WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR"> AND Deleted = 0
@@ -183,11 +200,26 @@
 	</CFQUERY>	
 </CFIF>
 
+<cfset useLakebaseForGetReasonCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_shortpay_reason")>
+<cfif useLakebaseForGetReasonCode>
+	<cftry>
+		<cfset GetReasonCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_shortpay_reason", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetReasonCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetReasonCode>
 <CFQUERY NAME="GetReasonCode" DATASOURCE="#Application.Datasource#">
 	SELECT 	* 
 	FROM 	BB_ShortPay_Reason
 	WHERE 	Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFIF GetPaymentDetail.SET_Billback_ID EQ "">
 	<CFSET Paid_Amount = GetPaymentDetail.Paid_Amount>

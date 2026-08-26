@@ -17,10 +17,25 @@
 					Internal_Settings_Updated_On = GetDate()								
 		</cfquery>
 
-		<cfquery name="GetCurrentSSL" datasource="#application.datasource#">
+		<cfset useLakebaseForGetCurrentSSL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetCurrentSSL>
+	<cftry>
+		<cfset GetCurrentSSL = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ssl_on"
+			}), "ssl_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentSSL = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentSSL>
+<cfquery name="GetCurrentSSL" datasource="#application.datasource#">
 		SELECT SSL_On
 		FROM _Application_Settings
 		</cfquery>
+</cfif>
 
 		
 <!--- rewrite index.htm --->

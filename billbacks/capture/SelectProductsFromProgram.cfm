@@ -171,11 +171,25 @@ we need to loop through to see which value pairs to delete.  the #listofitemstod
 
 
 <!--- If there's already values, you need to delete them --->
+<cfset useLakebaseForDeletePriorValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_product_discount")>
+<cfif useLakebaseForDeletePriorValues>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_product_discount", {
+			"billback_id" = "eq.#Billback_ID#",
+			"program_id" = "eq.#OriginalProgram_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePriorValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePriorValues>
 <cfquery name="DeletePriorValues" datasource="#application.datasource#">
 DELETE FROM BB_Product_Discount
 WHERE Billback_ID = '#Billback_ID#'
 AND Program_ID = '#OriginalProgram_ID#'
 </cfquery>
+</cfif>
 <cfif len(trim(Form.TheFinalUPCList)) EQ 0 AND len(trim(form.selectedUPCs)) GT 0>
 	<cfset Form.TheFinalUPCList = form.selectedUPCs>
 </cfif>

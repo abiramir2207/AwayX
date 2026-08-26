@@ -173,10 +173,25 @@ If you added a new setting to this file, please also add the new setting to belo
 		</cfif>
 
 
-		<cfquery name="qCheckOptions" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqCheckOptions>
+	<cftry>
+		<cfset qCheckOptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckOptions>
+<cfquery name="qCheckOptions" datasource="#application.datasource#">
 			SELECT 	TOP 1 *
 			FROM 	Program_Control_Panel_Options
 		</cfquery>
+</cfif>
 
 		<cfset lumpSumCapMin = 0>
 		<cfset approvalGroupManager = CreateObject("component", "components.settings.ApprovalGroupManager").init() />
@@ -5237,11 +5252,27 @@ Dev Notes: D18996
 
 	<td align="left" bgcolor="##eeeeee">
 		&nbsp;<span id="err_Category"></span>
-		<cfquery name="GetCategories" datasource="#application.datasource#">
+		<cfset useLakebaseForGetCategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_category")>
+<cfif useLakebaseForGetCategories>
+	<cftry>
+		<cfset GetCategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_category", {
+				"deleted" = "eq.0",
+				"select" = "program_category_id,program_category"
+			}), "program_category_id,program_category"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCategories>
+<cfquery name="GetCategories" datasource="#application.datasource#">
 			SELECT	Program_Category_ID, Program_Category
 			FROM	Program_Category
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfset iMaxCols = 9>
 		<table cellpadding="0" cellspacing="0" border="0">

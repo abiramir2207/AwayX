@@ -44,7 +44,25 @@
 			</cfquery>
 			<!---- UPDATE PRICING LEVEL IF GROUP IS DELETED --->
 			<cfif arguments.IS_Group>
-				<cfquery name="GPLD" datasource="#application.datasource#">
+				<cfset useLakebaseForGPLD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGPLD>
+	<cftry>
+		<cfset GPLD = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"product_type_id" = "eq.2",
+				"pricing_level_id" = "eq.#arguments.Pricing_Level_ID#",
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "pricing_level_id"
+			}), "pricing_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGPLD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGPLD>
+<cfquery name="GPLD" datasource="#application.datasource#">
 					SELECT Pricing_Level_ID
 					FROM Contract_Products
 					WHERE Product_Type_ID = 2
@@ -52,6 +70,7 @@
 					AND Contract_Main_ID = #arguments.Contract_Main_ID#
 					AND Deleted = 0
 				</cfquery>
+</cfif>
 
 				<cfif GPLD.recordcount EQ 0>
 

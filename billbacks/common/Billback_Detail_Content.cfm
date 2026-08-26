@@ -760,13 +760,28 @@ Billback_Product.Billback_Product_ID, Billback_Product_Detail.BB_Product_Type_ID
 	</TR>
 	<CFIF Get_Program_Products.RecordCount GT 0>
 	<cfsilent>
-	<cfquery name="getgroupdistintitemdetails" dbtype="query">
+	<cfset useLakebaseForgetgroupdistintitemdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_program_products")>
+<cfif useLakebaseForgetgroupdistintitemdetails>
+	<cftry>
+		<cfset getgroupdistintitemdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_program_products", {
+				"select" = "item_bb_volume_cs,item_bb_volume_lb,item_expected_volume_cs,item_expected_volume_lb,item_approved_volume_cs,item_approved_volume_lb,group_id,billback_program_id,billback_product_id"
+			}), "item_bb_volume_cs,item_bb_volume_lb,item_expected_volume_cs,item_expected_volume_lb,item_approved_volume_cs,item_approved_volume_lb,group_id,billback_program_id,billback_product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetgroupdistintitemdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetgroupdistintitemdetails>
+<cfquery name="getgroupdistintitemdetails" dbtype="query">
 	select distinct Item_BB_Volume_CS, Item_BB_Volume_LB,
 	Item_Expected_Volume_CS,Item_Expected_Volume_LB,
 	Item_Approved_Volume_CS,Item_Approved_Volume_LB,group_id,billback_program_id,
 	Billback_Product_ID
 	from Get_Program_Products
 	</cfquery>
+</cfif>
 		<cfset total_BB_approved_volume_lb = 0>
 		<cfset total_BB_approved_volume_cs = 0>
 		<cfset total_BB_expected_volume_lb = 0>

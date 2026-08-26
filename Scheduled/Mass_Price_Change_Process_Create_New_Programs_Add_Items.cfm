@@ -37,10 +37,26 @@
 	<cfset New_Pgm_Start_Date 	= Programs_Custom_Revision.New_Start_Date	/>	
 	<cfset New_Pgm_End_Date 	= Programs_Custom_Revision.New_End_Date	/>
 
-	<cfquery name="Getcompany" datasource="#application.datasource#">
+	<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 		SELECT Top 1 Company_Main_ID
 		FROM Company_Main
 	</cfquery>
+</cfif>
 
 	<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 	
@@ -150,12 +166,29 @@
 				AND 	Deleted = 0
 			</cfquery>
 			
-			<cfquery name="qAddFixedProductData" datasource="#application.datasource#">
+			<cfset useLakebaseForqAddFixedProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForqAddFixedProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_fixed_price_product_data", {
+			"program_id" = "#renewed_program_id#",
+			"contract_products_id" = "#qAddContractProducts.Contract_Products_ID#",
+			"fixed_price_value" = "#qGetDiscountDataToAdd.Rate#",
+			"unit_of_measure_id" = "#qGetDiscountDataToAdd.Unit_Of_Measure_ID#",
+			"program_fixed_component_id" = "#qGetProgramFixedCompID.Program_Fixed_Component_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddFixedProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddFixedProductData>
+<cfquery name="qAddFixedProductData" datasource="#application.datasource#">
 				INSERT INTO Program_Fixed_Price_Product_Data
 					(Program_ID, Contract_Products_ID, Fixed_Price_Value, Unit_Of_Measure_ID, Program_Fixed_Component_ID)
 				VALUES
 					('#renewed_program_id#', '#qAddContractProducts.Contract_Products_ID#', '#qGetDiscountDataToAdd.Rate#', '#qGetDiscountDataToAdd.Unit_Of_Measure_ID#', '#qGetProgramFixedCompID.Program_Fixed_Component_ID#')
 			</cfquery>
+</cfif>
 		
 		<!--- if its fixed then add fixed data --->
 		<cfelseif qGetDiscountDataToAdd.Component_Type eq 2>	
@@ -168,12 +201,28 @@
 				AND 	Deleted = 0
 			</cfquery>
 			
-			<cfquery name="qAddRebateProductData" datasource="#application.datasource#">
+			<cfset useLakebaseForqAddRebateProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
+<cfif useLakebaseForqAddRebateProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_rebates_product_data", {
+			"program_id" = "#renewed_program_id#",
+			"contract_products_id" = "#qAddContractProducts.Contract_Products_ID#",
+			"rebate_value" = "#qGetDiscountDataToAdd.Rate#",
+			"unit_of_measure_id" = "#qGetDiscountDataToAdd.Unit_Of_Measure_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddRebateProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddRebateProductData>
+<cfquery name="qAddRebateProductData" datasource="#application.datasource#">
 				INSERT INTO Program_Rebates_Product_Data
 					(Program_ID, Contract_Products_ID, Rebate_Value, Unit_Of_Measure_ID)
 				VALUES
 					('#renewed_program_id#', '#qAddContractProducts.Contract_Products_ID#', '#qGetDiscountDataToAdd.Rate#', '#qGetDiscountDataToAdd.Unit_Of_Measure_ID#')
 			</cfquery>
+</cfif>
 			
 			<cfquery name="qAddRebateCompData" datasource="#application.datasource#">
 				INSERT INTO	Program_Rebates_Component_Data
@@ -190,13 +239,31 @@
 		</cfif>
 		
 		<!--- check volume --->
-		<cfquery name="qCheckVolume" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqCheckVolume>
+	<cftry>
+		<cfset qCheckVolume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#qGetItemMasterID.BSA_Foodservice_Items_Master_ID#",
+				"program_id" = "eq.#renewed_program_id#",
+				"deleted" = "eq.0",
+				"select" = "program_product_volume_id"
+			}), "program_product_volume_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckVolume>
+<cfquery name="qCheckVolume" datasource="#application.datasource#">
 			SELECT	Program_Product_Volume_ID
 			FROM	Program_Product_Volume
 			WHERE	BSA_Foodservice_Items_Master_ID = '#qGetItemMasterID.BSA_Foodservice_Items_Master_ID#'
 			AND		Program_ID = #renewed_program_id#
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfif not qCheckVolume.RecordCount>
 		

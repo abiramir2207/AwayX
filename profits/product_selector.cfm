@@ -614,7 +614,22 @@ Add Sort By
 				<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 				<!--- Get the name, author and date of the pricing rule, that this product is part of... --->
 				<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-				<CFQUERY NAME="Get_Pricing_Rule_Details" DBTYPE="query">
+				<cfset useLakebaseForGet_Pricing_Rule_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_pricing_rule_details")>
+<cfif useLakebaseForGet_Pricing_Rule_Details>
+	<cftry>
+		<cfset Get_Pricing_Rule_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_pricing_rule_details", {
+				"pricing_rule_id" = "eq.#Check_for_Products.Pricing_Rule_ID#",
+				"select" = "pricing_rule_name,pricing_rule_date,pricing_rule_author,user_id,name_first,name_last"
+			}), "pricing_rule_name,pricing_rule_date,pricing_rule_author,user_id,name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Pricing_Rule_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Pricing_Rule_Details>
+<CFQUERY NAME="Get_Pricing_Rule_Details" DBTYPE="query">
 					Select		Pricing_Rule_Name, 
 								Pricing_Rule_Date, 
 								Pricing_Rule_Author,
@@ -624,6 +639,7 @@ Add Sort By
 					From		Get_All_Pricing_Rule_Details
 					Where		Pricing_Rule_ID = '#Check_for_Products.Pricing_Rule_ID#'
 				</CFQUERY>
+</cfif>
 
 				<CFSET color="Silver">
 			<CFELSE>

@@ -233,11 +233,27 @@
     		SELECT MAX(profile_sequence) AS max_ps
     		FROM profiles
     	</cfquery>
-    	<cfquery name="pull_CURRENT_ID" datasource="#application.datasource#">
+    	<cfset useLakebaseForpull_CURRENT_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForpull_CURRENT_ID>
+	<cftry>
+		<cfset pull_CURRENT_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"profiles_id" = "eq.#arguments.profileId#",
+				"select" = "profile_sequence"
+			}), "profile_sequence"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForpull_CURRENT_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForpull_CURRENT_ID>
+<cfquery name="pull_CURRENT_ID" datasource="#application.datasource#">
     		SELECT profile_sequence
     		FROM profiles
     		WHERE Profiles_ID = '#arguments.profileId#'
     	</cfquery>
+</cfif>
     	<cfloop from="#pull_CURRENT_ID.profile_sequence#" to="#pull_MAX_ID.max_ps#" index="ps">
     		<cfset new_ps = ps + 1>
     		<cfset useLakebaseForupdate_ps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
@@ -829,12 +845,28 @@
 
 		<!--- Only do this for spending cap values OR if "ApproveLSComponentByProfile" is ON --->
 		<cfif appSettings.getApprovalSpendingCapOn() or appSettings.getApproveLSComponentByProfile()>
-			<cfquery name="GetLSApprovalAmount" datasource="#application.datasource#">
+			<cfset useLakebaseForGetLSApprovalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>
+<cfif useLakebaseForGetLSApprovalAmount>
+	<cftry>
+		<cfset GetLSApprovalAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_ls_approval", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#arguments.Copy_Profile_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLSApprovalAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLSApprovalAmount>
+<cfquery name="GetLSApprovalAmount" datasource="#application.datasource#">
 				Select *
 				from Profile_LS_Approval
 				where deleted = 0
 				and Profiles_ID =  '#arguments.Copy_Profile_ID#'
 			</cfquery>
+</cfif>
 			<cfif GetLSApprovalAmount.recordcount GT 0>
 				<cfloop query="GetLSApprovalAmount">
 					<cfset useLakebaseForEnterLSApprovalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>

@@ -640,11 +640,27 @@ Order By #sql_Sort_By# ASC
 		
 			<!--- show a lock for locked contracts --->
 			<CFIF BB_Is_Locked EQ 1>
-				<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
+				<cfset useLakebaseForLookUpTheLockingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLookUpTheLockingUser>
+	<cftry>
+		<cfset LookUpTheLockingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#BB_Locked_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookUpTheLockingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookUpTheLockingUser>
+<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
 					SELECT Name_First, Name_Last
 					FROM _Users
 					WHERE User_ID = '#BB_Locked_By_User_ID#'
 				</cfquery>
+</cfif>
 				<IMG SRC="/images/lock.gif" TITLE="This program is currently being viewed by #LookUpTheLockingUser.Name_First# #LookUpTheLockingUser.Name_Last#" height="16" width="12">
 <cfelse><img src="/images/fill.gif" width="12">
 			</CFIF>

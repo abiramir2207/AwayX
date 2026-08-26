@@ -12,12 +12,28 @@
 
 	<cffunction name="GetLabels" access="public" returntype="any" output="false" displayname="GetLabels" hint="Gets the Labels if they exist.">
 		<cfargument name="tableCode" required="true" default="" type="string">
-		<cfquery name="getLabels" datasource="#application.datasource#">
+		<cfset useLakebaseForgetLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_export_labels")>
+<cfif useLakebaseForgetLabels>
+	<cftry>
+		<cfset getLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_auto_report_export_labels", {
+				"table_code" = "eq.#arguments.tableCode#",
+				"order" = "sequence.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLabels>
+<cfquery name="getLabels" datasource="#application.datasource#">
 			SELECT *
 			FROM BB_Auto_Report_Export_Labels
 			WHERE Table_Code = '#arguments.tableCode#'
 			ORDER BY Sequence
 		</cfquery>
+</cfif>
 		<cfreturn getLabels>
 	</cffunction>
 

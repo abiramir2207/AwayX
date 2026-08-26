@@ -327,9 +327,25 @@
 				<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 				<!--- If there is no records its not a valid program or product. So just insert the F/S Natural value --->
 				<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-					<CFQUERY NAME="Reset_QBrand" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForReset_QBrand = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("q_brand_desc")>
+<cfif useLakebaseForReset_QBrand>
+	<cftry>
+		<cfset Reset_QBrand = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("q_brand_desc", {
+				"q_brand" = "eq.F/S Natural",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForReset_QBrand = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForReset_QBrand>
+<CFQUERY NAME="Reset_QBrand" DATASOURCE="#Application.Datasource#">
 						SELECT * FROM Q_Brand_Desc WHERE Q_Brand = 'F/S Natural' AND Deleted=0                   
 					</CFQUERY>
+</cfif>
 					<CFQUERY NAME="Insert_Growth_Details" DATASOURCE="#Application.Datasource#">
 						INSERT INTO 		GL_QBrand_Rate_Calculation
 											(	Billback_ID,
@@ -490,9 +506,25 @@
 			</CFIF>
 		</CFOUTPUT>		
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxx Lumpsum End xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-	<CFQUERY NAME="Test" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForTest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_qbrand_rate_calculation")>
+<cfif useLakebaseForTest>
+	<cftry>
+		<cfset Test = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_qbrand_rate_calculation", {
+				"billback_id" = "eq.#BB_Item#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTest>
+<CFQUERY NAME="Test" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM GL_QBrand_Rate_Calculation WHERE Billback_ID = '#BB_Item#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 </CFLOOP>
 

@@ -34,12 +34,29 @@
 	
 		<cfargument name="authoritySequenceId" type="numeric" required="true">
 	
-		<cfquery name="qGetAuthoritySequenceLevel" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAuthoritySequenceLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqGetAuthoritySequenceLevel>
+	<cftry>
+		<cfset qGetAuthoritySequenceLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("authority_sequence", {
+				"deleted" = "eq.0",
+				"authority_sequence_id" = "eq.#arguments.authoritySequenceId#",
+				"select" = "authority_sequence_order"
+			}), "authority_sequence_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAuthoritySequenceLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAuthoritySequenceLevel>
+<cfquery name="qGetAuthoritySequenceLevel" datasource="#application.datasource#">
 			SELECT	Authority_Sequence_Order
 			FROM	Authority_Sequence
 			WHERE	Deleted = 0
 					AND Authority_Sequence_ID = #arguments.authoritySequenceId#			
 		</cfquery>
+</cfif>
 	
 		<cfreturn qGetAuthoritySequenceLevel />
 		

@@ -255,11 +255,27 @@ Please be advised program #getExpiringPrograms.Contract_Number# is expiring and 
 		<!--- WEEKLY SUMMARIIZED EMAIL --->
 		<cfif NumberOfDaysForWeeklyNotification GTE 1 AND sendSummaryEmailToday eq 1>
 			<cfloop list ="#Responsible_User_ID_List#" index="RSP_ID">
-				<cfquery name="getRSPEmail" datasource="#application.datasource#">
+				<cfset useLakebaseForgetRSPEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetRSPEmail>
+	<cftry>
+		<cfset getRSPEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#RSP_ID#",
+				"select" = "user_email,name_first"
+			}), "user_email,name_first"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRSPEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRSPEmail>
+<cfquery name="getRSPEmail" datasource="#application.datasource#">
 					SELECT User_Email, NAME_FIRST
 					FROM _Users
 					WHERE User_ID = '#RSP_ID#'
 				</cfquery>
+</cfif>
 
 				<cfsavecontent variable="EmailContents">
 					<cfinclude template="\templates\email\expiring_program.cfm">

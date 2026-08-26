@@ -21,10 +21,25 @@
 
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
 
+<cfset useLakebaseForGetCurrentSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGetCurrentSetting>
+	<cftry>
+		<cfset GetCurrentSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "login_attempts,la_changed_date,la_changed_by"
+			}), "login_attempts,la_changed_date,la_changed_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentSetting>
 <cfquery name="GetCurrentSetting" datasource="#application.datasource#">
 Select		Login_Attempts, LA_Changed_Date, LA_Changed_By
 From		General_Settings
 </cfquery>
+</cfif>
 
 <cfset useLakebaseForGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
 <cfif useLakebaseForGetUserName>

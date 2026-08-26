@@ -478,11 +478,26 @@ Processes form information from the previous page.
 	DELETE FROM Program_Perf_Mapping WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
 </cfquery>
 
+<cfset useLakebaseForGetPerformanceRequirements = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_perf_req")>
+<cfif useLakebaseForGetPerformanceRequirements>
+	<cftry>
+		<cfset GetPerformanceRequirements = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_perf_req", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPerformanceRequirements = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPerformanceRequirements>
 <cfquery name="GetPerformanceRequirements" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Perf_Req
 	WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 <cfloop query="GetPerformanceRequirements">
 <cfif isDefined("Form.Requirement_#Evaluate(Program_Perf_Req_ID)#")>

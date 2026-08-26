@@ -145,30 +145,11 @@
 			WHERE 	Deduction_ID = '#DD_DedID#' AND Deleted=0
 		</CFQUERY>
 		<CFIF DD_DedID NEQ FORM.URLDeduction_ID>
-			<cfset useLakebaseForUnLock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForUnLock>
-	<cftry>
-		<cfset application.oLakebase.updateRows("deductions",
-			{
-				"deduction_id" = "eq.#DD_DedID#"
-			},
-			{
-				"is_locked" = "0",
-				"locked_by" = ""
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUnLock = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUnLock>
-<CFQUERY NAME="UnLock" DATASOURCE="#Application.Datasource#">
+			<CFQUERY NAME="UnLock" DATASOURCE="#Application.Datasource#">
 				UPDATE 	Deductions
 				SET 	Is_Locked = 0,Locked_By = ''
 				WHERE 	Deduction_ID = '#DD_DedID#'
 			</CFQUERY>
-</cfif>
 		</CFIF>
 	</CFIF>
 </CFLOOP>

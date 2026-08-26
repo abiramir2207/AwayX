@@ -18,9 +18,8 @@ import argparse
 import re
 from pathlib import Path
 
-PROPOSAL_BLOCK_RE = re.compile(
-    r"===== QUERY: (.+?) =====\nSTATUS: (AUTO-GENERATED[^\n]*|NEEDS_MANUAL_REVIEW[^\n]*)\n\n(.*?)(?=\n===== QUERY:|\Z)",
-    re.DOTALL,
+PROPOSAL_HEADER_RE = re.compile(
+    r"===== QUERY: (.+?) =====\nSTATUS: (AUTO-GENERATED[^\n]*|NEEDS_MANUAL_REVIEW[^\n]*)\n\n",
 )
 QUERY_TAG_RE_TMPL = r"(<cf(query|storedproc)\s+name\s*=\s*[\"']{name}[\"'][^>]*>.*?</cf\2>)"
 
@@ -29,13 +28,21 @@ EXCLUDE_FILES = {"enter.cfm"}
 
 
 def load_proposals(proposal_file: Path):
+    # Body length varies (NEEDS_MANUAL_REVIEW entries have none) so we can't rely on
+    # a fixed trailing-newline count to find each block's end - find header positions
+    # independently first, then slice the body between consecutive headers.
     text = proposal_file.read_text(encoding="utf-8", errors="ignore")
+    headers = list(PROPOSAL_HEADER_RE.finditer(text))
     out = []
-    for m in PROPOSAL_BLOCK_RE.finditer(text):
-        name, status, body = m.group(1), m.group(2), m.group(3).strip()
+    for i, m in enumerate(headers):
+        name, status = m.group(1), m.group(2)
+        body_start = m.end()
+        body_end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
+        body = text[body_start:body_end].strip()
         if status.startswith("AUTO-GENERATED"):
             out.append((name, body))
     return out
+
 
 
 def apply_to_file(src_path: Path, proposals: list[tuple[str, str]]) -> tuple[int, int]:

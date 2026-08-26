@@ -76,13 +76,31 @@
 	</CFCASE>
 
 	<CFCASE VALUE="AccessLevel">
-		<CFQUERY NAME="UpdateAccessLevel" datasource="#application.datasource#" DBTYPE="ODBC">
+		<cfset useLakebaseForUpdateAccessLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUpdateAccessLevel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#Form.User_ID#"
+			},
+			{
+				"access_level" = "#Form.Access_Level#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAccessLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAccessLevel>
+<CFQUERY NAME="UpdateAccessLevel" datasource="#application.datasource#" DBTYPE="ODBC">
 			UPDATE _Users
 			SET
 				Access_Level = '#Form.Access_Level#'
 			WHERE
 				User_ID 			= 	'#Form.User_ID#'
-		</CFQUERY>		
+		</CFQUERY>
+</cfif>		
     <!--- 
 	  Dev Notes: 23086/Anand Rao/21-May-10
 	  User Traffic Changes

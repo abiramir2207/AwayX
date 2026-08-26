@@ -47,12 +47,27 @@ WHERE     (dbo.Contract_Products.Deleted = 0) AND (dbo.Program_Rebates_Product_D
 
 <CFLOOP INDEX="Product_ID" LIST="#FORM.Product_List#" DELIMITERS=",">
 	<CFIF listfind(listofactiveproducts,Product_ID, ",") EQ 0>
-		<CFQUERY NAME="saveContractProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForsaveContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForsaveContractProducts>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"bsa_foodservice_items_master_id" = "#Product_ID#",
+			"contract_main_id" = "#FORM.Program_ID#",
+			"product_type_id" = "2"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveContractProducts>
+<CFQUERY NAME="saveContractProducts" datasource="#application.datasource#">
 			INSERT INTO Contract_Products
 			(BSA_Foodservice_Items_Master_ID, Contract_Main_ID, Product_Type_ID)
 			VALUES
 			('#Product_ID#', '#FORM.Program_ID#', 2)
 		</CFQUERY>
+</cfif>
 		
 		<cfset useLakebaseForInsertNewProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
 <cfif useLakebaseForInsertNewProduct>

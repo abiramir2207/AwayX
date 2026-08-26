@@ -52,7 +52,27 @@ Description  :  Manager for Import Planners
 		</cfquery>
 
 		<cfloop index="local.progId" list="#local.stData.chosen_programs#">
-			<cfquery name="local.qInsertLog" datasource="#application.datasource#">
+			<cfset useLakebaseForlocal_qInsertLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_program_copy_log")>
+<cfif useLakebaseForlocal_qInsertLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planner_program_copy_log", {
+			"planner_program_copy_batch_id" = "#local.getBatchID.BatchID#",
+			"to_planner_id" = "#local.stData.target_planner_id#",
+			"from_planner_id" = "#local.stData.source_planner_id#",
+			"from_program_id" = "#local.progId#",
+			"user_id" = "#local.stData.user_id#",
+			"import_type" = "#local.stData.planner_import_type#",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"processed" = "0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qInsertLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qInsertLog>
+<cfquery name="local.qInsertLog" datasource="#application.datasource#">
 				INSERT INTO Planner_Program_Copy_Log
 						(
 							Planner_Program_Copy_Batch_Id,
@@ -77,6 +97,7 @@ Description  :  Manager for Import Planners
 							0
 					)
 			</cfquery>
+</cfif>
 		</cfloop>
 		<cfreturn local.getBatchID.BatchID />
 	</cffunction>

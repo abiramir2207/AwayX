@@ -48,12 +48,29 @@
 		ORDER BY DD_Reason_Code_Description
 	</cfquery>
 
-	<cfquery name="GetDDProfileSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForGetDDProfileSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
+<cfif useLakebaseForGetDDProfileSettings>
+	<cftry>
+		<cfset GetDDProfileSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions_profiles_settings", {
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"deleted" = "eq.0",
+				"select" = "dd_match_central_write_off_amount"
+			}), "dd_match_central_write_off_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDDProfileSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDDProfileSettings>
+<cfquery name="GetDDProfileSettings" datasource="#application.datasource#">
 		SELECT DD_Match_Central_Write_Off_Amount
 		FROM Deductions_Profiles_Settings
 		WHERE profiles_id = #request.AccessStructure.Profiles_ID#
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfset useLakebaseForGet_DD_Closing_Method = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
 <cfif useLakebaseForGet_DD_Closing_Method>

@@ -494,9 +494,25 @@
     	</cfif> 
     	<cfif arguments.Dist_group>
 			<cfset Dist_ext_info = "">
-			<cfquery name="Dist_groups_info" datasource="#application.datasource#">
+			<cfset useLakebaseForDist_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_distributor_planning_groups")>
+<cfif useLakebaseForDist_groups_info>
+	<cftry>
+		<cfset Dist_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_distributor_planning_groups", {
+				"vf_plan_id" = "eq.#arguments.edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_groups_info>
+<cfquery name="Dist_groups_info" datasource="#application.datasource#">
 				SELECT * FROM VF_Distributor_Planning_Groups WHERE VF_plan_ID = #arguments.edit# AND deleted = 0
-			</cfquery>	
+			</cfquery>
+</cfif>	
 			<cfif Dist_groups_info.recordcount>
 						<cfloop query="Dist_groups_info">
 							<cfif listfind(arguments.Dist_list, Dist_groups_info.PG_Customer_Category_ID) EQ 0>
@@ -536,10 +552,24 @@
 		<cfargument name="bsa_id" 		type="string"  default="" required="true">
 
 		<cfloop list ="#arguments.bsa_id#"  index="bsa_id" delimiters=",">
-			<cfquery name="qInsertVFDistibutorPG" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsertVFDistibutorPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_distributor_planning_groups")>
+<cfif useLakebaseForqInsertVFDistibutorPG>
+	<cftry>
+		<cfset application.oLakebase.insertRow("vf_distributor_planning_groups", {
+			"vf_plan_id" = "#arguments.id#",
+			"pg_product_category_id" = "#bsa_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertVFDistibutorPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertVFDistibutorPG>
+<cfquery name="qInsertVFDistibutorPG" datasource="#application.datasource#">
 				INSERT INTO VF_Distributor_Planning_Groups(vf_plan_id, pg_product_category_id)
 				Values ('#arguments.id#','#bsa_id#')
 			</cfquery>
+</cfif>
 		</cfloop>
 
 	</cffunction>

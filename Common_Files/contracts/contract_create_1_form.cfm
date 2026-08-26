@@ -959,10 +959,25 @@ summary page and also on the program flex grid's column (volume).
 </cfif>
 
 <!--- Max Length for Program Title --->
+<cfset useLakebaseForqryUsersSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqryUsersSettings>
+	<cftry>
+		<cfset qryUsersSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"select" = "max_program_title_length,pullback_modify_corporate_program_rates"
+			}), "max_program_title_length,pullback_modify_corporate_program_rates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUsersSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUsersSettings>
 <CFQUERY NAME="qryUsersSettings" datasource="#application.datasource#">
 SELECT 	Max_Program_Title_Length, Pullback_Modify_Corporate_Program_Rates
 FROM	_Users_Settings
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="Form.Document_ID" DEFAULT="ContractGeneralInfo">
 
@@ -1993,11 +2008,28 @@ start date of the parent.
 				<cfelse>
 
 					<!--- If the Program has formula periods (dates) set up,program dates are locked --->
-					<cfquery NAME="checkFormulaPeriod" datasource="#application.datasource#">
+					<cfset useLakebaseForcheckFormulaPeriod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForcheckFormulaPeriod>
+	<cftry>
+		<cfset checkFormulaPeriod = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_id" = "eq.#contract_Id#",
+				"deleted" = "eq.0",
+				"select" = "program_formula_pricing_period_id"
+			}), "program_formula_pricing_period_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckFormulaPeriod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckFormulaPeriod>
+<cfquery NAME="checkFormulaPeriod" datasource="#application.datasource#">
 						SELECT Program_Formula_Pricing_Period_Id FROM Program_Formula_Pricing_Periods
 						WHERE Program_Id = #contract_Id# AND
 						Deleted = 0
 					</cfquery>
+</cfif>
 					<cfset title="Click here to get a calendar" />
 					<cfif checkFormulaPeriod.recordCount GT 0>
 						<cfset title="Contract dates are not editable when the program has formula period dates configured" />

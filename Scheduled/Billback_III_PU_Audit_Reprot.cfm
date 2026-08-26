@@ -537,10 +537,25 @@ TABLE.Maintable TD
 	Setting variables.emailToAddress to empty string instead of hard coded email addresses --->
 <cfset variables.emailToAddress = "" />
 
+<cfset useLakebaseForqGetToAddress = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqGetToAddress>
+	<cftry>
+		<cfset qGetToAddress = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_billback_upload_audit_report_email"
+			}), "send_billback_upload_audit_report_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetToAddress = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetToAddress>
 <cfquery name="qGetToAddress" datasource="#application.datasource#">
 	SELECT	Send_Billback_Upload_Audit_Report_Email
 	FROM	General_Settings
 </cfquery>
+</cfif>
 
 <cfif qGetToAddress.RecordCount and len(trim(qGetToAddress.Send_Billback_Upload_Audit_Report_Email))>
 	<cfset variables.emailToAddress = "#trim(qGetToAddress.Send_Billback_Upload_Audit_Report_Email)#" />

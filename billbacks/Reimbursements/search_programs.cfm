@@ -304,12 +304,31 @@ SELECT
 <!-----------------------------------------------------------------------
 Get Program Types from DB
 --------------------------------------------------------------------------->
-						<CFQUERY NAME="Get_ProgramTypes" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForGet_ProgramTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGet_ProgramTypes>
+	<cftry>
+		<cfset Get_ProgramTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"generic_type" = "eq.Distributor Trade/Shelter",
+				"active" = "eq.1",
+				"order" = "created_type.asc",
+				"select" = "programcontrol_panel_options_id,created_type"
+			}), "programcontrol_panel_options_id,created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_ProgramTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_ProgramTypes>
+<CFQUERY NAME="Get_ProgramTypes" DATASOURCE="#Application.Datasource#">
 						Select	ProgramControl_Panel_Options_ID,Created_Type
 						From 	Program_Control_Panel_Options
 						Where 	Deleted=0 AND Generic_Type = 'Distributor Trade/Shelter' AND Active = 1
 						Order By Created_Type
 						</CFQUERY>
+</cfif>
 						
 						<SELECT NAME="ProgramType">
 							<OPTION VALUE="0">**ALL** Program Type</OPTION>
@@ -344,12 +363,28 @@ Get Program Types from DB
 								<cfif Distributor_List IS 0><INPUT OnClick="JavaScript:dist_lookup_Pick(1,this);" TYPE="RADIO" ID="Customer_Filter" NAME="Customer_Filter" VALUE="family_name"<CFIF FORM.Customer_Filter EQ "family_name"> CHECKED</CFIF>></TD>
 								<TD NOWRAP><span ID="searchItemLabel">Family Name</span></TD>
 								<TD>
-								<cfquery name="GetFamilyNames" DATASOURCE="#Application.Datasource#">
+								<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" DATASOURCE="#Application.Datasource#">
 									SELECT *
 									FROM Distributor_Family
 									WHERE Deleted = 0 
 									ORDER BY Family_Name
 								</cfquery>
+</cfif>
 								<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 								<SPAN ID="SP_Family_Name">
 								<SELECT NAME="Family_Name" style="width: 200px;">

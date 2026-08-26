@@ -582,7 +582,20 @@ Please note that many fields from the parent may not be defined if the user does
 				SET NOCOUNT OFF			
 			</CFQUERY>	
 			
-			<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForInsert_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"deduction_id" = "#Deduction_ID#",
+			"doc_id" = "#Save_Data.Doc_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Data>
+<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
 			INSERT	INTO Contract_Attachments
 					(
 						Deduction_ID,
@@ -593,7 +606,8 @@ Please note that many fields from the parent may not be defined if the user does
 						'#Deduction_ID#',
 						'#Save_Data.Doc_ID#'
 					)
-			</CFQUERY>	
+			</CFQUERY>
+</cfif>	
 		
 		</cfoutput>
 	</cfif>

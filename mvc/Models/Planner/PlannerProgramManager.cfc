@@ -396,13 +396,30 @@ Description  :  Manager for Planner Program
 		<cfif qCheckProgramNumber.recordCount and bIsRevision eq 0>
 			<cfset New_Contract_Main_ID = qCheckProgramNumber.Contract_Main_ID />
 			<cfif (form.AltCustomers EQ "1")>
-				<cfquery name="chkAlternateCustomer" datasource="#application.datasource#">
+				<cfset useLakebaseForchkAlternateCustomer = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForchkAlternateCustomer>
+	<cftry>
+		<cfset chkAlternateCustomer = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#New_Contract_Main_ID#",
+				"alternate_customer_flag" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForchkAlternateCustomer = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForchkAlternateCustomer>
+<cfquery name="chkAlternateCustomer" datasource="#application.datasource#">
 					SELECT 	*
 					FROM 	Contract_Distributors
 					WHERE 	Contract_Main_ID = '#New_Contract_Main_ID#' AND
 							Alternate_Customer_Flag = 1 AND
 							Deleted = 0
 				</cfquery>
+</cfif>
 				<cfif (isDefined("chkAlternateCustomer") AND chkAlternateCustomer.RecordCount EQ 0)>
 						<cfset form.AltCustomers = 0 />
 				</cfif>
@@ -1855,9 +1872,22 @@ Description  :  Manager for Planner Program
 		</cfscript>
 
 
-		<cfquery name="qDelVolume" datasource="#application.datasource#">
+		<cfset useLakebaseForqDelVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqDelVolume>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_product_volume", {
+			"program_id" = "eq.#stData.programId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDelVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDelVolume>
+<cfquery name="qDelVolume" datasource="#application.datasource#">
 			DELETE FROM Program_Product_Volume WHERE Program_ID = '#stData.programId#'
 		</cfquery>
+</cfif>
 
 		<cfloop index="iIndx" list="#stData.Product_List#">
 

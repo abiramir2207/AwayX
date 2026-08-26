@@ -303,12 +303,28 @@ ul.rebate_type > li {
 			</TD>
 		</TR>
 	<cfloop from="1" to="3" index="i">
-		<cfquery name="alternateRateCheck" datasource="#application.datasource#">
+		<cfset useLakebaseForalternateRateCheck = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForalternateRateCheck>
+	<cftry>
+		<cfset alternateRateCheck = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#form.compid#",
+				"alternate_recapture_rate_index" = "eq.#i#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForalternateRateCheck = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForalternateRateCheck>
+<cfquery name="alternateRateCheck" datasource="#application.datasource#">
 		 SELECT *
 		 FROM Alternate_Recapture_Rate_Setting
 		 WHERE Program_Rebates_Component_Name_ID = #form.compid#
 		 AND Alternate_Recapture_Rate_Index = #i#
 		</cfquery>
+</cfif>
 
 		<cfset useLakebaseForalternateRateTemplateList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_template")>
 <cfif useLakebaseForalternateRateTemplateList>

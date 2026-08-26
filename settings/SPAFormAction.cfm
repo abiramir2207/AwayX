@@ -18,11 +18,27 @@
 	</cfquery>
 
 	<cfloop list="#form.fieldnames#" index="fName">
-		<cfquery name="qGetSPAModule" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetSPAModule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_panel_access_modules")>
+<cfif useLakebaseForqGetSPAModule>
+	<cftry>
+		<cfset qGetSPAModule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("settings_panel_access_modules", {
+				"module_name" = "eq.#fName#",
+				"select" = "settings_panel_access_modules_id"
+			}), "settings_panel_access_modules_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSPAModule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSPAModule>
+<cfquery name="qGetSPAModule" datasource="#application.datasource#">
 			SELECT Settings_Panel_Access_Modules_ID 
 			FROM Settings_Panel_Access_Modules
 			WHERE Module_name = '#fName#'
 		</cfquery>
+</cfif>
 
 		<cfset SettingsPanelAccessModulesID = qGetSPAModule.Settings_Panel_Access_Modules_ID>
 		

@@ -54,10 +54,25 @@ Called from		:
 	----->
 </cfif>
 			<!--- D38427 : Billback email notifications START --->
-			<cfquery name="emailevent" datasource="#application.datasource#">
+			<cfset useLakebaseForemailevent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForemailevent>
+	<cftry>
+		<cfset emailevent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "billback_rfa_agree_email_event"
+			}), "billback_rfa_agree_email_event"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForemailevent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForemailevent>
+<cfquery name="emailevent" datasource="#application.datasource#">
 			select billback_rfa_agree_email_event
 			from _application_Settings
 			</cfquery>
+</cfif>
 			<cfif appSettings.getBBAgreeEmail() AND emailevent.billback_rfa_agree_email_event EQ 2>	
 					<cfset useremail = 0>
 					<cfset useremail = ListFind(EmailList, request.AccessStructure.User_Email)> 

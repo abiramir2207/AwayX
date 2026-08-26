@@ -183,11 +183,29 @@
 	</cfoutput>
 
 	<!--- Dev Note: Clay : Auto Renew Errors  --->
-	<cfquery name="MarkAsRenewed" datasource="#application.datasource#">
+	<cfset useLakebaseForMarkAsRenewed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForMarkAsRenewed>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_auto_renew",
+			{
+				"program_auto_renew_id" = "eq.#Needs_Renewal.Program_Auto_Renew_ID#"
+			},
+			{
+				"renewed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForMarkAsRenewed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForMarkAsRenewed>
+<cfquery name="MarkAsRenewed" datasource="#application.datasource#">
 		UPDATE 	Program_Auto_Renew
 		SET 		Renewed = 1
 		WHERE 	Program_Auto_Renew_ID = '#Needs_Renewal.Program_Auto_Renew_ID#'
 	</cfquery>
+</cfif>
 
 	<cfset Contract_Main_ID = renewed_program_id>
 	<!------ Change the status to RFA ----->

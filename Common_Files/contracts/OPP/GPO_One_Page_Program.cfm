@@ -339,7 +339,22 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 					<cfprocparam type="In" cfsqltype="cf_sql_varchar" dbVarName="@Unlock_Program_Number" value="">
 				</cfstoredproc>
 
-				<cfquery NAME="getDiscNumber" datasource="#application.datasource#">
+				<cfset useLakebaseForgetDiscNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options") AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForgetDiscNumber>
+	<cftry>
+		<cfset getDiscNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#Form.ProgramType_Id#",
+				"select" = "discount_identifier_id"
+			}, "discount_identifier_id", "discount_identifier", "discount_identifier_id", "discount_identifier_desc,discount_identifier_number"), "discount_identifier_desc,discount_identifier_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDiscNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDiscNumber>
+<cfquery NAME="getDiscNumber" datasource="#application.datasource#">
 					SELECT Disc.Discount_Identifier_Number,
 							Disc.Discount_Identifier_Desc
 					FROM Program_Control_Panel_Options PCPO
@@ -347,6 +362,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 							Disc.Discount_Identifier_ID = PCPO.Discount_Identifier_ID
 					where PCPO.ProgramControl_Panel_Options_ID = '#Form.ProgramType_Id#'
 				</cfquery>
+</cfif>
 
 				<cfinclude template="/Common_Files/contracts/contract_number_generator.cfm">
 

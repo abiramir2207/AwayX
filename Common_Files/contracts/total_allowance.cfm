@@ -279,11 +279,26 @@ WHERE 	PRODUCT_ID = '#BSA_Foodservice_Items_Master_ID#'
 	<!---Bid Request number 10--->
 	
 	<!---Get Bid Request cost data -- query of a query--->
-	<cfquery name="getBidRequestCosts" dbtype="query">
+	<cfset useLakebaseForgetBidRequestCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetBidRequestCosts>
+	<cftry>
+		<cfset getBidRequestCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.10"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBidRequestCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBidRequestCosts>
+<cfquery name="getBidRequestCosts" dbtype="query">
 		SELECT 	*
 		FROM 	GetContractProductInfo
 		WHERE 	Product_Type_ID = 10
 	</cfquery>
+</cfif>
 	
 	<cfif isNumeric(getBidRequestCosts.FPR_LB)>
 	

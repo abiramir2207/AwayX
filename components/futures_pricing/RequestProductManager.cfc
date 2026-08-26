@@ -29,7 +29,23 @@
 		<cfargument name="productId" type="string" required="true" default="">
 		
 		<!---get product detail info from database--->
-		<cfquery name="qGetProductInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProductInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqGetProductInfo>
+	<cftry>
+		<cfset qGetProductInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.productId#",
+				"deleted" = "eq.0",
+				"select" = "item,upc,description"
+			}), "item,upc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductInfo>
+<cfquery name="qGetProductInfo" datasource="#application.datasource#">
 			SELECT 	Item,
 					UPC,
 					Description
@@ -37,6 +53,7 @@
 			WHERE	BSA_Foodservice_Items_Master_ID = '#arguments.productId#'
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetProductInfo />	
 

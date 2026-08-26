@@ -140,11 +140,27 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 				<cfset headersvalue= ListAppend(headersvalue,'#getComponents.Description#')>
 			</cfif>
 			<!---D46874 :: New Growth Option (Growth Calculation) START --->
-			<CFQUERY NAME="GetAllContractInfo" datasource="#application.datasource#">
+			<cfset useLakebaseForGetAllContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetAllContractInfo>
+	<cftry>
+		<cfset GetAllContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#CSLGetContractInfo.ProgramType_ID#",
+				"select" = "growth_auto_pay"
+			}), "growth_auto_pay"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllContractInfo>
+<CFQUERY NAME="GetAllContractInfo" datasource="#application.datasource#">
 				SELECT	Growth_Auto_Pay
 				FROM	Program_Control_Panel_Options
 				WHERE 	ProgramControl_Panel_Options_ID = #CSLGetContractInfo.ProgramType_ID#
 			</CFQUERY>
+</cfif>
 			<cfif GetAllContractInfo.Growth_Auto_Pay>
 			<cfset colheaders =ListAppend(colheaders,'Growth Calculation')>
 				<cfif getComponents.Growth_Calculation EQ 1>

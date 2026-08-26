@@ -24,9 +24,25 @@
 	    <LEGEND STYLE="font: bold 14px sans-serif; color: Red;">find your #lcase(application.returned_customer_setting.distributor_label_singular)#</LEGEND>
 		
 		<!---Get data --->
-		<cfquery name="GetBBBData" datasource="#application.datasource#">
+		<cfset useLakebaseForGetBBBData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("big_billback")>
+<cfif useLakebaseForGetBBBData>
+	<cftry>
+		<cfset GetBBBData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("big_billback", {
+				"big_billback_id" = "eq.#Big_Billback_ID#",
+				"select" = "distributor"
+			}), "distributor"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBBData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBBData>
+<cfquery name="GetBBBData" datasource="#application.datasource#">
 		SELECT Distributor FROM Big_Billback WHERE Big_Billback_ID = #Big_Billback_ID#
 		</cfquery>
+</cfif>
 	
 		
 		<table width="350" cellpadding="0" cellspacing="2" border="0">

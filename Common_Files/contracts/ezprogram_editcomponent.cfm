@@ -230,12 +230,28 @@
 				<!--- Dev Note: drachala; D28504: Update bracket drop down list to remove price list ID  START
                 Changed/Added: Added Query to get Price_list_id based on "Bracket" and check if that list have 85 if it has 85 we assign that price_list_id to select value, if not
                 we will assign least price_list_id to select value.--->
-				<cfquery name="Pull_price_list_id" datasource="#application.datasource#">
+				<cfset useLakebaseForPull_price_list_id = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("v_price_list_bracket")>
+<cfif useLakebaseForPull_price_list_id>
+	<cftry>
+		<cfset Pull_price_list_id = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("v_price_list_bracket", {
+				"bracket" = "eq.#Bracket#",
+				"order" = "price_list.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPull_price_list_id = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPull_price_list_id>
+<cfquery name="Pull_price_list_id" datasource="#application.datasource#">
 					SELECT *
 					FROM  V_Price_List_Bracket
 					WHERE Bracket = #Bracket#
 					ORDER BY Price_List
 				</cfquery>
+</cfif>
 				<cfset price_list_id_list = #valuelist(Pull_price_list_id.Price_List_ID,",")#>
 				<cfif ListContains(price_list_id_list, 85)>
 					<cfset price_list_id_value = listgetat(price_list_id_list, ListContains(price_list_id_list, 85))>

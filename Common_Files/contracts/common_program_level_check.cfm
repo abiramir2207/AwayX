@@ -404,12 +404,29 @@ When lump sum product is mandatory check if there is any lump sum component with
 
 <!---TSF: Label 10305 - Check Volume against Min/Max Template Volume if it's set--->
 <!---get the uom from contract_main--->
+<cfset useLakebaseForqGetProgramUOMIDX = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramUOMIDX>
+	<cftry>
+		<cfset qGetProgramUOMIDX = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "contract_quantity_uom_idx"
+			}), "contract_quantity_uom_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramUOMIDX = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramUOMIDX>
 <cfquery name="qGetProgramUOMIDX" datasource="#application.datasource#">
 	SELECT	Contract_Quantity_UOM_IDX
 	FROM	Contract_Main
 	WHERE	Contract_Main_ID = #Contract_Main_ID#
 	AND		Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset variables.programUOM			= qGetProgramUOMIDX.Contract_Quantity_UOM_IDX />
 <cfset variables.minGlobalVolume 	= GetSettings.Min_Global_Volume />
@@ -431,11 +448,27 @@ When lump sum product is mandatory check if there is any lump sum component with
 	</cfquery>
 
 	<!---get the default unit of time--->
-	<cfquery name="qGetDefaultUOT" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetDefaultUOT = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqGetDefaultUOT>
+	<cftry>
+		<cfset qGetDefaultUOT = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultUOT = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultUOT>
+<cfquery name="qGetDefaultUOT" datasource="#application.datasource#">
 		SELECT		Volume_UOT_ID
 		FROM		_Users_Settings
 		WHERE		User_ID = '#request.AccessStructure.Company_Main_ID#'
 	</CFQUERY>
+</cfif>
 
 	<!---get program volume--->
 	<cfset ProgramVolumeQuantity 		= CreateObject("component", "components.programs.volume.ProgramVolume").getProgramQty(Contract_Main_ID, qGetContractSpan.Contract_Span, qGetDefaultUOT.Volume_UOT_ID) />

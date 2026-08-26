@@ -582,13 +582,30 @@ function confirmCompletion(){
 		<!---Generic type is bid request or off invoice--->
 		</cfif>
 
-		<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForGetCurrencyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForGetCurrencyTypes>
+	<cftry>
+		<cfset GetCurrencyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "currency_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrencyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrencyTypes>
+<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Currency
 			WHERE 	Deleted = 0
 			AND 	Active = 1
 			ORDER BY Currency_Name
 		</cfquery>
+</cfif>
 		<cfset DefaultValue2 = 0>
 
 		<cfset NoDefaultValue2 = GetCurrencyTypes.Recordcount>
@@ -2359,9 +2376,25 @@ function confirmCompletion(){
 			bResult = 0;
 		</cfscript>
 
-		<cfquery name="getTemplateParentID" datasource="#application.datasource#">
+		<cfset useLakebaseForgetTemplateParentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetTemplateParentID>
+	<cftry>
+		<cfset getTemplateParentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#ID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateParentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateParentID>
+<cfquery name="getTemplateParentID" datasource="#application.datasource#">
 			SELECT First_Parent_ID FROM Program_Control_Panel_Options WHERE ProgramControl_Panel_Options_ID = #ID#
 		</cfquery>
+</cfif>
 
 		<cfif url.DownloadSettings>
 

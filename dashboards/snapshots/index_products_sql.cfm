@@ -98,6 +98,23 @@ WHERE	product_group_id = '#product_group_id#'
 <!--- ----------------------------------------------------------------------------------------- --->
 <!--- items ----------------------------------------------------------------------------------- --->
 <!--- ----------------------------------------------------------------------------------------- --->
+<cfset useLakebaseForget_items = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_product_tt_items")>
+<cfif useLakebaseForget_items>
+	<cftry>
+		<cfset get_items = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_product_tt_items", {
+				"product_group_id" = "eq.#product_group_id#",
+				"pr_date_period" = "eq.#pr_date_period#",
+				"deleted" = "eq.0",
+				"select" = "ttit_items_id,pr_product_summary_id,ttit_item_number,ttit_item_description,ttit_dollars,ttit_cases,ttit_dollars_per_cases,ttit_net,ttit_index,deleted,created_date,pr_date_period,product_group_id"
+			}), "ttit_items_id,pr_product_summary_id,ttit_item_number,ttit_item_description,ttit_dollars,ttit_cases,ttit_dollars_per_cases,ttit_net,ttit_index,deleted,created_date,pr_date_period,product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_items = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_items>
 <cfquery name="get_items" datasource="#Application.Datasource#">
 
 SELECT	ttit_items_ID,
@@ -123,6 +140,7 @@ WHERE	product_group_id = '#product_group_id#'
 		deleted = 0
 
 </cfquery>
+</cfif>
 
 
 <!--- ----------------------------------------------------------------------------------------- --->

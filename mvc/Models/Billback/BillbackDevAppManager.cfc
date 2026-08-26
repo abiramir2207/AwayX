@@ -679,7 +679,26 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
     --->
 
     <cfif (GetFormInfo.Billback_Status_ID EQ 3)>
-      <cfquery name="updBBApproved" datasource="#application.datasource#">
+      <cfset useLakebaseForupdBBApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForupdBBApproved>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_approved",
+			{
+				"billback_id" = "eq.#arguments.Billback_ID#"
+			},
+			{
+				"approval_type" = "3",
+				"approval_updated_by" = "#arguments.userId#",
+				"approval_updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBApproved>
+<cfquery name="updBBApproved" datasource="#application.datasource#">
 	      UPDATE BB_Approved
 	      SET Approval_Type = 3,
           Approval_Updated_By = '#arguments.userId#'<!--- <cfqueryparam value="#request.AccessStructure.user_id#" cfsqltype="CF_SQL_VARCHAR"> --->,
@@ -687,6 +706,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
         WHERE 
          Billback_ID = '#arguments.Billback_ID#'
       </cfquery>
+</cfif>
     </cfif>
     
       <cfloop from="1" to="#ArrayLen(updateBBDev)#" index="i" step="1"> 

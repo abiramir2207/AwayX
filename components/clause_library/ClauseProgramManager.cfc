@@ -560,7 +560,26 @@
 		<cfargument name="newClauseId" type="numeric" required="true" default="" />
 		<cfargument name="programId" type="numeric" required="true" default="0" />
 		
-		<cfquery name="qUpdateProgramClause" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateProgramClause = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_program")>
+<cfif useLakebaseForqUpdateProgramClause>
+	<cftry>
+		<cfset application.oLakebase.updateRows("clause_program",
+			{
+				"clause_library_id" = "eq.#arguments.clauseId#",
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#"
+			},
+			{
+				"clause_library_id" = "#arguments.newClauseId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateProgramClause = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateProgramClause>
+<cfquery name="qUpdateProgramClause" datasource="#application.datasource#">
 			UPDATE	Clause_Program
 			SET		Clause_Library_ID = #arguments.newClauseId#
 			WHERE
@@ -570,6 +589,7 @@
 					AND
 					Program_ID = #arguments.programId#				
 		</cfquery>
+</cfif>
 		
 	</cffunction>
 	

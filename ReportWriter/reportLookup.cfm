@@ -17,12 +17,31 @@ End - Get Status from DB
 <!-----------------------------------------------------------------------
 Get Program Types from DB
 --------------------------------------------------------------------------->
+<cfset useLakebaseForq_getProgramTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForq_getProgramTypes>
+	<cftry>
+		<cfset q_getProgramTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"isdominant" = "eq.1",
+				"order" = "created_type.asc",
+				"select" = "programcontrol_panel_options_id,created_type"
+			}), "programcontrol_panel_options_id,created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getProgramTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getProgramTypes>
 <CFQUERY NAME="q_getProgramTypes" datasource="#application.datasource#">
 Select	ProgramControl_Panel_Options_ID,Created_Type
 From 	Program_Control_Panel_Options
 Where 	Deleted=0 AND Active=1 AND IsDominant = 1
 Order By Created_Type
 </CFQUERY>
+</cfif>
 <!-----------------------------------------------------------------------
 End - Get Program Types from DB
 --------------------------------------------------------------------------->

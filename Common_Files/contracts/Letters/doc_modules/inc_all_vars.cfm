@@ -305,11 +305,27 @@ So, we need to get the count from ##TMP_Rebate_Price_Details.
 
 <cfset variables.bid_request_status_id = 0>
 <cfif getprogramdetails.BidRequestStatusOn>
-    <cfquery name="variables.qProgramBidRequestStatus" datasource="#application.datasource#">
+    <cfset useLakebaseForvariables_qProgramBidRequestStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForvariables_qProgramBidRequestStatus>
+	<cftry>
+		<cfset variables.qProgramBidRequestStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request", {
+				"program_id" = "eq.#CSL_Contract_Main_ID#",
+				"select" = "bid_request_status_id"
+			}), "bid_request_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qProgramBidRequestStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qProgramBidRequestStatus>
+<cfquery name="variables.qProgramBidRequestStatus" datasource="#application.datasource#">
         SELECT 	Bid_Request_Status_ID
         FROM 	Program_Bid_Request
         WHERE 	Program_Bid_Request.Program_ID = #CSL_Contract_Main_ID#
     </cfquery>
+</cfif>
 
     <cfif variables.qProgramBidRequestStatus.recordCount>
         <cfset variables.bid_request_status_id = variables.qProgramBidRequestStatus.Bid_Request_Status_ID[1]>

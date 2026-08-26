@@ -707,7 +707,26 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
 
 					<td valign="top">
 						<!--- Get list of payment types --->
-						<cfquery name="qGetPaymentTypes" datasource="#application.datasource#">
+						<cfset useLakebaseForqGetPaymentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqGetPaymentTypes>
+	<cftry>
+		<cfset qGetPaymentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"restrict_from_billback" = "eq.0",
+				"off_invoice" = "eq.0",
+				"order" = "payment_type_name.asc",
+				"select" = "payment_type_name,payment_type_id"
+			}), "payment_type_name,payment_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPaymentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPaymentTypes>
+<cfquery name="qGetPaymentTypes" datasource="#application.datasource#">
 						SELECT
 							Payment_Type_Name,
 							Payment_Type_ID
@@ -718,6 +737,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
 							AND Off_Invoice = 0
 						ORDER BY Payment_Type_Name
 						</cfquery>
+</cfif>
 
 						&nbsp;<br>
 						<SPAN ID="Payment_Type">

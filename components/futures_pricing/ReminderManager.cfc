@@ -174,11 +174,29 @@
 			</cf_EmailWrapper>
 			
 			<!---mark as sent--->
-			<cfquery name="qSetReminderSent" datasource="#application.datasource#">
+			<cfset useLakebaseForqSetReminderSent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_reminder")>
+<cfif useLakebaseForqSetReminderSent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fp_reminder",
+			{
+				"fp_reminder_id" = "eq.#FP_Reminder_ID#"
+			},
+			{
+				"reminder_sent" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetReminderSent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetReminderSent>
+<cfquery name="qSetReminderSent" datasource="#application.datasource#">
 				UPDATE 	FP_Reminder
 				SET  	Reminder_Sent = 1
 				WHERE	FP_Reminder_ID = #FP_Reminder_ID#
 			</cfquery>
+</cfif>
 			
 			<!---set the previous id to this id--->
 			<cfset prevRequestId = FP_Request_Master_ID />

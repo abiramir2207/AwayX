@@ -8,11 +8,27 @@
 	ORDER BY National_Affiliation_Code ASC
 </CFQUERY>
 
+<cfset useLakebaseForGetAllCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetAllCompanies>
+	<cftry>
+		<cfset GetAllCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"order" = "company_name.asc",
+				"select" = "company_main_id,company_name"
+			}), "company_main_id,company_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllCompanies>
 <CFQUERY NAME="GetAllCompanies" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT Company_Main_ID, Company_Name
 	FROM Company_Main
 	ORDER BY Company_Name ASC
 </CFQUERY>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 

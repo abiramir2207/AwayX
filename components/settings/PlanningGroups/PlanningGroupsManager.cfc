@@ -6384,10 +6384,23 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
     <cfset PGNumberSequence = appSettings.get_Setting('PG_Number_Sequence') + 1>
   </cfif>
 
-  <cfquery name="IPGSNumber" datasource="#application.datasource#">
+  <cfset useLakebaseForIPGSNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planning_group_sequence_number")>
+<cfif useLakebaseForIPGSNumber>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planning_group_sequence_number", {
+			"pg_sequence_number" = "#PGNumberSequence#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForIPGSNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIPGSNumber>
+<cfquery name="IPGSNumber" datasource="#application.datasource#">
     INSERT INTO  Planning_Group_Sequence_Number (PG_Sequence_Number)
     VALUES (#PGNumberSequence#)
   </cfquery>
+</cfif>
 
 
 <cfreturn PGNumberSequence>

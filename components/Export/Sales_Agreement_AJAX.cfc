@@ -455,7 +455,23 @@
 	<!--- Get the variable cost associated with exports --->
 	<cffunction name="getStandardCost" output="no" returntype="query">
 		<cfargument name="Export_Sales_Agreement_ID" type="string" default="">
-			<cfquery name="qrygetStandardCost" datasource="#Application.Datasource#">
+			<cfset useLakebaseForqrygetStandardCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_cost") AND application.oLakebase.isTableMigrated("export_lookup_costs")>
+<cfif useLakebaseForqrygetStandardCost>
+	<cftry>
+		<cfset qrygetStandardCost = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("export_cost", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"order" = "show_order_sequence.asc",
+				"select" = "export_additional_cost,export_cost,export_cost_desc,export_cost_id,show_order_sequence"
+			}, "export_cost_desc", "export_lookup_costs", "export_lookup_cost_id", "export_lookup_cost_desc"), "export_additional_cost,export_cost,export_cost_desc,export_cost_id,show_order_sequence,export_lookup_cost_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetStandardCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetStandardCost>
+<cfquery name="qrygetStandardCost" datasource="#Application.Datasource#">
 			SELECT ec.Export_Cost_ID,ec.Export_Cost_Desc,ec.Export_Cost,ec.Export_Additional_Cost,ec.Show_Order_Sequence
 			,elc.Export_Lookup_Cost_Desc
 			FROM Export_Cost ec INNER JOIN Export_lookup_Costs elc
@@ -463,6 +479,7 @@
 			WHERE ec.Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'
 			ORDER BY ec.Show_Order_Sequence
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetStandardCost>
 	</cffunction>

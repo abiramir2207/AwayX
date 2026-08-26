@@ -201,11 +201,27 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 
 	<!--- (start) get distributor exceptions --->
 	<CFIF Form.WeightAssignmentCompleted EQ 0>
-		<cfquery name="CheckForExistingDistributorExceptions" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckForExistingDistributorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors_exceptions")>
+<cfif useLakebaseForCheckForExistingDistributorExceptions>
+	<cftry>
+		<cfset CheckForExistingDistributorExceptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors_exceptions", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForExistingDistributorExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForExistingDistributorExceptions>
+<cfquery name="CheckForExistingDistributorExceptions" datasource="#application.datasource#">
 			SELECT 	BSA_Foodservice_Customers_ID
 			FROM 	Contract_Distributors_Exceptions
 			WHERE 	Contract_Main_ID = '#cryp.value#'
 		</cfquery>
+</cfif>
 
 		<cfif CheckForExistingDistributorExceptions.recordcount GT 0>
 			<CFSET form.ExcludeDistributor = Replace(valuelist(CheckForExistingDistributorExceptions.BSA_Foodservice_Customers_ID),"-","_","ALL")>
@@ -378,12 +394,29 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 <!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
 <!---////////////////////////////////////// Save Into the database start /////////////////////////////////////////////--->
 <!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
-		<cfquery name="CheckForSavedDistributors" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckForSavedDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForCheckForSavedDistributors>
+	<cftry>
+		<cfset CheckForSavedDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_customers_id,program_weight,warehouse_master_id"
+			}), "bsa_foodservice_customers_id,program_weight,warehouse_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForSavedDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForSavedDistributors>
+<cfquery name="CheckForSavedDistributors" datasource="#application.datasource#">
 			SELECT BSA_Foodservice_Customers_ID,Program_Weight,Warehouse_Master_ID
 			FROM Contract_Distributors
 			WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
 			AND Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfset SavedItemList = valuelist(CheckForSavedDistributors.BSA_Foodservice_Customers_ID)>
 
@@ -419,11 +452,29 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 
 		<cfset DeletedDistributorList = valuelist(CheckForExistingDistributors.BSA_Foodservice_Customers_ID)>
 
-		<CFQUERY NAME="deletedCurrentDistributors" datasource="#application.datasource#">
+		<cfset useLakebaseFordeletedCurrentDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseFordeletedCurrentDistributors>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_distributors",
+			{
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletedCurrentDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletedCurrentDistributors>
+<CFQUERY NAME="deletedCurrentDistributors" datasource="#application.datasource#">
 			UPDATE Contract_Distributors
 			SET Deleted = 1
 			WHERE Contract_Main_ID = '#Form.Contract_Main_ID#'
 		</CFQUERY>
+</cfif>
 
 		<CFQUERY NAME = "Specify_Broker" datasource="#Application.Datasource#">
 			SELECT  Program_Control_Panel_Options.Specify_Brokers Specify_Brokers, Date_Exclusions_ON, 	Generic_Type

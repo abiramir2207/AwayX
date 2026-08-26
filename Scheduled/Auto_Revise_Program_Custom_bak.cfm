@@ -35,11 +35,28 @@
 	<cfset New_Pgm_Start_Date 	= Programs_Custom_Revision.New_Start_Date	/>	
 	<cfset New_Pgm_End_Date 	= Programs_Custom_Revision.New_End_Date	/>
 
-	<cfquery name="Getcompany" datasource="#application.datasource#">
+	<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 		SELECT Top 1 Company_Main_ID
 		FROM 	Company_Main
 		WHERE	Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 	
@@ -58,9 +75,25 @@
 			WHERE 	Contract_Main_ID = <cfqueryparam value="#Program_ID_To_Replicate#" cfsqltype="cf_sql_integer">
 		</cfquery>
 		
-		<cfquery name="qGetProfileId" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProfileId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetProfileId>
+	<cftry>
+		<cfset qGetProfileId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetProgram.Approved_By_User_ID#",
+				"select" = "profiles_id"
+			}), "profiles_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfileId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfileId>
+<cfquery name="qGetProfileId" datasource="#application.datasource#">
 			SELECT Profiles_ID from _Users where USER_ID = '#qGetProgram.Approved_By_User_ID#'
 		</cfquery>
+</cfif>
 		<cfset Original_Creating_User_Position_ID = qGetProgram.Original_Creating_User_Position_ID>
 		<cfset User_Position_ID = qGetProgram.Creating_User_Position_ID>
 		<cfset request.AccessStructure.Creating_User_Position_ID = qGetProgram.Creating_User_Position_ID>

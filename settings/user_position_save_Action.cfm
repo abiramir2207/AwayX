@@ -8,7 +8,28 @@
 	</CFQUERY>
 
 <CFELSE>
-	<CFQUERY NAME="updatePosition" datasource="#application.datasource#">
+	<cfset useLakebaseForupdatePosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForupdatePosition>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_positions",
+			{
+				"user_positions_id" = "eq.#FORM.new_position_label_id#"
+			},
+			{
+				"position_label" = "#FORM.new_position_label#",
+				"position_description" = "#FORM.new_position_description#",
+				"position_zone" = "#FORM.Service_Zone_ID#",
+				"position_region" = "#FORM.Service_Region_ID#",
+				"position_market" = "#FORM.Service_Market_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatePosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatePosition>
+<CFQUERY NAME="updatePosition" datasource="#application.datasource#">
 		UPDATE User_Positions
 		SET
 			Position_Label 			= '#FORM.new_position_label#',
@@ -18,7 +39,8 @@
 			Position_Market			= #FORM.Service_Market_ID#
 		WHERE 
 			User_Positions_ID = '#FORM.new_position_label_id#'
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 </CFIF>
 
 <CFLOCATION URL="user_relationships_index.cfm">

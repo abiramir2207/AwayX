@@ -28,12 +28,27 @@ etc.
 </CFIF>
 
 <CFLOOP INDEX="Supplied_Group_ID" LIST="#addlist#" DELIMITERS=",">
-	<CFQUERY NAME="saveTypeCodeToGroup" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveTypeCodeToGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_any_group")>
+<cfif useLakebaseForsaveTypeCodeToGroup>
+	<cftry>
+		<cfset application.oLakebase.insertRow("margin_group_any_group", {
+			"group_id" = "#Supplied_Group_ID#",
+			"margin_group_id" = "#MARGIN_GROUP_ID#",
+			"group_type" = "#application.returned_customer_setting.approval_on_type_code#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveTypeCodeToGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveTypeCodeToGroup>
+<CFQUERY NAME="saveTypeCodeToGroup" datasource="#application.datasource#">
 		INSERT INTO Margin_Group_Any_Group
 		(Group_ID, Margin_Group_ID, Group_Type)
 		VALUES
 		('#Supplied_Group_ID#', '#MARGIN_GROUP_ID#', #application.returned_customer_setting.approval_on_type_code#)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 <script>

@@ -735,6 +735,22 @@ and BB_ModifyAgree_PrgId = #getusersmodifyagreed.BB_ModifyAgree_PrgId#
 		<td width="23%" style="border-right:none">ACTION</td>
 </tr>
 <cfsilent>
+<cfset useLakebaseForgetchangedPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackmodifyagreedchanges")>
+<cfif useLakebaseForgetchangedPrograms>
+	<cftry>
+		<cfset getchangedPrograms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackmodifyagreedchanges", {
+				"programchanges" = "neq.0",
+				"bb_modifyagree_prgid" = "eq.#getusersmodifyagreed.BB_ModifyAgree_PrgId#",
+				"select" = "to_programnum_list,from_programnum_list"
+			}), "to_programnum_list,from_programnum_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetchangedPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetchangedPrograms>
 <cfquery name="getchangedPrograms" dbtype="query">
 select distinct To_ProgramNum_List, From_ProgramNum_List
 from
@@ -742,6 +758,7 @@ BillbackModifyAgreedChanges
 where ProgramChanges <> 0
 and BB_ModifyAgree_PrgId = #getusersmodifyagreed.BB_ModifyAgree_PrgId#
 </cfquery>
+</cfif>
 </cfsilent>
 <cfif getchangedPrograms.recordcount GT 0>
 <cfoutput>

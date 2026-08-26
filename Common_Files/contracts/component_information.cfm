@@ -81,11 +81,26 @@
 	</tr>
 	<!--- 62343 8.0 - Blended Rate, CF START--->
 	<cfif appSettings.get_Setting('Blended_Rate') eq '1'>
-	<cfquery name="GetCompInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetCompInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForGetCompInfo>
+	<cftry>
+		<cfset GetCompInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"program_rebates_component_name_id" = "eq.#Component_Name_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompInfo>
+<cfquery name="GetCompInfo" datasource="#application.datasource#">
 	SELECT 	*
 	FROM 	Program_Rebates_Component_Name
 	WHERE 	Program_Rebates_Component_Name_ID = #Component_Name_ID#
 	</cfquery>
+</cfif>
 	<cfif GetCompInfo.Rebate_type EQ 7>
 		<cfset Blended_Rate_On = 1>	
 	<cfelse>

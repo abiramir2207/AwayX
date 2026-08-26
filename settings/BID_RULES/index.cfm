@@ -144,11 +144,27 @@
 	<CFSET LastModName = "Not Available">
 	
 	<cfif len(trim(getRules.Last_Mod_Usr_ID)) GT 0>
-		<cfquery name="getLastModData" datasource="#application.datasource#">
+		<cfset useLakebaseForgetLastModData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetLastModData>
+	<cftry>
+		<cfset getLastModData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#getRules.Last_Mod_Usr_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLastModData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLastModData>
+<cfquery name="getLastModData" datasource="#application.datasource#">
 			SELECT Name_First, Name_Last
 			FROM _Users
 			WHERE User_ID = '#getRules.Last_Mod_Usr_ID#'
 		</cfquery>
+</cfif>
 		<cfif getLastModData.recordcount GT 0>
 			<cfset LastModName = getLastModData.Name_First & " " & getLastModData.Name_Last & " On " & DateFormat(getRules.Last_Mod_Date, 'm/d/yyyy') & " @ " & TimeFormat(getRules.Last_Mod_Date, 'h:m tt')>
 		</cfif>

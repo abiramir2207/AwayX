@@ -75,7 +75,25 @@ and		customer_group_template_selection.Distributor_Group_level_ID =3
 		 
     <cfset bValExists = "0" />
     <cfif arguments.TemplateID NEQ 0>
-      <cfquery name="qGetGroupTemplate" datasource="#application.datasource#">
+      <cfset useLakebaseForqGetGroupTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_template")>
+<cfif useLakebaseForqGetGroupTemplate>
+	<cftry>
+		<cfset qGetGroupTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_template", {
+				"template_id" = "eq.#arguments.TemplateID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"pg_group_type" = "eq.2",
+				"select" = "group_level_id,allow_in_group_search,allow_filter"
+			}), "group_level_id,allow_in_group_search,allow_filter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupTemplate>
+<cfquery name="qGetGroupTemplate" datasource="#application.datasource#">
          SELECT DISTINCT Group_Level_ID,Allow_In_Group_Search,Allow_Filter 
 		 FROM Group_Template
          WHERE Template_ID =  #arguments.TemplateID#     
@@ -83,6 +101,7 @@ and		customer_group_template_selection.Distributor_Group_level_ID =3
          AND Deleted = 0
          AND PG_Group_Type = 2
       </cfquery>
+</cfif>
       <cfloop query="qGetGroupTemplate">
         <cfif qGetGroupTemplate.Group_Level_ID EQ DistributorGroupAttributeInfo.GroupLevelTypeID AND qGetGroupTemplate.Allow_Filter EQ 1>
           <cfset bValExists = "1" />

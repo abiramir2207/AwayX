@@ -90,11 +90,27 @@
 </cffunction>
 
 <cffunction name="getClaimReportProgramStatus" output="false" returntype="query">
-	<CFQUERY NAME="qryGetClaimReportProgramStatus" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForqryGetClaimReportProgramStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_status")>
+<cfif useLakebaseForqryGetClaimReportProgramStatus>
+	<cftry>
+		<cfset qryGetClaimReportProgramStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_status", {
+				"order" = "billback_status_id.asc",
+				"select" = "billback_status_id,bb_status_description"
+			}), "billback_status_id,bb_status_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetClaimReportProgramStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetClaimReportProgramStatus>
+<CFQUERY NAME="qryGetClaimReportProgramStatus" DATASOURCE="#application.datasource#">
 		Select	distinct Billback_Status_ID, BB_Status_Description
 		From 	billback_status
 		Order By Billback_Status_ID
 	</CFQUERY>
+</cfif>
 	<cfreturn qryGetClaimReportProgramStatus />
 </cffunction>
 

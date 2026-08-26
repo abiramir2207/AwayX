@@ -20,11 +20,27 @@
 	and		approved = 1
 </CFQUERY>
 
+<cfset useLakebaseForGetProgramDates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetProgramDates>
+	<cftry>
+		<cfset GetProgramDates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#programId#",
+				"select" = "contract_start_date,contract_end_date"
+			}), "contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProgramDates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProgramDates>
 <CFQUERY NAME="GetProgramDates" datasource="#application.datasource#">
 	select  Contract_Start_Date, Contract_End_Date
 	from  	contract_main
 	where 	Contract_Main_ID = #programId#
 </CFQUERY>
+</cfif>
 
 <cfset ProgramStart = GetProgramDates.Contract_Start_Date />
 <cfset ProgramEnd = GetProgramDates.Contract_End_Date />

@@ -54,12 +54,30 @@
 		<!---Identical to the insert section on power_punch_action.cfm--->
 		<!---The item is real and it is actually on the program, so now figure out if it's already been added--->
 		
-		<cfquery name="IsTheItemOnTheProgram" datasource="#application.datasource#">
+		<cfset useLakebaseForIsTheItemOnTheProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForIsTheItemOnTheProgram>
+	<cftry>
+		<cfset IsTheItemOnTheProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#IsItARealItem.BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0",
+				"select" = "contract_products_id"
+			}), "contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsTheItemOnTheProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsTheItemOnTheProgram>
+<cfquery name="IsTheItemOnTheProgram" datasource="#application.datasource#">
 		SELECT Contract_Products_ID FROM Contract_Products
 		WHERE Contract_Main_ID = '#Contract_Main_ID#'
 		AND BSA_Foodservice_Items_Master_ID = '#IsItARealItem.BSA_Foodservice_Items_Master_ID#'
 		AND Deleted = 0
 		</cfquery>
+</cfif>
 			
 			<Cfif ISTheItemOnTheProgram.Recordcount GT 0>
 				<cfset ProductTypeID = 1>
@@ -86,11 +104,29 @@
 
 					<cfset NewProductVolume = ItemIsAlreadyThere.BB_Product_Quantity + evaluate("Volume_#Row_CM_Partnering#")>
 	
-					<cfquery name="UpdateVolume" datasource="#application.datasource#">
+					<cfset useLakebaseForUpdateVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForUpdateVolume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_product_id" = "eq.#ItemIsAlreadyThere.Billback_Product_ID#"
+			},
+			{
+				"bb_product_quantity" = "#NewProductVolume#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateVolume>
+<cfquery name="UpdateVolume" datasource="#application.datasource#">
 					UPDATE Billback_Product
 					SET BB_Product_Quantity = '#NewProductVolume#'
 					WHERE Billback_Product_ID = '#ItemIsAlreadyThere.Billback_Product_ID#'
 					</cfquery>
+</cfif>
 				
 				<cfelse>
 				<!---Convert the form value to the value currently in the database--->

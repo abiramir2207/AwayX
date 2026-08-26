@@ -484,13 +484,30 @@ function confirmCompletion()
 		<!---Generic type is bid request or off invoice--->
 		</cfif>
 
-		<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForGetCurrencyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForGetCurrencyTypes>
+	<cftry>
+		<cfset GetCurrencyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "currency_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrencyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrencyTypes>
+<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Currency
 			WHERE 	Deleted = 0
 			AND 	Active = 1
 			ORDER BY Currency_Name
 		</cfquery>
+</cfif>
 		<cfset DefaultValue2 = 0>
 
 		<cfset NoDefaultValue2 = GetCurrencyTypes.Recordcount>
@@ -2725,7 +2742,24 @@ function confirmCompletion()
   					<tr>
   						<th colspan="3">Program Spending Types</th>
   					</tr>
-						<cfquery name="getTemplateCodes" datasource="#application.datasource#">
+						<cfset useLakebaseForgetTemplateCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_codes")>
+<cfif useLakebaseForgetTemplateCodes>
+	<cftry>
+		<cfset getTemplateCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_codes", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "template_code.asc",
+				"select" = "template_code,template_code_id"
+			}), "template_code,template_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateCodes>
+<cfquery name="getTemplateCodes" datasource="#application.datasource#">
 							select 	template_code,
 									template_code_id
 							from	template_codes
@@ -2733,6 +2767,7 @@ function confirmCompletion()
 							and 	active = 1
 							order by template_code
 						</cfquery>
+</cfif>
 
 						<TR>
 							<td nowrap><span id="error_program_spending_type"></span>Program Spending Type</td>

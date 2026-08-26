@@ -429,11 +429,27 @@ You need to be able to select any component that was ever on any version of the 
 		<td valign="top">
 			<table border="0" cellpadding="2" cellspacing="0"  class="productListTableStyle" valign="top">
 
-				<cfquery name="getBBData" datasource="#application.datasource#">
+				<cfset useLakebaseForgetBBData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetBBData>
+	<cftry>
+		<cfset getBBData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_start_date,bb_end_date"
+			}), "bb_start_date,bb_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBData>
+<cfquery name="getBBData" datasource="#application.datasource#">
 					SELECT BB_Start_Date, BB_End_Date
 					FROM Billback
 					WHERE Billback_ID = '#Billback_ID#'
 				</cfquery>
+</cfif>
 
 				<cfquery name="getProgramEffectiveDateSpan" datasource="#application.datasource#">
 					SELECT	MIN(Effective_Start_Date) As Effective_Start_Date,

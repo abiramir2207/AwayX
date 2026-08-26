@@ -412,11 +412,26 @@ function copy(id){
     </tr>
 <cfif busSegMgr.isEnabled>
   <cfset qSegments = busSegMgr.obj.getActive( userId = request.AccessStructure.User_ID )>
-  <cfquery name="qSortedSegments" dbtype="query">
+  <cfset useLakebaseForqSortedSegments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qsegments")>
+<cfif useLakebaseForqSortedSegments>
+	<cftry>
+		<cfset qSortedSegments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qsegments", {
+				"order" = "business_unit_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSortedSegments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSortedSegments>
+<cfquery name="qSortedSegments" dbtype="query">
     SELECT  *
     FROM  qSegments
     ORDER BY BUSINESS_UNIT_DESC
   </cfquery>
+</cfif>
   
     <tr>
       <td id="bold">Segment:</td>

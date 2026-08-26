@@ -87,11 +87,26 @@
 
    		<cfargument name="compId" required="false" default=0 />
 
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#arguments.compId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_Fixed_Component_Name
 			WHERE 	Program_Fixed_Component_Name_ID = '#arguments.compId#'
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 
@@ -526,12 +541,29 @@
 			<cfset usedAllowanceCodes = ValueList(qGetAllTemplateDiscountComponents.Allowance_Code_ID) />
 			<cfif ListFindNOCase(usedAllowanceCodes, arguments.allowanceCodeId) NEQ 0>
 				<!------ check if this allowance cod eis used by teh same component ----->
-				<cfquery name="qCheckIfCurrentcomponent" dbtype="query">
+				<cfset useLakebaseForqCheckIfCurrentcomponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalltemplatediscountcomponents")>
+<cfif useLakebaseForqCheckIfCurrentcomponent>
+	<cftry>
+		<cfset qCheckIfCurrentcomponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalltemplatediscountcomponents", {
+				"allowance_code_id" = "eq.#arguments.allowanceCodeId#",
+				"component_id" = "eq.#arguments.compId#",
+				"select" = "component_id"
+			}), "component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfCurrentcomponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfCurrentcomponent>
+<cfquery name="qCheckIfCurrentcomponent" dbtype="query">
 					SELECT	Component_ID
 					FROM	qGetAllTemplateDiscountComponents
 					WHERE	Allowance_Code_ID = #arguments.allowanceCodeId#
 					AND		Component_ID = #arguments.compId#
 				</cfquery>
+</cfif>
 				<cfif not qCheckIfCurrentcomponent.recordCount>
 					<cfset bProceedWithUpdate = 0 />
 					<cfset bCompNameExists = 3 />
@@ -1412,12 +1444,29 @@
 <cffunction name="getExpectedRateTemplates" returntype="query" output="false">
 	<cfargument name="CompID" type="numeric" required="true" default="0">
 
-	<cfquery name="qGetFixedComponentData" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetFixedComponentData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_expected_rate_template_list")>
+<cfif useLakebaseForqGetFixedComponentData>
+	<cftry>
+		<cfset qGetFixedComponentData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_expected_rate_template_list", {
+				"discount_type_id" = "eq.1",
+				"program_component_name_id" = "eq.#arguments.CompID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedComponentData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedComponentData>
+<cfquery name="qGetFixedComponentData" datasource="#application.datasource#">
 		SELECT First_Parent_ID
 		FROM Program_Expected_Rate_Template_List
 		WHERE Discount_Type_ID = 1
 		AND Program_Component_Name_ID = #arguments.CompID#
 	</cfquery>
+</cfif>
 	<cfreturn qGetFixedComponentData/>
 	</cffunction>
 <!--- 91550 :: Enhancement: Template-specific Expected Rate Adjustments END --->

@@ -226,6 +226,23 @@
 	<cfhtmlhead text="#application.util.string.compress( head_content )#">
 </head>
 <body>
+<cfset useLakebaseForisEditing = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForisEditing>
+	<cftry>
+		<cfset isEditing = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CID#",
+				"contract_is_locked" = "eq.1",
+				"contract_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisEditing = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisEditing>
 <cfquery name="isEditing" datasource="#application.datasource#">
 	SELECT 1
 		FROM Contract_Main
@@ -233,6 +250,7 @@
 			AND Contract_Is_Locked = 1
 			AND Contract_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 </cfquery>
+</cfif>
 <!----------------- Add Spinner ------------------------>
 <!--- 
 <SPAN CLASS="title2" ID="PleaseWaitMessage" ALIGN="CENTER">
@@ -322,10 +340,26 @@
 	<cfset MULTIPLIER = "*">
 </cfif>
 
+<cfset useLakebaseForProgram_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForProgram_Details>
+	<cftry>
+		<cfset Program_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CID#",
+				"select" = "contract_number,contract_start_date,contract_end_date,programtype_id"
+			}), "contract_number,contract_start_date,contract_end_date,programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Details>
 <CFQUERY NAME="Program_Details" DATASOURCE="#Application.Datasource#">
 	SELECT Contract_Number, Contract_Start_Date, Contract_End_Date,ProgramType_ID
 	FROM Contract_Main WHERE Contract_Main_ID = #CID#
 </CFQUERY>
+</cfif>
 
 <cfquery name="GetSettings" datasource="#application.datasource#">
 	SELECT *

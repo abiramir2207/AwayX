@@ -147,11 +147,26 @@
 
 <cfif FORM.PlannerTemplateFiltersID NEQ "0">
 	
-	<cfquery name="qGetExistingGroups" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetExistingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_customers")>
+<cfif useLakebaseForqGetExistingGroups>
+	<cftry>
+		<cfset qGetExistingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_customers", {
+				"planner_template_id" = "eq.#FORM.PlannerTemplateFiltersID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetExistingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetExistingGroups>
+<cfquery name="qGetExistingGroups" datasource="#application.datasource#">
 		SELECT	* 
 		FROM 	Planner_Template_Filters_Customers
 		WHERE	Planner_Template_ID = '#FORM.PlannerTemplateFiltersID#'
 	</cfquery>
+</cfif>
 
 	<cfset FORM.FinalDistList = '#ValueList( qGetExistingGroups.Distributor_Group_ID)#' />
 	

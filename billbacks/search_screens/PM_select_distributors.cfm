@@ -607,13 +607,30 @@ TABLE.Maintable TD
 					<cfif appSettings.getcustid_on() EQ 1>
 						<TD>
 							<cfoutput><span ID="searchItemLabel"><strong>#application.returned_customer_setting.Customer_Id_Label#</strong></span><BR></cfoutput>
-							<cfquery name="GetCustIds" datasource="#application.datasource#">
+							<cfset useLakebaseForGetCustIds = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_customer_id")>
+<cfif useLakebaseForGetCustIds>
+	<cftry>
+		<cfset GetCustIds = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_customer_id", {
+				"deleted" = "eq.0",
+				"custid_name" = "not.is.null",
+				"order" = "custid_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustIds = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustIds>
+<cfquery name="GetCustIds" datasource="#application.datasource#">
 								SELECT *
 								FROM Distributor_Customer_ID
 								WHERE Deleted = 0
 								and Custid_Name IS NOT NULL
 								ORDER BY Custid_Name
 							</cfquery>
+</cfif>
 
 							<SELECT NAME="Cust_Id" style="width: 200px;"  onkeydown="if (event.keyCode == 13) doSearchNow();">
 								<cfoutput>
@@ -757,10 +774,25 @@ TABLE.Maintable TD
 							ORDER BY Broker_Name
 						</cfquery>
 
-						<cfquery name="GetBrokers" dbtype="query">
+						<cfset useLakebaseForGetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallbrokers")>
+<cfif useLakebaseForGetBrokers>
+	<cftry>
+		<cfset GetBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallbrokers", {
+				"select" = "broker_name"
+			}), "broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokers>
+<cfquery name="GetBrokers" dbtype="query">
 							SELECT DISTINCT Broker_Name
 							FROM GetAllBrokers
 						</cfquery>
+</cfif>
 
 						<CFPARAM NAME="FORM.Broker" DEFAULT="0">
 						<SELECT NAME="Broker" style="width: 200px;"  onkeydown="if (event.keyCode == 13) doSearchNow();">
@@ -1221,12 +1253,29 @@ Add Sort By
 	<!---Queries that only need to be run if limiting the results to Distributors the user has permission to see--->
 	<cfif FORM.OnlyDistributorsUnderMe IS 1>
 		<!---Gets the current user's position--->
-		<CFQUERY NAME="getUserPosition" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+<CFQUERY NAME="getUserPosition" DATASOURCE="#application.datasource#">
 			SELECT 	User_Positions_ID
 			FROM 	User_Position_Holders
 			WHERE 	User_ID = '#request.AccessStructure.user_id#'
 			AND 	Deleted = 0
 		</CFQUERY>
+</cfif>
 	</cfif>
 
 	<CFSET form.searchstring = trim(form.searchstring)>

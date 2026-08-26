@@ -162,11 +162,27 @@
 	</CFQUERY>	
 	
 	<!--- Growth Components --->
-	<CFQUERY NAME="get_Growth_Components" datasource="#application.datasource#">
+	<cfset useLakebaseForget_Growth_Components = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForget_Growth_Components>
+	<cftry>
+		<cfset get_Growth_Components = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Growth_Components = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Growth_Components>
+<CFQUERY NAME="get_Growth_Components" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Growth_Components
 		WHERE Program_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 
 	<!--- Growth Components Tiers--->
 	<cfset useLakebaseForget_Growth_Component_Tiers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_tiers")>

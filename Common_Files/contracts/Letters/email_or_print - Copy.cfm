@@ -358,11 +358,27 @@ FUNCTIONALITY:
                 connection="programLetterConnection">
     
               <!--- X1.) Let's grab our XML data typed variable representing THIS letter's DNA... --->
-              <cfquery name="variables.qGetXML" datasource="#application.datasource#">
+              <cfset useLakebaseForvariables_qGetXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvariables_qGetXML>
+	<cftry>
+		<cfset variables.qGetXML = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#id#",
+				"select" = "letter_xml"
+			}), "letter_xml"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qGetXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qGetXML>
+<cfquery name="variables.qGetXML" datasource="#application.datasource#">
                 SELECT	Letter_xml
                 FROM		Program_Letters
                 WHERE 	Program_Letters.Program_Letters_ID = #id#
               </cfquery>
+</cfif>
 			  <!--- TECH NOTE: If this comes back, use the application.oLetterManager... --->
               
               <!--- X2.) Let's parse our XML variable with which to generate our initial edit form for THIS letter... --->

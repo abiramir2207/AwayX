@@ -39,7 +39,26 @@ because it is possible for products to belong to a deleted = 1 group, and we nee
 	</cfif>
 
 	<!------ iNsert ----->
-	<cfquery name="qInsertGroupAccessApprove" datasource="#application.datasource#">
+	<cfset useLakebaseForqInsertGroupAccessApprove = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_approval_rights")>
+<cfif useLakebaseForqInsertGroupAccessApprove>
+	<cftry>
+		<cfset application.oLakebase.insertRow("group_approval_rights", {
+			"user_profile_id" = "#ProfileID#",
+			"group_id" = "#Group_ID#",
+			"group_type" = "#application.returned_customer_setting.approval_on_type_code#",
+			"group_id_approval" = "#groupApprove#",
+			"group_id_margin" = "#groupApproveMargin#",
+			"group_id_spend_dollar" = "#groupApproveSpend#",
+			"group_id_margin_operator" = "#groupApproveMarginOper#",
+			"group_id_list_price" = "#groupApproveListPrice#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertGroupAccessApprove = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertGroupAccessApprove>
+<cfquery name="qInsertGroupAccessApprove" datasource="#application.datasource#">
 		INSERT INTO Group_Approval_Rights(
 			User_Profile_Id
 			,Group_ID
@@ -61,6 +80,7 @@ because it is possible for products to belong to a deleted = 1 group, and we nee
 			,'#groupApproveListPrice#'
 		)
 	</cfquery>
+</cfif>
 
 </cfloop>
 </cfloop>

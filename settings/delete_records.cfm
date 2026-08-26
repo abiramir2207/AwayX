@@ -39,9 +39,24 @@
 	</CFQUERY>
 </CFIF>
 
+<cfset useLakebaseForGet_AD_Days = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGet_AD_Days>
+	<cftry>
+		<cfset Get_AD_Days = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "log_gl_accrual_delete_days"
+			}), "log_gl_accrual_delete_days"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_AD_Days = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_AD_Days>
 <CFQUERY NAME="Get_AD_Days" datasource="#application.datasource#">
 	SELECT Log_GL_Accrual_Delete_Days FROM General_Settings
 </CFQUERY>
+</cfif>
 
 <cfoutput>
 <FORM name="Accrual_Maintenance" ACTION="delete_records.cfm" METHOD="Post">

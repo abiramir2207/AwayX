@@ -94,13 +94,31 @@
 		<cfargument name="TemplatePageSequence"  type="string" required="false" default="1">
 
 		<cfset Exception_Active_Value = StructNew()>
-		<cfquery name="qGetExceptionSettingIDs" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetExceptionSettingIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_template_display")>
+<cfif useLakebaseForqGetExceptionSettingIDs>
+	<cftry>
+		<cfset qGetExceptionSettingIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("settings_template_display", {
+				"deleted" = "eq.0",
+				"excluded_first_parent_id" = "not.is.null",
+				"generic_type" = "eq.#arguments.Generic_Type#",
+				"select" = "setting_id"
+			}), "setting_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetExceptionSettingIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetExceptionSettingIDs>
+<cfquery name="qGetExceptionSettingIDs" datasource="#application.datasource#">
 			select distinct Setting_ID
 			from Settings_Template_Display
 			where deleted = 0
 			and Excluded_First_Parent_ID IS NOT NULL
 			and Generic_Type= '#arguments.Generic_Type#'
 		</cfquery>
+</cfif>
 		
 		<cfif qGetExceptionSettingIDs.recordcount eq 0>
 			<cfquery name="qGetException" datasource="#application.datasource#">
@@ -154,7 +172,26 @@
 	<cffunction name="getTemplates" output="false"  returntype="query">
 		<cfargument name="Generic_Type"  type="string" required="true" default="">
 		
-		<cfquery name="qGetTemplates" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetTemplates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetTemplates>
+	<cftry>
+		<cfset qGetTemplates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"isdominant" = "eq.1",
+				"generic_type" = "eq.#arguments.Generic_Type#",
+				"active" = "eq.1",
+				"order" = "created_type.asc",
+				"select" = "created_type,first_parent_id"
+			}), "created_type,first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplates>
+<cfquery name="qGetTemplates" datasource="#application.datasource#">
 			SELECT Created_Type, First_Parent_ID
 			FROM 	Program_Control_Panel_Options
 			WHERE 	Deleted = 0
@@ -163,6 +200,7 @@
 			AND 	Active =1
 			ORDER BY Created_Type asc
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetTemplates>
 	</cffunction>

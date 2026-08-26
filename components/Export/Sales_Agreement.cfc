@@ -290,12 +290,28 @@
 	<cffunction name="getProfile" output="false" returntype="query">	
 		<cfargument name="userId" required="true" type="string" />
 		
-		<cfquery name="qgetProfile" datasource="#application.datasource#">	
+		<cfset useLakebaseForqgetProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users") AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqgetProfile>
+	<cftry>
+		<cfset qgetProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("_users", {
+				"user_id" = "eq.#arguments.userId#",
+				"select" = "profiles_id"
+			}, "profiles_id", "profiles", "profiles_id", "profiles_desc"), "profiles_id,profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetProfile>
+<cfquery name="qgetProfile" datasource="#application.datasource#">	
 			SELECT u.Profiles_ID, p.Profiles_Desc
 			FROM _Users u INNER JOIN Profiles p
 			ON u.Profiles_ID =  p.Profiles_ID
 			WHERE u.User_ID = '#arguments.userId#'
-		</cfquery>	
+		</cfquery>
+</cfif>	
 	
 		<cfreturn qgetProfile />
 	</cffunction>
@@ -496,7 +512,24 @@
 	<!--- Standard Costs --->
 	<cffunction name="getStandardCosts" output="false" returntype="query">
 		<cfargument name="Export_Sales_Agreement_ID" type="string" required="yes">
-			<cfquery name="qrygetStandardCosts" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetStandardCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_cost") AND application.oLakebase.isTableMigrated("export_lookup_costs")>
+<cfif useLakebaseForqrygetStandardCosts>
+	<cftry>
+		<cfset qrygetStandardCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("export_cost", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"export_additional_cost" = "neq.0",
+				"order" = "show_order_sequence.asc",
+				"select" = "export_additional_cost,export_cost_desc"
+			}, "export_cost_desc", "export_lookup_costs", "export_lookup_cost_id", "export_lookup_cost_desc"), "export_additional_cost,export_lookup_cost_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetStandardCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetStandardCosts>
+<cfquery name="qrygetStandardCosts" datasource="#application.datasource#">
 			 SELECT elc.Export_Lookup_Cost_Desc,ec.Export_Additional_Cost
 			 FROM Export_Cost ec INNER JOIN Export_lookup_Costs elc
 			 ON elc.Export_Lookup_Cost_ID = ec.Export_Cost_Desc
@@ -504,6 +537,7 @@
 			 AND Export_Additional_Cost != 0
 			 ORDER BY ec.Show_Order_Sequence
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetStandardCosts />
 	</cffunction>
@@ -748,12 +782,28 @@
 		<!--- Pallet Type for Customer --->
 	<cffunction name="getCustomerPalletType" output="false" returntype="query">
 		<cfargument name="Export_Customer_ID" type="string" required="yes">
-			<cfquery name="qrygetCustomerPalletType" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetCustomerPalletType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_customer_details") AND application.oLakebase.isTableMigrated("export_lookup_pallet_type")>
+<cfif useLakebaseForqrygetCustomerPalletType>
+	<cftry>
+		<cfset qrygetCustomerPalletType = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("export_customer_details", {
+				"export_customer_id" = "eq.#arguments.Export_Customer_ID#",
+				"select" = "export_customer_pallet_type"
+			}, "export_customer_pallet_type", "export_lookup_pallet_type", "export_lookup_pallet_type_id", "export_lookup_pallet_type_desc"), "export_lookup_pallet_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetCustomerPalletType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetCustomerPalletType>
+<cfquery name="qrygetCustomerPalletType" datasource="#application.datasource#">
 			 SELECT b.Export_Lookup_Pallet_Type_Desc
 			 FROM Export_Customer_Details a INNER JOIN Export_Lookup_Pallet_Type b
 			 ON a.Export_Customer_Pallet_Type = b.Export_Lookup_Pallet_Type_ID
 			 WHERE a.Export_Customer_ID = '#arguments.Export_Customer_ID#'
 			</cfquery>
+</cfif>
 			
 		<cfreturn qrygetCustomerPalletType />
 	</cffunction>

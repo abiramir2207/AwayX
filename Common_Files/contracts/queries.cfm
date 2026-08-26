@@ -579,7 +579,31 @@
 					SET NOCOUNT OFF
 				</CFQUERY>
 
-				<cfquery name="delDupContractMain" datasource="#application.datasource#">
+				<cfset useLakebaseFordelDupContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFordelDupContractMain>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_number" = "eq.#FORM.Contract_Number#",
+				"is_a_revision" = "eq.0",
+				"renewal_of_contract_main_id" = "is.null",
+				"revision_of_contract_main_id" = "is.null",
+				"deleted" = "eq.0",
+				"contract_ma" = "in.(_ID < #insert.Contract_Main_ID#)"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "DUPLICATE",
+				"deleted_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelDupContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelDupContractMain>
+<cfquery name="delDupContractMain" datasource="#application.datasource#">
 					update	Contract_Main
 					set		Deleted = 1,
 							Deleted_By = 'DUPLICATE',
@@ -591,6 +615,7 @@
 					and		Deleted = 0
 					and		Contract_Main_ID < #insert.Contract_Main_ID#
 				</cfquery>
+</cfif>
 
 			<!--- Add program owner info here --->
 				<cfset useLakebaseForinsProgramOwner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_owner")>

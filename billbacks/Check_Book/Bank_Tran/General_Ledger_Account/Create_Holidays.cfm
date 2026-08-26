@@ -112,9 +112,25 @@
 
 
 
+<cfset useLakebaseForCheck_For_Existance = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("holidays")>
+<cfif useLakebaseForCheck_For_Existance>
+	<cftry>
+		<cfset Check_For_Existance = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("holidays", {
+				"order" = "holiday_date.asc",
+				"select" = "holiday_date,holiday_desc"
+			}), "holiday_date,holiday_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_For_Existance = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_For_Existance>
 <CFQUERY NAME="Check_For_Existance" DATASOURCE="#Application.Datasource#">
 	SELECT Holiday_Date,Holiday_Desc FROM Holidays ORDER BY Holiday_Date
 </CFQUERY>
+</cfif>
 
 <CFOUTPUT>
 <script type = "text/javascript">

@@ -25,11 +25,27 @@
 <cfset appSettings = application.appsettingsGet />
 <cfset variables.Restrict_Pay_Each = appSettings.getBBAutoPayDisablePayEach() />
 <cfif isDefined("url.Claim_Mechanics_ID") AND url.Claim_Mechanics_ID neq "">
-	<cfquery name="GetClaimMechInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetClaimMechInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForGetClaimMechInfo>
+	<cftry>
+		<cfset GetClaimMechInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#url.Claim_Mechanics_ID#",
+				"select" = "restrict_from_billback,is_auto_pay,billback_closing_method_id"
+			}), "restrict_from_billback,is_auto_pay,billback_closing_method_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetClaimMechInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetClaimMechInfo>
+<cfquery name="GetClaimMechInfo" datasource="#application.datasource#">
 		SELECT Restrict_From_Billback, Is_Auto_pay, Billback_Closing_Method_ID
 		FROM Payment_Type
 		WHERE Payment_Type_ID = #url.Claim_Mechanics_ID#
 	</cfquery>
+</cfif>
 	<!---D37702 :: Brokerage template type doesn't allow vendor select --->
 	<cfif len(URL.ProgramType_ID)>
 		<cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
@@ -165,13 +181,31 @@
 			<!--- If we've already passed in a vendor master id we need the appropriate vendor id.... --->
 			 <cfset Vendor_ID = 0 /> <!---  initialize --->
 			 <cfif url.Program_Upload AND url.component_name_ID>
-			 	<cfquery name="getVendorInfo" datasource="#application.datasource#">
+			 	<cfset useLakebaseForgetVendorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForgetVendorInfo>
+	<cftry>
+		<cfset getVendorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"program_id" = "eq.#url.programId#",
+				"program_rebates_component_name_id" = "eq.#url.component_name_ID#",
+				"deleted" = "eq.0",
+				"select" = "vendor_master_id"
+			}), "vendor_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetVendorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetVendorInfo>
+<cfquery name="getVendorInfo" datasource="#application.datasource#">
 				 	SELECT Vendor_Master_ID
 				 	FROM Program_Rebates_Component
 					WHERE program_id = #url.programId#
 					AND Program_Rebates_Component_Name_ID = #url.component_name_ID#
 					AND Deleted = 0
 			  </cfquery>
+</cfif>
 			  <cfif getVendorInfo.Recordcount>
 			 	 	<cfset Vendor_Master_ID = #getVendorInfo.Vendor_Master_ID#>
 				</cfif>

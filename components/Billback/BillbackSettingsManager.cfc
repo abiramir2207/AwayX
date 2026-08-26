@@ -484,11 +484,31 @@
 
 				<cfif arguments.fromAutoMatch and qCheckFamily.Auto_Match_Family eq 0>
 
-					<CFQUERY NAME="qUpdateAutoMatchFamily" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForqUpdateAutoMatchFamily = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_match_deviation_family")>
+<cfif useLakebaseForqUpdateAutoMatchFamily>
+	<cftry>
+		<cfset application.oLakebase.updateRows("auto_match_deviation_family",
+			{
+				"family_id" = "eq.#Family#"
+			},
+			{
+				"auto_match_family" = "1",
+				"user_id" = "#request.AccessStructure.User_ID#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateAutoMatchFamily = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateAutoMatchFamily>
+<CFQUERY NAME="qUpdateAutoMatchFamily" DATASOURCE="#Application.Datasource#">
 						UPDATE Auto_Match_Deviation_Family
 						SET Auto_Match_Family = 1, User_ID='#request.AccessStructure.User_ID#',Updated_Date=getdate()
 						WHERE Family_ID = '#Family#'
 					</CFQUERY>
+</cfif>
 
 					<cfset Action_Notes ="Auto Match-Updated">
 				<cfelseif arguments.fromAutoDeviation and qCheckFamily.Auto_Deviation_Family eq 0>

@@ -125,9 +125,24 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 <CFPARAM NAME="cookie.User_Info" DEFAULT="">
 <CFCOOKIE NAME="User_Info" VALUE="" EXPIRES="NOW">
 
+<cfset useLakebaseForGetSingleSignOnInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetSingleSignOnInfo>
+	<cftry>
+		<cfset GetSingleSignOnInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "singlesign_on"
+			}), "singlesign_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSingleSignOnInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSingleSignOnInfo>
 <CFQUERY NAME="GetSingleSignOnInfo" datasource="#application.datasource#">
 	SELECT SingleSign_On FROM _application_settings
 </CFQUERY>
+</cfif>
 
 <cfif GetSingleSignOnInfo.SingleSign_On EQ 1>
 	<cfheader name="pragma" value="no-store">

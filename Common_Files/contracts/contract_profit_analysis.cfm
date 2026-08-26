@@ -771,11 +771,27 @@ WHERE     (dbo.Contract_Products.Product_Type_ID = 4) AND (dbo.Program_Growth_Co
 <CFSET ApproverInMarketList = listfind(Market_Approver_List,request.AccessStructure.User_ID, ",")> --->
 
 <!------Display Program Details----->
+<cfset useLakebaseForContract_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForContract_Details>
+	<cftry>
+		<cfset Contract_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"select" = "contract_number,contract_title,contract_start_date,contract_end_date"
+			}), "contract_number,contract_title,contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForContract_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForContract_Details>
 <CFQUERY NAME="Contract_Details" DATASOURCE="#application.datasource#">
 	SELECT	Contract_Number, Contract_Title, Contract_Start_Date, Contract_End_Date
 	FROM	Contract_Main
 	WHERE	Contract_Main.Contract_Main_ID = #FORM.Contract_Main_ID#
 </CFQUERY>
+</cfif>
 
 <CFOUTPUT>
 <cfinclude template="/common_files/general_labels.cfm">

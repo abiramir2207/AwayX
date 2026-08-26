@@ -221,11 +221,28 @@ Uncomment this line to debug js on this page. Just call the dump function - dump
 	ORDER BY Name
 </cfquery>
 
+<cfset useLakebaseForqgetReleaseVersion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_installation")>
+<cfif useLakebaseForqgetReleaseVersion>
+	<cftry>
+		<cfset qgetReleaseVersion = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_installation", {
+				"order" = "release_version.desc",
+				"limit" = "1",
+				"select" = "release_version"
+			}), "release_version"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetReleaseVersion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetReleaseVersion>
 <cfquery name="qgetReleaseVersion" datasource="#application.datasource#">
 	SELECT TOP 1 Release_Version
 	FROM Application_Installation
 	ORDER BY Release_Version DESC
 </cfquery>
+</cfif>
 
 <form name="frmFilePath" action="manual_modifications_interface_action.cfm" method="post" onSubmit="return CheckForm();">
 <table border="0" cellspacing="2" cellpadding="2" align="left" width="100%">

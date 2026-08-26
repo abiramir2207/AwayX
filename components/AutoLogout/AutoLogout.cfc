@@ -60,11 +60,28 @@
 					<cfset this_Users_Auto_Logout_List_ID = insertUser._Users_Auto_Logout_List_ID>
 				</cfif>
 				
-				<cfquery name="checkForExistingReason" datasource="#application.datasource#">
+				<cfset useLakebaseForcheckForExistingReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_auto_logout_reason")>
+<cfif useLakebaseForcheckForExistingReason>
+	<cftry>
+		<cfset checkForExistingReason = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_auto_logout_reason", {
+				"_users_auto_logout_list_id" = "eq.#this_Users_Auto_Logout_List_ID#",
+				"reason_text" = "eq.#reasonTxt#",
+				"select" = "reason_text"
+			}), "reason_text"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForExistingReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForExistingReason>
+<cfquery name="checkForExistingReason" datasource="#application.datasource#">
 					SELECT Reason_Text
 					FROM _Users_Auto_Logout_Reason
 					WHERE _Users_Auto_Logout_List_ID = '#this_Users_Auto_Logout_List_ID#' AND Reason_Text = '#reasonTxt#'
 				</cfquery>
+</cfif>
 				
 				<!--- insert reason if unique --->
 				<cfif checkForExistingReason.recordcount EQ 0>

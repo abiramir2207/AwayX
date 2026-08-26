@@ -810,7 +810,23 @@
 
 		<cfargument name="grpLevelId" required="false" default="" />
 
-		<CFQUERY NAME="qGetDummyProductId" datasource="#application.datasource#" cachedwithin="#this.timeSpan#">
+		<cfset useLakebaseForqGetDummyProductId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_product")>
+<cfif useLakebaseForqGetDummyProductId>
+	<cftry>
+		<cfset qGetDummyProductId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_product", {
+				"deleted" = "eq.0",
+				"product_group_level_id" = "eq.#arguments.grpLevelId#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDummyProductId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDummyProductId>
+<CFQUERY NAME="qGetDummyProductId" datasource="#application.datasource#" cachedwithin="#this.timeSpan#">
 
 			SELECT	Product_ID
 			FROM	Product_Group_Product
@@ -818,6 +834,7 @@
 			AND		Product_Group_Level_ID = #arguments.grpLevelId#
 
 		</CFQUERY>
+</cfif>
 
 		<cfreturn qGetDummyProductId.Product_ID />
 

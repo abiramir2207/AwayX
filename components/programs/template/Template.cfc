@@ -301,7 +301,24 @@ DEPENDENCIES:
 	<!---  INSERT :: Template Filter --->
   	<cffunction name="insertTemplateFilter" access="public" output="false">
   		<cfargument name="TemplateFilter" type="mvc.Models.Template.TemplateFilter" required="true" />
-		<cfquery name="qInsertTemplateFilter" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_filters")>
+<cfif useLakebaseForqInsertTemplateFilter>
+	<cftry>
+		<cfset application.oLakebase.insertRow("template_filters", {
+			"template_id" = "#this.id#",
+			"parent_template_id" = "#this.FirstParentID#",
+			"name" = "#arguments.TemplateFilter.Name#",
+			"description" = "#arguments.TemplateFilter.Desc#",
+			"status" = "#arguments.TemplateFilter.Status#",
+			"created_user_id" = "#request.accessStructure.user_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertTemplateFilter>
+<cfquery name="qInsertTemplateFilter" datasource="#application.datasource#">
 			INSERT INTO Template_Filters (
 				Template_Id,
 				Parent_Template_Id,
@@ -320,6 +337,7 @@ DEPENDENCIES:
 				)
 				SELECT @@identity as Template_Filters_Id		
 		</cfquery>
+</cfif>
 		
   	</cffunction>
 	

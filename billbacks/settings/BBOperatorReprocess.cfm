@@ -267,7 +267,24 @@ label {
 
 <cfoutput>
 <cfif variables.inEditMode>
-  <cfquery name="variables.qPlanningGroups" datasource="#application.datasource#">
+  <cfset useLakebaseForvariables_qPlanningGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForvariables_qPlanningGroups>
+	<cftry>
+		<cfset variables.qPlanningGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "pg_operator_category_name.asc",
+				"select" = "pg_operator_category_id,pg_operator_category_code,pg_operator_category_name"
+			}), "pg_operator_category_id,pg_operator_category_code,pg_operator_category_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qPlanningGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qPlanningGroups>
+<cfquery name="variables.qPlanningGroups" datasource="#application.datasource#">
     SELECT PG_Operator_Category_ID,
             PG_Operator_Category_Code,
             PG_Operator_Category_Name
@@ -275,6 +292,7 @@ label {
      WHERE Deleted = 0 AND Active = 1
            ORDER BY PG_Operator_Category_Name
   </cfquery>
+</cfif>
   <div id="massdiv">
     <label id="massApply">[ mass apply ]</label><select id="massPG" class="massPG"><option value=""></option><cfloop query="variables.qPlanningGroups"><option value="#variables.qPlanningGroups.PG_Operator_Category_ID#"> #variables.qPlanningGroups.PG_Operator_Category_Name# </option></cfloop></select>
   </div>

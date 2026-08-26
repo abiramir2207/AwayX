@@ -262,11 +262,28 @@
 					<cfset variables.msgFooter = variables.msgFooter & "#Chr(13)##Chr(10)#" />
 					<cfset variables.msgFooter = variables.msgFooter & "#application.returned_customer_setting.Company_Name#"& " -- " &"Contract Management services provided by #Application.CompanyNameFull#" />
 
-					<cfquery name="Getcompany" datasource="#application.datasource#">
+					<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 						SELECT 	Top 1 Company_Main_ID
 						FROM 	Company_Main
 						WHERE 	Deleted = 0		<!--- D45803 :: Template error when creating multiple programs --->
 					</cfquery>
+</cfif>
 
 					<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID />
 					<cfset request.AccessStructure.User_ID = variables.qGetUserPrograms.User_ID />

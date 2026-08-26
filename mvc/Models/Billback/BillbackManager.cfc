@@ -452,11 +452,27 @@
 			WHERE Billback_ID_Int IN (#arguments.billbackList#)
 		</CFQUERY>
 
-		<CFQUERY name="qryGetUserID" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqryGetUserID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqryGetUserID>
+	<cftry>
+		<cfset qryGetUserID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"sales_person_id" = "eq.#strArrreassignToBBUser#",
+				"select" = "user_id"
+			}), "user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetUserID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetUserID>
+<CFQUERY name="qryGetUserID" datasource="#Application.Datasource#">
 			SELECT	User_ID
 			FROM	_Users
 			WHERE Sales_Person_ID = '#strArrreassignToBBUser#'
 		</CFQUERY>
+</cfif>
 
 		<cfset BillbackIDList = ListQualify(ValueList(qryBillback.Billback_ID), chr(39))>
 

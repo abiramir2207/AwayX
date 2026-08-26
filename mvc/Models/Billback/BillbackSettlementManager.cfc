@@ -1786,12 +1786,29 @@ Usage:			N/A
 
 		<cfif arguments.BB_Closing_Method EQ 2 AND arguments.BB_Associated_To_DD EQ 1>
 
-			<cfquery name="qGetAssociatedDD" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetAssociatedDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForqGetAssociatedDD>
+	<cftry>
+		<cfset qGetAssociatedDD = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure_detail", {
+				"deleted" = "eq.0",
+				"dd_closure_id" = "eq.#arguments.billbackID#",
+				"select" = "dd_closure_detail_id,deduction_id,dd_closure_status_id"
+			}), "dd_closure_detail_id,deduction_id,dd_closure_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAssociatedDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAssociatedDD>
+<cfquery name="qGetAssociatedDD" datasource="#application.datasource#">
 				SELECT 	DD_Closure_Detail_ID,Deduction_ID, DD_Closure_Status_ID
 				FROM	DD_Closure_Detail
 				WHERE	Deleted = 0
 				AND		DD_Closure_ID = '#arguments.billbackID#'
 			</cfquery>
+</cfif>
 		 	<!--- Get the Deduction record associated with the Deduction_ID  --->
 			<!---<cfset qGetDeductions =	DedDAOObj.getDeductionOnID('#qGetAssociatedDD.Deduction_ID#') />--->
 			<!--- if there are deductions send it to the below function to return an array --->

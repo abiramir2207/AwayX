@@ -4973,12 +4973,28 @@ Description  :  Manager for Planners
                 DROP TABLE ##Tmp_Import_Planner_Programs
         </cfquery>
 
-        <cfquery name="local.qPlannerTemplate" datasource="#application.datasource#">
+        <cfset useLakebaseForlocal_qPlannerTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planners") AND application.oLakebase.isTableMigrated("planner_template")>
+<cfif useLakebaseForlocal_qPlannerTemplate>
+	<cftry>
+		<cfset local.qPlannerTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("planners", {
+				"planner_id" = "eq.#arguments.target_planner#",
+				"select" = "planner_template_id"
+			}, "planner_template_id", "planner_template", "planner_template_id", "business_segment_id"), "planner_template_id,business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qPlannerTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qPlannerTemplate>
+<cfquery name="local.qPlannerTemplate" datasource="#application.datasource#">
             SELECT pl.planner_template_id, pt.Business_Segment_ID
               FROM planners pl
                       INNER JOIN planner_template pt ON pl.planner_template_id = pt.planner_template_id
              WHERE pl.planner_ID = #arguments.target_planner#
         </cfquery>
+</cfif>
 
         <cfset local.qProgramTemplates = createObject("component","components.programs.template.TemplateManager").getRetailPlannerTemplates(  qPlannerTemplate.planner_template_id
                                                                                                                                             , qPlannerTemplate.Business_Segment_ID )>

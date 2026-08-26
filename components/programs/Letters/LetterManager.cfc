@@ -38,12 +38,31 @@ FUNCTIONALITY:
 		<cfargument name="program_id" required="true" type="numeric" />
 		<cfargument name="letter_type" required="true" type="numeric" />
         
-		<cfquery name="qdeleteLetters" datasource="#application.datasource#">
+		<cfset useLakebaseForqdeleteLetters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForqdeleteLetters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_letters",
+			{
+				"program_id" = "eq.#arguments.program_id#",
+				"letter_type" = "eq.#arguments.letter_type#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqdeleteLetters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqdeleteLetters>
+<cfquery name="qdeleteLetters" datasource="#application.datasource#">
 			update program_letters
 			set deleted = 1
 			where program_id =  '#arguments.program_id#'
 			and letter_type =  '#arguments.letter_type#'
 		</cfquery>
+</cfif>
         
 	</cffunction>
     <!--- METHOD: deleteLetters [end] --->
@@ -80,11 +99,26 @@ FUNCTIONALITY:
 
 		<cftry>
 
-            <cfquery name="var_qAllLetterInfo" datasource="#application.datasource#">
+            <cfset useLakebaseForvar_qAllLetterInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvar_qAllLetterInfo>
+	<cftry>
+		<cfset var_qAllLetterInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#arguments.program_letter_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_qAllLetterInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_qAllLetterInfo>
+<cfquery name="var_qAllLetterInfo" datasource="#application.datasource#">
               SELECT	*
               FROM		Program_Letters
               WHERE 	Program_Letters.Program_Letters_ID = #arguments.program_letter_id#
             </cfquery>
+</cfif>
             
             <cfreturn var_qAllLetterInfo>
         
@@ -323,11 +357,27 @@ FUNCTIONALITY:
 
 		<cftry>
 
-            <cfquery name="var_qLetterPath" datasource="#application.datasource#">
+            <cfset useLakebaseForvar_qLetterPath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvar_qLetterPath>
+	<cftry>
+		<cfset var_qLetterPath = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#arguments.program_letter_id#",
+				"select" = "letter_path"
+			}), "letter_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_qLetterPath = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_qLetterPath>
+<cfquery name="var_qLetterPath" datasource="#application.datasource#">
               SELECT	letter_path
               FROM		Program_Letters
               WHERE 	Program_Letters.Program_Letters_ID = #arguments.program_letter_id#
             </cfquery>
+</cfif>
             
             <cfif var_qLetterPath.recordCount EQ 1 AND len(trim(var_qLetterPath.letter_path[1]))>
             

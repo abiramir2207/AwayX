@@ -575,12 +575,29 @@
 		<!---61605 : Event error on fixed price save when revision setting for UOM change is OFF START --->
 		<cfset ParentRebateComponents = 0>
 		<cfif len(GetContractInfo.Revision_of_Contract_Main_ID)>
-		<CFQUERY NAME="getParentRebateComponents" datasource="#application.datasource#">
+		<cfset useLakebaseForgetParentRebateComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForgetParentRebateComponents>
+	<cftry>
+		<cfset getParentRebateComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"program_id" = "eq.#CSLGetContractInfo.Revision_of_Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_name_id"
+			}), "program_rebates_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentRebateComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentRebateComponents>
+<CFQUERY NAME="getParentRebateComponents" datasource="#application.datasource#">
 			SELECT Program_Rebates_Component_Name_ID
 			FROM Program_Rebates_Component
 			where program_id = #CSLGetContractInfo.Revision_of_Contract_Main_ID#
 			AND deleted = 0
 		</CFQUERY>
+</cfif>
 		<cfset ParentRebateComponents = valuelist(getParentRebateComponents.Program_Rebates_Component_Name_ID)>
 		</cfif>
 		<!---61605 : Event error on fixed price save when revision setting for UOM change is OFF END --->

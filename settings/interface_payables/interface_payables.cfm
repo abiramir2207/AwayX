@@ -41,12 +41,28 @@
 		ORDER BY Status_Order_Number
 	</CFQUERY>
 
-	<cfquery NAME="qGetClosingMethods" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetClosingMethods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForqGetClosingMethods>
+	<cftry>
+		<cfset qGetClosingMethods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"benabled" = "eq.1",
+				"order" = "vchbillback_closing_method_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClosingMethods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClosingMethods>
+<cfquery NAME="qGetClosingMethods" datasource="#application.datasource#">
 		SELECT	*
 		FROM  	Billback_Closing_Methods
 		WHERE	bEnabled = 1
 		ORDER BY vchBillback_Closing_Method_Desc
 	</cfquery>
+</cfif>
 
 	<cfset useLakebaseForqGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
 <cfif useLakebaseForqGetUserName>

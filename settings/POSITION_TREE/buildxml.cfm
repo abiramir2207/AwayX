@@ -338,7 +338,25 @@
 			<cfset brokerIndx = 0>
 				
 			<!---get brokers--->
-			<cfquery name="getBrokers" datasource="#application.datasource#">
+			<cfset useLakebaseForgetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForgetBrokers>
+	<cftry>
+		<cfset getBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"active_code" = "eq.A",
+				"deleted" = "eq.0",
+				"service_market_id" = "eq.#getMarkets.Service_Market_ID#",
+				"order" = "broker_name.asc",
+				"select" = "broker_name,bsa_foodservice_brokers_id,broker_shard"
+			}), "broker_name,bsa_foodservice_brokers_id,broker_shard"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBrokers>
+<cfquery name="getBrokers" datasource="#application.datasource#">
 				SELECT 	Broker_Name, 
 						BSA_Foodservice_Brokers_ID, 
 						Broker_Shard
@@ -348,6 +366,7 @@
 				AND		Service_Market_ID = '#getMarkets.Service_Market_ID#'
 				ORDER BY Broker_Name
 			</cfquery>
+</cfif>
 			
 			<!---loop through brokers and build xml children to markets--->
 			<CFLOOP query="getBrokers">

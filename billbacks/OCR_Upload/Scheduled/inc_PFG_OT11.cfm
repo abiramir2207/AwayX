@@ -408,27 +408,7 @@ Description  :  Include template for PFG OT1
 					##tblPFGOT11FileData 
 			</cfquery>     
  
-			<cfset useLakebaseForupdateOCRUploadLogStatus4 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
-<cfif useLakebaseForupdateOCRUploadLogStatus4>
-	<cftry>
-		<cfset application.oLakebase.updateRows("ocr_upload_log",
-			{
-				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
-			},
-			{
-				"ocr_step" = "4",
-				"ocr_upload_status" = "Transferred file to DB processing",
-				"debug_dev_status" = "Transferred file to DB processing. DBLocation ""#DBDest#""",
-				"updated_date" = "#now()#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateOCRUploadLogStatus4 = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateOCRUploadLogStatus4>
-<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
+			<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
 				UPDATE OCR_Upload_Log 
 					SET 
 					OCR_Step = '4',
@@ -436,8 +416,7 @@ Description  :  Include template for PFG OT1
 					Debug_Dev_Status = 'Transferred file to DB processing. DBLocation "#DBDest#"',
 					Updated_Date = getDate()
 				WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-			</cfquery>
-</cfif>	 
+			</cfquery>	 
 		<cfelse>
 			 	<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
 					UPDATE OCR_Upload_Log 

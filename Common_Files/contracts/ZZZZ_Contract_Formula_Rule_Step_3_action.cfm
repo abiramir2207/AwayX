@@ -117,11 +117,29 @@
 <CFSET activeProductList=ValueList(Get_Active_Products.BSA_Foodservice_Items_Master_ID,",")>
 
 
+<cfset useLakebaseForUpdate_Formula_Price_Rebate_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForUpdate_Formula_Price_Rebate_Type>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#cryp.value#"
+			},
+			{
+				"formula_price_rebate_type" = "#Form.Formula_Price_Rebate_Type#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Formula_Price_Rebate_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Formula_Price_Rebate_Type>
 <CFQUERY NAME="Update_Formula_Price_Rebate_Type" datasource="#application.datasource#">
 	UPDATE		Contract_Main
 	SET			Formula_Price_Rebate_Type 	= 	#Form.Formula_Price_Rebate_Type#
 	WHERE		Contract_Main_ID			=	#cryp.value#	
 </CFQUERY>
+</cfif>
 
 <CFLOOP INDEX="Product_ID" LIST="#FORM.ABS_FINAL_PRODUCT_LIST#">
 <!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

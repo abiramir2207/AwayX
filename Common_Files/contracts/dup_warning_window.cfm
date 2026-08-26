@@ -237,10 +237,26 @@ possible values: 	contract_approve_broker_action (default) - see above
 				<!--- START: D32448: Program Manager Incorrect on Duplicate Warning/Anand Rao/13-Jun-2012 --->
 				<cfif appSettings.getShowManagerDetailsOnViewProgram()>
 					<cfif getpositionabove neq -1>
-						<cfquery name="PositionDescforManager" datasource="#application.datasource#">
+						<cfset useLakebaseForPositionDescforManager = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforManager>
+	<cftry>
+		<cfset PositionDescforManager = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#getpositionabove#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforManager = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforManager>
+<cfquery name="PositionDescforManager" datasource="#application.datasource#">
 								SELECT Position_Label FROM User_Positions
 								WHERE User_Positions_ID = '#getpositionabove#'
 						</cfquery>
+</cfif>
 						<cfif PositionDescforManager.recordcount GT 0>
 							<cfquery name="getManagerDetails" datasource="#application.datasource#">
 								SELECT top 1 	name_first + ' ' + name_last AS User_Full_Name,

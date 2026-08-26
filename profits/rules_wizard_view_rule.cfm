@@ -85,11 +85,27 @@ Where	item  in (#listqualifY(ValueList(Get_Rule_Data.Products), "'")#)
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the name of the exchange used																 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Exchange = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_exchange_detail")>
+<cfif useLakebaseForGet_Exchange>
+	<cftry>
+		<cfset Get_Exchange = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_exchange_detail", {
+				"exchange_detail_id" = "eq.#Get_Rule_Data.Exchange#",
+				"select" = "exchange_detail_name"
+			}), "exchange_detail_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Exchange = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Exchange>
 <CFQUERY NAME="Get_Exchange" datasource="#application.datasource#">
 Select	Exchange_Detail_Name
 From 	Commodities_Exchange_Detail
 Where 	Exchange_Detail_ID	=	'#Get_Rule_Data.Exchange#'
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the name of the commodity																	 --->

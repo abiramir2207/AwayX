@@ -162,10 +162,26 @@
 		  <CFOUTPUT QUERY="getGrowthComponents"> 
 			<!---Gets component types--->
 			<cfif appSettings.getGrowthExpansion1()>
-			  <cfquery name="GetType" datasource="#application.datasource#">
+			  <cfset useLakebaseForGetType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_type")>
+<cfif useLakebaseForGetType>
+	<cftry>
+		<cfset GetType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_type", {
+				"program_growth_component_type_id" = "eq.#getGrowthComponents.Program_Growth_Component_Type_ID #",
+				"select" = "description"
+			}), "description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetType>
+<cfquery name="GetType" datasource="#application.datasource#">
 			  SELECT Description FROM Program_Growth_Component_Type WHERE Program_Growth_Component_Type_ID 
 			  = #getGrowthComponents.Program_Growth_Component_Type_ID # 
 			  </cfquery>
+</cfif>
 			</cfif>
 			<cfset useLakebaseForItemsForComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
 <cfif useLakebaseForItemsForComponent>

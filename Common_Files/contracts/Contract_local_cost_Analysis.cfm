@@ -102,10 +102,27 @@ where BSA_Foodservice_Items_Master_id = '#replace(ItemId, "_", "-", "ALL")#'
 </TR></cfoutput>
 </table>
 
+<cfset useLakebaseForgetlocalcostsvariables = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForgetlocalcostsvariables>
+	<cftry>
+		<cfset getlocalcostsvariables = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cost_sequence", {
+				"deleted" = "eq.0",
+				"order" = "cost_sequence_order.asc",
+				"select" = "cost_sequence_name"
+			}), "cost_sequence_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetlocalcostsvariables = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetlocalcostsvariables>
 <CFQUERY NAME="getlocalcostsvariables" datasource="#application.datasource#">
 select Cost_Sequence_name from Cost_Sequence where deleted = 0
 order by Cost_Sequence_Order
 </CFQUERY>
+</cfif>
 <cfset i= 1>
 <CFQUERY NAME="getlocalcosts" datasource="#application.datasource#">
 select 

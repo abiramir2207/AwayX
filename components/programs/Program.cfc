@@ -2339,10 +2339,28 @@
 			</cfstoredproc>
 
 			<!--- log entry --->
-			<cfquery name="qInsertLog" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsertLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_start_date_change_history")>
+<cfif useLakebaseForqInsertLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_start_date_change_history", {
+			"contract_main_id" = "#arguments.programId#",
+			"contract_number" = "#arguments.contractNumber#",
+			"user_id" = "#arguments.userId#",
+			"original_start_date" = "#arguments.originalStartDate#",
+			"modified_start_date" = "#arguments.modifiedStartDate#",
+			"batch_number" = "#arguments.batchNumber#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertLog>
+<cfquery name="qInsertLog" datasource="#application.datasource#">
 				INSERT INTO Contract_Start_Date_Change_History(Contract_Main_ID, Contract_Number, User_ID, Original_Start_Date, Modified_Start_Date, Batch_Number)
 				VALUES(#arguments.programId#, '#arguments.contractNumber#', '#arguments.userId#', '#arguments.originalStartDate#', '#arguments.modifiedStartDate#', #arguments.batchNumber#)
 			</cfquery>
+</cfif>
 		</cffunction>
 
 		<!--- get the number of times user has modified start dates from the  "modify pre-active dates" tool. --->

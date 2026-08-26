@@ -1862,12 +1862,29 @@
   
   	<!--- KEEP &#session.urltoken# <cflocation url="#includeLettersFilename#?CID=#url.CMID#"> --->
   <cfelse>
-    <cfquery name="qgetUseremail" datasource="#application.datasource#">
+    <cfset useLakebaseForqgetUseremail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqgetUseremail>
+	<cftry>
+		<cfset qgetUseremail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#URL.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetUseremail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetUseremail>
+<cfquery name="qgetUseremail" datasource="#application.datasource#">
         select user_email
         from _users
         where user_id = '#URL.user_id#'
         and deleted = 0
     </cfquery>
+</cfif>
     
     <!--- Question: IF we do NOT identify the query, we will only get the first row. Is this desired? RBL --->
 		<cfoutput>
@@ -1911,7 +1928,7 @@
     loc.letterName = replace( replace(loc.letterName, ')', '_', 'all'), ',', '',  'all' );
     loc.letterName = replace( replace(loc.letterName, '&', '',  'all'), '.', '',  'all' );
     loc.letterName = replace( replace(loc.letterName, '''' ,'', 'all'), '##' ,'', 'all' );
-    loc.letterName = replace( replace(loc.letterName, ' ', '',  'all'), "’", "",  'all'	);
+    loc.letterName = replace( replace(loc.letterName, ' ', '',  'all'), "", "",  'all'	);
 
     loc.nameSuffix = "_system_generated";
   </cfscript>

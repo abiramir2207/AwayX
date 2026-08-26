@@ -25,12 +25,27 @@ ORDER BY 	Region_Name, Market_Name, Generic_Type, Contract_Number,
 </cfquery>
 </cfoutput>
 
+<cfset useLakebaseForgetRFAtitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetRFAtitle>
+	<cftry>
+		<cfset getRFAtitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "report_name,send_report_to"
+			}), "report_name,send_report_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRFAtitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRFAtitle>
 <cfquery name="getRFAtitle" datasource="#application.datasource#">
 
 select report_name,Send_Report_To
 from _application_settings
 
 </cfquery>
+</cfif>
 
 
 

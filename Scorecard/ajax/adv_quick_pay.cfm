@@ -193,12 +193,29 @@
 </cfquery>
 <cfset forbidType = appSettings.getForbidAllowProfilesInTemplates() />
 
-	<cfquery NAME="qBBProfilesSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForqBBProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_profiles_settings")>
+<cfif useLakebaseForqBBProfilesSettings>
+	<cftry>
+		<cfset qBBProfilesSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_profiles_settings", {
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"deleted" = "eq.0",
+				"select" = "bb_approve_critical"
+			}), "bb_approve_critical"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBBProfilesSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBBProfilesSettings>
+<cfquery NAME="qBBProfilesSettings" datasource="#application.datasource#">
 		SELECT BB_Approve_Critical
 		FROM BB_Profiles_Settings
 		WHERE Profiles_ID = #request.AccessStructure.Profiles_ID#
 		AND Deleted=0
 	</cfquery>
+</cfif>
 	<cfset BB_Approve_Critical = qBBProfilesSettings.BB_Approve_Critical>
 
 	<cfquery NAME="qRowsTemp" datasource="#application.datasource#">

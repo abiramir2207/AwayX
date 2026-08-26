@@ -204,12 +204,26 @@
 	<cfloop index="x" from="#fromValue#" to="#getGroupLabels.approval_group_count#" step="1">
 		<cfloop query="Get_Profile_Settings">
 		<cfset n = Get_Profile_Settings.Profiles_ID>
-			<cfquery name="saveNewGroups" datasource="#application.datasource#">
+			<cfset useLakebaseForsaveNewGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForsaveNewGroups>
+	<cftry>
+		<cfset application.oLakebase.insertRow("margin_group_profile_approval_margins", {
+			"group_id" = "#x#",
+			"profile_id" = "#n#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveNewGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveNewGroups>
+<cfquery name="saveNewGroups" datasource="#application.datasource#">
 				INSERT INTO Margin_Group_Profile_Approval_Margins
 				(Group_ID, Profile_ID)
 				VALUES
 				(#x#,#n#)
 			</cfquery>
+</cfif>
 		</cfloop>
 	</cfloop>
 </cfif>

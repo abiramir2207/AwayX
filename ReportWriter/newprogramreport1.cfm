@@ -27,11 +27,27 @@ Where
 Order By Contract_Status_Type_ID
 </CFQUERY>
 
+<cfset useLakebaseForq_getGenericTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_type")>
+<cfif useLakebaseForq_getGenericTypes>
+	<cftry>
+		<cfset q_getGenericTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_type", {
+				"order" = "generic_type.asc",
+				"select" = "generic_type_id,generic_type"
+			}), "generic_type_id,generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getGenericTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getGenericTypes>
 <CFQUERY NAME="q_getGenericTypes" datasource="#application.datasource#">
 Select	Generic_Type_ID, Generic_Type
 From 	Generic_Type
 Order By Generic_Type
 </CFQUERY>
+</cfif>
 <CFQUERY NAME="q_getFamilys" datasource="#application.datasource#">
 Select 	distinct f.family_ID,f.Family_Name
 From	Distributor_Family f, customer_lob_active cla

@@ -22,7 +22,23 @@
 				<cfstoredproc procedure="PROGRAM_EFFECTIVE_DATES_UPDATE" datasource="#application.datasource#">
 					<cfprocparam type="In" CFSQLType="CF_SQL_INTEGER" dbVarName = "@CONTRACT_MAIN_ID" value = "#getProgramsList.contract_main_id#" null="no">
 				</cfstoredproc>
-				<cfquery name="updateNotes" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_evaluation_notes")>
+<cfif useLakebaseForupdateNotes>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_evaluation_notes", {
+			"contract_number" = "#getProgramsList.Contract_Number#",
+			"entered_by" = "#SystemAdministratorName#",
+			"eval_action" = "Program Expired",
+			"notes" = "Program End-date was updated due to a level of inactivity that satisfied the Auto Cancel rules at the time",
+			"contract_notes_type" = "2"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateNotes>
+<cfquery name="updateNotes" datasource="#application.datasource#">
 					INSERT INTO contract_evaluation_notes (
 															Contract_Number,
 															Entered_By,
@@ -36,7 +52,8 @@
 									'Program End-date was updated due to a level of inactivity that satisfied the Auto Cancel rules at the time',
 									2
 									) 
-				</cfquery>													
+				</cfquery>
+</cfif>													
 	</cfloop>
 	
 </cfif>

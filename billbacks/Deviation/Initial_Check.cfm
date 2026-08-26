@@ -249,26 +249,7 @@
 							</cfloop>
 						</cfcase>
 						<cfcase value="RESET">
-							<cfset useLakebaseForupdBBOperatorLocationReset = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
-<cfif useLakebaseForupdBBOperatorLocationReset>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
-			{
-				"billback_id" = "eq.#arguments.bbid#"
-			},
-			{
-				"denied" = "0",
-				"updated_date" = javaCast("null",""),
-				"updated_by" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdBBOperatorLocationReset = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdBBOperatorLocationReset>
-<cfquery name="updBBOperatorLocationReset" datasource="#application.datasource#">
+							<cfquery name="updBBOperatorLocationReset" datasource="#application.datasource#">
 					            UPDATE Billback_Operator_Location_Detail 
 					            SET 
 									Denied = 0,
@@ -276,7 +257,6 @@
 									Updated_By = NULL
 					            WHERE Billback_ID = '#arguments.bbid#'
 							</cfquery>
-</cfif>
 						</cfcase>
 						<cfcase value="GOTODEV">
 							<cfset displayOperDupScreen = 0 />
@@ -397,29 +377,7 @@
 </cfif>
 	<cfelse>
 		<!--- 2) update all the other records in billbacks not locked through match central as unlocked --->
-		<cfset useLakebaseForunlockLockedBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
-<cfif useLakebaseForunlockLockedBillbacks>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_allied",
-			{
-				"bb_is_locked" = "eq.1",
-				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
-				"billback_id" = "neq.#arguments.bbid#",
-				"bb_locked_by_match_central" = "eq.0"
-			},
-			{
-				"bb_is_locked" = "0",
-				"bb_locked_by_user_id" = javaCast("null",""),
-				"bb_lock_date" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForunlockLockedBillbacks = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForunlockLockedBillbacks>
-<cfquery name="unlockLockedBillbacks" datasource="#application.datasource#">
+		<cfquery name="unlockLockedBillbacks" datasource="#application.datasource#">
 		  UPDATE Billback_Allied
 		  SET    BB_Is_Locked = 0,
 				 BB_Locked_By_User_ID = NULL,
@@ -429,7 +387,6 @@
 				 Billback_id <> '#arguments.bbid#' AND
 				 BB_Locked_By_Match_Central = 0
 		</cfquery>
-</cfif>
 		
 		<!--- 2) update the record as locked by the current user --->
 		<cfquery name="updLockBillback" datasource="#application.datasource#">
@@ -528,12 +485,31 @@
 							<cfprocresult name="getDeviation">  
 						</cfstoredproc>
 						<!--- Update the deviation history that it was run --->
-						<cfquery name="updDeviationHistory" datasource="#application.datasource#">
+						<cfset useLakebaseForupdDeviationHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdDeviationHistory>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#arguments.bbid#"
+			},
+			{
+				"deviation_ran_by" = "#request.AccessStructure.User_ID#",
+				"deviation_ran_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdDeviationHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdDeviationHistory>
+<cfquery name="updDeviationHistory" datasource="#application.datasource#">
 							UPDATE Billback 
 							SET Deviation_Ran_By = '#request.AccessStructure.User_ID#',
 								Deviation_Ran_Date = getdate()
 							WHERE Billback_ID = '#arguments.bbid#'
 						</cfquery>
+</cfif>
 				   </cflock>
 					<cfcatch>
 						<cfif cfcatch.type EQ 'LOCK'>

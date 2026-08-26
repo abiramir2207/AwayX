@@ -40,6 +40,22 @@
 	Order by	Created_Date Desc
 </CFQUERY>
 
+<cfset useLakebaseForGet_LastUpdated_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_notes")>
+<cfif useLakebaseForGet_LastUpdated_Details>
+	<cftry>
+		<cfset Get_LastUpdated_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_notes", {
+				"updated_date" = "not.is.null",
+				"order" = "updated_date.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_LastUpdated_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_LastUpdated_Details>
 <CFQUERY NAME="Get_LastUpdated_Details" datasource="#application.datasource#">
 	Select		TOP 1 *
 	From		Template_Notes
@@ -48,6 +64,7 @@
 	
 	Order by	Updated_Date Desc
 </CFQUERY>
+</cfif>
 <CFIF URL.RID NEQ 0>
 	<CFIF Get_LastCreated_Details.Updated_By NEQ "">
 		<CFSET GetUser = "Get_LastCreated_Details.Updated_By">

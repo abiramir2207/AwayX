@@ -3689,11 +3689,27 @@
 		)
 	</cfquery>
 
-		<cfquery name="qCheckAltRates" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckAltRates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebate_alternate_recapture_rate")>
+<cfif useLakebaseForqCheckAltRates>
+	<cftry>
+		<cfset qCheckAltRates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebate_alternate_recapture_rate", {
+				"contract_main_id" = "eq.#arguments.rebateData.programId#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckAltRates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckAltRates>
+<cfquery name="qCheckAltRates" datasource="#application.datasource#">
 			select 	1
 			from 	Program_Rebate_Alternate_Recapture_Rate
 			where 	Contract_Main_ID = #arguments.rebateData.programId#
 		</cfquery>
+</cfif>
 
 
 		<cfif qCheckAltRates.RecordCount>
@@ -4744,7 +4760,23 @@
 			Single component changes
 		--->
 		<cfif (getProgID.RecordCount GTE 1 AND bAutoAddComponent EQ 1)>
-			<cfquery name="getProductpresent" datasource="#application.datasource#">
+			<cfset useLakebaseForgetProductpresent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data") AND application.oLakebase.isTableMigrated("program_rebates_component_data")>
+<cfif useLakebaseForgetProductpresent>
+	<cftry>
+		<cfset getProductpresent = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("program_rebates_product_data", {
+				"program_id" = "eq.#getProgID.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_product_data_id"
+			}, "program_rebates_product_data_id", "program_rebates_component_data", "program_rebates_product_data_id", "program_rebates_product_data_id"), "program_rebates_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductpresent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductpresent>
+<cfquery name="getProductpresent" datasource="#application.datasource#">
 				SELECT 	PRCD.Program_Rebates_Product_Data_ID
 				FROM 	Program_Rebates_Product_Data PRPD
 				INNER JOIN Program_Rebates_Component_Data PRCD ON
@@ -4752,6 +4784,7 @@
 	 			WHERE 	PRPD.Program_ID = #getProgID.Contract_Main_ID#
 				AND		PRPD.Deleted = 0
 			</cfquery>
+</cfif>
 			<cfif getProductpresent.Recordcount EQ 0>
 				<cfset useLakebaseForupdPrgRebComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
 <cfif useLakebaseForupdPrgRebComp>
@@ -5337,13 +5370,31 @@
 	<cffunction Name="UpdateGroupStatus" access="private" output="false">
 	 <cfargument name="ProgramID" type="string" required="true" />
 
-			<cfquery name="checkGroupProgram" datasource="#application.datasource#">
+			<cfset useLakebaseForcheckGroupProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForcheckGroupProgram>
+	<cftry>
+		<cfset checkGroupProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.ProgramID#",
+				"is_group" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckGroupProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckGroupProgram>
+<cfquery name="checkGroupProgram" datasource="#application.datasource#">
 				SELECT 1
 				FROM Contract_Products
 				WHERE Contract_MAIN_ID = '#arguments.ProgramID#'
 				AND Is_Group = 1
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 
 			 <cfif checkGroupProgram.Recordcount GT 0>
 				<cfquery name="qFlagGroup" datasource="#application.datasource#">

@@ -633,12 +633,31 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 
 		<cfset contractQty = contractSum/prgSpan />
 
-		<cfquery name="qryContractVolumeUpdate" datasource="#application.datasource#" >
+		<cfset useLakebaseForqryContractVolumeUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqryContractVolumeUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#ProgramId#"
+			},
+			{
+				"contract_quantity" = "#contractSum#",
+				"contract_daily_volume" = "#contractQty#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryContractVolumeUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryContractVolumeUpdate>
+<cfquery name="qryContractVolumeUpdate" datasource="#application.datasource#" >
 			UPDATE Contract_Main
 			SET    Contract_Quantity = #contractSum#,
 				   Contract_Daily_Volume = #contractQty#
 			WHERE  Contract_Main_ID = #ProgramId#
 		</cfquery>
+</cfif>
 
 		<!--- delete program product volume --->
 		<cfset useLakebaseForqryDeleteVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>

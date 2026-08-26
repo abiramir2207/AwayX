@@ -247,13 +247,30 @@ Remarks      :
 					<cfif appSettings.getcustid_on() eq 1>
 						<td>
 							<span class="searchItemLabel"> <strong>#application.returned_customer_setting.Customer_Id_Label#</strong> </span> <br>
-							<cfquery name="GetCustIds" datasource="#application.datasource#">
+							<cfset useLakebaseForGetCustIds = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_customer_id")>
+<cfif useLakebaseForGetCustIds>
+	<cftry>
+		<cfset GetCustIds = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_customer_id", {
+				"deleted" = "eq.0",
+				"custid_name" = "not.is.null",
+				"order" = "custid_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustIds = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustIds>
+<cfquery name="GetCustIds" datasource="#application.datasource#">
 								SELECT *
 								FROM Distributor_Customer_ID
 								WHERE Deleted = 0
 								AND Custid_Name IS NOT NULL
 								ORDER BY Custid_Name
 							</cfquery>
+</cfif>
 
 							<select name="Cust_Id" id="Cust_Id" onkeydown="if (event.keyCode == 13) doSearchNow();">
 								<option value="0"> **ALL** #application.returned_customer_setting.Customer_Id_Label# </option>

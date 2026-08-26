@@ -71,11 +71,27 @@ Before it was "1.9.1".
 
 <!--- "Product_ID" exists when user visits from "PRODUCT CLAIMED NOT ON PROGRAM" grid. --->
 <cfif productID neq "">
-	<cfquery name="qGetItemDetails" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetItemDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqGetItemDetails>
+	<cftry>
+		<cfset qGetItemDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#productID#",
+				"select" = "item,description"
+			}), "item,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetItemDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetItemDetails>
+<cfquery name="qGetItemDetails" datasource="#application.datasource#">
 		SELECT Item,Description
 		FROM BSA_Foodservice_Items_Master
 		WHERE BSA_Foodservice_Items_Master_ID = '#productID#'
 	</cfquery>
+</cfif>
 
 	<cfset prod = qGetItemDetails.Item>
 	<cfset prod_desc = qGetItemDetails.Description>

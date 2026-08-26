@@ -26,12 +26,29 @@
 					Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
 		</CFQUERY>
 		
-		<CFQUERY NAME="checkCommOverageData" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForcheckCommOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_comm_data")>
+<cfif useLakebaseForcheckCommOverageData>
+	<cftry>
+		<cfset checkCommOverageData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_comm_data", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_formula_pricing_rule_comm_data_id"
+			}), "program_formula_pricing_rule_comm_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckCommOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckCommOverageData>
+<CFQUERY NAME="checkCommOverageData" DATASOURCE="#application.datasource#">
 			SELECT Program_Formula_Pricing_Rule_Comm_Data_Id
 			FROM Program_Formula_Pricing_Rule_Comm_Data
 			WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#' AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 		
 		<cfset useLakebaseForcheckOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_commodity_overage")>
 <cfif useLakebaseForcheckOverageData>

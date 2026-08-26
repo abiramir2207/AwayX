@@ -28,12 +28,29 @@
 	
 		<cfargument name="CostSequenceId" type="numeric" required="true">
 	
-		<cfquery name="qGetCostSequenceLevel" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCostSequenceLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForqGetCostSequenceLevel>
+	<cftry>
+		<cfset qGetCostSequenceLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cost_sequence", {
+				"deleted" = "eq.0",
+				"cost_sequence_id" = "eq.#arguments.CostSequenceId#",
+				"select" = "cost_sequence_order"
+			}), "cost_sequence_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCostSequenceLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCostSequenceLevel>
+<cfquery name="qGetCostSequenceLevel" datasource="#application.datasource#">
 			SELECT	Cost_Sequence_Order
 			FROM	Cost_Sequence
 			WHERE	Deleted = 0
 					AND Cost_Sequence_ID = #arguments.CostSequenceId#			
 		</cfquery>
+</cfif>
 	
 		<cfreturn qGetCostSequenceLevel />
 		
@@ -111,10 +128,24 @@
 							AND Cost_Sequence_Order >= #arguments.CostSequenceOrder#
 				</cfquery>
 				
-				<cfquery name="qInsertAS" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsertAS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForqInsertAS>
+	<cftry>
+		<cfset application.oLakebase.insertRow("cost_sequence", {
+			"cost_sequence_order" = "#arguments.CostSequenceOrder#",
+			"cost_sequence_name" = "#arguments.CostSequenceDesc#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertAS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertAS>
+<cfquery name="qInsertAS" datasource="#application.datasource#">
 					INSERT INTO Cost_Sequence (Cost_Sequence_Order, Cost_Sequence_Name)
 					VALUES (#arguments.CostSequenceOrder#, '#arguments.CostSequenceDesc#')
 				</cfquery>
+</cfif>
 				
 				<cfset tocount = arguments.CostSequenceOrder>
 				<cfloop from="9" to="#tocount#" index ="i" step="-1">

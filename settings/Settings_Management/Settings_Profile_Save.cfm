@@ -263,11 +263,29 @@
 	<cfset DD_Status_ID = getDD_Status_list.DD_Status_ID>
 	<cfparam name="Form.DD_Status_#DD_Status_ID#" default="1">
 	<cfset FieldValueDD_Status = Evaluate("Form.DD_Status_#DD_Status_ID#")>
-	<cfquery name="UpdateDD_Status" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdateDD_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_status")>
+<cfif useLakebaseForUpdateDD_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_status",
+			{
+				"dd_status_id" = "eq.#DD_Status_ID#"
+			},
+			{
+				"setting_display_value" = "#FieldValueDD_Status#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDD_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDD_Status>
+<cfquery name="UpdateDD_Status" datasource="#application.datasource#">
 			update DD_Status
 			set Setting_Display_Value = #FieldValueDD_Status#
 			where 	DD_Status_ID = #DD_Status_ID#
 	</cfquery>
+</cfif>
 </cfloop>
 <!---end :: update show/hide 'Hide #DD_Status_Description#' on deduction profile settings --->
 

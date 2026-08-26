@@ -108,13 +108,30 @@
 	<cfset Distributor_List = ListAppend(Distributor_List, Distributor_ID) />
 </cfloop>
 <cfif Len(Distributor_List)>
-	<cfquery name="qGetDist" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForqGetDist>
+	<cftry>
+		<cfset qGetDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Distributor_List#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDist>
+<cfquery name="qGetDist" datasource="#application.datasource#">
 		SELECT 	*
 		FROM 	BSA_Foodservice_Customers
 		WHERE 	BSA_Foodservice_Customers_ID = '#Distributor_List#' 
 		AND 	deleted = 0
 		AND		active_code = 'A'
 	</cfquery>
+</cfif>
 	
 	<cfset Ship_To = #qGetDist.Ship_To# />
 	

@@ -70,11 +70,27 @@ span.lbl { display:inline-block; width:107px; font-weight: bold; margin:2px 0;}
 	order by contract_main_id desc
 </cfquery>
 
-  <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+  <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#Get_Parent.ProgramType_ID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT First_parent_ID
     FROM Program_Control_Panel_Options
     WHERE ProgramControl_Panel_Options_ID = #Get_Parent.ProgramType_ID#
   </cfquery>
+</cfif>
 
 <cfset MarginUploadCFC = CreateObject("component","components.settings.upload_margin_Targets.uploadMarginTargets")/>
 <cfset qFilters = MarginUploadCFC.ProductFilters(url.contract_main_id, GetTemplateInfo.First_parent_ID, 0) />

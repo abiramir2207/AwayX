@@ -1537,13 +1537,28 @@
 			
 		<cfelse>		
 		 <!---61486 : Default program only when $'s equal to $0.00 END --->
-		<CFQUERY NAME="qAutoApprovalSetting" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForqAutoApprovalSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqAutoApprovalSetting>
+	<cftry>
+		<cfset qAutoApprovalSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "auto_approve_amount,auto_approve_on,auto_approve_bb_types,auto_appr_consider_created_date,auto_appr_age,auto_appr_divested_items,auto_appr_unknown_items,auto_appr_reference_exclusive,auto_appr_payee_operator,auto_appr_payee_distributor"
+			}), "auto_approve_amount,auto_approve_on,auto_approve_bb_types,auto_appr_consider_created_date,auto_appr_age,auto_appr_divested_items,auto_appr_unknown_items,auto_appr_reference_exclusive,auto_appr_payee_operator,auto_appr_payee_distributor"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAutoApprovalSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAutoApprovalSetting>
+<CFQUERY NAME="qAutoApprovalSetting" DATASOURCE="#Application.Datasource#">
 			SELECT 	Auto_Approve_Amount, Auto_Approve_On, Auto_Approve_BB_Types,
 					Auto_Appr_Consider_Created_Date, Auto_Appr_Age,
 					Auto_Appr_Divested_Items, Auto_Appr_Unknown_Items, Auto_Appr_Reference_Exclusive,
 					Auto_Appr_Payee_Operator, Auto_Appr_Payee_Distributor
 			FROM 	Billback_Settings
 		</CFQUERY>
+</cfif>
 		<cfif 	arguments.billbackStatus LTE 2 
 				AND qAutoApprovalSetting.Auto_Approve_On EQ 1 
 				AND (qAutoApprovalSetting.Auto_Approve_BB_Types EQ 2 OR qAutoApprovalSetting.Auto_Approve_BB_Types EQ 3)
@@ -1679,10 +1694,25 @@
 		<cfargument name="billback_Id" type="string" required="true">
 		
 		<cfset var hasDummy = 0 />
-		<cfquery name="GetBillbackSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForGetBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForGetBillbackSettings>
+	<cftry>
+		<cfset GetBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program"
+			}), "default_program"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSettings>
+<cfquery name="GetBillbackSettings" datasource="#application.datasource#">
 			SELECT Default_Program
 			FROM Billback_Settings
-		</cfquery>	
+		</cfquery>
+</cfif>	
 		<cfif len(trim(GetBillbackSettings.Default_Program)) GT 0>
 			<cfquery name="GetDummyContractNumber" datasource="#application.datasource#">
 				SELECT Contract_Number 

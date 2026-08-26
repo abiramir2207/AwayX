@@ -134,11 +134,26 @@
 						) />
 <!--- Dev Note: Drachala; D27578: Planning Group setup - require business segment END--->
 
+<cfset useLakebaseForqGetExistingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_operators")>
+<cfif useLakebaseForqGetExistingGroups>
+	<cftry>
+		<cfset qGetExistingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_operators", {
+				"planner_template_id" = "eq.#FORM.PlannerTemplateFiltersID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetExistingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetExistingGroups>
 <cfquery name="qGetExistingGroups" datasource="#application.datasource#">
 	SELECT	* 
 	FROM 	Planner_Template_Filters_Operators
 	WHERE	Planner_Template_ID = '#FORM.PlannerTemplateFiltersID#'
 </cfquery>
+</cfif>
 
 <cfset FORM.FinalDistList = '#ValueList( qGetExistingGroups.Operator_Group_ID)#' />
 

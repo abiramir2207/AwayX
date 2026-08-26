@@ -628,7 +628,30 @@
 
 		<cfelse>
 
-			<cfquery name="qSetEnabled" datasource="#application.datasource#">
+			<cfset useLakebaseForqSetEnabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForqSetEnabled>
+	<cftry>
+		<cfset application.oLakebase.insertRow("business_segment_enabled", {
+			"enabled" = "#arguments.enabledVal#",
+			"distributor_enabled" = "#arguments.enabledValDistributor#",
+			"product_enabled" = "#arguments.enabledValProduct#",
+			"vendor_enabled_type" = "#arguments.enabledValVendorType#",
+			"operator_enabled" = "#arguments.enabledValOperator#",
+			"autopay_segment_enable" = "#arguments.enabledAutoPaySegment#",
+			"allow_multiple_segment" = "#arguments.enabledAllowMultipleSegment#",
+			"allow_segment_change" = "#arguments.enabledAllowSegmentChange#",
+			"budget_segment_enabled" = "#arguments.enabledBudgetSegment#",
+			"display_segment_in_billbacks" = "#enabledDisplaySegmentInBillbacks#",
+			"planner_volume_plan_segment_enable" = "#arguments.enabledPlannerVolumePlan#",
+			"user_segment_filters_autopay_results" = "#arguments.enabledUserSegmentFiltersAutopayResults#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetEnabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetEnabled>
+<cfquery name="qSetEnabled" datasource="#application.datasource#">
 
 				INSERT INTO Business_Segment_Enabled
 					(Enabled, Distributor_Enabled, Product_Enabled, Vendor_Enabled_Type,Operator_Enabled,AutoPay_Segment_Enable,Allow_Multiple_Segment,Allow_Segment_Change,
@@ -638,6 +661,7 @@
 					#arguments.enabledBudgetSegment#,#enabledDisplaySegmentInBillbacks#,#arguments.enabledPlannerVolumePlan#,#arguments.enabledUserSegmentFiltersAutopayResults#)
 
 			</cfquery>
+</cfif>
 
 		</cfif>
 

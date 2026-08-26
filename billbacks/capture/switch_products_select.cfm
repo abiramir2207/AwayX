@@ -177,6 +177,21 @@ Description:	This file is responsible for selecting the products to switch in Bi
 <cfset searchProducts = productManager.search(stStruct)>
 
 <!---TODO: Tim Ford - Get query out of view page. --->
+<cfset useLakebaseForgGetProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgGetProgramInfo>
+	<cftry>
+		<cfset gGetProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#form.Program_ID#",
+				"select" = "contract_number,contract_title,contract_start_date,contract_end_date"
+			}), "contract_number,contract_title,contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgGetProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgGetProgramInfo>
 <cfquery name="gGetProgramInfo" datasource="#application.datasource#">
 	SELECT	Contract_Number,
 			Contract_Title,
@@ -185,6 +200,7 @@ Description:	This file is responsible for selecting the products to switch in Bi
 	FROM	Contract_Main
 	WHERE	Contract_Main_ID = '#form.Program_ID#'
 </cfquery>
+</cfif>
 
 <cfset useLakebaseForqGetProductsToSwitch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("searchproducts")>
 <cfif useLakebaseForqGetProductsToSwitch>

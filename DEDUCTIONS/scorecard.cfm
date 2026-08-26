@@ -135,12 +135,29 @@
 			ORDER BY Start_Range ASC
 		</cfquery>
 	<CFELSEIF URL.ScorecardToShow EQ "action">
-		<cfquery name="GetActions" datasource="#application.datasource#">
+		<cfset useLakebaseForGetActions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_stage")>
+<cfif useLakebaseForGetActions>
+	<cftry>
+		<cfset GetActions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_stage", {
+				"deleted" = "eq.0",
+				"order" = "is_default.asc",
+				"select" = "dd_stage_description,dd_stage_id"
+			}), "dd_stage_description,dd_stage_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetActions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetActions>
+<cfquery name="GetActions" datasource="#application.datasource#">
 			SELECT DD_Stage_Description, DD_Stage_ID
 			FROM DD_Stage
 			 WHERE Deleted = 0
 			ORDER BY Is_Default ASC
 		</cfquery>
+</cfif>
 	<CFELSE>
 		<cfset useLakebaseForGetClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
 <cfif useLakebaseForGetClass>

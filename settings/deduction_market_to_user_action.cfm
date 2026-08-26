@@ -15,11 +15,26 @@
 		<cfset marketarea	= evaluate("#mid(fieldName, 1, len(fieldName)-5)#_market")>
 		<!--- not a new record --->
 		<cfif record_id NEQ 0>
-			<cfquery name="getMarketRecord" datasource="#application.datasource#">
+			<cfset useLakebaseForgetMarketRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_market_to_user")>
+<cfif useLakebaseForgetMarketRecord>
+	<cftry>
+		<cfset getMarketRecord = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_market_to_user", {
+				"deduction_market_to_user_id" = "eq.#record_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarketRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarketRecord>
+<cfquery name="getMarketRecord" datasource="#application.datasource#">
 				SELECT *
 				FROM deduction_market_to_user
 				WHERE deduction_market_to_user_id = '#record_id#'
 			</cfquery>
+</cfif>
 		
 			<cfset useLakebaseForupdateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_market_to_user")>
 <cfif useLakebaseForupdateInfo>

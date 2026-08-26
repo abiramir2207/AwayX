@@ -51,9 +51,24 @@ to control the first page of program wizard and user profile page
 	ORDER BY Generic_Type_ID
 </cfquery>
 
+<cfset useLakebaseForGetGenericTypeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetgenerictype")>
+<cfif useLakebaseForGetGenericTypeID>
+	<cftry>
+		<cfset GetGenericTypeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetgenerictype", {
+				"generic_type" = "eq.#Form.Generic_Type#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetGenericTypeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetGenericTypeID>
 <cfquery name="GetGenericTypeID" dbtype="query"> 
   select * from qGetGenericType where Generic_Type = '#Form.Generic_Type#' 
 </cfquery>
+</cfif>
 <!--- 	Payment paid To --->
 <cfquery name="GetPaymentPaidToTypes" datasource="#application.datasource#">
 	SELECT 	*
@@ -63,6 +78,22 @@ to control the first page of program wizard and user profile page
 	ORDER BY Payment_Paid_To_ID
 </cfquery>
 
+<cfset useLakebaseForGetCurrencyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForGetCurrencyTypes>
+	<cftry>
+		<cfset GetCurrencyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "currency_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrencyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrencyTypes>
 <cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
 	SELECT 	*
 	FROM 	Currency
@@ -70,6 +101,7 @@ to control the first page of program wizard and user profile page
 	AND 	Active = 1
 	ORDER BY Currency_Name
 </cfquery>
+</cfif>
 
 <cfoutput><CF_MessageWindow></cfoutput>
 

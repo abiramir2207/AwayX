@@ -286,7 +286,25 @@ Called from		:
 			
 			<CFSET CheckPercentTot = 0>
 			<CFLOOP QUERY="FundDistinctFund">				
-				<CFQUERY NAME="GetARFund" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetARFund = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetARFund>
+	<cftry>
+		<cfset GetARFund = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"fund_number" = "eq.#Fund_Number#",
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetARFund = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetARFund>
+<CFQUERY NAME="GetARFund" DATASOURCE="#Application.Datasource#">
 					SELECT 		*
 					FROM 		GL_Code_Activation
 					WHERE 		A_R = '#DistAR#' AND
@@ -295,6 +313,7 @@ Called from		:
 								Current_Active_Data = 1 AND
 								deleted = 0
 				</CFQUERY>
+</cfif>
 				
 				<CFSET SOCA_Fund = "#GetARFund.COMPANY#-#GetARFund.LOCATION#-#GetARFund.COST_CENTER#-#GetARFund.NATURAL_ACCT#-#GetARFund.CHANNEL#-#GetARFund.PRODUCT_GROUP#-#GetARFund.FUND_NUMBER#">
 				

@@ -327,10 +327,26 @@
 		and Created_Date  >  '#arguments.FromDate#'
 		order by work_request_ID
 	</cfquery>
-	<cfquery name="Get_Doc_Path" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Doc_Path = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGet_Doc_Path>
+	<cftry>
+		<cfset Get_Doc_Path = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"limit" = "1",
+				"select" = "document_path"
+			}), "document_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Doc_Path = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Doc_Path>
+<cfquery name="Get_Doc_Path" datasource="#application.datasource#">
 		select Top 1 Document_Path
 		from _Application_Settings
 	</cfquery>
+</cfif>
 	
 	<cfsilent>
 		<cfsavecontent variable="contentElements">

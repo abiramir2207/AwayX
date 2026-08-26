@@ -46,10 +46,26 @@
 	<cfset New_Pgm_Start_Date 	= Programs_Custom_Revision.New_Start_Date	/>	
 	<cfset New_Pgm_End_Date 	= Programs_Custom_Revision.New_End_Date	/>
 
-	<cfquery name="Getcompany" datasource="#application.datasource#">
+	<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 		SELECT Top 1 Company_Main_ID
 		FROM Company_Main
 	</cfquery>
+</cfif>
 
 	<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 	
@@ -68,11 +84,27 @@
 		<cfset request.AccessStructure.Creating_User_Position_ID = GetOriginalUser.Creating_User_Position_ID>
 		<cfset request.AccessStructure.User_ID = GetOriginalUser.Creator_ID>
 		
-		<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
+		<cfset useLakebaseForgetPacket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_renewal_packets")>
+<cfif useLakebaseForgetPacket>
+	<cftry>
+		<cfset getPacket = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_renewal_packets", {
+				"contract_renewal_packets_id" = "eq.#savePacket.Contract_Renewal_Packets_ID#",
+				"select" = "xml_file_location"
+			}), "xml_file_location"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPacket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPacket>
+<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
 			SELECT XML_File_Location
 			FROM Contract_Renewal_Packets
 			WHERE Contract_Renewal_Packets_ID = '#savePacket.Contract_Renewal_Packets_ID#'
 		</CFQUERY>
+</cfif>
 	
 		<CFFILE ACTION="READ" FILE="#getPacket.XML_File_Location#" VARIABLE="Packet_Data">
 		<CFWDDX ACTION="WDDX2CFML" INPUT="#Packet_Data#" OUTPUT="Program_Packet">

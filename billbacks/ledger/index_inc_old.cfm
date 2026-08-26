@@ -133,10 +133,25 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 </cfif>
 
 <!---Select preferences from Billback Settings--->
+<cfset useLakebaseForBB_Preferences = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForBB_Preferences>
+	<cftry>
+		<cfset BB_Preferences = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "bb_tolerance_tet"
+			}), "bb_tolerance_tet"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Preferences = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Preferences>
 <cfquery name="BB_Preferences" datasource="#application.datasource#">
 	SELECT BB_Tolerance_TET
 	FROM Billback_Settings
 </cfquery>
+</cfif>
 
 <cfset BB_Tolerance_TET = BB_Preferences.BB_Tolerance_TET>
 

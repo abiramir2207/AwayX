@@ -2794,10 +2794,25 @@ and contract_products.deleted = 0
 			</cfquery>
 </cfif>
 			<cfif qgetFav.recordcount eq 0> <!--- if not there, insert record --->
-				<cfquery name="qInsFav" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsFav = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_favorites")>
+<cfif useLakebaseForqInsFav>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_favorites", {
+			"program_id" = "#items[i].data#",
+			"user_id" = "#arguments.user_id#",
+			"program_number" = "#items[i].label#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsFav = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsFav>
+<cfquery name="qInsFav" datasource="#application.datasource#">
 					insert into Program_Favorites (Program_id, User_Id, Program_Number)
 						Values ('#items[i].data#','#arguments.user_id#', '#items[i].label#')
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfloop>
 

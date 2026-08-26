@@ -68,7 +68,27 @@ Description  :  Upload from home page
 				<cfset OCRUploadID = qInsOCRUploadLog.OCR_Upload_ID />
 			 
 				<cfif (isDefined("URL.Testing") and URL.Testing EQ "1")>
-					<cfquery name="qInsOCRUploadTestLogDetailSummary" datasource="#application.datasource#">
+					<cfset useLakebaseForqInsOCRUploadTestLogDetailSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqInsOCRUploadTestLogDetailSummary>
+	<cftry>
+		<cfset application.oLakebase.insertRow("ocr_upload_test_log_detail_summary", {
+			"ocr_upload_test_log_id" = "#OCRUploadTestLogID#",
+			"ocr_upload_id" = "#OCRUploadID#",
+			"ocr_upload_testset_id" = "#OCRUploadTestSetID#",
+			"ocr_step_expected" = "#OCRStepExpected#",
+			"total_invoices_expected" = "#TotalInvoicesExpected#",
+			"total_line_items_expected" = "#TotalLineItemsExpected#",
+			"total_amount_expected" = "#TotalAmountExpected#",
+			"total_quantity_expected" = "#TotalQuantityExpected#",
+			"display_status" = "IN PROGRESS"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsOCRUploadTestLogDetailSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsOCRUploadTestLogDetailSummary>
+<cfquery name="qInsOCRUploadTestLogDetailSummary" datasource="#application.datasource#">
 					INSERT INTO	OCR_Upload_Test_Log_Detail_Summary
 					(
 						OCR_Upload_Test_Log_ID,
@@ -97,6 +117,7 @@ Description  :  Upload from home page
 						'IN PROGRESS'
 					)
 					</cfquery>
+</cfif>
 				</cfif>	
 			
 				<cfquery name="qInsOCRUploadLog" datasource="#application.datasource#">
@@ -105,13 +126,32 @@ Description  :  Upload from home page
 				</cfquery>
 				
 				<cfif ((qInsOCRUploadLog.OCR_Reader_Name EQ "DOCPARSER") OR (qInsOCRUploadLog.OCR_Reader_Name EQ "ABBYY&DOCPARSER") OR (qInsOCRUploadLog.OCR_Reader_Name EQ "EXCELCSV"))>
-					<cfquery name="qUpdOCRUploadAmount" datasource="#application.datasource#">
+					<cfset useLakebaseForqUpdOCRUploadAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdOCRUploadAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#OCRUploadID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"db_input_filename" = "#strFileName#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdOCRUploadAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdOCRUploadAmount>
+<cfquery name="qUpdOCRUploadAmount" datasource="#application.datasource#">
 						UPDATE 
 							OCR_Upload_Log
 						SET 
 							DB_Input_FileName = '#strFileName#'
 						WHERE OCR_Upload_ID = '#OCRUploadID#'  AND Deleted = 0
 					</cfquery>
+</cfif>
 				</cfif>
 				
 				

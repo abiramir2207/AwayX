@@ -370,12 +370,30 @@ TABLE.Maintable TD
 					</cfquery>
 					<TD><!--- Brokers --->
 						<span ID="searchItemLabel">Broker</span><BR>
-						<cfquery name="GetBrokers" Datasource="#application.datasource#">
+						<cfset useLakebaseForGetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForGetBrokers>
+	<cftry>
+		<cfset GetBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"active_code" = "eq.A",
+				"line_of_business_id" = "eq.#GetFirstDefaultBiz.Line_Of_Business_ID#",
+				"deleted" = "eq.0",
+				"order" = "broker_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokers>
+<cfquery name="GetBrokers" Datasource="#application.datasource#">
 							SELECT *
 							FROM BSA_Foodservice_Brokers
 							WHERE  ACTIVE_CODE = 'A' AND Line_Of_Business_ID = '#GetFirstDefaultBiz.Line_Of_Business_ID#' AND Deleted = 0
 							ORDER BY Broker_Name
 						</cfquery>
+</cfif>
 						<CFPARAM NAME="FORM.Broker" DEFAULT="0">
 						<SELECT NAME="Broker" style="width: 200px;">
 							<OPTION VALUE="0">**ALL** Brokers</OPTION>

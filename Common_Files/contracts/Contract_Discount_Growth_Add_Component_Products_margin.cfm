@@ -1309,11 +1309,26 @@ SELECT		FIM.BSA_Foodservice_Items_Master_ID,
 		
 	</table>
 	
-	<CFQUERY NAME="getAllUOMs" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllUOMs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetAllUOMs>
+	<cftry>
+		<cfset getAllUOMs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "neq.3"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllUOMs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllUOMs>
+<CFQUERY NAME="getAllUOMs" datasource="#application.datasource#">
 		SELECT *
 		FROM Units_Of_Measure
 		where Unit_Of_Measure_ID <> 3
 	</CFQUERY>
+</cfif>
 
 	<!--- Add products to products collection in the structure --->
 	
@@ -1483,9 +1498,25 @@ SELECT		FIM.BSA_Foodservice_Items_Master_ID,
 			<CFLOOP INDEX="LoadedProductData" LIST="#Product_Key_List#">
 				<CFSET ThisProductData = evaluate("LoadedGrowthDataStruct.Products.#LoadedProductData#")>
 				
-				<cfquery name="GetDisplayGroupName" dbtype="query">
+				<cfset useLakebaseForGetDisplayGroupName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_comp_products")>
+<cfif useLakebaseForGetDisplayGroupName>
+	<cftry>
+		<cfset GetDisplayGroupName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_comp_products", {
+				"bsa_foodservice_items_master_id" = "eq.#ThisProductData.BSA_Foodservice_Items_Master_ID#",
+				"select" = "displaygroupname"
+			}), "displaygroupname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDisplayGroupName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDisplayGroupName>
+<cfquery name="GetDisplayGroupName" dbtype="query">
 					select DisplayGroupName from Get_Growth_Comp_Products where BSA_Foodservice_Items_Master_ID = '#ThisProductData.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 				<cfif GetDisplayGroupName.DisplayGroupName NEQ currentheader>
 					<cfset currentheader = GetDisplayGroupName.DisplayGroupName />
 					<cfset currentheader_id = #REREPLACE(trim(GetDisplayGroupName.DisplayGroupName),' ','_','ALL')# />

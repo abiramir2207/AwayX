@@ -243,11 +243,31 @@ Processes form information from the previous page.
 </cfquery>
 <cfif ! form.Discount_Fixed_Prices>
 	<cfset Ideal_Price = 0>
-	<cfquery name="UpdData" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ideal_price_template_list")>
+<cfif useLakebaseForUpdData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ideal_price_template_list",
+			{
+				"first_parent_id" = "eq.#getTemplateParentID.First_Parent_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_date" = "#now()#",
+				"deleted_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdData>
+<cfquery name="UpdData" datasource="#application.datasource#">
 		UPDATE Ideal_Price_Template_List
 		SET Deleted =1, Deleted_Date = getdate(), Deleted_By = '#request.AccessStructure.User_ID#'
 		WHERE First_Parent_ID = #getTemplateParentID.First_Parent_ID#
 	</cfquery>
+</cfif>
 </cfif>
 <!--- 114617 :: Ideal Price END --->
 
@@ -555,12 +575,28 @@ Processes form information from the previous page.
 	DELETE FROM Payment_Template_Mapping WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
 </cfquery>
 
+<cfset useLakebaseForGetPaymentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForGetPaymentTypes>
+	<cftry>
+		<cfset GetPaymentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPaymentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPaymentTypes>
 <cfquery name="GetPaymentTypes" datasource="#application.datasource#">
 	SELECT distinct *
 	FROM Payment_Type
 	WHERE Deleted = 0
 	AND Active = 1
 </cfquery>
+</cfif>
 
 <cfloop query="GetPaymentTypes">
 	<cfif isDefined("Form.Payment_Type_#Evaluate(Payment_Type_ID)#") AND Form['Payment_Type_#Payment_Type_ID#'] EQ 1>

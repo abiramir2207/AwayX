@@ -175,12 +175,31 @@
 		<!--- ---------------------------------update Release_Notes BEGIN--------------------------------- --->
 		<cfif qGetPunchComplete.recordcount GT 0>
 			<cfoutput  QUERY="qGetPunchComplete">
-				<cfquery name="updatePunchReleaseNote" datasource="#application.datasource#">
+				<cfset useLakebaseForupdatePunchReleaseNote = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForupdatePunchReleaseNote>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"ba_ticket_number" = "eq.#qGetPunchComplete.Punch_ID#",
+				"release_notes" = "is.null"
+			},
+			{
+				"release_notes" = "#qGetPunchComplete.Punch_Release_Notes#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatePunchReleaseNote = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatePunchReleaseNote>
+<cfquery name="updatePunchReleaseNote" datasource="#application.datasource#">
 					update	work_request
 					set 	Release_Notes ='#qGetPunchComplete.Punch_Release_Notes#'
 					where 	BA_Ticket_Number = '#qGetPunchComplete.Punch_ID#'
 					and 	Release_Notes is NULL
 				</cfquery>
+</cfif>
 			</cfoutput>			
 		</cfif>
 			update Release_Notes for  WRs.<br>

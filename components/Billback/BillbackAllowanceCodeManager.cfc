@@ -574,12 +574,30 @@
 						<CFSET Paid_Rate_per_Component = Paid_Amount_For_This_Program>
 					</CFIF>
 					
-					<CFQUERY NAME="CompAlloCode" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForCompAlloCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components") AND application.oLakebase.isTableMigrated("program_growth_components_name")>
+<cfif useLakebaseForCompAlloCode>
+	<cftry>
+		<cfset CompAlloCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("program_growth_components", {
+				"program_growth_component_id" = "eq.#Program_Growth_Component_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_growth_components_name_id"
+			}, "program_growth_components_name_id", "program_growth_components_name", "program_growth_components_name_id", "allowance_code_id"), "allowance_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCompAlloCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCompAlloCode>
+<CFQUERY NAME="CompAlloCode" DATASOURCE="#Application.Datasource#">
 						SELECT PGCN.Allowance_Code_ID
 						FROM Program_Growth_Components PGC
 						INNER JOIN Program_Growth_Components_Name PGCN ON PGCN.Program_Growth_Components_Name_ID = PGC.Program_Growth_Components_Name_ID
 						WHERE PGC.Program_Growth_Component_ID = '#Program_Growth_Component_ID#' AND PGC.Program_ID = #Program_ID# AND PGC.Deleted = 0
 					</CFQUERY>
+</cfif>
 					<cfset useLakebaseForInsGrowthData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_allowancecode_allocation")>
 <cfif useLakebaseForInsGrowthData>
 	<cftry>

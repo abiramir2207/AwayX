@@ -15,6 +15,25 @@
 	<cfargument name="profile_ID" type="string" required="true" />
 	<cfargument name="forbidtype" type="string" required="true" />
 	<cfargument name="forbidaccesstype" type="string" required="true" />
+<cfset useLakebaseForqgetApprovalSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_template")>
+<cfif useLakebaseForqgetApprovalSettings>
+	<cftry>
+		<cfset qgetApprovalSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_template", {
+				"deleted" = "eq.0",
+				"template_id" = "eq.#arguments.ProgramType_ID#",
+				"forbid_type" = "eq.#arguments.forbidType#",
+				"forbid_access_type" = "eq.#arguments.forbidaccesstype#",
+				"profile_id" = "eq.#arguments.profile_ID#",
+				"select" = "template_id"
+			}), "template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetApprovalSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetApprovalSettings>
 <cfquery name="qgetApprovalSettings" datasource="#application.datasource#">
 	select 	distinct template_id 
 						from 	Profile_Forbidden_Template 
@@ -24,6 +43,7 @@
 								AND	Forbid_Access_Type = #arguments.forbidaccesstype#
 								AND profile_id = #arguments.profile_ID#
 </cfquery>
+</cfif>
 <cfreturn qgetApprovalSettings />
 </cffunction>
 

@@ -16,26 +16,7 @@
 
 
 <CFIF Form.up_sv EQ 0>
-	<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
-<cfif useLakebaseForInsert_Data>
-	<cftry>
-		<cfset application.oLakebase.insertRow("_users_settings", {
-			"user_id" = "#request.AccessStructure.Company_Main_ID#",
-			"payables_expect_rate" = "#Payables_Expect_Rate#",
-			"payables_expect_rate_calc_percent_fob" = "#Payables_Expect_Rate_Calc_percent_FOB#",
-			"payables_expect_rate_calc_dollar_case" = "",
-			"payables_expect_rate_period" = "#Payables_Expect_Rate_Period#",
-			"payables_expect_rate_include_period" = "#Payables_Expect_Rate_Include_Period#",
-			"payables_expect_rate_highlight_billback" = "#Payables_Expect_Rate_Highlight_billback#",
-			"payables_expect_rate_date_updated" = "#Date_Updated#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsert_Data = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsert_Data>
-<CFQUERY NAME="Insert_Data" datasource="#application.datasource#">
+	<CFQUERY NAME="Insert_Data" datasource="#application.datasource#">
 		INSERT INTO _Users_Settings
 			(
 				User_ID,
@@ -61,7 +42,6 @@
 				#Date_Updated#
 			)
 	</CFQUERY>
-</cfif>
 <CFELSE>
 	<cfset useLakebaseForUpdate_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
 <cfif useLakebaseForUpdate_Data>

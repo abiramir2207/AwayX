@@ -226,11 +226,26 @@
 				<CFSET Renewed_Program_ID = insert.Contract_Main_ID>
 				
 				
+<cfset useLakebaseForgetTemplateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetTemplateSettings>
+	<cftry>
+		<cfset getTemplateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#Program_Packet.Basic_Information.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateSettings>
 <cfquery name="getTemplateSettings" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = '#Program_Packet.Basic_Information.ProgramType_ID#'
 </cfquery>
+</cfif>
 				
 					<!--- save accounting specialist --->
 <cfif application.returned_customer_setting.Accounting_Specialist eq 1>
@@ -970,12 +985,31 @@ SELECT Program_BidRequest_Component_ID = @@IDENTITY
 						</CFLOOP>
 						
 						<!---Query to do the update--->
-						<cfquery name="UpdateGrowthWithParentID" datasource="#application.datasource#">
+						<cfset useLakebaseForUpdateGrowthWithParentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForUpdateGrowthWithParentID>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_components",
+			{
+				"parent_id" = "eq.#Old_Growth_Component_ID#",
+				"program_id" = "eq.#Renewed_Program_ID#"
+			},
+			{
+				"parent_id" = "#Mapped_Growth_Component_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateGrowthWithParentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateGrowthWithParentID>
+<cfquery name="UpdateGrowthWithParentID" datasource="#application.datasource#">
 						UPDATE Program_Growth_Components
 						SET Parent_ID = '#Mapped_Growth_Component_ID#'
 						WHERE Parent_ID = '#Old_Growth_Component_ID#'
 						AND Program_ID = '#Renewed_Program_ID#'
 						</cfquery>
+</cfif>
 
 					</CFLOOP>	
 				</CFIF>

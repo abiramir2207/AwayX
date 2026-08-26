@@ -116,9 +116,22 @@
       			,Value
 		  FROM _Settings
 	</cfquery>
-	<cfquery name="qApp_Settings" datasource="#application.datasource#">
+	<cfset useLakebaseForqApp_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqApp_Settings>
+	<cftry>
+		<cfset qApp_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqApp_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqApp_Settings>
+<cfquery name="qApp_Settings" datasource="#application.datasource#">
 		SELECT * FROM _application_settings
 	</cfquery>
+</cfif>
 
 	<cfset settings = []>
 	<cfoutput query="qSettings">

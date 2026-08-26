@@ -392,11 +392,28 @@ AND Contract_Products.Deleted = 0
 </cfif>
 <cfif form.Discount_Type_ID GT 0>
 <tr><td>
-	<cfquery name="DiscountDescription" datasource="#application.datasource#">
+	<cfset useLakebaseForDiscountDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_type")>
+<cfif useLakebaseForDiscountDescription>
+	<cftry>
+		<cfset DiscountDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_type", {
+				"discount_type_id" = "eq.#form.Discount_Type_ID#",
+				"order" = "discount_type_id.desc",
+				"select" = "discount_type_desc"
+			}), "discount_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDiscountDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDiscountDescription>
+<cfquery name="DiscountDescription" datasource="#application.datasource#">
 	SELECT Discount_Type_Desc FROM Discount_Type
 	WHERE Discount_Type_ID = #form.Discount_Type_ID#
 	ORDER BY Discount_Type_ID DESC
 	</cfquery>
+</cfif>
 <span class="legend">Discount Type:</span><br>
 	#DiscountDescription.Discount_Type_Desc#
 	<br>

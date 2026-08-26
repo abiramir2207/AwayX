@@ -35,12 +35,29 @@ Price - avg. FOB Fixed Price = Rebate
 		FROM	qGetInvoiceInfoFOB
 	</cfquery>
 	<!------ get the price used for that max volume ----->
-	<cfquery name="qGetMostCommonlyUsedPrice" dbtype="query">
+	<cfset useLakebaseForqGetMostCommonlyUsedPrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetinvoiceinfofob")>
+<cfif useLakebaseForqGetMostCommonlyUsedPrice>
+	<cftry>
+		<cfset qGetMostCommonlyUsedPrice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetinvoiceinfofob", {
+				"volume_" = "in.(voiced >= #qGetMaxVolume.MaxVolume_Invoiced#)",
+				"order" = "unitprice.asc",
+				"select" = "unitprice"
+			}), "unitprice"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetMostCommonlyUsedPrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetMostCommonlyUsedPrice>
+<cfquery name="qGetMostCommonlyUsedPrice" dbtype="query">
 		SELECT	unitPrice
 		FROM	qGetInvoiceInfoFOB
 		WHERE	Volume_Invoiced >= #qGetMaxVolume.MaxVolume_Invoiced#
 		Order By unitPrice
-	</cfquery>	
+	</cfquery>
+</cfif>	
 	<cfset FOBPricePaid = qGetMostCommonlyUsedPrice.unitPrice>
 	<TR CLASS="MaintableTHEAD">
 		<TD COLSPAN="5" ALIGN="RIGHT"><B>Most commonly used FOB price (invoice) / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>

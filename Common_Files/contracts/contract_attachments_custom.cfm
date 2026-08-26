@@ -728,9 +728,25 @@ function hide17() { $('#sdoc17').hide(); location.reload(); }
 					<CFOUTPUT QUERY="Current_sel">
 						<!--- DATA OUTPUT --->
 						<TR ID="TR_Delete_#CurrentRow#" BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#" VALIGN="top">
-						<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
 								SELECT Name_First, Name_Last FROM _USERS WHERE User_ID = '#Uploaded_By#'
 						</CFQUERY>
+</cfif>
 							<CFSET SIZEinMB = #Doc_size#/1024>
 							<TD ID="TD1_#CurrentRow#" WIDTH="16%">#DateFormat(Uploaded_Date,"mm/dd/yyyy")#<BR>#User_Name.Name_First# #User_Name.Name_Last#&nbsp;</TD>
 							 	<cfset DecodedDoc_Uni_Name = Replace(Doc_Uni_Name,"á","charE1a","ALL") />

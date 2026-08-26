@@ -163,7 +163,21 @@ Added/Changed: Added below 5 Argumnets--->
 			
 			<Cfif len(trim(arguments.GLList)) GT 0>
 				<cfloop list="#arguments.GLList#" index="GL_Account_ID">
-				<cfquery name="InsertGLs" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertGLs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_component_mapping")>
+<cfif useLakebaseForInsertGLs>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_component_mapping", {
+			"gl_account_id" = "#GL_Account_ID#",
+			"component_name_id" = "#qGetActiveComps.Program_Growth_Components_Name_ID#",
+			"discount_type_id" = "4"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertGLs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertGLs>
+<cfquery name="InsertGLs" datasource="#application.datasource#">
 				INSERT INTO GL_Component_Mapping
 				(
 					GL_Account_ID,
@@ -177,6 +191,7 @@ Added/Changed: Added below 5 Argumnets--->
 					4
 				)
 				</cfquery>
+</cfif>
 				</cfloop>
 			</Cfif>
 <!--- Dev Note: drachala; D28881: Update growth component settings to include additional elements  START
@@ -398,12 +413,29 @@ Added/Changed: Added this function to SaveCredit TypeExclusion--->
 			<cfset usedAllowanceCodes = ValueList(qGetAllTemplateDiscountComponents.Allowance_Code_ID) />
 			<cfif ListFindNOCase(usedAllowanceCodes, arguments.allowanceCodeId) NEQ 0>
 				<!------ check if this allowance cod eis used by teh same component ----->
-				<cfquery name="qCheckIfCurrentcomponent" dbtype="query">
+				<cfset useLakebaseForqCheckIfCurrentcomponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalltemplatediscountcomponents")>
+<cfif useLakebaseForqCheckIfCurrentcomponent>
+	<cftry>
+		<cfset qCheckIfCurrentcomponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalltemplatediscountcomponents", {
+				"allowance_code_id" = "eq.#arguments.allowanceCodeId#",
+				"component_id" = "eq.#arguments.compId#",
+				"select" = "component_id"
+			}), "component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfCurrentcomponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfCurrentcomponent>
+<cfquery name="qCheckIfCurrentcomponent" dbtype="query">
 					SELECT	Component_ID
 					FROM	qGetAllTemplateDiscountComponents
 					WHERE	Allowance_Code_ID = #arguments.allowanceCodeId#
 					AND		Component_ID = #arguments.compId#
 				</cfquery>
+</cfif>
 				<cfif not qCheckIfCurrentcomponent.recordCount>
 					<cfset bProceedWithUpdate = 0 />
 					<cfset bCompNameExists = 3 />

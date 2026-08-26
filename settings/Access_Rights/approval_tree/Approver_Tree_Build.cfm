@@ -128,11 +128,27 @@ WHERE     (dbo.BSA_Foodservice_Brokers.Active_Code = 'A') AND (dbo.BSA_Foodservi
 				</CFIF>
 				<!--- end get Approvers --->
 				
-				<CFQUERY NAME="getMarkets" datasource="#application.datasource#">
+				<cfset useLakebaseForgetMarkets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_markets")>
+<cfif useLakebaseForgetMarkets>
+	<cftry>
+		<cfset getMarkets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("service_markets", {
+				"service_region_id" = "eq.#DB_ServiceRegion_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarkets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarkets>
+<CFQUERY NAME="getMarkets" datasource="#application.datasource#">
 					SELECT *
 					FROM Service_Markets
 					WHERE Service_Region_ID = '#DB_ServiceRegion_ID#' AND DELETED = 0
 				</CFQUERY>
+</cfif>
 				
 					<CFLOOP QUERY="getMarkets">
 
@@ -168,11 +184,27 @@ WHERE     (dbo.BSA_Foodservice_Brokers.Active_Code = 'A') AND (dbo.BSA_Foodservi
 									</CFQUERY>
 									
 									<CFLOOP QUERY="getPositionHolders">
-										<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+										<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#getPositionHolders.User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 											SELECT Name_First, Name_Last
 											FROM _Users
 											WHERE User_ID = '#getPositionHolders.User_ID#'
 										</CFQUERY>
+</cfif>
 										<cfset temp=StructInsert(ThisLevelStructure,"ID_"&getPositionHolders.User_ID, getUserName.Name_First&" "&getUserName.Name_Last)>
 									</CFLOOP>
 								</CFLOOP>

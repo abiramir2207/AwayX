@@ -66,11 +66,27 @@
 			and pr1.Component_Name_ID = getExcludedProgramRates.Component_Name_ID
 		</CFQUERY>  --->
 		
-		<CFQUERY NAME="getZeroProductgroups" dbtype="query">
+		<cfset useLakebaseForgetZeroProductgroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getexcludedprogramrates")>
+<cfif useLakebaseForgetZeroProductgroups>
+	<cftry>
+		<cfset getZeroProductgroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getexcludedprogramrates", {
+				"rate" = "eq.0",
+				"select" = "product_group"
+			}), "product_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetZeroProductgroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetZeroProductgroups>
+<CFQUERY NAME="getZeroProductgroups" dbtype="query">
 			select distinct Product_Group
 			from getExcludedProgramRates
 			where rate = 0
-		</CFQUERY> 
+		</CFQUERY>
+</cfif> 
 		
 		<cfset zeroproductgrouplist = Valuelist(getZeroProductgroups.Product_Group)>
 		

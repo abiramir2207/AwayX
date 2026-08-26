@@ -175,7 +175,23 @@ Updated_By
 			<cfif Get_LastUpdated_Details.RecordCount gt 0>
 				<font size="2"><b>This <cfif URL.CD_ID neq 0>Item <cfelse> setting</cfif> was last updated on <cfoutput>#dateformat(Get_LastUpdated_Details.Updated_Date, 'm/d/yyy')# #timeformat(Get_LastUpdated_Details.Updated_Date, 'h:mm:ss TT')#</cfoutput> by <cfoutput>#getUserName.User_FullName#</cfoutput></b></font></td></tr></table>
 			</cfif>
-			<cfquery name="Get_Data" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_source")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_source", {
+				"deleted" = "eq.0",
+				"order" = "program_bid_source_description.asc",
+				"select" = "program_bid_source_id,program_bid_source_code,program_bid_source_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_source_id,program_bid_source_code,program_bid_source_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
+<cfquery name="Get_Data" datasource="#application.datasource#">
 				SELECT	Program_Bid_Source_ID,
 						Program_Bid_Source_Code,
 						Program_Bid_Source_Description,
@@ -188,6 +204,7 @@ Updated_By
 				WHERE 	Deleted = 0  
 				ORDER BY Program_Bid_Source_Description
 			</cfquery>
+</cfif>
 			<table border="0" cellspacing="10" cellpadding="0" width="750">
 				<tr>
 					<td valign="top">

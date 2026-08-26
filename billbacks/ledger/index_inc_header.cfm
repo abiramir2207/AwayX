@@ -59,11 +59,27 @@ exec BB_D_Program_Detail
 </cfquery>
 
 <!---Gets user friendly names--->
+<cfset useLakebaseForGetDistributorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistributorName>
+	<cftry>
+		<cfset GetDistributorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#DistributorNumber#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorName>
 <cfquery name="GetDistributorName" datasource="#application.datasource#">
 SELECT Name 
 FROM BSA_Foodservice_Customers 
 WHERE BSA_Foodservice_Customers_ID = '#DistributorNumber#'
 </cfquery>
+</cfif>
 
 <!---Gets program number--->
 <cfquery name="GetProgramNumber" datasource="#application.datasource#">

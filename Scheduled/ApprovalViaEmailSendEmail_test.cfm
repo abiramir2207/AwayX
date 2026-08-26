@@ -251,10 +251,26 @@ and Contract_Main_ID in (250)
 					<cfset variables.msgFooter = variables.msgFooter & "#variables.qGetMaxSentId.maxSentId#" & "|" & "#variables.qGetUserPrograms.User_ID#" />
 					<cfset variables.msgFooter = variables.msgFooter & " ---" />
 
-					<cfquery name="Getcompany" datasource="#application.datasource#">
+					<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 						SELECT 	Top 1 Company_Main_ID
 						FROM 	Company_Main
 					</cfquery>
+</cfif>
 
 					<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID />
 					<cfset request.AccessStructure.User_ID = variables.qGetUserPrograms.User_ID />

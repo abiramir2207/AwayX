@@ -95,12 +95,28 @@
 	 <!---<cfdump var="#xmlProgramDoc#">
 	  <cfif getProgramheader.approved_user EQ "gvegulla@bigredflame.com">
 	 <cfdump var="#xmlProgramDoc#"><HR></cfif> --->
-	<CFQUERY NAME="getprogramdetails" datasource="#application.datasource#">
+	<cfset useLakebaseForgetprogramdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForgetprogramdetails>
+	<cftry>
+		<cfset getprogramdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"bsa_program_id" = "eq.#RebateID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetprogramdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetprogramdetails>
+<CFQUERY NAME="getprogramdetails" datasource="#application.datasource#">
 		select * from
 		Program_WebServices_Detail
 		where BSA_Program_Id = '#RebateID#'
 		and deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	
 	<cfif getprogramdetails.recordcount GT 0>

@@ -76,12 +76,28 @@
   <cfset load_prodpg()>
 </cfif>
 
+<cfset useLakebaseForqUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_units_of_measure")>
+<cfif useLakebaseForqUOM>
+	<cftry>
+		<cfset qUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_units_of_measure", {
+				"deleted" = "eq.0",
+				"select" = "budget_units_of_measure_id,unit_of_measure_abbreviation"
+			}), "budget_units_of_measure_id,unit_of_measure_abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUOM>
 <cfquery name="qUOM" datasource="#application.datasource#">
     SELECT   Budget_Units_of_Measure_ID
            , Unit_Of_Measure_Abbreviation
       FROM Budget_Units_of_Measure
      WHERE Deleted = 0
 </cfquery>
+</cfif>
 <cfscript>
   main = {};
   elements = {};

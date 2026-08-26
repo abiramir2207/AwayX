@@ -28,12 +28,31 @@
 		<cfargument name="visibility" required="false" default="" />
 				
 		<!---set deleted to 1 for all comp/profile combination--->
-		<cfquery name="qUpdate" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lumpsum_component_profile")>
+<cfif useLakebaseForqUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_lumpsum_component_profile",
+			{
+				"deleted" = "eq.0",
+				"program_lumpsum_component_name_id" = "eq.#arguments.compNameId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdate>
+<cfquery name="qUpdate" datasource="#application.datasource#">
 			UPDATE	Program_LumpSum_Component_Profile
 			SET			Deleted = 1
 			WHERE	Deleted = 0
 			AND		Program_LumpSum_Component_Name_ID = #arguments.compNameId#
 		</cfquery>
+</cfif>
 
 		<!---loop over the list of profile id's and insert for each profile/component combination--->
 		<cfloop index="profIndx" list="#arguments.lProfileId#">

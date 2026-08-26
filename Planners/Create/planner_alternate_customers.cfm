@@ -157,9 +157,26 @@ Description  :  Main Screen for the alternate customer popup. The save/delete fu
 </cfif> 
 
 <cfoutput>
-	<cfquery name="GetPrgAltDistInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetPrgAltDistInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGetPrgAltDistInfo>
+	<cftry>
+		<cfset GetPrgAltDistInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#local.programID#",
+				"alternate_customer_flag" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPrgAltDistInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPrgAltDistInfo>
+<cfquery name="GetPrgAltDistInfo" datasource="#application.datasource#">
 		SELECT * FROM Contract_Distributors WHERE Contract_Main_ID = #local.programID# AND Alternate_Customer_Flag = 1 AND Deleted = 0
 	</cfquery>
+</cfif>
 </cfoutput>
 
 <!--- Setting the tab display --->

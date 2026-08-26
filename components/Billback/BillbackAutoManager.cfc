@@ -131,12 +131,28 @@
 		<cfset var BillbackManager = CreateObject("component","components.Billback.BillbackManager")>
 		
 		<!---  Get information on the lump sums --->
-		<cfquery name="Contract_Info" datasource="#application.datasource#">
+		<cfset useLakebaseForContract_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForContract_Info>
+	<cftry>
+		<cfset Contract_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"select" = "rebate_recipient_customer_id,contract_number,contract_title,contract_start_date,contract_end_date,creating_user_position_id,revision_of_contract_main_id,creator_id"
+			}), "rebate_recipient_customer_id,contract_number,contract_title,contract_start_date,contract_end_date,creating_user_position_id,revision_of_contract_main_id,creator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForContract_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForContract_Info>
+<cfquery name="Contract_Info" datasource="#application.datasource#">
 			SELECT Rebate_Recipient_Customer_ID, Contract_Number, Contract_Title, Contract_Start_Date, Contract_End_Date,
 			Creating_User_Position_ID, Revision_of_Contract_Main_ID, Creator_ID
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#arguments.Contract_Main_ID#'
 		</cfquery>
+</cfif>
 		
 		<Cfif Contract_Info.Recordcount GT 0 AND len(trim(Contract_Info.Rebate_Recipient_Customer_ID)) GT 0>
 			

@@ -3,29 +3,11 @@
 
 <cfif blnSubmit IS 1>
 
-<cfset useLakebaseForUpdateDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForUpdateDeductions>
-	<cftry>
-		<cfset application.oLakebase.updateRows("deductions",
-			{
-				"deduction_id" = "eq.#Deduction_ID#"
-			},
-			{
-				"dd_closure_id" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdateDeductions = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdateDeductions>
 <cfquery name="UpdateDeductions" datasource="#application.datasource#">
 UPDATE Deductions 
 SET DD_Closure_ID = null
 WHERE Deduction_ID = '#Deduction_ID#'
 </cfquery>
-</cfif>
 
 <script>
 opener.location.reload(true);
