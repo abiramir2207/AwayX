@@ -330,7 +330,23 @@
 
 	<cffunction name="PrgChanges" output="false" returntype="query">
 		<cfargument name="programId" type="numeric" required="true" />
-		<cfquery name="qPrgChanges" datasource="#application.datasource#">
+		<cfset useLakebaseForqPrgChanges = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_revision_changes")>
+<cfif useLakebaseForqPrgChanges>
+	<cftry>
+		<cfset qPrgChanges = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_revision_changes", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"select" = "products_added,products_removed,distributors_removed,distributors_added,operators_added,operators_removed,start_date_changed,end_date_changed"
+			}), "products_added,products_removed,distributors_removed,distributors_added,operators_added,operators_removed,start_date_changed,end_date_changed"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPrgChanges = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPrgChanges>
+<cfquery name="qPrgChanges" datasource="#application.datasource#">
 			select   Products_Added
 						, Products_Removed
 						, Distributors_Removed
@@ -343,6 +359,7 @@
 			where  Contract_Main_ID = #arguments.programId#
 			and 	  Deleted = 0
 		</cfquery>
+</cfif>
 		<cfreturn qPrgChanges />
 	</cffunction>
 

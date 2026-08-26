@@ -11,10 +11,25 @@
 	<cfset ProductGroupManager = CreateObject("component", "components.programs.products.ProductGroupManager").init() />
 	<cfset this.GroupDataManager = CreateObject("component", "components.products.Group.DataManager") />
 	<!--- get install path --->
-	<!--- 	<CFQUERY NAME="getInstallationPath" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0,6,0,0)#">
+	<!--- 	<cfset useLakebaseForgetInstallationPath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetInstallationPath>
+	<cftry>
+		<cfset getInstallationPath = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "application_installation_root_location"
+			}), "application_installation_root_location"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetInstallationPath = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetInstallationPath>
+<CFQUERY NAME="getInstallationPath" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0,6,0,0)#">
 		SELECT Application_Installation_Root_Location
 		FROM General_Settings
-	</CFQUERY> --->
+	</CFQUERY>
+</cfif> --->
 
 	<!---set the temp file path to the app install path--->
 	<!--- <cfset this.tmpFilePath = getInstallationPath.Application_Installation_Root_Location & "\Temp_Files\Rebates"/> --->
@@ -78,12 +93,28 @@
     		WHERE Contract_Main.Contract_Main_ID = '#arguments.programID#'
   	  </cfquery>
 
-      <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+      <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,single_component_per_discount_type"
+			}), "first_parent_id,single_component_per_discount_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
     		SELECT 	First_parent_ID,
 					Single_Component_Per_Discount_Type
         	FROM Program_Control_Panel_Options
         	WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
       </cfquery>
+</cfif>
 
 		<!--- Dev Note: KAL; 8575 --->
 		<cfif IsDateExclusion eq 1
@@ -110,7 +141,22 @@
 			</cfscript>
       <cfset bDiscountRebateMaxRateOn = 0 />
 			<cfif isdefined("arguments.template_id") and arguments.template_id NEQ 0>
-				<cfquery name="qGettemplatesettings" datasource="#application.datasource#">
+				<cfset useLakebaseForqGettemplatesettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGettemplatesettings>
+	<cftry>
+		<cfset qGettemplatesettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.template_id#",
+				"select" = "discount_rebates_item_level,discount_rebates_group_level,ezbutton_update_with_latest_template_settings_on_revise,ez_contract_id,discount_rebate_max_rate_on,ezbutton_enter_beyond_max_rates,ezbutton_default_show_item_rates"
+			}), "discount_rebates_item_level,discount_rebates_group_level,ezbutton_update_with_latest_template_settings_on_revise,ez_contract_id,discount_rebate_max_rate_on,ezbutton_enter_beyond_max_rates,ezbutton_default_show_item_rates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGettemplatesettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGettemplatesettings>
+<cfquery name="qGettemplatesettings" datasource="#application.datasource#">
 					SELECT Discount_Rebates_Item_Level,
 								 Discount_Rebates_group_Level,
 								 EzButton_Update_With_Latest_Template_Settings_On_Revise,
@@ -122,6 +168,7 @@
 								 Program_Control_Panel_Options
 					WHERE  ProgramControl_Panel_Options_ID = #arguments.template_id#
 				</cfquery>
+</cfif>
         <cfset bDiscountRebateMaxRateOn = qGettemplatesettings.Discount_Rebate_Max_Rate_On />
 
        <!---  <cfif (isDefined("arguments.RevisionOfExistingContract") AND arguments.RevisionOfExistingContract EQ 1)>
@@ -805,12 +852,28 @@
 
 			<cfloop query="qGetComps">
 				<!--- D38536  :: Alternate recapture rates per component START--->
-					<cfquery name="ARSettings" datasource="#application.datasource#">
+					<cfset useLakebaseForARSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForARSettings>
+	<cftry>
+		<cfset ARSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#Program_Rebates_Component_Name_ID#",
+				"status" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForARSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForARSettings>
+<cfquery name="ARSettings" datasource="#application.datasource#">
 						SELECT *
 						FROM Alternate_Recapture_Rate_Setting
 						WHERE Program_Rebates_Component_Name_ID = #Program_Rebates_Component_Name_ID#
 						AND Status = 0
 					</cfquery>
+</cfif>
 				<!--- D38536  :: Alternate recapture rates per component END--->
 				<cfscript>
 					//qGetCompName = comp.getComp(qGetComps.Program_Rebates_Component_Name_ID);
@@ -3342,11 +3405,27 @@
 
 				<cfparam name="arguments.rebateData.aComp[n].Claims_Mechanic" default="0" />
 
-				<cfquery name="GetCompInfo" datasource="#application.datasource#" cachedwithin="#createtimespan(0,0,20,0)#">
+				<cfset useLakebaseForGetCompInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForGetCompInfo>
+	<cftry>
+		<cfset GetCompInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"program_rebates_component_name_id" = "eq.#arguments.rebateData.aComp[n].compNameId#",
+				"select" = "external_id"
+			}), "external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompInfo>
+<cfquery name="GetCompInfo" datasource="#application.datasource#" cachedwithin="#createtimespan(0,0,20,0)#">
 				SELECT External_ID
 				FROM Program_Rebates_Component_Name
 				WHERE Program_Rebates_Component_Name_ID = '#arguments.rebateData.aComp[n].compNameId#'
 				</cfquery>
+</cfif>
 
 
 				<cfquery name="qInsertComps" datasource="#application.datasource#">
@@ -3703,7 +3782,25 @@
 			<!---flag groups to be processed if adding groups--->
 			<cfif bHasGroups>
 
-				<cfquery name="qFlagGroup" datasource="#application.datasource#">
+				<cfset useLakebaseForqFlagGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqFlagGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.rebateData.programId#"
+			},
+			{
+				"group_processed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFlagGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFlagGroup>
+<cfquery name="qFlagGroup" datasource="#application.datasource#">
 
 					UPDATE	Contract_Main
 					SET		Group_Processed = 1
@@ -3711,6 +3808,7 @@
 					AND 	Contract_Main_ID = #arguments.rebateData.programId#
 
 				</cfquery>
+</cfif>
 
 			<!---call SP to update program product volume --->
 			<cfelseif isDefined("arguments.dontCallSP") and arguments.dontCallSP neq 1>    <!---31869 - do not call when program has product groups as it would wipe out entered volume information for product members--->
@@ -3797,11 +3895,27 @@
 
 	<cffunction Name="getMaxProducts" access="public" output="false" returntype="numeric">
 		<cfif NOT isdefined("request.Max_Program_product_Display")>
-			<cfquery name="qGetMaxProducts" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetMaxProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqGetMaxProducts>
+	<cftry>
+		<cfset qGetMaxProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.accessstructure.company_Main_Id#",
+				"select" = "max_program_product_display"
+			}), "max_program_product_display"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetMaxProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetMaxProducts>
+<cfquery name="qGetMaxProducts" datasource="#application.datasource#">
 				Select		Max_Program_product_Display
 				From		_Users_Settings
 				Where		User_ID		=	'#request.accessstructure.company_Main_Id#'
 			</cfquery>
+</cfif>
 			<cfset request.Max_Program_product_Display = qGetMaxProducts.Max_Program_product_Display />
 		</cfif>
 		<!---Label - 21880: if request.Max_Program_product_Display is not numeric then defualt it to 250 --->
@@ -3838,11 +3952,27 @@
 			WHERE Contract_Products_Id  = '#conProdId#'
 		</cfquery>
         	<!--- Dev Note: drachala;  D27947: Deleted Product Groups and Capture START --->
-			<cfquery name="qIsGroup" datasource="#application.datasource#">
+			<cfset useLakebaseForqIsGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqIsGroup>
+	<cftry>
+		<cfset qIsGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_products_id" = "eq.#conProdId#",
+				"select" = "is_group,product_group_id,product_type_id,contract_main_id"
+			}), "is_group,product_group_id,product_type_id,contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsGroup>
+<cfquery name="qIsGroup" datasource="#application.datasource#">
 			SELECT is_group,Product_group_id,Product_Type_ID, contract_main_id
 			FROM Contract_Products
 			WHERE contract_Products_Id  = '#conProdId#'
 			</cfquery>
+</cfif>
 			<!--- Dev Note: drachala;  D27947: Deleted Product Groups and Capture END --->
 
 		<cfquery name="qDelRebateProduct3" datasource="#application.datasource#">
@@ -3863,11 +3993,27 @@
 		</cfquery>
 
 
-		<cfquery name="getProgID" datasource="#application.datasource#">
+		<cfset useLakebaseForgetProgID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForgetProgID>
+	<cftry>
+		<cfset getProgID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_products_id" = "eq.#conProdId#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgID>
+<cfquery name="getProgID" datasource="#application.datasource#">
 		 SELECT Contract_Main_ID
 		 FROM Contract_Products
 		 WHERE Contract_Products_ID = '#conProdId#'
 		</cfquery>
+</cfif>
 		<!---
 			28993/Anand Rao/28-Oct-2011
 			Single component changes
@@ -3882,11 +4028,29 @@
 				AND		PRPD.Deleted = 0
 			</cfquery>
 			<cfif getProductpresent.Recordcount EQ 0>
-				<cfquery name="updPrgRebComp" datasource="#application.datasource#">
+				<cfset useLakebaseForupdPrgRebComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForupdPrgRebComp>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_rebates_component",
+			{
+				"program_id" = "eq.#getProgID.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdPrgRebComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdPrgRebComp>
+<cfquery name="updPrgRebComp" datasource="#application.datasource#">
 					UPDATE Program_Rebates_Component
 					SET Deleted = 1
 					WHERE Program_ID = #getProgID.Contract_Main_ID#
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfif>
 
@@ -4396,13 +4560,30 @@
 			<cfif appsettings.getUseFixedPriceType() && isNumeric(Competitor_Name_ID) >  <!---&& this.getfixedComponentType(Program_ID) GT 0--->
 				<cfif Competitor_Name_ID EQ -1>
 					<!--- see if "other" record exists --->
-					<cfquery name="getOtherWonBy" datasource="#application.datasource#">
+					<cfset useLakebaseForgetOtherWonBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForgetOtherWonBy>
+	<cftry>
+		<cfset getOtherWonBy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_description" = "eq.#CompetitorSourceOther#",
+				"program_bid_won_by_code" = "eq.#Program_ID#",
+				"select" = "program_bid_won_by_description,program_bid_won_by_id"
+			}), "program_bid_won_by_description,program_bid_won_by_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOtherWonBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOtherWonBy>
+<cfquery name="getOtherWonBy" datasource="#application.datasource#">
 						SELECT Program_Bid_Won_By_Description,
 								Program_Bid_Won_By_ID
 						FROM	Program_Bid_Won_By
 						WHERE Program_Bid_Won_By_Description = '#CompetitorSourceOther#' AND
 							Program_Bid_Won_By_Code = '#Program_ID#'
 					</cfquery>
+</cfif>
 					<!--- Dont insert if it already exists --->
 					<cfif getOtherWonBy.RecordCount>
 						<cfset Competitor_Name_ID = getOtherWonBy.Program_Bid_Won_By_ID>
@@ -4459,12 +4640,29 @@
 
 
 		<!--- FIGURING OUT ALTERNATE RATE INDEX --->
-		<cfquery name="Check_Alternate_Rate_Index" datasource="#application.datasource#">
+		<cfset useLakebaseForCheck_Alternate_Rate_Index = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForCheck_Alternate_Rate_Index>
+	<cftry>
+		<cfset Check_Alternate_Rate_Index = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#arguments.component_name_id#",
+				"order" = "alternate_recapture_rate_index.asc",
+				"select" = "alternate_recapture_rate_index"
+			}), "alternate_recapture_rate_index"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Alternate_Rate_Index = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Alternate_Rate_Index>
+<cfquery name="Check_Alternate_Rate_Index" datasource="#application.datasource#">
 			SELECT alternate_recapture_rate_index
 			FROM alternate_recapture_rate_setting
 			WHERE Program_Rebates_Component_Name_ID = #arguments.component_name_id#
 			ORDER BY Alternate_Recapture_Rate_Index ASC
 		</cfquery>
+</cfif>
 
 		<cfquery name="Check_Alternate_Rate_Index" datasource="#application.datasource#">
 				<!---CHECK IF THERE ARE ANY EXISTING ALTERNATE RECAPTURE RATE RECORDS IF EXISIT DELETE THOSE RECORDS--->

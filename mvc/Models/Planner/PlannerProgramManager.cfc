@@ -908,7 +908,25 @@ Description  :  Manager for Planner Program
 						</cfif>
 					</cfif>
 
-					<cfquery name="qSaveFixedPriceData" datasource="#application.datasource#">
+					<cfset useLakebaseForqSaveFixedPriceData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForqSaveFixedPriceData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_fixed_price_product_data", {
+			"program_id" = "#New_Contract_Main_ID#",
+			"contract_products_id" = "#qSaveFixedContractProducts.Contract_Products_ID#",
+			"fixed_price_value" = "#local.thisRate#",
+			"unit_of_measure_id" = "#local.thisSelectedUOM#",
+			"program_fixed_component_id" = "#iFixedCompId#",
+			"user_picked_uom" = "#local.thisUserSelectedUOM#",
+			"user_picked_fixed_price" = "#local.thisUserSelectRate#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveFixedPriceData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveFixedPriceData>
+<cfquery name="qSaveFixedPriceData" datasource="#application.datasource#">
 						INSERT INTO Program_Fixed_Price_Product_Data
 							(
 								Program_ID,
@@ -930,6 +948,7 @@ Description  :  Manager for Planner Program
 								'#local.thisUserSelectRate#'
 							)
 					</cfquery>
+</cfif>
 
 				</cfloop>
 

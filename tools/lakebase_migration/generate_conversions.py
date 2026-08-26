@@ -86,6 +86,12 @@ def col_name(qualified: str) -> str:
     return qualified.strip().split(".")[-1].lower()
 
 
+def has_dynamic_identifier(*parts: str) -> bool:
+    """True if any table/column name contains '#' - a CFML variable used as a
+    dynamic SQL identifier (not a value), which the simple REST client can't express."""
+    return any("#" in p for p in parts)
+
+
 def sql_value_to_cf(v: str) -> str:
     v = v.strip()
     if v.upper() == "NULL":
@@ -138,6 +144,8 @@ def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
         return None, "SELECT column list contains functions/CASE - review manually"
     cols = [c.strip() for c in cols_raw.split(",")]
     is_star = cols_raw.strip() == "*"
+    if has_dynamic_identifier(table, *cols):
+        return None, "table/column name is a dynamic CFML variable (#...#) - review manually"
     pg_table = table.lower()
     filters = {}
     if where:
@@ -146,7 +154,7 @@ def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
             return None, "WHERE clause too complex (OR/parens/functions) - review manually"
     if order_by:
         order_by = order_by.strip()
-        if UNSAFE_RE.search(order_by) or "," in order_by:
+        if UNSAFE_RE.search(order_by) or "," in order_by or has_dynamic_identifier(order_by):
             return None, "ORDER BY too complex - review manually"
         parts = order_by.split()
         ocol = col_name(parts[0])
@@ -190,6 +198,8 @@ def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     table, set_clause, where = m.group(1), m.group(2), m.group(3)
     if UNSAFE_RE.search(set_clause):
         return None, "SET clause too complex - review manually"
+    if has_dynamic_identifier(table):
+        return None, "table name is a dynamic CFML variable (#...#) - review manually"
     filters = parse_where_to_filters(where)
     if filters is None:
         return None, "WHERE clause too complex - review manually"
@@ -199,6 +209,8 @@ def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
         if "=" not in s:
             return None, "Could not parse SET assignment"
         col, val = s.split("=", 1)
+        if has_dynamic_identifier(col):
+            return None, "SET column name is a dynamic CFML variable (#...#) - review manually"
         data[col_name(col)] = sql_value_to_cf(val.strip())
 
     var_name = f"useLakebaseFor{query_name.replace('.', '_')}"
@@ -244,6 +256,8 @@ def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
         return None, "INSERT column/value count mismatch - review manually"
     if any(UNSAFE_RE.search(v) for v in vals):
         return None, "INSERT VALUES contain functions/expressions - review manually"
+    if has_dynamic_identifier(table, *cols):
+        return None, "table/column name is a dynamic CFML variable (#...#) - review manually"
 
     var_name = f"useLakebaseFor{query_name.replace('.', '_')}"
     pg_table = table.lower()
@@ -278,6 +292,10 @@ def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[st
 
     generated, skipped, details = 0, 0, []
     for qname in query_names:
+        if "#" in qname:
+            skipped += 1
+            details.append((qname, None, "query name itself is a dynamic CFML variable (#...#) - review manually"))
+            continue
         rx = re.compile(QUERY_RE_TMPL.format(name=re.escape(qname)), re.IGNORECASE | re.DOTALL)
         m = rx.search(text)
         if not m:

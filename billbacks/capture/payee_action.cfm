@@ -1311,7 +1311,23 @@ User can chose the new Option C to do replace.
 </cfif>
 
 		   	<!--- Insert new record --->
-			<cfquery name="InsertNewSummedRecord" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertNewSummedRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForInsertNewSummedRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_product_detail", {
+			"billback_product_id" = "#GetRecordsToUpdate.Billback_Product_ID#",
+			"billback_id" = "#FORM.Billback_ID#",
+			"bb_product_type_id" = "#GetRecordsToUpdate.BB_Product_Type_ID#",
+			"bb_rate" = "#GetRecordsToUpdate.NewSum#",
+			"distributor_id_earned" = "#GetRecordsToUpdate.Distributor_ID_Earned#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewSummedRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewSummedRecord>
+<cfquery name="InsertNewSummedRecord" datasource="#application.datasource#">
 				INSERT INTO Billback_Product_Detail
 				(
 					Billback_Product_ID,
@@ -1329,6 +1345,7 @@ User can chose the new Option C to do replace.
 					'#GetRecordsToUpdate.Distributor_ID_Earned#'
 				)
 			</cfquery>
+</cfif>
 		   </cfloop>		
 		<!--- 
 			END:104331 - Billback did not consolidate with associated shipto on change/Anand Rao/18-Mar-2021 

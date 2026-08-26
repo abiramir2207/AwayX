@@ -7,11 +7,26 @@
 	<cffunction name="getComp" output="false" returntype="query">
 		<cfargument name="GL_Account_ID" type="numeric" required="false" default="0" />	
 		
-		<cfquery name="qGetGLAccountInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetGLAccountInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForqGetGLAccountInfo>
+	<cftry>
+		<cfset qGetGLAccountInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"gl_account_id" = "eq.#arguments.GL_Account_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGLAccountInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGLAccountInfo>
+<cfquery name="qGetGLAccountInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM GL_Account
 		WHERE GL_Account_ID = '#arguments.GL_Account_ID#'
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetGLAccountInfo />
 		

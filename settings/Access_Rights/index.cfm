@@ -133,11 +133,26 @@ function massUpdateCheckAll(thisElement)
 <cfset appSettings = application.appSettingsGet>
 <cfset UseCustomerType = appSettings.getCustomertype()>
 <cfif UseCustomerType IS 1>
-	<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForGetCustomerTypes>
+	<cftry>
+		<cfset GetCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustomerTypes>
+<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
 	SELECT *
 	FROM Customer_Type
 	WHERE Deleted = 0
 	</cfquery>
+</cfif>
 </cfif>
 
 <cfinclude template ="profile_qry_include.cfm">
@@ -180,19 +195,51 @@ function massUpdateCheckAll(thisElement)
 	
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- get margin approval method --->
+<cfset useLakebaseFormargin_approval_method = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseFormargin_approval_method>
+	<cftry>
+		<cfset margin_approval_method = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_approval_method"
+			}), "program_margin_approval_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormargin_approval_method = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormargin_approval_method>
 <cfquery name="margin_approval_method" datasource="#application.datasource#">
 	SELECT program_margin_approval_method
 	FROM General_Settings
 </cfquery>
+</cfif>
 
 <CFLOOP INDEX="GroupCount" FROM="1" TO="#application.returned_customer_setting.approval_group_count#" STEP="1">
 		<cfloop query="getProfiles">
 		<cfset i = getProfiles.profiles_id>
-			<CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
+			<cfset useLakebaseForgetApprovalMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetApprovalMargin>
+	<cftry>
+		<cfset getApprovalMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"group_id" = "eq.#GroupCount#",
+				"profile_id" = "eq.#i#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetApprovalMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetApprovalMargin>
+<CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
 				SELECT Amount
 				FROM Margin_Group_Profile_Approval_Margins
 				WHERE Group_ID='#GroupCount#' AND Profile_ID='#i#'
 			</CFQUERY>
+</cfif>
 			<CFSET "FORM.Group_#GroupCount#_Profile_#i#" = getApprovalMargin.Amount>
 
 			<cfif len(trim(getApprovalMargin.Amount)) EQ 0>

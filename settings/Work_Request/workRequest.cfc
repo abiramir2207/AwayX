@@ -992,7 +992,25 @@ The work request ###DeletedPunchInfo.BA_Ticket_Number# -- #DeletedPunchInfo.Work
 			<!--- update punchlist using DSN --->
 			<!--- INSERT/UPDATE Punch_File --->
 			<cfif #arguments.InsertStatus# eq "1">
-			<cfquery name="InsertToPunch_File" datasource="punchlist">
+			<cfset useLakebaseForInsertToPunch_File = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForInsertToPunch_File>
+	<cftry>
+		<cfset application.oLakebase.insertRow("punch_file", {
+			"punch_id" = "#arguments.BA_Ticket_Number#",
+			"punch_file_name" = "#arguments.WR_Document_Name#",
+			"punch_file_name_saved_as" = "#arguments.Actual_file_name#",
+			"uploaded_by" = "#arguments.User_ID#",
+			"filepathinapp" = "#arguments.FilePathInApp#",
+			"punch_file_size" = "#arguments.sizeoffile#",
+			"matchattch" = "#arguments.MatchAttch#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertToPunch_File = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertToPunch_File>
+<cfquery name="InsertToPunch_File" datasource="punchlist">
 				INSERT INTO Punch_File
 				(
 					Punch_ID,
@@ -1015,6 +1033,7 @@ The work request ###DeletedPunchInfo.BA_Ticket_Number# -- #DeletedPunchInfo.Work
 				'#arguments.MatchAttch#'
 				)
 			</cfquery>
+</cfif>
 			<cfelse>
 			<cfquery name="UpdatePunch_File" datasource="punchlist">
 				Update Punch_File

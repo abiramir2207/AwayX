@@ -572,12 +572,26 @@
 			<cfset currentnode = evaluate("BidRule.Type.Type_#thisCounter#")>
 			<!--- if action 1 insert --->
 			<cfif currentnode.action EQ 1>
-				<cfquery name="insertTypeCode" datasource="#application.datasource#">
+				<cfset useLakebaseForinsertTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
+<cfif useLakebaseForinsertTypeCode>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bid_rule_items", {
+			"bid_rule_id" = "#BidRule.Basic.Bid_Rule_ID#",
+			"type_item_id" = "#currentnode.type_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertTypeCode>
+<cfquery name="insertTypeCode" datasource="#application.datasource#">
 					INSERT INTO Bid_Rule_Items
 					(Bid_Rule_ID,Type_Item_ID)
 					VALUES
 					('#BidRule.Basic.Bid_Rule_ID#', '#currentnode.type_id#')
 				</cfquery>
+</cfif>
 				<cfset currentnode.Bid_Rule_Item_ID = insertTypeCode.Bid_Rule_Item_ID>
 			</cfif>
 
