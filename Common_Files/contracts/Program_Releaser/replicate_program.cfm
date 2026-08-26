@@ -1783,28 +1783,12 @@ Dev Note: Milan (48182) - Remove any insert/update to "template_pullback_program
 This table is not being used anymore.
 --->
 <!---<CFIF getContractTemplateDetails.generic_type EQ "Distributor Trade/Shelter" and getContractTemplateDetails.Pullbacks_On EQ 1 and getContractTemplateDetails.is_pullback_corporate_deal EQ 1>
-<cfset useLakebaseForgetPullbacksProgramDefaults = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_pullback_program_defaults")>
-<cfif useLakebaseForgetPullbacksProgramDefaults>
-	<cftry>
-		<cfset getPullbacksProgramDefaults = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("template_pullback_program_defaults", {
-				"program_id" = "eq.#Program_ID_To_Replicate#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetPullbacksProgramDefaults = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetPullbacksProgramDefaults>
 <cfquery name="getPullbacksProgramDefaults" datasource="#application.datasource#">
 	select * from
 	template_pullback_program_defaults
 	where program_id = '#Program_ID_To_Replicate#'
 	and deleted = 0
 </cfquery>
-</cfif>
 </CFIF>--->
 <!--- End suppress distributors & products --->
 			

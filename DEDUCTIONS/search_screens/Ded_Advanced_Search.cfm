@@ -321,29 +321,12 @@
 </cfquery>
 </cfif>
 <!----
-<cfset useLakebaseForGetBillTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_bill_to")>
-<cfif useLakebaseForGetBillTo>
-	<cftry>
-		<cfset GetBillTo = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("distributor_bill_to", {
-				"deleted" = "eq.0",
-				"order" = "name.asc",
-				"select" = "distributor_bill_to_id,shr_bill_to,name"
-			}), "distributor_bill_to_id,shr_bill_to,name"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetBillTo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetBillTo>
 <CFQUERY NAME="GetBillTo" DATASOURCE="#Application.Datasource#" cachedwithin="#CreateTimeSpan(0, 12, 0, 0)#">
 	SELECT 		Distributor_Bill_To_ID, Shr_Bill_To, Name
 	FROM 		Distributor_Bill_To
 	WHERE 		Deleted=0
 	ORDER BY	Name
 </CFQUERY>
-</cfif>
 --->
 <cfset useLakebaseForGetLOB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
 <cfif useLakebaseForGetLOB>

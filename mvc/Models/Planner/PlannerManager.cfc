@@ -4422,7 +4422,28 @@ Description  :  Manager for Planners
 					<cfset PlannerDDSVal	= evaluate("ppFormData.DaysLessStart_#Planner_Template_Perf_Types_ID#") />
 					<cfset PlannerDDEVal	= evaluate("ppFormData.DaysLessEnd_#Planner_Template_Perf_Types_ID#") />
 
-					<cfquery name="local.qUpdatePlannerProfile" datasource="#application.datasource#">
+					<cfset useLakebaseForlocal_qUpdatePlannerProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_profile")>
+<cfif useLakebaseForlocal_qUpdatePlannerProfile>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_profile",
+			{
+				"planner_profile_id" = "eq.#profileRows.Planner_Profile_ID#"
+			},
+			{
+				"duration" = "#DurationVal#",
+				"planner_delivery_days_start" = "#PlannerDDSVal#",
+				"planner_delivery_days_end" = "#PlannerDDEVal#",
+				"updated_by" = "#request.AccessStructure.user_id#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qUpdatePlannerProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qUpdatePlannerProfile>
+<cfquery name="local.qUpdatePlannerProfile" datasource="#application.datasource#">
 						UPDATE	Planner_Profile
 						SET 	Duration                    = '#DurationVal#',
 								Planner_Delivery_Days_Start = '#PlannerDDSVal#' ,
@@ -4431,6 +4452,7 @@ Description  :  Manager for Planners
 								Updated_Date                = getDate()
 						WHERE	Planner_Profile_ID = #profileRows.Planner_Profile_ID#
 					</cfquery>
+</cfif>
 				</cfif>
 			</cfloop>
 			<cfreturn 1 />
@@ -4597,7 +4619,24 @@ Description  :  Manager for Planners
                         </cfquery>
                     <cfelse>
                         <!--- INSERT --->
-                        <cfquery name="local.qInsertPlannerProfileProducts" datasource="#application.datasource#">
+                        <cfset useLakebaseForlocal_qInsertPlannerProfileProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_profile_products")>
+<cfif useLakebaseForlocal_qInsertPlannerProfileProducts>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planner_profile_products", {
+			"planner_id" = "#ppFormData.plannerID#",
+			"bsa_foodservice_customers_id" = "#qPlannerProfileProducts.BSA_Foodservice_Customers_ID#",
+			"bsa_foodservice_items_master_id" = "#qPlannerProfileProducts.Item_Key#",
+			"everyday_unit_price" = "#everyDayUnitPrice#",
+			"everyday_unit_price_uom" = "#everyDayUnitPriceUOM#",
+			"created_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qInsertPlannerProfileProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qInsertPlannerProfileProducts>
+<cfquery name="local.qInsertPlannerProfileProducts" datasource="#application.datasource#">
                             INSERT INTO Planner_Profile_Products
                                 ( Planner_ID, BSA_Foodservice_Customers_ID, BSA_Foodservice_Items_Master_ID, EveryDay_Unit_Price, EveryDay_Unit_Price_UOM, Created_Date )
                             VALUES
@@ -4610,6 +4649,7 @@ Description  :  Manager for Planners
                                     getDate()
                                 )
                         </cfquery>
+</cfif>
                     </cfif>
                 </cfif>
 			</cfloop>

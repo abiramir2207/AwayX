@@ -134,6 +134,26 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 
 
 <!-------- unlock projects -------->
+<cfset useLakebaseForUnlock_Projects = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForUnlock_Projects>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_locked" = "eq.1",
+				"pm_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"pm_locked" = "0",
+				"pm_locked_by_user_id" = javaCast("null",""),
+				"pm_locked_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlock_Projects = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlock_Projects>
 <CFQUERY NAME="Unlock_Projects" DATASOURCE="#application.datasource#">
 	UPDATE	PM_Item_Master
 	SET		PM_Locked	=	0,
@@ -144,6 +164,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 			AND
 			PM_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
@@ -451,28 +472,12 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 </CFQUERY>
 
 <!--- Get Owner --->
-<!------<cfset useLakebaseForGet_Owner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
-<cfif useLakebaseForGet_Owner>
-	<cftry>
-		<cfset Get_Owner = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("_users", {
-				"user_id" = "eq.#PM_Owner_ID#",
-				"select" = "name_first,name_last"
-			}), "name_first,name_last"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGet_Owner = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGet_Owner>
-<CFQUERY NAME="Get_Owner" datasource="#application.datasource#">
+<!------<CFQUERY NAME="Get_Owner" datasource="#application.datasource#">
 	Select		Name_First, 
 				Name_Last
 	From 		_Users	
 	Where 		User_ID = '#PM_Owner_ID#'
-</CFQUERY>
-</cfif>----->
+</CFQUERY>----->
 
 <cfset useLakebaseForGet_Position = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
 <cfif useLakebaseForGet_Position>

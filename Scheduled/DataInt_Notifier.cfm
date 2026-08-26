@@ -179,11 +179,27 @@ From general_Settings
 			
 			</cfif> 
   <cfif send eq "Yes" AND qGetInstance.Recordcount neq 0>
-		<cfquery name="qInsertLog" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_alerts_log")>
+<cfif useLakebaseForqInsertLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dataint_alerts_log", {
+			"instance_id" = "#qGetInstance.instance_id#",
+			"sent_time" = "#now()#",
+			"elist" = "#trim(left(elist,1999))#",
+			"type" = "S"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertLog>
+<cfquery name="qInsertLog" datasource="#application.datasource#">
 		 Insert into DataInt_Alerts_Log
 		 	(instance_id, sent_time, elist, type)
 			Values (#qGetInstance.instance_id#, #now()#, '#trim(left(elist,1999))#', 'S')
 		</cfquery>
+</cfif>
   </cfif>
 <cfif send eq "Yes" and trim(elist) neq "">
 	<br><cfoutput>#qAllJobs.Job_name#</cfoutput> Overdue Job  ::  Recipients -> <cfoutput>#elist#  #send#</cfoutput><br>

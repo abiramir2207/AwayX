@@ -1586,7 +1586,29 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         </cfif>
       </cfloop>
       <cfif templateFound EQ 0>
-        <cfquery name="updProdCatDef" datasource="#application.datasource#">
+        <cfset useLakebaseForupdProdCatDef = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_template_selection")>
+<cfif useLakebaseForupdProdCatDef>
+	<cftry>
+		<cfset application.oLakebase.updateRows("product_group_template_selection",
+			{
+				"product_group_id" = "eq.#qryProdGrpTemSel.Product_Group_ID#",
+				"template_id" = "eq.#qryProdGrpTemSel.Template_ID#",
+				"template_filters_id" = "eq.#qryProdGrpTemSel.Template_Filters_ID#"
+			},
+			{
+				"active" = "0",
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdProdCatDef = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdProdCatDef>
+<cfquery name="updProdCatDef" datasource="#application.datasource#">
           UPDATE Product_Group_Template_Selection
           SET
             Active = 0,
@@ -1598,6 +1620,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 						Template_ID = #qryProdGrpTemSel.Template_ID# AND
 						Template_Filters_ID = #qryProdGrpTemSel.Template_Filters_ID#
         </cfquery>
+</cfif>
        <!---  <cfquery name="updProdCatDef" datasource="#application.datasource#">
           UPDATE Template_Filters
           SET
@@ -1849,7 +1872,29 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 	<cfargument name="Group_Product_ID"	required="true" type="string" />
 	<cfargument name="UserID"	required="true" type="string" />
 
-	<cfquery name="qDeletePlanningGroupProduct" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeletePlanningGroupProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_product_category_definition")>
+<cfif useLakebaseForqDeletePlanningGroupProduct>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pg_product_category_definition",
+			{
+				"pg_product_category_id" = "eq.#arguments.PG_Product_Category_ID#",
+				"product_group_id" = "eq.#arguments.Group_Product_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			},
+			{
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeletePlanningGroupProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeletePlanningGroupProduct>
+<cfquery name="qDeletePlanningGroupProduct" datasource="#application.datasource#">
 		UPDATE PG_Product_Category_Definition
 		SET deleted = 1,
 			Updated_Date = GetDate(),
@@ -1859,6 +1904,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		AND deleted = 0
 		AND Active = 1
 	</cfquery>
+</cfif>
 
 </cffunction>
 
@@ -1977,7 +2023,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
     <cffunction name="fnGetCoreProductPG" output="false" returntype="Query">
 		  <cfset var qGetCoreProductPG = "" />
-      <cfquery name="qGetCoreProductPG" datasource="#application.datasource#">
+      <cfset useLakebaseForqGetCoreProductPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_product_category")>
+<cfif useLakebaseForqGetCoreProductPG>
+	<cftry>
+		<cfset qGetCoreProductPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_product_category", {
+				"include_in_other_pg" = "eq.1",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "pg_product_category_id,pg_type_id,pg_product_category_code,pg_product_category_name,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg"
+			}), "pg_product_category_id,pg_type_id,pg_product_category_code,pg_product_category_name,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCoreProductPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCoreProductPG>
+<cfquery name="qGetCoreProductPG" datasource="#application.datasource#">
         SELECT
         PG_Product_Category_ID,
         PG_Type_ID,
@@ -1993,6 +2056,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         FROM PG_Product_Category
         WHERE Include_In_Other_PG = 1 AND ACTIVE = 1 AND DELETED = 0
       </cfquery>
+</cfif>
     <cfreturn qGetCoreProductPG />
 	  </cffunction>
 
@@ -2895,7 +2959,29 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         </cfif>
       </cfloop>
       <cfif templateFound EQ 0>
-        <cfquery name="updCusCatDef" datasource="#application.datasource#">
+        <cfset useLakebaseForupdCusCatDef = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_group_template_selection")>
+<cfif useLakebaseForupdCusCatDef>
+	<cftry>
+		<cfset application.oLakebase.updateRows("customer_group_template_selection",
+			{
+				"distributor_group_id" = "eq.#qryCusGrpTemSel.Distributor_Group_ID#",
+				"template_id" = "eq.#qryCusGrpTemSel.Template_ID#",
+				"template_filters_id" = "eq.#qryCusGrpTemSel.Template_Filters_ID#"
+			},
+			{
+				"active" = "0",
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdCusCatDef = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdCusCatDef>
+<cfquery name="updCusCatDef" datasource="#application.datasource#">
           UPDATE Customer_Group_Template_Selection
           SET
             Active = 0,
@@ -2907,6 +2993,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 						Template_ID = #qryCusGrpTemSel.Template_ID# AND
 						Template_Filters_ID = #qryCusGrpTemSel.Template_Filters_ID#
         </cfquery>
+</cfif>
 <!---         <cfquery name="updCusCatDef" datasource="#application.datasource#">
           UPDATE Template_Filters
           SET
@@ -3134,7 +3221,29 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 	<cfargument name="Group_Distributor_ID"	required="true" type="string" />
 	<cfargument name="UserID"	required="true" type="string" />
 
-	<cfquery name="qDeletePlanningGroupCustomer" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeletePlanningGroupCustomer = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_customer_category_definition")>
+<cfif useLakebaseForqDeletePlanningGroupCustomer>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pg_customer_category_definition",
+			{
+				"pg_customer_category_id" = "eq.#arguments.PG_Customer_Category_ID#",
+				"distributor_group_id" = "eq.#arguments.Group_Distributor_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			},
+			{
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeletePlanningGroupCustomer = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeletePlanningGroupCustomer>
+<cfquery name="qDeletePlanningGroupCustomer" datasource="#application.datasource#">
 		UPDATE PG_Customer_Category_Definition
 		SET deleted = 1,
 			Updated_Date = GetDate(),
@@ -3144,6 +3253,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		AND deleted = 0
 		AND Active = 1
 	</cfquery>
+</cfif>
 
 </cffunction>
 
@@ -4541,7 +4651,29 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 	<cfargument name="Group_Operator_ID"	required="true" type="string" />
 	<cfargument name="UserID"	required="true" type="string" />
 
-	<cfquery name="qDeletePlanningGroupOperator" datasource="#application.datasource#">
+	<cfset useLakebaseForqDeletePlanningGroupOperator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForqDeletePlanningGroupOperator>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pg_operator_category_definition",
+			{
+				"pg_operator_category_id" = "eq.#arguments.PG_Operator_Category_ID#",
+				"operator_group_id" = "eq.#arguments.Group_Operator_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			},
+			{
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeletePlanningGroupOperator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeletePlanningGroupOperator>
+<cfquery name="qDeletePlanningGroupOperator" datasource="#application.datasource#">
 		UPDATE PG_Operator_Category_Definition
 		SET deleted = 1,
 			Updated_Date = GetDate(),
@@ -4551,13 +4683,31 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		AND deleted = 0
 		AND Active = 1
 	</cfquery>
+</cfif>
 
 </cffunction>
 
 
 <cffunction  name="fnGetOprPGByTypeID" output="false" returntype="Query">
 
-  <cfquery name="qryGetTopLevelOprPGTypes" datasource="#application.datasource#">
+  <cfset useLakebaseForqryGetTopLevelOprPGTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_group_level")>
+<cfif useLakebaseForqryGetTopLevelOprPGTypes>
+	<cftry>
+		<cfset qryGetTopLevelOprPGTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_group_level", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "group_level_desc.asc",
+				"select" = "group_level_desc,deleted,created_date,operator_group_level_type_id,updated_date,active,search_sequence_name,operator_group_attribute_table,operator_group_attribute_id_field,operator_group_attribute_master_id_field,operator_group_attribute_name_field,group_level_desc_internal,search_filter_on,operator_group_level_id,is_group_combination,level_id,list_order,operator_group_attribute_number_field,operator_group_attribute_interface_field,is_pg"
+			}), "group_level_desc,deleted,created_date,operator_group_level_type_id,updated_date,active,search_sequence_name,operator_group_attribute_table,operator_group_attribute_id_field,operator_group_attribute_master_id_field,operator_group_attribute_name_field,group_level_desc_internal,search_filter_on,operator_group_level_id,is_group_combination,level_id,list_order,operator_group_attribute_number_field,operator_group_attribute_interface_field,is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetTopLevelOprPGTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetTopLevelOprPGTypes>
+<cfquery name="qryGetTopLevelOprPGTypes" datasource="#application.datasource#">
     SELECT
       Group_Level_Desc,
       Deleted,
@@ -4586,6 +4736,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
       Deleted = 0
       ORDER BY Group_Level_Desc ASC
    </cfquery>
+</cfif>
   <cfreturn qryGetTopLevelOprPGTypes />
 
 </cffunction>

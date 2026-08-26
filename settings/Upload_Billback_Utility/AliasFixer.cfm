@@ -568,11 +568,27 @@ window.close()
 							</cfif>			
 						
 							<cfif FORM.Operator_List NEQ "" AND valToCheck EQ FORM.CurrentImgClick>
-									<cfquery name="Opr_Search_Result" datasource = "#Application.Datasource#">
+									<cfset useLakebaseForOpr_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForOpr_Search_Result>
+	<cftry>
+		<cfset Opr_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_List#",
+				"select" = "bsa_operator_id,operator_name,operator_location_type,operator_city,operator_state,operator_number_of_locations,operator_dba,legacy_id"
+			}), "bsa_operator_id,operator_name,operator_location_type,operator_city,operator_state,operator_number_of_locations,operator_dba,legacy_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOpr_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOpr_Search_Result>
+<cfquery name="Opr_Search_Result" datasource = "#Application.Datasource#">
 										SELECT	BSA_Operator_ID, operator_name, Operator_Location_Type, Operator_City, Operator_State, Operator_Number_Of_Locations, Operator_DBA, legacy_id
 										FROM 	BSA_Operator
 										WHERE 	BSA_Operator_ID = '#FORM.Operator_List#'
 									</cfquery>
+</cfif>
 								<cfset Selected_FieldValue = Opr_Search_Result.legacy_id>
 								<cfset Selected_Alias_Opr_ID = " [" & Opr_Search_Result.BSA_Operator_ID & "]" />
 								<cfset Selected_Alias_Detail = Opr_Search_Result.Operator_Name & Selected_Alias_Opr_ID & ", " & Opr_Search_Result.Operator_City  & ", " & Opr_Search_Result.Operator_State  /> 

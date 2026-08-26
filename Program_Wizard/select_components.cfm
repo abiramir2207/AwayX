@@ -462,12 +462,31 @@ function alert_in_use(component) {
 		</cfloop>
 
 		<cfif defaultComp eq 1>
-			<cfquery name="updateDefaultComponent" datasource="#application.datasource#">
+			<cfset useLakebaseForupdateDefaultComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForupdateDefaultComponent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#id#"
+			},
+			{
+				"default_fixed_component_name_id" = "#Listgetat(form.DEFAULT_COMP,2,'_')#",
+				"default_rebate_component_name_id" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateDefaultComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateDefaultComponent>
+<cfquery name="updateDefaultComponent" datasource="#application.datasource#">
 	        	 UPDATE Program_Control_Panel_Options
 				 SET Default_Fixed_Component_Name_Id = #Listgetat(form.DEFAULT_COMP,2,'_')#,
 				 	Default_Rebate_Component_Name_Id = 0
 				 WHERE ProgramControl_Panel_Options_ID = #id#
 			</cfquery>
+</cfif>
 		<cfelseif defaultComp eq 2>
 			<cfquery name="updateDefaultComponent" datasource="#application.datasource#">
 	        	 UPDATE Program_Control_Panel_Options

@@ -2,11 +2,29 @@
 <CFSET FORM.Program_ID = cryp.value>
 
 <CFIF len(trim(FORM.newProgramGlobalVolume)) GT 0>
-	<cfquery name="saveNewProgramVolume" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveNewProgramVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForsaveNewProgramVolume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#FORM.Program_ID#"
+			},
+			{
+				"contract_quantity" = "#trim(FORM.newProgramGlobalVolume)#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveNewProgramVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveNewProgramVolume>
+<cfquery name="saveNewProgramVolume" datasource="#application.datasource#">
 		UPDATE Contract_Main
 		SET Contract_Quantity = '#trim(FORM.newProgramGlobalVolume)#'
 		WHERE Contract_Main_ID = '#FORM.Program_ID#'
 	</cfquery>
+</cfif>
 </CFIF>
 
 
@@ -22,7 +40,28 @@
 		<CFSET TypeCode_ID 	= currentFormElement[4]>
 		<CFSET Brand_ID 	= currentFormElement[5]>
 		
-		<cfquery name="getProductCategoryID" datasource="#application.datasource#">
+		<cfset useLakebaseForgetProductCategoryID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_categories")>
+<cfif useLakebaseForgetProductCategoryID>
+	<cftry>
+		<cfset getProductCategoryID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_categories", {
+				"typegroup_desc_id" = "eq.#TypeGroup_ID#",
+				"qbrand_desc_id" = "eq.#QBrand_ID#",
+				"typecode_desc_id" = "eq.#TypeCode_ID#",
+				"brand_id" = "eq.#Brand_ID#",
+				"program_id" = "eq.#FORM.Program_ID#",
+				"iscontract" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_product_category_id"
+			}), "program_product_category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductCategoryID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductCategoryID>
+<cfquery name="getProductCategoryID" datasource="#application.datasource#">
 			SELECT Program_Product_Category_ID
 			FROM Program_Product_Categories
 			WHERE 
@@ -40,6 +79,7 @@
 				AND 
 				Deleted 			= 0
 			</cfquery>
+</cfif>
 
 			<CFSET FormVariableName = Mid(ListFormElement,1, len(ListFormElement)-7)>
 			

@@ -125,13 +125,33 @@
 		</CFQUERY>
 	
 		<CFIF ValidateAllocation.RecordCount NEQ 0 AND ValidateAllocation.Allocated_Amount EQ ValidateAllocation.Paid_Amount>		
-			<CFQUERY NAME="Approve_Pay_Req" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForApprove_Pay_Req = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForApprove_Pay_Req>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"bb_payment_request_prepared" = "1",
+				"bb_payment_request_prepared_by" = "#request.AccessStructure.User_ID#",
+				"bb_payment_request_prepared_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprove_Pay_Req = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprove_Pay_Req>
+<CFQUERY NAME="Approve_Pay_Req" DATASOURCE="#Application.Datasource#">
 				UPDATE Billback
 				SET BB_Payment_Request_Prepared = 1,
 					BB_Payment_Request_Prepared_By = '#request.AccessStructure.User_ID#',
 					BB_Payment_Request_Prepared_Date = getdate()
 				WHERE Billback_ID = '#Billback_ID#'
 			</CFQUERY>
+</cfif>
 		<CFELSE>
 			<BR><BR><BR><BR>
 		

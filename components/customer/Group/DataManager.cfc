@@ -1041,7 +1041,29 @@
     <cfset returnValue = "0" />  
     <!--- Update all the records to inactive before activating them again. --->
  <!---    <cftry> --->
-    <cfquery name="qUpdateAllRecs" datasource="#application.datasource#">
+    <cfset useLakebaseForqUpdateAllRecs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_group_template_selection")>
+<cfif useLakebaseForqUpdateAllRecs>
+	<cftry>
+		<cfset application.oLakebase.updateRows("customer_group_template_selection",
+			{
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"template_filters_id" = "eq.#arguments.stForm.TemplateFiltersID#",
+				"distributor_group_level_id" = "eq.#arguments.stForm.GroupLevelID#"
+			},
+			{
+				"active" = "0",
+				"deleted" = "1",
+				"updated_by" = "#arguments.UserID#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateAllRecs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateAllRecs>
+<cfquery name="qUpdateAllRecs" datasource="#application.datasource#">
       UPDATE Customer_Group_Template_Selection 
       SET Active = 0,
           Deleted = 1,
@@ -1051,6 +1073,7 @@
       AND     Template_Filters_ID = #arguments.stForm.TemplateFiltersID# 
       AND     Distributor_Group_Level_ID = #arguments.stForm.GroupLevelID#       
     </cfquery>
+</cfif>
     
 <!---     <cfquery name="qGetExistingData" datasource="#application.datasource#">
       SELECT  Customer_Group_Template_Selection_ID,

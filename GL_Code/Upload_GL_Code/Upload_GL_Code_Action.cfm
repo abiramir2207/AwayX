@@ -106,29 +106,11 @@
 			</CFQUERY> --->
 			
 			<!--- 
-			<cfset useLakebaseForResetOtherUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
-<cfif useLakebaseForResetOtherUpload>
-	<cftry>
-		<cfset application.oLakebase.updateRows("gl_code_upload",
-			{
-				"activation_date" = "eq.#FORM.Activation_Date#"
-			},
-			{
-				"activate_tonight" = "0"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForResetOtherUpload = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForResetOtherUpload>
-<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
+			<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
 				UPDATE GL_Code_Upload
 				SET Activate_Tonight = 0
 				WHERE Activation_Date = '#FORM.Activation_Date#'
-			</CFQUERY>
-</cfif> --->
+			</CFQUERY> --->
 						
 			<CFQUERY NAME="deleteallOthers" DATASOURCE="#Application.Datasource#">
 				UPDATE 	GL_Code_Upload 
@@ -138,7 +120,27 @@
 						Deleted = 0
 			</CFQUERY>
 			
-			<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForDataInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForDataInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_upload", {
+			"gl_code_uni_name" = "#Build_File_Name#",
+			"gl_code_file_path" = "#GL_Code_File_Path#",
+			"server_name" = "#Application.WebServerName#",
+			"gl_code_title" = "#DateStampedGLCode#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"gl_code_process_status_id" = "2",
+			"activation_date" = "#FORM.Activation_Date#",
+			"fiscal_year" = "#FORM.Fiscal_Year#",
+			"worksheetname" = "#FORM.WorkSheetName#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDataInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDataInsert>
+<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
 				INSERT INTO 
 				
 				GL_Code_Upload	(	GL_Code_Uni_Name,
@@ -161,6 +163,7 @@
 									'#FORM.Fiscal_Year#',
 									'#FORM.WorkSheetName#'		)
 			</CFQUERY>
+</cfif>
 			
 			<cfset useLakebaseForDeletedTempData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation_temp")>
 <cfif useLakebaseForDeletedTempData>

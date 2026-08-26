@@ -1300,50 +1300,15 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			<!---- release any billback which is already linked to this deduction ----->
 			<cfset RemoveAssociatedBB(arguments.deductionId) />
 			<!---
-			<cfset useLakebaseForIsAnyAssociatedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForIsAnyAssociatedBB>
-	<cftry>
-		<cfset IsAnyAssociatedBB = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("deductions", {
-				"deduction_id" = "eq.#arguments.deductionId#",
-				"dd_closure_type" = "eq.1",
-				"select" = "dd_closure_id"
-			}), "dd_closure_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForIsAnyAssociatedBB = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForIsAnyAssociatedBB>
-<CFQUERY NAME="IsAnyAssociatedBB" DATASOURCE="#Application.Datasource#">
+			<CFQUERY NAME="IsAnyAssociatedBB" DATASOURCE="#Application.Datasource#">
 				SELECT DD_Closure_ID FROM Deductions WHERE Deduction_ID = '#arguments.deductionId#' AND DD_Closure_Type = 1
 			</CFQUERY>
-</cfif>
 			<CFIF IsAnyAssociatedBB.RecordCount GT 0 AND IsAnyAssociatedBB.DD_Closure_ID NEQ "">
-			<cfset useLakebaseForUnAssociateBBIfAny = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
-<cfif useLakebaseForUnAssociateBBIfAny>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback",
-			{
-				"billback_id" = "eq.#IsAnyAssociatedBB.DD_Closure_ID#"
-			},
-			{
-				"bb_associated_to_dd" = "0"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUnAssociateBBIfAny = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUnAssociateBBIfAny>
-<CFQUERY NAME="UnAssociateBBIfAny" DATASOURCE="#Application.Datasource#">
+			<CFQUERY NAME="UnAssociateBBIfAny" DATASOURCE="#Application.Datasource#">
 				UPDATE Billback
 				SET BB_Associated_To_DD = 0
 				WHERE Billback_ID = '#IsAnyAssociatedBB.DD_Closure_ID#'
 			</CFQUERY>
-</cfif>
 			</CFIF>
 			--->
 

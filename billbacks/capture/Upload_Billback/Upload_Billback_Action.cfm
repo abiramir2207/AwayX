@@ -309,29 +309,11 @@
 			WHERE 	DATEDIFF(d, Activation_Date, '#FORM.Activation_Date#') = 0 AND 
 					Deleted = 0 AND GL_Code_Upload_ID <> '#RID#'
 		</CFQUERY>
-		<cfset useLakebaseForUpdateUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
-<cfif useLakebaseForUpdateUpload>
-	<cftry>
-		<cfset application.oLakebase.updateRows("gl_code_upload",
-			{
-				"gl_code_upload_id" = "eq.#RID#"
-			},
-			{
-				"activation_date" = "#FORM.Activation_Date#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdateUpload = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdateUpload>
-<CFQUERY NAME="UpdateUpload" DATASOURCE="#Application.Datasource#">
+		<CFQUERY NAME="UpdateUpload" DATASOURCE="#Application.Datasource#">
 			UPDATE GL_Code_Upload
 			SET Activation_Date = '#FORM.Activation_Date#'
 			WHERE GL_Code_Upload_ID = '#RID#'
-		</CFQUERY>
-</cfif>		
+		</CFQUERY>		
 	</CFIF>
 	<CFLOCATION URL="index.cfm?Show_Tab=3" ADDTOKEN="No">
  --->

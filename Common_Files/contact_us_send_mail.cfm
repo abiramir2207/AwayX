@@ -35,7 +35,23 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForSaveEmail>
-	<CFQUERY NAME="Save_Email" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Email = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("email_messages")>
+<cfif useLakebaseForSave_Email>
+	<cftry>
+		<cfset application.oLakebase.insertRow("email_messages", {
+			"email_user_id" = "#request.AccessStructure.User_ID#",
+			"email_date_sent" = "#createodbcdatetime(now())#",
+			"email_address_from" = "#Form.From#",
+			"email_subject" = "#Form.Subject#",
+			"email_message" = "#Form.Message#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Email = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Email>
+<CFQUERY NAME="Save_Email" datasource="#application.datasource#">
 	INSERT INTO 	email_messages
 					(
 					email_user_id,
@@ -54,10 +70,27 @@
 					)
 	</CFQUERY>
 </cfif>
+</cfif>
 
+<cfset useLakebaseForGetUserDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserDetails>
+	<cftry>
+		<cfset GetUserDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserDetails>
 <CFQUERY NAME="GetUserDetails" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM _Users WHERE User_ID = '#request.AccessStructure.User_ID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
  	<!--- 
 				Dev Notes: D24468/Anand Rao/17-Aug-10
 				URL on email notifications

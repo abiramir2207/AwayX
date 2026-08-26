@@ -809,12 +809,29 @@ Contract_Operators.BSA_Operator_ID, --->
 			<cfcase value="2,3,4" delimiters=",">
 				<!--- ACTION: FILTER products [begin] --->
 				<!--- 1.) let's grab the id's... --->
-				<cfquery name="variables.qGetProductIDs" datasource="#application.datasource#">
+				<cfset useLakebaseForvariables_qGetProductIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_bid_info")>
+<cfif useLakebaseForvariables_qGetProductIDs>
+	<cftry>
+		<cfset variables.qGetProductIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_bid_info", {
+				"program_id" = "eq.#variables.qProgramInfo.contract_main_id[1]#",
+				"won" = "eq.1",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qGetProductIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qGetProductIDs>
+<cfquery name="variables.qGetProductIDs" datasource="#application.datasource#">
 					SELECT	Product_ID
 					FROM	program_product_bid_info
 					WHERE	program_product_bid_info.program_id = #variables.qProgramInfo.contract_main_id[1]#
 					AND		program_product_bid_info.won = 1
 				</cfquery>
+</cfif>
 				<!--- 2.) make an overall list of the id's... --->
 				<cfset variables.lsProductIDs = valueList(variables.qGetProductIDs.Product_ID, ",")>
 

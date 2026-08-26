@@ -368,7 +368,27 @@
             
         <cfelse>
             <!---This user doesn't have any programs--->
-            <cfquery NAME="deleteUser" datasource="#application.datasource#">
+            <cfset useLakebaseFordeleteUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseFordeleteUser>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#FORM.User_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_date" = "#now()#",
+				"deleted_by" = "#request.AccessStructure.user_id#",
+				"profiles_id" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteUser>
+<cfquery NAME="deleteUser" datasource="#application.datasource#">
                 UPDATE _Users
                 SET deleted = 1,
                     deleted_date = Getdate(),
@@ -376,12 +396,31 @@
                     profiles_id = 0
                 WHERE User_ID = '#FORM.User_ID#' 
             </cfquery>
+</cfif>
 
-            <cfquery NAME="deleteUserPOSITIONS" datasource="#application.datasource#">
+            <cfset useLakebaseFordeleteUserPOSITIONS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseFordeleteUserPOSITIONS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_position_holders",
+			{
+				"user_id" = "eq.#FORM.User_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteUserPOSITIONS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteUserPOSITIONS>
+<cfquery NAME="deleteUserPOSITIONS" datasource="#application.datasource#">
                 UPDATE user_position_holders
                 SET deleted = 1
                 WHERE User_ID = '#FORM.User_ID#'
             </cfquery>
+</cfif>
 
         <!--- 
             Dev Notes: 23086/Anand Rao/21-May-10

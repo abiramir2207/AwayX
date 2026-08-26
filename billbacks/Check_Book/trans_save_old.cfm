@@ -4,24 +4,9 @@
 <!--- 
 	Update the record with....
  --->
-<!--- <cfset useLakebaseForcheck_exist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
-<cfif useLakebaseForcheck_exist>
-	<cftry>
-		<cfset check_exist = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("ledger_table", {
-				"ledger_id" = "eq.#URL.RID#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForcheck_exist = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForcheck_exist>
-<CFQUERY name = "check_exist" datasource = "#application.datasource#">
+<!--- <CFQUERY name = "check_exist" datasource = "#application.datasource#">
 	select * from ledger_table where ledger_Id = #URL.RID#
 </CFQUERY>
-</cfif>
  --->
 
 <cfif isdefined("form.check_number")>

@@ -493,11 +493,31 @@
 					<cfset Action_Notes ="Auto Match-Updated">
 				<cfelseif arguments.fromAutoDeviation and qCheckFamily.Auto_Deviation_Family eq 0>
 
-					<CFQUERY NAME="qUpdateAutoDeviationFamily" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForqUpdateAutoDeviationFamily = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_match_deviation_family")>
+<cfif useLakebaseForqUpdateAutoDeviationFamily>
+	<cftry>
+		<cfset application.oLakebase.updateRows("auto_match_deviation_family",
+			{
+				"family_id" = "eq.#Family#"
+			},
+			{
+				"auto_deviation_family" = "1",
+				"user_id" = "#request.AccessStructure.User_ID#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateAutoDeviationFamily = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateAutoDeviationFamily>
+<CFQUERY NAME="qUpdateAutoDeviationFamily" DATASOURCE="#Application.Datasource#">
 						UPDATE Auto_Match_Deviation_Family
 						SET Auto_Deviation_Family = 1, User_ID='#request.AccessStructure.User_ID#',Updated_Date=getdate()
 						WHERE Family_ID = '#Family#'
 					</CFQUERY>
+</cfif>
 
 					<cfset Action_Notes ="Auto Deviation-Updated">
 				</cfif>
@@ -609,12 +629,31 @@
 	<cffunction name="setBB2Paid" returntype="void">
 		<cfargument name="Billback_ID" required="true">
 
-		<cfquery name="Set_Status" datasource="#application.datasource#">
+		<cfset useLakebaseForSet_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForSet_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#arguments.Billback_ID#"
+			},
+			{
+				"billback_status_id" = "5",
+				"paid_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSet_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSet_Status>
+<cfquery name="Set_Status" datasource="#application.datasource#">
 			UPDATE	Billback
 			SET		Billback_Status_ID = 5,
 					Paid_Date = getdate()
 			WHERE 	Billback.Billback_ID = '#arguments.Billback_ID#'
 		</cfquery>
+</cfif>
 	</cffunction>
 
 </cfcomponent>

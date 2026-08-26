@@ -226,7 +226,27 @@
 		<cfif arguments.Alias_Type IS 1>
 		<!---Distributor --->
 		
-			<cfquery name="UpdateAlias" datasource="#application.datasource#">
+			<cfset useLakebaseForUpdateAlias = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alias_distributor")>
+<cfif useLakebaseForUpdateAlias>
+	<cftry>
+		<cfset application.oLakebase.updateRows("alias_distributor",
+			{
+				"alias_distributor_id" = "eq.#arguments.Alias_ID#"
+			},
+			{
+				"alias_string" = "#arguments.Alias#",
+				"distributor_id" = "#arguments.Item_ID#",
+				"created_by" = "#arguments.User_ID#",
+				"created_on" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAlias = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAlias>
+<cfquery name="UpdateAlias" datasource="#application.datasource#">
 			UPDATE Alias_Distributor
 				SET Alias_String = '#arguments.Alias#',
 					Distributor_ID = '#arguments.Item_ID#',
@@ -234,6 +254,7 @@
 					Created_On = #now()#
 				WHERE Alias_Distributor_ID = '#arguments.Alias_ID#'
 			</cfquery>
+</cfif>
 			
 		<cfelse>
 		

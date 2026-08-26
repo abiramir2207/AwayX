@@ -220,10 +220,24 @@
 		</CFQUERY>
 </cfif>
 	<cfloop from="1" to="#listlen(Form.Classification_Analyst_Profile)#" index="A">
-		<CFQUERY NAME="Save_Analyst_Data" datasource="#application.datasource#">
+		<cfset useLakebaseForSave_Analyst_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification_analyst")>
+<cfif useLakebaseForSave_Analyst_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_classification_analyst", {
+			"dd_classification_id" = "#Save_Data.SCOPEIDENTITY#",
+			"analyst_profiles_id" = "#listgetat(Form.Classification_Analyst_Profile, A)#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Analyst_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Analyst_Data>
+<CFQUERY NAME="Save_Analyst_Data" datasource="#application.datasource#">
 			INSERT INTO DD_Classification_Analyst(DD_Classification_ID,Analyst_Profiles_ID)
 			Values(#Save_Data.SCOPEIDENTITY#,'#listgetat(Form.Classification_Analyst_Profile, A)#')
 		</CFQUERY>
+</cfif>
 	</cfloop>
 		<CFLOCATION URL="create_Classifications.cfm" ADDTOKEN="No">
 		<CFABORT>

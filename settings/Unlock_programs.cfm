@@ -58,7 +58,30 @@
 	</cfquery>
 </cfif>
 	
-	<cfquery name="UndeleteProgram" datasource="#application.datasource#">
+	<cfset useLakebaseForUndeleteProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForUndeleteProgram>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"sent_to_external_client" = "eq.0",
+				"contract_main_id" = "eq.#LatestContractMain.Contract_Main_ID#"
+			},
+			{
+				"sent_to_external_client" = "1",
+				"sending_to_external_client" = "0",
+				"external_client_ack_date" = "#now()#",
+				"unsuccessful_ack_from_external_client" = "0",
+				"unsuccessful_ack_reason_from_external_client" = javaCast("null",""),
+				"external_client_error_ack_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUndeleteProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUndeleteProgram>
+<cfquery name="UndeleteProgram" datasource="#application.datasource#">
 		UPDATE          contract_main
 		SET             Sent_To_External_Client = 1, 
                         Sending_To_External_Client = 0,
@@ -70,6 +93,7 @@
 		WHERE           Sent_To_External_Client = 0
 		AND             contract_main_id = #LatestContractMain.Contract_Main_ID#
 	</cfquery>
+</cfif>
 
 <!--- Dev Note: Milan; D8508 (Unlock the program after undeleting it) --->
 	<cfset programManager.setLockStatus(LatestContractMain.Contract_Main_ID,0,request.AccessStructure.User_ID)>

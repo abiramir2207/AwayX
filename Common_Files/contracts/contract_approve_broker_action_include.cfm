@@ -379,11 +379,27 @@ if all are TRUE set bAutoApproveProgram = 1
 		</cfoutput>
 		<!---Sends out an email notification upon the rfa request, and at a scheduled later date--->
 		<cfset alreadySentRFAEmail = 0 />
-		<CFQUERY NAME="checkIfAlreadySentRFAEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckIfAlreadySentRFAEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForcheckIfAlreadySentRFAEmail>
+	<cftry>
+		<cfset checkIfAlreadySentRFAEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"select" = "rfa_email_sent"
+			}), "rfa_email_sent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckIfAlreadySentRFAEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckIfAlreadySentRFAEmail>
+<CFQUERY NAME="checkIfAlreadySentRFAEmail" datasource="#application.datasource#">
 			SELECT	RFA_Email_Sent
 			FROM 		Contract_Main_Aux_Data
 			WHERE 	Contract_Main_ID = '#Contract_Main_ID#'
 		</CFQUERY>
+</cfif>
 		<cfif checkIfAlreadySentRFAEmail.recordCount>
 			<cfif checkIfAlreadySentRFAEmail.RFA_Email_Sent EQ "1">
 				<cfset alreadySentRFAEmail = 0 />

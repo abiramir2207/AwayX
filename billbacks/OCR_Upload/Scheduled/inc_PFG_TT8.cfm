@@ -443,13 +443,33 @@ in inc_PFG_TT8.cfm
 				</cfif>	<!--- END: <cfif qSelPFGFileDataCheck.RecordCount GTE 1> --->
 	
 			<cfelse>
-				<cfquery name="updateOCRUploadLogStatus5" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateOCRUploadLogStatus5 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatus5>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"debug_dev_status" = "Docparser is still processing the file and returning half the results.",
+				"processtries" = "ProcessTries + 1",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatus5 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatus5>
+<cfquery name="updateOCRUploadLogStatus5" datasource="#application.datasource#">
 					UPDATE OCR_Upload_Log 
 					SET 
 						Debug_Dev_Status = 'Docparser is still processing the file and returning half the results.',
 						ProcessTries = ProcessTries + 1,
 						Updated_Date = getDate()
 					WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-				</cfquery> 
+				</cfquery>
+</cfif> 
 			</cfif>  	<!---  <cfif (isCompletelyParsed EQ 1)> --->					
 </cfoutput>

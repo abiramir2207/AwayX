@@ -192,7 +192,20 @@
 					</cfquery>
 				</cfif>
 				<CFLOOP List="#okinsertList#" index="DistId">
-					<cfquery name="qInsertList" datasource="#application.datasource#">
+					<cfset useLakebaseForqInsertList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>
+<cfif useLakebaseForqInsertList>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_distributor_list", {
+			"billback_id" = "#form.billback_ID#",
+			"distributor_id" = "#DistId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertList>
+<cfquery name="qInsertList" datasource="#application.datasource#">
 						INSERT INTO 
 							Billback_Distributor_List 	
 								(		Billback_ID,
@@ -206,6 +219,7 @@
 										Set Is_BB_Calc = 0
 										Where Billback_ID = '#form.billback_ID#'--->
 					</cfquery>
+</cfif>
 				</CFLOOP>
 						<!--- 		<cfquery name="DeldistList" datasource="#application.datasource#">
 									Delete from Billback_Distributor_List
@@ -944,29 +958,12 @@ User can chose the new Option C to do replace.
 <!--- 
 <CFIF form.selected_bb_payee_type EQ 1 AND GetPayeeType.Billback_Payee_Type_ID EQ form.selected_bb_payee_type AND form.saveOverwriteOption neq "DistributorPayeeRetainExisting">
 
-	<cfset useLakebaseForSaved_Program = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
-<cfif useLakebaseForSaved_Program>
-	<cftry>
-		<cfset Saved_Program = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("billback_program", {
-				"billback_id" = "eq.#form.billback_ID#",
-				"deleted" = "eq.0",
-				"select" = "program_id"
-			}), "program_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForSaved_Program = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForSaved_Program>
-<CFQUERY NAME="Saved_Program" datasource="#application.datasource#">
+	<CFQUERY NAME="Saved_Program" datasource="#application.datasource#">
 		SELECT 	Program_ID 
 		FROM 	Billback_Program 
 		WHERE 	Billback_ID= '#form.billback_ID#' AND
 				Deleted = 0
 	</CFQUERY>
-</cfif>
 	
 	<CFIF Saved_Program.RecordCount GT 0>
 		
@@ -983,82 +980,25 @@ User can chose the new Option C to do replace.
 		</CFIF>
 		<CFIF form.selected_bb_payee_type EQ 1 AND GetPayeeType.Distributor_ID NEQ form.distributor_ID AND
 				Saved_Program.RecordCount EQ NewPayee_In_Program.RecordCount>
-			<cfset useLakebaseForqRemoveDistributorProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
-<cfif useLakebaseForqRemoveDistributorProducts>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_product",
-			{
-				"billback_id" = "eq.#form.billback_ID#",
-				"distributor_id" = "eq.#GetPayeeType.Distributor_ID#"
-			},
-			{
-				"distributor_id" = "#form.distributor_ID#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqRemoveDistributorProducts = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqRemoveDistributorProducts>
-<CFQUERY NAME="qRemoveDistributorProducts" datasource="#application.datasource#">
+			<CFQUERY NAME="qRemoveDistributorProducts" datasource="#application.datasource#">
 				UPDATE 	Billback_Product 
 				SET 	Distributor_id = '#form.distributor_ID#'
 				WHERE 	Billback_ID= '#form.billback_ID#' AND
 						Distributor_id = '#GetPayeeType.Distributor_ID#'
 			</CFQUERY>
-</cfif>
-			<cfset useLakebaseForqRemoveDistributorProductDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
-<cfif useLakebaseForqRemoveDistributorProductDetail>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_product_detail",
-			{
-				"billback_id" = "eq.#form.billback_ID#",
-				"distributor_id_earned" = "eq.#GetPayeeType.Distributor_ID#"
-			},
-			{
-				"distributor_id_earned" = "#form.distributor_ID#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqRemoveDistributorProductDetail = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqRemoveDistributorProductDetail>
-<CFQUERY NAME="qRemoveDistributorProductDetail" datasource="#application.datasource#">
+			<CFQUERY NAME="qRemoveDistributorProductDetail" datasource="#application.datasource#">
 				UPDATE 	Billback_Product_detail 
 				SET 	Distributor_id_Earned = '#form.distributor_ID#'
 				WHERE 	Billback_ID= '#form.billback_ID#' AND
 						Distributor_id_Earned = '#GetPayeeType.Distributor_ID#'
 			</CFQUERY>
-</cfif>
 
-			<cfset useLakebaseForqUpdateDistributorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
-<cfif useLakebaseForqUpdateDistributorID>
-	<cftry>
-		<cfset application.oLakebase.updateRows("bb_item_invoice_level",
-			{
-				"billback_id" = "eq.#form.billback_ID#",
-				"distributor_id" = "eq.#GetPayeeType.Distributor_ID#"
-			},
-			{
-				"distributor_id" = "#form.distributor_ID#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqUpdateDistributorID = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqUpdateDistributorID>
-<CFQUERY NAME="qUpdateDistributorID" datasource="#application.datasource#">
+			<CFQUERY NAME="qUpdateDistributorID" datasource="#application.datasource#">
 				UPDATE 	BB_Item_Invoice_Level 
 				SET 	Distributor_id = '#form.distributor_ID#'
 				WHERE 	Billback_ID= '#form.billback_ID#'   AND
 						Distributor_id = '#GetPayeeType.Distributor_ID#'
 			</CFQUERY>
-</cfif>
 			<!--- Dev Note- Milan; 17165 - Do this only when there are products ("alertlist" is a list of distributors) 
 						added to the billback. 
 			--->

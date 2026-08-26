@@ -239,25 +239,10 @@ ORDER BY 	BSA_Foodservice_Items_Master.Is_Divested,c.ship_to, Billback_Product.P
 	 AND BPR.Distributor_ID = ERP.Distributor_ID
 	 AND BPR.Deleted = 0
 </cfquery>	
-<!--- <cfset useLakebaseForgetCsrSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
-<cfif useLakebaseForgetCsrSettings>
-	<cftry>
-		<cfset getCsrSettings = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("general_settings", {
-				"select" = "csr_path,csr_days_to_store,csr_address_label"
-			}), "csr_path,csr_days_to_store,csr_address_label"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetCsrSettings = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetCsrSettings>
-<cfquery name="getCsrSettings" datasource="#application.datasource#">
+<!--- <cfquery name="getCsrSettings" datasource="#application.datasource#">
  	Select Csr_Path,Csr_Days_To_Store,Csr_Address_Label
     From General_Settings
- </cfquery>
-</cfif> --->
+ </cfquery> --->
 <cfif GetVendorId.Vendor_Master_ID neq "">
  <cfset variables.showVendorInfo = true />
   

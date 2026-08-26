@@ -85,27 +85,11 @@ Maybe <INPUT TYPE="Radio" NAME="MailingList" VALUE="MAYBE">
 <!---// TIP: If you are storing the WDDX packet create by wddxFormLibrary, you could do
         something the following instead to either retrieve the stored data, or use the 
         default data
-<cfset useLakebaseForGetExistingData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("survey")>
-<cfif useLakebaseForGetExistingData>
-	<cftry>
-		<cfset GetExistingData = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("survey", {
-				"id" = "eq.#URL.ID#",
-				"select" = "wddxpacket"
-			}), "wddxpacket"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetExistingData = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetExistingData>
 <CFQUERY NAME="GetExistingData" DATASOURCE="#Application.DSN#">
 	SELECT wddxPacket
 	FROM Survey
 	WHERE ID = #URL.ID#
 </CFQUERY>
-</cfif>
 
 <CFIF GetExistingData.RecordCount GT 0>
 	<CFSET wddxPacket = GetExistingData.wddxPacket>

@@ -99,23 +99,61 @@ Updated_By
 	<!--- Delete record --->
 	<cfif FORM.deleterecord EQ 1>
 		
-		<cfquery name="delete_Data" datasource="#application.datasource#">
+		<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_bid_won_by",
+			{
+				"program_bid_won_by_id" = "eq.#FORM.Program_Bid_Won_By_ID#"
+			},
+			{
+				"deleted" = "1",
+				"updated_date" = "#Now()#",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<cfquery name="delete_Data" datasource="#application.datasource#">
 			UPDATE Program_Bid_Won_By 
 			SET     Deleted = 1,  
 			Updated_Date			= #Now()#,
 			Updated_By				= '#request.AccessStructure.User_ID#' 
 			WHERE Program_Bid_Won_By_ID = #FORM.Program_Bid_Won_By_ID#
 		</cfquery>
+</cfif>
 	
 	<cfelseif FORM.Program_Bid_Won_By_ID EQ "">
 	
 		<!--- Insert the record --->
-		<cfquery name="Save_Data" datasource="#application.datasource#">
+		<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_bid_won_by", {
+			"program_bid_won_by_code" = "#FORM.ProgramBidWonByCode#",
+			"program_bid_won_by_description" = "#FORM.ProgramBidWonByDescription#",
+			"active" = "#FORM.Active#",
+			"updated_date" = "#Now()#",
+			"updated_by" = "#request.AccessStructure.User_ID#",
+			"deleted" = "0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<cfquery name="Save_Data" datasource="#application.datasource#">
 			INSERT INTO Program_Bid_Won_By
 				(Program_Bid_Won_By_Code,Program_Bid_Won_By_Description,Active,Updated_Date,Updated_By,Deleted)
 			VALUES
 				('#FORM.ProgramBidWonByCode#','#FORM.ProgramBidWonByDescription#',#FORM.Active#,#Now()#,'#request.AccessStructure.User_ID#',0)
 		</cfquery>
+</cfif>
 		
 	<cfelse>
 		

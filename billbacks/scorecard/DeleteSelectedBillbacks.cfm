@@ -47,13 +47,33 @@
 		<cfset IsAutoBB = 1>
 			<cfinclude template="/billbacks/common/auto_bb_delete.cfm">
 	<cfelse>
-		<cfquery name="DeleteTheBillbacks" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteTheBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForDeleteTheBillbacks>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by_user_id" = "#request.AccessStructure.User_ID#",
+				"deleted_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteTheBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteTheBillbacks>
+<cfquery name="DeleteTheBillbacks" datasource="#application.datasource#">
 			UPDATE Billback 
 			SET Deleted = 1
 			,Deleted_By_User_id =  '#request.AccessStructure.User_ID#'
 			,Deleted_Date = getdate()
 			WHERE Billback_ID = '#Billback_ID#'
 		</cfquery>
+</cfif>
 		<cfstoredproc procedure="Upload_EDI_Dup_Delete" datasource="#application.datasource#">	
 			<cfprocparam type="In" CFSQLType="CF_SQL_VARCHAR"	dbVarName = "@@Billback_ID" value="#Billback_ID#" null="false" />
 			<cfprocparam type="In" CFSQLType="CF_SQL_INTEGER"	dbVarName = "@@Upload_ID" null="true"/>

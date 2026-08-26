@@ -274,13 +274,33 @@
 	
 <!--- Lock that particular contract --->
 	<CFIF isContractCurrentlyLocked.Sales_Agreement_Is_Locked EQ 0>
-		<CFQUERY NAME="lockContractFromOtherUsers" datasource="#application.datasource#">
+		<cfset useLakebaseForlockContractFromOtherUsers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForlockContractFromOtherUsers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"export_sales_agreement_id" = "eq.#CTLKR_Sales_Agreement_ID#"
+			},
+			{
+				"sales_agreement_is_locked" = "1",
+				"sales_agreement_locked_by_user_id" = "#request.AccessStructure.User_ID#",
+				"sales_agreement_lock_date" = "#createodbcdatetime(Now())#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlockContractFromOtherUsers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlockContractFromOtherUsers>
+<CFQUERY NAME="lockContractFromOtherUsers" datasource="#application.datasource#">
 			UPDATE Export_Sales_Agreement
 			Set Sales_Agreement_Is_Locked = 1
 			,Sales_Agreement_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 			,Sales_Agreement_Lock_Date = #createodbcdatetime(Now())#
 			WHERE Export_Sales_Agreement_ID = '#CTLKR_Sales_Agreement_ID#'
 		</CFQUERY>
+</cfif>
 		<cfset this.editMode = 1 />
 	</CFIF>
 

@@ -484,12 +484,26 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 
 		<CFIF IsDefined("form.excludeDistributor") AND form.excludeDistributor neq "">
 			<CFLOOP INDEX="ListDistributor_ID" LIST="#request.app_general_functions.listRemoveDupes(excludeDistributor,",")#" DELIMITERS=",">
-				<cfquery name="SaveDistributorExceptions" datasource="#application.datasource#">
+				<cfset useLakebaseForSaveDistributorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors_exceptions")>
+<cfif useLakebaseForSaveDistributorExceptions>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_distributors_exceptions", {
+			"bsa_foodservice_customers_id" = "#Replace(ListDistributor_ID,"_","-", "ALL")#",
+			"contract_main_id" = "#FORM.Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaveDistributorExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaveDistributorExceptions>
+<cfquery name="SaveDistributorExceptions" datasource="#application.datasource#">
 					INSERT INTO Contract_Distributors_Exceptions
 					(BSA_Foodservice_Customers_ID, Contract_Main_ID)
 					VALUES
 					('#Replace(ListDistributor_ID,"_","-", "ALL")#', '#FORM.Contract_Main_ID#')
 				</cfquery>
+</cfif>
 			</CFLOOP>
 		</CFIF>
 		<!--- (end) DISTRIBUTOR EXCEPTIONS --->
@@ -779,12 +793,27 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 					AND Contract_Main_Id = #FORM.Contract_Main_ID# AND Deleted = 0
 				</CFQUERY>
 				<CFIF Check_existance.recordcount EQ 0 and len(trim(Get_Broker.BSA_Foodservice_Brokers_ID)) EQ 36> <!--- length of guid --->
-					<CFQUERY NAME="insert_autobrokers" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForinsert_autobrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseForinsert_autobrokers>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_brokers", {
+			"bsa_foodservice_brokers_id" = "#Get_Broker.BSA_Foodservice_Brokers_ID#",
+			"contract_main_id" = "#FORM.Contract_Main_ID#",
+			"auto_selection" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsert_autobrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsert_autobrokers>
+<CFQUERY NAME="insert_autobrokers" DATASOURCE="#Application.Datasource#">
 						INSERT INTO Contract_Brokers
 						(BSA_Foodservice_Brokers_ID, Contract_Main_ID,Auto_Selection)
 						VALUES
 						('#Get_Broker.BSA_Foodservice_Brokers_ID#','#FORM.Contract_Main_ID#',1)
 					</CFQUERY>
+</cfif>
 				</CFIF>
 			</CFIF>
 			<!--- ################################################################################### --->

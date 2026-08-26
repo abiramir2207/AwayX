@@ -2808,27 +2808,11 @@
             Req.Approval By</cfoutput></TD>
         </TR>
     </CFIF>
-            <cfset useLakebaseForApprovedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
-<cfif useLakebaseForApprovedUser>
-	<cftry>
-		<cfset ApprovedUser = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("_users", {
-				"user_id" = "eq.#CSLGetContractInfo.Approved_By_User_ID#",
-				"select" = "name_first,name_last"
-			}), "name_first,name_last"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForApprovedUser = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForApprovedUser>
-<cfquery name="ApprovedUser" datasource="#application.datasource#">
+            <cfquery name="ApprovedUser" datasource="#application.datasource#">
                 SELECT Name_First, Name_Last
                 FROM _Users
                 WHERE User_ID = '#CSLGetContractInfo.Approved_By_User_ID#'
     </cfquery>
-</cfif>
     <!--- 	ooooooooooooooooooooooooooooooooooooooooooo
                     Flag that says this is a LSAutoPay template
                     Set in Common_Queries.cfm 	bHideFromLSAutoPay

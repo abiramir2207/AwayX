@@ -1278,26 +1278,10 @@ Usage:			N/A
 					<cfif totalClosedWithoutDed GT 0 AND bDeductionExists EQ 1 AND OriginalDDAttached NEQ "">
 
 						<!---
-							<cfset useLakebaseForqrySplitBBs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
-<cfif useLakebaseForqrySplitBBs>
-	<cftry>
-		<cfset qrySplitBBs = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("billback", {
-				"bb_parent_id" = "eq.#Parent_ID#",
-				"bb_closing_method" = "eq.2"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqrySplitBBs = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqrySplitBBs>
-<cfquery name="qrySplitBBs" datasource="#application.datasource#">
+							<cfquery name="qrySplitBBs" datasource="#application.datasource#">
 								SELECT * FROM Billback
 								WHERE BB_Parent_ID = '#Parent_ID#' AND BB_Closing_Method = 2
 							</cfquery>
-</cfif>
 						--->
 						<cfset useLakebaseForupdBBSplit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
 <cfif useLakebaseForupdBBSplit>
@@ -1530,9 +1514,25 @@ Usage:			N/A
 				EXEC BB_Approve_Data_Validation '#Billback_ID#'
 			</CFQUERY>
 
-			<CFQUERY NAME="Sel_DataVal_Result" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForSel_DataVal_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForSel_DataVal_Result>
+	<cftry>
+		<cfset Sel_DataVal_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_approve_data_validation_success"
+			}), "bb_approve_data_validation_success"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSel_DataVal_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSel_DataVal_Result>
+<CFQUERY NAME="Sel_DataVal_Result" DATASOURCE="#Application.Datasource#">
 				SELECT BB_Approve_Data_Validation_Success FROM BIllback WHERE Billback_ID = '#Billback_ID#'
 			</CFQUERY>
+</cfif>
 
 			<CFIF Sel_DataVal_Result.BB_Approve_Data_Validation_Success EQ 1>
 				<cfquery name="CreateExclusion" datasource="#application.datasource#">
@@ -2041,11 +2041,27 @@ Usage:			N/A
 
 		<cfif appsettings.getBillbackModifyAgree() EQ 1>
 			<!--- Check If modify agree is 1 --->
-			<cfquery name="getBBInfo" datasource="#application.datasource#">
+			<cfset useLakebaseForgetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetBBInfo>
+	<cftry>
+		<cfset getBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_modify_agree"
+			}), "bb_modify_agree"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBInfo>
+<cfquery name="getBBInfo" datasource="#application.datasource#">
 				SELECT BB_Modify_Agree
 				FROM Billback
 				WHERE Billback_Id = '#Billback_ID#'
 			</cfquery>
+</cfif>
 			<cfif getBBInfo.BB_Modify_Agree EQ 1>
 				<cfinclude template="/billbacks/Approval/save_modifyagree_BBchanges.cfm">
 				<cfset useLakebaseForUpdateModifyAgreeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>

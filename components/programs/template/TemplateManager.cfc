@@ -1435,7 +1435,27 @@ DEPENDENCIES:
 			<cfargument name="TemplateID" required="true" type="numeric" />
 			<cfargument name="Current_User_ID" type="string" required="true" />
 
-			<cfquery name="qLockTemplate" datasource="#application.datasource#">
+			<cfset useLakebaseForqLockTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqLockTemplate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#arguments.TemplateID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "1",
+				"locked_by" = "#arguments.Current_User_ID#",
+				"locked_time" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLockTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLockTemplate>
+<cfquery name="qLockTemplate" datasource="#application.datasource#">
 				UPDATE Program_Control_Panel_Options
 					SET		IS_Locked = 1,
 							Locked_By = '#arguments.Current_User_ID#',
@@ -1443,6 +1463,7 @@ DEPENDENCIES:
 					WHERE	ProgramControl_Panel_Options_ID = '#arguments.TemplateID#'
 					AND		Deleted = 0
 			</cfquery>
+</cfif>
 		</cffunction>
 
 		<cffunction name="GetNewTemplate" output="false">
@@ -1675,7 +1696,28 @@ DEPENDENCIES:
 	<cffunction name="saveApprovalMetrics" output="false">
 		<cfargument name="templateId" required="true" type="numeric" />
 		<cfargument name="formScope" required="true" type="struct" />
-			<cfquery name="saveApprovalMetrics" datasource="#application.datasource#">
+			<cfset useLakebaseForsaveApprovalMetrics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForsaveApprovalMetrics>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#arguments.templateId#"
+			},
+			{
+				"approval_margin_item" = "#Evaluate("arguments.formScope.approval_margin_item")#",
+				"approval_spend_item" = "#Evaluate("arguments.formScope.approval_spend_item")#",
+				"approval_program_margin" = "#Evaluate("arguments.formScope.approval_program_margin")#",
+				"approval_program_spend" = "#Evaluate("arguments.formScope.approval_program_spend")#",
+				"approval_uom" = "#Evaluate("arguments.formScope.approval_uom")#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveApprovalMetrics = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveApprovalMetrics>
+<cfquery name="saveApprovalMetrics" datasource="#application.datasource#">
 				update Program_Control_Panel_Options
 				set approval_margin_item = #Evaluate("arguments.formScope.approval_margin_item")#,
 				approval_spend_item = #Evaluate("arguments.formScope.approval_spend_item")#,
@@ -1684,16 +1726,33 @@ DEPENDENCIES:
 				approval_uom = #Evaluate("arguments.formScope.approval_uom")#
 				where ProgramControl_Panel_Options_ID = '#arguments.templateId#'
 			</cfquery>
+</cfif>
 	</cffunction>
 
 		<cffunction name="getApprovalMetrics" output="false">
 		<cfargument name="templateId" required="true" type="numeric" />
-			<cfquery name="qgetApprovalMetrics" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetApprovalMetrics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqgetApprovalMetrics>
+	<cftry>
+		<cfset qgetApprovalMetrics = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.templateId#",
+				"select" = "approval_margin_item,approval_spend_item,approval_program_margin,approval_program_spend,approval_uom"
+			}), "approval_margin_item,approval_spend_item,approval_program_margin,approval_program_spend,approval_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetApprovalMetrics = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetApprovalMetrics>
+<cfquery name="qgetApprovalMetrics" datasource="#application.datasource#">
 				select approval_margin_item,approval_spend_item,approval_program_margin,approval_program_spend,approval_uom
 				from
 				Program_Control_Panel_Options
 				where ProgramControl_Panel_Options_ID = '#arguments.templateId#'
 			</cfquery>
+</cfif>
 		<cfreturn qgetApprovalMetrics />
 	</cffunction>
 

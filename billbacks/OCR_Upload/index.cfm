@@ -67,7 +67,27 @@ Description  :
 	</cfquery>
 </cfif>
 	<cfif qGetBBUploadID.RecordCount EQ 1 AND qGetBBUploadID.BB_Upload_ID NEQ "">
-		<cfquery name="qUpdBBUploadLog" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdBBUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_log")>
+<cfif useLakebaseForqUpdBBUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_upload_log",
+			{
+				"upload_id" = "eq.#qGetBBUploadID.BB_Upload_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "#Request.AccessStructure.User_ID#",
+				"deleted_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdBBUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdBBUploadLog>
+<cfquery name="qUpdBBUploadLog" datasource="#application.datasource#">
 			UPDATE 
 				BB_Upload_Log
 			SET 
@@ -76,9 +96,32 @@ Description  :
 				Deleted_Date = getDate()
 			WHERE Upload_ID = '#qGetBBUploadID.BB_Upload_ID#' AND Deleted = 0
 		</cfquery>
+</cfif>
 	</cfif>
 	
-	<cfquery name="qUpdOCRUploadLog" datasource="#application.datasource#">
+	<cfset useLakebaseForqUpdOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#FORM.deleteOCRUploadID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"ocr_step" = "404",
+				"deleted" = "1",
+				"deleted_by" = "#Request.AccessStructure.User_ID#",
+				"deleted_date" = "#now()#",
+				"ocr_upload_status" = "OCR Upload Deleted by user"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdOCRUploadLog>
+<cfquery name="qUpdOCRUploadLog" datasource="#application.datasource#">
 		UPDATE 
 			OCR_Upload_Log
 		SET 
@@ -89,6 +132,7 @@ Description  :
 			OCR_Upload_Status = 'OCR Upload Deleted by user'
 		WHERE OCR_Upload_ID = '#FORM.deleteOCRUploadID#' AND Deleted = 0
 	</cfquery>
+</cfif>
 	
 <!--- 	
 	<div id="sb"><p align="center"><strong><img src="/images/Exclamation_Triangle.gif"/> &nbsp;&nbsp; Upload ID: <cfoutput>#FORM.deleteOCRUploadID# </cfoutput>has been deleted.</strong></p></div> --->

@@ -192,7 +192,27 @@
 		<cfargument name="programId" required="true" default="" />
 		<cfargument name="statusId" required="true" default="" />
 
-		<cfquery name="qApplyStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForqApplyStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForqApplyStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_bid_request",
+			{
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#"
+			},
+			{
+				"bid_request_status_id" = "#arguments.statusId#",
+				"status_changed_date" = "#now()#",
+				"status_changed_by" = "#request.accessstructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqApplyStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqApplyStatus>
+<cfquery name="qApplyStatus" datasource="#application.datasource#">
 			UPDATE	Program_Bid_Request
 			SET 	Bid_Request_Status_ID = #arguments.statusId#,
 					Status_Changed_Date = #now()#,
@@ -200,8 +220,25 @@
 			WHERE	Deleted = 0
 			AND		Program_ID = #arguments.programId#
 		</cfquery>
+</cfif>
 
-		<cfquery name="qApplyStatusHistory" datasource="#application.datasource#">
+		<cfset useLakebaseForqApplyStatusHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request_history")>
+<cfif useLakebaseForqApplyStatusHistory>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_bid_request_history", {
+			"program_id" = "#arguments.programId#",
+			"bid_request_status_id" = "#arguments.statusId#",
+			"updated_by" = "#request.accessstructure.User_ID#",
+			"updated_datetime" = "#now()#",
+			"deleted" = "0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqApplyStatusHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqApplyStatusHistory>
+<cfquery name="qApplyStatusHistory" datasource="#application.datasource#">
 			INSERT INTO	Program_Bid_Request_History
 				(
 					Program_ID
@@ -219,6 +256,7 @@
 					,0
 				)
 		</cfquery>
+</cfif>
 
 		<cfset CreateObject("component", "components.programs.bid_request.BidRequestProductStatusManager").saveBidRequestProductStatus(arguments.programId, arguments.statusId) />
 

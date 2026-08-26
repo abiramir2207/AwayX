@@ -65,27 +65,11 @@
 	<cffunction name="getRebateClaimMechanics" output="false" returntype="query">
 		<cfargument name="ProgramID" type="string" required="true">
 
-			<cfset useLakebaseForqgetClaimMechanics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
-<cfif useLakebaseForqgetClaimMechanics>
-	<cftry>
-		<cfset qgetClaimMechanics = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("program_rebates_component", {
-				"program_id" = "eq.#arguments.ProgramID#",
-				"select" = "claim_mechanics"
-			}), "claim_mechanics"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqgetClaimMechanics = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqgetClaimMechanics>
-<cfquery name="qgetClaimMechanics" datasource="#application.datasource#">
+			<cfquery name="qgetClaimMechanics" datasource="#application.datasource#">
 				SELECT DISTINCT Claim_Mechanics
 				FROM Program_Rebates_Component
 				WHERE Program_ID = '#arguments.ProgramID#'
 			</cfquery>
-</cfif>
 			<cfreturn qgetClaimMechanics>
 	</cffunction>
 	--->

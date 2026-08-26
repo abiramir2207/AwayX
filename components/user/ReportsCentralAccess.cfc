@@ -256,7 +256,28 @@
 			<cfargument name="Group_Icon" required="true" type="string" />
 			<cfargument name="User_ID" required="true" type="string" />
 		
-			<cfquery name="qUpdateReportGroup" datasource="#application.datasource#">
+			<cfset useLakebaseForqUpdateReportGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_groups")>
+<cfif useLakebaseForqUpdateReportGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("report_groups",
+			{
+				"group_id" = "eq.#Arguments.Group_ID#"
+			},
+			{
+				"group_label" = "#Arguments.Group_Label#",
+				"icon_used" = "#Arguments.Icon_Used#",
+				"group_icon" = "#Arguments.Group_Icon#",
+				"lastupdated" = "#now()#",
+				"updated_userid" = "#Arguments.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateReportGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateReportGroup>
+<cfquery name="qUpdateReportGroup" datasource="#application.datasource#">
 				Update Report_Groups
 				Set Group_Label = '#Arguments.Group_Label#',
 					Icon_Used = '#Arguments.Icon_Used#',
@@ -265,5 +286,6 @@
 					Updated_UserID = '#Arguments.User_ID#'
 				Where Group_ID = '#Arguments.Group_ID#'
 			</cfquery>
+</cfif>
 		</cffunction>
 </cfcomponent>

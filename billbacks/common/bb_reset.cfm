@@ -18,23 +18,7 @@ bb_reset.cfm
 	<CFIF variables.qGetReferencedBillbacks.recordcount GT 0>
 		<CFSET reset_This_Billback = 0>
 	</CFIF>
-	<cfset useLakebaseForBB_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
-<cfif useLakebaseForBB_Info>
-	<cftry>
-		<cfset BB_Info = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("billback", {
-				"billback_id" = "eq.#Billback_ID#",
-				"deleted" = "eq.0",
-				"select" = "bb_code,bb_title,billback_status_id"
-			}), "bb_code,bb_title,billback_status_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForBB_Info = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForBB_Info>
-<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
+	<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
 		SELECT	BB_Code, BB_Title, Billback_Status_ID
 		FROM	Billback
 		WHERE
@@ -42,7 +26,6 @@ bb_reset.cfm
 				AND
 				Billback.Deleted = 0
 	</CFQUERY>
-</cfif>
 	<CFIF BB_Info.recordCount GT 0>
 		<HTML>
 		<HEAD>

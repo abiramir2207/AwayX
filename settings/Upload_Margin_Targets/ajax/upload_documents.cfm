@@ -271,7 +271,31 @@
 </cfif>
 
 			<cfif checkItemExist.recordcount>
-				<cfquery name="updateItem" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload")>
+<cfif useLakebaseForupdateItem>
+	<cftry>
+		<cfset application.oLakebase.updateRows("margin_targets_upload",
+			{
+				"item" = "eq.#item#",
+				"bsa_foodservice_items_master_id" = "eq.#getBSAID.BSA_Foodservice_Items_Master_ID#"
+			},
+			{
+				"distribution_channel" = "#Distribution_Channel#",
+				"net_sales_target_value" = "#Net_Sales_Target_Value#",
+				"net_sales_floor_value" = "#Net_Sales_Floor_Value#",
+				"gm_target_value" = "#GM_Target_Value#",
+				"gm_floor_value" = "#GM_Floor_Value#",
+				"updated_by" = "#request.AccessStructure.user_id#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateItem>
+<cfquery name="updateItem" datasource="#application.datasource#">
 				UPDATE Margin_Targets_Upload
 				SET Distribution_Channel = '#Distribution_Channel#'
 						, Net_Sales_Target_Value = '#Net_Sales_Target_Value#'
@@ -283,6 +307,7 @@
 				WHERE Item = '#item#'
 				AND BSA_Foodservice_Items_Master_ID = '#getBSAID.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 			<cfelse>
 					<cfset useLakebaseForinsertItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload")>
 <cfif useLakebaseForinsertItem>

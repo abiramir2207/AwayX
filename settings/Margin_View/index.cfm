@@ -12,7 +12,21 @@ This allows an administrator to specify how many days old a billback needs to be
 <cfif isDefined("form.blnSubmit")>
 		<!---If there is no prior record for this group--->
 		<cfif FORM.up_sv EQ 0>
-			 <CFQUERY NAME="INSERT_Margin_View" DATASOURCE="#application.datasource#">
+			 <cfset useLakebaseForINSERT_Margin_View = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_view")>
+<cfif useLakebaseForINSERT_Margin_View>
+	<cftry>
+		<cfset application.oLakebase.insertRow("margin_view", {
+			"user_id" = "#request.AccessStructure.User_ID#",
+			"date_updated" = "#createodbcdatetime(Now())#",
+			"margin_view_type" = "#form.margin_view_type#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForINSERT_Margin_View = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForINSERT_Margin_View>
+<CFQUERY NAME="INSERT_Margin_View" DATASOURCE="#application.datasource#">
 				INSERT INTO Margin_View
 				(User_ID, 
 				Date_Updated, 
@@ -21,7 +35,8 @@ This allows an administrator to specify how many days old a billback needs to be
 				('#request.AccessStructure.User_ID#', 
 				#createodbcdatetime(Now())#, 
 				'#form.margin_view_type#')
-			</CFQUERY> 
+			</CFQUERY>
+</cfif> 
 		
 		<cfelse>
 			 <CFQUERY NAME="UPDATE_Margin_View" DATASOURCE="#application.datasource#">

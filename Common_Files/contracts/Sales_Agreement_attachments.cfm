@@ -36,26 +36,11 @@
 <cfif application.programlayout EQ 1>
  <div id="Layer1" style="position:relative; height:430px; width:200px; z-index:1; left: 150px; top: 10px;"></cfif>
 <!------
-<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForGetContractInfo>
-	<cftry>
-		<cfset GetContractInfo = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_main", {
-				"contract_main_id" = "eq.#cryp.value#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetContractInfo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetContractInfo>
 <cfquery name="GetContractInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Main
 	WHERE Contract_Main_ID = #cryp.value#
 </cfquery>
-</cfif>
 
 	<HR COLOR="Blue" SIZE="1" WIDTH="800" ALIGN="left">
 

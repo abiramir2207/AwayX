@@ -75,12 +75,31 @@ WHERE Payment_Template_Mapping.Template_ID = '#ID#'
 
 <cfif error IS 0 OR GetAllInfo.Generic_Type EQ "LSAutoPay">
 	<!---Update the record--->
-	<cfquery name="UpdateTemplate" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdateTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForUpdateTemplate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#ID#"
+			},
+			{
+				"active" = "1",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTemplate>
+<cfquery name="UpdateTemplate" datasource="#application.datasource#">
 	UPDATE Program_Control_Panel_Options
 	SET 	Active 					= 	1,
 			Updated_By				=	'#request.AccessStructure.User_ID#'
 	WHERE ProgramControl_Panel_Options_ID = #ID#
 	</cfquery>
+</cfif>
 	
 	<cflocation url="/Program_Wizard/index.cfm">
 

@@ -54,7 +54,36 @@ Description  : 	Page to create NUC Targets
 			param name="form.allow_duplicate_programs" default="";
 		</cfscript>
 
-		<cfquery name="updPerfTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForupdPerfTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_perf_types")>
+<cfif useLakebaseForupdPerfTypes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_perf_types",
+			{
+				"planner_perf_types_id" = "eq.#perfTypesActive.Planner_Perf_Types_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"sort_order" = "#vSort_Order_value#",
+				"color" = "#vColor_value#",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.accessStructure.User_Id#",
+				"everyday_price" = "#isEveryDayPrice#",
+				"slotting" = "#(form[ slotting_name ] neq '' ? 1 : 0)#",
+				"accrual" = "#isAccrual#",
+				"allow_duplicate_programs" = "#bAllowDuplicatePrograms#",
+				"default_duration" = "#vDefault_Duration#",
+				"default_delivery_days_start" = "#vDefault_Delivery_Days_Start#",
+				"default_delivery_days_end" = "#vDefault_Delivery_Days_End#",
+				"default_use" = "#vDefault_Use#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdPerfTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdPerfTypes>
+<cfquery name="updPerfTypes" datasource="#application.datasource#">
 			UPDATE Planner_Perf_Types
 				SET
 					Sort_Order		= #vSort_Order_value#,
@@ -72,6 +101,7 @@ Description  : 	Page to create NUC Targets
 				WHERE   Planner_Perf_Types_ID = '#perfTypesActive.Planner_Perf_Types_ID#'
 				AND Deleted = 0
 		</cfquery>
+</cfif>
 	</cfloop>
 
 <cfelseif FORM.display EQ "Active" AND FORM.command EQ "deactSel">

@@ -2426,7 +2426,22 @@ components.programs.volume.ProgramVolume
 			<cfelse>
 
 				<!---------- Insert Global Volume Rule ------------>
-				<cfquery name="qInsertPrgmProds" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsertPrgmProds = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqInsertPrgmProds>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_product_volume", {
+			"program_id" = "#arguments.programVolume.getProgramId()#",
+			"bsa_foodservice_items_master_id" = "#trim(aProgramProductVolume[indx].getItemMasterId())#",
+			"volume_lb" = "#trim(aProgramProductVolume[indx].getVolumeLB())#",
+			"volume_cs" = "#trim(aProgramProductVolume[indx].getVolumeCS())#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertPrgmProds = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertPrgmProds>
+<cfquery name="qInsertPrgmProds" datasource="#application.datasource#">
 					INSERT INTO Program_Product_Volume
 						(Program_ID, BSA_Foodservice_Items_Master_ID, Volume_LB, Volume_CS
 						<!------ , Volume_Multiplier, Volume ----->
@@ -2442,6 +2457,7 @@ components.programs.volume.ProgramVolume
 							'#trim(aProgramProductVolume[indx].getVolume())#' ----->
 						)
 				</cfquery>
+</cfif>
 
 			</cfif>
 

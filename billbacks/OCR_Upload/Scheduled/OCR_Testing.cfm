@@ -246,7 +246,22 @@
 					
 					<cfset FieldDifferences = 0 />
 					<cfset URL.Testing = 1 />
-					<cfquery name="qGetOCRUserInput" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetOCRUserInput = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_user_input_testset")>
+<cfif useLakebaseForqGetOCRUserInput>
+	<cftry>
+		<cfset qGetOCRUserInput = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_user_input_testset", {
+				"ocr_upload_id" = "eq.#OCRUploadTestSetID#",
+				"select" = "ocr_user_input_id,ocr_upload_id,ocr_template_settings_id,invoice_number,invoice_amount,invoice_date,start_date,end_date"
+			}), "ocr_user_input_id,ocr_upload_id,ocr_template_settings_id,invoice_number,invoice_amount,invoice_date,start_date,end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOCRUserInput = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOCRUserInput>
+<cfquery name="qGetOCRUserInput" datasource="#application.datasource#">
 						SELECT  
 							OCR_User_Input_ID,
 							OCR_Upload_ID,
@@ -260,6 +275,7 @@
 							OCR_User_Input_Testset
 						WHERE OCR_Upload_ID = '#OCRUploadTestSetID#'
 					</cfquery>
+</cfif>
 				
 				<cfset inputCtr = 0 />
 				<cfloop query="qGetOCRUserInput">

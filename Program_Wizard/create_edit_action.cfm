@@ -2172,22 +2172,63 @@ Processes form information from the previous page.
 </cfif>
 		</cfif>
 		<cfif listfind(form.Auto_Renew_Selected_Options, Options) EQ 0>
-			<cfquery name="UpdateSelection" datasource="#application.datasource#">
+			<cfset useLakebaseForUpdateSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_auto_renew_options")>
+<cfif useLakebaseForUpdateSelection>
+	<cftry>
+		<cfset application.oLakebase.updateRows("template_auto_renew_options",
+			{
+				"template_first_parent_id" = "eq.#getFisrParentID.First_Parent_ID#",
+				"auto_renew_option_id" = "eq.#Options#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateSelection>
+<cfquery name="UpdateSelection" datasource="#application.datasource#">
 				UPDATE Template_Auto_Renew_Options
 				SET Deleted = 1, Updated_date = getdate()
 				WHERE Template_First_Parent_ID = #getFisrParentID.First_Parent_ID#
 				AND Auto_Renew_Option_ID = #Options#
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 		</cfif>
 	</cfloop>
 <cfelse>
-	<cfquery name="updateTemplateAutoRenewOptions" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateTemplateAutoRenewOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_auto_renew_options")>
+<cfif useLakebaseForupdateTemplateAutoRenewOptions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("template_auto_renew_options",
+			{
+				"template_first_parent_id" = "eq.#getFisrParentID.First_Parent_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTemplateAutoRenewOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTemplateAutoRenewOptions>
+<cfquery name="updateTemplateAutoRenewOptions" datasource="#application.datasource#">
 		UPDATE Template_Auto_Renew_Options
 		SET Deleted = 1, Updated_date = getdate()
 		WHERE Template_First_Parent_ID = #getFisrParentID.First_Parent_ID#
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 </cfif>
 <!--- NEW --->
 <!--- Checks if template setting "Optional Dates for Program"  is ON we excute below code --->

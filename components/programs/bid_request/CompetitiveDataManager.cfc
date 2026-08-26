@@ -1601,11 +1601,27 @@ DROP TABLE ##TMP_Comp_Won_By_Data
 			var qGetClientBidId	= "";
 		</cfscript>
 
-		<cfquery name="qGetClientBidId" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetClientBidId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForqGetClientBidId>
+	<cftry>
+		<cfset qGetClientBidId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"is_client" = "eq.1",
+				"select" = "program_bid_won_by_id"
+			}), "program_bid_won_by_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClientBidId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClientBidId>
+<cfquery name="qGetClientBidId" datasource="#application.datasource#">
 			SELECT	Program_Bid_Won_By_ID
 			FROM	PROGRAM_BID_WON_BY
 			WHERE	Is_Client = 1
 		</cfquery>
+</cfif>
 
 		<cfset nClientBidId = qGetClientBidId.Program_Bid_Won_By_ID />
 

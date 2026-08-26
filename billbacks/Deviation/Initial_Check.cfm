@@ -121,7 +121,26 @@
 					<cfset displayOperDupScreen = 1 />
 					<cfswitch expression="#arguments.actionType#">
 						<cfcase value="ACCEPT">
-							 <cfquery name="updBBOperatorLocationAccept" datasource="#application.datasource#">
+							 <cfset useLakebaseForupdBBOperatorLocationAccept = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
+<cfif useLakebaseForupdBBOperatorLocationAccept>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
+			{
+				"billback_operator_location_detail_id" = "eq.#arguments.BillbackOperatorLocationDetailID#"
+			},
+			{
+				"denied" = "0",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBOperatorLocationAccept = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBOperatorLocationAccept>
+<cfquery name="updBBOperatorLocationAccept" datasource="#application.datasource#">
 					            UPDATE Billback_Operator_Location_Detail 
 					            SET 
 									Denied = 0,
@@ -129,9 +148,29 @@
 									Updated_By = '#request.AccessStructure.User_ID#'
 					            WHERE Billback_Operator_Location_Detail_ID = #arguments.BillbackOperatorLocationDetailID#
 					          </cfquery>
+</cfif>
 						</cfcase>
 						<cfcase value="DENY">
-							<cfquery name="updBBOperatorLocationDeny" datasource="#application.datasource#">
+							<cfset useLakebaseForupdBBOperatorLocationDeny = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
+<cfif useLakebaseForupdBBOperatorLocationDeny>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
+			{
+				"billback_operator_location_detail_id" = "eq.#arguments.BillbackOperatorLocationDetailID#"
+			},
+			{
+				"denied" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBOperatorLocationDeny = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBOperatorLocationDeny>
+<cfquery name="updBBOperatorLocationDeny" datasource="#application.datasource#">
 					            UPDATE Billback_Operator_Location_Detail 
 					            SET 
 									Denied = 1,
@@ -139,9 +178,29 @@
 									Updated_By = '#request.AccessStructure.User_ID#'
 					            WHERE Billback_Operator_Location_Detail_ID = #arguments.BillbackOperatorLocationDetailID#
 					          </cfquery>
+</cfif>
 						</cfcase>
 						<cfcase value="ACCEPTALL">
-							<cfquery name="updBBOperatorLocationAcceptall" datasource="#application.datasource#">
+							<cfset useLakebaseForupdBBOperatorLocationAcceptall = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
+<cfif useLakebaseForupdBBOperatorLocationAcceptall>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
+			{
+				"billback_id" = "eq.#arguments.bbid#"
+			},
+			{
+				"denied" = "0",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBOperatorLocationAcceptall = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBOperatorLocationAcceptall>
+<cfquery name="updBBOperatorLocationAcceptall" datasource="#application.datasource#">
 					            UPDATE Billback_Operator_Location_Detail 
 					            SET 
 									Denied = 0,
@@ -149,6 +208,7 @@
 									Updated_By = '#request.AccessStructure.User_ID#'
 					            WHERE Billback_ID = '#arguments.bbid#'
 							</cfquery>
+</cfif>
 						</cfcase>
 						<cfcase value="DENYALL">
 							<cfstoredproc procedure="Billback_Operator_Location_Duplicate_Checker" datasource="#application.datasource#">
@@ -156,7 +216,27 @@
 						    		<cfprocresult name="getBBOperLocationDupsDenyAll">  
 						    </cfstoredproc>	
 							<cfloop query="getBBOperLocationDupsDenyAll">
-								<cfquery name="updBBOperatorLocationDenyall" datasource="#application.datasource#">
+								<cfset useLakebaseForupdBBOperatorLocationDenyall = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
+<cfif useLakebaseForupdBBOperatorLocationDenyall>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
+			{
+				"billback_id" = "eq.#arguments.bbid#",
+				"billback_operator_location_detail_id" = "eq.#getBBOperLocationDupsDenyAll.Billback_Operator_Location_Detail_ID#"
+			},
+			{
+				"denied" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBOperatorLocationDenyall = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBOperatorLocationDenyall>
+<cfquery name="updBBOperatorLocationDenyall" datasource="#application.datasource#">
 						            UPDATE Billback_Operator_Location_Detail 
 						            SET 
 										Denied = 1,
@@ -165,6 +245,7 @@
 						            WHERE Billback_ID = '#arguments.bbid#' AND 
 										  Billback_Operator_Location_Detail_ID = '#getBBOperLocationDupsDenyAll.Billback_Operator_Location_Detail_ID#'
 								</cfquery>
+</cfif>
 							</cfloop>
 						</cfcase>
 						<cfcase value="RESET">
@@ -215,7 +296,28 @@
 								 </cfloop>
 							</cfif>	
 							<cfif (CanAcceptAll EQ 1)>
-								<cfquery name="selRowsUpdatedAcceptAll" datasource="#application.datasource#">
+								<cfset useLakebaseForselRowsUpdatedAcceptAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
+<cfif useLakebaseForselRowsUpdatedAcceptAll>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
+			{
+				"billback_id" = "eq.#arguments.bbid#",
+				"updated_date" = "is.null",
+				"updated_by" = "is.null"
+			},
+			{
+				"denied" = "0",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselRowsUpdatedAcceptAll = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselRowsUpdatedAcceptAll>
+<cfquery name="selRowsUpdatedAcceptAll" datasource="#application.datasource#">
 									UPDATE Billback_Operator_Location_Detail 
 						            SET 
 										Denied = 0,
@@ -223,6 +325,7 @@
 										Updated_By = '#request.AccessStructure.User_ID#' 
 									WHERE Billback_ID = '#arguments.bbid#' AND Updated_date IS NULL AND Updated_By IS NULL
 								</cfquery>
+</cfif>
 							<cfelse>
 								<cfquery name="selRowsNotUpdated" datasource="#application.datasource#">
 									UPDATE Billback_Operator_Location_Detail 
@@ -459,10 +562,23 @@
 
 					)
 				 AND getDeviationHistory.Billback_Status_ID LT 3>
-				<cfquery name="delDeviationHistory" datasource="#application.datasource#">
+				<cfset useLakebaseFordelDeviationHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
+<cfif useLakebaseFordelDeviationHistory>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("bb_item_invoice_level", {
+			"billback_id" = "eq.#arguments.bbid#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelDeviationHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelDeviationHistory>
+<cfquery name="delDeviationHistory" datasource="#application.datasource#">
 				  DELETE FROM BB_Item_Invoice_Level
 				  WHERE Billback_ID = '#arguments.bbid#'
 				</cfquery>
+</cfif>
 			 <cfelse>
 				<cfset useLakebaseForUpdBBItemInvoiceLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
 <cfif useLakebaseForUpdBBItemInvoiceLevel>

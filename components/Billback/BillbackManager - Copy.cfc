@@ -2054,7 +2054,33 @@ Description:	This file is responsible for managing Billback data.
 		</CFQUERY>
 </cfif>
 	<!--- 	delete 'Manually configured Auto Pay' Pullbacks --->
-		<CFQUERY NAME="unapplyPBLog" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForunapplyPBLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_pb_log")>
+<cfif useLakebaseForunapplyPBLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_auto_report_pb_log",
+			{
+				"applied_to_billback_id" = "eq.#arguments.BillbackID#",
+				"applied" = "eq.1"
+			},
+			{
+				"applied" = "0",
+				"unapplied_by" = "#arguments.userId#",
+				"unapplied_date" = "#now()#",
+				"applied_to_billback_id" = javaCast("null",""),
+				"adjustment_dollars_ineligible_vol" = "0",
+				"pb_corp_rate" = "0",
+				"net_dollars" = "0",
+				"corp_program_id" = javaCast("null",""),
+				"corp_program_number" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunapplyPBLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunapplyPBLog>
+<CFQUERY NAME="unapplyPBLog" DATASOURCE="#application.datasource#">
 					Update BB_Auto_Report_PB_Log
 					SET Applied = 0,
 						Unapplied_by = '#arguments.userId#',
@@ -2068,7 +2094,28 @@ Description:	This file is responsible for managing Billback data.
 					WHERE BB_Auto_Report_PB_Log.Applied_To_Billback_Id = '#arguments.BillbackID#' AND
 						  BB_Auto_Report_PB_Log.Applied = 1
 		</CFQUERY>
-		<CFQUERY NAME="removePBLog" DATASOURCE="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForremovePBLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_pb_log")>
+<cfif useLakebaseForremovePBLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_auto_report_pb_log",
+			{
+				"billback_id" = "eq.#arguments.BillbackID#",
+				"applied" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "#arguments.userId#",
+				"deleted_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForremovePBLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForremovePBLog>
+<CFQUERY NAME="removePBLog" DATASOURCE="#application.datasource#">
 					Update BB_Auto_Report_PB_Log
 						SET Deleted = 1,
 							Deleted_By = '#arguments.userId#',
@@ -2076,6 +2123,7 @@ Description:	This file is responsible for managing Billback data.
 					WHERE BB_Auto_Report_PB_Log.Billback_Id = '#arguments.BillbackID#' AND
 						BB_Auto_Report_PB_Log.Applied = 0
 		</cfquery>
+</cfif>
 		<!--- Remove Broker Pullback Entries --->
 		<cfset CreateObject("component","components.Brk_Pullback.Brk_Pullback_Upd").init().BrkPBDelete(arguments.billbackId) />
 

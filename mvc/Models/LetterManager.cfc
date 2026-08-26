@@ -1900,7 +1900,27 @@ FUNCTIONALITY:
 </cfif>
 
 		<!--- MVC: Looks like we can't use cfqueryparam here? --->
-		<cfquery name="var_qInsertLetterSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForvar_qInsertLetterSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters_settings")>
+<cfif useLakebaseForvar_qInsertLetterSettings>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_letters_settings", {
+			"program_id" = "#arguments.program_id#",
+			"letter_type" = "#Evaluate("arguments.formScope.Letter_Type")#",
+			"operator_letter_type" = "#evaluate("arguments.formScope.Operator_Letter_Type")#",
+			"distributor_letter_type" = "#Evaluate("arguments.formScope.Distributor_Letter_TYpe")#",
+			"opr_letter_settings" = "#evaluate("arguments.formScope.Opr_Letter_Settings")#",
+			"dis_letter_settings" = "#Evaluate("arguments.formScope.Dis_Letter_Settings")#",
+			"notification_type" = "#evaluate("arguments.formScope.notification_type")#",
+			"addcustomerproductnumbers" = "#evaluate(formscope.Addcustomerproductnumbers)#",
+			"user_id" = "#arguments.user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_qInsertLetterSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_qInsertLetterSettings>
+<cfquery name="var_qInsertLetterSettings" datasource="#application.datasource#">
 			INSERT INTO	Program_Letters_Settings
 			(Program_id,Letter_Type,Operator_Letter_Type,Distributor_Letter_Type,
 			Opr_Letter_Settings,Dis_Letter_Settings,Notification_type,Addcustomerproductnumbers,user_id)
@@ -1910,6 +1930,7 @@ FUNCTIONALITY:
 			#evaluate("arguments.formScope.Opr_Letter_Settings")#,#Evaluate("arguments.formScope.Dis_Letter_Settings")#,
 			#evaluate("arguments.formScope.notification_type")#,#evaluate(formscope.Addcustomerproductnumbers)#,'#arguments.user_id#')
 		</cfquery>
+</cfif>
 
 	</cffunction>
 	<!--- MODEL Legacy METHOD: saveLetterSettings() FUNCTIONALITY: I save letter settings to the DB. [end] --->

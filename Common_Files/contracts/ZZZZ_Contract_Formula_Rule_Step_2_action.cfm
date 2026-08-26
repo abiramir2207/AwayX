@@ -188,21 +188,7 @@
 
 
 <CFIF FORM.UPDATE EQ 1>
-	<!------<cfset useLakebaseFordeleteExisting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
-<cfif useLakebaseFordeleteExisting>
-	<cftry>
-		<cfset application.oLakebase.deleteRows("program_formula_pricing_rule_overage", {
-			"program_id" = "eq.#cryp.value#",
-			"active" = "eq.1",
-			"deleted" = "eq.0"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseFordeleteExisting = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseFordeleteExisting>
-<CFQUERY NAME="deleteExisting" datasource="#application.datasource#">
+	<!------<CFQUERY NAME="deleteExisting" datasource="#application.datasource#">
 		DELETE FROM Program_Formula_Pricing_Rule_Overage
 		WHERE
 		Program_ID = '#cryp.value#' 
@@ -210,8 +196,7 @@
 		Active = 1
 		AND
 		Deleted = 0
-	</CFQUERY>
-</cfif>----->
+	</CFQUERY>----->
 	<CFQUERY NAME="deleteExisting" datasource="#application.datasource#">
 		UPDATE 		Program_Formula_Pricing_Rule_Overage
 		SET

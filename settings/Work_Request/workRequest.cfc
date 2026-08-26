@@ -455,24 +455,9 @@
 			<cfset Punch_Type_ID = GetTypeID.Punch_Type_ID>
 		</cfif>
 		<cfparam name="Punch_Company_ID" default="1">
-		<!---<cfset useLakebaseForGetMapPunchCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
-<cfif useLakebaseForGetMapPunchCompany>
-	<cftry>
-		<cfset GetMapPunchCompany = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("customer_settings", {
-				"select" = "mappunchcompany"
-			}), "mappunchcompany"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetMapPunchCompany = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetMapPunchCompany>
-<cfquery name="GetMapPunchCompany" datasource="#application.datasource#">
+		<!---<cfquery name="GetMapPunchCompany" datasource="#application.datasource#">
 			SELECT MapPunchCompany FROM Customer_Settings
-		</cfquery>
-</cfif>--->
+		</cfquery>--->
 		<CFIF SupportEmail.MapPunchCompany EQ 0 OR SupportEmail.MapPunchCompany EQ "">
 			<!---Company name isn't going to be a perfect match for the db, so only use the left bit --->
 		<cfset CompanyNameForCompare = left(arguments.Company_Name, 11)>

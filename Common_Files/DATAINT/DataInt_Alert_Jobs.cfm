@@ -177,27 +177,11 @@
 	<td>#qgetAlerts.Job_Name#</td>
 	<td width="75"><cfinput type="Text" name="AlertTime_#qGetAlerts.intra_id#" value="#qgetAlerts.Alert_time#" size="1" required="Yes" validate="integer" message="Please Enter a valid integer for #qgetAlerts.Job_Name#."> Hours</td>
 	<!---
-	<cfset useLakebaseForqGetContacts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_contacts")>
-<cfif useLakebaseForqGetContacts>
-	<cftry>
-		<cfset qGetContacts = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("data_integration_contacts", {
-				"intra_id" = "eq.#qGetAlerts.intra_id#",
-				"select" = "email"
-			}), "email"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetContacts = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetContacts>
-<cfquery name="qGetContacts" datasource="#application.datasource#">
+	<cfquery name="qGetContacts" datasource="#application.datasource#">
 	Select Distinct email
 	From Data_Integration_Contacts
 	where intra_id = #qGetAlerts.intra_id#
 </cfquery>
-</cfif>
 	<td><cfloop query="qGetContacts"><a href="javascript:(void);" onclick="javascript:window.open('DataInt_Alert.cfm?em=#email#&Intra_Id=#qGetAlerts.intra_id#','configAlert','toolbar=no,width=800,height=460,location=no,menubar=yes,resizable=yes,scrollbars=yes');return false">#email#</a>; </cfloop></td>
 	--->
 </tr><cfset i = i +1>

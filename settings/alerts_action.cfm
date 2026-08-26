@@ -19,7 +19,26 @@
 	<CFPARAM NAME="Alert_Expiration_Email_Address" DEFAULT="">
 
 <CFIF Form.up_sv EQ 0>
-	<CFQUERY NAME="Insert_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForInsert_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("_users_settings", {
+			"user_id" = "#request.AccessStructure.User_ID#",
+			"alert_in_30" = "#Alert_in_30#",
+			"alert_in_45" = "#Alert_in_45#",
+			"alert_in_60" = "#Alert_in_60#",
+			"alert_in_90" = "#Alert_in_90#",
+			"alert_expiration_message" = "#Alert_Expiration_Message#",
+			"alert_expiration_email_address" = "#Alert_Expiration_Email_Address#",
+			"alert_date_updated" = "#createodbcdatetime(now())#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Data>
+<CFQUERY NAME="Insert_Data" datasource="#application.datasource#">
 		INSERT INTO _Users_Settings
 			(
 				user_id, 
@@ -43,8 +62,32 @@
 				#createodbcdatetime(now())#
 			)
 	</CFQUERY>
+</cfif>
 <CFELSE>
-	<CFQUERY NAME="Update_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdate_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForUpdate_Data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users_settings",
+			{
+				"user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"alert_in_30" = "#Alert_in_30#",
+				"alert_in_45" = "#Alert_in_45#",
+				"alert_in_60" = "#Alert_in_60#",
+				"alert_in_90" = "#Alert_in_90#",
+				"alert_expiration_message" = "#Alert_Expiration_Message#",
+				"alert_expiration_email_address" = "#Alert_Expiration_Email_Address#",
+				"alert_date_updated" = "#createodbcdatetime(now())#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Data>
+<CFQUERY NAME="Update_Data" datasource="#application.datasource#">
 		Update _Users_Settings
 		Set
 				Alert_in_30						= 		#Alert_in_30#,
@@ -57,6 +100,7 @@
 
 		Where	user_id 						=		'#request.AccessStructure.User_ID#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 

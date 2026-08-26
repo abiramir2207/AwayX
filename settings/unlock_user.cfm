@@ -19,7 +19,28 @@
 			<CFSET tempPassword=tempPassword&mid(alphastring, randrange(1, len(alphastring)), 1)>
 		</CFLOOP>
 
-	<cfquery name="UnlockUser" datasource="#application.datasource#">
+	<cfset useLakebaseForUnlockUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUnlockUser>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#url.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"logintries" = "0",
+				"is_first_time" = "1",
+				"user_password" = "#hash(tempPassword)#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlockUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlockUser>
+<cfquery name="UnlockUser" datasource="#application.datasource#">
 		UPDATE _users
 		SET 
 		Is_Locked = 0, 
@@ -29,6 +50,7 @@
 		WHERE User_ID = '#url.User_ID#'
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 	 
   <!--- 
 	Dev Notes: 23086/Anand Rao/21-May-10
@@ -51,12 +73,29 @@
 
  	<CFINCLUDE TEMPLATE="/get_Contact_Admin_Email_Address.cfm">
 	
-	<cfquery name="ConfirmLogin" datasource="#application.datasource#">
+	<cfset useLakebaseForConfirmLogin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForConfirmLogin>
+	<cftry>
+		<cfset ConfirmLogin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#url.User_ID#",
+				"deleted" = "eq.0",
+				"select" = "user_code,user_password,user_email"
+			}), "user_code,user_password,user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForConfirmLogin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForConfirmLogin>
+<cfquery name="ConfirmLogin" datasource="#application.datasource#">
 		SELECT User_Code, User_Password, User_Email
 		FROM _users
 		WHERE User_ID	=	'#url.User_ID#'
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 	
 	<cfoutput>
 	<CF_EMAILWRAPPER  

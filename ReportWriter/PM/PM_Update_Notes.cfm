@@ -98,12 +98,31 @@ function submit_this()
 	
 	</CFQUERY>
 </cfif>
-	<CFQUERY NAME="Change_Modi_By" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForChange_Modi_By = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForChange_Modi_By>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Form.PM_Item_Master_ID#"
+			},
+			{
+				"pm_modified_by_id" = "#request.AccessStructure.User_ID#",
+				"pm_date_modified" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForChange_Modi_By = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForChange_Modi_By>
+<CFQUERY NAME="Change_Modi_By" DATASOURCE="#Application.Datasource#">
 		UPDATE 		PM_Item_Master 
 		SET 		PM_Modified_By_ID = '#request.AccessStructure.User_ID#',
 					PM_Date_Modified = #now()# 
 		WHERE 		PM_Item_Master_ID = '#Form.PM_Item_Master_ID#'
 	</CFQUERY>
+</cfif>
 	
 	</CFOUTPUT>
 	

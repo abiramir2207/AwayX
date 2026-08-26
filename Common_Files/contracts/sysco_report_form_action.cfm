@@ -4,6 +4,25 @@
 <Cfdump var="#form#">
 
 
+<cfset useLakebaseForUpdateAllToDeleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sysco_deal_sheet_programs")>
+<cfif useLakebaseForUpdateAllToDeleted>
+	<cftry>
+		<cfset application.oLakebase.updateRows("sysco_deal_sheet_programs",
+			{
+				"contract_main_id" = "eq.#form.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_date" = "#now()#",
+				"deleted_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAllToDeleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAllToDeleted>
 <cfquery name="UpdateAllToDeleted" datasource="#application.datasource#">
 UPDATE Sysco_Deal_Sheet_Programs
 SET Deleted = 1,
@@ -11,6 +30,7 @@ Deleted_Date = getdate(),
 Deleted_By = '#request.AccessStructure.User_ID#'
 WHERE Contract_Main_ID = #form.Contract_Main_ID#
 </cfquery>
+</cfif>
 
 <cfloop index = "I"
   from = "1"

@@ -122,10 +122,26 @@ WHERE Billback_ID = '#bbid#'
 </cfif>
 
 <cfif billbackinfo.copiedbb neq "">
-	<cfquery name="CopiedBillback" datasource="#application.datasource#">
+	<cfset useLakebaseForCopiedBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCopiedBillback>
+	<cftry>
+		<cfset CopiedBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#billbackinfo.copiedbb#",
+				"select" = "bb_code,bb_title,bb_start_date,bb_end_date"
+			}), "bb_code,bb_title,bb_start_date,bb_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCopiedBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCopiedBillback>
+<cfquery name="CopiedBillback" datasource="#application.datasource#">
 		SELECT BB_Code,BB_Title,bb_start_date,bb_end_date FROM Billback
 		WHERE billback_id = '#billbackinfo.copiedbb#'
 	</cfquery>
+</cfif>
 </cfif>
 
 <cfif appSettings.getBillbackModifyAgree() EQ 1>

@@ -125,13 +125,33 @@
 
 <cfif IsDefined("FORM.AgreeThisBB")>
 <!--- 21923: When the user update the already approved BB and if the user can only Agree then set the status = RFA --->
-  <cfquery name="UpdateAgreeBB" DATASOURCE="#Application.Datasource#">
+  <cfset useLakebaseForUpdateAgreeBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateAgreeBB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "2",
+				"payment_notes" = "#trim(form.Payment_Notes)#",
+				"totaltaxamount" = "#FORM.TotalTaxAmount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAgreeBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAgreeBB>
+<cfquery name="UpdateAgreeBB" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Billback
 		SET 			Billback_Status_ID = 2
 						,payment_notes = '#trim(form.Payment_Notes)#'
 						,TotalTaxAmount = #FORM.TotalTaxAmount#
 		WHERE  	Billback_Id = '#Billback_ID#'
   </cfquery>
+</cfif>
   <!--- D31841: Payment notes not saving when user agrees to program... --->
  <cfquery name="UpdateAgreeInfo" DATASOURCE="#Application.Datasource#">
 		INSERT INTO BB_Agreed_Info 	(

@@ -33,7 +33,24 @@
 <!---Add--->
 <cfelse>
 
-	<cfquery name="InsertEntry" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertEntry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForInsertEntry>
+	<cftry>
+		<cfset application.oLakebase.insertRow("auto_checkbook", {
+			"user_id" = "#request.AccessStructure.User_ID#",
+			"program_id" = "#Program_ID#",
+			"distributor_id" = "#Distributor_ID#",
+			"created_date" = "#Now()#",
+			"deleted" = "0",
+			"send_to" = "#Send_To#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertEntry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertEntry>
+<cfquery name="InsertEntry" datasource="#application.datasource#">
 	INSERT INTO Auto_Checkbook
 	(
 		User_ID,
@@ -53,6 +70,7 @@
 		'#Send_To#'
 	)
 	</cfquery>
+</cfif>
 
 </cfif>
 

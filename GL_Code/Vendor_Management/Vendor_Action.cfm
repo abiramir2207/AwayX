@@ -324,26 +324,9 @@
 				SELECT * FROM Vendor_Master WHERE Vendor_ID = '#FORM.Vendor_ID#' AND Active_Code = 'A' AND Deleted = 0
 			</CFQUERY>
 </cfif>
-			<!--- <cfset useLakebaseForCheckVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_dist_oper")>
-<cfif useLakebaseForCheckVendorID>
-	<cftry>
-		<cfset CheckVendorID = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("vendor_dist_oper", {
-				"vendor_id" = "eq.#FORM.Vendor_ID#",
-				"vendor_dist_oper_id" = "neq.#FORM.RID#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCheckVendorID = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCheckVendorID>
-<CFQUERY NAME="CheckVendorID" DATASOURCE="#Application.Datasource#">
+			<!--- <CFQUERY NAME="CheckVendorID" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM Vendor_Dist_Oper WHERE Vendor_ID = '#FORM.Vendor_ID#' AND Vendor_Dist_Oper_ID <> '#FORM.RID#' AND Deleted = 0
-			</CFQUERY>
-</cfif> --->
+			</CFQUERY> --->
 			<CFIF CheckMaster.RecordCount EQ 0><!--- CheckVendorID.RecordCount GT 0 OR  --->
 				<CFSET ValidEntry = 0>
 				<BR><BR><BR><BR>

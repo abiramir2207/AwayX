@@ -124,12 +124,31 @@ Description  :  Manager for Import Planners
 	<cffunction name="lockPlannerImport" output="false">
 		<cfargument name="plannerid" type="numeric" required="true">
 
-		<cfquery name="local.qLockImportPlanner" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_qLockImportPlanner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planners")>
+<cfif useLakebaseForlocal_qLockImportPlanner>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planners",
+			{
+				"planner_id" = "eq.#arguments.PlannerId#"
+			},
+			{
+				"system_locked" = "1",
+				"system_locked_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qLockImportPlanner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qLockImportPlanner>
+<cfquery name="local.qLockImportPlanner" datasource="#application.datasource#">
 			UPDATE Planners
 			SET    System_Locked = 1,
 				   System_Locked_Date = GetDate()
 			WHERE  Planner_Id = #arguments.PlannerId#
 		</cfquery>
+</cfif>
 	</cffunction>
 
 	<!-------------------------------------------------------------------------------------------------------------------------------------------------------------->
@@ -202,12 +221,30 @@ Description  :  Manager for Import Planners
 		</cfquery>
 
 
-		<cfquery name="local.qGetSystemAdmin" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_qGetSystemAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForlocal_qGetSystemAdmin>
+	<cftry>
+		<cfset local.qGetSystemAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qGetSystemAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qGetSystemAdmin>
+<cfquery name="local.qGetSystemAdmin" datasource="#application.datasource#">
 			SELECT	TOP 1 User_Email
 			FROM 	_Users
 			WHERE 	Is_System_Administrator = 1
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 
 		<!--- email user about the unexpected exception --->
 		<cfif structKeyExists(arguments, "exception")>

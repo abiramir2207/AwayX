@@ -13,23 +13,62 @@
 	<!--- Delete record --->
 	<CFIF FORM.DeleteRecord EQ 1>
 
-		<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
+		<cfset useLakebaseFordelete_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_perf_req")>
+<cfif useLakebaseFordelete_Data>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("program_perf_req", {
+			"program_perf_req_id" = "eq.#Form.Program_Perf_Req_ID#'
+
+			DELETE FROM Program_Perf_Req_Labels
+			WHERE		Program_Perf_Req_ID			=	'#Form.Program_Perf_Req_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_Data>
+<CFQUERY NAME="delete_Data" datasource="#application.datasource#">
 			DELETE FROM Program_Perf_Req
 			WHERE		Program_Perf_Req_ID			=	'#Form.Program_Perf_Req_ID#'
 
 			DELETE FROM Program_Perf_Req_Labels
 			WHERE		Program_Perf_Req_ID			=	'#Form.Program_Perf_Req_ID#'
 		</CFQUERY>
+</cfif>
 
 	<cfelseif Form.Program_Perf_Req_ID EQ "">
 
 		<!--- Insert the record --->
-		<CFQUERY NAME="Save_Data" datasource="#application.datasource#" result="SaveData">
+		<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_perf_req")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_perf_req", {
+			"requirement_name" = "#Requirement_Name#",
+			"pr_operator_category" = "#form.PR_Operator_Category#",
+			"pr_operator_priority" = "#form.PR_Operator_Priority#",
+			"pr_date_range" = "#form.PR_Date_Range#",
+			"mass_prog_change" = "#form.Mass_Prog_Change#",
+			"date_created" = "#now()#",
+			"date_updated" = "#now()#",
+			"updated_by" = "#request.AccessStructure.User_ID#",
+			"deleted" = "#Deleted#",
+			"allow_change_on_revision" = "#Form.Allow_Change_On_Revision#",
+			"list_features" = "#form.List_Features#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#" result="SaveData">
 			INSERT INTO Program_Perf_Req
 				(Requirement_Name,PR_Operator_Category,PR_Operator_Priority,PR_Date_Range,Mass_Prog_Change,Date_Created,Date_Updated,Updated_By,Deleted,Allow_Change_On_Revision,List_Features)
 			VALUES
 				('#Requirement_Name#',#form.PR_Operator_Category#,#form.PR_Operator_Priority#,#form.PR_Date_Range#,#form.Mass_Prog_Change#,#now()#,#now()#,'#request.AccessStructure.User_ID#',#Deleted#,#Form.Allow_Change_On_Revision#,#form.List_Features#)
 		</CFQUERY>
+</cfif>
 		<cfif form.List_Features>
 			<!--- Insert Labels Record --->
 			<CFQUERY NAME="Save_Labels_Data" datasource="#application.datasource#">

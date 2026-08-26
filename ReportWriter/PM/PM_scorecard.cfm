@@ -88,12 +88,28 @@
 <CFSET eligibleUserID=ListQualify(eligibleUserID, "'", ",")>----->
 
 <!--- Get the list of the diferent priorities --->
+<cfset useLakebaseForGet_Priorities = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_priority")>
+<cfif useLakebaseForGet_Priorities>
+	<cftry>
+		<cfset Get_Priorities = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_priority", {
+				"pm_priority_deleted" = "eq.0",
+				"select" = "pm_priority_id,pm_priority_description"
+			}), "pm_priority_id,pm_priority_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Priorities = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Priorities>
 <CFQUERY NAME="Get_Priorities" datasource="#application.datasource#">
 	Select DISTINCT	PM_Priority_ID,
 					PM_Priority_Description 
 	from 			PM_Priority
 	where 			PM_Priority_Deleted = 0					
 </CFQUERY>
+</cfif>
 
 <!--- Get the list of phases --->
 <cfset useLakebaseForGet_Phases = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_phase")>

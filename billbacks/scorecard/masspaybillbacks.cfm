@@ -44,7 +44,29 @@
 			</cfquery>
 			
 			<!---Update appropriate billback statuses --->
-			<cfquery name="UpdateBillbacks" datasource="#application.datasource#">
+			<cfset useLakebaseForUpdateBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateBillbacks>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "5",
+				"bb_payment_request_approved" = "1",
+				"bb_payment_request_approved_by" = "#request.AccessStructure.User_ID#",
+				"bb_payment_request_approved_date" = "#now()#",
+				"paid_date" = "#now()#",
+				"payment_notes" = "This billback was paid using the mass payment feature"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBillbacks>
+<cfquery name="UpdateBillbacks" datasource="#application.datasource#">
 			UPDATE Billback
 			SET Billback_Status_ID = 5,
 				BB_Payment_Request_Approved = 1,
@@ -54,6 +76,7 @@
 				Payment_Notes = 'This billback was paid using the mass payment feature'
 			WHERE Billback_ID = '#Billback_ID#'
 			</cfquery>
+</cfif>
 			
 			<!---NOTE: this is a bare bones approach. There is supplementary stuff (like running deviations, sending emails, checking for correct payment etc. that was not needed for the client this was written for and was not implemented. This should not be use for a client with robust billback processing.) --->
 		

@@ -14,6 +14,41 @@
 <!--- If the save/create switch is on, update data.... --->
 <CFIF Form.update_state EQ 1>
 
+<cfset useLakebaseForUpdate_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForUpdate_Data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Form.RID#"
+			},
+			{
+				"pm_priority_id" = "#Form.PM_Priority_ID#",
+				"pm_status_id" = "#Form.PM_Status_ID#",
+				"pm_phase_id" = "#Form.PM_Phase_ID#",
+				"pm_start_date" = "#Form.PM_Start_Date#",
+				"pm_end_date" = "#Form.PM_End_Date#",
+				"pm_acct_project" = "#Form.PM_Acct_Project#",
+				"pm_value_pounds" = "#Form.PM_Value_Pounds#",
+				"pm_value_dollars" = "#Form.PM_Value_Dollars#",
+				"pm_far_id" = "#Form.PM_Far_ID#",
+				"pm_sponsor_id" = "#Form.PM_Sponsor_ID#",
+				"pm_resources" = "#Form.PM_Resources#",
+				"pm_support" = "#Form.PM_Support#",
+				"pm_ext_budget" = "#Form.PM_Ext_Budget#",
+				"pm_cer" = "#Form.PM_CER#",
+				"pm_actual" = "#Form.PM_Actual#",
+				"pm_date_modified" = "#now()#",
+				"pm_modified_by_id" = "#request.AccessStructure.User_ID#",
+				"pm_deleted" = "#PM_Deleted#",
+				"pm_hide" = "#Form.PM_Hide#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Data>
 <CFQUERY NAME="Update_Data" datasource="#application.datasource#">
 	UPDATE 		PM_Item_Master
 
@@ -43,6 +78,7 @@
 	WHERE 		PM_Item_Master_ID	=	'#Form.RID#'
 
 </CFQUERY>
+</cfif>
 
 
 	<!------ Insert notes ----->

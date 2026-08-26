@@ -73,7 +73,26 @@
 	</CFQUERY>
 </cfif>
 
-	<CFQUERY NAME="ApproveThisPR" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForApproveThisPR = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForApproveThisPR>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"--approved" = "1",
+				"approved_date" = "#now()#",
+				"approved_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveThisPR = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveThisPR>
+<CFQUERY NAME="ApproveThisPR" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		
 		SET 	--Approved = 1,
@@ -81,7 +100,8 @@
 				Approved_By = '#request.AccessStructure.User_ID#'
 				
 		WHERE	Billback_ID = '#Billback_ID#'
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 
 	<CFSET DateTimeHolder = now()>
 	
@@ -186,13 +206,33 @@
 			</script>
 		</cfoutput>	
 
-		<cfquery name="DefaultSignedToOn" datasource="#application.datasource#">
+		<cfset useLakebaseForDefaultSignedToOn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForDefaultSignedToOn>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"bb_payment_request_approved" = "1",
+				"bb_payment_request_approved_date" = "#now()#",
+				"bb_payment_request_approved_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefaultSignedToOn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefaultSignedToOn>
+<cfquery name="DefaultSignedToOn" datasource="#application.datasource#">
 			UPDATE Billback
 			SET		BB_Payment_Request_Approved = 1,
 					BB_Payment_Request_Approved_Date = getdate(),
 					BB_Payment_Request_Approved_By = '#request.AccessStructure.User_ID#'
 			WHERE Billback_ID = '#Billback_ID#'
 		</cfquery>
+</cfif>
 	</cfif>
 	<!--- 
 	<!-----  reset the flag -------->
@@ -219,29 +259,11 @@
 		
 	<!-----
 	<CFIF IsDefined("Deduction_ID")>
-		<cfset useLakebaseForSetBillbacktoPaid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
-<cfif useLakebaseForSetBillbacktoPaid>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback",
-			{
-				"billback_id" = "eq.#Billback_ID#"
-			},
-			{
-				"billback_status_id" = "5"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForSetBillbacktoPaid = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForSetBillbacktoPaid>
-<cfquery name="SetBillbacktoPaid" datasource="#application.datasource#">
+		<cfquery name="SetBillbacktoPaid" datasource="#application.datasource#">
 			UPDATE Billback
 			SET Billback_Status_ID = 5
 			WHERE Billback_ID = '#Billback_ID#'
 		</cfquery>
-</cfif>
 		<BR><BR><BR>
 		<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" ALIGN="Center">
 			<TR>

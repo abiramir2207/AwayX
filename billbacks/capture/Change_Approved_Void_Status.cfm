@@ -60,7 +60,31 @@ Change_Approved_Void_Status.cfm
 <cfparam name="FORM.resubmitBillback" 	default="0">
 <CFIF 	Isnumeric(FORM.resubmitBillback) AND FORM.resubmitBillback NEQ 0 
 		AND GetVoidDetail.Billback_Status_ID EQ 8 AND GetVoidDetail.BB_Void_Multiplier LT 0>
-	<CFQUERY NAME="NewBBCode" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForNewBBCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForNewBBCode>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#URL.BBID#"
+			},
+			{
+				"bb_code" = "#Generated_BB_Code#-00",
+				"billback_status_id" = "3",
+				"previous_bb_code" = "#GetVoidDetail.BB_Code#",
+				"bb_payment_request_sent" = "0",
+				"new_bb_created_date" = "#now()#",
+				"void_reset_user_id" = "#request.AccessStructure.User_ID#",
+				"viod_reset_user_position_id" = "#This_User_Position_ID#",
+				"void_count" = "#GetVoidDetail.Void_Count# + 1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForNewBBCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForNewBBCode>
+<CFQUERY NAME="NewBBCode" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Billback
 		SET 	BB_Code 					= '#Generated_BB_Code#-00',
 				Billback_Status_ID 			= 3,
@@ -73,6 +97,7 @@ Change_Approved_Void_Status.cfm
 				
 		WHERE 	Billback_ID 				= '#URL.BBID#'
 	</CFQUERY>
+</cfif>
 	
 	<cfset useLakebaseForDeletePrevious = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_item_allocation_cal")>
 <cfif useLakebaseForDeletePrevious>

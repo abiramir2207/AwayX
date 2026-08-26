@@ -104,7 +104,31 @@
 	
 	
 	<cfif getprogramdetails.recordcount GT 0>
-		<CFQUERY NAME="updateprogramwebservicesdetails" datasource="#application.datasource#">
+		<cfset useLakebaseForupdateprogramwebservicesdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForupdateprogramwebservicesdetails>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_webservices_detail",
+			{
+				"bsa_program_id" = "eq.#RebateID#",
+				"program_discount_type_id" = "eq.#getRebateChildren.Program_Discount_Type_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"bsa_xml_structure" = "#xmlProgramDoc#",
+				"approved_user_id" = "#getRebateChildren.approved_by_user_id#",
+				"approved_date" = "#now()#",
+				"program_id" = "#getRebateChildren.program_id#",
+				"component_name_id" = "#getRebateChildren.Component_Name_ID#",
+				"schedule_sent" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateprogramwebservicesdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateprogramwebservicesdetails>
+<CFQUERY NAME="updateprogramwebservicesdetails" datasource="#application.datasource#">
 			update Program_WebServices_Detail
 			SET 
 			BSA_XML_Structure = '#xmlProgramDoc#',
@@ -118,12 +142,33 @@
 			and Program_Discount_Type_ID = #getRebateChildren.Program_Discount_Type_ID#
 			and deleted = 0
 		</CFQUERY>
+</cfif>
 	<cfelse>
-		 <CFQUERY NAME="insertprogramwebservicesdetails" datasource="#application.datasource#">
+		 <cfset useLakebaseForinsertprogramwebservicesdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForinsertprogramwebservicesdetails>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_webservices_detail", {
+			"program_id" = "#getRebateChildren.program_id#",
+			"bsa_program_id" = "#RebateID#",
+			"program_discount_type_id" = "#getRebateChildren.Program_Discount_Type_ID#",
+			"component_name_id" = "#getRebateChildren.Component_Name_ID#",
+			"bsa_xml_structure" = "#xmlProgramDoc#",
+			"schedule_sent" = "1",
+			"approved_user_id" = "#getRebateChildren.approved_by_user_id#",
+			"approved_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertprogramwebservicesdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertprogramwebservicesdetails>
+<CFQUERY NAME="insertprogramwebservicesdetails" datasource="#application.datasource#">
 			insert into Program_WebServices_Detail
 			(Program_Id,BSA_Program_Id,Program_Discount_Type_ID,Component_Name_ID,BSA_XML_Structure,Schedule_Sent,Approved_User_Id,Approved_Date)
 			values(#getRebateChildren.program_id#,'#RebateID#',#getRebateChildren.Program_Discount_Type_ID#, #getRebateChildren.Component_Name_ID#,'#xmlProgramDoc#',1,'#getRebateChildren.approved_by_user_id#',#now()#)
 		</CFQUERY>
+</cfif>
 	</cfif>
 	
 	
@@ -256,28 +301,11 @@
  <!--- <cfcatch type="Any">
       <CFOUTPUT> <div align="center"><font size="2" color="red"><B>
 	 #cfcatch.message# - #cfcatch.detail# Could not connect to SAP, Please try again.</B></font></div></cfoutput>
-	<cfset useLakebaseForinsertwebserviceserrordetails3 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_error_detail")>
-<cfif useLakebaseForinsertwebserviceserrordetails3>
-	<cftry>
-		<cfset application.oLakebase.insertRow("program_webservices_error_detail", {
-			"bsa_program_id" = "#RebateId#",
-			"pactiv_program_id" = "",
-			"message_text" = "#cfcatch.message# - #cfcatch.detail#",
-			"message_type" = "E",
-			"message_for" = "B"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForinsertwebserviceserrordetails3 = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForinsertwebserviceserrordetails3>
-<CFQUERY NAME="insertwebserviceserrordetails3" datasource="#application.datasource#">
+	<CFQUERY NAME="insertwebserviceserrordetails3" datasource="#application.datasource#">
 			insert into Program_Webservices_Error_Detail
 (BSA_Program_Id,Pactiv_Program_Id,Message_Text,Message_Type,Message_For)
 values('#RebateId#','','#cfcatch.message# - #cfcatch.detail#','E','B')
 		</CFQUERY>
-</cfif>
    </cfcatch>
 
 </cftry>

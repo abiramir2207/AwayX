@@ -304,12 +304,29 @@ Usage:			N/A
 		<cfargument name="User_ID" type="string" required="true">
 		<cfargument name="BBUploadHoldScorecardID" type="string" required="false" default="0">
 		
-		<cfquery name="BBScoreCardUploadID" datasource="#application.datasource#">
+		<cfset useLakebaseForBBScoreCardUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_hold_scorecard")>
+<cfif useLakebaseForBBScoreCardUploadID>
+	<cftry>
+		<cfset BBScoreCardUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_hold_scorecard", {
+				"bb_upload_hold_scorecard_id" = "eq.#arguments.BBUploadHoldScorecardID#",
+				"deleted" = "eq.0",
+				"select" = "upload_id"
+			}), "upload_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBScoreCardUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBScoreCardUploadID>
+<cfquery name="BBScoreCardUploadID" datasource="#application.datasource#">
 			SELECT Upload_ID
 			FROM BB_Upload_Hold_Scorecard
 			WHERE		BB_Upload_Hold_Scorecard_ID = #arguments.BBUploadHoldScorecardID# 
 			AND			Deleted = 0  
 		</cfquery>
+</cfif>
 		<cfquery name="updDeletedFlags" datasource="#application.datasource#">
 			UPDATE 	BB_User_Upload_Hold_log
 			SET			Deleted = 1,

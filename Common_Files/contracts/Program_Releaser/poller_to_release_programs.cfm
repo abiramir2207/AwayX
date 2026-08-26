@@ -410,29 +410,11 @@
 				<CFIF getReplicantProgramsStatus.Contract_Status_Type_IDX EQ getThisProgramsStatus.Contract_Status_Type_IDX>
 					<!------
 					Let the trigger delete it
-					<cfset useLakebaseFordeleteParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseFordeleteParent>
-	<cftry>
-		<cfset application.oLakebase.updateRows("contract_main",
-			{
-				"contract_main_id" = "eq.#Program_ID_To_Replicate#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseFordeleteParent = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseFordeleteParent>
-<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
+					<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
 						UPDATE Contract_main
 						SET deleted = 1
 						where contract_main_id = '#Program_ID_To_Replicate#'
 					</CFQUERY>
-</cfif>
 					----->
 				</CFIF>
 			</CFIF>
@@ -665,7 +647,25 @@
 		<CFSET form.ProgramPacketSupplied = 1>
 
 		<cfinclude template="/common_files/contracts/replicate_program_action.cfm">
-		<cfquery name="flagProgramAsRevised" datasource="#application.datasource#">
+		<cfset useLakebaseForflagProgramAsRevised = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForflagProgramAsRevised>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_exclusions",
+			{
+				"program_exclusion_id" = "eq.#getProgramsToRenew.Program_Exclusion_ID#"
+			},
+			{
+				"reviseoriginalprogram" = "0",
+				"programhasbeenrevised" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForflagProgramAsRevised = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForflagProgramAsRevised>
+<cfquery name="flagProgramAsRevised" datasource="#application.datasource#">
 			UPDATE Program_Exclusions
 			SET
 				ReviseOriginalProgram = 0,
@@ -673,6 +673,7 @@
 			WHERE Program_Exclusion_ID = '#getProgramsToRenew.Program_Exclusion_ID#'
 
 		</cfquery>
+</cfif>
 		<hr>
 		<cfdump var="#ProgramWDDX#">
 				<hr>

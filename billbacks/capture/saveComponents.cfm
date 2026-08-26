@@ -48,7 +48,26 @@
 	<cfif billbackProgramManager.hasSavedSelectedComponent() >
 		<cfloop query="billbackProgramRebateComps">
 			<cfset idx = idx + 1 >
-			<CFQUERY NAME="updateRebateCmps" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForupdateRebateCmps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_rebate_component")>
+<cfif useLakebaseForupdateRebateCmps>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_rebate_component",
+			{
+				"billback_id" = "eq.#billbackID#",
+				"billback_program_id" = "eq.#programID#",
+				"program_rebates_component_name" = "eq.#Program_Rebates_Component_Name#"
+			},
+			{
+				"checked" = "#evaluate("url." & "Component_" & idx & "_" & replace(replace(replace(Program_Rebates_Component_Name," ","_","ALL"),"-","_","ALL"),".","","ALL"))#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateRebateCmps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateRebateCmps>
+<CFQUERY NAME="updateRebateCmps" DATASOURCE="#Application.Datasource#">
 				update Billback_Program_rebate_Component
 				set Checked = '#evaluate("url." & "Component_" & idx & "_" & replace(replace(replace(Program_Rebates_Component_Name," ","_","ALL"),"-","_","ALL"),".","","ALL"))#'
 				where Billback_ID = '#billbackID#'
@@ -58,6 +77,7 @@
 				and deleted = 1
 			--->
 			</CFQUERY>
+</cfif>
 		</cfloop>
 	<cfelse>
 		<cfloop query="billbackProgramRebateComps">

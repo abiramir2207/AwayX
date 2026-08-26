@@ -151,11 +151,31 @@
 					#Replace(getProgramheader.contract_number,"-","")#&"."&#discount_type#&#componentcount#&"."&#paymentcounter#> 
 					
 					<cfif mws eq 0>
-					   <CFQUERY NAME="insertprogramperiods" datasource="#application.datasource#">
+					   <cfset useLakebaseForinsertprogramperiods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
+<cfif useLakebaseForinsertprogramperiods>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_period_dates", {
+			"program_id" = "#getProgramheader.contract_main_id#",
+			"bsa_program_id" = "#RebateID#",
+			"program_payment_period" = "#paymentcounter#",
+			"contract_number" = "#getProgramheader.contract_number#",
+			"program_discount_type_id" = "#Discount_Type_ID#",
+			"component_name_id" = "#getDiscountTypeRates.Component_Name_ID#",
+			"period_start_date" = "#Trim(rUnits[i].PERIODSTARTDATE)#",
+			"period_end_date" = "#Trim(rUnits[i].PERIODENDDATE)#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertprogramperiods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertprogramperiods>
+<CFQUERY NAME="insertprogramperiods" datasource="#application.datasource#">
 						insert into program_period_dates
 						(Program_Id,BSA_Program_Id,Program_Payment_Period,contract_number,Program_Discount_Type_ID,Component_Name_ID,Period_Start_Date,Period_End_Date)
 						values(#getProgramheader.contract_main_id#,'#RebateID#', #paymentcounter#, #getProgramheader.contract_number#,#Discount_Type_ID#, #getDiscountTypeRates.Component_Name_ID#,#Trim(rUnits[i].PERIODSTARTDATE)#,#Trim(rUnits[i].PERIODENDDATE)#)
 					   </CFQUERY>
+</cfif>
 					</cfif>
 
 					</cfloop>
@@ -363,23 +383,10 @@
 						<cfset tempxml = tempxml & "<Rate>#getgrouprate.rate#</Rate>">
 					</cfif>
 
-							<!---<cfset useLakebaseForgettestCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("test_webservice_milan")>
-<cfif useLakebaseForgettestCount>
-	<cftry>
-		<cfset application.oLakebase.insertRow("test_webservice_milan", {
-			"test_desc" = "test"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForgettestCount = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgettestCount>
-<CFQUERY NAME="gettestCount" datasource="#application.datasource#">
+							<!---<CFQUERY NAME="gettestCount" datasource="#application.datasource#">
 							insert into test_Webservice_Milan(test_desc)
 							values('test')
 							</CFQUERY>
-</cfif>
 							--->
 					
 					<cfset tempxml = tempxml & "<MaterialForSettlement>ADMIN_#getDiscountTypeRates.Product_group#</MaterialForSettlement>">
@@ -514,11 +521,31 @@
 									and deleted = 0
 								</CFQUERY>
 							<cfelse>
-								 <CFQUERY NAME="insertprogramwebservicesdetails" datasource="#application.datasource#">
+								 <cfset useLakebaseForinsertprogramwebservicesdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForinsertprogramwebservicesdetails>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_webservices_detail", {
+			"program_id" = "#getProgramheader.contract_main_id#",
+			"bsa_program_id" = "#RebateID#",
+			"program_discount_type_id" = "#Discount_Type_ID#",
+			"component_name_id" = "#getDiscountTypeRates.Component_Name_ID#",
+			"bsa_xml_structure" = "#xmlProgramDoc#",
+			"approved_user_id" = "#user_id#",
+			"approved_date" = "#now()#",
+			"schedule_sent" = "#Schedule_Sent#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertprogramwebservicesdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertprogramwebservicesdetails>
+<CFQUERY NAME="insertprogramwebservicesdetails" datasource="#application.datasource#">
 									insert into Program_WebServices_Detail
 									(Program_Id,BSA_Program_Id,Program_Discount_Type_ID,Component_Name_ID,BSA_XML_Structure,Approved_User_Id,Approved_Date,Schedule_Sent)
 									values(#getProgramheader.contract_main_id#,'#RebateID#',#Discount_Type_ID#, #getDiscountTypeRates.Component_Name_ID#,'#xmlProgramDoc#','#user_id#',#now()#,#Schedule_Sent#)
 								</CFQUERY>
+</cfif>
 							</cfif>
 							<!--- <hr>
 							inserted into the DB <cfflush> --->

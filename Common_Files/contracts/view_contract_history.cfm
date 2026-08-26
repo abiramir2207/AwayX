@@ -57,28 +57,12 @@
 
 <cfset qGetChangeLog = CreateObject("component", "components.programs.program_history").init() />
 <!---
-<cfset useLakebaseForContractHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("temp_history")>
-<cfif useLakebaseForContractHistory>
-	<cftry>
-		<cfset ContractHistory = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("temp_history", {
-				"temp_id" = "eq.#contract_main_id#",
-				"order" = "changed_date.desc"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForContractHistory = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForContractHistory>
 <CFQUERY NAME="ContractHistory" datasource="#application.datasource#">
 	SELECT *
 	FROM Temp_History
 	WHERE temp_id = '#contract_main_id#'
 	ORDER BY Changed_Date desc
 </CFQUERY>
-</cfif>
 --->
 
 <CFQUERY NAME="Get_Contract_Number" datasource="#application.datasource#">

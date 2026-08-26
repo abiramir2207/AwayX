@@ -19,7 +19,32 @@ Description  : 	Page to create NUC Targets
 			target_margin = val(form[ "target_margin_" & row_class ]);
 		</cfscript>
 
-		<cfquery name="qUpdate" datasource="#application.datasource#" result="qResult">
+		<cfset useLakebaseForqUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("nuc_targets")>
+<cfif useLakebaseForqUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("nuc_targets",
+			{
+				"product_group_id" = "eq.#row_guid#",
+				"deleted" = "eq.0"
+			},
+			{
+				"promoted_nuc" = "#promoted_nuc#",
+				"promoted_nuc_uom" = "#promoted_uom#",
+				"blended_nuc" = "#blended_nuc#",
+				"blended_nuc_uom" = "#blended_uom#",
+				"case_count" = "#case_count#",
+				"target_margin" = "#target_margin#",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.accessStructure.User_Id#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdate>
+<cfquery name="qUpdate" datasource="#application.datasource#" result="qResult">
 			UPDATE NUC_Targets
 				SET
 					Promoted_NUC		= #promoted_nuc#,
@@ -34,9 +59,30 @@ Description  : 	Page to create NUC Targets
 					Product_Group_ID = '#row_guid#' AND
 					Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfif qResult.recordCount eq 0>
-			<cfquery name="qInsert" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("nuc_targets")>
+<cfif useLakebaseForqInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("nuc_targets", {
+			"product_group_id" = "#row_guid#",
+			"promoted_nuc" = "#promoted_nuc#",
+			"promoted_nuc_uom" = "#promoted_uom#",
+			"blended_nuc" = "#blended_nuc#",
+			"blended_nuc_uom" = "#blended_uom#",
+			"case_count" = "#case_count#",
+			"target_margin" = "#target_margin#",
+			"created_date" = "#now()#",
+			"created_by" = "#request.accessStructure.User_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsert>
+<cfquery name="qInsert" datasource="#application.datasource#">
 				INSERT  INTO NUC_Targets (
 					Product_Group_ID,
 					Promoted_NUC,
@@ -61,6 +107,7 @@ Description  : 	Page to create NUC Targets
 					'#request.accessStructure.User_Id#'
 				)
 			</cfquery>
+</cfif>
 		</cfif>
 	</cfif>
 </cfloop>

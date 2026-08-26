@@ -14,22 +14,9 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
  <br>
  <br>
  <strong>Clearing cache.... </strong>
-<!--- <cfset useLakebaseFordelDataFromTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_new_single_file_blk_ins")>
-<cfif useLakebaseFordelDataFromTable>
-	<cftry>
-		<cfset application.oLakebase.deleteRows("bb_new_single_file_blk_ins", {
-			"upload_id" = "eq.#UploadID#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseFordelDataFromTable = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseFordelDataFromTable>
-<cfquery name="delDataFromTable" datasource="#application.datasource#">
+<!--- <cfquery name="delDataFromTable" datasource="#application.datasource#">
 	DELETE FROM BB_New_Single_File_BLK_INS WHERE Upload_ID = #UploadID#
-</cfquery>
-</cfif> --->
+</cfquery> --->
 <script>
 window.close();
 </script>

@@ -225,6 +225,25 @@
 </cfif>
 
 <!--- Lock the new created program --->
+<cfset useLakebaseForlockContractFromOtherUsers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForlockContractFromOtherUsers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"export_sales_agreement_id" = "eq.#New_Export_Sales_Agreement_ID#"
+			},
+			{
+				"sales_agreement_is_locked" = "1",
+				"sales_agreement_locked_by_user_id" = "#request.AccessStructure.User_ID#",
+				"sales_agreement_lock_date" = "#createodbcdatetime(Now())#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlockContractFromOtherUsers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlockContractFromOtherUsers>
 <cfquery NAME="lockContractFromOtherUsers" datasource="#application.datasource#">
 	UPDATE Export_Sales_Agreement
 	SET Sales_Agreement_Is_Locked = 1
@@ -232,6 +251,7 @@
 	,Sales_Agreement_Lock_Date = #createodbcdatetime(Now())#
 	WHERE Export_Sales_Agreement_ID = '#New_Export_Sales_Agreement_ID#'
 </cfquery>
+</cfif>
 
 	<CF_CRYP type="en" string="#New_Export_Sales_Agreement_ID#" key="#request.key#">
 

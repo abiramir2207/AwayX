@@ -438,7 +438,32 @@
 	<cffunction name="UpdateProgramDistributorFreight" output="false">
 		<cfargument name="programId" required="true" type="numeric" />	
 				
-			<cfquery name="qUpdateProgramDistributorFreight" datasource="#application.datasource#">
+			<cfset useLakebaseForqUpdateProgramDistributorFreight = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_distributor_freight")>
+<cfif useLakebaseForqUpdateProgramDistributorFreight>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_distributor_freight",
+			{
+				"program_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"obf_rate" = "0",
+				"default_obf_rate" = "0",
+				"pickup_allowance" = "0",
+				"default_pickup_allowance" = "0",
+				"overridden_obf_rate" = "0",
+				"overridden_pickup_allowance" = "0",
+				"last_updated_by" = "#request.AccessStructure.User_ID#",
+				"last_updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateProgramDistributorFreight = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateProgramDistributorFreight>
+<cfquery name="qUpdateProgramDistributorFreight" datasource="#application.datasource#">
 				UPDATE Program_Distributor_Freight
 				SET OBF_Rate = 0
 				,Default_OBF_Rate =  0
@@ -451,6 +476,7 @@
 				WHERE 	Program_ID = '#arguments.programId#' 
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 	</cffunction>
 	
 	<cffunction name="verifyFreightAdjustment" output="false" returntype="numeric">

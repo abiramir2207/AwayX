@@ -139,27 +139,11 @@ FUNCTIONALITY:
 	<!--- X1.) Let's grab our XML data typed variable representing THIS letter's DNA from STARTING Letter ... --->
     
 	<!--- D16774 8/14/08 [begin]
-    <cfset useLakebaseForthisTag_qGetXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
-<cfif useLakebaseForthisTag_qGetXML>
-	<cftry>
-		<cfset thisTag.qGetXML = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("program_letters", {
-				"program_letters_id" = "eq.#form.prior_program_letter_id#",
-				"select" = "letter_xml"
-			}), "letter_xml"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForthisTag_qGetXML = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForthisTag_qGetXML>
-<cfquery name="thisTag.qGetXML" datasource="#application.datasource#">
+    <cfquery name="thisTag.qGetXML" datasource="#application.datasource#">
         SELECT	Letter_xml
         FROM	Program_Letters
         WHERE 	Program_Letters.Program_Letters_ID = #form.prior_program_letter_id#
     </cfquery>
-</cfif>
     --->
     <cfset thisTag.xInitialProgramLetterXML = application.oLetterManager.getLetterXML(form.prior_program_letter_id)>
     <!--- D16774 8/14/08 [end] --->
@@ -1838,11 +1822,29 @@ FUNCTIONALITY:
 
 		<!--- D16774 8/14/08 [begin]
 		<!--- C.) Let's grab our DNA XML from our XML Custom Tag above via request scope... for future letter mods... --->
-        <cfquery name="qUpdateXML" datasource="#application.datasource#">
+        <cfset useLakebaseForqUpdateXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForqUpdateXML>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_letters",
+			{
+				"program_letters_id" = "eq.#variables.currentLetterID#"
+			},
+			{
+				"letter_xml" = "#trim(request.sProgramLetterXML)#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateXML>
+<cfquery name="qUpdateXML" datasource="#application.datasource#">
             UPDATE	Program_Letters
             SET 	Letter_xml = '#trim(request.sProgramLetterXML)#'
             WHERE 	Program_Letters_ID = #variables.currentLetterID#
         </cfquery>
+</cfif>
 		--->
         <cfinvoke 
                 component="#application.oLetterManager#" 
@@ -1857,12 +1859,29 @@ FUNCTIONALITY:
 		<cfif getLetterSettings.notification_type EQ 2>
 			<cflocation url="#includeLettersFilename#?CID=#url.CMID#">
 		<cfelse>
-			<cfquery name="qgetUseremail" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetUseremail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqgetUseremail>
+	<cftry>
+		<cfset qgetUseremail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#URL.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetUseremail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetUseremail>
+<cfquery name="qgetUseremail" datasource="#application.datasource#">
 					select user_email
 					from _users
 					where user_id = '#URL.user_id#'
 					and deleted = 0
 			</cfquery>
+</cfif>
 			
 			<!--- Question: IF we do NOT identify the query, we will only get the first row. Is this desired? RBL --->
       

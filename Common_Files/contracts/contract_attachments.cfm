@@ -68,26 +68,11 @@
 <cfif application.programlayout EQ 1>
 <div id="Layer1" style="position:relative; height:430px; width:796px; z-index:1; left: 150px; top: 10px;"></cfif>
 <!------
-<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForGetContractInfo>
-	<cftry>
-		<cfset GetContractInfo = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_main", {
-				"contract_main_id" = "eq.#cryp.value#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetContractInfo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetContractInfo>
 <cfquery name="GetContractInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Main
 	WHERE Contract_Main_ID = #cryp.value#
 </cfquery>
-</cfif>
 
 	<HR COLOR="Blue" SIZE="1" WIDTH="800" ALIGN="left">
 
@@ -107,49 +92,17 @@
  <cfinclude template="Contract_Documents_Menu.cfm">
 
 <!------<CFIF isdefined("FORM.formcheck")>
-	<cfset useLakebaseForupdate_del = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
-<cfif useLakebaseForupdate_del>
-	<cftry>
-		<cfset application.oLakebase.updateRows("contract_attachments",
-			{
-				"program_id" = "eq.#cryp.value#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdate_del = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdate_del>
-<CFQUERY NAME="update_del" DATASOURCE="#Application.Datasource#">
+	<CFQUERY NAME="update_del" DATASOURCE="#Application.Datasource#">
 		UPDATE Contract_Attachments SET deleted = 1 WHERE program_ID = '#cryp.value#'
 	</CFQUERY>
-</cfif>
 </CFIF>
 <CFPARAM NAME="FORM.Doc_ID" DEFAULT="">
 <CFIF FORM.Doc_ID NEQ "">
 	<CFLOOP LIST="#FORM.Doc_ID#" INDEX="loop">
 	<CFOUTPUT>
-		<cfset useLakebaseForinsert_selection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
-<cfif useLakebaseForinsert_selection>
-	<cftry>
-		<cfset application.oLakebase.insertRow("contract_attachments", {
-			"doc_id" = "#loop#",
-			"program_id" = "#cryp.value#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForinsert_selection = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForinsert_selection>
-<CFQUERY NAME = "insert_selection" DATASOURCE = "#Application.Datasource#">
+		<CFQUERY NAME = "insert_selection" DATASOURCE = "#Application.Datasource#">
 			INSERT INTO Contract_Attachments(Doc_Id,Program_ID) VALUES (#loop#,#cryp.value#)
 		</CFQUERY>
-</cfif>
 	</CFOUTPUT>
 	</CFLOOP>
 	<cflocation url="Contract_Edit_Menu.cfm?CID=#URL.CID#">

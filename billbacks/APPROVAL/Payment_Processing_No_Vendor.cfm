@@ -38,7 +38,30 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		</cfif>
 	</cfif>
 
-	<cfquery name="UpdBillback" datasource="#Application.Datasource#">
+	<cfset useLakebaseForUpdBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdBillback>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "4",
+				"bb_payment_request_approved" = "1",
+				"bb_payment_request_approved_date" = "#now()#",
+				"bb_payment_request_approved_by" = "#request.AccessStructure.User_ID#",
+				"bb_payment_request_prepared" = "1",
+				"bb_payment_request_prepared_by" = "#request.AccessStructure.User_ID#",
+				"bb_payment_request_prepared_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdBillback>
+<cfquery name="UpdBillback" datasource="#Application.Datasource#">
 		UPDATE Billback
 		SET         Billback_Status_ID = 4,
 					BB_Payment_Request_Approved = 1,
@@ -49,5 +72,6 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 					BB_Payment_Request_Prepared_Date = getdate()
 		WHERE Billback_ID = '#Billback_ID#'
 	</cfquery>
+</cfif>
 	
 	<cflocation addtoken="no" url="/billbacks/capture/Billback_Summary.cfm?BBID=#Billback_ID#">

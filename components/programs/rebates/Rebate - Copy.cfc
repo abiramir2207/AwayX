@@ -11,25 +11,10 @@
 	<cfset ProductGroupManager = CreateObject("component", "components.programs.products.ProductGroupManager").init() />
 	<cfset this.GroupDataManager = CreateObject("component", "components.products.Group.DataManager") />
 	<!--- get install path --->
-	<!--- 	<cfset useLakebaseForgetInstallationPath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
-<cfif useLakebaseForgetInstallationPath>
-	<cftry>
-		<cfset getInstallationPath = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("general_settings", {
-				"select" = "application_installation_root_location"
-			}), "application_installation_root_location"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetInstallationPath = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetInstallationPath>
-<CFQUERY NAME="getInstallationPath" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0,6,0,0)#">
+	<!--- 	<CFQUERY NAME="getInstallationPath" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0,6,0,0)#">
 		SELECT Application_Installation_Root_Location
 		FROM General_Settings
-	</CFQUERY>
-</cfif> --->
+	</CFQUERY> --->
 
 	<!---set the temp file path to the app install path--->
 	<!--- <cfset this.tmpFilePath = getInstallationPath.Application_Installation_Root_Location & "\Temp_Files\Rebates"/> --->

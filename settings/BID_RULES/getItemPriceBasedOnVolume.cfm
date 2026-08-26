@@ -128,23 +128,7 @@
 <!--- <!-- get overage for volume range -->
 <cfif len(trim(url.typeid)) NEQ 0 OR len(trim(url.volume)) NEQ 0>
 	<cfset url.volume = trim(numberformat(url.volume, '_________.___'))>
-	<cfset useLakebaseForfindRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
-<cfif useLakebaseForfindRule>
-	<cftry>
-		<cfset findRule = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("bid_rule_items", {
-				"type_item_id" = "eq.#url.typeid#",
-				"deleted" = "eq.0",
-				"select" = "bid_rule_id,bid_rule_item_id"
-			}), "bid_rule_id,bid_rule_item_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForfindRule = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForfindRule>
-<CFQUERY NAME="findRule" DATASOURCE="#application.datasource#">
+	<CFQUERY NAME="findRule" DATASOURCE="#application.datasource#">
 		SELECT Bid_Rule_ID, Bid_Rule_Item_ID
 		FROM Bid_Rule_Items
 		WHERE 
@@ -152,7 +136,6 @@
 			AND
 			DELETED = 0
 	</CFQUERY>
-</cfif>
 	
 	<cfif findRule.recordcount GT 0>
 		<CFQUERY NAME="getBidRuleVolumeGroupID" DATASOURCE="#application.datasource#">

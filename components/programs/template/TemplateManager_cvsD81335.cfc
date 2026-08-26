@@ -1352,7 +1352,27 @@ DEPENDENCIES:
 			<cfargument name="TemplateID" required="true" type="numeric" />
 			<cfargument name="Current_User_ID" type="string" required="true" />
 
-			<cfquery name="qLockTemplate" datasource="#application.datasource#">
+			<cfset useLakebaseForqLockTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqLockTemplate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#arguments.TemplateID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "1",
+				"locked_by" = "#arguments.Current_User_ID#",
+				"locked_time" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLockTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLockTemplate>
+<cfquery name="qLockTemplate" datasource="#application.datasource#">
 				UPDATE Program_Control_Panel_Options
 					SET		IS_Locked = 1,
 							Locked_By = '#arguments.Current_User_ID#',
@@ -1360,6 +1380,7 @@ DEPENDENCIES:
 					WHERE	ProgramControl_Panel_Options_ID = '#arguments.TemplateID#'
 					AND		Deleted = 0
 			</cfquery>
+</cfif>
 		</cffunction>
 
 		<cffunction name="GetNewTemplate" output="false">
@@ -1598,7 +1619,28 @@ DEPENDENCIES:
 	<cffunction name="saveApprovalMetrics" output="false">
 		<cfargument name="templateId" required="true" type="numeric" />
 		<cfargument name="formScope" required="true" type="struct" />
-			<cfquery name="saveApprovalMetrics" datasource="#application.datasource#">
+			<cfset useLakebaseForsaveApprovalMetrics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForsaveApprovalMetrics>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#arguments.templateId#"
+			},
+			{
+				"approval_margin_item" = "#Evaluate("arguments.formScope.approval_margin_item")#",
+				"approval_spend_item" = "#Evaluate("arguments.formScope.approval_spend_item")#",
+				"approval_program_margin" = "#Evaluate("arguments.formScope.approval_program_margin")#",
+				"approval_program_spend" = "#Evaluate("arguments.formScope.approval_program_spend")#",
+				"approval_uom" = "#Evaluate("arguments.formScope.approval_uom")#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveApprovalMetrics = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveApprovalMetrics>
+<cfquery name="saveApprovalMetrics" datasource="#application.datasource#">
 				update Program_Control_Panel_Options
 				set approval_margin_item = #Evaluate("arguments.formScope.approval_margin_item")#,
 				approval_spend_item = #Evaluate("arguments.formScope.approval_spend_item")#,
@@ -1607,6 +1649,7 @@ DEPENDENCIES:
 				approval_uom = #Evaluate("arguments.formScope.approval_uom")#
 				where ProgramControl_Panel_Options_ID = '#arguments.templateId#'
 			</cfquery>
+</cfif>
 	</cffunction>
 
 		<cffunction name="getApprovalMetrics" output="false">
@@ -2407,7 +2450,28 @@ DEPENDENCIES:
 	            WHERE Group_Template_ID = #qryGetGroupTemplateByTemplateID.Group_Template_ID#
 	          </cfquery>
 	          <cfif FiltersChecked EQ "0">
-		          <cfquery name="updProdGroupSelection" datasource="#application.datasource#">
+		          <cfset useLakebaseForupdProdGroupSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_template_selection")>
+<cfif useLakebaseForupdProdGroupSelection>
+	<cftry>
+		<cfset application.oLakebase.updateRows("product_group_template_selection",
+			{
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"product_group_level_id" = "eq.#qryGetGroupTemplateByTemplateID.Group_Level_ID#"
+			},
+			{
+				"active" = "0",
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdProdGroupSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdProdGroupSelection>
+<cfquery name="updProdGroupSelection" datasource="#application.datasource#">
 		            UPDATE Product_Group_Template_Selection
 		            SET Active = 0,
 			            Deleted = 1,
@@ -2417,6 +2481,7 @@ DEPENDENCIES:
 		                  Template_ID = #arguments.stForm.TemplateID#
 			            AND   Product_Group_Level_ID = #qryGetGroupTemplateByTemplateID.Group_Level_ID#
 		           </cfquery>
+</cfif>
 	           </cfif>
           </cfif> <!--- END if prodGroupExistsAlready EQ 1 --->
         </cfloop> <!--- End Loop query="qryGetGroupTemplateByTemplateID" --->
@@ -2505,7 +2570,31 @@ DEPENDENCIES:
 
 	 	<cfif (qryCheckPGTS.RecordCount EQ 0 AND ListFindNoCase(FilterValsChecked,qGetTopLevelGroups.Product_Group_Level_ID) GTE 1)>
 
-	       <cfquery name="updGroupTemplateFilters" datasource="#application.datasource#">
+	       <cfset useLakebaseForupdGroupTemplateFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_template")>
+<cfif useLakebaseForupdGroupTemplateFilters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("group_template",
+			{
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"pg_group_type" = "eq.1",
+				"group_level_id" = "eq.#qGetTopLevelGroups.Product_Group_Level_ID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"allow_filter" = "0",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#",
+				"updated_from" = "Program Wizard - Template Filters page"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdGroupTemplateFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdGroupTemplateFilters>
+<cfquery name="updGroupTemplateFilters" datasource="#application.datasource#">
 	            UPDATE Group_Template
 	            SET  Allow_Filter = 0,
 	                 Updated_Date = GetDate(),
@@ -2517,6 +2606,7 @@ DEPENDENCIES:
 	            AND Active = 1
 	            AND Deleted = 0
 	       </cfquery>
+</cfif>
 	       <cfset errorCount = errorCount + 1 />
 	       <cfset addedVal = ListAppend(addedVal, qGetTopLevelGroups.Group_Level_Desc) />
 	       <cfset returnVal = returnVal & errorCount & ". #qGetTopLevelGroups.Group_Level_Desc#" & "\n"  />
@@ -2657,7 +2747,28 @@ DEPENDENCIES:
             WHERE Group_Template_ID = #qryGetGroupTemplateByTemplateID.Group_Template_ID#
           </cfquery>
           <cfif FiltersChecked EQ "0">
-           <cfquery name="updDistGroupSelection" datasource="#application.datasource#">
+           <cfset useLakebaseForupdDistGroupSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_group_template_selection")>
+<cfif useLakebaseForupdDistGroupSelection>
+	<cftry>
+		<cfset application.oLakebase.updateRows("customer_group_template_selection",
+			{
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"distributor_group_level_id" = "eq.#qryGetGroupTemplateByTemplateID.Group_Level_ID#"
+			},
+			{
+				"active" = "0",
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdDistGroupSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdDistGroupSelection>
+<cfquery name="updDistGroupSelection" datasource="#application.datasource#">
             UPDATE Customer_Group_Template_Selection
             SET Active = 0,
             Deleted = 1,
@@ -2667,6 +2778,7 @@ DEPENDENCIES:
                   Template_ID = #arguments.stForm.TemplateID#
             AND   Distributor_Group_Level_ID = #qryGetGroupTemplateByTemplateID.Group_Level_ID#
            </cfquery>
+</cfif>
           </cfif>
           </cfif> <!--- distGroupExistsAlready EQ 1 --->
         </cfloop> <!--- End Loop query="qryGetGroupTemplateByTemplateID" --->
@@ -2857,7 +2969,28 @@ DEPENDENCIES:
             WHERE Group_Template_ID = #qryGetGroupTemplateByTemplateID.Group_Template_ID#
           </cfquery>
           <cfif FiltersChecked EQ "0">
-           <cfquery name="updOprGroupSelection" datasource="#application.datasource#">
+           <cfset useLakebaseForupdOprGroupSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_group_template_selection")>
+<cfif useLakebaseForupdOprGroupSelection>
+	<cftry>
+		<cfset application.oLakebase.updateRows("operator_group_template_selection",
+			{
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"operator_group_level_id" = "eq.#qryGetGroupTemplateByTemplateID.Group_Level_ID#"
+			},
+			{
+				"active" = "0",
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdOprGroupSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdOprGroupSelection>
+<cfquery name="updOprGroupSelection" datasource="#application.datasource#">
             UPDATE Operator_Group_Template_Selection
             SET Active = 0,
             Deleted = 1,
@@ -2867,6 +3000,7 @@ DEPENDENCIES:
                   Template_ID = #arguments.stForm.TemplateID#
             AND   Operator_Group_Level_ID = #qryGetGroupTemplateByTemplateID.Group_Level_ID#
            </cfquery>
+</cfif>
           </cfif>
           </cfif> <!--- oprGroupExistsAlready EQ 1 --->
         </cfloop> <!--- End Loop query="qryGetGroupTemplateByTemplateID" --->

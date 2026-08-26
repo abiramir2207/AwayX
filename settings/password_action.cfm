@@ -12,13 +12,32 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Update old password...																		 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-	<CFQUERY NAME="Change_Paswword" datasource="#application.datasource#">
+	<cfset useLakebaseForChange_Paswword = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForChange_Paswword>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"user_password" = "#hash(trim(Form.New_Password))#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForChange_Paswword = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForChange_Paswword>
+<CFQUERY NAME="Change_Paswword" datasource="#application.datasource#">
 		Update	_users
 		Set		user_password	=	'#hash(trim(Form.New_Password))#'
 		Where	User_ID			=	'#request.AccessStructure.User_ID#'
 				and
 				deleted			=	0
 	</CFQUERY>
+</cfif>
   
     <!--- 
     	Dev Notes: 23086/Anand Rao/21-May-10

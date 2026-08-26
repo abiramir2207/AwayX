@@ -2,7 +2,35 @@
 <CFSWITCH EXPRESSION="#Form.Document_ID#">
 	
 	<CFCASE VALUE="UserGeneralInfo">
-		<CFQUERY NAME="UpdateUserInfo" datasource="#application.datasource#" DBTYPE="ODBC">
+		<cfset useLakebaseForUpdateUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUpdateUserInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#Form.User_ID#"
+			},
+			{
+				"name_first" = "#Form.User_Name_First#",
+				"name_last" = "#Form.User_Name_Last#",
+				"title" = "#Form.User_Title#",
+				"work_address_1" = "#Form.User_Work_Address_1#",
+				"work_address_2" = "#Form.User_Work_Address_2#",
+				"work_city" = "#Form.User_Work_City#",
+				"work_state" = "#Form.User_Work_State#",
+				"work_zip" = "#Form.User_Work_Zip#",
+				"work_phone" = "(#Form.User_Work_Phone_1#)#Form.User_Work_Phone_2##Form.User_Work_Phone_3#",
+				"company_main_id" = "#Form.Company_Main_ID#",
+				"user_email" = "#FORM.emailaddress#",
+				"user_rights_id" = "#FORM.User_Rights_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateUserInfo>
+<CFQUERY NAME="UpdateUserInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 			UPDATE _Users
 			SET
 				Name_First			=	'#Form.User_Name_First#',
@@ -20,6 +48,7 @@
 			WHERE
 				User_ID 			= 	'#Form.User_ID#'
 		</CFQUERY>
+</cfif>
 		<CFSET URL = "user_login_info.cfm?User_ID=#Form.User_ID#">
 	</CFCASE>
 	

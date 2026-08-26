@@ -196,27 +196,11 @@ WHERE     	(dbo.BSA_Foodservice_Brokers.Deleted = 0)
 			<TD #onclick#  WIDTH="23%">#HREFHTML##getAllBrokers.Zone_Name#</A></TD>
 			<TD #onclick#  WIDTH="23%">#HREFHTML##getAllBrokers.Region_Name#</A></TD>
 			
-			<!------<cfset useLakebaseForgetBrokerMarketArea = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_markets")>
-<cfif useLakebaseForgetBrokerMarketArea>
-	<cftry>
-		<cfset getBrokerMarketArea = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("service_markets", {
-				"service_market_id" = "eq.#getAllBrokers.Service_Market_ID#",
-				"select" = "market_name"
-			}), "market_name"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetBrokerMarketArea = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetBrokerMarketArea>
-<CFQUERY NAME="getBrokerMarketArea" datasource="#application.datasource#">
+			<!------<CFQUERY NAME="getBrokerMarketArea" datasource="#application.datasource#">
 				SELECT Market_Name
 				FROM Service_Markets
 				WHERE Service_Market_ID = '#getAllBrokers.Service_Market_ID#'
 			</CFQUERY>
-</cfif>
 			
 			<TD #onclick# NOWRAP WIDTH="23%">#HREFHTML#<CFIF getBrokerMarketArea.Recordcount GT 0>#getBrokerMarketArea.Market_Name#<CFELSE><span STYLE="color:red;">NOT-ASSIGNED</span></CFIF></A></TD>
 			----->

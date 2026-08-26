@@ -84,11 +84,27 @@ From general_Settings
 	</cfquery>
 
 	<!--- <cfif qGetAlertEmails.recordcount gt 0> --->
-		<cfquery name="qInsertLog" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_alerts_log")>
+<cfif useLakebaseForqInsertLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dataint_alerts_log", {
+			"instance_id" = "#qFailedJobs.instance_id#",
+			"sent_time" = "#now()#",
+			"elist" = "#trim(left(elist,1999))#",
+			"type" = "F"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertLog>
+<cfquery name="qInsertLog" datasource="#application.datasource#">
 		 Insert into DataInt_Alerts_Log
 		 	(instance_id, sent_time, elist, type)
 			Values (#qFailedJobs.instance_id#, #now()#, '#trim(left(elist,1999))#' ,'F')
 		</cfquery>
+</cfif>
 	<!--- </cfif> --->
 				#qFailedJobs.Job_name# Job  ::  Recipients -> #elist#<br><br>
 

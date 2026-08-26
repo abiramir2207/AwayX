@@ -85,25 +85,65 @@
 
 <!--- update the bb status --->
 <cfif bblock.bb_lock_action EQ 1 AND bblock.bb_is_locked_by_other_user EQ 0>
-	<cfquery name="lockBB" datasource="#application.datasource#">
+	<cfset useLakebaseForlockBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForlockBB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#bblock.bb_id#"
+			},
+			{
+				"bb_is_locked" = "1",
+				"bb_locked_by_user_id" = "#request.AccessStructure.user_id#",
+				"bb_lock_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlockBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlockBB>
+<cfquery name="lockBB" datasource="#application.datasource#">
 		update Billback_Allied
 		set BB_Is_Locked = 1,
 			BB_Locked_By_User_ID = '#request.AccessStructure.user_id#',
 			BB_Lock_Date = Getdate()
 		where Billback_id = '#bblock.bb_id#'
 	</cfquery>
+</cfif>
 	<cfset bblock.bb_is_unlocked = 0>
 	<cfset bblock.valid_bb_id = 1>
 </cfif>
 
 <cfif bblock.bb_unlock_action EQ 1 AND bblock.bb_is_locked_by_other_user EQ 0>
-	<cfquery name="unlockBB" datasource="#application.datasource#">
+	<cfset useLakebaseForunlockBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForunlockBB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#bblock.bb_id#",
+				"bb_locked_by_match_central" = "eq.0"
+			},
+			{
+				"bb_is_locked" = "0",
+				"bb_locked_by_deviation_grid" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlockBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlockBB>
+<cfquery name="unlockBB" datasource="#application.datasource#">
 		update Billback_Allied
 		set BB_Is_Locked = 0,
 		BB_Locked_By_Deviation_Grid = 0
 		where Billback_id = '#bblock.bb_id#'
 		AND BB_Locked_By_Match_Central = 0		
 	</cfquery>
+</cfif>
 </cfif>
 <cfset local_bbid = bblock.bb_id>
 

@@ -72,7 +72,23 @@
 		<cfelse>
 			<Cfset Amt = ItemAllocationAmount.Amount />
 		</cfif>
-		<CFQUERY NAME="Insert_QB_Calculated_Amount" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForInsert_QB_Calculated_Amount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_item_allocation_cal")>
+<cfif useLakebaseForInsert_QB_Calculated_Amount>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_item_allocation_cal", {
+			"billback_id" = "#Billback_ID#",
+			"program_id" = "#ItemAllocationAmount.Program_ID#",
+			"product_id" = "#ItemAllocationAmount.Product_ID#",
+			"billback_product_id" = "#ItemAllocationAmount.Billback_Product_ID#",
+			"approved_amount" = "#Amt#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_QB_Calculated_Amount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_QB_Calculated_Amount>
+<CFQUERY NAME="Insert_QB_Calculated_Amount" DATASOURCE="#Application.Datasource#">
 			INSERT INTO 		GL_Code_Item_Allocation_Cal
 								(	Billback_ID,
 									Program_ID,									
@@ -87,7 +103,8 @@
 									'#ItemAllocationAmount.Billback_Product_ID#',
 								 	#Amt# 
 								)	
-		</CFQUERY>			
+		</CFQUERY>
+</cfif>			
 	</CFOUTPUT>
 </CFIF>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Fixed, Rebate, Formula End xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
@@ -644,27 +661,11 @@
 	
 	<!--- <CFSET TemplateManager = CreateObject("component","components.programs.template.TemplateManager")> --->
 	<CFLOOP LIST = "#Program_List#" INDEX = "Item">
-		<!--- <cfset useLakebaseForGetProTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForGetProTemplate>
-	<cftry>
-		<cfset GetProTemplate = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_main", {
-				"contract_main_id" = "eq.#Item#",
-				"select" = "programtype_id"
-			}), "programtype_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetProTemplate = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetProTemplate>
-<CFQUERY NAME="GetProTemplate" DATASOURCE="#Application.Datasource#">
+		<!--- <CFQUERY NAME="GetProTemplate" DATASOURCE="#Application.Datasource#">
 			SELECT ProgramType_ID 
 			FROM Contract_main
 			WHERE Contract_Main_ID = '#Item#'
 		</CFQUERY>
-</cfif>
 	
 		<CFSET TemplateID = TemplateManager.getLatestTemplateId(GetProTemplate.ProgramType_ID )> --->
 		 <cfset useLakebaseForGetARFY = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>

@@ -15,28 +15,11 @@ The below destination needs to be configured and should come from a table. So th
 <cffile action="uploadall" destination="\\webstage8\CIA_OCR_Claims\File_Landing" nameconflict="makeunique" result="variables.upload"> <cfoutput>#serializeJSON({STATUS=200,MESSAGE='Passed'})#</cfoutput> 
 
  
-<!--- 		<cfset useLakebaseForgetDuplicateUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
-<cfif useLakebaseForgetDuplicateUpload>
-	<cftry>
-		<cfset getDuplicateUpload = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("ocr_upload_log", {
-				"header_file_name" = "eq.#cffile.serverFile#",
-				"limit" = "1",
-				"select" = "[file_name]"
-			}), "[file_name]"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetDuplicateUpload = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetDuplicateUpload>
-<cfquery name="getDuplicateUpload" datasource="#application.datasource#">
+<!--- 		<cfquery name="getDuplicateUpload" datasource="#application.datasource#">
 			SELECT  top 1 [File_Name]
 					FROM OCR_Upload_Log
 			WHERE 	header_file_name = '#cffile.serverFile#'	
 		</cfquery>
-</cfif>
 		
 		
 		<cfif getDuplicateUpload.RecordCount GTE 1>

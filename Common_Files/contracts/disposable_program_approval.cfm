@@ -571,27 +571,11 @@ ONCLICK="showGroupCalculation('#replace(Group_Id, "-", "_", "ALL")#','T')">
 	</A> 
 	</TD>
 	<cfif getProgramInfo.Contract_Status_Type_IDX EQ 2  AND (approvaltype EQ 1 OR agreetype EQ 1)>
-<!--- <cfset useLakebaseForgetgroupapprovalrights = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
-<cfif useLakebaseForgetgroupapprovalrights>
-	<cftry>
-		<cfset getgroupapprovalrights = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("getallgroupmargins", {
-				"type_group_desc_id" = "eq.#getAllProductMargins.Type_Group_Desc_Id#",
-				"select" = "group_id_approval"
-			}), "group_id_approval"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForgetgroupapprovalrights = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForgetgroupapprovalrights>
-<cfquery name="getgroupapprovalrights" dbtype="query">
+<!--- <cfquery name="getgroupapprovalrights" dbtype="query">
 select Group_ID_Approval
 from getAllGroupMargins
 where Type_Group_Desc_Id = '#getAllProductMargins.Type_Group_Desc_Id#'
-</cfquery>
-</cfif> --->
+</cfquery> --->
 <!--- check if the operating margin is LT the caluclated margin - if variation is * then let them approve anything--->
 	
 	

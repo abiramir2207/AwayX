@@ -59,24 +59,7 @@
 </CFQUERY>
 
 <!--- Get the fiscal calendar --->
-<!------<cfset useLakebaseForGet_Fiscal_Calendar = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
-<cfif useLakebaseForGet_Fiscal_Calendar>
-	<cftry>
-		<cfset Get_Fiscal_Calendar = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("fiscal_year", {
-				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
-				"deleted" = "eq.0",
-				"order" = "start_date.asc",
-				"select" = "start_date,end_date"
-			}), "start_date,end_date"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGet_Fiscal_Calendar = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGet_Fiscal_Calendar>
-<CFQUERY NAME="Get_Fiscal_Calendar" datasource="#application.datasource#">
+<!------<CFQUERY NAME="Get_Fiscal_Calendar" datasource="#application.datasource#">
 	Select		Start_Date,
 				End_date
 	From		Fiscal_Year
@@ -84,28 +67,10 @@
 				AND
 				Deleted			= 0
 	Order by	Start_Date 
-</CFQUERY>
-</cfif>----->
+</CFQUERY>----->
 
 <!--- Get the list of Owners --->
-<!------<cfset useLakebaseForGet_Owners = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
-<cfif useLakebaseForGet_Owners>
-	<cftry>
-		<cfset Get_Owners = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("_users", {
-				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
-				"deleted" = "eq.0",
-				"order" = "name_last.asc",
-				"select" = "name_first,name_last,user_id"
-			}), "name_first,name_last,user_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGet_Owners = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGet_Owners>
-<CFQUERY NAME="Get_Owners" datasource="#application.datasource#">
+<!------<CFQUERY NAME="Get_Owners" datasource="#application.datasource#">
 	Select		Name_First,
 				Name_Last,
 				User_ID
@@ -114,8 +79,7 @@
 				AND
 				Deleted			= 0
 	Order by	Name_Last
-</CFQUERY>
-</cfif>----->
+</CFQUERY>----->
 
 <!------<CFQUERY NAME="Get_Positions" datasource="#application.datasource#">
 	Select		u.Name_First,

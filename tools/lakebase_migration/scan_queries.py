@@ -31,6 +31,7 @@ TXN_RE = re.compile(
     r"<cftransaction\b[^>]*>(.*?)</cftransaction>",
     re.IGNORECASE | re.DOTALL,
 )
+COMMENT_RE = re.compile(r"<!---.*?--->", re.DOTALL)
 JOIN_UNION_RE = re.compile(r"\b(JOIN|UNION)\b", re.IGNORECASE)
 FROM_TABLE_RE = re.compile(r"\bFROM\s+([A-Za-z_][A-Za-z0-9_\.]*)", re.IGNORECASE)
 UPDATE_TABLE_RE = re.compile(r"\bUPDATE\s+([A-Za-z_][A-Za-z0-9_\.]*)", re.IGNORECASE)
@@ -53,6 +54,7 @@ def classify_file(path: Path) -> list[dict]:
         return []
 
     txn_spans = [m.span() for m in TXN_RE.finditer(text)]
+    comment_spans = [m.span() for m in COMMENT_RE.finditer(text)]
     converted_names = {m.group(1).lower() for m in LAKEBASE_CONVERTED_RE.finditer(text)}
 
     rows = []
@@ -60,6 +62,7 @@ def classify_file(path: Path) -> list[dict]:
         tag, name, sql = m.group(1), m.group(2), m.group(3)
         start = m.start()
         in_txn = any(s <= start < e for s, e in txn_spans)
+        in_comment = any(s <= start < e for s, e in comment_spans)
         already = name.replace(".", "_").lower() in converted_names or any(
             name.lower() in cn or cn in name.lower() for cn in converted_names
         )
@@ -70,6 +73,8 @@ def classify_file(path: Path) -> list[dict]:
 
         if already:
             verdict = "ALREADY_CONVERTED"
+        elif in_comment:
+            verdict = "DEFER_COMMENTED_OUT"
         elif in_txn:
             verdict = "DEFER_TRANSACTION"
         elif has_join_union:

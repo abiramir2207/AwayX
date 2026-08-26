@@ -658,12 +658,28 @@
 				<cfset thisOverageAmountUOM = evaluate("currentnode_overage.Group_Overage_#x#_UOM")>
 				<cfswitch expression="#currentnode.action#">
 					<cfcase value="1"><!--- insert --->
-						<cfquery name="insertOverage" datasource="#application.datasource#">
+						<cfset useLakebaseForinsertOverage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_item_group_amounts")>
+<cfif useLakebaseForinsertOverage>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bid_rule_item_group_amounts", {
+			"bid_rule_group_id" = "#evaluate("Bid_Rule_Group_ID_#x#")#",
+			"bid_rule_item_id" = "#currentnode.Bid_Rule_Item_ID#",
+			"amount" = "#thisOverageAmount#",
+			"uom" = "#thisOverageAmountUOM#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertOverage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertOverage>
+<cfquery name="insertOverage" datasource="#application.datasource#">
 							INSERT INTO Bid_Rule_Item_Group_Amounts
 							(Bid_Rule_Group_ID,Bid_Rule_Item_ID,Amount, uom)
 							VALUES
 							('#evaluate("Bid_Rule_Group_ID_#x#")#','#currentnode.Bid_Rule_Item_ID#','#thisOverageAmount#', '#thisOverageAmountUOM#')
 						</cfquery>
+</cfif>
 					</cfcase>
 
 					<cfcase value="2"><!--- update --->
@@ -735,12 +751,31 @@
 			<cfset currentnode = evaluate("BidRule.Modifiers.Mod_#x#")>
 			<cfif len(currentnode.Bid_Rule_Modifier_ID) EQ 0 AND currentnode.Action EQ 1>
 				<!--- insert --->
-				<cfquery name="insertModifier" datasource="#application.datasource#">
+				<cfset useLakebaseForinsertModifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_modifiers")>
+<cfif useLakebaseForinsertModifier>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bid_rule_modifiers", {
+			"bid_rule_id" = "#BidRule.Basic.Bid_Rule_ID#",
+			"modifier_index" = "#x#",
+			"modifier_amount" = "#currentnode.Modifier_Amount#",
+			"modifier_desc" = "#currentnode.Modifier_Desc#",
+			"modifier_uom" = "#currentnode.Modifier_UOM#",
+			"iscompound" = "#currentnode.iscompound#",
+			"isindependent" = "#currentnode.isindependent#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertModifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertModifier>
+<cfquery name="insertModifier" datasource="#application.datasource#">
 					INSERT INTO Bid_Rule_Modifiers
 					(Bid_Rule_ID,Modifier_Index,Modifier_Amount,Modifier_Desc,Modifier_UOM, iscompound, isindependent)
 					VALUES
 					('#BidRule.Basic.Bid_Rule_ID#','#x#','#currentnode.Modifier_Amount#','#currentnode.Modifier_Desc#','#currentnode.Modifier_UOM#', '#currentnode.iscompound#', '#currentnode.isindependent#')
 				</cfquery>
+</cfif>
 			</cfif>
 			<!--- update --->
 			<cfif len(currentnode.Bid_Rule_Modifier_ID) GT 0 AND currentnode.Action EQ 2>
@@ -1079,7 +1114,25 @@
 		
 
 		<!--- LAST MODIFIED RECORD --->
-		<cfquery name="updateLastModified" datasource="#application.datasource#">
+		<cfset useLakebaseForupdateLastModified = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rules")>
+<cfif useLakebaseForupdateLastModified>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rules",
+			{
+				"bid_rule_id" = "eq.#BidRule.Basic.Bid_Rule_ID#"
+			},
+			{
+				"last_mod_usr_id" = "#request.AccessStructure.user_id#",
+				"last_mod_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateLastModified = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateLastModified>
+<cfquery name="updateLastModified" datasource="#application.datasource#">
 			UPDATE Bid_Rules
 			SET 
 				Last_Mod_Usr_ID = '#request.AccessStructure.user_id#',
@@ -1087,6 +1140,7 @@
 			WHERE
 				Bid_Rule_ID = '#BidRule.Basic.Bid_Rule_ID#'
 		</cfquery>
+</cfif>
 		
 		<cfset url.sg = form.sg>
 		<cfset url.id = BidRule.Basic.Bid_Rule_ID>

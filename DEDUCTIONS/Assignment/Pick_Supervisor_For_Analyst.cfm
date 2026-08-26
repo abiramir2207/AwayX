@@ -46,11 +46,30 @@
 					</cftry>
 				</cfif>
 				<cfif NOT useLakebaseForUpAnalyst>
-					<CFQUERY NAME="Up_Analyst" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForUp_Analyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForUp_Analyst>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_analyst",
+			{
+				"analyst_user_id" = "eq.#Item#",
+				"deleted" = "eq.0"
+			},
+			{
+				"supervisor_id" = "#Evaluate("FORM.Analyst_User_ID_#LoopCount#")#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUp_Analyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUp_Analyst>
+<CFQUERY NAME="Up_Analyst" DATASOURCE="#Application.Datasource#">
 						UPDATE 	DD_Analyst
 						SET		Supervisor_ID = '#Evaluate("FORM.Analyst_User_ID_#LoopCount#")#'
 						WHERE	Analyst_User_ID	=	'#Item#' AND Deleted = 0
 					</CFQUERY>
+</cfif>
 				</cfif>
 			</CFLOOP>
 		</CFIF>

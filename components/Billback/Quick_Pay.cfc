@@ -1694,11 +1694,24 @@ BEGIN
 		</cfloop>
 	</cfif>
 
+<cfset useLakebaseForqDeleteRecords = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqDeleteRecords>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("adv_quick_pay_billback_log", {
+			"user_id" = "eq.#arguments.unique_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteRecords = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteRecords>
 <cfquery name="qDeleteRecords" DATASOURCE="#Application.Datasource#">
 	DELETE
 	FROM ADV_Quick_Pay_Billback_Log
 	WHERE User_ID =  '#arguments.unique_ID#'
 </cfquery>
+</cfif>
 
 <cfset var strData = structnew()>
 <cfset arrstatus = ArrayNew(1)>

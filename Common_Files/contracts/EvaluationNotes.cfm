@@ -166,11 +166,29 @@ So you need to pass this code to this page depending on the type of note.
         <!--- D17383 put it back in... '#reReplaceNoCase(trim(form.notes),"\r","<br>","ALL")#' --->
 			<!--- When a record is edited, update notes --->
 			<cfif editRecord gt 0>
-				<cfquery name="editSaveEvaluationNotes" datasource="#application.datasource#">
+				<cfset useLakebaseForeditSaveEvaluationNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_evaluation_notes")>
+<cfif useLakebaseForeditSaveEvaluationNotes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_evaluation_notes",
+			{
+				"contract_evaluation_notes_id" = "eq.#editRecord#"
+			},
+			{
+				"notes" = "#reReplaceNoCase(trim(form.notes),"\r","<br>","ALL")#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForeditSaveEvaluationNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForeditSaveEvaluationNotes>
+<cfquery name="editSaveEvaluationNotes" datasource="#application.datasource#">
 					UPDATE contract_evaluation_notes
 					SET Notes = '#reReplaceNoCase(trim(form.notes),"\r","<br>","ALL")#'
 					WHERE contract_evaluation_notes_id = #editRecord#
 				</cfquery>
+</cfif>
 				<!--- Reset "editRecord" back to 0 as update is complete. --->
 				<cfset editRecord = 0>
 

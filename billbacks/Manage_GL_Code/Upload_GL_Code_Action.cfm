@@ -124,7 +124,26 @@
 						Deleted = 0
 			</CFQUERY>
 			
-			<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForDataInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForDataInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_upload", {
+			"gl_code_uni_name" = "#Build_File_Name#",
+			"gl_code_file_path" = "#GL_Code_File_Path#",
+			"server_name" = "#CGI.SERVER_NAME#",
+			"gl_code_title" = "#DateStampedGLCode#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"gl_code_process_status_id" = "2",
+			"activate_tonight" = "#FORM.ActivateStatus#",
+			"fiscal_year" = "#FORM.Fiscal_Year#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDataInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDataInsert>
+<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
 				INSERT INTO 
 				
 				GL_Code_Upload	(	GL_Code_Uni_Name,
@@ -145,6 +164,7 @@
 									#FORM.ActivateStatus#,
 									'#FORM.Fiscal_Year#'		)
 			</CFQUERY>
+</cfif>
 			
 			<cfset useLakebaseForDeletedTempData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation_temp")>
 <cfif useLakebaseForDeletedTempData>

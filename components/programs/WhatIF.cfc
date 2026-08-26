@@ -204,13 +204,33 @@
 
 	<cffunction name="saveDistributor" access="public" output="true" hint="">
 
-		<cfquery name="local.save" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_save = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("whatif")>
+<cfif useLakebaseForlocal_save>
+	<cftry>
+		<cfset application.oLakebase.updateRows("whatif",
+			{
+				"whatif_id" = "eq.#form.id#"
+			},
+			{
+				"modified_date" = "#now()#",
+				"modified_by" = "#request.AccessStructure.User_ID#",
+				"shr_ship_to" = "#form.distributor#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_save = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_save>
+<cfquery name="local.save" datasource="#application.datasource#">
 			UPDATE WhatIF
 			   SET  Modified_Date = getDate()
 			       ,Modified_By   = '#request.AccessStructure.User_ID#'
 			       ,shr_ship_to   = '#form.distributor#'
 			 WHERE WhatIf_Id = #form.id#
 		</cfquery>
+</cfif>
 
 		<cfset resetWhatIf( form.id )>
 	</cffunction>

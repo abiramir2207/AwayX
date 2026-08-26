@@ -204,7 +204,26 @@ Description  : 	Manager for Planner Settings
 				DELETE FROM Planner_Retail_Customer_Groups
 			</cfquery>
 			<!--- Update the Delete flags in the Log to keep track of who deleted the rows --->
-			<cfquery name="local.delCustomerGroups_Log" datasource="#application.datasource#">
+			<cfset useLakebaseForlocal_delCustomerGroups_Log = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_retail_customer_groups_log")>
+<cfif useLakebaseForlocal_delCustomerGroups_Log>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_retail_customer_groups_log",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"deleted_date" = "#now()#",
+				"deleted_by" = "#Request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_delCustomerGroups_Log = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_delCustomerGroups_Log>
+<cfquery name="local.delCustomerGroups_Log" datasource="#application.datasource#">
 				UPDATE Planner_Retail_Customer_Groups_Log
 				SET Deleted = 1,
 					Deleted_Date = Getdate(),
@@ -212,6 +231,7 @@ Description  : 	Manager for Planner Settings
 				WHERE
 					Deleted = 0
 			</cfquery>
+</cfif>
 
 			<cfloop index = "idx" list = "#FORM.CustomerGroupChecked#">
 				<cfquery name="local.update" datasource="#application.datasource#">

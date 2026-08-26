@@ -150,29 +150,12 @@
 	
 		<cfargument name="CostSequenceId" type="numeric" required="true">
 		
-		<cfset useLakebaseForqGetUserAssosiated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
-<cfif useLakebaseForqGetUserAssosiated>
-	<cftry>
-		<cfset qGetUserAssosiated = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("_users", {
-				"deleted" = "eq.0",
-				"cost_sequence_id" = "eq.#arguments.CostSequenceId#",
-				"limit" = "1"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetUserAssosiated = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetUserAssosiated>
-<cfquery name="qGetUserAssosiated" datasource="#application.datasource#">
+		<cfquery name="qGetUserAssosiated" datasource="#application.datasource#">
 			SELECT 	TOP 1 *
 			FROM	_Users
 			WHERE	Deleted = 0
 					AND Cost_Sequence_ID = #arguments.CostSequenceId#
 		</cfquery>
-</cfif>
 		
 		<cfreturn qGetUserAssosiated />
 		

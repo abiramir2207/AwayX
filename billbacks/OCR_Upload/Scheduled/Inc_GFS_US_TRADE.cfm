@@ -297,7 +297,28 @@ Description  :  Include template for GFS US TRADE
 						
 					</cfloop>
 				<cfelse>
-						<cfquery name="updateOCRUploadLogStatus5" datasource="#application.datasource#">
+						<cfset useLakebaseForupdateOCRUploadLogStatus5 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatus5>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2.CF_Error",
+				"ocr_upload_status" = "Data mismatch between the file and the Docparser template. ",
+				"debug_dev_status" = "In docParser.cfm Checkpoint 1. The parser failed to return the data. The data location are not correct in the file and did not match the docparser template.",
+				"updated_date" = "#now()#",
+				"error_tool_tip" = "Please try again with a different source type. The invoice file format did not match the format of the selected source type."
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatus5 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatus5>
+<cfquery name="updateOCRUploadLogStatus5" datasource="#application.datasource#">
 							UPDATE OCR_Upload_Log 
 							SET 
 								OCR_Step = '2.CF_Error',
@@ -306,7 +327,8 @@ Description  :  Include template for GFS US TRADE
 								Updated_Date = getDate(),
 								Error_Tool_Tip = 'Please try again with a different source type. The invoice file format did not match the format of the selected source type.'
 							WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-						</cfquery> 
+						</cfquery>
+</cfif> 
 						<cfabort> <!--- OTHER ROWS WILL BE PICKED UP DURING THE NEXT RUN --->
 				</cfif>	<!--- END: <cfif (StructKeyExists(structFileContent[i], "customer_reference_number")  AND  --->
 			</cfloop>
@@ -416,14 +438,34 @@ Description  :  Include template for GFS US TRADE
 						</cfquery>	
 			</cfif>	<!--- END: <cfif qSelGFSFileDataCheck.RecordCount GTE 1> --->
 <cfelse>
-	<cfquery name="updateOCRUploadLogUpdateTries" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateOCRUploadLogUpdateTries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogUpdateTries>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"debug_dev_status" = "Docparser is still processing the file and returning half the results.",
+				"processtries" = "ProcessTries + 1",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogUpdateTries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogUpdateTries>
+<cfquery name="updateOCRUploadLogUpdateTries" datasource="#application.datasource#">
 		UPDATE OCR_Upload_Log 
 				SET 
 					Debug_Dev_Status = 'Docparser is still processing the file and returning half the results.',
 					ProcessTries = ProcessTries + 1,
 					Updated_Date = getDate()
 			WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-	</cfquery>	
+	</cfquery>
+</cfif>	
  </cfif> 			
 			
 </cfoutput>			

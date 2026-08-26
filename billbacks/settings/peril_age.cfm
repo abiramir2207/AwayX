@@ -14,7 +14,23 @@ This allows an administrator to specify how many days old a billback needs to be
 	<cfif isnumeric(FORM.BB_Danger_Range) AND isNumeric(form.AutoBB_Notify_Days)>
 		<!---If there is no prior record for this group--->
 		<cfif FORM.up_sv EQ 0>
-			 <CFQUERY NAME="INSERT_Danger_Date" DATASOURCE="#application.datasource#">
+			 <cfset useLakebaseForINSERT_Danger_Date = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForINSERT_Danger_Date>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_settings", {
+			"user_id" = "#request.AccessStructure.Company_Main_ID#",
+			"bb_danger_range" = "#int(form.BB_Danger_Range)#",
+			"autobb_notify_days" = "#int(FORM.AutoBB_Notify_Days)#",
+			"bb_range_update_date" = "#createodbcdatetime(Now())#",
+			"bb_range_editor_id" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForINSERT_Danger_Date = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForINSERT_Danger_Date>
+<CFQUERY NAME="INSERT_Danger_Date" DATASOURCE="#application.datasource#">
 				INSERT INTO Billback_Settings
 				(User_ID, 
 				BB_Danger_Range, 
@@ -27,17 +43,39 @@ This allows an administrator to specify how many days old a billback needs to be
 				#int(FORM.AutoBB_Notify_Days)#,
 				#createodbcdatetime(Now())#, 
 				'#request.AccessStructure.User_ID#')
-			</CFQUERY> 
+			</CFQUERY>
+</cfif> 
 		
 		<cfelse>
-			 <CFQUERY NAME="UPDATE_Danger_Date" DATASOURCE="#application.datasource#">
+			 <cfset useLakebaseForUPDATE_Danger_Date = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForUPDATE_Danger_Date>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_settings",
+			{
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#"
+			},
+			{
+				"bb_danger_range" = "#int(FORM.BB_Danger_Range)#",
+				"autobb_notify_days" = "#int(FORM.AutoBB_Notify_Days)#",
+				"bb_range_update_date" = "#createodbcdatetime(Now())#",
+				"bb_range_editor_id" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUPDATE_Danger_Date = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUPDATE_Danger_Date>
+<CFQUERY NAME="UPDATE_Danger_Date" DATASOURCE="#application.datasource#">
 				UPDATE Billback_Settings
 				SET BB_Danger_Range 	= #int(FORM.BB_Danger_Range)#,
 				AutoBB_Notify_Days 		= #int(FORM.AutoBB_Notify_Days)#, 	
 				BB_Range_Update_Date 	= #createodbcdatetime(Now())#,
 				BB_Range_Editor_ID	 	= '#request.AccessStructure.User_ID#'
 				WHERE User_ID			= '#request.AccessStructure.Company_Main_ID#'
-			</CFQUERY> 
+			</CFQUERY>
+</cfif> 
 		<!---No prior record--->
 		</cfif>
 		<CFLOCATION ADDTOKEN="No" URL="peril_age.cfm">

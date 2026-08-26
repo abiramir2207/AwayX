@@ -67,11 +67,21 @@ UNSAFE_RE = re.compile(
 # built conditionally at runtime - never safe to auto-generate a wrapper for.
 EMBEDDED_CFML_RE = re.compile(r"<cf\w+|<!---", re.IGNORECASE)
 CF_COMMENT_RE = re.compile(r"<!---.*?--->", re.DOTALL)
+SQL_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+# A value is only safe to auto-generate if it's a literal/NULL/CF-interpolation/
+# GetDate() - anything else (bare column refs, arithmetic like "col + 1",
+# concatenation, function calls) must be rejected rather than guessed at.
+SIMPLE_VALUE_RE = re.compile(r"^(NULL|'[^']*'|-?\d+(\.\d+)?|#[^#]*#|GetDate\s*\(\s*\))$", re.IGNORECASE)
 
 
 def strip_cf_comments(sql: str) -> str:
     """CF comments are inert - safe to remove before parsing/dynamic-SQL checks."""
     return CF_COMMENT_RE.sub(" ", sql)
+
+
+def strip_sql_comments(sql: str) -> str:
+    """SQL /* ... */ comments are inert - safe to remove before parsing."""
+    return SQL_COMMENT_RE.sub(" ", sql)
 
 
 def split_top_level(s: str, sep_word: str) -> list[str]:
@@ -113,8 +123,10 @@ def sql_value_to_cf(v: str) -> str:
     if re.match(r"GetDate\s*\(\s*\)", v, re.IGNORECASE):
         return "#now()#"
     if v.startswith("'") and v.endswith("'"):
-        return v[1:-1]
-    return v
+        v = v[1:-1]
+    # values get embedded in a double-quoted CFML string literal in the generated
+    # wrapper - any literal " in the value must be escaped as "" or it breaks the parser.
+    return v.replace('"', '""')
 
 
 def parse_where_to_filters(where: str):
@@ -148,7 +160,7 @@ def parse_where_to_filters(where: str):
 
 
 def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
-    sql = strip_cf_comments(sql)
+    sql = strip_sql_comments(strip_cf_comments(sql))
     if EMBEDDED_CFML_RE.search(sql):
         return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
     top_m = TOP_N_RE.search(sql)
@@ -205,29 +217,30 @@ def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
 
 
 def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
-    sql = strip_cf_comments(sql)
+    sql = strip_sql_comments(strip_cf_comments(sql))
     if EMBEDDED_CFML_RE.search(sql):
         return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
     m = UPDATE_RE.search(sql.strip())
     if not m:
         return None, "UPDATE pattern did not match parser"
     table, set_clause, where = m.group(1), m.group(2), m.group(3)
-    if UNSAFE_RE.search(set_clause):
-        return None, "SET clause too complex - review manually"
     if has_dynamic_identifier(table):
         return None, "table name is a dynamic CFML variable (#...#) - review manually"
     filters = parse_where_to_filters(where)
     if filters is None:
         return None, "WHERE clause too complex - review manually"
-    sets = split_top_level(set_clause, "AND") if "," not in set_clause else [s.strip() for s in set_clause.split(",")]
+    sets = split_top_level(set_clause, ",")
     data = {}
     for s in sets:
         if "=" not in s:
             return None, "Could not parse SET assignment"
         col, val = s.split("=", 1)
+        val = val.strip()
         if has_dynamic_identifier(col):
             return None, "SET column name is a dynamic CFML variable (#...#) - review manually"
-        data[col_name(col)] = sql_value_to_cf(val.strip())
+        if not SIMPLE_VALUE_RE.match(val):
+            return None, "SET clause too complex - review manually"
+        data[col_name(col)] = sql_value_to_cf(val)
 
     var_name = f"useLakebaseFor{query_name.replace('.', '_')}"
     pg_table = table.lower()
@@ -259,7 +272,7 @@ def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
 
 
 def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
-    sql = strip_cf_comments(sql)
+    sql = strip_sql_comments(strip_cf_comments(sql))
     if EMBEDDED_CFML_RE.search(sql):
         return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
     m = INSERT_HEADER_RE.search(sql.strip())
@@ -281,7 +294,7 @@ def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     vals = split_top_level(vals_raw, ",")
     if len(cols) != len(vals):
         return None, "INSERT column/value count mismatch - review manually"
-    if any(UNSAFE_RE.search(v) and not re.match(r"GetDate\s*\(\s*\)", v.strip(), re.IGNORECASE) for v in vals):
+    if any(not SIMPLE_VALUE_RE.match(v.strip()) for v in vals):
         return None, "INSERT VALUES contain functions/expressions - review manually"
     if has_dynamic_identifier(table, *cols):
         return None, "table/column name is a dynamic CFML variable (#...#) - review manually"
@@ -311,7 +324,7 @@ def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
 
 
 def gen_delete_wrapper(query_name: str, sql: str) -> tuple[str, str]:
-    sql = strip_cf_comments(sql)
+    sql = strip_sql_comments(strip_cf_comments(sql))
     if EMBEDDED_CFML_RE.search(sql):
         return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
     m = DELETE_RE.match(sql.strip())
@@ -352,6 +365,8 @@ def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[st
     except OSError:
         return 0, 0, []
 
+    comment_spans = [m.span() for m in re.finditer(r"<!---.*?--->", text, re.DOTALL)]
+
     generated, skipped, details = 0, 0, []
     for qname in query_names:
         if "#" in qname:
@@ -363,6 +378,10 @@ def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[st
         if not m:
             skipped += 1
             details.append((qname, None, "query block not found (name reused/dynamic?)"))
+            continue
+        if any(s <= m.start() < e for s, e in comment_spans):
+            skipped += 1
+            details.append((qname, None, "query is inside an HTML/CF comment (dead code) - skipped"))
             continue
         sql = m.group(2)
         sql_stripped = sql.strip()

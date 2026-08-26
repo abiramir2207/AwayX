@@ -30,27 +30,9 @@ function redirectToSummaryPage()
 <!--- <cfparam name="URL.DISTID" default="0" > --->
 <cfoutput>
 	<!---
-	<cfset useLakebaseForqGetDSChannels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
-<cfif useLakebaseForqGetDSChannels>
-	<cftry>
-		<cfset qGetDSChannels = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("business_segment", {
-				"active" = "eq.1",
-				"deleted" = "eq.0",
-				"bs_var_2" = "not.is.null",
-				"select" = "bs_var_2"
-			}), "bs_var_2"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetDSChannels = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetDSChannels>
-<cfquery name="qGetDSChannels" datasource="#application.datasource#">
+	<cfquery name="qGetDSChannels" datasource="#application.datasource#">
 		SELECT DISTINCT BS_Var_2 FROM Business_Segment WHERE Active = 1 AND Deleted = 0 AND BS_Var_2 IS NOT NULL
 	</cfquery>
-</cfif>
 	--->
 	<cfquery name="getDSChannelForProgram" datasource="#application.datasource#">
 		SELECT 

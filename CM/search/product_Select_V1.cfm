@@ -1038,11 +1038,27 @@ function save_Documents()
 <INPUT type="Hidden" name="sort_Order" value="#FORM.sort_Order#">
 </cfoutput>
 
+<cfset useLakebaseForgetLOBCharacter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getlinesofbiz")>
+<cfif useLakebaseForgetLOBCharacter>
+	<cftry>
+		<cfset getLOBCharacter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getlinesofbiz", {
+				"line_of_business_id" = "eq.#FORM.Line_Of_Biz#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLOBCharacter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLOBCharacter>
 <CFQUERY NAME="getLOBCharacter" DBTYPE="query">
 	SELECT *
 	FROM GetLinesOfBiz
 	WHERE Line_Of_Business_ID = '#FORM.Line_Of_Biz#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="getCategories" datasource="#application.datasource#">
 	SELECT Category_ID

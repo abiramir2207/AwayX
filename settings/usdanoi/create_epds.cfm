@@ -11,13 +11,32 @@
 		UPDATE _Application_Settings
 		SET usdanoi_enabled = #theBit#
 	</CFQUERY>
-	<cfquery name="LastEditedBy" datasource="#application.datasource#">
+	<cfset useLakebaseForLastEditedBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("global_last_edited_by")>
+<cfif useLakebaseForLastEditedBy>
+	<cftry>
+		<cfset application.oLakebase.updateRows("global_last_edited_by",
+			{
+				"global_last_edited_by_id" = "eq.1"
+			},
+			{
+				"user_id" = "#request.AccessStructure.user_id#",
+				"datetimestamp" = "#createodbcdatetime(now())#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLastEditedBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLastEditedBy>
+<cfquery name="LastEditedBy" datasource="#application.datasource#">
 		UPDATE Global_Last_Edited_By
 		SET 
 			user_id = '#request.AccessStructure.user_id#',
 			DateTimeStamp = #createodbcdatetime(now())#
 		WHERE Global_Last_Edited_By_ID = 1
 	</cfquery>
+</cfif>
 	
 	
 	<!--- update components table --->

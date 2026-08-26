@@ -180,29 +180,13 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 						OUL.OCR_Upload_Date DESC  		
 			</cfquery>
 
-			<!--- <cfset useLakebaseForqGetOCRUploadSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_template_settings")>
-<cfif useLakebaseForqGetOCRUploadSettings>
-	<cftry>
-		<cfset qGetOCRUploadSettings = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("ocr_template_settings", {
-				"deleted" = "eq.0",
-				"order" = "search_order.asc"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqGetOCRUploadSettings = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqGetOCRUploadSettings>
-<cfquery name="qGetOCRUploadSettings" datasource="#application.datasource#">
+			<!--- <cfquery name="qGetOCRUploadSettings" datasource="#application.datasource#">
 				SELECT * 
 					FROM OCR_Template_Settings 
 				WHERE
 					Deleted = 0
 				ORDER BY Search_Order
-			</cfquery>
-</cfif> --->
+			</cfquery> --->
 
 		<!--- 
 			A) RUN THE LOGIC TO PICK THE TEMPLATE BY DOING A STRING MATCHING
@@ -229,32 +213,13 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 				<cfset OCRTemplateSettingsID_Matched = 0 />
 				<cfloop query = "qGetOCRUploadSettings">
 		 			
-		<!--- 			<cfset useLakebaseForupdateOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
-<cfif useLakebaseForupdateOCRUploadLog>
-	<cftry>
-		<cfset application.oLakebase.updateRows("ocr_upload_log",
-			{
-				"ocr_upload_id" = "eq.#qGetOCRUploadRecords.OCR_Upload_ID#"
-			},
-			{
-				"ocr_step" = "2",
-				"ocr_upload_status" = "Analyzing the file for Picking Template"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateOCRUploadLog = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateOCRUploadLog>
-<cfquery name="updateOCRUploadLog" datasource="#application.datasource#">
+		<!--- 			<cfquery name="updateOCRUploadLog" datasource="#application.datasource#">
 							UPDATE OCR_Upload_Log 
 								SET 
 									OCR_Step			= 2,	
 									OCR_Upload_Status 	= 'Analyzing the file for Picking Template'
 							WHERE OCR_Upload_ID = '#qGetOCRUploadRecords.OCR_Upload_ID#'
-						</cfquery>
-</cfif> --->
+						</cfquery> --->
 					
 					<!--- <cfset txtFile = qGetOCRUploadSettings.OCR_File_Landing_Path & "\Raw_Text\" & Replace(qGetOCRUploadRecords.File_Name,".pdf",".txt") />  --->
 					<cfif ((qGetOCRUploadSettings.OCR_Reader_Name EQ "ABBYY") OR (qGetOCRUploadSettings.Is_Double_Processing_On EQ 1 AND qGetOCRUploadSettings.OCR_Reader_Name EQ "ABBYY&DOCPARSER" ) OR
@@ -329,14 +294,34 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 										<!--- <cfset OCRTemplateSettingsID_Matched = 1 /> --->
 									<cfbreak />
 								<cfelse>
-										<cfquery name="updateOCRUploadLogStatusError1" datasource="#application.datasource#">
+										<cfset useLakebaseForupdateOCRUploadLogStatusError1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatusError1>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadRecords.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "1",
+				"debug_dev_status" = "File is missing #srcFile#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatusError1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatusError1>
+<cfquery name="updateOCRUploadLogStatusError1" datasource="#application.datasource#">
 											UPDATE OCR_Upload_Log 
 												SET 
 													OCR_Step				= '1',	
 													Debug_Dev_Status = 'File is missing #srcFile#',
 													Updated_Date = getDate()
 											WHERE OCR_Upload_ID = '#qGetOCRUploadRecords.OCR_Upload_ID#'
-										</cfquery>	
+										</cfquery>
+</cfif>	
 								</cfif>	 <!--- <cfif FileExists(srcTxtFile)> --->
 							</cfif> <!--- <cfif (moveToNextSetting EQ 0)> --->
 						</cfif>	<!--- <cfif FileExists(txtFile)> --->
@@ -506,7 +491,27 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 							When the OCR_Step is set to 4 it means that the steps to convert 
 							into text file is complete and the SQL Process should kick-in.
 						 --->
-						<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
+						<cfset useLakebaseForupdateOCRUploadLogStatus4 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatus4>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "4",
+				"ocr_upload_status" = "Transferred file to DB processing",
+				"debug_dev_status" = "Transferred file to DB processing. DBLocation "#DBDest#"",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatus4 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatus4>
+<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
 								UPDATE OCR_Upload_Log 
 									SET 
 										OCR_Step = '4',
@@ -515,19 +520,38 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 										Updated_Date = getDate()
 								WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
 						</cfquery>
+</cfif>
 						<!--- After copying the file Move it to archive location --->
 						
 						<cffile action="move" source="#srcPDFFile#" destination="#archiveLocation#">
 						<cffile action="move" source="#srcTxtFile#" destination="#archiveLocation#">
 							
 					<cfelse>
-						<cfquery name="updateOCRUploadLogStatusError2" datasource="#application.datasource#">
+						<cfset useLakebaseForupdateOCRUploadLogStatusError2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatusError2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"debug_dev_status" = "File is missing "#srcPDFFile#" and "#srcTxtFile#" trying to move the file to "#DBDest#". Probably it is still not being picked up by the Hotfolder"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatusError2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatusError2>
+<cfquery name="updateOCRUploadLogStatusError2" datasource="#application.datasource#">
 							UPDATE 
 								OCR_Upload_Log 
 							SET 
 								Debug_Dev_Status = 'File is missing "#srcPDFFile#" and "#srcTxtFile#" trying to move the file to "#DBDest#". Probably it is still not being picked up by the Hotfolder'
 							WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-						</cfquery>	
+						</cfquery>
+</cfif>	
 					</cfif>
 				<!----*****************************************   DOCPARSER   *****************************************---->	
 				<cfelseif ((qGetOCRUploadExtracted.IS_OCR_Required EQ 1 AND qGetOCRUploadExtracted.OCR_Reader_Name EQ "DOCPARSER") OR 
@@ -1239,7 +1263,26 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 
 	</cfif> <!--- <cfif (qryIsSTProcessing.Recordcount EQ 0)> --->
 	<cfcatch>
-		<cfquery name="qryUpdSTLogEndError" datasource="#application.datasource#">
+		<cfset useLakebaseForqryUpdSTLogEndError = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cia_scheduled_task_log")>
+<cfif useLakebaseForqryUpdSTLogEndError>
+	<cftry>
+		<cfset application.oLakebase.updateRows("cia_scheduled_task_log",
+			{
+				"cia_scheduled_task_log_id" = "eq.#CIAScheduledTaskLogID#"
+			},
+			{
+				"end_datetime" = "#now()#",
+				"errored" = "1",
+				"isprocessing" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdSTLogEndError = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdSTLogEndError>
+<cfquery name="qryUpdSTLogEndError" datasource="#application.datasource#">
 					UPDATE 
 						CIA_Scheduled_Task_Log
 					SET 
@@ -1248,6 +1291,7 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 						isProcessing = 0
 					WHERE CIA_Scheduled_Task_Log_ID = #CIAScheduledTaskLogID#
 		</cfquery>
+</cfif>
 	</cfcatch>
 </cftry>
 </body>

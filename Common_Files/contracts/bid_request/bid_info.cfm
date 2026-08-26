@@ -140,23 +140,6 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 <!--- The queries commented below are not being used --->
 <!--- THIS Query Pulls category info START --->
 <!---
-<cfset useLakebaseForcategory_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_category")>
-<cfif useLakebaseForcategory_info>
-	<cftry>
-		<cfset category_info = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("program_bid_category", {
-				"deleted" = "eq.0",
-				"active" = "eq.1",
-				"order" = "program_bid_category_description.asc",
-				"select" = "program_bid_category_id,program_bid_category_code,program_bid_category_description,active,deleted,created_date,updated_date,updated_by"
-			}), "program_bid_category_id,program_bid_category_code,program_bid_category_description,active,deleted,created_date,updated_date,updated_by"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForcategory_info = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForcategory_info>
 <cfquery name="category_info" datasource="#application.datasource#">
     SELECT  Program_Bid_Category_ID,
             Program_Bid_Category_Code,
@@ -170,29 +153,11 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
     WHERE Deleted = 0  AND active = 1
     ORDER BY    Program_Bid_Category_Description
  </cfquery>
-</cfif>
  --->
 <!--- THIS Query Pulls category info END--->
 
 <!--- THIS Query Pulls package START --->
 <!---
-<cfset useLakebaseForpackage_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_package")>
-<cfif useLakebaseForpackage_info>
-	<cftry>
-		<cfset package_info = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("program_bid_package", {
-				"deleted" = "eq.0",
-				"active" = "eq.1",
-				"order" = "program_bid_package_description.asc",
-				"select" = "program_bid_package_id,program_bid_package_code,program_bid_package_description,active,deleted,created_date,updated_date,updated_by"
-			}), "program_bid_package_id,program_bid_package_code,program_bid_package_description,active,deleted,created_date,updated_date,updated_by"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForpackage_info = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForpackage_info>
 <cfquery name="package_info" datasource="#application.datasource#">
     SELECT  Program_Bid_Package_ID,
             Program_Bid_Package_Code,
@@ -206,26 +171,8 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
     WHERE Deleted = 0 AND active = 1
     ORDER BY    Program_Bid_Package_Description
  </cfquery>
-</cfif>
  --->
  <!---
-<cfset useLakebaseForwon_by = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
-<cfif useLakebaseForwon_by>
-	<cftry>
-		<cfset won_by = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("program_bid_won_by", {
-				"deleted" = "eq.0",
-				"active" = "eq.1",
-				"order" = "program_bid_won_by_description.asc",
-				"select" = "program_bid_won_by_id,program_bid_won_by_code,program_bid_won_by_description,active,deleted,created_date,updated_date,updated_by"
-			}), "program_bid_won_by_id,program_bid_won_by_code,program_bid_won_by_description,active,deleted,created_date,updated_date,updated_by"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForwon_by = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForwon_by>
 <cfquery name="won_by" datasource="#application.datasource#">
     SELECT  Program_Bid_Won_By_ID,
             Program_Bid_Won_By_Code,
@@ -239,7 +186,6 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
     WHERE Deleted = 0 AND active = 1
     ORDER BY    Program_Bid_Won_By_Description
 </cfquery>
-</cfif>
 --->
  
 <cfinvoke component="components.programs.bid_request.CompetitiveDataManager" method="getTemplateSettings" returnVariable="template_info">

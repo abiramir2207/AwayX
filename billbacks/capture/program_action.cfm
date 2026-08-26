@@ -1,26 +1,8 @@
-<!--- <cfset useLakebaseFordeleteExistingProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
-<cfif useLakebaseFordeleteExistingProducts>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_product",
-			{
-				"billback_id" = "eq.#FORM.BillBack_ID#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseFordeleteExistingProducts = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseFordeleteExistingProducts>
-<cfquery name="deleteExistingProducts" datasource="#Application.Datasource#">
+<!--- <cfquery name="deleteExistingProducts" datasource="#Application.Datasource#">
 	UPDATE Billback_Product
 	SET Deleted = 1
 	WHERE Billback_ID = '#FORM.BillBack_ID#'
-</cfquery>
-</cfif> --->
+</cfquery> --->
 
 
 

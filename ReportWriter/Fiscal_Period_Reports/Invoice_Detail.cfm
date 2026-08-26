@@ -141,22 +141,9 @@ AND Record_Type = 1
 	
 	</cfloop>
 
-<!--- <cfset useLakebaseForSelectAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_detail")>
-<cfif useLakebaseForSelectAll>
-	<cftry>
-		<cfset SelectAll = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("rp_invoice_detail", {})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForSelectAll = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForSelectAll>
-<cfquery name="SelectAll" datasource="#application.datasource#">
+<!--- <cfquery name="SelectAll" datasource="#application.datasource#">
 SELECT * FROM RP_Invoice_Detail
-</cfquery>
-</cfif>	
+</cfquery>	
 <cfdump var="#SelectAll#">
 <hr>
  --->

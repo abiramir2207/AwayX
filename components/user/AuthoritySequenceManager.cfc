@@ -84,13 +84,33 @@
 			<cfif arguments.authoritySequenceId><!------ Edit ----->
 			
 				<!------ Edit the description alone ----->
-				<cfquery name="qUpdateAS" datasource="#application.datasource#">
+				<cfset useLakebaseForqUpdateAS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqUpdateAS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("authority_sequence",
+			{
+				"authority_sequence_id" = "eq.#arguments.authoritySequenceId#"
+			},
+			{
+				"authority_sequence_name" = "#arguments.authoritySequenceDesc#",
+				"updated_by" = "#arguments.AccessStructure.user_id#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateAS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateAS>
+<cfquery name="qUpdateAS" datasource="#application.datasource#">
 					UPDATE	Authority_Sequence
 					SET		Authority_Sequence_Name = '#arguments.authoritySequenceDesc#',
 							Updated_By = '#arguments.AccessStructure.user_id#',
 							Updated_Date = GetDate()
 					WHERE	Authority_Sequence_ID = #arguments.authoritySequenceId#
 				</cfquery>
+</cfif>
 				
 			<cfelse><!------ Insert ----->
 			
@@ -268,11 +288,29 @@
 	<cffunction name="removeHQPositions" output="false">
 		
 		<!------ Update Order ----->
-		<cfquery name="removeHQPositions" datasource="#application.datasource#">
+		<cfset useLakebaseForremoveHQPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForremoveHQPositions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("authority_sequence",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"hq_position_id" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForremoveHQPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForremoveHQPositions>
+<cfquery name="removeHQPositions" datasource="#application.datasource#">
 			UPDATE	Authority_Sequence
 			SET		HQ_Position_id = 0
 			WHERE	deleted = 0
-		</cfquery>		
+		</cfquery>
+</cfif>		
 		
 	</cffunction>	
 	

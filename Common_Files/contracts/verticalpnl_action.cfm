@@ -95,7 +95,27 @@
 						<cfset runFreight = 1>  <!--- If fixed price is updated, re-calc Freight --->
 					</cfif>
 
-					<cfquery name="qZapCPMO" datasource="#application.datasource#">
+					<cfset useLakebaseForqZapCPMO = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin_override")>
+<cfif useLakebaseForqZapCPMO>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_product_margin_override",
+			{
+				"contract_main_id" = "eq.#form.contract_main_id#",
+				"bsa_foodservice_items_master_id" = "eq.#product_id#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_user_id" = "#request.AccessStructure.user_id#",
+				"deleted_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqZapCPMO = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqZapCPMO>
+<cfquery name="qZapCPMO" datasource="#application.datasource#">
 						UPDATE Contract_Product_Margin_Override
 							SET Deleted = 1,
 								Deleted_User_Id = '#request.AccessStructure.user_id#',
@@ -103,6 +123,7 @@
 						 WHERE Contract_Main_ID = #form.contract_main_id# AND
 								BSA_Foodservice_Items_Master_ID = '#product_id#' 
 					</cfquery>
+</cfif>
 				</cfif>
 			</cfloop>
 		</cfif>	

@@ -21,22 +21,58 @@
 				WHERE deduction_market_to_user_id = '#record_id#'
 			</cfquery>
 		
-			<cfquery name="updateInfo" datasource="#application.datasource#">
+			<cfset useLakebaseForupdateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_market_to_user")>
+<cfif useLakebaseForupdateInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deduction_market_to_user",
+			{
+				"deduction_market_to_user_id" = "eq.#record_id#"
+			},
+			{
+				"user_id" = "#localuser_id#",
+				"market_area_id" = "#marketarea#",
+				"setting_last_updated" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateInfo>
+<cfquery name="updateInfo" datasource="#application.datasource#">
 				UPDATE deduction_market_to_user
 				SET 
 					User_ID = '#localuser_id#',
 					Market_Area_ID = '#marketarea#',
 					Setting_Last_Updated = getdate()
 				WHERE deduction_market_to_user_id = '#record_id#'
-			</cfquery>			
+			</cfquery>
+</cfif>			
 			
 		<CFELSE>
-				<cfquery name="saveMarketAreaAssignments" datasource="#application.datasource#">
+				<cfset useLakebaseForsaveMarketAreaAssignments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_market_to_user")>
+<cfif useLakebaseForsaveMarketAreaAssignments>
+	<cftry>
+		<cfset application.oLakebase.insertRow("deduction_market_to_user", {
+			"user_id" = "#localuser_id#",
+			"market_area_id" = "#marketarea#",
+			"company_main_id" = "#request.AccessStructure.Company_Main_ID#",
+			"setting_last_updated" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveMarketAreaAssignments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveMarketAreaAssignments>
+<cfquery name="saveMarketAreaAssignments" datasource="#application.datasource#">
 					INSERT INTO deduction_market_to_user
 					(User_ID, Market_Area_ID, Company_Main_ID, Setting_Last_Updated)
 					VALUES
 					('#localuser_id#','#marketarea#','#request.AccessStructure.Company_Main_ID#', getdate())
-				</cfquery>			
+				</cfquery>
+</cfif>			
 		</cfif>
 	
 	</cfif>

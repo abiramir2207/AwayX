@@ -42,37 +42,112 @@
 	<!--- BELOW VARAIBLE CONTAINS LIST OF REMOVED TEMPLATES --->
 	<cfset removedTemplates = listCompare(selectedTemplate, form.first_Parent_ID)>
 	<cfloop list="#removedTemplates#" delimiters="," index="iFirstParentID">
-		<cfquery name="UpdData" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ideal_price_template_list")>
+<cfif useLakebaseForUpdData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ideal_price_template_list",
+			{
+				"first_parent_id" = "eq.#url.First_Parent_ID#",
+				"include_first_parent_id" = "eq.#iFirstParentID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_date" = "#now()#",
+				"deleted_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdData>
+<cfquery name="UpdData" datasource="#application.datasource#">
 			UPDATE Ideal_Price_Template_List
 			SET Deleted =1, Deleted_Date = getdate(), Deleted_By = '#request.AccessStructure.User_ID#'
 			WHERE First_Parent_ID = #url.First_Parent_ID#
 			AND Include_First_Parent_ID = #iFirstParentID#
 			</cfquery>
+</cfif>
 	</cfloop>
 
 		<!--- BELOW VARAIBLE CONTAINS LIST OF NEWLY ADDED TEMPLATES --->
 		<cfset addedTemplates = listCompare(form.first_Parent_ID, selectedTemplate)>
 		<cfloop list="#addedTemplates#" delimiters="," index="iFirstParentID">
 
-			<cfquery name="CheckTemplateExist" datasource="#application.datasource#">
+			<cfset useLakebaseForCheckTemplateExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ideal_price_template_list")>
+<cfif useLakebaseForCheckTemplateExist>
+	<cftry>
+		<cfset CheckTemplateExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ideal_price_template_list", {
+				"first_parent_id" = "eq.#url.First_Parent_ID#",
+				"include_first_parent_id" = "eq.#iFirstParentID#",
+				"deleted" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckTemplateExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckTemplateExist>
+<cfquery name="CheckTemplateExist" datasource="#application.datasource#">
 				SELECT *
 				FROM Ideal_Price_Template_List
 				WHERE First_Parent_ID = #url.First_Parent_ID#
 				AND Include_First_Parent_ID = #iFirstParentID#
 				AND Deleted = 1
 			</cfquery>
+</cfif>
 			<cfif CheckTemplateExist.recordCount>
-				<cfquery name="UpdOldRecord" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdOldRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ideal_price_template_list")>
+<cfif useLakebaseForUpdOldRecord>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ideal_price_template_list",
+			{
+				"first_parent_id" = "eq.#url.First_Parent_ID#",
+				"include_first_parent_id" = "eq.#iFirstParentID#"
+			},
+			{
+				"deleted" = "0",
+				"updated_date" = "#now()#",
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdOldRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdOldRecord>
+<cfquery name="UpdOldRecord" datasource="#application.datasource#">
 					UPDATE Ideal_Price_Template_List
 					SET Deleted =0, Updated_Date = getdate(), Updated_By = '#request.AccessStructure.User_ID#'
 					WHERE First_Parent_ID = #url.First_Parent_ID#
 					AND Include_First_Parent_ID = #iFirstParentID#
 					</cfquery>
+</cfif>
 			<cfelse>
-					<cfquery name="InsData" datasource="#application.datasource#">
+					<cfset useLakebaseForInsData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ideal_price_template_list")>
+<cfif useLakebaseForInsData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("ideal_price_template_list", {
+			"first_parent_id" = "#url.First_Parent_ID#",
+			"include_first_parent_id" = "#iFirstParentID#",
+			"created_by" = "#request.AccessStructure.User_ID#",
+			"created_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsData>
+<cfquery name="InsData" datasource="#application.datasource#">
 						INSERT INTO Ideal_Price_Template_List(First_Parent_ID, Include_First_Parent_ID, Created_By, Created_Date)
 						VALUES (#url.First_Parent_ID#, #iFirstParentID#, '#request.AccessStructure.User_ID#' , getdate())
 					</cfquery>
+</cfif>
 			</cfif>
 		</cfloop>
 	<script>

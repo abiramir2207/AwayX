@@ -570,10 +570,25 @@ Added/Changed: Added value to busSegIdForProgram to filter Position Drop Down Fi
 								ORDER BY a.Broker_Name
 							</cfquery>
 
-							<cfquery name="GetBrokers" dbtype="query">
+							<cfset useLakebaseForGetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallbrokers")>
+<cfif useLakebaseForGetBrokers>
+	<cftry>
+		<cfset GetBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallbrokers", {
+				"select" = "broker_name"
+			}), "broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokers>
+<cfquery name="GetBrokers" dbtype="query">
 								SELECT DISTINCT Broker_Name
 								FROM GetAllBrokers
 							</cfquery>
+</cfif>
 
 							<CFIF ShowDropDown EQ 1 AND Get_Profile_Settings.View_Broker_List EQ 1>
 							<SELECT NAME="Broker" style="width: 200px;" onkeydown="if (event.keyCode == 13) doSearchNow();">

@@ -164,7 +164,24 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	</CFQUERY>
 </cfif>
 	<CFSET ThisProductIDFormattedForHTMLFormElementName = Replace(Product_ID,"-","_", "ALL")>
-	<CFQUERY NAME="saveFormulaProduct" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveFormulaProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_products")>
+<cfif useLakebaseForsaveFormulaProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_formula_pricing_rule_products", {
+			"program_id" = "#cryp.value#",
+			"program_formula_pricing_rule_id" = "#FORM.Program_Formula_Pricing_Rule_ID#",
+			"contract_product_id" = "#saveNewProduct.contract_products_id#",
+			"weekly_volume" = "#Evaluate("Form.WEEKLYVOLUME_#ThisProductIDFormattedForHTMLFormElementName#")#",
+			"product_overage" = "#Evaluate("Form.Overage_LB_#ThisProductIDFormattedForHTMLFormElementName#")#",
+			"active" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveFormulaProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveFormulaProduct>
+<CFQUERY NAME="saveFormulaProduct" datasource="#application.datasource#">
 		INSERT INTO Program_Formula_Pricing_Rule_Products
 		(
 			Program_ID,
@@ -184,6 +201,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 			1
 		)		
 	</CFQUERY>
+</cfif>
 <CFELSE>
 	<CFQUERY NAME="get_CP_ID" datasource="#application.datasource#">
 		SELECT	

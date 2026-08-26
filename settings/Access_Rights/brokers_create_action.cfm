@@ -183,29 +183,11 @@ WHERE State_ID = '#FORM.ADDRESS_STATE#'
 
 <CFIF getLastMAassignedToBroker.Recordcount NEQ 0>
 	<CFIF getLastMAassignedToBroker.Service_Market_ID NEQ FORM.MARKET_AREA_ID>
-		<cfset useLakebaseForsaveMAassignment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_markets")>
-<cfif useLakebaseForsaveMAassignment>
-	<cftry>
-		<cfset application.oLakebase.updateRows("service_markets",
-			{
-				"service_market_id" = "eq.#getLastMAassignedToBroker.Service_Market_ID#"
-			},
-			{
-				"bsa_foodservice_brokers_id" = javaCast("null","")
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForsaveMAassignment = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForsaveMAassignment>
-<CFQUERY NAME="saveMAassignment" datasource="#application.datasource#">
+		<CFQUERY NAME="saveMAassignment" datasource="#application.datasource#">
 			UPDATE Service_Markets
 			SET BSA_Foodservice_Brokers_ID = NULL
 			WHERE Service_Market_ID = '#getLastMAassignedToBroker.Service_Market_ID#'
 		</CFQUERY>
-</cfif>
 	</CFIF>
 </CFIF> --->
 

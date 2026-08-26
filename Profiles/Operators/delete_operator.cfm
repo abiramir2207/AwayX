@@ -14,7 +14,29 @@ function printPage()
 <Cfif blnSubmit IS 1>
 
 <!---Do the deletion and close the window --->
-	<cfquery name="MarkasDeleted" datasource="#application.datasource#">
+	<cfset useLakebaseForMarkasDeleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForMarkasDeleted>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bsa_operator",
+			{
+				"bsa_operator_id" = "eq.#BSA_Operator_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "#request.AccessStructure.User_ID#",
+				"deleted_date" = "#now()#",
+				"display_code" = "N",
+				"user_date_edited" = "#now()#",
+				"edited_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForMarkasDeleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForMarkasDeleted>
+<cfquery name="MarkasDeleted" datasource="#application.datasource#">
 	UPDATE BSA_Operator
 	SET Deleted = 1,
 		Deleted_By = '#request.AccessStructure.User_ID#',
@@ -25,6 +47,7 @@ function printPage()
 	WHERE BSA_Operator_ID = #BSA_Operator_ID#
 	<!--- AND User_Added = 1 BJF: I had to either disable the link or take out this req. I don't think this serves a valuable purpose so I removed it. --->
 	</cfquery>
+</cfif>
 	
 	<cfquery name="DeleteContractOperator" datasource="#application.datasource#">
 	UPDATE Contract_Operators
@@ -71,11 +94,27 @@ FROM Billback_Operator
 <cfelse>
 
 
+<cfset useLakebaseForOperatorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForOperatorInfo>
+	<cftry>
+		<cfset OperatorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#BSA_Operator_ID#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOperatorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOperatorInfo>
 <cfquery name="OperatorInfo" datasource="#application.datasource#">
 SELECT Operator_Name
 FROM BSA_Operator
 WHERE BSA_Operator_ID = #BSA_Operator_ID#
 </cfquery>
+</cfif>
 
 <HTML>
 <HEAD>

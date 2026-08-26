@@ -12,6 +12,26 @@
 <CFINCLUDE TEMPLATE="/get_access_profile.cfm">
 
 <CFIF application.returned_customer_setting.Show_Fund_Settings EQ 1 AND application.returned_customer_setting.Upload_GL_Code EQ 1>		
+<cfset useLakebaseForPayment_Requested = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForPayment_Requested>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"payment_requested" = "1",
+				"pay_req_by" = "#request.AccessStructure.User_ID#",
+				"pay_req_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPayment_Requested = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPayment_Requested>
 <CFQUERY NAME="Payment_Requested" DATASOURCE="#Application.Datasource#">
 	UPDATE 	GL_Code_Allocation
 	SET 	Payment_Requested = 1,
@@ -21,10 +41,26 @@
 	WHERE 	Billback_ID = '#Billback_ID#' AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 </CFIF>
+<cfset useLakebaseForGetPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetPayee>
+	<cftry>
+		<cfset GetPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayee>
 <CFQUERY NAME="GetPayee" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback WHERE Billback_ID = '#Billback_ID#'
 </CFQUERY>
+</cfif>
 
 <CFSET ConsiderThisassociatedDistributorToBeThePayee = "" />
 <CFIF GetPayee.Billback_Payee_Type_ID EQ 4><!------ If payee = other, check i distributor is associated ----->	
@@ -79,25 +115,9 @@
 	</CFQUERY>
 <CFELSEIF GetPayee.Billback_Payee_Type_ID EQ 2>
 	<!--- 
-	<cfset useLakebaseForGetAssociatedShipTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator")>
-<cfif useLakebaseForGetAssociatedShipTo>
-	<cftry>
-		<cfset GetAssociatedShipTo = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("billback_operator", {
-				"billback_id" = "eq.#Billback_ID#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetAssociatedShipTo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetAssociatedShipTo>
-<CFQUERY NAME="GetAssociatedShipTo" DATASOURCE="#Application.Datasource#">
+	<CFQUERY NAME="GetAssociatedShipTo" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Billback_Operator WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
 	</CFQUERY>
-</cfif>
 	 --->
 	<CFQUERY NAME="SelectVendor" DATASOURCE="#Application.Datasource#">
 		SELECT 		DISTINCT 	Vendor_Dist_Oper.Vendor_ID,					

@@ -16,7 +16,21 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForSaveNotesData>
-	<CFQUERY NAME="Save_Notes_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Notes_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_action_plan_notes")>
+<cfif useLakebaseForSave_Notes_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("broker_action_plan_notes", {
+			"broker_action_plan_id" = "#Form.Broker_Action_Plan_ID#",
+			"date_of_note" = "#createodbcdatetime(now())#",
+			"broker_action_plan_notes" = "#Broker_Action_Plan_Notes#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Notes_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Notes_Data>
+<CFQUERY NAME="Save_Notes_Data" datasource="#application.datasource#">
 		INSERT INTO Broker_Action_Plan_Notes
 			(
 				Broker_Action_Plan_ID,
@@ -30,6 +44,7 @@
 				'#Broker_Action_Plan_Notes#'
 			)
 	</CFQUERY>
+</cfif>
 </cfif>
 
 

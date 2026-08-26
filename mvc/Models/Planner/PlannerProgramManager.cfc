@@ -959,7 +959,22 @@ Description  :  Manager for Planner Program
 
 						<cfset iFixedCompId = qSaveFixedPriceComp.Program_Fixed_Component_ID />
 
-						<cfquery name="qSaveFixedPricePaymentCycle" datasource="#application.datasource#">
+						<cfset useLakebaseForqSaveFixedPricePaymentCycle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForqSaveFixedPricePaymentCycle>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_payment_cycle", {
+			"program_id" = "#New_Contract_Main_ID#",
+			"discount_type_id" = "1",
+			"payment_cycle_id" = "#Evaluate("stData.fixed_paymentcycle_#ListGetAt(fIndx, 1, "_")#_#Replace(iIndx, "-", "_", "ALL")#")#",
+			"component_id" = "#iFixedCompId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveFixedPricePaymentCycle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveFixedPricePaymentCycle>
+<cfquery name="qSaveFixedPricePaymentCycle" datasource="#application.datasource#">
 							INSERT INTO Program_Payment_Cycle
 								(
 									Program_ID,
@@ -976,6 +991,7 @@ Description  :  Manager for Planner Program
 
 								)
 						</cfquery>
+</cfif>
 
 					</cfif>
 
@@ -1173,7 +1189,22 @@ Description  :  Manager for Planner Program
 
 						<cfset iRebateCompId = qAddRebateComp.Program_Rebates_Component_ID />
 
-						<cfquery name="qSaveRebatePaymentCycle" datasource="#application.datasource#">
+						<cfset useLakebaseForqSaveRebatePaymentCycle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForqSaveRebatePaymentCycle>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_payment_cycle", {
+			"program_id" = "#New_Contract_Main_ID#",
+			"discount_type_id" = "2",
+			"payment_cycle_id" = "#Evaluate("stData.rebate_paymentcycle_#ListGetAt(rIndx, 1, "_")#_#Replace(iIndx, "-", "_", "ALL")#")#",
+			"component_id" = "#iRebateCompId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveRebatePaymentCycle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveRebatePaymentCycle>
+<cfquery name="qSaveRebatePaymentCycle" datasource="#application.datasource#">
 							INSERT INTO Program_Payment_Cycle
 								(
 									Program_ID,
@@ -1190,6 +1221,7 @@ Description  :  Manager for Planner Program
 
 								)
 						</cfquery>
+</cfif>
 
 					</cfif>
 
@@ -3152,7 +3184,31 @@ Description  :  Manager for Planner Program
 			<cfprocparam type="in" 	cfsqltype="cf_sql_bit"		value="0">
 		</cfstoredproc>
 
-		<cfquery name="local.qCopyProgramUpdateDates" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_qCopyProgramUpdateDates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForlocal_qCopyProgramUpdateDates>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#renewed_program_id#"
+			},
+			{
+				"performance_start_date" = "#dateformat(arguments.data.start_date, "m/d/yyyy")#",
+				"performance_end_date" = "#dateformat(arguments.data.end_date, "m/d/yyyy")#",
+				"delivery_start_date" = "#dateformat(arguments.data.delivery_start_date, "m/d/yyyy")#",
+				"delivery_end_date" = "#dateformat(arguments.data.delivery_end_date, "m/d/yyyy")#",
+				"contract_start_date" = "#dateformat(arguments.data.delivery_start_date, "m/d/yyyy")#",
+				"contract_end_date" = "#dateformat(arguments.data.delivery_end_date, "m/d/yyyy")#",
+				"planner_perf_type_id" = "#arguments.data.planner_perf_id#",
+				"planner_id" = "#arguments.data.plannerid#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qCopyProgramUpdateDates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qCopyProgramUpdateDates>
+<cfquery name="local.qCopyProgramUpdateDates" datasource="#application.datasource#">
 			UPDATE	Contract_Main
 			SET		Performance_Start_Date 	= '#dateformat(arguments.data.start_date, "m/d/yyyy")#',
 					Performance_End_Date    = '#dateformat(arguments.data.end_date, "m/d/yyyy")#',
@@ -3164,6 +3220,7 @@ Description  :  Manager for Planner Program
 					Planner_ID 				= '#arguments.data.plannerid#'
 			WHERE 	Contract_Main_ID		= '#renewed_program_id#'
 		</cfquery>
+</cfif>
 
 		<cfif arguments.data.indirect_planner >
 			<cfstoredproc procedure="Planner_Program_Volume_Save_To_Volume_Plan_Indirect" datasource="#application.datasource#" returnCode = "yes">

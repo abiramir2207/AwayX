@@ -552,7 +552,22 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 	</cffunction>
 
 	<cffunction name="getBBUploadErrorCodes" output="false" returntype="query">
-		<cfquery name="qryBBUploadErrorCodes" datasource="#application.datasource#">
+		<cfset useLakebaseForqryBBUploadErrorCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_error_codes")>
+<cfif useLakebaseForqryBBUploadErrorCodes>
+	<cftry>
+		<cfset qryBBUploadErrorCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_error_codes", {
+				"deleted" = "eq.0",
+				"select" = "error_id,error_code,error_desc,error_valid_rules,error_type,deleted"
+			}), "error_id,error_code,error_desc,error_valid_rules,error_type,deleted"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryBBUploadErrorCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryBBUploadErrorCodes>
+<cfquery name="qryBBUploadErrorCodes" datasource="#application.datasource#">
 			SELECT
 				Error_ID,
 				Error_Code,
@@ -565,6 +580,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 			WHERE
 				Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qryBbUploadErrorCodes />
 

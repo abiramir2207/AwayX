@@ -40,7 +40,22 @@
 	
 	<!---stick them into the name table as inactive--->
 	<cfloop query="GetAllDistinctExistingLSNames">
-		<cfquery name="InsertIntoOptions" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertIntoOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_name")>
+<cfif useLakebaseForInsertIntoOptions>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_lump_sum_name", {
+			"program_lump_sum_name" = "#Lump_Sum_Name#",
+			"deleted" = "0",
+			"active" = "0",
+			"createddate" = "#Now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoOptions>
+<cfquery name="InsertIntoOptions" datasource="#application.datasource#">
 		INSERT INTO Program_Lump_Sum_Name
 		(
 			Program_Lump_Sum_Name,
@@ -56,4 +71,5 @@
 			#Now()#
 		)
 		</cfquery>
+</cfif>
 	</cfloop>--->

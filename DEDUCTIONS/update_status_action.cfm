@@ -230,7 +230,23 @@ Please note that many fields from the parent may not be defined if the user does
 
 	<!--- ACTION --->
 	<cfif DD_Stage_ID IS NOT Old_Stage>
-	<cfquery name="InsertDeductions" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_ded_actions")>
+<cfif useLakebaseForInsertDeductions>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_ded_actions", {
+			"deduction_id" = "#Deduction_ID#",
+			"dd_stage_id" = "#DD_Stage_ID#",
+			"action_completed" = "#Old_Stage#",
+			"completed_by" = "#request.AccessStructure.user_id#",
+			"date_completed" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertDeductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertDeductions>
+<cfquery name="InsertDeductions" datasource="#application.datasource#">
 		INSERT INTO DD_Ded_Actions
 		(
 			Deduction_ID,
@@ -247,14 +263,34 @@ Please note that many fields from the parent may not be defined if the user does
 			'#request.AccessStructure.user_id#',
 			#now()#
 		)
-	</cfquery>				
+	</cfquery>
+</cfif>				
 	
-	<cfquery name="UpdateDeductions" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdateDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDeductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"dd_stage" = "#DD_Stage_ID#",
+				"dd_ded_action_id" = "#InsertDeductions.DD_Ded_Action_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDeductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDeductions>
+<cfquery name="UpdateDeductions" datasource="#application.datasource#">
 		UPDATE Deductions
 		SET DD_Stage = #DD_Stage_ID#,
 		DD_Ded_Action_ID = '#InsertDeductions.DD_Ded_Action_ID#'
 		WHERE Deduction_ID = '#Deduction_ID#'
 	</cfquery>
+</cfif>
 	<!---- add reminder ---->
 	<cfset DeductionManager.loadDDStageInfo(DD_Stage_ID) />
 	 <cfset DeductionManager.loadDDActionInfo(InsertDeductions.DD_Ded_Action_ID) />

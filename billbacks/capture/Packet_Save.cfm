@@ -233,7 +233,21 @@
 			<CFIF not isdefined("Program.BILLBACK_PROGRAM_ID")>
 				
 					
-						<cfquery name="InsertProgram" datasource="#Application.Datasource#">
+						<cfset useLakebaseForInsertProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForInsertProgram>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program", {
+			"billback_id" = "#Billback.Billback_ID#",
+			"display_product_hierarchy" = "#evaluate("Program_#Program.Program_ID#_ShowProductsInGroupLevel")#",
+			"program_id" = "#Program.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertProgram>
+<cfquery name="InsertProgram" datasource="#Application.Datasource#">
 							INSERT INTO Billback_Program
 							(
 								Billback_ID,
@@ -247,6 +261,7 @@
 								'#Program.Program_ID#'
 							)
 						</cfquery>
+</cfif>
 					
 			<CFELSE>
 				<CFSET InsertProgram = QueryNew("Billback_Program_ID")>
@@ -897,26 +912,9 @@
 			
 		<!--- <CFIF evaluate("Program_#Program.Program_ID#_ShowProductsInGroupLevel") EQ 1> --->
 				<!--- OLD XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-					<cfset useLakebaseForGetProdCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
-<cfif useLakebaseForGetProdCount>
-	<cftry>
-		<cfset GetProdCount = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("billback_product", {
-				"billback_id" = "eq.#Billback_ID#",
-				"deleted" = "eq.0",
-				"product_hierarchy_id" = "eq.#Product.Billback_Product_ID#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetProdCount = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetProdCount>
-<CFQUERY NAME="GetProdCount" DATASOURCE="#Application.Datasource#">
+					<CFQUERY NAME="GetProdCount" DATASOURCE="#Application.Datasource#">
 					SELECT * FROM Billback_Product WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0 AND Product_Hierarchy_ID = '#Product.Billback_Product_ID#'
-				</CFQUERY>
-</cfif> --->
+				</CFQUERY> --->
 			<cfif Scheduled_Auto_BB eq 0>
 				<!---set up above...use that else reset <CFSET StructLocationPerRateType = "fixed_1,rebate_2,lump_sum_3,growth_4,formula_5,unknown_6,claimadjust_10"> --->
 			<cfelse><!---  AUTO BB CHECK...rates are not modified if Sched Auto BB, ONLY Adjustments can be made...these queries need to adjust for group by Product.Distributor_ID_Earned  ********************* --->
@@ -1271,7 +1269,27 @@
 						
 						
 					<CFELSE>
-						<cfquery name="UpdateProductd" datasource="#Application.Datasource#">
+						<cfset useLakebaseForUpdateProductd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForUpdateProductd>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product_detail",
+			{
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"billback_product_id" = "eq.#Product.Billback_Product_ID#",
+				"deleted" = "eq.0",
+				"bb_product_type_id" = "eq.#tempRateData[2]#"
+			},
+			{
+				"bb_rate" = "#evaluate("Product.Rate_#tempRateData[1]#")#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateProductd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateProductd>
+<cfquery name="UpdateProductd" datasource="#Application.Datasource#">
 							UPDATE Billback_Product_Detail
 								SET 
 									BB_Rate = '#evaluate("Product.Rate_#tempRateData[1]#")#'
@@ -1282,6 +1300,7 @@
 									AND
 									BB_Product_Type_ID = '#tempRateData[2]#'
 						</cfquery>
+</cfif>
 					</CFIF>
 					
 				  </cfif>

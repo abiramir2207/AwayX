@@ -77,21 +77,8 @@ GROUP BY Distributor_ID, Shared_Ship_To, Legacy_Ship_To, Item_Number, BB_Summary
 </cfif>
 	
 	</cfloop>
-	<!--- <cfset useLakebaseForGetAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_summary")>
-<cfif useLakebaseForGetAll>
-	<cftry>
-		<cfset GetAll = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("rp_billback_summary", {})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetAll = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetAll>
-<cfquery name="GetAll" datasource="#application.datasource#">
+	<!--- <cfquery name="GetAll" datasource="#application.datasource#">
 	SELECT * FROM RP_Billback_Summary
 	</cfquery>
-</cfif>
 	
 	<cfdump var="#GetAll#"> --->

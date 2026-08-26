@@ -243,13 +243,32 @@ Description  :  Upload from home page
 							<cffile action="copy" destination="#qGetOCRSettings.OCR_File_PreProcess_Path#" source="#fileSource#">
 							<cffile action="copy" destination="#qGetOCRSettings.OCR_File_PreProcess_Path#\ABBYY" source="#fileSource#">
 						<cfelseif qGetOCRSettings.OCR_Reader_Name NEQ "EXCELCFPARSE">
-							<cfquery name="qUpdOCRUploadLog" datasource="#application.datasource#">
+							<cfset useLakebaseForqUpdOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#OCRUploadID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"debug_dev_status" = "ERROR: There seems to be multiple templates and atleast one does not have a valid path!!"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdOCRUploadLog>
+<cfquery name="qUpdOCRUploadLog" datasource="#application.datasource#">
 								UPDATE 
 									OCR_Upload_Log
 								SET 
 									Debug_Dev_Status = 'ERROR: There seems to be multiple templates and atleast one does not have a valid path!!'
 								WHERE OCR_Upload_ID = '#OCRUploadID#'  AND Deleted = 0
 							</cfquery>
+</cfif>
 								
 						</cfif>
 					</cfloop>

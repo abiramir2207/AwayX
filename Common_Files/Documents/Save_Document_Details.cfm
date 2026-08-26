@@ -89,25 +89,9 @@
 
 <!--- <CFIF Form.Deleted EQ 1 AND Form.Doc_ID NEQ "">
 	<CFOUTPUT>
-	<cfset useLakebaseForCheck_bef_deleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
-<cfif useLakebaseForCheck_bef_deleted>
-	<cftry>
-		<cfset Check_bef_deleted = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_attachments", {
-				"doc_id" = "eq.#FORM.Doc_ID#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCheck_bef_deleted = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCheck_bef_deleted>
-<CFQUERY NAME="Check_bef_deleted" DATASOURCE = "#Application.Datasource#">
+	<CFQUERY NAME="Check_bef_deleted" DATASOURCE = "#Application.Datasource#">
 		SELECT * from Contract_Attachments where DOC_ID = '#FORM.Doc_ID#' and Deleted = 0
 	</CFQUERY>
-</cfif>
 	<CFIF Check_bef_deleted.recordcount GT 0>
 		<BR><BR><BR><BR>
 		<TABLE ALIGN="CENTER">

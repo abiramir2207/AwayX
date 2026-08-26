@@ -512,7 +512,28 @@
 			bReturnVal	= 0;
 		</cfscript>
 
-		<cfquery name="qFlagProgramApprovalByProfile" datasource="#application.datasource#">
+		<cfset useLakebaseForqFlagProgramApprovalByProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_approval_by_profile")>
+<cfif useLakebaseForqFlagProgramApprovalByProfile>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_approval_by_profile",
+			{
+				"program_id" = "eq.#nProgramID#",
+				"profiles_id" = "eq.#nProfileID#",
+				"approved_by_user_id" = "eq.#strUserID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"approved_by_user" = "1",
+				"approved_by_user_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFlagProgramApprovalByProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFlagProgramApprovalByProfile>
+<cfquery name="qFlagProgramApprovalByProfile" datasource="#application.datasource#">
 			UPDATE	Program_Approval_By_Profile
 			SET		Approved_By_User = 1,
 					Approved_By_User_Date = getDate()
@@ -521,6 +542,7 @@
 			AND		Approved_By_User_ID = '#strUserID#'
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 
 	</cffunction>
 

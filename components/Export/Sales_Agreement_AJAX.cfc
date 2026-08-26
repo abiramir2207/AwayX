@@ -634,10 +634,26 @@
 			  and therefore I replaced it with a 0 on that page (Sales_Agreement.cfm). I just dont use that array
 			  entry here --->
 		<cfloop from="2" to="#Arraylen(Misc_Cost_Desc)#" index="i">
-			<cfquery name="InsertExportMiscCost" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertExportMiscCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_misc_cost")>
+<cfif useLakebaseForInsertExportMiscCost>
+	<cftry>
+		<cfset application.oLakebase.insertRow("export_misc_cost", {
+			"export_sales_agreement_id" = "#arguments.Export_Sales_Agreement_ID#",
+			"export_misc_cost_desc" = "#Misc_Cost_Desc[i]#",
+			"export_misc_cost" = "#val(Misc_Cost[i])#",
+			"show_order_sequence" = "#Misc_Cost_Desc_CostNumber[i]#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertExportMiscCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertExportMiscCost>
+<cfquery name="InsertExportMiscCost" datasource="#application.datasource#">
 			 INSERT INTO Export_Misc_Cost(Export_Sales_Agreement_ID,Export_Misc_Cost_Desc,Export_Misc_Cost,Show_Order_Sequence)
 			 VALUES('#arguments.Export_Sales_Agreement_ID#','#Misc_Cost_Desc[i]#','#val(Misc_Cost[i])#','#Misc_Cost_Desc_CostNumber[i]#')
 			</cfquery>
+</cfif>
 		</cfloop>
 
 		<!--- I am returning a  value here because AJAXCFC expects a return value ---> 
@@ -651,18 +667,48 @@
 		<cfargument name="Export_Additional_Cost" type="Array" required="no" default="#Arraynew(1)#">
 		<cfargument name="Export_Cost_Desc_CostNumber" type="Array" required="no" default="#Arraynew(1)#">
 
-		<cfquery name="DelExistingExportCost" datasource="#Application.Datasource#">
+		<cfset useLakebaseForDelExistingExportCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_cost")>
+<cfif useLakebaseForDelExistingExportCost>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("export_cost", {
+			"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelExistingExportCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelExistingExportCost>
+<cfquery name="DelExistingExportCost" datasource="#Application.Datasource#">
 			DELETE FROM Export_Cost
 			WHERE Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'
 		</cfquery>
+</cfif>
 		<!--- I am starting from index 2, because the array being passed somehow stores blank in the first index
 			  and therefore I replaced it with a 0 on that page (Sales_Agreement.cfm). I just dont use that array
 			  entry here--->
 		<cfloop from="2" to="#Arraylen(Export_Cost)#" index="i">
-			<cfquery name="InsertExportCost" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertExportCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_cost")>
+<cfif useLakebaseForInsertExportCost>
+	<cftry>
+		<cfset application.oLakebase.insertRow("export_cost", {
+			"export_sales_agreement_id" = "#Export_Sales_Agreement_ID#",
+			"export_cost_desc" = "#Export_Cost_Desc[i]#",
+			"export_cost" = "#val(Export_Cost[i])#",
+			"export_additional_cost" = "#val(Export_Additional_Cost[i])#",
+			"show_order_sequence" = "#Export_Cost_Desc_CostNumber[i]#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertExportCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertExportCost>
+<cfquery name="InsertExportCost" datasource="#application.datasource#">
 			 INSERT INTO Export_Cost(Export_Sales_Agreement_ID,Export_Cost_Desc,Export_Cost,Export_Additional_Cost,Show_Order_Sequence)
 			 VALUES('#Export_Sales_Agreement_ID#','#Export_Cost_Desc[i]#','#val(Export_Cost[i])#','#val(Export_Additional_Cost[i])#','#Export_Cost_Desc_CostNumber[i]#')
 			</cfquery>
+</cfif>
 		</cfloop>
 
 		<!--- I am returning a  value here because AJAXCFC expects a return value ---> 
@@ -678,7 +724,29 @@
 		<cfargument name="Ocean_Fuel_Surcharge" type="string" required="yes">
 		<cfargument name="Additional_Ocean_Fuel_Surcharge" type="string" required="yes">
 		
-			  <cfquery name="qryUpdateStandardCosts" datasource="#application.datasource#">
+			  <cfset useLakebaseForqryUpdateStandardCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForqryUpdateStandardCosts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_freight_cost" = "#val(arguments.Freight_Cost)#",
+				"export_additional_freight_cost" = "#val(arguments.Additional_Freight_Cost)#",
+				"export_inland_fuel_surcharge" = "#val(arguments.Inland_Fuel_Surcharge)#",
+				"export_additional_inland_fuel_surcharge" = "#val(arguments.Additional_Inland_Fuel_Surcharge)#",
+				"export_ocean_fuel_surcharge" = "#val(arguments.Ocean_Fuel_Surcharge)#",
+				"export_additional_ocean_fuel_surcharge" = "#val(arguments.Additional_Ocean_Fuel_Surcharge)#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdateStandardCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdateStandardCosts>
+<cfquery name="qryUpdateStandardCosts" datasource="#application.datasource#">
 			   UPDATE Export_Sales_Agreement
 				SET Export_Freight_Cost='#val(arguments.Freight_Cost)#'
 				,Export_Additional_Freight_Cost='#val(arguments.Additional_Freight_Cost)#'
@@ -688,6 +756,7 @@
 				,Export_Additional_Ocean_Fuel_Surcharge='#val(arguments.Additional_Ocean_Fuel_Surcharge)#'
 			   WHERE Export_Sales_Agreement_ID='#arguments.Export_Sales_Agreement_ID#'
 			  </cfquery>
+</cfif>
 
 		<!--- I am returning a  value here because AJAXCFC expects a return value ---> 
 		<cfreturn 1>

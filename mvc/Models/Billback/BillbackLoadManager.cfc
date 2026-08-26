@@ -2256,10 +2256,25 @@
 		<cfset typeLabels = ListAppend(typeLabels,'Auto Pay')>
 		  </cfif>
 
-		  <cfquery name="qgetAutoApprove" datasource="#application.datasource#">
+		  <cfset useLakebaseForqgetAutoApprove = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqgetAutoApprove>
+	<cftry>
+		<cfset qgetAutoApprove = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "auto_approve_on"
+			}), "auto_approve_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetAutoApprove = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetAutoApprove>
+<cfquery name="qgetAutoApprove" datasource="#application.datasource#">
 		SELECT Auto_Approve_On
 		FROM Billback_Settings
 		  </cfquery>
+</cfif>
 
 		  <!--- Only if "Auto Approve" is ON --->
 		  <cfif qgetAutoApprove.Auto_Approve_On eq 1>

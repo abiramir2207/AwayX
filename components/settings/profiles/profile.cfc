@@ -473,19 +473,7 @@
 			<cfset new_Profiles_ID = insertProfile.Profiles_ID>
 
 			<!---
-			<cfset useLakebaseForInsertProfileSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
-<cfif useLakebaseForInsertProfileSetting>
-	<cftry>
-		<cfset application.oLakebase.insertRow("profiles_settings", {
-			"profiles_id" = "#insertProfile.Profiles_ID#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertProfileSetting = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertProfileSetting>
-<cfquery name="InsertProfileSetting" datasource="#application.datasource#">
+			<cfquery name="InsertProfileSetting" datasource="#application.datasource#">
 				INSERT INTO Profiles_Settings
 				(
 					Profiles_ID
@@ -494,8 +482,7 @@
 				(
 					#insertProfile.Profiles_ID#
 				)
-			</cfquery>
-</cfif> --->
+			</cfquery> --->
 
 			<!------
 			Program Templates may have access permissions for new profiles being added

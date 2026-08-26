@@ -135,12 +135,27 @@
 		<!--- The current UPC Does NOT Exists in DB so add it--->
 		<!--- <CFOUTPUT>#listfindnocase(FORM.FinalUPCList, ListItem)#</CFOUTPUT> --->
 		<CFIF listfindnocase(ListOfExistingProductsInDB, ListItem) EQ 0>
-			<CFQUERY NAME="SaveProduct" datasource="#application.datasource#">
+			<cfset useLakebaseForSaveProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForSaveProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"contract_main_id" = "#FORM.Contract_Main_ID#",
+			"product_upc" = "#trim(ListItem)#",
+			"creator_id" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaveProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaveProduct>
+<CFQUERY NAME="SaveProduct" datasource="#application.datasource#">
 				INSERT INTO Contract_Products
 				(Contract_Main_ID, Product_UPC, Creator_ID)
 				VALUES
 				('#FORM.Contract_Main_ID#', '#trim(ListItem)#','#request.AccessStructure.User_ID#')
-			</CFQUERY>					
+			</CFQUERY>
+</cfif>					
 		</CFIF>
 	</CFLOOP>
 	
@@ -150,11 +165,27 @@
 	<CF_CRYP type="en" string="#FORM.Contract_Main_ID#" key="#request.key#">
 	<CFIF CheckForProductsInDB.recordcount EQ 0>
 		<!--- REDIRECTOR --->
-		<cfquery name="getContractProgramID" datasource="#application.datasource#">
+		<cfset useLakebaseForgetContractProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetContractProgramID>
+	<cftry>
+		<cfset getContractProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractProgramID>
+<cfquery name="getContractProgramID" datasource="#application.datasource#">
 			SELECT ProgramType_ID
 			FROM Contract_Main
 			WHERE COntract_Main_ID = '#Form.Contract_Main_ID#'
 		</cfquery>
+</cfif>
 		<CFSET redirector_Program_ID = getContractProgramID.ProgramType_ID>
 		<CFSET redirector_FromPage_ID = 5>
 		<cfinclude template="internal_redirector_based_on_settings.cfm">

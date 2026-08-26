@@ -616,20 +616,7 @@
 
 			<!---Add performance requirements--->
 				<!--- <cfloop index = "Requirement" list = "#PerfRequirements#"  delimiterS = ",">
-					<cfset useLakebaseForInsertPerfReq = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("one_program_perf_mapping")>
-<cfif useLakebaseForInsertPerfReq>
-	<cftry>
-		<cfset application.oLakebase.insertRow("one_program_perf_mapping", {
-			"contract_main_id" = "#insert.Contract_Main_ID#",
-			"program_perf_req_id" = "#Requirement#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertPerfReq = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertPerfReq>
-<cfquery name="InsertPerfReq" datasource="#application.datasource#">
+					<cfquery name="InsertPerfReq" datasource="#application.datasource#">
 					INSERT INTO One_Program_Perf_Mapping
 					(
 						Contract_Main_ID,
@@ -641,7 +628,6 @@
 						#Requirement#
 					)
 					</cfquery>
-</cfif>
 				</cfloop> --->
 
 		<!--- START: 25709: EZ Button/Anand Rao/28-Mar-2011 --->
@@ -801,7 +787,27 @@
 				 SET @Contract_Products_ID = SCOPE_IDENTITY()
 	       SELECT Contract_Products_ID = @Contract_Products_ID
 				</cfquery>
-				<cfquery name="qInsRebProdFromTemplateDupProgram" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsRebProdFromTemplateDupProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
+<cfif useLakebaseForqInsRebProdFromTemplateDupProgram>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_rebates_product_data", {
+			"program_id" = "#insert.Contract_Main_ID#",
+			"contract_products_id" = "#qInsProdFromTemplateDupProgram.Contract_Products_ID#",
+			"rebate_value" = "#qGetProductFromDummy.Rebate_Value#",
+			"volume" = "#qGetProductFromDummy.Volume#",
+			"unit_of_measure_id" = "#qGetProductFromDummy.Unit_OF_Measure_ID#",
+			"deleted" = "0",
+			"is_group" = "#qGetProductFromDummy.Is_Group#",
+			"created_date" = "#now()#",
+			"captured_from_group" = "#qGetProductFromDummy.Captured_From_Group#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsRebProdFromTemplateDupProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsRebProdFromTemplateDupProgram>
+<cfquery name="qInsRebProdFromTemplateDupProgram" datasource="#application.datasource#">
 					INSERT INTO Program_Rebates_Product_Data
 					(
 						Program_ID,
@@ -828,6 +834,7 @@
 					)
 					SELECT SCOPE_IDENTITY()	as 	Program_Rebates_Product_Data_ID
 				</cfquery>
+</cfif>
 
 				<!--- Insert all component rates from template for this product alone --->
 				<cfquery name="qInsRebRateFromTemplateDupProgram" datasource="#application.datasource#">
@@ -1033,7 +1040,28 @@
 				<!---Save Auto-Renewal Data--->
 				<cfif Form.Auto_Renew IS 1>
 
-					<cfquery name="InsertAutoRenewData" datasource="#application.datasource#">
+					<cfset useLakebaseForInsertAutoRenewData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForInsertAutoRenewData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_auto_renew", {
+			"ar_notification_date" = "#dateFormat(AR_Notification_Date,"short")#",
+			"ar_start_date" = "#dateFormat(AR_Start_Date,"short")#",
+			"ar_end_date" = "#dateFormat(AR_End_Date,"short")#",
+			"ar_renewal_type" = "#Form.AR_Renewal_Type#",
+			"program_id" = "#insert.Contract_Main_ID#",
+			"renewed" = "0",
+			"renewal_lead_time" = "#Form.Renewal_Lead_Time#",
+			"ar_start_period" = "#AR_Start_Period#",
+			"ar_end_period" = "#AR_End_Period#",
+			"ar_fiscal_year" = "#AR_Fiscal_Year#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertAutoRenewData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertAutoRenewData>
+<cfquery name="InsertAutoRenewData" datasource="#application.datasource#">
 						INSERT INTO Program_Auto_Renew
 						(
 							AR_Notification_Date,
@@ -1061,6 +1089,7 @@
 							'#AR_Fiscal_Year#'
 						)
 					</cfquery>
+</cfif>
 
 				</cfif>
 
@@ -1176,7 +1205,31 @@
 
 					<cfelseif IsAutoRenewThere.Recordcount IS 1>
 
-						<cfquery name="UpdateAutoRenewData" datasource="#application.datasource#">
+						<cfset useLakebaseForUpdateAutoRenewData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForUpdateAutoRenewData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_auto_renew",
+			{
+				"program_id" = "eq.#cryp.value#"
+			},
+			{
+				"ar_notification_date" = "#dateFormat(AR_Notification_Date,"short")#",
+				"ar_start_date" = "#dateFormat(AR_Start_Date,"short")#",
+				"ar_end_date" = "#dateFormat(AR_End_Date,"short")#",
+				"ar_renewal_type" = "#Form.AR_Renewal_Type#",
+				"renewal_lead_time" = "#Form.Renewal_Lead_Time#",
+				"ar_start_period" = "#AR_Start_Period#",
+				"ar_end_period" = "#AR_End_Period#",
+				"ar_fiscal_year" = "#AR_Fiscal_Year#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAutoRenewData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAutoRenewData>
+<cfquery name="UpdateAutoRenewData" datasource="#application.datasource#">
 							UPDATE 	Program_Auto_Renew
 							SET 		AR_Notification_Date = '#dateFormat(AR_Notification_Date,"short")#',
 											AR_Start_Date = '#dateFormat(AR_Start_Date,"short")#',
@@ -1188,6 +1241,7 @@
 											AR_Fiscal_Year = '#AR_Fiscal_Year#'
 							WHERE 	Program_ID = #cryp.value#
 						</cfquery>
+</cfif>
 
 					</cfif>
 

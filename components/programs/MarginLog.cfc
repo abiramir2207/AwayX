@@ -151,12 +151,31 @@
 <cffunction name="UpdateMarginLogStatusInfo" output="false">
  <cfargument name="Program_ID" type="numeric" required="true" />
   <cfargument name="Status" type="numeric" required="true" />
-	<cfquery name="qUpdateMarginLogStatusInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForqUpdateMarginLogStatusInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_margin_log_status")>
+<cfif useLakebaseForqUpdateMarginLogStatusInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_margin_log_status",
+			{
+				"program_id" = "eq.#arguments.Program_ID#"
+			},
+			{
+				"status" = "#arguments.Status#",
+				"completed_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateMarginLogStatusInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateMarginLogStatusInfo>
+<cfquery name="qUpdateMarginLogStatusInfo" datasource="#application.datasource#">
 		UPDATE Program_Margin_Log_Status
 		SET Status = '#arguments.Status#',
 		Completed_Date = getDate()
 		WHERE Program_ID = '#arguments.Program_ID#'
 	</cfquery>
+</cfif>
 	<cfreturn 1 />
 </cffunction>
 

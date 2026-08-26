@@ -97,11 +97,28 @@
 			<cfset cfTime = #replace( cfTime, '","', ' ')# />
 
 			<cfoutput>
-			<cfquery name="InsertCFLog" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertCFLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("message_log_cf_admin")>
+<cfif useLakebaseForInsertCFLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("message_log_cf_admin", {
+			"messageto" = "#cfTo#",
+			"messagefrom" = "#cfFrom#",
+			"messagesubject" = "#cfSubject#",
+			"message" = "#lines[x]#",
+			"message_sent_date" = "#createodbcdatetime(cfTime)#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertCFLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertCFLog>
+<cfquery name="InsertCFLog" datasource="#application.datasource#">
 				INSERT INTO	Message_Log_CF_Admin
 				(MessageTo,MessageFrom,MessageSubject,Message,Message_Sent_Date)
 				Values		('#cfTo#','#cfFrom#','#cfSubject#','#lines[x]#',#createodbcdatetime(cfTime)#)
 			</cfquery>
+</cfif>
 			</cfoutput>
 
 			<!---<cfset arrayPrepend(tail, lines[x])>--->

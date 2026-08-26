@@ -60,25 +60,9 @@
 	<CFABORT>
 </CFIF>
 <!--- 
-<cfset useLakebaseForIsThereDefault = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("awayx_operator_type")>
-<cfif useLakebaseForIsThereDefault>
-	<cftry>
-		<cfset IsThereDefault = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("awayx_operator_type", {
-				"is_default" = "eq.1",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForIsThereDefault = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForIsThereDefault>
 <cfquery name="IsThereDefault" datasource="#application.datasource#">
 	SELECT * FROM Awayx_Operator_Type WHERE Is_Default = 1 AND Deleted = 0
-</cfquery>
-</cfif> --->
+</cfquery> --->
 
 <!---See if something is already set as default--->
 <!--- <cfparam name="SetAsDefault" default="0">
@@ -89,29 +73,11 @@
 
 <!--- remove the default from another entry if necessary --->
 <!--- <cfif FORM.Is_Default IS 1>
-	<cfset useLakebaseForRemoveDefault = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("awayx_operator_type")>
-<cfif useLakebaseForRemoveDefault>
-	<cftry>
-		<cfset application.oLakebase.updateRows("awayx_operator_type",
-			{
-				"is_default" = "eq.1"
-			},
-			{
-				"is_default" = "0"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForRemoveDefault = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForRemoveDefault>
-<cfquery name="RemoveDefault" datasource="#application.datasource#">
+	<cfquery name="RemoveDefault" datasource="#application.datasource#">
 	UPDATE Awayx_Operator_Type 
 	SET Is_Default = 0
 	WHERE Is_Default = 1
 	</cfquery>
-</cfif>
 </cfif> --->
 
 

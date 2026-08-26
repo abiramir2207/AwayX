@@ -528,9 +528,24 @@
                         <cffunction name="render_exports" output="true">
                             <cfargument name="profile" required="true">
 
-                            <cfquery name="local.qExcelExports" dbtype="query">
+                            <cfset useLakebaseForlocal_qExcelExports = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qletters")>
+<cfif useLakebaseForlocal_qExcelExports>
+	<cftry>
+		<cfset local.qExcelExports = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qletters", {
+				"letter_type" = "eq.#arguments.profile.letter_type#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qExcelExports = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qExcelExports>
+<cfquery name="local.qExcelExports" dbtype="query">
                                 SELECT * FROM qLetters WHERE Letter_Type = #arguments.profile.letter_type#
                             </cfquery>
+</cfif>
 
                             <!--- export file exists and program template setting for export is enabled --->
                             <cfif local.qExcelExports.recordCount and arguments.profile.setting>

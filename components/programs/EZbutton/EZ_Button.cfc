@@ -58,27 +58,7 @@
 					<cfloop from="#arguments.Pricing_Level_ID#" to="#request.AccessStructure.numberOfProductGroupLevels#" index="PL">
 						<cfset NextPL = #PL# + 1>
 					<!---	<cfif PL EQ arguments.Pricing_Level_ID>
-							<cfset useLakebaseForupdPL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
-<cfif useLakebaseForupdPL>
-	<cftry>
-		<cfset application.oLakebase.updateRows("contract_products",
-			{
-				"product_type_id" = "eq.2",
-				"pricing_level_id" = "eq.#NextPL#",
-				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
-				"deleted" = "eq.0"
-			},
-			{
-				"pricing_level_id" = "#arguments.Pricing_Level_ID#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdPL = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdPL>
-<cfquery name="updPL" datasource="#application.datasource#">
+							<cfquery name="updPL" datasource="#application.datasource#">
 								UPDATE Contract_Products
 								SET Pricing_Level_ID = #arguments.Pricing_Level_ID#
 								WHERE Product_Type_ID = 2
@@ -86,7 +66,6 @@
 								AND Contract_Main_ID = #arguments.Contract_Main_ID#
 								AND Deleted = 0
 						</cfquery>
-</cfif>
 						<cfelse> </cfif>---->
 						<cfquery name="updPL" datasource="#application.datasource#">
 								UPDATE Contract_Products
@@ -256,7 +235,25 @@
 	<cfargument name="defaultUOM"	type="numeric"	required="true" default="1">
 	<cfargument name="Product_Rate"	type="any"	required="false" default="0.0000">
 
-		<cfquery name="CProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForCProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForCProducts>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"bsa_foodservice_items_master_id" = "#arguments.BSA_Foodservice_Items_Master_ID#",
+			"contract_main_id" = "#arguments.Contract_Main_ID#",
+			"product_type_id" = "2",
+			"pricing_level_id" = "#arguments.PricingLevelID#",
+			"is_group" = "#arguments.IS_Group#",
+			"product_group_id" = "#arguments.Product_Group_ID#",
+			"product_group_level_id" = "#arguments.Product_Group_Level_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForCProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCProducts>
+<cfquery name="CProducts" datasource="#application.datasource#">
 				INSERT INTO Contract_Products(
 				BSA_Foodservice_Items_Master_ID
 				,Contract_Main_ID
@@ -276,6 +273,7 @@
 
 				SELECT SCOPE_IDENTITY() AS Contract_Products_ID
 		</cfquery>
+</cfif>
 
 		<cfset useLakebaseForPrgProdData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
 <cfif useLakebaseForPrgProdData>

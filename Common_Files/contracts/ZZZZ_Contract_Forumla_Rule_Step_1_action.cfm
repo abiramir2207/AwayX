@@ -62,32 +62,13 @@
 <CFELSE>
 
 	<CF_cryp type="de" key="#request.key#" string="#FORM.Rule_ID#">
-	<!------<cfset useLakebaseForupdateRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
-<cfif useLakebaseForupdateRules>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
-			{
-				"program_formula_pricing_rule_id" = "eq.#cryp.value#"
-			},
-			{
-				"rule_name" = "#FORM.Rule_Name#",
-				"number_of_comms" = "#FORM.Number_Of_Comms#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateRules = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateRules>
-<CFQUERY NAME="updateRules" datasource="#application.datasource#">
+	<!------<CFQUERY NAME="updateRules" datasource="#application.datasource#">
 		UPDATE Program_Formula_Pricing_Rules
 		SET 
 			Rule_Name = '#FORM.Rule_Name#',
 			Number_Of_Comms = '#FORM.Number_Of_Comms#'
 		WHERE Program_Formula_Pricing_Rule_ID = '#cryp.value#'
-	</CFQUERY>
-</cfif>----->
+	</CFQUERY>----->
 	<CFQUERY NAME="updateRules" datasource="#application.datasource#">
 		UPDATE Program_Formula_Pricing_Rules
 		SET 

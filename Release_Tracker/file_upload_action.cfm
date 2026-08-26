@@ -212,6 +212,25 @@ function FileCanWrite(filename){
 
 <cffile action = "delete" file="#FileSavePath##UploadFileName#">
 
+<cfset useLakebaseForSaveUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_installation")>
+<cfif useLakebaseForSaveUserInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("application_installation",
+			{
+				"installed_date" = "is.null"
+			},
+			{
+				"name" = "#Name#",
+				"installed_date" = "#now()#",
+				"cf_installation" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaveUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaveUserInfo>
 <CFQUERY NAME="SaveUserInfo" datasource="#application.datasource#">
 	UPDATE Application_Installation 
 	SET Name = '#Name#',
@@ -219,3 +238,4 @@ function FileCanWrite(filename){
 	CF_Installation = 1
 	WHERE Installed_Date IS NULL
 </CFQUERY>
+</cfif>

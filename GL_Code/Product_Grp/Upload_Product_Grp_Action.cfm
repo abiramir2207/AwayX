@@ -63,29 +63,11 @@
 			</CFQUERY> --->
 			
 			<!--- 
-			<cfset useLakebaseForResetOtherUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
-<cfif useLakebaseForResetOtherUpload>
-	<cftry>
-		<cfset application.oLakebase.updateRows("gl_code_upload",
-			{
-				"activation_date" = "eq.#FORM.Activation_Date#"
-			},
-			{
-				"activate_tonight" = "0"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForResetOtherUpload = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForResetOtherUpload>
-<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
+			<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
 				UPDATE GL_Code_Upload
 				SET Activate_Tonight = 0
 				WHERE Activation_Date = '#FORM.Activation_Date#'
-			</CFQUERY>
-</cfif> --->
+			</CFQUERY> --->
 						
 			<CFQUERY NAME="deleteallOthers" DATASOURCE="#Application.Datasource#">
 				UPDATE 	GL_Code_Pro_Grp_Upload 
@@ -95,7 +77,27 @@
 						Deleted = 0
 			</CFQUERY>
 			
-			<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForDataInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_pro_grp_upload")>
+<cfif useLakebaseForDataInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_pro_grp_upload", {
+			"uni_name" = "#Build_File_Name#",
+			"file_path" = "#Product_Grp_File_Path#",
+			"server_name" = "#application.WebServerName#",
+			"title" = "#DateStampedProGrp#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"gl_code_process_status_id" = "2",
+			"progrp_activation_date" = "#FORM.ProGrp_Activation_Date#",
+			"fiscal_year" = "#FORM.Fiscal_Year#",
+			"worksheetname" = "#FORM.WorkSheetName#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDataInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDataInsert>
+<CFQUERY NAME="DataInsert" DATASOURCE="#Application.Datasource#">
 				INSERT INTO 
 				
 				GL_Code_Pro_Grp_Upload	(	Uni_Name,
@@ -118,6 +120,7 @@
 											'#FORM.Fiscal_Year#',
 											'#FORM.WorkSheetName#'		)
 			</CFQUERY>
+</cfif>
 			
 			<CFQUERY NAME="DeletedTempData" DATASOURCE="#Application.Datasource#">
 				DELETE FROM GL_Code_Pro_Group_Mapping_Temp 

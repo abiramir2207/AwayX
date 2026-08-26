@@ -758,24 +758,9 @@
     </cfsavecontent>
 
 
- <!---    <cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
-<cfif useLakebaseForlocal_detail>
-	<cftry>
-		<cfset local.detail = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("qcostdetail", {
-				"product_id" = "eq.#getAllProductMargins.Product_ID#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForlocal_detail = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForlocal_detail>
-<cfquery name="local.detail" dbtype="query">
+ <!---    <cfquery name="local.detail" dbtype="query">
         SELECT * FROM qCostDetail WHERE Product_ID = '#getAllProductMargins.Product_ID#'
-    </cfquery>
-</cfif> --->
+    </cfquery> --->
 
     <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
     <!--- ~~~~~ Requested Case Volume ~~~~~~ --->

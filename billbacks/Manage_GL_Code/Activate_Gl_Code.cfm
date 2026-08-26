@@ -11,75 +11,22 @@
 
 <CFIF FORM.formSubmitted EQ 1>
 <!--- 
-	<cfset useLakebaseForCurrActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
-<cfif useLakebaseForCurrActive>
-	<cftry>
-		<cfset CurrActive = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("gl_code_activation", {
-				"current_active_data" = "eq.1",
-				"select" = "created_date"
-			}), "created_date"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCurrActive = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCurrActive>
-<CFQUERY NAME="CurrActive" DATASOURCE="#Application.Datasource#">
+	<CFQUERY NAME="CurrActive" DATASOURCE="#Application.Datasource#">
 		SELECT Created_Date FROM GL_Code_Activation WHERE Current_Active_Data = 1
 	</CFQUERY>
-</cfif>
 	<CFIF CurrActive.Created_Date NEQ FORM.Created_Date>
-		<cfset useLakebaseForChangePreAct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
-<cfif useLakebaseForChangePreAct>
-	<cftry>
-		<cfset application.oLakebase.updateRows("gl_code_activation",
-			{
-				"previous_active_data" = "eq.1"
-			},
-			{
-				"previous_active_data" = "0"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForChangePreAct = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForChangePreAct>
-<CFQUERY NAME="ChangePreAct" DATASOURCE="#Application.Datasource#">
+		<CFQUERY NAME="ChangePreAct" DATASOURCE="#Application.Datasource#">
 			UPDATE 	GL_Code_Activation		
 			SET 	Previous_Active_Data = 0
 			WHERE 	Previous_Active_Data = 1
 		</CFQUERY>
-</cfif>
 		
-		<cfset useLakebaseForPreActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
-<cfif useLakebaseForPreActive>
-	<cftry>
-		<cfset application.oLakebase.updateRows("gl_code_activation",
-			{
-				"created_date" = "eq.#CurrActive.Created_Date#"
-			},
-			{
-				"current_active_data" = "0",
-				"previous_active_data" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForPreActive = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForPreActive>
-<CFQUERY NAME="PreActive" DATASOURCE="#Application.Datasource#">
+		<CFQUERY NAME="PreActive" DATASOURCE="#Application.Datasource#">
 			UPDATE 	GL_Code_Activation
 			SET 	Current_Active_Data = 0,
 					Previous_Active_Data = 1
 			WHERE 	Created_Date = '#CurrActive.Created_Date#'
 		</CFQUERY>
-</cfif>
 		
 		<CFQUERY NAME="CurActive" DATASOURCE="#Application.Datasource#">
 			UPDATE 	GL_Code_Activation
@@ -92,9 +39,26 @@
 		</CFQUERY>
 	</CFIF>
  --->
- 	<CFQUERY NAME="GetGL_Code_Upload_ID" DATASOURCE="#Application.Datasource#">
+ 	<cfset useLakebaseForGetGL_Code_Upload_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetGL_Code_Upload_ID>
+	<cftry>
+		<cfset GetGL_Code_Upload_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"created_date" = "eq.#FORM.Created_Date#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetGL_Code_Upload_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetGL_Code_Upload_ID>
+<CFQUERY NAME="GetGL_Code_Upload_ID" DATASOURCE="#Application.Datasource#">
 		SELECT TOP 1 * FROM GL_Code_Activation WHERE Created_Date = '#FORM.Created_Date#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
  	
  	<cfset useLakebaseForoffTonightBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
 <cfif useLakebaseForoffTonightBit>

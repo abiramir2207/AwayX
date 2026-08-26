@@ -11,6 +11,25 @@
 <!--- <Cfdump var="#form#"> --->
 <CFINCLUDE template="/includes/call_please_wait.cfm">
 
+<cfset useLakebaseForUpdateAllToDeleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sysco_deal_sheet_programs")>
+<cfif useLakebaseForUpdateAllToDeleted>
+	<cftry>
+		<cfset application.oLakebase.updateRows("sysco_deal_sheet_programs",
+			{
+				"contract_main_id" = "eq.#form.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_date" = "#now()#",
+				"deleted_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAllToDeleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAllToDeleted>
 <cfquery name="UpdateAllToDeleted" datasource="#application.datasource#">
 UPDATE Sysco_Deal_Sheet_Programs
 SET Deleted = 1,
@@ -18,6 +37,7 @@ Deleted_Date = getdate(),
 Deleted_By = '#request.AccessStructure.User_ID#'
 WHERE Contract_Main_ID = #form.Contract_Main_ID#
 </cfquery>
+</cfif>
 
 <cfloop index = "I"
   from = "1"
@@ -162,11 +182,27 @@ WHERE Contract_Main_ID = #form.Contract_Main_ID#
 						<CFSET ProgramIsARevision = 1>
 					</CFIF>
 					
-					<CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
+					<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#form.Contract_Main_ID#",
+				"select" = "contract_start_date,contract_end_date,revision_of_contract_main_id"
+			}), "contract_start_date,contract_end_date,revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
 							SELECT Contract_Start_Date, Contract_End_Date, Revision_Of_Contract_Main_ID
 							FROM Contract_Main
 							WHERE Contract_Main_ID = '#form.Contract_Main_ID#'
 					</CFQUERY>
+</cfif>
 		   <cfinclude template="/common_files/contracts/contract_approve_broker_action_include.cfm">
 		   
 				<CFQUERY NAME="getProgramTemplateInfo" datasource="#application.datasource#">

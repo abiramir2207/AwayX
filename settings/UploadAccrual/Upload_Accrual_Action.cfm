@@ -177,7 +177,27 @@
 			 <!---Inserts into database  -- one for each of the four files--->
 			
 			<!---AccrualFile --->
-			<cfquery name="InsertAccrualFile" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertAccrualFile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accrual_upload")>
+<cfif useLakebaseForInsertAccrualFile>
+	<cftry>
+		<cfset application.oLakebase.insertRow("accrual_upload", {
+			"file_type" = "Accrual",
+			"filelocation" = "#AccrualFileLocation#",
+			"start_date" = "#form.Start_Date#",
+			"end_date" = "#form.End_Date#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"created_date" = "#now()#",
+			"fiscal_year" = "#FiscalYear#",
+			"worksheetname" = "#AccrualWorkSheetName#",
+			"dbfilelocation" = "#DBAccrualPath#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertAccrualFile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertAccrualFile>
+<cfquery name="InsertAccrualFile" datasource="#application.datasource#">
 			INSERT INTO Accrual_Upload
 			(
 				<!--- Accrual_File_Path, --->
@@ -205,9 +225,30 @@
 				'#DBAccrualPath#'
 			)
 			</cfquery>
+</cfif>
 			
 			<!--- AccrualItemFile --->
-			<cfquery name="InsertAccrualItemFile" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertAccrualItemFile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accrual_upload")>
+<cfif useLakebaseForInsertAccrualItemFile>
+	<cftry>
+		<cfset application.oLakebase.insertRow("accrual_upload", {
+			"file_type" = "Accrual Items",
+			"filelocation" = "#AccrualItemFileLocation#",
+			"start_date" = "#form.Start_Date#",
+			"end_date" = "#form.End_Date#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"created_date" = "#now()#",
+			"fiscal_year" = "#FiscalYear#",
+			"worksheetname" = "#AccrualItemWorkSheetName#",
+			"dbfilelocation" = "#DBAccrualItemPath#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertAccrualItemFile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertAccrualItemFile>
+<cfquery name="InsertAccrualItemFile" datasource="#application.datasource#">
 			INSERT INTO Accrual_Upload
 			(
 				<!--- Accrual_File_Path, --->
@@ -235,9 +276,30 @@
 				'#DBAccrualItemPath#'
 			)
 			</cfquery>
+</cfif>
 			
 			<!--- CDPFile --->
-			<cfquery name="InsertCDPFile" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertCDPFile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accrual_upload")>
+<cfif useLakebaseForInsertCDPFile>
+	<cftry>
+		<cfset application.oLakebase.insertRow("accrual_upload", {
+			"file_type" = "CDP",
+			"filelocation" = "#CDPFileLocation#",
+			"start_date" = "#form.Start_Date#",
+			"end_date" = "#form.End_Date#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"created_date" = "#now()#",
+			"fiscal_year" = "#FiscalYear#",
+			"worksheetname" = "#CDPWorkSheetName#",
+			"dbfilelocation" = "#DBShelterPath#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertCDPFile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertCDPFile>
+<cfquery name="InsertCDPFile" datasource="#application.datasource#">
 			INSERT INTO Accrual_Upload
 			(
 				<!--- Accrual_File_Path, --->
@@ -265,9 +327,30 @@
 				'#DBShelterPath#'
 			)
 			</cfquery>
+</cfif>
 			
 			<!--- CDPFItemile --->
-			<cfquery name="InsertCDPItemFile" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertCDPItemFile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accrual_upload")>
+<cfif useLakebaseForInsertCDPItemFile>
+	<cftry>
+		<cfset application.oLakebase.insertRow("accrual_upload", {
+			"file_type" = "CDP Items",
+			"filelocation" = "#CDPItemFileLocation#",
+			"start_date" = "#form.Start_Date#",
+			"end_date" = "#form.End_Date#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"created_date" = "#now()#",
+			"fiscal_year" = "#FiscalYear#",
+			"worksheetname" = "#CDPItemWorkSheetName#",
+			"dbfilelocation" = "#DBShelterItemPath#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertCDPItemFile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertCDPItemFile>
+<cfquery name="InsertCDPItemFile" datasource="#application.datasource#">
 			INSERT INTO Accrual_Upload
 			(
 				<!--- Accrual_File_Path, --->
@@ -295,6 +378,7 @@
 				'#DBShelterItemPath#'
 			)
 			</cfquery>
+</cfif>
 			 
 			 <!---The name of the job varies by location -- get the correct one from db ---> 
 			 <cfquery name="ThisJobName" datasource="#application.datasource#">

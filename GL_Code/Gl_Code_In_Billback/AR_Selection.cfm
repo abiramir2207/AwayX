@@ -162,25 +162,7 @@
 				
 				<CFIF CheckTemplateType.RecordCount GT 0 OR (CheckAnyClaimedProduct.RecordCount EQ 0 AND GetAllocation.Allocation_Method EQ 1)>
 					<CFSET Final_Allocation_Method = 3>			
-					<cfset useLakebaseForCheckAlreadySaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
-<cfif useLakebaseForCheckAlreadySaved>
-	<cftry>
-		<cfset CheckAlreadySaved = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("billback_program", {
-				"a_r" = "eq.#A_R_Number#",
-				"ar_from_fiscal_year" = "eq.#A_R_Fiscal_Year#",
-				"allocation_method" = "eq.3",
-				"billback_program_id" = "eq.#ItemID#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCheckAlreadySaved = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCheckAlreadySaved>
-<CFQUERY NAME="CheckAlreadySaved" DATASOURCE="#Application.Datasource#">
+					<CFQUERY NAME="CheckAlreadySaved" DATASOURCE="#Application.Datasource#">
 						SELECT 	* FROM Billback_Program
 						WHERE 	A_R = '#A_R_Number#' AND
 								AR_From_Fiscal_Year = '#A_R_Fiscal_Year#' AND
@@ -188,7 +170,6 @@
 								Billback_Program_ID = '#ItemID#' AND 
 								Deleted = 0
 					</CFQUERY>
-</cfif>
 					<CFIF CheckAlreadySaved.RecordCount EQ 0>
 						<CFSET RecalcFund = 1>
 					</CFIF>			

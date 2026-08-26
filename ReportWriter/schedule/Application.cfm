@@ -6,28 +6,12 @@
 
 <!------
 <CFIF NOT isDefined("request.AccessStructure.company_main_id")>
-	<cfset useLakebaseForGet_Company_Main_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
-<cfif useLakebaseForGet_Company_Main_ID>
-	<cftry>
-		<cfset Get_Company_Main_ID = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("company_main", {
-				"deleted" = "eq.0",
-				"select" = "company_main_id"
-			}), "company_main_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGet_Company_Main_ID = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGet_Company_Main_ID>
-<CFQUERY NAME="Get_Company_Main_ID" DATASOURCE="#application.datasource#">
+	<CFQUERY NAME="Get_Company_Main_ID" DATASOURCE="#application.datasource#">
 	SELECT 	Company_Main_ID
 	FROM	Company_Main
 	WHERE
 			Company_Main.Deleted = 0
 	</CFQUERY>
-</cfif>
 	
 	<CFIF Get_Company_Main_ID.recordCount GT 0>
 		<CFSET request.AccessStructure.company_main_id = Get_Company_Main_ID.Company_Main_ID>

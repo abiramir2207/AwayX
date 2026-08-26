@@ -73,7 +73,29 @@ Description  :  This is a popup which gives the user the option to accept the ch
 	</cfoutput>		
 	<cfabort>
 <cfelseif isdefined("FORM.strAction") AND FORM.strAction EQ "2">
-	<cfquery name="qUpdOCRUploadLog" datasource="#application.datasource#">
+	<cfset useLakebaseForqUpdOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#URL.OCRUploadID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"ocr_step" = "404",
+				"deleted" = "1",
+				"deleted_by" = "#Request.AccessStructure.User_ID#",
+				"deleted_date" = "#now()#",
+				"ocr_upload_status" = "Deleted by user"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdOCRUploadLog>
+<cfquery name="qUpdOCRUploadLog" datasource="#application.datasource#">
 		UPDATE 
 			OCR_Upload_Log
 		SET 
@@ -84,6 +106,7 @@ Description  :  This is a popup which gives the user the option to accept the ch
 			OCR_Upload_Status = 'Deleted by user'
 		WHERE OCR_Upload_ID = '#URL.OCRUploadID#' AND Deleted = 0
 	</cfquery>
+</cfif>
 	<cfoutput>
 		<br>
 		<p align="center">
@@ -97,12 +120,28 @@ Description  :  This is a popup which gives the user the option to accept the ch
 </cfif>
 
 <cfif URL.OCRUploadID NEQ "0">
-	<cfquery name="getOCRUploadLogRecord" datasource="#application.datasource#">
+	<cfset useLakebaseForgetOCRUploadLogRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForgetOCRUploadLogRecord>
+	<cftry>
+		<cfset getOCRUploadLogRecord = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#URL.OCRUploadID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOCRUploadLogRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOCRUploadLogRecord>
+<cfquery name="getOCRUploadLogRecord" datasource="#application.datasource#">
 		SELECT  *
 		FROM OCR_Upload_log
 		WHERE 	OCR_Upload_ID = '#URL.OCRUploadID#'	AND 
 				Deleted = 0
 	</cfquery>
+</cfif>
 <cfelse>
 		<p align="center">
 			<span style="FONT-SIZE: 12pt; FONT-FAMILY: 'Century Gothic'; font-weight:bold">

@@ -74,12 +74,31 @@ This file is very sensitive with <cfoutput>, we don't want extra characters prin
 		</cfif>
 		<cfset TotalBBContents = "#TotalBBContents##BBContents#">		
 		
-		<cfquery name="qSetPrintStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForqSetPrintStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForqSetPrintStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"pay_print_over" = "1",
+				"pay_print_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetPrintStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetPrintStatus>
+<cfquery name="qSetPrintStatus" datasource="#application.datasource#">
 			UPDATE	Billback_Allied SET
 					Pay_Print_Over = 1,
 					Pay_Print_Date = GetDate()
 			WHERE	Billback_ID = '#Billback_ID#'
 		</cfquery>
+</cfif>
 	</cfif>
 	
 		

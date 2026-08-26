@@ -92,47 +92,18 @@
 		<!--- 
 		<CFLOOP LIST = "#FORM.Analyst_ID#" INDEX="Item">
 					
-			<cfset useLakebaseForCheck_Et = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
-<cfif useLakebaseForCheck_Et>
-	<cftry>
-		<cfset Check_Et = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("dd_analyst", {
-				"analyst_user_id" = "eq.#Item#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCheck_Et = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCheck_Et>
-<CFQUERY NAME="Check_Et" DATASOURCE="#Application.Datasource#">
+			<CFQUERY NAME="Check_Et" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM DD_Analyst WHERE Analyst_User_ID = '#Item#' AND Deleted=0
 			</CFQUERY>
-</cfif>
 			
 			<CFIF Check_Et.recordcount EQ 0>
-				<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
-<cfif useLakebaseForInsert_Data>
-	<cftry>
-		<cfset application.oLakebase.insertRow("dd_analyst", {
-			"analyst_user_id" = "#Item#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsert_Data = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsert_Data>
-<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
+				<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
 					INSERT INTO
 					
 					DD_Analyst 		(	Analyst_User_ID	)
 					
 					VALUES			(	'#Item#'	)
-				</CFQUERY>
-</cfif>	
+				</CFQUERY>	
 			</CFIF>			
 	
 		</CFLOOP>

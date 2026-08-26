@@ -17,7 +17,27 @@ Reply_Date
 <cfparam name="FORM.Document_Type" 	default="">
 
 <CFIF FORM.Message_ID NEQ "">
-	<CFQUERY NAME="Update_As_Acknowledged" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForUpdate_As_Acknowledged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("route_recipient")>
+<cfif useLakebaseForUpdate_As_Acknowledged>
+	<cftry>
+		<cfset application.oLakebase.updateRows("route_recipient",
+			{
+				"recipient_id" = "eq.#request.AccessStructure.User_ID#",
+				"route_message_id" = "eq.#FORM.Message_ID#"
+			},
+			{
+				"message_status" = "1",
+				"reply_message" = "#FORM.Reply_Message#",
+				"reply_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_As_Acknowledged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_As_Acknowledged>
+<CFQUERY NAME="Update_As_Acknowledged" DATASOURCE="#application.datasource#">
 		UPDATE	Route_Recipient
 		SET
 			Message_Status = 1,
@@ -28,6 +48,7 @@ Reply_Date
 			AND
 			Route_Recipient.Route_Message_ID = #FORM.Message_ID#
 	</CFQUERY>
+</cfif>
 	
 	<!------
 <CFSET redirect_URL="">

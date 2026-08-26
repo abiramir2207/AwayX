@@ -210,29 +210,12 @@ Description:	This file is responsible for handling programs that are being billb
 <CFIF len(trim(URL.BBID)) GT 0>
 	<CFSET FORM.Billback_ID = URL.BBID>
 
-	<!--- <cfset useLakebaseForLookForExistingProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
-<cfif useLakebaseForLookForExistingProgram>
-	<cftry>
-		<cfset LookForExistingProgram = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("billback_program", {
-				"billback_id" = "eq.#FORM.Billback_ID#",
-				"deleted" = "eq.0",
-				"select" = "program_id"
-			}), "program_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForLookForExistingProgram = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForLookForExistingProgram>
-<cfquery name="LookForExistingProgram" datasource="#Application.Datasource#" maxrows=1>
+	<!--- <cfquery name="LookForExistingProgram" datasource="#Application.Datasource#" maxrows=1>
 		SELECT	Program_ID
 		FROM	Billback_Program
 		WHERE 	Billback_ID = '#FORM.Billback_ID#' 
 		AND		Deleted = 0
 	</cfquery>
-</cfif>
 	<CFIF LookForExistingProgram.recordcount GT 0>
 		<CFSET LoadBillbackID = FORM.Billback_ID>	
 		<cfinclude template="load_billback_to_struct.cfm">

@@ -22,7 +22,46 @@
 
 <cfif isnumeric(FORM.contract_expiration_range)>
 	<cfif FORM.up_sv EQ 0>
-		<CFQUERY NAME="INSERT" datasource="#application.datasource#">
+		<cfset useLakebaseForINSERT = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForINSERT>
+	<cftry>
+		<cfset application.oLakebase.insertRow("_users_settings", {
+			"contract_expiration_range" = "#int(FORM.contract_expiration_range)#",
+			"user_id" = "#request.AccessStructure.Company_Main_ID#",
+			"contract_expiration_range_date_update" = "#createodbcdatetime(Now())#",
+			"contract_settings_editor_id" = "#request.AccessStructure.User_ID#",
+			"volume_resolution" = "#Form.Volume_Resolution#",
+			"margin_calc_display" = "#form.Margin_Calc_Display#",
+			"nightly_report_email_list" = "#form.Nightly_Report_Email_List#",
+			"volume_uot_id" = "#FORM.volumeUOTID#",
+			"volume_uom_for_performance_indicator" = "#FORM.Global_UOM#",
+			"scorecard_sort_option" = "#FORM.scorecard_sort_option#",
+			"scorecard_sort_method" = "#FORM.scorecard_sort_method#",
+			"margin_uot_id" = "#FORM.marginUOTID#",
+			"max_operator_id_length" = "#Max_Operator_ID_Length#",
+			"max_program_title_length" = "#Max_Program_Title_Length#",
+			"volume_distributor_template_groupa" = "#FORM.Volume_Distributor_Template_GroupA#",
+			"volume_operator_template_groupa" = "#FORM.Volume_Operator_Template_GroupA#",
+			"volume_help_text" = "#FORM.Volume_Help_Text#",
+			"pullback_requires_approval" = "#Form.Pullback_Requires_Approval#",
+			"pullback_modify_corporate_program_rates" = "#Form.Pullback_Modify_Corporate_Program_Rates#",
+			"pullback_modify_operator_program_rates" = "#Form.Pullback_Modify_Operator_Program_Rates#",
+			"display_trade_dollars" = "#Form.Display_Trade_Dollars#",
+			"display_trade_dollars_type" = "#Form.Display_Trade_Dollars_Type#",
+			"display_payment_dollars" = "#Form.Display_Payment_Dollars#",
+			"display_volume" = "#Form.Display_Volume#",
+			"display_volume_type" = "#Form.Display_Volume_Type#",
+			"accrual_product_group_level_id" = "#Form.Accrual_Product_Group_Level_ID#",
+			"display_operator_info" = "#Form.Display_Operator_Info#",
+			"display_reference_number_in_search_results" = "#form.Display_Reference_Number_In_Search_Results#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForINSERT = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForINSERT>
+<CFQUERY NAME="INSERT" datasource="#application.datasource#">
 			INSERT INTO _Users_Settings
 			(Contract_Expiration_Range, User_ID, Contract_Expiration_Range_Date_Update, Contract_Settings_Editor_ID, Volume_Resolution, Margin_Calc_Display, Nightly_Report_Email_List, Volume_UOT_ID, Volume_UOM_For_Performance_Indicator, scorecard_sort_option, scorecard_sort_method, Margin_UOT_ID, Max_Operator_ID_Length, Max_Program_Title_Length, Volume_Distributor_Template_GroupA, Volume_Operator_Template_GroupA, Volume_Help_Text,
 			Pullback_Requires_Approval, Pullback_Modify_Corporate_Program_Rates, Pullback_Modify_Operator_Program_Rates, Display_Trade_Dollars, Display_Trade_Dollars_Type, Display_Payment_Dollars,
@@ -32,6 +71,7 @@
 			'#Form.Pullback_Requires_Approval#', '#Form.Pullback_Modify_Corporate_Program_Rates#', '#Form.Pullback_Modify_Operator_Program_Rates#', '#Form.Display_Trade_Dollars#','#Form.Display_Trade_Dollars_Type#','#Form.Display_Payment_Dollars#',
 			'#Form.Display_Volume#','#Form.Display_Volume_Type#','#Form.Accrual_Product_Group_Level_ID#','#Form.Display_Operator_Info#', '#form.Display_Reference_Number_In_Search_Results#')
 		</CFQUERY>
+</cfif>
 
 	<cfelse>
 		<CFQUERY NAME="UPDATE" datasource="#application.datasource#">

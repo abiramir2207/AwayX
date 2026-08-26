@@ -540,12 +540,31 @@
 			--->
 			<cfif ProdGroupDataManager.isGroupDeal(FORM.Contract_Main_ID) AND GetTemplateInfo.Custom_Fixed_Price_Options eq 0>
 				<!---if it's a group then flag to process when applying volume--->
-				<cfquery name="qFlagGroup" datasource="#application.datasource#">
+				<cfset useLakebaseForqFlagGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqFlagGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#"
+			},
+			{
+				"group_processed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFlagGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFlagGroup>
+<cfquery name="qFlagGroup" datasource="#application.datasource#">
 					UPDATE	Contract_Main
 					SET		Group_Processed = 1
 					WHERE	Deleted = 0
 					AND 	Contract_Main_ID = #Form.Contract_Main_ID#
 				</cfquery>
+</cfif>
 			</cfif>
 
 			<!---if it's a group being added then capture group customers--->
@@ -2373,31 +2392,12 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 
 		<cfset variables.data = deserializeJSON(arguments.data) >
 
-		<!--- <cfset useLakebaseForqDelRebateComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
-<cfif useLakebaseForqDelRebateComps>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_rebates_component",
-			{
-				"program_id" = "eq.#arguments.contractId#",
-				"program_rebates_component_name_id" = "eq.#variables.data.compid#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqDelRebateComps = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqDelRebateComps>
-<cfquery name="qDelRebateComps" datasource="#application.datasource#">
+		<!--- <cfquery name="qDelRebateComps" datasource="#application.datasource#">
 			Update Program_Rebates_Component
 			Set deleted = 1
 			WHERE Program_Id = #arguments.contractId# AND
 				Program_Rebates_Component_Name_Id = #variables.data.compid#
-		</cfquery>
-</cfif> --->
+		</cfquery> --->
 
 		<cfif variables.data.selected>
 			<cfquery name="qInsRebateComps" datasource="#application.datasource#">
@@ -2449,29 +2449,11 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 	<cffunction name="saveCPAFixedComp" hint="" access="remote" output="false" returntype="string" returnformat="JSON">
 		<cfargument name="contractId" type="numeric" required="false" default="0" />
 		<cfargument name="Claim_Mechanics" type="numeric" required="false" default="0" />
-		<!--- <cfset useLakebaseForqDelFixedComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
-<cfif useLakebaseForqDelFixedComps>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_fixed_component",
-			{
-				"program_id" = "eq.#arguments.contractId#"
-			},
-			{
-				"deleted" = "1"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqDelFixedComps = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqDelFixedComps>
-<cfquery name="qDelFixedComps" datasource="#application.datasource#">
+		<!--- <cfquery name="qDelFixedComps" datasource="#application.datasource#">
 			Update Program_Fixed_Component
 			Set deleted = 1
 			WHERE Program_Id = #arguments.contractId#
-		</cfquery>
-</cfif> --->
+		</cfquery> --->
 			<cfquery name="qInsFixedComps" datasource="#application.datasource#">
 				INSERT INTO Program_Fixed_Component
 						(Program_ID,Program_Fixed_Component_Name_Id,Fixed_Component_Paid_To, Claim_Mechanics, GL_account_Id)

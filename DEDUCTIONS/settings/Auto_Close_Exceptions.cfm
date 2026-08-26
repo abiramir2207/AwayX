@@ -117,12 +117,31 @@
 		<cfset PartialDist = right(Fieldname, DesiredLength)>
 		<cfset DeletedDistributor = replace(PartialDist, "_", "-", "all")>
 			
-		<cfquery name="DeleteDistributor" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteDistributor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_close_exception")>
+<cfif useLakebaseForDeleteDistributor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_auto_close_exception",
+			{
+				"distributor_id" = "eq.#DeletedDistributor#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteDistributor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteDistributor>
+<cfquery name="DeleteDistributor" datasource="#application.datasource#">
 		UPDATE BB_Auto_Close_Exception
 		SET Deleted = 1,
 			Deleted_Date = #now()#
 		WHERE Distributor_ID = '#DeletedDistributor#'
 		</cfquery>
+</cfif>
 		
 	</cfloop>
 		
@@ -199,11 +218,26 @@
 <!--- Loop through distributors (combination of database values and form values) --->
 	<!--- Checkbox, distributor, value, delete --->
 <cfif len(trim(DistributorExceptions)) IS 0>
-	<cfquery name="GetDistributorExceptionList" datasource="#application.datasource#">
+	<cfset useLakebaseForGetDistributorExceptionList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_close_exception")>
+<cfif useLakebaseForGetDistributorExceptionList>
+	<cftry>
+		<cfset GetDistributorExceptionList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_auto_close_exception", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorExceptionList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorExceptionList>
+<cfquery name="GetDistributorExceptionList" datasource="#application.datasource#">
 	SELECT * FROM 
 	BB_Auto_Close_Exception
 	WHERE Deleted = 0
-	</cfquery>	
+	</cfquery>
+</cfif>	
 	<cfset DistributorExceptions = valuelist(GetDistributorExceptionList.Distributor_ID)>
 </cfif>
 <cfset tmpAutoApproveAmount = GetAutoApproveFromBillbacks.Auto_Approve_Amount />

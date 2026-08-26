@@ -1,23 +1,4 @@
 <!--- 
-<cfset useLakebaseForUpdateAllocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
-<cfif useLakebaseForUpdateAllocation>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_program",
-			{
-				"program_id" = "eq.#MainProgID#",
-				"billback_id" = "eq.#Billback_ID#",
-				"deleted" = "eq.0"
-			},
-			{
-				"allocation_method" = "#Allocation_Method#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdateAllocation = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdateAllocation>
 <CFQUERY NAME="UpdateAllocation" DATASOURCE="#Application.Datasource#">
 	UPDATE 	Billback_Program
 	SET 	Allocation_Method = #Allocation_Method#
@@ -25,7 +6,6 @@
 			Billback_ID = '#Billback_ID#' AND 
 			Deleted = 0
 </CFQUERY>
-</cfif>
  --->
 
 <cfset useLakebaseForGetLumpInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
@@ -163,53 +143,21 @@
 <!---
 <CFSET TemplateManager = CreateObject("component","components.programs.template.TemplateManager")>
 
-<cfset useLakebaseForGetProTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForGetProTemplate>
-	<cftry>
-		<cfset GetProTemplate = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_main", {
-				"contract_main_id" = "eq.#MainProgID#",
-				"select" = "programtype_id"
-			}), "programtype_id"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetProTemplate = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetProTemplate>
 <CFQUERY NAME="GetProTemplate" DATASOURCE="#Application.Datasource#">
 	SELECT 	ProgramType_ID 
 	FROM 	Contract_main
 	WHERE 	Contract_Main_ID = '#MainProgID#'
 </CFQUERY>
-</cfif>
 
 <CFSET TemplateID = TemplateManager.getLatestTemplateId(GetProTemplate.ProgramType_ID )>
 
 
- <cfset useLakebaseForGetARFY = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
-<cfif useLakebaseForGetARFY>
-	<cftry>
-		<cfset GetARFY = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("program_control_panel_options", {
-				"programcontrol_panel_options_id" = "eq.#TemplateID#",
-				"select" = "ar_from_fiscal_year,a_r"
-			}), "ar_from_fiscal_year,a_r"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetARFY = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetARFY>
-<CFQUERY NAME="GetARFY" DATASOURCE="#Application.Datasource#">
+ <CFQUERY NAME="GetARFY" DATASOURCE="#Application.Datasource#">
 	SELECT 	AR_From_Fiscal_Year,
 			A_R
 	FROM 	Program_Control_Panel_Options 
 	WHERE 	ProgramControl_Panel_Options_ID = '#TemplateID#'
 </CFQUERY>
-</cfif>
  --->
 
 <CFELSE>

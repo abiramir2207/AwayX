@@ -106,35 +106,37 @@ Modes: URL.Mode Sets the Eval Action of the Form.
 
 <!--- Decrypt Contract ID, Retrieve Contract_Number, and Get Evaluation Notes --->
 <cfif isDefined("FORM.BBID")>
-	<!--- <cfset useLakebaseForGetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForGetBBInfo>
-	<cftry>
-		<cfset GetBBInfo = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("contract_main", {
-				"contract_main_id" = "eq.#cryp.value#",
-				"select" = "contract_number,is_a_revision"
-			}), "contract_number,is_a_revision"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetBBInfo = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetBBInfo>
-<cfquery name="GetBBInfo" datasource="#application.datasource#">
+	<!--- <cfquery name="GetBBInfo" datasource="#application.datasource#">
 		select contract_number,Is_A_Revision from contract_main where contract_main_id = '#cryp.value#'
-	</cfquery>
-</cfif> --->
+	</cfquery> --->
 
 	<cfif FORM.FormSubmit EQ 1>
 		<cfif trim(form.notes) neq "">
 			<!--- When a record is edited, update notes --->
 			<cfif editRecord gt 0>
-				<cfquery name="editSaveEvaluationNotes" datasource="#application.datasource#">
+				<cfset useLakebaseForeditSaveEvaluationNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_business_consideration")>
+<cfif useLakebaseForeditSaveEvaluationNotes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_business_consideration",
+			{
+				"bb_business_consideration_id" = "eq.#editRecord#"
+			},
+			{
+				"notes" = "#REReplaceNoCase(trim(form.notes),"\r","<br>","ALL")#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForeditSaveEvaluationNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForeditSaveEvaluationNotes>
+<cfquery name="editSaveEvaluationNotes" datasource="#application.datasource#">
 					UPDATE BB_Business_Consideration
 					SET Notes = '#REReplaceNoCase(trim(form.notes),"\r","<br>","ALL")#'
 					WHERE BB_Business_Consideration_ID = #editRecord#
 				</cfquery>
+</cfif>
 				<!--- Reset "editRecord" back to 0 as update is complete. --->
 				<cfset editRecord = 0>
 

@@ -36,7 +36,21 @@
 			<cfif form.msg_ctr_admin_id EQ 0>
 
 					<!--- if the message id is zero it means it is a new message --->
-					<cfquery name="save_data" datasource="#db_connection#">
+					<cfset useLakebaseForsave_data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("msg_ctr_admin_msgs")>
+<cfif useLakebaseForsave_data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("msg_ctr_admin_msgs", {
+			"msg_ctr_admin_txt" = "#form.msg_ctr_admin_txt#",
+			"msg_ctr_start_date" = "#createodbcdate(form.msg_ctr_start_date)#",
+			"msg_ctr_end_date" = "#createodbcdate(form.msg_ctr_end_date)#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsave_data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsave_data>
+<cfquery name="save_data" datasource="#db_connection#">
 						INSERT INTO msg_ctr_admin_msgs 
 							(
 								msg_ctr_admin_txt, 
@@ -50,6 +64,7 @@
 								#createodbcdate(form.msg_ctr_end_date)# 
 							)
 					</cfquery>
+</cfif>
 
 			<cfelse>
 

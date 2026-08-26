@@ -577,25 +577,9 @@ Non HQ (Analyst / Supervisor)			Based on analyst assignment only
 		</TD>
 		<!--- <TD WIDTH="20">&nbsp;
 				<CFIF DD_IsParent EQ 1>
-					<cfset useLakebaseForCheck_Child = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForCheck_Child>
-	<cftry>
-		<cfset Check_Child = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("deductions", {
-				"dd_dedid" = "eq.#DD_DedID#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCheck_Child = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCheck_Child>
-<CFQUERY NAME="Check_Child" DATASOURCE="#Application.Datasource#">
+					<CFQUERY NAME="Check_Child" DATASOURCE="#Application.Datasource#">
 						SELECT * FROM Deductions WHERE DD_DedID = '#DD_DedID#' AND Deleted=0
 					</CFQUERY>
-</cfif>
 					<CFIF Check_Child.Recordcount GT 1>
 						<CFSET ChildCount = Check_Child.Recordcount - 1>
 						<img src="/Images/parent_New.gif" alt="Splitted into #ChildCount# deductions." width="13" height="13" border="0">

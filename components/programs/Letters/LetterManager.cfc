@@ -699,7 +699,27 @@ inner join _users on _users.user_id = Contract_Main.Responsible_User_ID
 			-- and 	user_id = '#arguments.user_id#'
 		</cfquery>
 	
-        <cfquery name="qInsertLetterSettings" datasource="#application.datasource#">
+        <cfset useLakebaseForqInsertLetterSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters_settings")>
+<cfif useLakebaseForqInsertLetterSettings>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_letters_settings", {
+			"program_id" = "#arguments.program_id#",
+			"letter_type" = "#Evaluate("arguments.formScope.Letter_Type")#",
+			"operator_letter_type" = "#Evaluate("arguments.formScope.Operator_Letter_Type")#",
+			"distributor_letter_type" = "#Evaluate("arguments.formScope.Distributor_Letter_TYpe")#",
+			"opr_letter_settings" = "#Evaluate("arguments.formScope.Opr_Letter_Settings")#",
+			"dis_letter_settings" = "#Evaluate("arguments.formScope.Dis_Letter_Settings")#",
+			"notification_type" = "#Evaluate("arguments.formScope.notification_type")#",
+			"addcustomerproductnumbers" = "#evaluate(formscope.Addcustomerproductnumbers)#",
+			"user_id" = "#arguments.user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertLetterSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertLetterSettings>
+<cfquery name="qInsertLetterSettings" datasource="#application.datasource#">
             INSERT INTO	Program_Letters_Settings
             (Program_id,Letter_Type,Operator_Letter_Type,Distributor_Letter_Type,
             Opr_Letter_Settings,Dis_Letter_Settings,Notification_type,Addcustomerproductnumbers,user_id)
@@ -709,6 +729,7 @@ inner join _users on _users.user_id = Contract_Main.Responsible_User_ID
             #Evaluate("arguments.formScope.Opr_Letter_Settings")#,#Evaluate("arguments.formScope.Dis_Letter_Settings")#,
             #Evaluate("arguments.formScope.notification_type")#,#evaluate(formscope.Addcustomerproductnumbers)#,'#arguments.user_id#')
         </cfquery>
+</cfif>
 	</cffunction>
 	<!--- METHOD: saveLetterSettings [end] --->
     
@@ -723,11 +744,29 @@ inner join _users on _users.user_id = Contract_Main.Responsible_User_ID
 
 		<cftry>
 
-            <cfquery name="var_qUpdateLetterXML" datasource="#application.datasource#">
+            <cfset useLakebaseForvar_qUpdateLetterXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvar_qUpdateLetterXML>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_letters",
+			{
+				"program_letters_id" = "eq.#arguments.program_letter_id#"
+			},
+			{
+				"letter_xml" = "#trim(arguments.sProgramLetterXML)#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_qUpdateLetterXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_qUpdateLetterXML>
+<cfquery name="var_qUpdateLetterXML" datasource="#application.datasource#">
               	UPDATE	Program_Letters
                 SET 	Letter_xml = '#trim(arguments.sProgramLetterXML)#'
                 WHERE 	Program_Letters_ID = #arguments.program_letter_id#
             </cfquery>
+</cfif>
 
             <cfcatch>
             

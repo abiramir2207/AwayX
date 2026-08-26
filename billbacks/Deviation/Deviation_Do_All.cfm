@@ -201,12 +201,31 @@ Deviation_Do_All.cfm
 	<CFSET NEXT_STEP = THIS_STEP_LEVEL_IN_LIST + 1>
 	<CFIF NEXT_STEP GT ListLen(VALIDATION_STEPS)>
 		<!--- Ana: D15311 -- Set the Deviation Ran Details --->
-		<cfquery name="SetDev" datasource="#application.datasource#">
+		<cfset useLakebaseForSetDev = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForSetDev>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"deviation_ran_date" = "#now()#",
+				"deviation_ran_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSetDev = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSetDev>
+<cfquery name="SetDev" datasource="#application.datasource#">
 			UPDATE 	Billback 
 			SET 	Deviation_Ran_Date = GETDATE(),
 					Deviation_Ran_By = '#request.AccessStructure.User_ID#' 
 			WHERE	Billback_ID = '#Billback_ID#'
-		</cfquery>	
+		</cfquery>
+</cfif>	
 	</CFIF>
 	
 	<CFOUTPUT>

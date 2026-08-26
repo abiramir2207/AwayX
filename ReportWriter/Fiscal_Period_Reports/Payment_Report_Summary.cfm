@@ -113,22 +113,9 @@ AND RP_Mapping_Table.FP_End_Date = '#Fiscal_Period_End_Date#'
 
 </cfloop>
 
-<!--- <cfset useLakebaseForGetAllPaymentvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_payment_report_summary")>
-<cfif useLakebaseForGetAllPaymentvalues>
-	<cftry>
-		<cfset GetAllPaymentvalues = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("rp_payment_report_summary", {})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetAllPaymentvalues = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetAllPaymentvalues>
-<cfquery name="GetAllPaymentvalues" datasource="#application.datasource#">
+<!--- <cfquery name="GetAllPaymentvalues" datasource="#application.datasource#">
 SELECT * FROM RP_Payment_Report_Summary
 </cfquery>
-</cfif>
 <cfdump var="#GetAllPaymentvalues#"> --->
 	
 	<!---Billbacks per distributor/item/type--->

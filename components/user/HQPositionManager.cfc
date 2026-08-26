@@ -216,13 +216,33 @@
 			<cfif arguments.HQPositionId><!------ Edit ----->
 			
 				<!------ Edit the description alone ----->
-				<cfquery name="qUpdateAS" datasource="#application.datasource#">
+				<cfset useLakebaseForqUpdateAS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("hq_positions")>
+<cfif useLakebaseForqUpdateAS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("hq_positions",
+			{
+				"hq_position_id" = "eq.#arguments.HQPositionId#"
+			},
+			{
+				"hq_position_name" = "#arguments.HQPositionDesc#",
+				"updated_by" = "#arguments.AccessStructure.user_id#",
+				"updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateAS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateAS>
+<cfquery name="qUpdateAS" datasource="#application.datasource#">
 					UPDATE	HQ_Positions
 					SET		HQ_Position_Name = '#arguments.HQPositionDesc#',
 							Updated_By = '#arguments.AccessStructure.user_id#',
 							Updated_Date = GetDate()
 					WHERE	HQ_Position_ID = #arguments.HQPositionId#
 				</cfquery>
+</cfif>
 				
 			<cfelse><!------ Insert ----->
 			
@@ -236,10 +256,26 @@
 							AND HQ_Position_Order >= #arguments.HQPositionOrder#
 				</cfquery>
 				
-				<cfquery name="qInsertAS" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsertAS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("hq_positions")>
+<cfif useLakebaseForqInsertAS>
+	<cftry>
+		<cfset application.oLakebase.insertRow("hq_positions", {
+			"hq_position_order" = "#arguments.HQPositionOrder#",
+			"hq_position_name" = "#arguments.HQPositionDesc#",
+			"updated_by" = "#arguments.AccessStructure.user_id#",
+			"updated_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertAS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertAS>
+<cfquery name="qInsertAS" datasource="#application.datasource#">
 					INSERT INTO HQ_Positions (HQ_Position_Order, HQ_Position_Name, Updated_By, Updated_Date)
 					VALUES (#arguments.HQPositionOrder#, '#arguments.HQPositionDesc#', '#arguments.AccessStructure.user_id#', GetDate())
 				</cfquery>
+</cfif>
 			
 			</cfif>
 			
@@ -378,9 +414,20 @@
 	
 	<cffunction name="InsertAssignRT" output="false">
 		<cfargument name="formScope" required="true" type="struct" />
-		<cfquery name="deleteRT" datasource="#application.datasource#">
+		<cfset useLakebaseFordeleteRT = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("revisiontype_approval")>
+<cfif useLakebaseFordeleteRT>
+	<cftry>
+		<cfset application.oLakebase.deleteRows("revisiontype_approval", {})>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteRT = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteRT>
+<cfquery name="deleteRT" datasource="#application.datasource#">
 			Delete from RevisionType_Approval
 		</cfquery>
+</cfif>
 		<cfquery name="qInsertRT" datasource="#application.datasource#">
 			INSERT INTO RevisionType_Approval (Revision_TypeA, Revision_TypeB,Revision_TypeC)
 			VALUES ( #Evaluate("arguments.formScope.HQPosition_A")#,  #Evaluate("arguments.formScope.HQPosition_B")#, #Evaluate("arguments.formScope.HQPosition_C")#)
@@ -388,10 +435,23 @@
 	</cffunction>
 	
 	<cffunction name="getRevisionHQAssigned" output="false" returntype="query">
-		<cfquery name="qgetRevisionHQAssigned" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetRevisionHQAssigned = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("revisiontype_approval")>
+<cfif useLakebaseForqgetRevisionHQAssigned>
+	<cftry>
+		<cfset qgetRevisionHQAssigned = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("revisiontype_approval", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetRevisionHQAssigned = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetRevisionHQAssigned>
+<cfquery name="qgetRevisionHQAssigned" datasource="#application.datasource#">
 			select * from
 			RevisionType_Approval
 		</cfquery>
+</cfif>
 		<cfreturn qgetRevisionHQAssigned>
 	</cffunction>
 	

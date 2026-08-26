@@ -45,13 +45,32 @@
 <!--- If the entered old password matches what's in the DB as of now, make the changes				 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFIF Get_Password.User_Password EQ hash(Form.Old_Password)>
-	<CFQUERY NAME="Change_Paswword" datasource="#application.datasource#">
+	<cfset useLakebaseForChange_Paswword = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForChange_Paswword>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"user_password" = "#hash(Form.New_Password)#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForChange_Paswword = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForChange_Paswword>
+<CFQUERY NAME="Change_Paswword" datasource="#application.datasource#">
 		Update	_users
 		Set		user_password	=	'#hash(Form.New_Password)#'
 		Where	User_ID			=	'#request.AccessStructure.User_ID#'
 				and
 				deleted			=	0
 	</CFQUERY>
+</cfif>
 
 	<CFSET pagetitle = "Password Change Successful">
 	<CFINCLUDE TEMPLATE="/settings/settings_title.cfm">

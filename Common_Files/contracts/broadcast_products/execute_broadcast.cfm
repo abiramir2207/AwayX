@@ -74,12 +74,31 @@
 			<CFIF GetContractData.Discount_Type_ID EQ 3 OR GetContractData.Discount_Type_ID EQ 4><cfset DT = "NP"></CFIF><!--- Net price --->
 
 			<CFIF GetContractData.Contract_Quantity_UOM_IDX EQ 1 OR GetContractData.Contract_Quantity_UOM_IDX EQ 2>
-				<CFQUERY NAME="UpdateProductData" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdateProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForUpdateProductData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"contract_main_id" = "eq.#ListItem#",
+				"product_upc" = "eq.#SpecialUPC#"
+			},
+			{
+				"discount_value" = "#evaluate("FORM.UPC_#replace(SpecialUPC, "-", "X", "ALL")#_#DT##weightvalue#")#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateProductData>
+<CFQUERY NAME="UpdateProductData" datasource="#application.datasource#">
 					UPDATE Contract_Products
 					SET Discount_Value = '#evaluate("FORM.UPC_#replace(SpecialUPC, "-", "X", "ALL")#_#DT##weightvalue#")#'
 					WHERE Contract_Main_ID = '#ListItem#'
 					AND Product_UPC = '#SpecialUPC#'
-				</CFQUERY>				
+				</CFQUERY>
+</cfif>				
 			</CFIF>
 		</CFIF>
 		<!--- O=1 OC=0 --->
@@ -92,12 +111,28 @@
 			<CFIF GetContractData.Discount_Type_ID EQ 3 OR GetContractData.Discount_Type_ID EQ 4><cfset DT = "NP"></CFIF><!--- Net price --->
 
 			<CFIF GetContractData.Contract_Quantity_UOM_IDX EQ 1 OR GetContractData.Contract_Quantity_UOM_IDX EQ 2>
-				<CFQUERY NAME="InsertProductData" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForInsertProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"product_upc" = "#SpecialUPC#",
+			"contract_main_id" = "#listitem#",
+			"discount_value" = "#evaluate("FORM.UPC_#replace(SpecialUPC, "-", "X", "ALL")#_#DT##weightvalue#")#",
+			"pricing_rule" = "#GetContractData.Contract_Quantity_UOM_IDX#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertProductData>
+<CFQUERY NAME="InsertProductData" datasource="#application.datasource#">
 					INSERT INTO Contract_Products
 					(Product_UPC, Contract_Main_ID, Discount_Value, Pricing_Rule)
 					VALUES
 					('#SpecialUPC#', '#listitem#', '#evaluate("FORM.UPC_#replace(SpecialUPC, "-", "X", "ALL")#_#DT##weightvalue#")#', #GetContractData.Contract_Quantity_UOM_IDX#)
 				</CFQUERY>
+</cfif>
 			</CFIF>
 		</CFIF>
 

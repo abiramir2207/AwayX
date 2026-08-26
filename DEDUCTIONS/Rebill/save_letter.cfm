@@ -165,6 +165,22 @@ Folder_Name="Rebill_Letters">
 <cfset FileLink = application.Doc_Mapping & FileLocation2 & lName>
 
 <!---Save all info in database --->
+<cfset useLakebaseForInsertIntoLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_log")>
+<cfif useLakebaseForInsertIntoLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_rebill_log", {
+			"file_location" = "#fName#",
+			"html_file_location" = "#FileLink#",
+			"deduction_id" = "#Deduction_ID#",
+			"created_date" = "#now()#",
+			"created_by" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoLog>
 <cfquery name="InsertIntoLog" datasource="#application.datasource#">
 INSERT INTO DD_Rebill_Log
 (
@@ -183,7 +199,8 @@ VALUES
 	'#request.AccessStructure.User_ID#'
 )
 SELECT DD_Rebill_Log_ID = @@IDENTITY
-</cfquery> 
+</cfquery>
+</cfif> 
 
 <cflocation url="view_letter.cfm?Deduction_ID=#Deduction_ID#&DD_Rebill_Log_ID=#InsertIntoLog.DD_Rebill_Log_ID#"> 
 

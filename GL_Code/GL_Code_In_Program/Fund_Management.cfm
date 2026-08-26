@@ -20,24 +20,9 @@
 
 
 <!--- 
-<cfset useLakebaseForGetARSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
-<cfif useLakebaseForGetARSetting>
-	<cftry>
-		<cfset GetARSetting = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("gl_code_fund_setting", {
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForGetARSetting = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetARSetting>
 <CFQUERY NAME="GetARSetting" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE Deleted = 0
 </CFQUERY>
-</cfif>
  --->
 <CFSET VarYear3Back = YEAR(DateAdd("yyyy",-3,now()))>
 <CFSET VarYear2Back = YEAR(DateAdd("yyyy",-2,now()))>

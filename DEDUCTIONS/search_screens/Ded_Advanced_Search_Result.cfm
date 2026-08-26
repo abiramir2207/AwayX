@@ -4,24 +4,9 @@
 <!---User profile--->
 <!--- <CFINCLUDE TEMPLATE="/get_access_profile.cfm">
 
-<cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
-<cfif useLakebaseForDeductionsProfilesSettings>
-	<cftry>
-		<cfset DeductionsProfilesSettings = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("deductions_profiles_settings", {
-				"profiles_id" = "eq.#Get_Profile_Settings.Profiles_ID#"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForDeductionsProfilesSettings = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForDeductionsProfilesSettings>
 <cfquery name="DeductionsProfilesSettings" datasource="#application.datasource#">
 SELECT * FROM Deductions_Profiles_Settings WHERE Profiles_ID = '#Get_Profile_Settings.Profiles_ID#'
-</cfquery>
-</cfif> --->
+</cfquery> --->
 <!--- <CFDUMP VAR="#FORM#"> --->
 
 <!---
@@ -267,25 +252,9 @@ TABLE.BorderTable TD
 					<TR>
 						<TD HEIGHT="10" STYLE="Border-bottom: none">
 						<CFIF DD_IsParent EQ 1>
-							<!--- <cfset useLakebaseForCheck_Child = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
-<cfif useLakebaseForCheck_Child>
-	<cftry>
-		<cfset Check_Child = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("deductions", {
-				"dd_dedid" = "eq.#DD_DedID#",
-				"deleted" = "eq.0"
-			})
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCheck_Child = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCheck_Child>
-<CFQUERY NAME="Check_Child" DATASOURCE="#Application.Datasource#">
+							<!--- <CFQUERY NAME="Check_Child" DATASOURCE="#Application.Datasource#">
 								SELECT * FROM Deductions WHERE DD_DedID = '#DD_DedID#' AND Deleted=0
-							</CFQUERY>
-</cfif> --->
+							</CFQUERY> --->
 							<CFIF Split_Count GT 0>
 								<img src="/Images/parent_New.gif" alt="" width="13" height="13" border="0">
 							</CFIF>

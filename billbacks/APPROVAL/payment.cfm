@@ -1336,10 +1336,25 @@ Added an argumets to modifiy query if its coming from Payments page.
 --->
 <cfset CheckTemplateApprovalRights = BBProgramManager.getTemplateApprovalRights(Billback_ID,1)>
 
+<cfset useLakebaseForGetFA_AppSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetFA_AppSetting>
+	<cftry>
+		<cfset GetFA_AppSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "forbidallowprofilesintemplates"
+			}), "forbidallowprofilesintemplates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFA_AppSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFA_AppSetting>
 <CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
 SELECT ForbidAllowProfilesInTemplates
 FROM _Application_Settings
 </CFQUERY>
+</cfif>
 
 <CFSET TemplateApprovalRight = 0>
 
