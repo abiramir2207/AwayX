@@ -97,7 +97,21 @@
 	</cfquery> --->
 	
 <!--- 	<cfloop query="GetContractMainOld">
-		<cfquery name="InsertContractMain" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_contract_main")>
+<cfif useLakebaseForInsertContractMain>
+	<cftry>
+		<cfset application.oLakebase.insertRow("rp_contract_main", {
+			"contract_main_id" = "#Contract_Main_ID#",
+			"contract_number" = "#Contract_Number#",
+			"created_type" = "#Created_Type#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertContractMain>
+<cfquery name="InsertContractMain" datasource="#application.datasource#">
 		INSERT INTO RP_Contract_Main
 		(
 			Contract_Main_ID, 
@@ -111,6 +125,7 @@
 			'#Created_Type#'
 		)
 		</cfquery>
+</cfif>
 	</cfloop>
 	 --->
 <!--- 	<cfquery name="GetContractMainNew" datasource="#application.datasource#">
@@ -473,9 +488,22 @@
 	</cfloop>
 Done.
 <cfabort>
-<!-----<cfquery name="TotalEarn" datasource="#application.datasource#">
+<!-----<cfset useLakebaseForTotalEarn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_mapping_table")>
+<cfif useLakebaseForTotalEarn>
+	<cftry>
+		<cfset TotalEarn = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_mapping_table", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTotalEarn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTotalEarn>
+<cfquery name="TotalEarn" datasource="#application.datasource#">
 SELECT * FROM RP_Mapping_Table
 </cfquery>
+</cfif>
 
  <cfdump var="#TotalEarn#"> --->
 

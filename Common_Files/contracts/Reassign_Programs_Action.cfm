@@ -108,10 +108,27 @@
 		</CFQUERY>
 
 		<!--- Add program owner info here --->
-		<CFQUERY NAME="insProgramOwner" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForinsProgramOwner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_owner")>
+<cfif useLakebaseForinsProgramOwner>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_owner", {
+			"contract_main_id" = "#Item#",
+			"contract_number" = "#Find_Contract_Number.Contract_Number#",
+			"responsible_user_id" = "#FORM.responsibleUser#",
+			"creating_user_position_id" = "#To_Position#",
+			"reassigned_by" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsProgramOwner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsProgramOwner>
+<CFQUERY NAME="insProgramOwner" DATASOURCE="#application.datasource#">
 		 INSERT INTO Program_Owner(Contract_Main_ID, Contract_Number, Responsible_User_ID, Creating_User_Position_ID, Reassigned_By)
 		  VALUES('#Item#', '#Find_Contract_Number.Contract_Number#', '#FORM.responsibleUser#', '#To_Position#', '#request.AccessStructure.User_ID#')
 		</CFQUERY>
+</cfif>
 
 		<cfstoredproc procedure="USP_Contract_Lock_Unlock" datasource="#application.datasource#">
 			<cfprocparam type="In" cfsqltype="cf_sql_varchar" dbVarName="@User_ID" value="#request.AccessStructure.User_ID#">
@@ -126,11 +143,29 @@
 
 			<!--- D38387 Programs not routing for approval START --->
 				<cfif Check_islocked.Contract_Status_Type_IDX EQ 2>
-					<CFQUERY NAME="Update_Program_Agree" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForUpdate_Program_Agree = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_agree")>
+<cfif useLakebaseForUpdate_Program_Agree>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_agree",
+			{
+				"programid" = "eq.#Item#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Program_Agree = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Program_Agree>
+<CFQUERY NAME="Update_Program_Agree" DATASOURCE="#Application.Datasource#">
 						UPDATE Program_Agree
 						SET deleted = 1
 						WHERE ProgramID = #Item#
 					</CFQUERY>
+</cfif>
 					<cfset useLakebaseForUpdate_Program_Type_code = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_type_code_approval_info")>
 <cfif useLakebaseForUpdate_Program_Type_code>
 	<cftry>

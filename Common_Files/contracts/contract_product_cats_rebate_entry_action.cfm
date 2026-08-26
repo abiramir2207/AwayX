@@ -90,7 +90,26 @@
 			<!--- INSERT NEW RECORD --->
 			<CFIF checkForThisCombo.recordcount EQ 0>
 			<!--- INSERT PER PRODUCT DATA --->
-				<cfquery name="insertProductData" datasource="#application.datasource#">
+				<cfset useLakebaseForinsertProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_category_product_rates_volumes")>
+<cfif useLakebaseForinsertProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_product_category_product_rates_volumes", {
+			"program_product_category_id" = "#getProductCategoryID.Program_Product_Category_ID#",
+			"program_id" = "#FORM.Program_ID#",
+			"iscontract" = "#FORM.Program_Volume_UOM#",
+			"bsa_foodservice_items_master_id" = "#product_BSA_Foodservice_Items_Master_ID#",
+			"volume" = "#product_Volume#",
+			"volume_uom" = "#product_Volume_UOM#",
+			"rate" = "#product_Rate#",
+			"rate_uom" = "#product_Rate_UOM#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertProductData>
+<cfquery name="insertProductData" datasource="#application.datasource#">
 					INSERT INTO Program_Product_Category_Product_Rates_Volumes
 					(
 						Program_Product_Category_ID,
@@ -113,10 +132,33 @@
 						'#product_Rate#',
 						'#product_Rate_UOM#'
 					)
-				</cfquery>			
+				</cfquery>
+</cfif>			
 			<!--- UPDATE EXISTING RECORD --->
 			<CFELSE>
-				<cfquery name="updateProductData" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_category_product_rates_volumes")>
+<cfif useLakebaseForupdateProductData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_product_category_product_rates_volumes",
+			{
+				"program_id" = "eq.#FORM.Program_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#product_BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"volume" = "#product_Volume#",
+				"volume_uom" = "#product_Volume_UOM#",
+				"rate" = "#product_Rate#",
+				"rate_uom" = "#product_Rate_UOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateProductData>
+<cfquery name="updateProductData" datasource="#application.datasource#">
 					UPDATE Program_Product_Category_Product_Rates_Volumes
 					SET
 						Volume									=	'#product_Volume#',
@@ -129,7 +171,8 @@
 						BSA_Foodservice_Items_Master_ID		= 	'#product_BSA_Foodservice_Items_Master_ID#'
 						AND 
 						Deleted 								= 0
-				</cfquery>			
+				</cfquery>
+</cfif>			
 			</CFIF>
 	</CFIF>
 </CFLOOP>

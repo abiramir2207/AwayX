@@ -92,12 +92,26 @@
 		#variables.programAlertPaymentNotificationEmail#
 	</CF_EMAILWRAPPER>
 
-	<CFQUERY NAME="qLogNotification" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForqLogNotification = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_alert_payment_notification_log")>
+<cfif useLakebaseForqLogNotification>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_alert_payment_notification_log", {
+			"program_id" = "#variables.programID#",
+			"user_id" = "#variables.userId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLogNotification = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLogNotification>
+<CFQUERY NAME="qLogNotification" DATASOURCE="#Application.Datasource#">
 		INSERT INTO Program_Alert_Payment_Notification_Log
 			(Program_ID, User_ID)
 		VALUES
 			('#variables.programID#', '#variables.userId#')
 	</CFQUERY>
+</cfif>
 	
 </cfloop>
 

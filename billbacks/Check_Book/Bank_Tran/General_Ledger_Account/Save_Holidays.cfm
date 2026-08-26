@@ -27,11 +27,27 @@
 
 <CFIF Form.Holiday_ID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("holidays")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("holidays", {
+			"holiday_desc" = "#Form.Holiday_Desc#",
+			"holiday_date" = "#Form.Holiday_Date#",
+			"deleted" = "#Form.Deleted#",
+			"updated_userid" = "#request.AccessStructure.User_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		Holidays
 						(Holiday_Desc,Holiday_Date,Deleted,Updated_UserId)
 		Values			('#Form.Holiday_Desc#','#Form.Holiday_Date#',#Form.Deleted#, '#request.AccessStructure.User_Id#')
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="create_Holidays.cfm" ADDTOKEN="No">
 	<CFABORT>
 <CFELSE>

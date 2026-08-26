@@ -7,7 +7,21 @@
 <!--- Do the actual processing --->
 
 	<!--- Insert into log --->
-	<cfquery name="InsertIntoDeletedLog" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertIntoDeletedLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("log_deleted_records")>
+<cfif useLakebaseForInsertIntoDeletedLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("log_deleted_records", {
+			"user_id" = "#request.accessstructure.User_ID#",
+			"number_of_billbacks" = "#form.PurgeBillbackCount#",
+			"number_of_programs" = "#form.PurgeProgramCount#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoDeletedLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoDeletedLog>
+<cfquery name="InsertIntoDeletedLog" datasource="#application.datasource#">
 	INSERT INTO Log_Deleted_Records
 	(
 		User_ID,
@@ -21,6 +35,7 @@
 		'#form.PurgeProgramCount#'
 	)
 	</cfquery>
+</cfif>
 
 	<!--- Let's purge those programs --->
 	<cfif form.Purge_Programs IS 1>

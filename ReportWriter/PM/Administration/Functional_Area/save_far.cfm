@@ -21,11 +21,26 @@
 
 <CFIF Form.PM_Far_ID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_far")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_far", {
+			"pm_far_description" = "#Form.PM_Far_Description#",
+			"pm_far_deleted" = "#Form.PM_Far_Deleted#",
+			"pm_updated_userid" = "#request.AccessStructure.User_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		PM_Far
 						(PM_Far_Description,PM_Far_Deleted,PM_Updated_UserId)
 		Values			('#Form.PM_Far_Description#',#Form.PM_Far_Deleted#,'#request.AccessStructure.User_Id#')
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="create_Far.cfm" ADDTOKEN="No">
 	<CFABORT>
 <CFELSE>

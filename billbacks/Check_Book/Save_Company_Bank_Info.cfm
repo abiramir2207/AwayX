@@ -39,7 +39,21 @@
 
 <CFIF Form.Bank_Info_ID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_bank_info")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("company_bank_info", {
+			"bank_name" = "#Form.Bank_Name#",
+			"debit_account_no" = "#Form.Debit_Account_No#",
+			"bank_info_deleted" = "#Form.Bank_Info_Deleted#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		Company_Bank_Info
 						(
 							Bank_Name,
@@ -52,6 +66,7 @@
 							 #Form.Bank_Info_Deleted#
 						)
 	</CFQUERY>
+</cfif>
 	<CFIF isdefined("FORM.FromPayment")>
 		<CFLOCATION URL = "Bank_Tran/Payment_Transaction_data_entry.cfm?new_bb_check=#form.new_bb_check#&Trans_type=#FORM.Trans_type#&RID=#FORM.CRID#" ADDTOKEN="No">
 		<CFABORT>

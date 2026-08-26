@@ -143,7 +143,23 @@
 
 <CFIF Form.usda_noi_epds_id EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("usda_noi_epds", {
+			"name" = "#Form.Name#",
+			"yield" = "#Form.Yield#",
+			"raw_price" = "#Form.raw_price#",
+			"uom" = "#Form.uom#",
+			"notes" = "#Form.Notes#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		usda_noi_epds
 						(
 							Name,
@@ -161,6 +177,7 @@
 						)
 		
 	</CFQUERY>
+</cfif>
 
 	<cfquery name="LastEditedBy" datasource="#application.datasource#">
 		UPDATE Global_Last_Edited_By

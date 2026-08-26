@@ -207,12 +207,25 @@
 				</cfquery>
 </cfif>
 				<CFIF recordCheck.recordcount EQ 0>
-					<cfquery name="insertRecord" datasource="#Application.Datasource#">
+					<cfset useLakebaseForinsertRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForinsertRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_main_aux_data", {
+			"contract_main_id" = "#insert.Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertRecord>
+<cfquery name="insertRecord" datasource="#Application.Datasource#">
 						INSERT INTO Contract_Main_Aux_Data
 						(Contract_Main_ID)
 						VALUES
 						('#insert.Contract_Main_ID#')
 					</cfquery>
+</cfif>
 				</CFIF>
 				<cfset useLakebaseForsaveAuxData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
 <cfif useLakebaseForsaveAuxData>
@@ -258,7 +271,58 @@
 				<!--- lock checker --->
 
 				
-				<cfquery name="UPDATETHETABLE" datasource="awayx">
+				<cfset useLakebaseForUPDATETHETABLE = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForUPDATETHETABLE>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#cryp.value#"
+			},
+			{
+				"contract_reference_number" = "#FORM.Contract_Reference_Number#",
+				"contract_title" = "#FORM.Contract_Title#",
+				"contract_start_date" = "#FORM.start_date#",
+				"contract_end_date" = "#FORM.end_date#",
+				"contract_quantity" = "#FORM.quantity#",
+				"contract_daily_volume" = "#DailyContractQuantity#",
+				"contract_quantity_uom_idx" = "#FORM.Contract_Quantity_UOM_IDX#",
+				"fixed_rebate_amount" = "#FORM.Fixed_Rebate_Amount#",
+				"dist_brand_eligibility" = "#Form.Dist_Brand_Eligibility#",
+				"notes" = "#Form.Notes#",
+				"editor_id" = "#request.AccessStructure.User_ID#",
+				"paymentcycle" = "#FORM.PaymentCycle#",
+				"programtype" = "#FORM.Created_Type#",
+				"programtype_id" = "#FORM.ProgramType_ID#",
+				"chkclaimperfreq_1" = "#FORM.chkClaimPerfReq_1#",
+				"chkclaimperfreq_2" = "#FORM.chkClaimPerfReq_2#",
+				"chkclaimperfreq_3" = "#FORM.chkClaimPerfReq_3#",
+				"chkclaimperfreq_4" = "#FORM.chkClaimPerfReq_4#",
+				"chkclaimperfreq_5" = "#FORM.chkClaimPerfReq_5#",
+				"chkclaimperfreq_6" = "#FORM.chkClaimPerfReq_6#",
+				"chkclaimperfreq_7" = "#FORM.chkClaimPerfReq_7#",
+				"chkclaimperfreq_8" = "#FORM.chkClaimPerfReq_8#",
+				"chkclaimperfreq_9" = "#FORM.chkClaimPerfReq_9#",
+				"commrecip_1" = "#FORM.CommRecip_1#",
+				"commrecip_2" = "#FORM.CommRecip_2#",
+				"commrecip_3" = "#FORM.CommRecip_3#",
+				"commrecip_4" = "#FORM.CommRecip_4#",
+				"auto_renew" = "#FORM.Auto_Renew#",
+				"auto_renewal_fixed_variable_margin" = "#FORM.Auto_Renewal_Fixed_Variable_Margin#",
+				"claimmechanics" = "#FORM.ClaimMechOption#",
+				"bldupinvoice" = "#FORM.ClaimMechOptionsBUI#",
+				"controllable_volume" = "#FORM.Controllable_Flag#",
+				"growth_inclusion" = "#FORM.Growth_Inclusion_Flag#",
+				"gl_assignment" = "#FORM.GL_Assignment_ID#",
+				"adv_spending_amount" = "#FORM.Adv_Spend_Amount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUPDATETHETABLE = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUPDATETHETABLE>
+<cfquery name="UPDATETHETABLE" datasource="awayx">
 					UPDATE contract_main
 					SET 
 							Contract_Reference_Number	=	'#FORM.Contract_Reference_Number#',
@@ -300,6 +364,7 @@
 					WHERE
 							Contract_Main_ID			=	'#cryp.value#'
 				</cfquery>
+</cfif>
 
 				<!--- save comments --->
 				<cfquery name="recordCheck" datasource="#Application.Datasource#">

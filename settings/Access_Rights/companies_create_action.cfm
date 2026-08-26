@@ -25,14 +25,75 @@
 	<CFSET IDGENERATOR_DESTINATIONFIELD = "Company_Main_ID">		
 	<CFINCLUDE TEMPLATE="/common_files/keyGenerator.cfm">
 	
-	<CFQUERY NAME="saveCompany" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForsaveCompany>
+	<cftry>
+		<cfset application.oLakebase.insertRow("company_main", {
+			"company_main_id" = "#Generated.Company_Main_ID#",
+			"company_name" = "#FORM.COMPANY_NAME#",
+			"address_1" = "#FORM.ADDRESS_1#",
+			"address_2" = "#FORM.ADDRESS_2#",
+			"address_city" = "#FORM.ADDRESS_CITY#",
+			"address_state" = "#FORM.ADDRESS_STATE#",
+			"address_zip" = "#FORM.ADDRESS_ZIP#",
+			"phone_1" = "#FORM.PHONE_1#",
+			"phone_2" = "#FORM.PHONE_2#",
+			"phone_3" = "#FORM.PHONE_3#",
+			"phone_ext" = "#FORM.PHONE_EXT#",
+			"fax_1" = "#FORM.FAX_1#",
+			"fax_2" = "#FORM.FAX_2#",
+			"fax_3" = "#FORM.FAX_3#",
+			"website" = "#FORM.WEBSITE#",
+			"primary_contact_name" = "#FORM.PRIMARY_CONTACT_EMAIL#",
+			"primary_contact_email" = "#FORM.PRIMARY_CONTACT_NAME#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveCompany>
+<CFQUERY NAME="saveCompany" datasource="#application.datasource#">
 		INSERT INTO	Company_Main
 		(Company_Main_ID, Company_Name, Address_1, Address_2, Address_City, Address_State, Address_Zip, Phone_1, Phone_2, Phone_3, Phone_Ext, Fax_1, Fax_2, Fax_3, Website, Primary_Contact_Name, Primary_Contact_Email)
 		VALUES
 		('#Generated.Company_Main_ID#', '#FORM.COMPANY_NAME#','#FORM.ADDRESS_1#','#FORM.ADDRESS_2#','#FORM.ADDRESS_CITY#','#FORM.ADDRESS_STATE#','#FORM.ADDRESS_ZIP#','#FORM.PHONE_1#','#FORM.PHONE_2#','#FORM.PHONE_3#','#FORM.PHONE_EXT#','#FORM.FAX_1#','#FORM.FAX_2#','#FORM.FAX_3#','#FORM.WEBSITE#','#FORM.PRIMARY_CONTACT_EMAIL#','#FORM.PRIMARY_CONTACT_NAME#')
 	</CFQUERY>
+</cfif>
 <CFELSE>
-	<CFQUERY NAME="updateCompany" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForupdateCompany>
+	<cftry>
+		<cfset application.oLakebase.updateRows("company_main",
+			{
+				"company_main_id" = "eq.#FORM.COMPANY_MAIN_ID#"
+			},
+			{
+				"company_name" = "#FORM.COMPANY_NAME#",
+				"address_1" = "#FORM.ADDRESS_1#",
+				"address_2" = "#FORM.ADDRESS_2#",
+				"address_city" = "#FORM.ADDRESS_CITY#",
+				"address_state" = "#FORM.ADDRESS_STATE#",
+				"address_zip" = "#FORM.ADDRESS_ZIP#",
+				"phone_1" = "#FORM.PHONE_1#",
+				"phone_2" = "#FORM.PHONE_2#",
+				"phone_3" = "#FORM.PHONE_3#",
+				"phone_ext" = "#FORM.PHONE_EXT#",
+				"fax_1" = "#FORM.FAX_1#",
+				"fax_2" = "#FORM.FAX_2#",
+				"fax_3" = "#FORM.FAX_3#",
+				"website" = "#FORM.WEBSITE#",
+				"primary_contact_email" = "#FORM.PRIMARY_CONTACT_EMAIL#",
+				"primary_contact_name" = "#FORM.PRIMARY_CONTACT_NAME#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCompany>
+<CFQUERY NAME="updateCompany" datasource="#application.datasource#">
 		UPDATE Company_Main
 		SET 
 			COMPANY_NAME				=	'#FORM.COMPANY_NAME#',
@@ -54,6 +115,7 @@
 		WHERE 
 			COMPANY_MAIN_ID 			=	'#FORM.COMPANY_MAIN_ID#'
 	</CFQUERY>
+</cfif>
 
 
 </CFIF>

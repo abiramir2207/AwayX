@@ -211,7 +211,22 @@ AND Program_ID = '#OriginalProgram_ID#'
 		<cfset DiscountList = valuelist(DiscountsForProduct.DiscountTypeID)>
 	</cfif>
 	
-	<cfquery name="InsertIntoTable" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertIntoTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_product_discount")>
+<cfif useLakebaseForInsertIntoTable>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_product_discount", {
+			"discount_list" = "#DiscountList#",
+			"product_id" = "#Product_ID#",
+			"billback_id" = "#Billback_ID#",
+			"program_id" = "#OriginalProgram_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoTable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoTable>
+<cfquery name="InsertIntoTable" datasource="#application.datasource#">
 	INSERT INTO BB_Product_Discount
 	(
 		Discount_List,
@@ -226,7 +241,8 @@ AND Program_ID = '#OriginalProgram_ID#'
 		'#Billback_ID#',
 		#OriginalProgram_ID#
 	)
-	</cfquery> 
+	</cfquery>
+</cfif> 
 
 </cfloop>
 
@@ -434,11 +450,26 @@ AND Program_ID = '#OriginalProgram_ID#'
 </CFOUTPUT>
 <br>&nbsp;&nbsp;&nbsp;<B>
 
+<cfset useLakebaseForGetLinesOfBiz = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLinesOfBiz>
+	<cftry>
+		<cfset GetLinesOfBiz = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLinesOfBiz = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLinesOfBiz>
 <cfquery name="GetLinesOfBiz" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0,24,0,0)#">
 	SELECT *
 	FROM Line_Of_Business
 	ORDER BY Line_Of_Business_Name
 </cfquery>
+</cfif>
 
 <CFQUERY NAME="getFoodserviceLOBID" DBTYPE="query">
 	SELECT Line_Of_Business_ID

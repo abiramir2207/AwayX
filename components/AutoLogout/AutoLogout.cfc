@@ -68,12 +68,26 @@
 				
 				<!--- insert reason if unique --->
 				<cfif checkForExistingReason.recordcount EQ 0>
-					<cfquery name="insertReason" datasource="#application.datasource#">
+					<cfset useLakebaseForinsertReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_auto_logout_reason")>
+<cfif useLakebaseForinsertReason>
+	<cftry>
+		<cfset application.oLakebase.insertRow("_users_auto_logout_reason", {
+			"_users_auto_logout_list_id" = "#this_Users_Auto_Logout_List_ID#",
+			"reason_text" = "#reasonTxt#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertReason>
+<cfquery name="insertReason" datasource="#application.datasource#">
 						INSERT INTO _Users_Auto_Logout_Reason
 						(_Users_Auto_Logout_List_ID, Reason_Text)
 						VALUES
 						('#this_Users_Auto_Logout_List_ID#', '#reasonTxt#')
 					</cfquery>
+</cfif>
 				</cfif>
 				
 			</cfif>
@@ -85,11 +99,27 @@
 		
 		<cfargument name="userId" type="string" required="yes">
 					
-			<cfquery name="get_USERS_AUTO_LOGOUT_LIST_ID" datasource="#application.datasource#">
+			<cfset useLakebaseForget_USERS_AUTO_LOGOUT_LIST_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_auto_logout_list")>
+<cfif useLakebaseForget_USERS_AUTO_LOGOUT_LIST_ID>
+	<cftry>
+		<cfset get_USERS_AUTO_LOGOUT_LIST_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_auto_logout_list", {
+				"user_id" = "eq.#userId#",
+				"select" = "_users_auto_logout_list_id"
+			}), "_users_auto_logout_list_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_USERS_AUTO_LOGOUT_LIST_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_USERS_AUTO_LOGOUT_LIST_ID>
+<cfquery name="get_USERS_AUTO_LOGOUT_LIST_ID" datasource="#application.datasource#">
 				SELECT _USERS_AUTO_LOGOUT_LIST_ID
 				FROM _USERS_AUTO_LOGOUT_LIST
 				WHERE User_ID = '#userId#'
 			</cfquery>
+</cfif>
 			
 			<cfset this_USERS_AUTO_LOGOUT_LIST_ID = get_USERS_AUTO_LOGOUT_LIST_ID._USERS_AUTO_LOGOUT_LIST_ID>
 			

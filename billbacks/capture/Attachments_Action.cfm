@@ -29,7 +29,20 @@
 		<!--- Loop over the documents --->
 		<CFLOOP INDEX="item" LIST="#Form.Doc_ID#" DELIMITERS=",">
 			<cfif form.BillbackList eq "">
-				<CFQUERY NAME="Save_Attachments" datasource="#application.datasource#">
+				<cfset useLakebaseForSave_Attachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForSave_Attachments>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"billback_id" = "#Form.BBID#",
+			"doc_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Attachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Attachments>
+<CFQUERY NAME="Save_Attachments" datasource="#application.datasource#">
 					INSERT	INTO Contract_Attachments
 						(
 							Billback_ID,
@@ -41,6 +54,7 @@
 							'#item#'
 						)
 				</CFQUERY>
+</cfif>
 			<cfelse>
 				<!--- If the request is to add for multiple billbacks, then loop through the billbacks. --->
 				<CFLOOP INDEX="bb_id" LIST="#form.BillbackList#" DELIMITERS=",">
@@ -66,7 +80,20 @@
 	<!--- Loop over the documents --->
 	<CFLOOP INDEX="item" LIST="#Form.Attachment_List#" DELIMITERS=",">
 		<cfif form.BillbackList eq "">
-			<CFQUERY NAME="Attachment_details" datasource="#application.datasource#">
+			<cfset useLakebaseForAttachment_details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForAttachment_details>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"billback_id" = "#FORM.BBID#",
+			"doc_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForAttachment_details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAttachment_details>
+<CFQUERY NAME="Attachment_details" datasource="#application.datasource#">
 				INSERT	INTO Contract_Attachments
 					(
 						Billback_ID,
@@ -78,6 +105,7 @@
 						'#item#'
 					)
 			</CFQUERY>
+</cfif>
 		<cfelse>
 			<!--- If the request is to add for multiple billbacks, then loop through the billbacks. --->
 			<CFLOOP INDEX="bb_id" LIST="#form.BillbackList#" DELIMITERS=",">

@@ -575,10 +575,25 @@
 
 					<cfif ! arguments.Expected_Rate_Apply_All_Templates>
 						<cfloop list="#arguments.ExpectedRateTemplateList#" index="FirstParentID">
-							<cfquery name="DeleteExpectedRateTemplate" datasource="#application.datasource#">
+							<cfset useLakebaseForDeleteExpectedRateTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_expected_rate_template_list")>
+<cfif useLakebaseForDeleteExpectedRateTemplate>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_expected_rate_template_list", {
+			"discount_type_id" = "2",
+			"program_component_name_id" = "#arguments.compId#",
+			"first_parent_id" = "#FirstParentID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteExpectedRateTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteExpectedRateTemplate>
+<cfquery name="DeleteExpectedRateTemplate" datasource="#application.datasource#">
 								INSERT INTO Program_Expected_Rate_Template_List (Discount_Type_ID, Program_Component_Name_ID, First_Parent_ID)
 								VALUES (2, #arguments.compId#, #FirstParentID#)
 							</cfquery>
+</cfif>
 						</cfloop>
 					</cfif>
 

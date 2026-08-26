@@ -118,11 +118,27 @@ You need to be able to select any component that was ever on any version of the 
 </cfquery>
 </cfif>
 
+<cfset useLakebaseForIsNegative = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForIsNegative>
+	<cftry>
+		<cfset IsNegative = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_end_date"
+			}), "bb_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsNegative = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsNegative>
 <cfquery name="IsNegative" datasource="#application.datasource#">
 	SELECT <!--- Negative_Billback, ---> BB_End_Date
 	FROM Billback
 	WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <cfparam name="ContractMainList" default="#Program_ID#">
 
@@ -359,13 +375,31 @@ You need to be able to select any component that was ever on any version of the 
 				</cfquery>
 
 				<!--- Get prior rebates --->
-				<cfquery name="PriorBidRequest" datasource="#application.datasource#">
+				<cfset useLakebaseForPriorBidRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_bidrequest_component")>
+<cfif useLakebaseForPriorBidRequest>
+	<cftry>
+		<cfset PriorBidRequest = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_bidrequest_component", {
+				"billback_program_id" = "eq.#Program_ID#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_bidrequest_component_id"
+			}), "program_bidrequest_component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPriorBidRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPriorBidRequest>
+<cfquery name="PriorBidRequest" datasource="#application.datasource#">
 					SELECT Program_BidRequest_Component_ID
 					FROM Billback_Program_BidRequest_Component
 					WHERE Billback_Program_ID = '#Program_ID#'
 					AND Billback_ID = '#Billback_ID#'
 					AND Deleted = 0
 				</cfquery>
+</cfif>
 
 				<cfset BidRequestList = "">
 				<cfif Has_BidRequest.Recordcount GT 0>

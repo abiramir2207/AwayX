@@ -109,7 +109,22 @@
 
 	<!--- Get the programs that have been revised --->
 	<cffunction name="getChangedPrograms" output="false" returntype="query">		
-			<cfquery name="qgetChangedPrograms" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetChangedPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_program_history_programs")>
+<cfif useLakebaseForqgetChangedPrograms>
+	<cftry>
+		<cfset qgetChangedPrograms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_program_history_programs", {
+				"order" = "child_contract_main_id.desc",
+				"limit" = "100"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetChangedPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetChangedPrograms>
+<cfquery name="qgetChangedPrograms" datasource="#application.datasource#">
 				SELECT TOP 100 * 
 				FROM Get_Program_History_Programs
 				<!--- Dev Note: Milan; 11370 - I have added the "ORDER BY" below, so that newer programs are updated
@@ -117,6 +132,7 @@
 					  of changes to a massive number of programs --->
 				ORDER BY Child_Contract_Main_ID DESC
 			</cfquery>
+</cfif>
 		<cfreturn qGetChangedPrograms>		
 	</cffunction>
 	
@@ -240,11 +256,27 @@
 	<cffunction name="getPaymentTypes" output="false" returntype="query">
 		<cfargument name="Payment_Type_ID" type="string" required="true">
 
-			<cfquery name="qgetPaymentTypes" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetPaymentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqgetPaymentTypes>
+	<cftry>
+		<cfset qgetPaymentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#arguments.Payment_Type_ID#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetPaymentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetPaymentTypes>
+<cfquery name="qgetPaymentTypes" datasource="#application.datasource#">
 				SELECT	Payment_Type_Name
 				FROM	Payment_Type
 				WHERE	Payment_Type_ID ='#arguments.Payment_Type_ID#'
 			</cfquery>
+</cfif>
 			<cfreturn qgetPaymentTypes>
 	</cffunction>
 	

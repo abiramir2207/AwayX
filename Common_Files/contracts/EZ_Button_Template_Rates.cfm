@@ -48,18 +48,51 @@
 <cfif EZCompID.recordcount>
 	<cfset thisEZCompId = EZCompID.Program_rebates_Component_ID />
 <cfelse>
-	<cfquery name="qAddEZComp" datasource="#application.datasource#">
+	<cfset useLakebaseForqAddEZComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForqAddEZComp>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_rebates_component", {
+			"program_id" = "#Contract_Main_ID#",
+			"program_rebates_component_name_id" = "0",
+			"component_paid_to" = "0",
+			"claim_mechanics" = "-1",
+			"gl_account_id" = "0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddEZComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddEZComp>
+<cfquery name="qAddEZComp" datasource="#application.datasource#">
 		INSERT INTO Program_Rebates_Component(Program_ID, Program_Rebates_Component_Name_ID, Component_Paid_To, Claim_Mechanics, GL_Account_ID)
 		VALUES (#Contract_Main_ID#, 0, 0, -1, 0)
 	</cfquery>
+</cfif>
 	<cfset thisEZCompId = EZComp.getEZCompID(Contract_Main_ID) />
 </cfif>
 	
+<cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
 <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 	SELECT First_parent_ID
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
 </cfquery>
+</cfif>
 
 <FIELDSET class="clBox" STYLE="padding:10px; width: 97%; border: 1px solid Blue; display:table;">
 	<LEGEND STYLE="font: bold 14px sans-serif; color: Red;">EZ Button</LEGEND>

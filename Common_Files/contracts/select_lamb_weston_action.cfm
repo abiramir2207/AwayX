@@ -132,7 +132,24 @@
 							</cfquery>
 </cfif>
 						<cfelseif #z[8]# IS "INS">
-							<cfquery name="insLambSettings" datasource="#application.datasource#">
+							<cfset useLakebaseForinsLambSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("lamb_requirements")>
+<cfif useLakebaseForinsLambSettings>
+	<cftry>
+		<cfset application.oLakebase.insertRow("lamb_requirements", {
+			"hq_rebate_component_id" = "#aryComp[i][3]#",
+			"comp_rate_discount" = "#aryComp[i][5]#",
+			"assoc_dist_id" = "#aryComp[i][1]#",
+			"assoc_program_id" = "#aryComp[i][4]#",
+			"program_component_id" = "#aryComp[i][2]#",
+			"hq_rebate_id" = "#cryp.value#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsLambSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsLambSettings>
+<cfquery name="insLambSettings" datasource="#application.datasource#">
 								INSERT INTO lamb_requirements
 									(
 										HQ_Rebate_Component_ID,
@@ -152,6 +169,7 @@
 										#cryp.value#
 									)
 							</cfquery>
+</cfif>
 						</cfif>
 					</cfif>
 				</cfif>
@@ -238,7 +256,22 @@
 								 AND UPC			= '#aryProd[i][1]#')
 							</cfquery>
 						<cfelseif #z[7]# IS "INS">
-							 <cfquery name="insLambProductSettings" datasource="#application.datasource#">
+							 <cfset useLakebaseForinsLambProductSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("lamb_requirements_products")>
+<cfif useLakebaseForinsLambProductSettings>
+	<cftry>
+		<cfset application.oLakebase.insertRow("lamb_requirements_products", {
+			"program_component_id" = "#aryProd[i][2]#",
+			"upc" = "#aryProd[i][1]#",
+			"assoc_dist_id" = "#aryProd[i][3]#",
+			"assoc_program_id" = "#aryProd[i][4]#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsLambProductSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsLambProductSettings>
+<cfquery name="insLambProductSettings" datasource="#application.datasource#">
 								INSERT INTO lamb_requirements_products
 									(
 										Program_Component_ID,
@@ -253,7 +286,8 @@
 										#aryProd[i][3]#,
 										#aryProd[i][4]#
 									 )
-							</cfquery> 
+							</cfquery>
+</cfif> 
 						</cfif>
 					</cfif>
 				</cfif>

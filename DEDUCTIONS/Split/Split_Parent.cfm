@@ -1278,10 +1278,24 @@ input, select
 										</cftry>
 									</cfif>
 									<cfif NOT useLakebaseForInsertDDAttach>
-										<CFQUERY NAME="Insert_DDAttach" DATASOURCE="#Application.Datasource#">
+										<cfset useLakebaseForInsert_DDAttach = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForInsert_DDAttach>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"deduction_id" = "#Insert_Data.Deduction_ID#",
+			"doc_id" = "#GetParentAttach.Doc_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_DDAttach = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_DDAttach>
+<CFQUERY NAME="Insert_DDAttach" DATASOURCE="#Application.Datasource#">
 											INSERT	INTO Contract_Attachments (Deduction_ID,Doc_ID)
 											VALUES  ('#Insert_Data.Deduction_ID#','#GetParentAttach.Doc_ID#')
 										</CFQUERY>
+</cfif>
 									</cfif>
 								</CFLOOP>
 							</cfif>

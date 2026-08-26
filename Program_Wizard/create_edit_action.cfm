@@ -2122,10 +2122,24 @@ Processes form information from the previous page.
 	<cfset currentSelection = valuelist(getCurrentSelection.Auto_Renew_Option_ID)>
 	<cfloop from="1" to="4" index="Options">
 		<cfif listfind(currentSelection, Options) EQ 0>
-			<cfquery name="InsertNewSelection" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertNewSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_auto_renew_options")>
+<cfif useLakebaseForInsertNewSelection>
+	<cftry>
+		<cfset application.oLakebase.insertRow("template_auto_renew_options", {
+			"template_first_parent_id" = "#getFisrParentID.First_Parent_ID#",
+			"auto_renew_option_id" = "#Options#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewSelection>
+<cfquery name="InsertNewSelection" datasource="#application.datasource#">
 				INSERT INTO Template_Auto_Renew_Options(Template_First_Parent_ID, Auto_Renew_Option_ID)
 				VALUES (#getFisrParentID.First_Parent_ID#, #Options#)
 			</cfquery>
+</cfif>
 		</cfif>
 		<cfif listfind(form.Auto_Renew_Selected_Options, Options) EQ 0>
 			<cfquery name="UpdateSelection" datasource="#application.datasource#">
@@ -2577,12 +2591,28 @@ Processes form information from the previous page.
 <!--- D116648 Final Settle logic for Indirect Accruals / Anand Rao / 12-Oct-2022 START --->
 <cfif Action eq "Copy">
 	<cfif FORM.Release_Settlement_Type EQ "Indirect">
-		<cfquery name="CheckTemplateList" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckTemplateList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("release_settlement_indirect_template")>
+<cfif useLakebaseForCheckTemplateList>
+	<cftry>
+		<cfset CheckTemplateList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("release_settlement_indirect_template", {
+				"first_parent_id" = "eq.#tmp_oldInfo.First_Parent_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckTemplateList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckTemplateList>
+<cfquery name="CheckTemplateList" datasource="#application.datasource#">
 			SELECT *
 			FROM Release_Settlement_Indirect_Template
 			WHERE First_Parent_ID = #tmp_oldInfo.First_Parent_ID#
 			AND Deleted = 0
 		</cfquery>
+</cfif>
 		<cfset selectedTemplate = valueList(CheckTemplateList.Include_First_Parent_ID)>
 		<cfset saveReleaseSettlementTmplts = CreateObject("component", "components.programs.template.TemplateManager").saveReleaseSettlementTmplts(selectedTemplate = "#selectedTemplate#", frmfirstParentId = ID, orgFirstParentId = ID, action="copy")>
 	</cfif>

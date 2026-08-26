@@ -110,10 +110,31 @@
 		<cfset newVendorID = 'VEN-'&GetVenNumber.newID>
 	</cfif>
 
-	<cfquery name="InsertNewVendor" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertNewVendor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForInsertNewVendor>
+	<cftry>
+		<cfset application.oLakebase.insertRow("vendor_master", {
+			"vendor_id" = "#newVendorID#",
+			"vendor_name" = "#form.vendor_name#",
+			"address_1" = "#form.address#",
+			"address_2" = "#form.address2#",
+			"city" = "#form.vendor_city#",
+			"state" = "#form.vendor_state#",
+			"zipcode" = "#form.zip_code#",
+			"country_code" = "#form.vendor_country#",
+			"active_code" = "A"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewVendor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewVendor>
+<cfquery name="InsertNewVendor" datasource="#application.datasource#">
 		INSERT INTO Vendor_Master (Vendor_ID, Vendor_Name, Address_1, Address_2, City, State, Zipcode, Country_Code, Active_code)
 		VALUES('#newVendorID#','#form.vendor_name#','#form.address#','#form.address2#','#form.vendor_city#','#form.vendor_state#','#form.zip_code#','#form.vendor_country#','A')
 	</cfquery>
+</cfif>
 
 	<div style="color:green;padding-top:25px;font-size:12px;text-align:center;">
 		Vendor <cfoutput>#form.vendor_name#</cfoutput> is added to system.
@@ -125,7 +146,32 @@
 	</script>
 
 <cfelseif form.saveType eq 'update'>
-	<cfquery name="updateVendorInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateVendorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForupdateVendorInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("vendor_master",
+			{
+				"vendor_master_id" = "eq.#form.vmi#"
+			},
+			{
+				"vendor_name" = "#form.vendor_name#",
+				"address_1" = "#form.address#",
+				"address_2" = "#form.address2#",
+				"city" = "#form.vendor_city#",
+				"state" = "#form.vendor_state#",
+				"zipcode" = "#form.zip_code#",
+				"country_code" = "#form.vendor_country#",
+				"active_code" = "A",
+				"user_updated" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateVendorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateVendorInfo>
+<cfquery name="updateVendorInfo" datasource="#application.datasource#">
 		UPDATE Vendor_Master
 		SET Vendor_Name = '#form.vendor_name#'
 			, Address_1 = '#form.address#'
@@ -138,6 +184,7 @@
 			, User_Updated = 1
 	   WHERE Vendor_Master_ID = '#form.vmi#'
 	</cfquery>
+</cfif>
 	<div style="color:green;padding-top:25px;font-size:12px;text-align:center;">
 		Vendor <cfoutput>"#form.vendor_name#"</cfoutput> is updated in the system.
 	</div>

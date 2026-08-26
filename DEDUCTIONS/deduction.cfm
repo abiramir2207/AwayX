@@ -301,10 +301,27 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 			<cfset  CurrentBroker = Deduction_Info.Broker_ID>
 
 			<cfif appSettings.getDDReassignAnalystWhileChangingPayTo() AND GetCurrentDetail.Analyst_User_ID NEQ GetAnalyst.Analyst_User_ID>
-				<CFQUERY name="LogReassign" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForLogReassign = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_reassign")>
+<cfif useLakebaseForLogReassign>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_reassign", {
+			"deduction_id" = "#Deduction_ID#",
+			"from_analyst" = "#GetCurrentDetail.Analyst_User_ID#",
+			"to_analyst" = "#GetAnalyst.Analyst_User_ID#",
+			"by_analyst" = "#request.AccessStructure.User_ID#",
+			"reassign_triggered_by" = "Triggered by customer reassignment"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForLogReassign = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLogReassign>
+<CFQUERY name="LogReassign" DATASOURCE="#Application.Datasource#">
 				INSERT INTO DD_Reassign (	Deduction_ID,From_Analyst,To_Analyst,By_Analyst,Reassign_Triggered_By )
 				VALUES ('#Deduction_ID#','#GetCurrentDetail.Analyst_User_ID#','#GetAnalyst.Analyst_User_ID#','#request.AccessStructure.User_ID#','Triggered by customer reassignment')
 				</CFQUERY>
+</cfif>
 			</cfif>
 		</cfif>
 	</cfif>
@@ -352,11 +369,29 @@ EDITED:   	11/18/2008 - Brad Lee MMCP/ACI
 			INSERT INTO DD_Broker_Reassign (Deduction_ID,<cfif len(trim(CurrentBroker))>From_Broker_ID,</cfif>To_Broker_ID,Reassigned_By,Latest_Insert)
 			VALUES ('#Deduction_ID#',<cfif len(trim(CurrentBroker))>'#CurrentBroker#',</cfif>'#Broker_List#','#request.AccessStructure.User_ID#',1)
 		</CFQUERY>
-		<CFQUERY name="DDUpdate" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDDUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForDDUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"broker_id" = "#Broker_List#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDDUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDDUpdate>
+<CFQUERY name="DDUpdate" DATASOURCE="#Application.Datasource#">
 			UPDATE Deductions
 			SET Broker_ID = '#Broker_List#'
 			WHERE Deduction_Id = '#Deduction_ID#'
 		</CFQUERY>
+</cfif>
 
 	</cfif>
 

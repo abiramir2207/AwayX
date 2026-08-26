@@ -56,7 +56,40 @@ WHERE State_ID = '#FORM.ADDRESS_STATE#'
 	<CFSET IDGENERATOR_DESTINATIONFIELD = "Company_Main_ID">		
 	<CFINCLUDE TEMPLATE="/common_files/keyGenerator.cfm">
 	
-	<CFQUERY NAME="saveCompany" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForsaveCompany>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bsa_foodservice_brokers", {
+			"active_code" = "A",
+			"address" = "#FORM.ADDRESS#",
+			"address_2" = "#FORM.ADDRESS_2#",
+			"city" = "#FORM.ADDRESS_CITY#",
+			"state" = "#FORM.ADDRESS_STATE#",
+			"zip" = "#FORM.ADDRESS_ZIP#",
+			"broker_csr" = "#FORM.BROKER_CSR#",
+			"e_mail" = "#FORM.BROKER_EMAIL#",
+			"broker_name" = "#FORM.BROKER_NAME#",
+			"line_of_business_id" = "#FORM.LINE_OF_BUSINESS_ID#",
+			"account_exec" = "#FORM.ACCOUNT_EXEC#",
+			"phone_1" = "#FORM.PHONE_1#",
+			"phone_2" = "#FORM.PHONE_2#",
+			"phone_3" = "#FORM.PHONE_3#",
+			"phone_ext" = "#FORM.PHONE_EXT#",
+			"fax_1" = "#FORM.FAX_1#",
+			"fax_2" = "#FORM.FAX_2#",
+			"fax_3" = "#FORM.FAX_3#",
+			"service_region_id" = "#FORM.Region_ID#",
+			"service_zone_id" = "#FORM.Zone_ID#",
+			"service_market_id" = "#Form.MARKET_AREA_ID#",
+			"broker_shard" = "#FORM.BROKER_SHARD#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveCompany>
+<CFQUERY NAME="saveCompany" datasource="#application.datasource#">
 		INSERT INTO	BSA_Foodservice_Brokers
 			(
 				Active_Code,
@@ -108,6 +141,7 @@ WHERE State_ID = '#FORM.ADDRESS_STATE#'
 				'#FORM.BROKER_SHARD#'
 			)
 	</CFQUERY>
+</cfif>
 <CFELSE>
 	<CFQUERY NAME="updateCompany" datasource="#application.datasource#">
 		UPDATE BSA_Foodservice_Brokers

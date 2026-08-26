@@ -618,12 +618,29 @@
 					<CFIF trim(CurrentComponent.Supplied_Amount) NEQ 0 AND len(trim(CurrentComponent.Supplied_Amount)) NEQ 0>
 					<cfswitch expression="#CurrentComponent.Component_Type_ID#">
 						<cfcase value="1"><!--- known component --->
-							<cfquery name="insertComponent" datasource="#Application.Datasource#">
+							<cfset useLakebaseForinsertComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForinsertComponent>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program_lumpsum_component", {
+			"billback_id" = "#Billback.Billback_ID#",
+			"billback_program_id" = "#Billback_Program_ID#",
+			"component_type_id" = "1",
+			"program_lump_sum_id" = "#CurrentComponent.PROGRAM_LUMP_SUM_ID#",
+			"amount" = "#CurrentComponent.SUPPLIED_AMOUNT#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertComponent>
+<cfquery name="insertComponent" datasource="#Application.Datasource#">
 								INSERT INTO Billback_Program_Lumpsum_Component
 								(Billback_ID, Billback_Program_ID,Component_Type_ID,Program_Lump_Sum_ID,Amount)
 								VALUES
 								('#Billback.Billback_ID#', '#Billback_Program_ID#',1,'#CurrentComponent.PROGRAM_LUMP_SUM_ID#','#CurrentComponent.SUPPLIED_AMOUNT#')
 							</cfquery>
+</cfif>
 						</cfcase>
 			
 						<cfcase value="3"><!--- growth component --->

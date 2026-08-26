@@ -99,10 +99,24 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 				</cfquery>
 </cfif>
 			<cfelse>
-				<cfquery name="Insert_Tax_Info" datasource="#application.datasource#">
+				<cfset useLakebaseForInsert_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForInsert_Tax_Info>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_tax_info", {
+			"billback_id" = "#Billback_ID#",
+			"tax_code_1_id" = "#form.Billbacks_Sales_Tax#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Tax_Info>
+<cfquery name="Insert_Tax_Info" datasource="#application.datasource#">
 					INSERT INTO BB_Tax_Info (Billback_ID, Tax_Code_1_ID)
 					VALUES('#Billback_ID#', #form.Billbacks_Sales_Tax#)
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfif>
 		<script>

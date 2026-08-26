@@ -147,7 +147,31 @@ AND RP_Billback_Table.Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 		</cfquery>
 		
 		<!---Insert into Payment Report Summary--->
-		<cfquery name="InsertBBs" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertBBs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_payment_report_summary")>
+<cfif useLakebaseForInsertBBs>
+	<cftry>
+		<cfset application.oLakebase.insertRow("rp_payment_report_summary", {
+			"fiscal_period_start_date" = "#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "#Fiscal_Period_End_Date#",
+			"legacy_ship_to" = "#Legacy_Ship_To#",
+			"shared_ship_to" = "#Shared_Ship_To#",
+			"shared_invoice_number" = "0",
+			"invoice_line_number" = "0",
+			"item_number" = "#Item_Number#",
+			"qbrand_id" = "#QBrand_ID#",
+			"total_bg_dollars" = "#GetDistributor.Dist_Billed_Back#",
+			"total_dist_dollars" = "#GetBuyingGroup.BG_Billed_Back#",
+			"record_type" = "Billback",
+			"upc" = "#UPC#",
+			"buying_group" = "#Buying_Group#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertBBs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertBBs>
+<cfquery name="InsertBBs" datasource="#application.datasource#">
 			INSERT INTO RP_Payment_Report_Summary
 			(
 				Fiscal_Period_Start_Date,
@@ -181,12 +205,29 @@ AND RP_Billback_Table.Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 				#Buying_Group#
 			)
 		</cfquery>
+</cfif>
 	<!---Billback table--->
 	</cfloop>
 	
 	
 	<!---Outputs values for troubleshooting--->
-	<cfquery name="WriteReport" datasource="#application.datasource#">
+	<cfset useLakebaseForWriteReport = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_payment_report_summary")>
+<cfif useLakebaseForWriteReport>
+	<cftry>
+		<cfset WriteReport = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_payment_report_summary", {
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"select" = "fiscal_period_end_date,fiscal_period_start_date,legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,total_bg_dollars,total_dist_dollars,total_corp_dollars,record_type,item_number,upc,buying_group"
+			}), "fiscal_period_end_date,fiscal_period_start_date,legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,total_bg_dollars,total_dist_dollars,total_corp_dollars,record_type,item_number,upc,buying_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForWriteReport = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForWriteReport>
+<cfquery name="WriteReport" datasource="#application.datasource#">
 	SELECT 
 	RP_Payment_Report_Summary.Fiscal_Period_End_Date,
 	RP_Payment_Report_Summary.Fiscal_Period_Start_Date,
@@ -206,6 +247,7 @@ AND RP_Billback_Table.Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 	WHERE Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 	AND Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 	</cfquery>
+</cfif>
 
 	<!---Create flat files--->
 	<cfinclude template="/reportwriter/fiscal_period_reports/report_functions.cfm">

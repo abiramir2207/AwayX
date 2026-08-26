@@ -270,7 +270,21 @@
 
 			<Cfif len(trim(arguments.GLList)) GT 0>
 				<cfloop list="#arguments.GLList#" index="GL_Account_ID">
-				<cfquery name="InsertGLs" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertGLs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_component_mapping")>
+<cfif useLakebaseForInsertGLs>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_component_mapping", {
+			"gl_account_id" = "#GL_Account_ID#",
+			"component_name_id" = "#qGetActiveComps.Program_Lump_Sum_Name_ID#",
+			"discount_type_id" = "3"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertGLs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertGLs>
+<cfquery name="InsertGLs" datasource="#application.datasource#">
 				INSERT INTO GL_Component_Mapping
 				(
 					GL_Account_ID,
@@ -284,6 +298,7 @@
 					3
 				)
 				</cfquery>
+</cfif>
 				</cfloop>
 			</Cfif>
 

@@ -277,7 +277,20 @@
 				SELECT SCOPE_IDENTITY() AS Contract_Products_ID
 		</cfquery>
 
-		<cfquery name="PrgProdData" datasource="#application.datasource#">
+		<cfset useLakebaseForPrgProdData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
+<cfif useLakebaseForPrgProdData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_rebates_product_data", {
+			"program_id" = "#arguments.Contract_Main_ID#",
+			"contract_products_id" = "#CProducts.Contract_Products_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForPrgProdData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPrgProdData>
+<cfquery name="PrgProdData" datasource="#application.datasource#">
 				INSERT INTO program_rebates_product_data(
 					Program_ID
 				, Contract_Products_ID)
@@ -287,8 +300,24 @@
 
 				SELECT SCOPE_IDENTITY() AS Program_Rebates_Product_Data_ID
 		</cfquery>
+</cfif>
 
-		<cfquery name="PrdCompData" datasource="#application.datasource#">
+		<cfset useLakebaseForPrdCompData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_data")>
+<cfif useLakebaseForPrdCompData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_rebates_component_data", {
+			"program_rebates_product_data_id" = "#PrgProdData.Program_Rebates_Product_Data_ID#",
+			"program_rebates_component_id" = "#arguments.Program_Rebates_Component_ID#",
+			"rate" = "#arguments.Product_Rate#",
+			"unit_of_measure_id" = "#arguments.defaultUOM#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForPrdCompData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPrdCompData>
+<cfquery name="PrdCompData" datasource="#application.datasource#">
 			INSERT INTO program_rebates_component_data(
 				Program_Rebates_Product_Data_ID
 			, Program_Rebates_Component_ID
@@ -300,6 +329,7 @@
 			, '#arguments.Product_Rate#'
 			, #arguments.defaultUOM#)
 		</cfquery>
+</cfif>
 	</cffunction>
 
 	<cffunction name="saveRateUom" output="false" access="remote" returntype="any">

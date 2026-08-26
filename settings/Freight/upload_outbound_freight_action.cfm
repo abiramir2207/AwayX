@@ -44,10 +44,24 @@
 		</cfquery>
 </cfif>
 
-		<cfquery name="set_Error_Message" datasource="#application.datasource#">
+		<cfset useLakebaseForset_Error_Message = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("outbound_freight_upload_detail")>
+<cfif useLakebaseForset_Error_Message>
+	<cftry>
+		<cfset application.oLakebase.insertRow("outbound_freight_upload_detail", {
+			"outbound_freight_upload_id" = "#URL.Outbound_Freight_Upload_ID#",
+			"errormessage" = "Reset Upload Manually"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForset_Error_Message = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForset_Error_Message>
+<cfquery name="set_Error_Message" datasource="#application.datasource#">
 		 INSERT INTO Outbound_Freight_Upload_Detail(Outbound_Freight_Upload_ID,ErrorMessage)
 		 VALUES('#URL.Outbound_Freight_Upload_ID#','Reset Upload Manually')
 		</cfquery>
+</cfif>
 
 <cfelse>
 

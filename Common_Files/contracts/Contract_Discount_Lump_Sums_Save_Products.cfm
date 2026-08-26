@@ -539,16 +539,52 @@
 					<cfset Has_Groups = 1 />
 					<cfset Is_Group = 1 />
 
-					<CFQUERY NAME="saveContractProducts" datasource="#application.datasource#">
+					<cfset useLakebaseForsaveContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForsaveContractProducts>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"bsa_foodservice_items_master_id" = "#products#",
+			"contract_main_id" = "#FORM.Program_ID#",
+			"product_type_id" = "3",
+			"product_group_level_id" = "#groupLevel#",
+			"product_group_id" = "#products#",
+			"pricing_level_id" = "#form.Pricing_Level_ID#",
+			"is_group" = "#Is_Group#",
+			"dynamic_static_groups" = "#form.Dynamic_Static_Groups#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveContractProducts>
+<CFQUERY NAME="saveContractProducts" datasource="#application.datasource#">
 						INSERT INTO Contract_Products (BSA_Foodservice_Items_Master_ID, Contract_Main_ID, Product_Type_ID, Product_Group_Level_ID, Product_Group_ID, Pricing_Level_ID, Is_Group, Dynamic_Static_Groups)
 						VALUES 	('#products#', '#FORM.Program_ID#', 3, #groupLevel#, '#products#', '#form.Pricing_Level_ID#', #Is_Group#, #form.Dynamic_Static_Groups#)
 						SELECT SCOPE_IDENTITY() AS Contract_Products_ID
 					</CFQUERY>
+</cfif>
 
-					<CFQUERY NAME="InsertNewProduct" datasource="#application.datasource#">
+					<cfset useLakebaseForInsertNewProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_product_data")>
+<cfif useLakebaseForInsertNewProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_lump_sum_product_data", {
+			"program_lump_sum_id" = "#FORM.Program_Lump_Sum_ID#",
+			"contract_products_id" = "#saveContractProducts.Contract_Products_ID#",
+			"volume" = "#weeklyVolume#",
+			"is_group" = "#Is_Group#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewProduct>
+<CFQUERY NAME="InsertNewProduct" datasource="#application.datasource#">
 						INSERT INTO Program_Lump_Sum_Product_Data(Program_Lump_Sum_ID, Contract_Products_ID, Volume, Is_Group)
 						VALUES	('#FORM.Program_Lump_Sum_ID#', '#saveContractProducts.Contract_Products_ID#', '#weeklyVolume#', #Is_Group#)
 					</CFQUERY>
+</cfif>
 
 					<cfset listofactiveproducts = listAppend(listofactiveproducts, products)>
 				</cfif>

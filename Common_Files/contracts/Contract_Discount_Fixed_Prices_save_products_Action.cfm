@@ -61,12 +61,26 @@ WHERE     (dbo.Contract_Products.Deleted = 0) AND (dbo.Program_Fixed_Price_Produ
 			('#Product_ID#', '#FORM.Program_ID#', 1)
 		</CFQUERY>
 		
-		<CFQUERY NAME="InsertNewProduct" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertNewProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForInsertNewProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_fixed_price_product_data", {
+			"program_id" = "#FORM.Program_ID#",
+			"contract_products_id" = "#saveContractProducts.Contract_Products_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewProduct>
+<CFQUERY NAME="InsertNewProduct" datasource="#application.datasource#">
 			INSERT INTO Program_Fixed_Price_Product_Data
 			(Program_ID, Contract_Products_ID)
 			VALUES
 			('#FORM.Program_ID#', '#saveContractProducts.Contract_Products_ID#')
 		</CFQUERY>
+</cfif>
 	</CFIF>
 </CFLOOP>
 

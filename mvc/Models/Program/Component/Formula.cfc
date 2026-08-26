@@ -206,7 +206,23 @@
 		</cfscript>
 	
 		<cfif id EQ '' AND arguments.Program_Id NEQ 0>
-			<CFQUERY NAME="Insert_Rule_Basic_Info" DATASOURCE="#application.datasource#">
+			<cfset useLakebaseForInsert_Rule_Basic_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForInsert_Rule_Basic_Info>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_formula_pricing_rules", {
+			"program_id" = "#arguments.Program_Id#",
+			"rule_name" = "#rName#",
+			"number_of_comms" = "#arguments.Number_Of_Comms#",
+			"active" = "1",
+			"contract_products_id" = "#arguments.Contract_Products_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Rule_Basic_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Rule_Basic_Info>
+<CFQUERY NAME="Insert_Rule_Basic_Info" DATASOURCE="#application.datasource#">
 				INSERT	INTO	
 						Program_Formula_Pricing_Rules	
 							(
@@ -224,13 +240,33 @@
 								#arguments.Contract_Products_Id#
 							)
 			</CFQUERY>
+</cfif>
 		<CFELSEif id NEQ "" and arguments.Program_Fixed_Component_Id neq "" and arguments.Program_Fixed_Component_Name_Id neq "">
-			<CFQUERY NAME="Update_Rule_Basic_Info" DATASOURCE="#application.datasource#">
+			<cfset useLakebaseForUpdate_Rule_Basic_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForUpdate_Rule_Basic_Info>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_formula_pricing_rule_id" = "eq.#id#"
+			},
+			{
+				"program_fixed_component_id" = "#arguments.Program_Fixed_Component_Id#",
+				"program_fixed_component_name_id" = "#arguments.Program_Fixed_Component_Name_Id#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Rule_Basic_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Rule_Basic_Info>
+<CFQUERY NAME="Update_Rule_Basic_Info" DATASOURCE="#application.datasource#">
 				UPDATE 	Program_Formula_Pricing_Rules
 				SET		Program_Fixed_Component_Id = '#arguments.Program_Fixed_Component_Id#',
 						Program_Fixed_Component_Name_Id = '#arguments.Program_Fixed_Component_Name_Id#'
 				WHERE	Program_Formula_Pricing_Rule_ID = '#id#'
 			</CFQUERY>
+</cfif>
 		
 		</CFIF>
 	</cffunction>

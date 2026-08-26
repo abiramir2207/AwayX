@@ -136,7 +136,26 @@
 					<cfset total	= ArrayLen(result) />
 					
 					<cfloop from="1" to="#total#" index="i" step="1">
-						<cfquery name="qInsertWSResponse" datasource="#Application.Datasource#">
+						<cfset useLakebaseForqInsertWSResponse = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settlement_webservice_response")>
+<cfif useLakebaseForqInsertWSResponse>
+	<cftry>
+		<cfset application.oLakebase.insertRow("settlement_webservice_response", {
+			"settlement_webservice_request_id" = "#arguments.RequestID#",
+			"message_text" = "#result[i].Messagetext.XmlText#",
+			"message_type" = "#result[i].MessageType.XmlText#",
+			"message_for" = "#result[i].MessageFor.XmlText#",
+			"rebate_id" = "#result[i].Rebate_ID.XmlText#",
+			"rebate_ref_id" = "#result[i].Rebate_Ref_ID.XmlText#",
+			"sapcreditmemorequestnumber" = "#result[i].SAPCreditMemoRequestNumber.XmlText#",
+			"sapaccrualamountatsettlement" = "#result[i].SAPCreditMemoRequestNumber.XmlText#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertWSResponse = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertWSResponse>
+<cfquery name="qInsertWSResponse" datasource="#Application.Datasource#">
 							Insert into Settlement_WebService_Response (
 										Settlement_webservice_Request_ID,
 										Message_text,
@@ -158,6 +177,7 @@
 										'#result[i].SAPCreditMemoRequestNumber.XmlText#'
 										)
 						</cfquery>
+</cfif>
 						<cfset respMessage = respMessage&"<br>"&result[i].Messagetext.XmlText />
 						<cfif result[i].MessageType.XmlText eq "E"> <!--- ERP Response.  Status E = Error --->
 							<cfset status = "F" />

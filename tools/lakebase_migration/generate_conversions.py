@@ -52,6 +52,12 @@ UNSAFE_RE = re.compile(
 # Any embedded CFML tag/comment anywhere in the query body means the SQL is
 # built conditionally at runtime - never safe to auto-generate a wrapper for.
 EMBEDDED_CFML_RE = re.compile(r"<cf\w+|<!---", re.IGNORECASE)
+CF_COMMENT_RE = re.compile(r"<!---.*?--->", re.DOTALL)
+
+
+def strip_cf_comments(sql: str) -> str:
+    """CF comments are inert - safe to remove before parsing/dynamic-SQL checks."""
+    return CF_COMMENT_RE.sub(" ", sql)
 
 
 def split_top_level(s: str, sep_word: str) -> list[str]:
@@ -120,8 +126,9 @@ def parse_where_to_filters(where: str):
 
 
 def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
+    sql = strip_cf_comments(sql)
     if EMBEDDED_CFML_RE.search(sql):
-        return None, "query body contains embedded CFML tags/comments (dynamic SQL) - review manually"
+        return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
     top_m = TOP_N_RE.search(sql)
     m = SELECT_RE.search(sql.strip())
     if not m:
@@ -174,8 +181,9 @@ def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
 
 
 def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
+    sql = strip_cf_comments(sql)
     if EMBEDDED_CFML_RE.search(sql):
-        return None, "query body contains embedded CFML tags/comments (dynamic SQL) - review manually"
+        return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
     m = UPDATE_RE.search(sql.strip())
     if not m:
         return None, "UPDATE pattern did not match parser"
@@ -222,6 +230,45 @@ def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     return wrapper, None
 
 
+def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
+    sql = strip_cf_comments(sql)
+    if EMBEDDED_CFML_RE.search(sql):
+        return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
+    m = INSERT_RE.search(sql.strip())
+    if not m:
+        return None, "INSERT pattern did not match parser"
+    table, cols_raw, vals_raw = m.group(1), m.group(2), m.group(3)
+    cols = [c.strip() for c in cols_raw.split(",")]
+    vals = [v.strip() for v in vals_raw.split(",")]
+    if len(cols) != len(vals):
+        return None, "INSERT column/value count mismatch - review manually"
+    if any(UNSAFE_RE.search(v) for v in vals):
+        return None, "INSERT VALUES contain functions/expressions - review manually"
+
+    var_name = f"useLakebaseFor{query_name.replace('.', '_')}"
+    pg_table = table.lower()
+    data = {col_name(c): sql_value_to_cf(v) for c, v in zip(cols, vals)}
+    data_lines = "\n".join(
+        f'\t\t\t"{k}" = javaCast("null",""),' if v is None else f'\t\t\t"{k}" = "{v}",'
+        for k, v in data.items()
+    )
+    wrapper = f'''<cfset {var_name} = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("{pg_table}")>
+<cfif {var_name}>
+\t<cftry>
+\t\t<cfset application.oLakebase.insertRow("{pg_table}", {{
+{data_lines.rstrip(",")}
+\t\t}})>
+\t\t<cfcatch type="any">
+\t\t\t<cfset {var_name} = false>
+\t\t</cfcatch>
+\t</cftry>
+</cfif>
+<cfif NOT {var_name}>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>'''
+    return wrapper, None
+
+
 def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[str]):
     src = root / file_rel
     try:
@@ -243,8 +290,10 @@ def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[st
             wrapper, reason = gen_select_wrapper(qname, sql_stripped)
         elif re.match(r"UPDATE", sql_stripped, re.IGNORECASE):
             wrapper, reason = gen_update_wrapper(qname, sql_stripped)
+        elif re.match(r"INSERT", sql_stripped, re.IGNORECASE):
+            wrapper, reason = gen_insert_wrapper(qname, sql_stripped)
         else:
-            wrapper, reason = None, "INSERT/DELETE/other - review manually"
+            wrapper, reason = None, "DELETE/other - review manually"
 
         if wrapper:
             generated += 1

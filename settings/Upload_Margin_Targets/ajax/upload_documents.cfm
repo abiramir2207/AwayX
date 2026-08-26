@@ -270,7 +270,30 @@
 				AND BSA_Foodservice_Items_Master_ID = '#getBSAID.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
 			<cfelse>
-					<cfquery name="insertItem" datasource="#application.datasource#">
+					<cfset useLakebaseForinsertItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload")>
+<cfif useLakebaseForinsertItem>
+	<cftry>
+		<cfset application.oLakebase.insertRow("margin_targets_upload", {
+			"bsa_foodservice_items_master_id" = "#getBSAID.BSA_Foodservice_Items_Master_ID#",
+			"item" = "#item#",
+			"type_code_desc_id" = "#getBSAID.Type_Code_Desc_ID#",
+			"type_code_desc" = "#getBSAID.Type_Code_Desc#",
+			"type_group_desc_id" = "#getBSAID.Type_Group_Desc_ID#",
+			"type_group_desc" = "#getBSAID.Type_Group_Desc#",
+			"distribution_channel" = "#Distribution_Channel#",
+			"net_sales_target_value" = "#Net_Sales_Target_Value#",
+			"net_sales_floor_value" = "#Net_Sales_Floor_Value#",
+			"gm_target_value" = "#GM_Target_Value#",
+			"gm_floor_value" = "#GM_Floor_Value#",
+			"created_by" = "#request.AccessStructure.user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertItem>
+<cfquery name="insertItem" datasource="#application.datasource#">
 					INSERT INTO Margin_Targets_Upload(
 						BSA_Foodservice_Items_Master_ID
 						, item
@@ -299,6 +322,7 @@
 						, '#request.AccessStructure.user_id#'
 						)
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfloop>
 	</cfif>

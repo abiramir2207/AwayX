@@ -39,12 +39,27 @@
 	</cfquery>
 </cfif>
 	<CFIF checkforexistingprogram.recordcount EQ 0>
-		<cfquery name="insertProgram" datasource="#Application.Datasource#">
+		<cfset useLakebaseForinsertProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForinsertProgram>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program", {
+			"billback_id" = "#FORM.Billback_ID#",
+			"program_id" = "#Program_List#",
+			"bb_program_notes" = "#FORM.Program_Notes#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertProgram>
+<cfquery name="insertProgram" datasource="#Application.Datasource#">
 			INSERT INTO Billback_Program
 			(Billback_ID,Program_ID,BB_Program_Notes)
 			VALUES
 			('#FORM.Billback_ID#','#Program_List#','#FORM.Program_Notes#')
 		</cfquery>
+</cfif>
 	</CFIF>
 <CFELSE>
 	<cfquery name="insertProgram" datasource="#Application.Datasource#">

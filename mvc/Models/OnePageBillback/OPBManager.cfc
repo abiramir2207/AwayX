@@ -920,10 +920,24 @@ AND ( 1= 2
 <cfif len(arguments.stForm.Doc_ID)>
 <cfloop query="getBillbacks">
 	<cfloop list="#arguments.stForm.Doc_ID#" index="Doc_ID" delimiters=",">
-		<cfquery name="insertDocs" datasource="#application.datasource#">
+		<cfset useLakebaseForinsertDocs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForinsertDocs>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"billback_id" = "#getBillbacks.Billback_ID#",
+			"doc_id" = "#Doc_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertDocs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertDocs>
+<cfquery name="insertDocs" datasource="#application.datasource#">
 			INSERT INTO Contract_Attachments (	Billback_ID,	Doc_ID )
 			VALUES	( '#getBillbacks.Billback_ID#',	'#Doc_ID#')
 		</cfquery>
+</cfif>
 	</cfloop>
 </cfloop>
 </cfif>
@@ -1669,10 +1683,25 @@ INTO ##tmp_billbacks
 		<cfset DDMgr = createObject("Component","components.Deduction.DeductionManager").init()>
 		<cfset workItemInfo = DDMgr.getDeduction(arguments.ID)>
 
-		<cfquery name="AutoCloseReason" datasource="#application.datasource#">
+		<cfset useLakebaseForAutoCloseReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_auto_close")>
+<cfif useLakebaseForAutoCloseReason>
+	<cftry>
+		<cfset AutoCloseReason = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_auto_close", {
+				"select" = "dd_reason_code_id"
+			}), "dd_reason_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAutoCloseReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAutoCloseReason>
+<cfquery name="AutoCloseReason" datasource="#application.datasource#">
 			SELECT DD_Reason_Code_ID
 			FROM DD_Auto_Close
 		</cfquery>
+</cfif>
 
 		<cfquery name="GetReasonCodes" datasource="#application.datasource#">
 			SELECT DD_Reason_Code_ID, DD_Reason_Code_Description

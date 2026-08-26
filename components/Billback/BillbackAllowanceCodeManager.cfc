@@ -580,14 +580,32 @@
 						INNER JOIN Program_Growth_Components_Name PGCN ON PGCN.Program_Growth_Components_Name_ID = PGC.Program_Growth_Components_Name_ID
 						WHERE PGC.Program_Growth_Component_ID = '#Program_Growth_Component_ID#' AND PGC.Program_ID = #Program_ID# AND PGC.Deleted = 0
 					</CFQUERY>
-					<CFQUERY NAME="InsGrowthData" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForInsGrowthData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_allowancecode_allocation")>
+<cfif useLakebaseForInsGrowthData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_allowancecode_allocation", {
+			"billback_id" = "#arguments.billbackID#",
+			"program_id" = "#Program_ID#",
+			"product_type_id" = "4",
+			"program_growth_component_id" = "#Program_Growth_Component_ID#",
+			"allowance_code_id" = "#CompAlloCode.Allowance_Code_ID#",
+			"allocated_amount_complevel" = "#Paid_Rate_per_Component#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsGrowthData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsGrowthData>
+<CFQUERY NAME="InsGrowthData" DATASOURCE="#Application.Datasource#">
 						INSERT INTO 
 						BB_AllowanceCode_Allocation 
 								(Billback_ID,Program_ID,Product_Type_ID,Program_Growth_Component_ID,
 								Allowance_Code_ID,Allocated_Amount_CompLevel)
 						VALUES 	('#arguments.billbackID#',#Program_ID#,4,'#Program_Growth_Component_ID#',
 								#CompAlloCode.Allowance_Code_ID#,'#Paid_Rate_per_Component#')
-					</CFQUERY>	
+					</CFQUERY>
+</cfif>	
 					
 					<CFQUERY NAME="InsSummary" DATASOURCE="#Application.Datasource#">
 						INSERT INTO 

@@ -131,7 +131,29 @@
 	<CFSET thisSampleSizeUOM		= evaluate("FORM.Period_UOM_#i#")>
 	<CFSET thisWeight				= evaluate("FORM.Comm_weight_#i#")>
 
-	<CFQUERY NAME="saveNewCommData" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveNewCommData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_comm_data")>
+<cfif useLakebaseForsaveNewCommData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_formula_pricing_rule_comm_data", {
+			"program_id" = "#cryp.value#",
+			"program_formula_pricing_rule_id" = "#Rule_ID#",
+			"comm_count" = "#i#",
+			"exchange" = "#thisExchange#",
+			"symbol" = "#thisSymbol#",
+			"point_in_time" = "#thisPointInTime#",
+			"point_in_time_uom" = "#thisPointInTImeUOM#",
+			"sample_size" = "#thisSampleSize#",
+			"sample_size_uom" = "#thisSampleSizeUOM#",
+			"weight" = "#thisWeight#",
+			"active" = "#FORM.UPDATE#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveNewCommData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveNewCommData>
+<CFQUERY NAME="saveNewCommData" datasource="#application.datasource#">
 		INSERT INTO Program_Formula_Pricing_Rule_Comm_Data
 		(
 			Program_ID,
@@ -161,6 +183,7 @@
 			#FORM.UPDATE#
 		)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 
@@ -199,7 +222,25 @@
 		<CFSET thisAmount = evaluate("FORM.independent_amount_calc#i#_1")>
 		<CFSET thisUOM = evaluate("FORM.independent_amount_uom#i#_1")>
 			<CFIF len(trim(thisDescription)) GT 0 AND len(trim(thisAmount)) GT 0>
-			<CFQUERY NAME="saveOverageData" datasource="#application.datasource#">
+			<cfset useLakebaseForsaveOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
+<cfif useLakebaseForsaveOverageData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_formula_pricing_rule_overage", {
+			"program_formula_pricing_rule_id" = "#FORM.Program_Formula_Pricing_Rule_ID#",
+			"program_id" = "#cryp.value#",
+			"overage_index" = "#i#",
+			"description" = "#thisDescription#",
+			"amount" = "#thisAmount#",
+			"uom" = "#thisUOM#",
+			"active" = "#FORM.UPDATE#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveOverageData>
+<CFQUERY NAME="saveOverageData" datasource="#application.datasource#">
 				INSERT INTO Program_Formula_Pricing_Rule_Overage
 				(
 					Program_Formula_Pricing_Rule_ID,
@@ -221,6 +262,7 @@
 					#FORM.UPDATE#
 				)
 			</CFQUERY>
+</cfif>
 		</CFIF>
 	</CFIF>
 </CFLOOP>

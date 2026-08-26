@@ -93,7 +93,21 @@ WHERE	(dbo.Contract_Main.Contract_Main_ID = #Program_ID#)
 	<CFSET ShowProductsInGroupLevel = 1>							
 </cfif>
 
-	<cfquery name="InsertIntoBillbackProgram" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertIntoBillbackProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForInsertIntoBillbackProgram>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program", {
+			"billback_id" = "#Billback_ID#",
+			"display_product_hierarchy" = "#ShowProductsInGroupLevel#",
+			"program_id" = "#Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoBillbackProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoBillbackProgram>
+<cfquery name="InsertIntoBillbackProgram" datasource="#application.datasource#">
 	INSERT INTO Billback_Program
 	(
 		Billback_ID,
@@ -107,14 +121,33 @@ WHERE	(dbo.Contract_Main.Contract_Main_ID = #Program_ID#)
 		'#Program_ID#'
 	)
 	</cfquery>
+</cfif>
 	
-	<cfquery name="GetBillbackProgramID" datasource="#application.datasource#">
+	<cfset useLakebaseForGetBillbackProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetBillbackProgramID>
+	<cftry>
+		<cfset GetBillbackProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackProgramID>
+<cfquery name="GetBillbackProgramID" datasource="#application.datasource#">
 	Select Billback_Program_ID 
 	FROM Billback_Program
 	WHERE Billback_ID = '#Billback_ID#'
 	AND Program_ID = '#Program_ID#'
 	AND Deleted = 0
 	</cfquery>
+</cfif>
 	<cfset Billback_Program_ID = GetBillbackProgramID.Billback_Program_ID>
 </cfif>
 

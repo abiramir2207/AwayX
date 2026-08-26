@@ -421,12 +421,25 @@
 </cfif>
 
 
+<cfset useLakebaseForsaveLastUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("zone_region_market_last_edited_by")>
+<cfif useLakebaseForsaveLastUpdate>
+	<cftry>
+		<cfset application.oLakebase.insertRow("zone_region_market_last_edited_by", {
+			"users_id" = "#request.AccessStructure.user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveLastUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveLastUpdate>
 <CFQUERY NAME="saveLastUpdate" datasource="#application.datasource#">
 	INSERT INTO Zone_Region_Market_Last_Edited_By
 	(Users_ID)
 	VALUES
 	('#request.AccessStructure.user_id#')
 </CFQUERY>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>

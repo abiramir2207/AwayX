@@ -134,7 +134,20 @@
 			</cfquery>
 			
 			<cfloop list="#arguments.Distributor_List#" index="DistributorID">
-				<cfquery name="InsertDistributors" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_distributors")>
+<cfif useLakebaseForInsertDistributors>
+	<cftry>
+		<cfset application.oLakebase.insertRow("distributor_product_integrity_distributors", {
+			"distributor_product_integrity_rule_id" = "#qGetActiveComps.Distributor_Product_Integrity_Rule_ID#",
+			"distributor_id" = "#DistributorID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertDistributors>
+<cfquery name="InsertDistributors" datasource="#application.datasource#">
 				INSERT INTO Distributor_Product_Integrity_Distributors
 				(
 					Distributor_Product_Integrity_Rule_ID,
@@ -146,10 +159,24 @@
 					'#DistributorID#'
 				)
 				</cfquery>
+</cfif>
 			</cfloop>
 			
 			<cfloop list="#arguments.Product_List#" index="ProductID">
-				<cfquery name="InsertProducts" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_products")>
+<cfif useLakebaseForInsertProducts>
+	<cftry>
+		<cfset application.oLakebase.insertRow("distributor_product_integrity_products", {
+			"distributor_product_integrity_rule_id" = "#qGetActiveComps.Distributor_Product_Integrity_Rule_ID#",
+			"product_id" = "#ProductID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertProducts>
+<cfquery name="InsertProducts" datasource="#application.datasource#">
 				INSERT INTO Distributor_Product_Integrity_Products
 				(
 					Distributor_Product_Integrity_Rule_ID,
@@ -161,6 +188,7 @@
 					'#ProductID#'
 				)
 				</cfquery>
+</cfif>
 			</cfloop>
 		</cfif>
 

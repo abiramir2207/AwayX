@@ -184,7 +184,22 @@
 			<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 						
 			<CFLOOP QUERY="Get_Products">
-				<CFQUERY NAME="Insert_Growth_Details" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForInsert_Growth_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_item_allocation_cal")>
+<cfif useLakebaseForInsert_Growth_Details>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_item_allocation_cal", {
+			"billback_id" = "#Billback_ID#",
+			"program_id" = "#Program_ID#",
+			"product_id" = "#Product_ID#",
+			"approved_amount" = "#Paid_Rate_Per_Product#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Growth_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Growth_Details>
+<CFQUERY NAME="Insert_Growth_Details" DATASOURCE="#Application.Datasource#">
 					INSERT INTO 		GL_Code_Item_Allocation_Cal
 										(	Billback_ID,
 											Program_ID,									
@@ -197,7 +212,8 @@
 											'#Product_ID#',													
 											'#Paid_Rate_Per_Product#'										
 										)	
-				</CFQUERY><!--- Billback_Product_ID,	 '#Billback_Product_ID#',--->
+				</CFQUERY>
+</cfif><!--- Billback_Product_ID,	 '#Billback_Product_ID#',--->
 			</CFLOOP>
 			</CFOUTPUT>		
 		<CFELSE>

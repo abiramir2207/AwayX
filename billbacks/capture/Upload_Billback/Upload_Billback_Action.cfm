@@ -158,7 +158,26 @@
 		</CFQUERY>
 </cfif>
 				
-		<CFQUERY NAME="HeaderInsert" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForHeaderInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_master")>
+<cfif useLakebaseForHeaderInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_upload_master", {
+			"unique_name" = "#Build_File_Name#",
+			"master_file_path" = "#Header_File_Path#",
+			"title" = "#DateStampedBBUpload#",
+			"uploaded_by" = "#request.AccessStructure.User_ID#",
+			"process_status_id" = "2",
+			"latest_upload" = "1",
+			"alive_upload" = "1",
+			"worksheetname" = "#FORM.Header_WS_Name#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForHeaderInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHeaderInsert>
+<CFQUERY NAME="HeaderInsert" DATASOURCE="#Application.Datasource#">
 			INSERT INTO 
 			
 			Billback_Upload_Master	(	Unique_Name,
@@ -179,10 +198,29 @@
 										1,
 										'#FORM.Header_WS_Name#'					)
 		</CFQUERY>
+</cfif>
 		
 		<CFSET Master_ID = HeaderInsert.Billback_Upload_Master_ID>
 			
-		<CFQUERY NAME="DetailInsert" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDetailInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_details")>
+<cfif useLakebaseForDetailInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_upload_details", {
+			"billback_upload_master_id" = "#Master_ID#",
+			"d_unique_name" = "#Detail_Build_File_Name#",
+			"d_file_path" = "#Detail_File_Path#",
+			"d_title" = "#DateStampedBBUpload#",
+			"d_process_status_id" = "2",
+			"latest_upload" = "1",
+			"worksheetname" = "#FORM.Detail_WS_Name#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDetailInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDetailInsert>
+<CFQUERY NAME="DetailInsert" DATASOURCE="#Application.Datasource#">
 			INSERT INTO 
 			
 			Billback_Upload_Details	(	Billback_Upload_Master_ID,
@@ -201,6 +239,7 @@
 										1,
 										'#FORM.Detail_WS_Name#'			)
 		</CFQUERY>
+</cfif>
 		
 		<CFQUERY NAME="DeleteMaster" DATASOURCE="#Application.Datasource#">
 			DELETE FROM Billback_Upload_Master_Data

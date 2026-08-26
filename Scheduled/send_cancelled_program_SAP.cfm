@@ -145,11 +145,29 @@ objXMLHTTP = "";
 	
 			<cfset i = 1>
 				<cfloop condition = "i LESS THAN OR EQUAL TO #size#">
-			 <CFQUERY NAME="insertwebserviceserrordetails" datasource="#application.datasource#">
+			 <cfset useLakebaseForinsertwebserviceserrordetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_error_detail")>
+<cfif useLakebaseForinsertwebserviceserrordetails>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_webservices_error_detail", {
+			"bsa_program_id" = "#component[i].BlackSmithRebateNumber.XmlText#",
+			"pactiv_program_id" = "#component[i].PactivRebateNumber.XmlText#",
+			"message_text" = "#component[i].MessageText.XmlText#",
+			"message_type" = "#component[i].MessageType.XmlText#",
+			"message_for" = "#component[i].MessageFor.XmlText#",
+			"sap_deletion" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertwebserviceserrordetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertwebserviceserrordetails>
+<CFQUERY NAME="insertwebserviceserrordetails" datasource="#application.datasource#">
 				insert into Program_Webservices_Error_Detail
 	(BSA_Program_Id,Pactiv_Program_Id,Message_Text,Message_Type,Message_For,SAP_Deletion)
 	values('#component[i].BlackSmithRebateNumber.XmlText#','#component[i].PactivRebateNumber.XmlText#','#component[i].MessageText.XmlText#','#component[i].MessageType.XmlText#','#component[i].MessageFor.XmlText#',1)
 			</CFQUERY>
+</cfif>
 
 <cfoutput><cfif component[i].MessageType.XmlText EQ "E">
 <div align="center"><font size="2" color="red">

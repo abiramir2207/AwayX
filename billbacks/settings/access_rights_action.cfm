@@ -239,10 +239,24 @@
 			  </cfquery>
 
 			<cfif qCheckCM.recordcount EQ 0>
-				<cfquery name="INSERTBPCM" datasource="#application.datasource#">
+				<cfset useLakebaseForINSERTBPCM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_profile_closing_methods")>
+<cfif useLakebaseForINSERTBPCM>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_profile_closing_methods", {
+			"profile_id" = "#LOOPCOUNT#",
+			"billback_closing_method_id" = "2"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForINSERTBPCM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForINSERTBPCM>
+<cfquery name="INSERTBPCM" datasource="#application.datasource#">
 			         insert into BB_Profile_Closing_Methods (Profile_ID, Billback_Closing_Method_ID)
 			        values (#LOOPCOUNT#, 2)
 			    </cfquery>
+</cfif>
 			</cfif>
 			<!--- AUDITING - CAPTURE CHANGES --->
 			<cfquery name="variables.qUpdated" datasource="#application.datasource#">

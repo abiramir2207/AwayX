@@ -46,11 +46,25 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForSaveDataInsert>
-		<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+		<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_type")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("document_type", {
+			"doc_type" = "#Form.Doc_Type#",
+			"deleted" = "#Form.deleted#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 			INSERT INTO		Document_type
 							(Doc_Type,Deleted)
 			Values			('#Form.Doc_Type#','#Form.deleted#')
 		</CFQUERY>
+</cfif>
 	</cfif>
 	<CFLOCATION URL="create_Document_Type.cfm" ADDTOKEN="No">
 	<CFABORT>

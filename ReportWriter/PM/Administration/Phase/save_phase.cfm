@@ -21,11 +21,26 @@
 
 <CFIF Form.PM_Phase_ID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_phase")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_phase", {
+			"pm_phase_description" = "#Form.PM_Phase_Description#",
+			"pm_phase_definition" = "#Form.PM_Phase_Definition#",
+			"pm_phase_deleted" = "#Form.PM_Phase_Deleted#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		PM_Phase
 						(PM_Phase_Description,PM_Phase_Definition,PM_Phase_Deleted)
 		Values			('#Form.PM_Phase_Description#','#Form.PM_Phase_Definition#',#Form.PM_Phase_Deleted#)
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="create_Phase.cfm" ADDTOKEN="No">
 	<CFABORT>
 <CFELSE>

@@ -1504,7 +1504,22 @@ DEPENDENCIES:
 
 	<cffunction name="getsavedLetters" output="false">
 		<cfargument name="templateId" required="true" type="numeric" />
-			<cfquery name="qgetsavedletters" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetsavedletters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqgetsavedletters>
+	<cftry>
+		<cfset qgetsavedletters = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.templateId#",
+				"select" = "operator_letters_required,distributor_letters_required,distributor_fixed_pricing,distributor_rebate,distributor_lumpsum,distributor_growth,operator_fixed_pricing,operator_rebate,operator_lumpsum,operator_growth,distributor_paysto_opr,distributor_paysto_dis,operator_paysto_opr,operator_paysto_dis,operator_bid_request,distributor_bid_request,include_freight_summary,freight_uom,pre_defined_page_break,distributor_uom,operator_uom,distributor_discount_type,operator_discount_type,distributor_component_name,operator_component_name,distributor_claim_mechanism,operator_claim_mechanism,distributor_payable_to,operator_payable_to,distributor_pricing_type,operator_pricing_type,distributor_payment_frequency,operator_payment_frequency,distributor_gtin,operator_gtin,distributor_product_attribute_1,operator_product_attribute_1,email_letters_on_approval,generate_letters_on_approval,distributor_price_brackets,operator_price_brackets,distributor_open_date,operator_open_date,distributor_date_needed,operator_date_needed,distributor_expected_date,operator_expected_date,distributor_est_value_volume,operator_est_value_volume,distributor_dist_product_codes,distributor_customer_acceptance_block,operator_customer_acceptance_block,distributor_line,operator_line,distributor_notes,operator_notes,letters_accepted_by,operator_fixed_pricing_default,operator_rebate_default,operator_lumpsum_default,operator_bid_request_default,distributor_fixed_pricing_default,distributor_rebate_default,distributor_lumpsum_default,distributor_bid_request_default,operator_rate_change,distributor_rate_change,distributor_display_product_groups,operator_display_product_groups,distributor_show_volume_summary,operator_show_volume_summary,distributor_product_net_weight,operator_product_net_weight,distributor_broker_number,operator_broker_number,distributor_upc,operator_upc,operator_approval_date,distributor_approval_date,operator_generate_excel_file_product_group_members,distributor_generate_excel_file_product_group_members"
+			}), "operator_letters_required,distributor_letters_required,distributor_fixed_pricing,distributor_rebate,distributor_lumpsum,distributor_growth,operator_fixed_pricing,operator_rebate,operator_lumpsum,operator_growth,distributor_paysto_opr,distributor_paysto_dis,operator_paysto_opr,operator_paysto_dis,operator_bid_request,distributor_bid_request,include_freight_summary,freight_uom,pre_defined_page_break,distributor_uom,operator_uom,distributor_discount_type,operator_discount_type,distributor_component_name,operator_component_name,distributor_claim_mechanism,operator_claim_mechanism,distributor_payable_to,operator_payable_to,distributor_pricing_type,operator_pricing_type,distributor_payment_frequency,operator_payment_frequency,distributor_gtin,operator_gtin,distributor_product_attribute_1,operator_product_attribute_1,email_letters_on_approval,generate_letters_on_approval,distributor_price_brackets,operator_price_brackets,distributor_open_date,operator_open_date,distributor_date_needed,operator_date_needed,distributor_expected_date,operator_expected_date,distributor_est_value_volume,operator_est_value_volume,distributor_dist_product_codes,distributor_customer_acceptance_block,operator_customer_acceptance_block,distributor_line,operator_line,distributor_notes,operator_notes,letters_accepted_by,operator_fixed_pricing_default,operator_rebate_default,operator_lumpsum_default,operator_bid_request_default,distributor_fixed_pricing_default,distributor_rebate_default,distributor_lumpsum_default,distributor_bid_request_default,operator_rate_change,distributor_rate_change,distributor_display_product_groups,operator_display_product_groups,distributor_show_volume_summary,operator_show_volume_summary,distributor_product_net_weight,operator_product_net_weight,distributor_broker_number,operator_broker_number,distributor_upc,operator_upc,operator_approval_date,distributor_approval_date,operator_generate_excel_file_product_group_members,distributor_generate_excel_file_product_group_members"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetsavedletters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetsavedletters>
+<cfquery name="qgetsavedletters" datasource="#application.datasource#">
 				select operator_letters_required,distributor_letters_required,
 				Distributor_Fixed_Pricing,Distributor_Rebate,Distributor_Lumpsum,Distributor_Growth,
 				operator_Fixed_Pricing,operator_Rebate,operator_Lumpsum,operator_Growth,
@@ -1576,6 +1591,7 @@ DEPENDENCIES:
 				from  Program_Control_Panel_Options
 				where ProgramControl_Panel_Options_ID = '#arguments.templateId#'
 			</cfquery>
+</cfif>
 		<cfreturn qgetsavedletters />
 	</cffunction>
 
@@ -2560,7 +2576,25 @@ DEPENDENCIES:
     <cfset qryGetGroupTemplateByTemplateID = PGManager.fnGetGroupTemplateByTemplateID(arguments.stForm.TemplateID,arguments.stForm.cusPGGroupType)/>
       <cfloop query="qGetTopLevelGroups">
         <cfset distGroupExistsAlready = 0 />
-          <cfquery name="qryCheckCGTS" datasource="#application.datasource#">
+          <cfset useLakebaseForqryCheckCGTS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_group_template_selection")>
+<cfif useLakebaseForqryCheckCGTS>
+	<cftry>
+		<cfset qryCheckCGTS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_group_template_selection", {
+				"distributor_group_level_id" = "eq.#qGetTopLevelGroups.Distributor_Group_Level_ID#",
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "customer_group_template_selection_id"
+			}), "customer_group_template_selection_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCheckCGTS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCheckCGTS>
+<cfquery name="qryCheckCGTS" datasource="#application.datasource#">
             SELECT  Customer_Group_Template_Selection_ID
             FROM Customer_Group_Template_Selection
             WHERE Distributor_Group_Level_ID = #qGetTopLevelGroups.Distributor_Group_Level_ID#
@@ -2568,6 +2602,7 @@ DEPENDENCIES:
             AND Active = 1
             AND Deleted = 0
           </cfquery>
+</cfif>
         <cfloop query="qryGetGroupTemplateByTemplateID">
 
           <cfif qryGetGroupTemplateByTemplateID.Group_Level_ID EQ qGetTopLevelGroups.Distributor_Group_Level_ID>

@@ -51,7 +51,28 @@
 </cfif>
 </cfif>
 	<!----Create parent component--->
-	<cfquery name="CreateParentComponent" datasource="#application.datasource#">
+	<cfset useLakebaseForCreateParentComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForCreateParentComponent>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_growth_components", {
+			"program_id" = "#Form.Program_ID#",
+			"rate_type" = "#Rate_Type#",
+			"program_growth_component_type_id" = "#Component_Type#",
+			"isparent" = "1",
+			"is_rate" = "1",
+			"component_name" = "#Component_Name#",
+			"program_growth_components_name_id" = "#FORM.Growth_Component_Name_ID#",
+			"component_description" = "#Component_Description#",
+			"component_uom" = "0",
+			"gl_account_id" = "#GL_Account_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreateParentComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreateParentComponent>
+<cfquery name="CreateParentComponent" datasource="#application.datasource#">
 	INSERT INTO Program_Growth_Components
 	(
 		Program_ID,
@@ -79,6 +100,7 @@
 		'#GL_Account_ID#'
 	)
 	</cfquery>
+</cfif>
 	
 	<!------ Start Clause Code ----->
 	<cfset discountTypeId = 4>
@@ -113,11 +135,26 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfinclude template="/get_access_profile.cfm">

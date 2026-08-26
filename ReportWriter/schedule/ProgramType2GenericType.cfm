@@ -74,10 +74,25 @@
 </cfif>
 	<CFIF Check_Existing_Generic_Type_For_This_Report.RecordCount EQ 0>		
 		Insert #rGenericType# for report #Report_Type_ID#<HR>
-		<CFQUERY NAME="Insert_Values" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForInsert_Values = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_structure")>
+<cfif useLakebaseForInsert_Values>
+	<cftry>
+		<cfset application.oLakebase.insertRow("report_structure", {
+			"report_structure" = "rGenericTypes",
+			"report_structure_value" = "#rGenericType#",
+			"report_type_id" = "#Report_Type_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Values = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Values>
+<CFQUERY NAME="Insert_Values" DATASOURCE="#application.datasource#">
 			INSERT INTO Report_Structure(Report_Structure, Report_Structure_Value, Report_Type_ID)
 			VALUES ('rGenericTypes', '#rGenericType#', #Report_Type_ID#)
 		</CFQUERY>
+</cfif>
 	</CFIF>
 </CFOUTPUT>
 

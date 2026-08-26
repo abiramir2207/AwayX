@@ -20,10 +20,23 @@
 
 
 <cfloop query="a">
-	<cfquery name="b" datasource="#Application.Datasource#">
+	<cfset useLakebaseForb = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForb>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_main_aux_data", {
+			"contract_main_id" = "#a.Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForb = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForb>
+<cfquery name="b" datasource="#Application.Datasource#">
 		insert into contract_main_aux_data
 		(Contract_Main_ID)
 		VALUES
 		(#a.Contract_Main_ID#)
 	</cfquery>
+</cfif>
 </CFLOOP>

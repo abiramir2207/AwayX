@@ -474,10 +474,24 @@
 		
 		</cfloop>
 
-		<cfquery name="test" datasource="#application.datasource#">
+		<cfset useLakebaseFortest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("test_flex")>
+<cfif useLakebaseFortest>
+	<cftry>
+		<cfset application.oLakebase.insertRow("test_flex", {
+			"user_id" = "#arguments.BBFilterparams.entitySelect#",
+			"profile_id" = "#arrn[1]#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFortest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFortest>
+<cfquery name="test" datasource="#application.datasource#">
 		INSERT INTO test_flex(user_id, profile_id)
 		values('#arguments.BBFilterparams.entitySelect#','#arrn[1]#')
 		</cfquery>
+</cfif>
 		
 --->	
      		<!---<cfset User_ID = '#request.AccessStructure.user_id#'> --->

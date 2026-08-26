@@ -348,7 +348,21 @@
 					<cfset BBID = GetBBID.Billback_ID>
 					
 					<!--- Insert into billback program table --->
-					<cfquery name="InsertIntoBBProgram" datasource="#application.datasource#">
+					<cfset useLakebaseForInsertIntoBBProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForInsertIntoBBProgram>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program", {
+			"billback_id" = "#BBID#",
+			"program_id" = "#arguments.Contract_Main_ID#",
+			"discount_list" = "3"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoBBProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoBBProgram>
+<cfquery name="InsertIntoBBProgram" datasource="#application.datasource#">
 						INSERT INTO Billback_Program
 						(
 							Billback_ID,
@@ -363,12 +377,29 @@
 						)
 						SELECT Billback_Program_ID FROM Billback_Program WHERE Billback_ID = '#BBID#' AND Program_ID = '#arguments.Contract_Main_ID#'
 					</cfquery>
+</cfif>
 					
 					<cfset BBProgramID = InsertIntoBBProgram.Billback_Program_ID>
 					
 					<!---Insert into lump sum tables --->
 					
-					<cfquery name="InsertBBLSComp" datasource="#application.datasource#">
+					<cfset useLakebaseForInsertBBLSComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForInsertBBLSComp>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program_lumpsum_component", {
+			"billback_id" = "#BBID#",
+			"billback_program_id" = "#BBProgramID#",
+			"component_type_id" = "1",
+			"program_lump_sum_id" = "#GetAutoPayLS.Program_Lump_Sum_ID#",
+			"amount" = "#GetAutoPayLS.Lump_Sum_Amount#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertBBLSComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertBBLSComp>
+<cfquery name="InsertBBLSComp" datasource="#application.datasource#">
 						INSERT INTO Billback_Program_Lumpsum_Component
 						(
 							Billback_ID,
@@ -386,8 +417,29 @@
 							'#GetAutoPayLS.Lump_Sum_Amount#'
 						)
 					</cfquery>
+</cfif>
 										
-					<!--- <cfquery name="InsertBBLumpSum" datasource="#application.datasource#">
+					<!--- <cfset useLakebaseForInsertBBLumpSum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_lump_sums")>
+<cfif useLakebaseForInsertBBLumpSum>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_lump_sums", {
+			"billback_id" = "#BBID#",
+			"program_id" = "#arguments.Contract_Main_ID#",
+			"billback_program_id" = "#BBProgramID#",
+			"lump_sum_deviation" = "0",
+			"ls_expected_amount" = "#GetAutoPayLS.Lump_Sum_Amount#",
+			"ls_approved_amount" = "#GetAutoPayLS.Lump_Sum_Amount#",
+			"ls_billback_amount" = "#GetAutoPayLS.Lump_Sum_Amount#",
+			"ls_paid_amount" = "#GetAutoPayLS.Lump_Sum_Amount#",
+			"calc_ls_amount" = "#GetAutoPayLS.Lump_Sum_Amount#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertBBLumpSum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertBBLumpSum>
+<cfquery name="InsertBBLumpSum" datasource="#application.datasource#">
 					INSERT INTO BB_Lump_Sums
 					(
 						Billback_ID,
@@ -412,7 +464,8 @@
 						'#GetAutoPayLS.Lump_Sum_Amount#',
 						'#GetAutoPayLS.Lump_Sum_Amount#'
 					)
-					</cfquery> --->
+					</cfquery>
+</cfif> --->
 					
 					<!--- Insert into payee table --->
 					<cfset setPayee = BillbackManager.InsertBBPayee(BBID,Payee_ID,PayeeType )>

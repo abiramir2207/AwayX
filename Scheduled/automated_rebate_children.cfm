@@ -167,11 +167,28 @@
 				<cfset i = 1>
 				<cfloop condition = "i LESS THAN OR EQUAL TO #size#">
 					<cfoutput>PROCESSED:: #RebateId#  ::  SAP_ID: #component[i].PactivRebateNumber.XmlText#  :: BA_ID: #component[i].BlackSmithRebateNumber.XmlText# :: #component[i].MessageType.XmlText#</cfoutput><br>
-					<CFQUERY NAME="insertwebserviceserrordetails" datasource="#application.datasource#">
+					<cfset useLakebaseForinsertwebserviceserrordetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_error_detail")>
+<cfif useLakebaseForinsertwebserviceserrordetails>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_webservices_error_detail", {
+			"bsa_program_id" = "#component[i].BlackSmithRebateNumber.XmlText#",
+			"pactiv_program_id" = "#component[i].PactivRebateNumber.XmlText#",
+			"message_text" = "#component[i].MessageText.XmlText#",
+			"message_type" = "#component[i].MessageType.XmlText#",
+			"message_for" = "#component[i].MessageFor.XmlText#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertwebserviceserrordetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertwebserviceserrordetails>
+<CFQUERY NAME="insertwebserviceserrordetails" datasource="#application.datasource#">
 						insert into Program_Webservices_Error_Detail
 						(BSA_Program_Id,Pactiv_Program_Id,Message_Text,Message_Type,Message_For)
 						values('#component[i].BlackSmithRebateNumber.XmlText#','#component[i].PactivRebateNumber.XmlText#','#component[i].MessageText.XmlText#','#component[i].MessageType.XmlText#','#component[i].MessageFor.XmlText#')
 					</CFQUERY>
+</cfif>
 					<!--- SEND ERROR --->
 					<CFIF component[i].MessageType.XmlText EQ 'E'>				                
 					<cfsavecontent variable="errorDataTmp">
@@ -239,11 +256,28 @@
  <!--- <cfcatch type="Any">
       <CFOUTPUT> <div align="center"><font size="2" color="red"><B>
 	 #cfcatch.message# - #cfcatch.detail# Could not connect to SAP, Please try again.</B></font></div></cfoutput>
-	<CFQUERY NAME="insertwebserviceserrordetails3" datasource="#application.datasource#">
+	<cfset useLakebaseForinsertwebserviceserrordetails3 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_error_detail")>
+<cfif useLakebaseForinsertwebserviceserrordetails3>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_webservices_error_detail", {
+			"bsa_program_id" = "#RebateId#",
+			"pactiv_program_id" = "",
+			"message_text" = "#cfcatch.message# - #cfcatch.detail#",
+			"message_type" = "E",
+			"message_for" = "B"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertwebserviceserrordetails3 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertwebserviceserrordetails3>
+<CFQUERY NAME="insertwebserviceserrordetails3" datasource="#application.datasource#">
 			insert into Program_Webservices_Error_Detail
 (BSA_Program_Id,Pactiv_Program_Id,Message_Text,Message_Type,Message_For)
 values('#RebateId#','','#cfcatch.message# - #cfcatch.detail#','E','B')
 		</CFQUERY>
+</cfif>
    </cfcatch>
 
 </cftry>

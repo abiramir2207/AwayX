@@ -47,7 +47,21 @@
 
 	<!------ Insert notes ----->
 	<CFIF Trim(Form.PM_Notes) NEQ "">
-	<CFQUERY NAME="Save_Notes" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Notes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_notes")>
+<cfif useLakebaseForSave_Notes>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_notes", {
+			"pm_item_master_id" = "#Form.RID#",
+			"pm_notes" = "#Form.PM_Notes#",
+			"user_id" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Notes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Notes>
+<CFQUERY NAME="Save_Notes" datasource="#application.datasource#">
 		INSERT	INTO PM_Notes
 				(
 					PM_Item_Master_ID,
@@ -61,6 +75,7 @@
 					'#request.AccessStructure.User_ID#'
 				)
 	</CFQUERY>
+</cfif>
 	</CFIF>
 
 	
@@ -108,7 +123,20 @@
 
 <!--- Save the owners list --->
 <CFLOOP INDEX="item" LIST="#Form.User_Positions_List#" DELIMITERS=",">
-	<CFQUERY NAME="Save_Owners" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Owners = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_owner_position")>
+<cfif useLakebaseForSave_Owners>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_owner_position", {
+			"pm_item_master_id" = "#Form.RID#",
+			"user_positions_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Owners = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Owners>
+<CFQUERY NAME="Save_Owners" datasource="#application.datasource#">
 		INSERT	INTO PM_Owner_Position
 				(
 					PM_Item_Master_ID,
@@ -120,6 +148,7 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 	
 <!--- Delete all programs that belong to this project --->
@@ -134,7 +163,20 @@
 
 <!--- Save the program list --->
 <CFLOOP INDEX="item" LIST="#Form.PM_Contract_Number#" DELIMITERS=",">
-	<CFQUERY NAME="Save_Programs" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Programs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_programs")>
+<cfif useLakebaseForSave_Programs>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_programs", {
+			"pm_item_master_id" = "#Form.RID#",
+			"pm_contract_number" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Programs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Programs>
+<CFQUERY NAME="Save_Programs" datasource="#application.datasource#">
 		INSERT	INTO PM_Programs
 				(
 					PM_Item_Master_ID,
@@ -146,6 +188,7 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 
@@ -158,7 +201,20 @@
 
 <!--- Save the broker list --->
 <CFLOOP INDEX="item" LIST="#Form.QBrand_List#" DELIMITERS=",">
-	<CFQUERY NAME="Save_QBrands" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_QBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_qbrands")>
+<cfif useLakebaseForSave_QBrands>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_qbrands", {
+			"pm_item_master_id" = "#Form.RID#",
+			"q_brand_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_QBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_QBrands>
+<CFQUERY NAME="Save_QBrands" datasource="#application.datasource#">
 		INSERT	INTO PM_Qbrands
 				(
 					PM_Item_Master_ID,
@@ -170,6 +226,7 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 <!--- Delete all brokers that belong to this project --->
@@ -269,6 +326,35 @@
 <!--- Otherwise, create a new record --->
 <CFELSE>
 
+<cfset useLakebaseForCreate_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForCreate_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_item_master", {
+			"pm_priority_id" = "#Form.PM_Priority_ID#",
+			"pm_status_id" = "#Form.PM_Status_ID#",
+			"pm_phase_id" = "#Form.PM_Phase_ID#",
+			"pm_start_date" = "#Form.PM_Start_Date#",
+			"pm_end_date" = "#Form.PM_End_Date#",
+			"pm_acct_project" = "#Form.PM_Acct_Project#",
+			"pm_value_pounds" = "#Form.PM_Value_Pounds#",
+			"pm_value_dollars" = "#Form.PM_Value_Dollars#",
+			"pm_far_id" = "#Form.PM_Far_ID#",
+			"pm_sponsor_id" = "#Form.PM_Sponsor_ID#",
+			"pm_resources" = "#Form.PM_Resources#",
+			"pm_support" = "#Form.PM_Support#",
+			"pm_ext_budget" = "#Form.PM_Ext_Budget#",
+			"pm_cer" = "#Form.PM_CER#",
+			"pm_actual" = "#Form.PM_Actual#",
+			"pm_created_by_id" = "#request.AccessStructure.User_ID#",
+			"pm_modified_by_id" = "#request.AccessStructure.User_ID#",
+			"pm_hide" = "#Form.PM_Hide#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreate_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreate_Data>
 <CFQUERY NAME="Create_Data" datasource="#application.datasource#">
 	INSERT	INTO PM_Item_Master
 				(
@@ -319,6 +405,7 @@
 				#Form.PM_Hide#
 				)
 </CFQUERY>
+</cfif>
 
 
 	<!------ Insert notes ----->
@@ -441,7 +528,20 @@
 </CFLOOP>
 <!--- Save Attached Documents --->
 <CFLOOP INDEX="item" LIST="#Form.Attachment_List#" DELIMITERS=",">
-	<CFQUERY NAME="Attachment_details" datasource="#application.datasource#">
+	<cfset useLakebaseForAttachment_details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForAttachment_details>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"project_id" = "#Create_Data.PM_Item_Master_ID#",
+			"doc_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForAttachment_details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAttachment_details>
+<CFQUERY NAME="Attachment_details" datasource="#application.datasource#">
 		INSERT	INTO Contract_Attachments
 				(					
 					Project_ID,
@@ -453,6 +553,7 @@
 					'#item#'
 				)
 	</CFQUERY>
+</cfif>
 </CFLOOP>
 
 

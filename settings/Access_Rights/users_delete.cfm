@@ -68,12 +68,30 @@
     <cfparam name="user_primaty_position" default = "0">
     <cfparam name="form.planner_rsp_id" default = "">
 
-	<cfquery name="FindProgramstoReassign" datasource="#application.datasource#">
+	<cfset useLakebaseForFindProgramstoReassign = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForFindProgramstoReassign>
+	<cftry>
+		<cfset FindProgramstoReassign = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"responsible_user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0",
+				"planner_id" = "eq.0",
+				"select" = "contract_main_id,contract_number"
+			}), "contract_main_id,contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForFindProgramstoReassign = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForFindProgramstoReassign>
+<cfquery name="FindProgramstoReassign" datasource="#application.datasource#">
         SELECT	Contract_Main_ID, Contract_Number
         FROM 	Contract_Main
         WHERE 	Responsible_User_ID = '#FORM.User_ID#' AND deleted = 0   <!---D28655: Deactivating users prog issue --->
                 AND planner_id = 0
 	</cfquery>
+</cfif>
 
 	<cfquery NAME="checkifanyprimaryPOSITIONS" datasource="#application.datasource#">
 		SELECT DISTINCT user_positions_id
@@ -107,12 +125,29 @@
 		       AND DD_Analyst.Deleted = 0 
 	</cfquery>
 
-	<cfquery name="qPlanners" datasource="#application.datasource#">
+	<cfset useLakebaseForqPlanners = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planners")>
+<cfif useLakebaseForqPlanners>
+	<cftry>
+		<cfset qPlanners = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planners", {
+				"rsp_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPlanners = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPlanners>
+<cfquery name="qPlanners" datasource="#application.datasource#">
 		SELECT TOP 1 *
 		  FROM Planners
 		 WHERE Rsp_ID = '#FORM.User_ID#'
 		       AND Deleted = 0 
 	</cfquery>
+</cfif>
 
 	<cfset useLakebaseForqUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
 <cfif useLakebaseForqUser>
@@ -413,7 +448,23 @@
             <cfloop query="FindProgramstoReassign">
                 <!--- If the progam is unapproved, make an entry to keep track of the sales person responsible --->
                 
-                <cfquery NAME="insProgramOwner" DATASOURCE="#application.datasource#">
+                <cfset useLakebaseForinsProgramOwner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_owner")>
+<cfif useLakebaseForinsProgramOwner>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_owner", {
+			"contract_main_id" = "#FindProgramstoReassign.Contract_Main_ID#",
+			"contract_number" = "#FindProgramstoReassign.Contract_Number#",
+			"responsible_user_id" = "#New_Responsible_User_Id#",
+			"creating_user_position_id" = "#New_User_Position_ID#",
+			"reassigned_by" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsProgramOwner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsProgramOwner>
+<cfquery NAME="insProgramOwner" DATASOURCE="#application.datasource#">
                     INSERT INTO Program_Owner
                                 (Contract_Main_ID,
                                 Contract_Number,
@@ -426,6 +477,7 @@
                                 '#New_User_Position_ID#',
                                 '#request.AccessStructure.User_ID#') 
                 </cfquery>
+</cfif>
             
                 <!---TSF: Label 10784 - When reassining delete all the temp files for the user being deleted. --->
                 <cfif fileexists("#Application.Doc_Path#\Temp_Files\Program\View_Program_#FindProgramstoReassign.Contract_Main_ID#.htm")>

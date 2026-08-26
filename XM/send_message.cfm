@@ -101,6 +101,20 @@
 </CFIF>
 
 
+<cfset useLakebaseForSave_Message = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("xmessenger")>
+<cfif useLakebaseForSave_Message>
+	<cftry>
+		<cfset application.oLakebase.insertRow("xmessenger", {
+			"xm_sender_id" = "#request.AccessStructure.User_ID#",
+			"xm_receiver_id" = "#Form.XM_Receiver_ID#",
+			"xm_message" = "#Form.XM_Message2#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Message = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Message>
 <CFQUERY NAME="Save_Message" datasource="#application.datasource#">
 	Insert into	XMessenger
 			(
@@ -115,6 +129,7 @@
 				'#Form.XM_Message2#'
 			)
 </CFQUERY>
+</cfif>
 
 
 <CFLOCATION URL="iframe.cfm?ID=#Form.XM_Receiver_ID#" ADDTOKEN="No">

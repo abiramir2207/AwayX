@@ -405,83 +405,247 @@ URL on email notifications
 			</cfquery>
 </cfif>
 			<cfloop list="#FORM.User_Business_Segment_ID#" index="thisBusinessSegmentID">
-				<cfquery name="qInsertUserBusinessSegment" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsertUserBusinessSegment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
+<cfif useLakebaseForqInsertUserBusinessSegment>
+	<cftry>
+		<cfset application.oLakebase.insertRow("user_business_segment", {
+			"business_segment_id" = "#thisBusinessSegmentID#",
+			"user_id" = "#FORM.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertUserBusinessSegment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertUserBusinessSegment>
+<cfquery name="qInsertUserBusinessSegment" datasource="#application.datasource#">
 					INSERT INTO User_Business_Segment (Business_Segment_ID, User_ID)
 					VALUES ('#thisBusinessSegmentID#', '#FORM.User_ID#')
 					</cfquery>
+</cfif>
 			</cfloop>
 		<cfelse>
 			<!------ update Class Codes----->
-			<cfquery name="qDeleteUserClassCode" datasource="#application.datasource#">
+			<cfset useLakebaseForqDeleteUserClassCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_class_code")>
+<cfif useLakebaseForqDeleteUserClassCode>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_class_code",
+			{
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteUserClassCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteUserClassCode>
+<cfquery name="qDeleteUserClassCode" datasource="#application.datasource#">
 				UPDATE	User_Class_Code
 				SET		Deleted = 1
 				WHERE	User_ID = '#FORM.User_ID#'
 				AND 	DELETED = 0
 			</cfquery>
+</cfif>
 			<cfloop list="#FORM.User_Class_Code_ID#" index="thisClassCodeID">
-				<cfquery name="qInsertUserClassCode" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsertUserClassCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_class_code")>
+<cfif useLakebaseForqInsertUserClassCode>
+	<cftry>
+		<cfset application.oLakebase.insertRow("user_class_code", {
+			"class_code_id" = "#thisClassCodeID#",
+			"user_id" = "#FORM.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertUserClassCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertUserClassCode>
+<cfquery name="qInsertUserClassCode" datasource="#application.datasource#">
 					INSERT INTO User_Class_Code (Class_Code_ID, User_ID)
 					VALUES ('#thisClassCodeID#', '#FORM.User_ID#')
 					</cfquery>
+</cfif>
 			</cfloop>
 	</cfif>
 	<!---Type codes--->
 	<cfif len(trim(FORM.Type_Code_ID)) GT 0>
 		<!---Update Type Codes--->
-		<cfquery name="UpdateTypeCodes" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateTypeCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_type_code")>
+<cfif useLakebaseForUpdateTypeCodes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_type_code",
+			{
+				"user_id" = "eq.#form.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTypeCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTypeCodes>
+<cfquery name="UpdateTypeCodes" datasource="#application.datasource#">
 			UPDATE 	User_Type_Code
 			SET 	Deleted = 1
 			WHERE 	User_ID = '#form.User_ID#'
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 		<cfloop list="#FORM.Type_Code_ID#" index="ThisTypeCodeID">
-			<cfquery name="InsertTypeCode" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_type_code")>
+<cfif useLakebaseForInsertTypeCode>
+	<cftry>
+		<cfset application.oLakebase.insertRow("user_type_code", {
+			"user_id" = "#FORM.User_ID#",
+			"type_code_id" = "#ThisTypeCodeID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertTypeCode>
+<cfquery name="InsertTypeCode" datasource="#application.datasource#">
 				INSERT INTO User_Type_Code (User_ID, Type_Code_ID)
 				VALUES ('#FORM.User_ID#', '#ThisTypeCodeID#')
 			</cfquery>
+</cfif>
 		</cfloop>
 	</cfif>
 	<!---Type codes--->
 	<cfif len(trim(FORM.Line_of_Business_ID)) GT 0>
 		<!---Update Type Codes--->
-		<cfquery name="UpdateLOB" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateLOB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_lob")>
+<cfif useLakebaseForUpdateLOB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_lob",
+			{
+				"user_id" = "eq.#form.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLOB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLOB>
+<cfquery name="UpdateLOB" datasource="#application.datasource#">
 			UPDATE 	user_LOB
 			SET 	Deleted = 1
 			WHERE 	User_ID = '#form.User_ID#'
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 		<cfloop list="#FORM.Line_of_Business_ID#" index="ThisLOBID">
-			<cfquery name="InsertLOB" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertLOB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_lob")>
+<cfif useLakebaseForInsertLOB>
+	<cftry>
+		<cfset application.oLakebase.insertRow("user_lob", {
+			"user_id" = "#FORM.User_ID#",
+			"line_of_business_id" = "#ThisLOBID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertLOB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertLOB>
+<cfquery name="InsertLOB" datasource="#application.datasource#">
 				INSERT INTO User_LOB (User_ID, Line_Of_Business_ID)
 				VALUES ('#FORM.User_ID#', '#ThisLOBID#')
 			</cfquery>
+</cfif>
 		</cfloop>
 	</cfif>
 	<CFIF getExistingUserPosition.Recordcount EQ 0>
 		<!--- Add NEw Position --->
-		<CFQUERY NAME="addNewPrimaryPositionHolder" datasource="#application.datasource#">
+		<cfset useLakebaseForaddNewPrimaryPositionHolder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForaddNewPrimaryPositionHolder>
+	<cftry>
+		<cfset application.oLakebase.insertRow("user_position_holders", {
+			"user_positions_id" = "#FORM.USER_POSITIONS_ID#",
+			"user_id" = "#FORM.User_ID#",
+			"user_position_type" = "P"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForaddNewPrimaryPositionHolder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForaddNewPrimaryPositionHolder>
+<CFQUERY NAME="addNewPrimaryPositionHolder" datasource="#application.datasource#">
 			INSERT INTO User_Position_Holders
 			(User_Positions_ID, User_ID,User_Position_Type)
 			VALUES
 			('#FORM.USER_POSITIONS_ID#', '#FORM.User_ID#','P')
 			</CFQUERY>
+</cfif>
 			<cfif #ListLen(USER_SEC_POSITIONS_ID,',' )# GT 0>
 				<cfloop list="#USER_SEC_POSITIONS_ID#" index="i">
-					<CFQUERY NAME="addNewSecondaryPositionHolder" datasource="#application.datasource#">
+					<cfset useLakebaseForaddNewSecondaryPositionHolder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForaddNewSecondaryPositionHolder>
+	<cftry>
+		<cfset application.oLakebase.insertRow("user_position_holders", {
+			"user_positions_id" = "#i#",
+			"user_id" = "#FORM.User_ID#",
+			"user_position_type" = "S"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForaddNewSecondaryPositionHolder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForaddNewSecondaryPositionHolder>
+<CFQUERY NAME="addNewSecondaryPositionHolder" datasource="#application.datasource#">
 						INSERT INTO User_Position_Holders
 						(User_Positions_ID, User_ID,User_Position_Type)
 						VALUES
 						('#i#', '#FORM.User_ID#','S')
 						</CFQUERY>
+</cfif>
 				</cfloop>
 		</cfif>
 	<CFELSE>
-		<CFQUERY NAME="UPDATEPRIMARYUSERPOSITION" datasource="#application.datasource#">
+		<cfset useLakebaseForUPDATEPRIMARYUSERPOSITION = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForUPDATEPRIMARYUSERPOSITION>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_position_holders",
+			{
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0",
+				"user_position_type" = "eq.P"
+			},
+			{
+				"user_positions_id" = "#FORM.USER_POSITIONS_ID#",
+				"user_position_type" = "P"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUPDATEPRIMARYUSERPOSITION = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUPDATEPRIMARYUSERPOSITION>
+<CFQUERY NAME="UPDATEPRIMARYUSERPOSITION" datasource="#application.datasource#">
 			UPDATE 	User_Position_Holders
 			SET		User_Positions_ID = '#FORM.USER_POSITIONS_ID#',
 			User_Position_Type = 'P'
 			WHERE 	User_ID = '#FORM.User_ID#' AND DELETED = 0 AND User_Position_Type = 'P'
 			</CFQUERY>
+</cfif>
 			<cfif #ListLen(USER_SEC_POSITIONS_ID,',' )# GT 0>
 				<CFQUERY NAME="UPDATESECONDARYUSERPOSITION_1" datasource="#application.datasource#">
 					UPDATE User_Position_Holders
@@ -503,12 +667,27 @@ URL on email notifications
 						</cfif>
 						<cfloop list="#USER_SEC_POSITIONS_ID#" index="i">
 							<cfif NOT ListFindNoCase(SecValueList, i , ',')>
-								<CFQUERY NAME="UPDATESECONDARYUSERPOSITION_2" datasource="#application.datasource#">
+								<cfset useLakebaseForUPDATESECONDARYUSERPOSITION_2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForUPDATESECONDARYUSERPOSITION_2>
+	<cftry>
+		<cfset application.oLakebase.insertRow("user_position_holders", {
+			"user_positions_id" = "#i#",
+			"user_id" = "#FORM.User_ID#",
+			"user_position_type" = "S"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForUPDATESECONDARYUSERPOSITION_2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUPDATESECONDARYUSERPOSITION_2>
+<CFQUERY NAME="UPDATESECONDARYUSERPOSITION_2" datasource="#application.datasource#">
 									INSERT INTO User_Position_Holders
 									(User_Positions_ID, User_ID,User_Position_Type)
 									VALUES
 									('#i#', '#FORM.User_ID#','S')
 									</CFQUERY>
+</cfif>
 							</cfif>
 					</cfloop>
 				<cfelse>

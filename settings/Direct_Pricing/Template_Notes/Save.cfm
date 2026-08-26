@@ -22,11 +22,25 @@
 
 <CFIF Form.Template_Note_ID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_notes")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("template_notes", {
+			"template_note_desc" = "#Form.Template_Note_Desc#",
+			"created_by" = "#request.AccessStructure.User_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		Template_Notes
 						(Template_Note_Desc,Created_By)
 		Values			('#Form.Template_Note_Desc#','#request.AccessStructure.User_Id#')
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 <CFELSE>
 <!--- Update the record --->
 	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">

@@ -330,10 +330,23 @@
 						<cfset tempxml = tempxml & "<Rate>#getgrouprate.rate#</Rate>">
 					</cfif>
 
-							<!---<CFQUERY NAME="gettestCount" datasource="#application.datasource#">
+							<!---<cfset useLakebaseForgettestCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("test_webservice_milan")>
+<cfif useLakebaseForgettestCount>
+	<cftry>
+		<cfset application.oLakebase.insertRow("test_webservice_milan", {
+			"test_desc" = "test"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForgettestCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgettestCount>
+<CFQUERY NAME="gettestCount" datasource="#application.datasource#">
 							insert into test_Webservice_Milan(test_desc)
 							values('test')
 							</CFQUERY>
+</cfif>
 							--->
 					
 					<cfset tempxml = tempxml & "<MaterialForSettlement>ADMIN_#getDiscountTypeRates.Product_group#</MaterialForSettlement>">
@@ -428,12 +441,28 @@
 							
 							<cfset xmlProgramDoc = ToString(xmlDocument)>
 
-							<CFQUERY NAME="getprogramdetails" datasource="#application.datasource#">
+							<cfset useLakebaseForgetprogramdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForgetprogramdetails>
+	<cftry>
+		<cfset getprogramdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"bsa_program_id" = "eq.#RebateID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetprogramdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetprogramdetails>
+<CFQUERY NAME="getprogramdetails" datasource="#application.datasource#">
 								select * from
 								Program_WebServices_Detail
 								where BSA_Program_Id = '#RebateID#'
 								and deleted = 0
 							</CFQUERY>
+</cfif>
 							
 							<cfset Schedule_Sent = url.is_autorenew />
 							<cfif getprogramdetails.recordcount GT 0>
@@ -492,11 +521,28 @@
 									<cfif isXmlDoc(xmldoc)>
 										<cfset i = 1>
 										<cfloop condition = "i LESS THAN OR EQUAL TO #size#">
-											<CFQUERY NAME="insertwebserviceserrordetails" datasource="#application.datasource#">
+											<cfset useLakebaseForinsertwebserviceserrordetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_error_detail")>
+<cfif useLakebaseForinsertwebserviceserrordetails>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_webservices_error_detail", {
+			"bsa_program_id" = "#component[i].BlackSmithRebateNumber.XmlText#",
+			"pactiv_program_id" = "#component[i].PactivRebateNumber.XmlText#",
+			"message_text" = "#component[i].MessageText.XmlText#",
+			"message_type" = "#component[i].MessageType.XmlText#",
+			"message_for" = "#component[i].MessageFor.XmlText#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertwebserviceserrordetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertwebserviceserrordetails>
+<CFQUERY NAME="insertwebserviceserrordetails" datasource="#application.datasource#">
 											insert into Program_Webservices_Error_Detail
 											(BSA_Program_Id,Pactiv_Program_Id,Message_Text,Message_Type,Message_For)
 											values('#component[i].BlackSmithRebateNumber.XmlText#','#component[i].PactivRebateNumber.XmlText#','#component[i].MessageText.XmlText#','#component[i].MessageType.XmlText#','#component[i].MessageFor.XmlText#')
 											</CFQUERY>
+</cfif>
 											<cfif component[i].MessageType.XmlText EQ "E">
 <cfsavecontent variable="errorDataTmp">
 	Error in Approval Send to SAP:<br>
@@ -514,11 +560,29 @@
 													<!--- If it is settled, flag it as settles and continue...Mimics manual process --->
 													<CFIF component[i].MessageText.XmlText CONTAINS 'was already settled. Only display is possible'>
 															<!--- Update record --->
-															<CFQUERY NAME="updateSettledRecord" datasource="#application.datasource#">
+															<cfset useLakebaseForupdateSettledRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForupdateSettledRecord>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_webservices_detail",
+			{
+				"bsa_program_id" = "eq.#component[i].BlackSmithRebateNumber.XmlText#"
+			},
+			{
+				"program_status" = "D"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateSettledRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateSettledRecord>
+<CFQUERY NAME="updateSettledRecord" datasource="#application.datasource#">
 																UPDATE Program_WebServices_Detail 
 																SET program_status ='D'
 																WHERE BSA_Program_Id ='#component[i].BlackSmithRebateNumber.XmlText#'
 															</CFQUERY>
+</cfif>
 													<CFELSE>
 															<cfset useLakebaseForselectSettledRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
 <cfif useLakebaseForselectSettledRecord>

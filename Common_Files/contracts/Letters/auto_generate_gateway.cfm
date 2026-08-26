@@ -352,7 +352,25 @@ FUNCTIONALITY:
             
             <!--- A.) Tech Note: Letter_Name is still a .htm file til further notice... --->
             
-            <cfquery name="thisTag.qInsertLetterSettings" datasource="#application.datasource#">
+            <cfset useLakebaseForthisTag_qInsertLetterSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForthisTag_qInsertLetterSettings>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_letters", {
+			"program_id" = "#thisTag.contract_main_id#",
+			"letter_type" = "1",
+			"letter_name" = "#thisTag.nameformat#",
+			"letter_path" = "#thisTag.html_file_path#",
+			"operator_name" = "All #application.returned_customer_setting.operator_label_plural#",
+			"distributor_name" = "All #application.returned_customer_setting.distributor_label_plural#",
+			"created_by" = "#thisTag.automatic_letter_generation_user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qInsertLetterSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qInsertLetterSettings>
+<cfquery name="thisTag.qInsertLetterSettings" datasource="#application.datasource#">
               
               INSERT INTO Program_Letters
               (Program_id,Letter_Type,Letter_Name,Letter_Path,operator_name,distributor_name,created_by)
@@ -361,6 +379,7 @@ FUNCTIONALITY:
               'All #application.returned_customer_setting.operator_label_plural#',
               'All #application.returned_customer_setting.distributor_label_plural#','#thisTag.automatic_letter_generation_user_id#')
             </cfquery>
+</cfif>
             
             <!--- D16774 8/14/08 [begin]
             <!--- B.) Let's idemtify our new Program Letter ID... --->

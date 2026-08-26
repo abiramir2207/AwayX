@@ -182,7 +182,20 @@ SELECT	Document_Details.*,
 
 	<CFIF FinalSelection NEQ "">
 	<CFLOOP INDEX="item" LIST="#FinalSelection#" DELIMITERS=",">
-		<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForInsert_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"deduction_id" = "#Form.Deduction_ID#",
+			"doc_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Data>
+<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
 			INSERT	INTO Contract_Attachments
 					(
 						Deduction_ID,
@@ -194,18 +207,34 @@ SELECT	Document_Details.*,
 						'#item#'
 					)
 		</CFQUERY>
+</cfif>
 	</CFLOOP>
 
 
 
 		 <cfif appSettings.getAddTodoOnDocAttach() AND len(isLocked.Analyst_User_ID) GT 0 >
 				<cfset todo_message = "Attachment added to DD## #trim(isLocked.DD_DedID_SP_Number)# on #dateformat(now(),'mm/dd/yyyy')# by #request.AccessStructure.Name_First# #request.AccessStructure.Name_Last#." />
-				<CFQUERY NAME="todo_save" datasource="#application.datasource#">
+				<cfset useLakebaseFortodo_save = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("todolist")>
+<cfif useLakebaseFortodo_save>
+	<cftry>
+		<cfset application.oLakebase.insertRow("todolist", {
+			"users_id" = "#isLocked.Analyst_User_ID#",
+			"listitem_text" = "#todo_message#",
+			"priority_level" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseFortodo_save = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFortodo_save>
+<CFQUERY NAME="todo_save" datasource="#application.datasource#">
 				INSERT INTO todolist
 				(Users_ID,Listitem_Text, Priority_Level)
 				VALUES
 				('#isLocked.Analyst_User_ID#', '#todo_message#', '1')
 				</CFQUERY>
+</cfif>
 		</cfif>
 	</CFIF>
 	<BR><BR><BR><BR><BR>

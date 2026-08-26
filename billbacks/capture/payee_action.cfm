@@ -59,6 +59,26 @@
 </cfquery>
 
 <!--- save the payee type in the bb table --->
+<cfset useLakebaseForsavePayeeType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForsavePayeeType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#form.billback_id#"
+			},
+			{
+				"billback_payee_type_id" = "#form.selected_bb_payee_type#",
+				"deviation_ran_date" = javaCast("null",""),
+				"auto_deviation_on" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsavePayeeType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsavePayeeType>
 <cfquery name="savePayeeType" datasource="#application.datasource#">
 	UPDATE Billback
 	SET Billback_Payee_Type_ID = '#form.selected_bb_payee_type#',
@@ -68,6 +88,7 @@
 		Deviation_Ran_By = NULL 
 	WHERE Billback_ID = '#form.billback_id#'
 </cfquery>
+</cfif>
 
 <cfset billbackAssignmentManager = CreateOBject("component", "components.billback.BillbackAssignmentManager") />
 <cfset billbackSummaryManager = CreateOBject("component", "components.billback.billbackSummaryManager") />
@@ -271,9 +292,24 @@
 	<!---
     	Dev Notes: Anand Rao/24-Jul-13/D38473: EDI -- 'USE DEFAULT PROGRAM IF OPERATOR AND/OR DISTRIBUTOR IS INVALID'
 	--->	
-		<cfquery name="GetBillbackSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForGetBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForGetBillbackSettings>
+	<cftry>
+		<cfset GetBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program,use_dflt_prg"
+			}), "default_program,use_dflt_prg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSettings>
+<cfquery name="GetBillbackSettings" datasource="#application.datasource#">
 			SELECT Default_Program,USE_DFLT_PRG FROM Billback_Settings
-		</cfquery>		
+		</cfquery>
+</cfif>		
 		<cfif len(trim(GetBillbackSettings.Default_Program)) GT 0>
 			<cfset useLakebaseForIsDefaultProgramOnBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
 <cfif useLakebaseForIsDefaultProgramOnBillback>

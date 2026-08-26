@@ -90,7 +90,20 @@
 		<CFSET InsertProgram = QueryNew("Blah")>
 		<cfswitch expression="#Program.Program_Type_ID#">
 				<CFCASE value="1"> <!--- known Program --->
-					<cfquery name="InsertProgram" datasource="#Application.Datasource#">
+					<cfset useLakebaseForInsertProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForInsertProgram>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program", {
+			"billback_id" = "#ExistingBillback.Billback_ID#",
+			"program_id" = "#Program.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertProgram>
+<cfquery name="InsertProgram" datasource="#Application.Datasource#">
 						INSERT INTO Billback_Program
 						(
 							Billback_ID,
@@ -102,6 +115,7 @@
 							'#Program.Program_ID#'
 						)
 					</cfquery>
+</cfif>
 					<CFSET Bilback_Program_Index_To_Add_To_Billback_Returned_Keys = listappend(Bilback_Program_Index_To_Add_To_Billback_Returned_Keys,InsertProgram.Billback_Program_ID)>
 				</CFCASE>
 				<CFCASE value="2"> <!--- unknown Program --->

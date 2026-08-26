@@ -311,7 +311,21 @@
 
 			<Cfif len(trim(arguments.GLList)) GT 0>
 				<cfloop list="#arguments.GLList#" index="GL_Account_ID">
-				<cfquery name="InsertGLs" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertGLs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_component_mapping")>
+<cfif useLakebaseForInsertGLs>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_component_mapping", {
+			"gl_account_id" = "#GL_Account_ID#",
+			"component_name_id" = "#qGetActiveComps.Program_Fixed_Component_Name_ID#",
+			"discount_type_id" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertGLs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertGLs>
+<cfquery name="InsertGLs" datasource="#application.datasource#">
 				INSERT INTO GL_Component_Mapping
 				(
 					GL_Account_ID,
@@ -325,6 +339,7 @@
 					1
 				)
 				</cfquery>
+</cfif>
 				</cfloop>
 			</Cfif>
 
@@ -350,10 +365,25 @@
 
 					<cfif ! arguments.Expected_Rate_Apply_All_Templates>
 						<cfloop list="#arguments.ExpectedRateTemplateList#" index="FirstParentID">
-							<cfquery name="DeleteExpectedRateTemplate" datasource="#application.datasource#">
+							<cfset useLakebaseForDeleteExpectedRateTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_expected_rate_template_list")>
+<cfif useLakebaseForDeleteExpectedRateTemplate>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_expected_rate_template_list", {
+			"discount_type_id" = "1",
+			"program_component_name_id" = "#arguments.compId#",
+			"first_parent_id" = "#FirstParentID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteExpectedRateTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteExpectedRateTemplate>
+<cfquery name="DeleteExpectedRateTemplate" datasource="#application.datasource#">
 								INSERT INTO Program_Expected_Rate_Template_List (Discount_Type_ID, Program_Component_Name_ID, First_Parent_ID)
 								VALUES (1, #arguments.compId#, #FirstParentID#)
 							</cfquery>
+</cfif>
 						</cfloop>
 					</cfif>
 

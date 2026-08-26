@@ -206,12 +206,27 @@
 				<cfset nWeeklyCs = 1 />
 			</cfif>
 		
-			<cfquery name="qInsertVol" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsertVol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqInsertVol>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_product_volume", {
+			"bsa_foodservice_items_master_id" = "#qGetItemMasterID.BSA_Foodservice_Items_Master_ID#",
+			"program_id" = "#renewed_program_id#",
+			"volume_cs" = "#nWeeklyCs#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertVol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertVol>
+<cfquery name="qInsertVol" datasource="#application.datasource#">
 				INSERT INTO	Program_Product_Volume
 					(BSA_Foodservice_Items_Master_ID, Program_ID, Volume_CS)
 				VALUES
 					('#qGetItemMasterID.BSA_Foodservice_Items_Master_ID#', #renewed_program_id#,  '#nWeeklyCs#' )
 			</cfquery>
+</cfif>
 			
 			<cfquery name="qUpdateVolumeLB" datasource="#application.datasource#">
 				UPDATE	Program_Product_Volume

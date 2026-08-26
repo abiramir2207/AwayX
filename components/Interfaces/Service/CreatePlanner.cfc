@@ -1357,7 +1357,26 @@
 		<cfargument name="Batch_Id" type="any" required="true" />
 		<!--- <cfargument name="rData" type="any" required="true" /> --->
 
-		<cfquery name="qUpdateVol" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateVol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("y_deal_ui_upload")>
+<cfif useLakebaseForqUpdateVol>
+	<cftry>
+		<cfset application.oLakebase.updateRows("y_deal_ui_upload",
+			{
+				"batch_id" = "eq.#arguments.Batch_ID#",
+				"record_type" = "eq.M"
+			},
+			{
+				"volume" = "1",
+				"volume_uom" = "CS"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateVol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateVol>
+<cfquery name="qUpdateVol" datasource="#application.datasource#">
 			UPDATE Y_DEAL_UI_UPLOAD
 			    SET Volume = 1, <!---'#arguments.rData.Volume#',--->
 			    	Volume_UOM = 'CS'<!---'#arguments.rData.Volume_UOM#'--->
@@ -1365,6 +1384,7 @@
 			    		Record_Type	= 'M' 
 			    		<!---AND Material = '#arguments.rData.Material#'--->
 		</cfquery>
+</cfif>
 
 		<cfscript>
 			 return;

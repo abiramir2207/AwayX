@@ -2332,7 +2332,23 @@ components.programs.volume.ProgramVolume
 
 		<cfargument name="programId" type="numeric" required="true" default="">
 
-		<cfquery name="qGetProgramProdVol" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramProdVol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqGetProgramProdVol>
+	<cftry>
+		<cfset qGetProgramProdVol = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_volume", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "program_product_volume_id,program_id,bsa_foodservice_items_master_id,volume_lb,volume_cs"
+			}), "program_product_volume_id,program_id,bsa_foodservice_items_master_id,volume_lb,volume_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramProdVol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramProdVol>
+<cfquery name="qGetProgramProdVol" datasource="#application.datasource#">
 			SELECT	Program_Product_Volume_ID,
 					Program_ID,
 					BSA_Foodservice_Items_Master_ID,
@@ -2345,6 +2361,7 @@ components.programs.volume.ProgramVolume
 			WHERE	Deleted = 0
 			AND		Program_ID = #arguments.programId#
 		</cfquery>
+</cfif>
 
 		<cfloop query="qGetProgramProdVol">
 

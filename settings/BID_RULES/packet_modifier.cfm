@@ -453,12 +453,27 @@
 							SAVE BASIC DATA
 --->
 		<cfif len(BidRule.Basic.Bid_Rule_ID) EQ 0>
-			<cfquery name="insertBasicInfo" datasource="#application.datasource#">
+			<cfset useLakebaseForinsertBasicInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rules")>
+<cfif useLakebaseForinsertBasicInfo>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bid_rules", {
+			"bid_rule_name" = "#BidRule.Basic.Bid_Rule_Name#",
+			"bid_rule_desc" = "#BidRule.Basic.Bid_Rule_Desc#",
+			"bid_rule_uom" = "#BidRule.Basic.Bid_Rule_UOM#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertBasicInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertBasicInfo>
+<cfquery name="insertBasicInfo" datasource="#application.datasource#">
 				INSERT INTO Bid_Rules
 				(Bid_Rule_Name,Bid_Rule_Desc,Bid_Rule_UOM)
 				VALUES
 				('#BidRule.Basic.Bid_Rule_Name#','#BidRule.Basic.Bid_Rule_Desc#','#BidRule.Basic.Bid_Rule_UOM#')
 			</cfquery>
+</cfif>
 			<cfset BidRule.Basic.Bid_Rule_ID = insertBasicInfo.Bid_Rule_ID>
 		<cfelse>
 			<cfquery name="insertBasicInfo" datasource="#application.datasource#">
@@ -479,12 +494,28 @@
 			<cfset currentnode = evaluate("BidRule.VolumeGroups.Group_#i#")>
 			<cfif len(currentnode.Bid_Rule_Group_ID) EQ 0>
 				<!--- insert --->
-				<cfquery name="insertGroup" datasource="#application.datasource#">
+				<cfset useLakebaseForinsertGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_volume_groups")>
+<cfif useLakebaseForinsertGroup>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bid_rule_volume_groups", {
+			"bid_rule_id" = "#BidRule.Basic.Bid_Rule_ID#",
+			"group_index" = "#i#",
+			"range_start" = "#currentnode.Range_Start#",
+			"range_end" = "#currentnode.Range_End#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertGroup>
+<cfquery name="insertGroup" datasource="#application.datasource#">
 					INSERT INTO Bid_Rule_Volume_Groups
 					(Bid_Rule_ID,Group_Index,Range_Start,Range_End)
 					VALUES
 					('#BidRule.Basic.Bid_Rule_ID#','#i#','#currentnode.Range_Start#','#currentnode.Range_End#')
 				</cfquery>
+</cfif>
 				<cfset "Bid_Rule_Group_ID_#i#" = insertGroup.Bid_Rule_Group_ID>
 			<cfelse>
 				<!--- update --->
@@ -770,21 +801,48 @@
 			
 			<cfswitch expression="#currentnode.action#">
 				<cfcase value="1"><!--- this is an overall new exception group --->
-					<cfquery name="insertExceptionGroup" datasource="#application.datasource#">
+					<cfset useLakebaseForinsertExceptionGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_groups")>
+<cfif useLakebaseForinsertExceptionGroup>
+	<cftry>
+		<cfset application.oLakebase.insertRow("exception_groups", {
+			"group_name" = "#currentnode.name#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertExceptionGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertExceptionGroup>
+<cfquery name="insertExceptionGroup" datasource="#application.datasource#">
 						INSERT INTO  Exception_Groups
 						(Group_Name)
 						VALUES
 						('#currentnode.name#')
 					</cfquery>
+</cfif>
 					<cfset currentnode.Exception_Group_ID = insertExceptionGroup.Exception_Group_ID>
 					
 					<!--- relate this group to this rule --->
-					<cfquery name="bindGroupToRule" datasource="#application.datasource#">
+					<cfset useLakebaseForbindGroupToRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_exception_groups")>
+<cfif useLakebaseForbindGroupToRule>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bid_rule_exception_groups", {
+			"bid_rule_id" = "#BidRule.Basic.Bid_Rule_ID#",
+			"exception_group_id" = "#currentnode.Exception_Group_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForbindGroupToRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForbindGroupToRule>
+<cfquery name="bindGroupToRule" datasource="#application.datasource#">
 						INSERT INTO Bid_Rule_Exception_Groups
 						(Bid_Rule_ID, Exception_Group_ID)
 						VALUES
 						('#BidRule.Basic.Bid_Rule_ID#', '#currentnode.Exception_Group_ID#')
 					</cfquery>
+</cfif>
 					<cfset currentnode.Bid_Rule_Exception_Group_ID = bindGroupToRule.Bid_Rule_Exception_Group_ID>
 					
 				</cfcase>
@@ -862,24 +920,57 @@
 					<!--- add products to group --->
 					<cfif listlen(AddTheseProducts) GT 0>
 						<cfloop index="x" list="#AddTheseProducts#">
-							<cfquery name="addProductToGroup" datasource="#application.datasource#">
+							<cfset useLakebaseForaddProductToGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_group_products")>
+<cfif useLakebaseForaddProductToGroup>
+	<cftry>
+		<cfset application.oLakebase.insertRow("exception_group_products", {
+			"product_id" = "#x#",
+			"exception_group_id" = "#currentnode.Exception_Group_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForaddProductToGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForaddProductToGroup>
+<cfquery name="addProductToGroup" datasource="#application.datasource#">
 								INSERT INTO Exception_Group_Products
 								(Product_ID, Exception_Group_ID)
 								VALUES
 								('#x#', '#currentnode.Exception_Group_ID#')
 							</cfquery>
+</cfif>
 						</cfloop>
 					</cfif>
 
 					<!--- remove products from group --->
 					<cfif listlen(RemoveTheseProducts) GT 0>
 						<cfloop index="x" list="#RemoveTheseProducts#">
-							<cfquery name="RemoveProductFromGroup" datasource="#application.datasource#">
+							<cfset useLakebaseForRemoveProductFromGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_group_products")>
+<cfif useLakebaseForRemoveProductFromGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("exception_group_products",
+			{
+				"product_id" = "eq.#x#",
+				"exception_group_id" = "eq.#currentnode.Exception_Group_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRemoveProductFromGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRemoveProductFromGroup>
+<cfquery name="RemoveProductFromGroup" datasource="#application.datasource#">
 								UPDATE Exception_Group_Products
 								SET Deleted = 1
 								WHERE Product_ID = '#x#'
 								AND Exception_Group_ID = '#currentnode.Exception_Group_ID#'
 							</cfquery>
+</cfif>
 						</cfloop>
 					</cfif>					
 			</cfif>

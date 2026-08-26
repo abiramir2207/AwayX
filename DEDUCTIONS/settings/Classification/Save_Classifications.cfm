@@ -197,11 +197,28 @@
 	</cfif>
 <CFIF Form.DD_Classification_ID EQ "">
 	<!--- Insert the record --->
-		<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+		<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_classification", {
+			"dd_classification_desc" = "#Form.DD_Classification_Desc#",
+			"deleted" = "#Form.Deleted#",
+			"is_default" = "#Form.Is_Default#",
+			"is_matchcentral_default" = "#Form.IS_MatchCentral_Default#",
+			"gl_account_code" = "#form.gl_account_code#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 			INSERT INTO		DD_Classification	(DD_Classification_Desc,Deleted,Is_Default,IS_MatchCentral_Default,GL_Account_Code)
 			Values ('#Form.DD_Classification_Desc#',#Form.Deleted#,#Form.Is_Default#,#Form.IS_MatchCentral_Default#,'#form.gl_account_code#')
 			SELECT SCOPE_IDENTITY() AS SCOPEIDENTITY
 		</CFQUERY>
+</cfif>
 	<cfloop from="1" to="#listlen(Form.Classification_Analyst_Profile)#" index="A">
 		<CFQUERY NAME="Save_Analyst_Data" datasource="#application.datasource#">
 			INSERT INTO DD_Classification_Analyst(DD_Classification_ID,Analyst_Profiles_ID)

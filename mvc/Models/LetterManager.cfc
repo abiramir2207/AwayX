@@ -1865,7 +1865,28 @@ FUNCTIONALITY:
 		<cfset var var_qInsertLetterSettings 	= queryNew('cols')>
 
 		<!--- MVC: Looks like we can't use cfqueryparam here? --->
-		<cfquery name="var_qDeleteLetterSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForvar_qDeleteLetterSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters_settings")>
+<cfif useLakebaseForvar_qDeleteLetterSettings>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_letters_settings",
+			{
+				"program_id" = "eq.#arguments.program_id#",
+				"deleted" = "eq.0
+			 
+			--",
+				"user_id" = "eq.#arguments.user_id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_qDeleteLetterSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_qDeleteLetterSettings>
+<cfquery name="var_qDeleteLetterSettings" datasource="#application.datasource#">
 			UPDATE 	Program_Letters_Settings
 			set 	deleted = 1
 			where 	Program_id = '#arguments.program_id#'
@@ -1876,6 +1897,7 @@ FUNCTIONALITY:
 			----->
 			-- and 	user_id = '#arguments.user_id#'
 		</cfquery>
+</cfif>
 
 		<!--- MVC: Looks like we can't use cfqueryparam here? --->
 		<cfquery name="var_qInsertLetterSettings" datasource="#application.datasource#">
@@ -1988,11 +2010,27 @@ FUNCTIONALITY:
 
 		<cfset var bLetterEmailLogExist = 0>
 
-		<cfquery name="qgetLetterEmailLogExist" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetLetterEmailLogExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("message_log")>
+<cfif useLakebaseForqgetLetterEmailLogExist>
+	<cftry>
+		<cfset qgetLetterEmailLogExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("message_log", {
+				"app_area_sub_identifier" = "eq.#arguments.program_letter_id#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetLetterEmailLogExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetLetterEmailLogExist>
+<cfquery name="qgetLetterEmailLogExist" datasource="#application.datasource#">
 			SELECT	1
 			FROM	message_log
 			WHERE	App_Area_Sub_Identifier = '#arguments.program_letter_id#'
 		</cfquery>
+</cfif>
 
 		<cfif qgetLetterEmailLogExist.recordcount>
 			<cfset bLetterEmailLogExist = 1>

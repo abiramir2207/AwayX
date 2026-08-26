@@ -32,11 +32,27 @@
 		</CFQUERY>
 </cfif>
 	<CFELSE>
-		<CFQUERY NAME="Insert_Rule_Basic_Info" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForInsert_Rule_Basic_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_rule")>
+<cfif useLakebaseForInsert_Rule_Basic_Info>
+	<cftry>
+		<cfset application.oLakebase.insertRow("formula_pricing_rule", {
+			"rule_name" = "#FORM.Rule_Name#",
+			"number_of_comms" = "#FORM.Number_Of_Comms#",
+			"show_details" = "1",
+			"active" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Rule_Basic_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Rule_Basic_Info>
+<CFQUERY NAME="Insert_Rule_Basic_Info" DATASOURCE="#application.datasource#">
 			INSERT	INTO	
 			Formula_Pricing_Rule	(Rule_Name, Number_Of_Comms, Show_Details, Active)
 			VALUES 			('#FORM.Rule_Name#', #FORM.Number_Of_Comms#, 1, 1)
 		</CFQUERY>
+</cfif>
 		<CFSET Rule_ID=Insert_Rule_Basic_Info.Formula_Pricing_Rule_ID>				
 	</CFIF>
 

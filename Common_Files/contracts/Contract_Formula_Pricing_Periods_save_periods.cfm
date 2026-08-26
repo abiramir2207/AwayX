@@ -43,7 +43,24 @@
 		<CFSET thisEnd  		= evaluate("FORM.PERIOD_ENDING_DATE_#i#")>
 		<CFSET thisRelease  	= evaluate("FORM.PERIOD_RELEASE_DATE_#i#")>
 	
-			<CFQUERY NAME="saveNewPeriod" datasource="#application.datasource#">
+			<cfset useLakebaseForsaveNewPeriod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForsaveNewPeriod>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_formula_pricing_periods", {
+			"program_id" = "#FORM.PROGRAM_ID#",
+			"duration" = "#thisDuration#",
+			"start_date" = "#thisStart#",
+			"end_date" = "#thisEnd#",
+			"release_date" = "#thisRelease#",
+			"active" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveNewPeriod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveNewPeriod>
+<CFQUERY NAME="saveNewPeriod" datasource="#application.datasource#">
 			INSERT INTO Program_Formula_Pricing_Periods
 			(
 				Program_ID,
@@ -63,6 +80,7 @@
 				1
 			)
 		</CFQUERY>
+</cfif>
 	</CFIF>
 </CFLOOP>
 

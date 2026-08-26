@@ -138,7 +138,23 @@
 			<!---otherwise insert a new entry--->
 			<cfelse>
 				
-				<cfquery name="qAddBillbackProductDetail" dataSource="#application.datasource#">
+				<cfset useLakebaseForqAddBillbackProductDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForqAddBillbackProductDetail>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_product_detail", {
+			"billback_product_id" = "#arguments.existingbillbackProductId#",
+			"billback_id" = "#arguments.billbackId#",
+			"bb_product_type_id" = "#qGetExistingProductDetailData.BB_Product_Type_ID#",
+			"bb_rate" = "#qGetExistingProductDetailData.BB_Rate#",
+			"distributor_id_earned" = "#qGetExistingProductDetailData.Distributor_ID_Earned#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddBillbackProductDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddBillbackProductDetail>
+<cfquery name="qAddBillbackProductDetail" dataSource="#application.datasource#">
 				
 					INSERT INTO Billback_Product_Detail
 					(
@@ -157,6 +173,7 @@
 						'#qGetExistingProductDetailData.Distributor_ID_Earned#'
 					)
 				</cfquery>
+</cfif>
 			
 			</cfif>
 		

@@ -78,13 +78,26 @@
 			</CFQUERY>
 			
 			<CFIF Check_Et.recordcount EQ 0>
-				<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForInsert_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_analyst", {
+			"analyst_user_id" = "#Item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Data>
+<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
 					INSERT INTO
 					
 					DD_Analyst 		(	Analyst_User_ID	)
 					
 					VALUES			(	'#Item#'	)
-				</CFQUERY>	
+				</CFQUERY>
+</cfif>	
 			</CFIF>			
 	
 		</CFLOOP>
@@ -174,9 +187,27 @@
 					
 		</CFIF>
 	<CFELSE>
-		<CFQUERY NAME="Delete_All" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDelete_All = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForDelete_All>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_analyst",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_All = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_All>
+<CFQUERY NAME="Delete_All" DATASOURCE="#Application.Datasource#">
 			UPDATE 	DD_Analyst SET 	Deleted = 1	WHERE Deleted = 0	
 		</CFQUERY>
+</cfif>
 		<CFQUERY NAME="update_Ass" DATASOURCE="#Application.Datasource#">
 			UPDATE 	DD_Assignment
 			

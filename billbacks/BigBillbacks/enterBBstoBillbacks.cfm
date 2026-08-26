@@ -158,7 +158,25 @@ AND Deleted = 0
 </cfif>
 
 
-		<cfquery name="InsertBBProgramRebateComps" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertBBProgramRebateComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_rebate_component")>
+<cfif useLakebaseForInsertBBProgramRebateComps>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program_rebate_component", {
+			"billback_id" = "#Billback_ID#",
+			"billback_program_id" = "#BigBillbackSummaryInfo.Program_ID#",
+			"program_rebates_component_name" = "-- contract_main_id
+			'#RebateComponentName.Program_Rebates_Component_Name#'",
+			"program_rebates_component_name_id" = "#RebateComponentName.Program_Rebates_Component_Name_ID#",
+			"program_rebates_component_id" = "#GetComponentID.Program_Rebates_Component_ID#",
+			"checked" = "true"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertBBProgramRebateComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertBBProgramRebateComps>
+<cfquery name="InsertBBProgramRebateComps" datasource="#application.datasource#">
 		INSERT INTO Billback_Program_Rebate_Component
 		(
 			Billback_ID,
@@ -178,6 +196,7 @@ AND Deleted = 0
 			'true'
 		)
 		</cfquery>
+</cfif>
 		<!---Already there or need to insert --->
 		</cfif>
 		</cfloop>
@@ -185,12 +204,29 @@ AND Deleted = 0
 	</cfif>
 	
 <!---Query of products on the program --->
+<cfset useLakebaseForProductsOnProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForProductsOnProgram>
+	<cftry>
+		<cfset ProductsOnProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#BigBillbackSummaryInfo.Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_items_master_id"
+			}), "bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProductsOnProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProductsOnProgram>
 <cfquery name="ProductsOnProgram" datasource="#application.datasource#">
 SELECT DISTINCT BSA_Foodservice_Items_Master_ID
 FROM Contract_Products
 WHERE Contract_Main_ID = '#BigBillbackSummaryInfo.Program_ID#'
 AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfparam name="ProductOnProgram" default="2">
 
@@ -388,7 +424,22 @@ AND Deleted = 0
 		<cfset DiscountList = valuelist(DiscountsForProduct.DiscountTypeID)>
 	</cfif>
 	
-	<cfquery name="InsertIntoTable" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertIntoTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_product_discount")>
+<cfif useLakebaseForInsertIntoTable>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_product_discount", {
+			"discount_list" = "#DiscountList#",
+			"product_id" = "#BigBillbackDetails.Product_ID#",
+			"billback_id" = "#Billback_ID#",
+			"program_id" = "#BigBillbackSummaryInfo.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoTable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoTable>
+<cfquery name="InsertIntoTable" datasource="#application.datasource#">
 	INSERT INTO BB_Product_Discount
 	(
 		Discount_List,
@@ -404,20 +455,51 @@ AND Deleted = 0
 		#BigBillbackSummaryInfo.Program_ID#
 	)
 	</cfquery>
+</cfif>
 
 	
 	<!--- Insert into  Billback_Distributor_List--->
 	<!--- Make sure the distributor isn't already there --->
 	
-	<cfquery name="IsDistributorAlreadyThere" datasource="#application.datasource#">
+	<cfset useLakebaseForIsDistributorAlreadyThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>
+<cfif useLakebaseForIsDistributorAlreadyThere>
+	<cftry>
+		<cfset IsDistributorAlreadyThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor_list", {
+				"billback_id" = "eq.#Billback_ID#",
+				"distributor_id" = "eq.#BigBillbackDetails.Distributor_ID#",
+				"select" = "billback_distributor_list_id"
+			}), "billback_distributor_list_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsDistributorAlreadyThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsDistributorAlreadyThere>
+<cfquery name="IsDistributorAlreadyThere" datasource="#application.datasource#">
 	SELECT Billback_Distributor_List_ID
 	FROM Billback_Distributor_List WHERE
 	Billback_ID = '#Billback_ID#'
 	AND Distributor_ID = '#BigBillbackDetails.Distributor_ID#'
 	</cfquery>
+</cfif>
 	
 	<cfif IsDistributorAlreadyThere.Recordcount EQ 0>
-	<cfquery name="InsertToBillbackDistributorList" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertToBillbackDistributorList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>
+<cfif useLakebaseForInsertToBillbackDistributorList>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_distributor_list", {
+			"billback_id" = "#Billback_ID#",
+			"distributor_id" = "#BigBillbackDetails.Distributor_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertToBillbackDistributorList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertToBillbackDistributorList>
+<cfquery name="InsertToBillbackDistributorList" datasource="#application.datasource#">
 	INSERT INTO Billback_Distributor_List
 	(
 		Billback_ID,
@@ -429,6 +511,7 @@ AND Deleted = 0
 		'#BigBillbackDetails.Distributor_ID#'
 	)
 	</cfquery>
+</cfif>
 	</cfif>
 	
 </cfloop>
@@ -499,12 +582,31 @@ Clean up data for 0 volume --->
 <CFSET LoadBillbackID = Billback_ID>	
 <cfinclude template="/billbacks/capture/load_billback_to_struct.cfm">
 
+<cfset useLakebaseForMarkSummaryAsDone = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("big_billback_summary")>
+<cfif useLakebaseForMarkSummaryAsDone>
+	<cftry>
+		<cfset application.oLakebase.updateRows("big_billback_summary",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"uploaded" = "1",
+				"number_of_records" = "#BigBillbackDetails.Recordcount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForMarkSummaryAsDone = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForMarkSummaryAsDone>
 <cfquery name="MarkSummaryAsDone" datasource="#application.datasource#">
 UPDATE Big_Billback_Summary
 SET Uploaded = 1,
 Number_of_Records = #BigBillbackDetails.Recordcount#
 WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <cfquery name="DeleteDetails" datasource="#application.datasource#">
 DELETE FROM Big_Billback

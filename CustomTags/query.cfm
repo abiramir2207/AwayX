@@ -1,11 +1,24 @@
 <cfif thisTag.ExecutionMode is 'end'>
-	<cfquery name="insertQuery" datasource="#attributes.datasource#">
+	<cfset useLakebaseForinsertQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("thadata")>
+<cfif useLakebaseForinsertQuery>
+	<cftry>
+		<cfset application.oLakebase.insertRow("thadata", {
+			"thadata" = "#thisTag.generatedContent#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertQuery>
+<cfquery name="insertQuery" datasource="#attributes.datasource#">
 		INSERT INTO thadata
 		(thadata)
 		VALUES
 		('#thisTag.generatedContent#')
 		
 	</cfquery>
+</cfif>
 	
 	<cfstoredproc procedure="cf_query" datasource="#attributes.datasource#">
 		<cfprocparam type="In" cfsqltype="CF_SQL_IDSTAMP" dbvarname="@@INPUTVAR_thadata_id" value="#insertQuery.thadata_ID#" null="No">

@@ -102,7 +102,24 @@
 	<!---<cffunction name="setTemplateFilter" output="false" >
 		<cfargument name="TemplateFilter" type="mvc.Models.Template.TemplateFilter" />	
 		
-		<cfquery name="qInsertTemplateFilter" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_filters")>
+<cfif useLakebaseForqInsertTemplateFilter>
+	<cftry>
+		<cfset application.oLakebase.insertRow("template_filters", {
+			"template_id" = "#arguments.TemplateFilter.Template_Id#",
+			"parent_template_id" = "#arguments.TemplateFilter.Parent_Template_Id#",
+			"name" = "#arguments.TemplateFilter.Name#",
+			"description" = "#arguments.TemplateFilter.Desc#",
+			"status" = "#arguments.TemplateFilter.Status#",
+			"created_user_id" = "#arguments.TemplateFilter.CreatedUserId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertTemplateFilter>
+<cfquery name="qInsertTemplateFilter" datasource="#application.datasource#">
 			INSERT INTO Template_Filters (
 				Template_Id,
 				Parent_Template_Id,
@@ -121,6 +138,7 @@
 				)
 				SELECT @@identity as Template_Filters_Id		
 		</cfquery>
+</cfif>
 			
 	</cffunction>--->
 	<cffunction name="saveDB" access="public" output="false">

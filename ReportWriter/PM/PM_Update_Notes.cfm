@@ -68,7 +68,21 @@ function submit_this()
 
 <CFELSE>
 	<CFOUTPUT>
-	<CFQUERY NAME="Update_Notes_Field" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdate_Notes_Field = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_notes")>
+<cfif useLakebaseForUpdate_Notes_Field>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_notes", {
+			"pm_item_master_id" = "#Form.PM_Item_Master_ID#",
+			"pm_notes" = "#Form.Ud_Notes#",
+			"user_id" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Notes_Field = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Notes_Field>
+<CFQUERY NAME="Update_Notes_Field" DATASOURCE="#Application.Datasource#">
 		INSERT	INTO PM_Notes
 				(
 					PM_Item_Master_ID,
@@ -83,6 +97,7 @@ function submit_this()
 				)
 	
 	</CFQUERY>
+</cfif>
 	<CFQUERY NAME="Change_Modi_By" DATASOURCE="#Application.Datasource#">
 		UPDATE 		PM_Item_Master 
 		SET 		PM_Modified_By_ID = '#request.AccessStructure.User_ID#',

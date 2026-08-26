@@ -596,21 +596,48 @@ Description  :  Manager for Planner Program
 </cfif>
 
 			<cfif recordCheck.recordcount EQ 0>
-				<cfquery name="insertRecord" datasource="#application.datasource#">
+				<cfset useLakebaseForinsertRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForinsertRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_main_aux_data", {
+			"contract_main_id" = "#insert.Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertRecord>
+<cfquery name="insertRecord" datasource="#application.datasource#">
 					INSERT INTO Contract_Main_Aux_Data
 						(Contract_Main_ID)
 					VALUES
 						('#insert.Contract_Main_ID#')
 				</cfquery>
+</cfif>
 			</cfif>
 
             <cfif bIsRevision eq 0>
-                <cfquery name="insertProgramBidRequest" datasource="#application.datasource#">
+                <cfset useLakebaseForinsertProgramBidRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForinsertProgramBidRequest>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_bid_request", {
+			"program_id" = "#insert.Contract_Main_ID#",
+			"bid_request_status_id" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertProgramBidRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertProgramBidRequest>
+<cfquery name="insertProgramBidRequest" datasource="#application.datasource#">
                     INSERT INTO Program_Bid_Request
                         (Program_ID, Bid_Request_Status_ID)
                     VALUES
                         ('#insert.Contract_Main_ID#', 1)
                 </cfquery>
+</cfif>
             <cfelse>
                 <cfquery name="copyProgramBidRequest" datasource="#application.datasource#">
                     INSERT INTO Program_Bid_Request
@@ -1266,7 +1293,22 @@ Description  :  Manager for Planner Program
 
 					<cfif local.product_counter eq 1
 							or qPrgTemplate.Lump_Sum_Allocation_Method is "component_product">
-						<cfquery name="qSaveLumpSumPaymentCycle" datasource="#application.datasource#">
+						<cfset useLakebaseForqSaveLumpSumPaymentCycle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForqSaveLumpSumPaymentCycle>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_payment_cycle", {
+			"program_id" = "#New_Contract_Main_ID#",
+			"discount_type_id" = "3",
+			"payment_cycle_id" = "#stData[ "lump_sum_paymentcycle_#local.lump_sum_id#_#local.product_cf_guid#" ]#",
+			"component_id" = "#iLumpSumCompId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveLumpSumPaymentCycle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveLumpSumPaymentCycle>
+<cfquery name="qSaveLumpSumPaymentCycle" datasource="#application.datasource#">
 							INSERT INTO Program_Payment_Cycle
 								(
 									Program_ID,
@@ -1282,6 +1324,7 @@ Description  :  Manager for Planner Program
 									'#iLumpSumCompId#'
 								)
 						</cfquery>
+</cfif>
 					</cfif>
 
                     <cfquery name="qSaveLumpSumContractProducts" datasource="#application.datasource#">
@@ -1678,7 +1721,23 @@ Description  :  Manager for Planner Program
 				<cfset weeklyVolumeLB = weeklyVolumeCS * netWeight />
 			</cfif>
 
-			<cfquery name="qSaveVolume" datasource="#application.datasource#">
+			<cfset useLakebaseForqSaveVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqSaveVolume>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_product_volume", {
+			"bsa_foodservice_items_master_id" = "#iIndx#",
+			"program_id" = "#stData.programId#",
+			"volume_cs" = "#weeklyVolumeCS#",
+			"volume_lb" = "#weeklyVolumeLB#",
+			"is_group" = "#bIsGroup#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveVolume>
+<cfquery name="qSaveVolume" datasource="#application.datasource#">
 				INSERT INTO Program_Product_Volume
 					(
 						BSA_Foodservice_Items_Master_ID,
@@ -1696,6 +1755,7 @@ Description  :  Manager for Planner Program
 						'#bIsGroup#'
 					)
 			</cfquery>
+</cfif>
 		</cfloop>
 
 	</cffunction>

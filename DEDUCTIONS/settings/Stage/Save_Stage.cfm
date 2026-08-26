@@ -148,11 +148,28 @@
 	</cfif>
 <CFIF Form.DD_Stage_ID EQ "">
 	<!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_stage")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_stage", {
+			"dd_stage_description" = "#Form.DD_Stage_Description#",
+			"deleted" = "#Form.Deleted#",
+			"is_default" = "#Form.Is_Default#",
+			"is_auto_reminded" = "#Form.AUTOREMINDER#",
+			"auto_default_days" = "#Form.DD_Stage_Auto_Reminder_Days#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO DD_Stage (DD_Stage_Description,Deleted,Is_Default,Is_Auto_Reminded,Auto_Default_Days)
 		Values ('#Form.DD_Stage_Description#',#Form.Deleted#,#Form.Is_Default#,#Form.AUTOREMINDER#,#Form.DD_Stage_Auto_Reminder_Days#)
 		SELECT SCOPE_IDENTITY() AS SCOPEIDENTITY;
 	</CFQUERY>
+</cfif>
 	<cfloop from="1" to="#listlen(form.Action_Analyst_Profile)#" index="A">
 		<CFQUERY NAME="Save_Analyst_Data" datasource="#application.datasource#">
 			INSERT INTO DD_Action_Analyst(DD_Stage_ID,Analyst_User_ID)

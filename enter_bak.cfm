@@ -125,11 +125,25 @@ Select
 		</CFIF>
 	</CFIF>
 <CFELSE>
-	<CFQUERY NAME="Insert_Session_Status" datasource="#application.datasource#">
+	<cfset useLakebaseForInsert_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
+<cfif useLakebaseForInsert_Session_Status>
+	<cftry>
+		<cfset application.oLakebase.insertRow("session_tracker", {
+			"session_user_id" = "#GetUserData.User_ID#",
+			"session_id" = "#thisSessionID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Session_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Session_Status>
+<CFQUERY NAME="Insert_Session_Status" datasource="#application.datasource#">
 		INSERT	INTO
 		Session_Tracker(Session_User_ID,Session_ID)
 		VALUES('#GetUserData.User_ID#','#thisSessionID#')
 	</CFQUERY>
+</cfif>
 </CFIF>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!-----  End Check login against Session_Tracker ------->
@@ -174,11 +188,29 @@ Select
 
 
 <!--- Set the Login_Status bit in the database --->
+<cfset useLakebaseForSet_Login_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForSet_Login_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#GetUserData.User_ID#"
+			},
+			{
+				"login_status" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSet_Login_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSet_Login_Status>
 <CFQUERY NAME="Set_Login_Status" datasource="#application.datasource#">
 	UPDATE	_Users
 	SET 	Login_Status = 1
 	WHERE	User_ID	=	'#GetUserData.User_ID#'
 </CFQUERY>
+</cfif>
 
 
 

@@ -101,7 +101,23 @@ SET NOCOUNT OFF
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForSaveProductsData>
-	<CFQUERY NAME="Save_Products_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Products_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_action_plan_products")>
+<cfif useLakebaseForSave_Products_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("broker_action_plan_products", {
+			"broker_action_plan_id" = "#Save_Broker_Data.Broker_Action_Plan_ID#",
+			"product_upc" = "#UPC#",
+			"product_week_volume" = "#Form.Product_Week_Volume#",
+			"product_uom" = "#Form.Product_UOM#",
+			"product_purchasing_status" = "#Form.Product_Purchasing_Status#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Products_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Products_Data>
+<CFQUERY NAME="Save_Products_Data" datasource="#application.datasource#">
 		INSERT INTO Broker_Action_Plan_Products
 			(
 				Broker_Action_Plan_ID,
@@ -119,6 +135,7 @@ SET NOCOUNT OFF
 				'#Form.Product_Purchasing_Status#'
 			)
 	</CFQUERY>
+</cfif>
 </cfif>
 
 

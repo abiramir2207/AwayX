@@ -56,12 +56,28 @@ Last Modified On:
 	</cfif>
 	<cfloop index="LoopCount" from="1" to="#arrayLen(arrFirst_Parent_ID)#">
 	      <cfif #Form.Setting_ID# GT 0 >
-		<CFQUERY NAME="InsertTemplateExceptions" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertTemplateExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_template_display")>
+<cfif useLakebaseForInsertTemplateExceptions>
+	<cftry>
+		<cfset application.oLakebase.insertRow("settings_template_display", {
+			"generic_type" = "#Form.Generic_Type#",
+			"excluded_first_parent_id" = "#arrFirst_Parent_ID[LoopCount]#",
+			"setting_id" = "#Form.Setting_ID#",
+			"updated_by" = "#request.AccessStructure.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertTemplateExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertTemplateExceptions>
+<CFQUERY NAME="InsertTemplateExceptions" datasource="#application.datasource#">
 			INSERT INTO Settings_Template_Display
 			(Generic_Type, Excluded_First_Parent_ID,Setting_ID,Updated_By)
 			VALUES
 			('#Form.Generic_Type#', '#arrFirst_Parent_ID[LoopCount]#',#Form.Setting_ID#,'#request.AccessStructure.User_ID#');
 		</CFQUERY>
+</cfif>
 	     <cfelse>
 		<CFQUERY NAME="InsertTemplateExceptions" datasource="#application.datasource#">
 			INSERT INTO Settings_Template_Display

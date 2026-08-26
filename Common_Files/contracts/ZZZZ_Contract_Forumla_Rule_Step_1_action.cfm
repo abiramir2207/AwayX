@@ -27,7 +27,21 @@
 	</CFQUERY>
 </cfif>
 	
-	<CFQUERY NAME="saveNewRule" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveNewRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForsaveNewRule>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_formula_pricing_rules", {
+			"program_id" = "#cryp.value#",
+			"rule_name" = "#FORM.Rule_Name#",
+			"number_of_comms" = "#FORM.Number_Of_Comms#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveNewRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveNewRule>
+<CFQUERY NAME="saveNewRule" datasource="#application.datasource#">
 		INSERT INTO Program_Formula_Pricing_Rules
 		(
 			Program_ID,
@@ -41,6 +55,7 @@
 			'#FORM.Number_Of_Comms#'
 		)
 	</CFQUERY>
+</cfif>
 	<CFSET Rule_ID=saveNewRule.Program_Formula_Pricing_Rule_ID>	
 	<CF_Cryp type="en" key="#request.key#" string="#Rule_ID#">
 	<CFSET Rule_ID=cryp.value>

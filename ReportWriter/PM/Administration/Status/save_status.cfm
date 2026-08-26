@@ -25,11 +25,27 @@
 
 <CFIF Form.PM_Status_ID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_status")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_status", {
+			"pm_status_description" = "#Form.PM_Status_Description#",
+			"pm_status_definition" = "#Form.PM_Status_Definition#",
+			"pm_status_deleted" = "#Form.PM_Status_Deleted#",
+			"pm_updated_userid" = "#request.AccessStructure.User_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		PM_Status
 						(PM_Status_Description,PM_Status_Definition,PM_Status_Deleted,PM_Updated_UserId)
 		Values			('#Form.PM_Status_Description#','#Form.PM_Status_Definition#',#Form.PM_Status_Deleted#,'#request.AccessStructure.User_Id#')
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="create_status.cfm" ADDTOKEN="No">
 	<CFABORT>
 <CFELSE>

@@ -134,7 +134,21 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 <!------<CFIF Get_Active_Products.recordCount LTE 0>		----->
 <CFIF NOT ListFindNoCase(activeProductList,Product_ID,",")>
-	<CFQUERY NAME="saveNewProduct" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveNewProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForsaveNewProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"bsa_foodservice_items_master_id" = "#Product_ID#",
+			"contract_main_id" = "#cryp.value#",
+			"product_type_id" = "5"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveNewProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveNewProduct>
+<CFQUERY NAME="saveNewProduct" datasource="#application.datasource#">
 		INSERT INTO Contract_Products
 		(
 			BSA_Foodservice_Items_Master_ID,
@@ -148,6 +162,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 			5
 		)				
 	</CFQUERY>
+</cfif>
 	<CFSET ThisProductIDFormattedForHTMLFormElementName = Replace(Product_ID,"-","_", "ALL")>
 	<CFQUERY NAME="saveFormulaProduct" datasource="#application.datasource#">
 		INSERT INTO Program_Formula_Pricing_Rule_Products

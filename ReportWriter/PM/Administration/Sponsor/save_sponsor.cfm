@@ -22,7 +22,25 @@
 
 <CFIF Form.PM_Sponsor_ID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_sponsor")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_sponsor", {
+			"pm_sponsor_name_last" = "#Form.PM_Sponsor_Name_Last#",
+			"pm_sponsor_name_first" = "#Form.PM_Sponsor_Name_First#",
+			"pm_sponsor_email" = "#Form.PM_Sponsor_Email#",
+			"pm_sponsor_phone" = "#Form.PM_Sponsor_Phone#",
+			"pm_sponsor_title" = "#Form.PM_Sponsor_Title#",
+			"pm_sponsor_deleted" = "#Form.PM_Sponsor_Deleted#",
+			"pm_updated_userid" = "#request.AccessStructure.User_Id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		PM_Sponsor
 						(
 							PM_Sponsor_Name_Last,
@@ -43,6 +61,7 @@
 							'#request.AccessStructure.User_Id#'
 						)
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="create_Sponsor.cfm" ADDTOKEN="No">
 	<CFABORT>
 <CFELSE>

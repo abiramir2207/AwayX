@@ -177,12 +177,29 @@
 						AND 	Deleted = 0
 					</cfquery>
 					
-					<cfquery name="qAddFixedProductData" datasource="#application.datasource#">
+					<cfset useLakebaseForqAddFixedProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForqAddFixedProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_fixed_price_product_data", {
+			"program_id" = "#renewed_program_id#",
+			"contract_products_id" = "#qAddContractProducts.Contract_Products_ID#",
+			"fixed_price_value" = "#qGetDiscountDataToAdd.Rate#",
+			"unit_of_measure_id" = "#qGetDiscountDataToAdd.UOM#",
+			"program_fixed_component_id" = "#qGetProgramFixedCompID.Program_Fixed_Component_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddFixedProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddFixedProductData>
+<cfquery name="qAddFixedProductData" datasource="#application.datasource#">
 						INSERT INTO Program_Fixed_Price_Product_Data
 							(Program_ID, Contract_Products_ID, Fixed_Price_Value, Unit_Of_Measure_ID, Program_Fixed_Component_ID)
 						VALUES
 							('#renewed_program_id#', '#qAddContractProducts.Contract_Products_ID#', '#qGetDiscountDataToAdd.Rate#', '#qGetDiscountDataToAdd.UOM#', '#qGetProgramFixedCompID.Program_Fixed_Component_ID#')
 					</cfquery>
+</cfif>
 				
 				<!--- if its fixed then add fixed data --->
 				<cfelseif qGetDiscountDataToAdd.Product_Type_ID eq 2>	

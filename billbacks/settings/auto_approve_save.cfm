@@ -95,12 +95,26 @@ or auto approve operator was selected and operator exceptions were added
 
 	<cfloop index="indx" list="#form.Operator_List#">
 		
-		<cfquery name="qAddOperator" datasource="#application.datasource#">
+		<cfset useLakebaseForqAddOperator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_appr_payee_exception")>
+<cfif useLakebaseForqAddOperator>
+	<cftry>
+		<cfset application.oLakebase.insertRow("auto_appr_payee_exception", {
+			"payee_type" = "2",
+			"operator_id" = "#indx#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddOperator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddOperator>
+<cfquery name="qAddOperator" datasource="#application.datasource#">
 			INSERT INTO Auto_Appr_Payee_Exception
 				(Payee_Type, Operator_ID)
 			VALUES
 				(2, #indx#)
 		</cfquery>
+</cfif>
 	
 	</cfloop>
 		

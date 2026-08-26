@@ -29,12 +29,26 @@
 		<CFSET FinalPacketLocationPath = "#WddxPacketLocation#\#Packet_Filename#">
 				
 		
-		<cfquery name="initDBRecord" datasource="#Application.Datasource#">
+		<cfset useLakebaseForinitDBRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("wddx_packet_to_file_map")>
+<cfif useLakebaseForinitDBRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("wddx_packet_to_file_map", {
+			"user_id" = "#request.AccessStructure.User_ID#",
+			"packet_filename" = "#Packet_Filename#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinitDBRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinitDBRecord>
+<cfquery name="initDBRecord" datasource="#Application.Datasource#">
 			INSERT INTO Wddx_Packet_To_File_Map
 			(User_ID,Packet_Filename)
 			VALUES
 			('#request.AccessStructure.User_ID#', '#Packet_Filename#')
 		</cfquery>
+</cfif>
 		
 		<CFSET Packet = StructNew()>
 		<CFSET Packet.Created_On = createodbcdatetime(Now())>
@@ -50,11 +64,29 @@
 	</CFCASE>
 
 	<cfcase value="delete"><!--- delete packet from DB --->
-		<cfquery name="setDeletedBitHigh" datasource="#Application.Datasource#">
+		<cfset useLakebaseForsetDeletedBitHigh = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("wddx_packet_to_file_map")>
+<cfif useLakebaseForsetDeletedBitHigh>
+	<cftry>
+		<cfset application.oLakebase.updateRows("wddx_packet_to_file_map",
+			{
+				"wddx_packet_to_file_map_id" = "eq.#Supplied_Wddx_Packet_To_File_Map_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetDeletedBitHigh = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetDeletedBitHigh>
+<cfquery name="setDeletedBitHigh" datasource="#Application.Datasource#">
 			UPDATE Wddx_Packet_To_File_Map
 			SET Deleted = 1
 			WHERE Wddx_Packet_To_File_Map_ID = '#Supplied_Wddx_Packet_To_File_Map_ID#'
 		</cfquery>
+</cfif>
 	</cfcase>
 
 	<cfcase value="read"><!--- read packet--->

@@ -111,7 +111,22 @@
 
 	</cfscript>
 
-	<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,ezbutton_enter_beyond_max_rates,ezbutton_default_show_item_rates,ez_contract_id,source,source_required,source_type,source_type_required,date_source_received,date_source_received_required,ezbutton_on,discount_rebate_max_rate_on"
+			}), "first_parent_id,ezbutton_enter_beyond_max_rates,ezbutton_default_show_item_rates,ez_contract_id,source,source_required,source_type,source_type_required,date_source_received,date_source_received_required,ezbutton_on,discount_rebate_max_rate_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT First_parent_ID
 			,EzButton_Enter_Beyond_Max_Rates<!--- D40141: restore 6.2 logic in 7.1.  Use EZ_button_settings.cfm to  set this property :: D28783: Release 7 EZ Button Max Rate. Allow users to enter beyond max rate always --->
 			,EzButton_Default_Show_ITem_Rates
@@ -126,6 +141,7 @@
 		FROM Program_Control_Panel_Options
 		WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
 	</cfquery>
+</cfif>
 
 	<!---set the sessionFile param--->
 	<cfif not isDefined("Form.sessionFile")>
@@ -190,7 +206,26 @@
   <cfif (GetSettings.isDominant EQ 1)>
 	<cfset Latest_EZ_Contract_ID = GetSettings.EZ_Contract_Id />
   <cfelse>
-	<cfquery name="qryGetLatestTemplate" datasource="#application.datasource#">
+	<cfset useLakebaseForqryGetLatestTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryGetLatestTemplate>
+	<cftry>
+		<cfset qryGetLatestTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#GetSettings.First_Parent_ID#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1",
+				"select" = "ez_contract_id"
+			}), "ez_contract_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetLatestTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetLatestTemplate>
+<cfquery name="qryGetLatestTemplate" datasource="#application.datasource#">
 			SELECT TOP 1 EZ_Contract_ID
 			FROM Program_Control_Panel_Options
 			WHERE First_Parent_ID = #GetSettings.First_Parent_ID#
@@ -198,6 +233,7 @@
 			and deleted = 0
 			ORDER BY ProgramControl_Panel_Options_ID desc
 	</cfquery>
+</cfif>
 	<cfset Latest_EZ_Contract_ID = qryGetLatestTemplate.EZ_Contract_ID />
   </cfif>
 

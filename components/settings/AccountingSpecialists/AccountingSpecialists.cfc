@@ -92,7 +92,20 @@
 		</cfquery>
 </cfif>
 		
-		<cfquery name="qInsertPaymentTypeProcessor" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertPaymentTypeProcessor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type_payment_processor")>
+<cfif useLakebaseForqInsertPaymentTypeProcessor>
+	<cftry>
+		<cfset application.oLakebase.insertRow("payment_type_payment_processor", {
+			"user_id" = "#arguments.userId#",
+			"payment_type_id" = "#arguments.paymentTypeId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertPaymentTypeProcessor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertPaymentTypeProcessor>
+<cfquery name="qInsertPaymentTypeProcessor" datasource="#application.datasource#">
 		
 			INSERT INTO Payment_Type_Payment_Processor
 				(User_ID, Payment_Type_ID)
@@ -100,6 +113,7 @@
 				('#arguments.userId#', #arguments.paymentTypeId#)
 
 		</cfquery>
+</cfif>
 
 		
    	</cffunction>
@@ -110,11 +124,29 @@
 		<cfargument name="lProfileId" required="false" default="" />
 		
 		<!---set deleted to 1 for all records--->
-		<cfquery name="qUpdate" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_specialist_profile_access")>
+<cfif useLakebaseForqUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("accounting_specialist_profile_access",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdate>
+<cfquery name="qUpdate" datasource="#application.datasource#">
 			UPDATE	Accounting_Specialist_Profile_Access
 			SET		Deleted = 1
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 			
 		<!---loop over the list of profile id's and insert for each profile--->
 		<cfloop index="profIndx" list="#arguments.lProfileId#">
@@ -136,11 +168,27 @@
 	<cffunction name="getProfileAccessList" output="false">
 		
 		<!---get all profiles restrict list--->
-		<cfquery name="qGetProfileList" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProfileList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_specialist_profile_access")>
+<cfif useLakebaseForqGetProfileList>
+	<cftry>
+		<cfset qGetProfileList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_specialist_profile_access", {
+				"deleted" = "eq.0",
+				"select" = "profiles_id"
+			}), "profiles_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfileList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfileList>
+<cfquery name="qGetProfileList" datasource="#application.datasource#">
 			SELECT 	Profiles_ID
 			FROM	Accounting_Specialist_Profile_Access
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn ValueList(qGetProfileList.Profiles_ID) />
 		

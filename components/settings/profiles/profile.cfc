@@ -473,7 +473,19 @@
 			<cfset new_Profiles_ID = insertProfile.Profiles_ID>
 
 			<!---
-			<cfquery name="InsertProfileSetting" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertProfileSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForInsertProfileSetting>
+	<cftry>
+		<cfset application.oLakebase.insertRow("profiles_settings", {
+			"profiles_id" = "#insertProfile.Profiles_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertProfileSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertProfileSetting>
+<cfquery name="InsertProfileSetting" datasource="#application.datasource#">
 				INSERT INTO Profiles_Settings
 				(
 					Profiles_ID
@@ -482,7 +494,8 @@
 				(
 					#insertProfile.Profiles_ID#
 				)
-			</cfquery> --->
+			</cfquery>
+</cfif> --->
 
 			<!------
 			Program Templates may have access permissions for new profiles being added
@@ -623,10 +636,25 @@
 
 		<cffunction name="getProfileLockStatus" output="false" hint="Return Lock Status">
 			<!--- Query for Lock Status' (by design all current profiles should have the same value) --->
-			<cfquery name="qGetProfileLockStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetProfileLockStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForqGetProfileLockStatus>
+	<cftry>
+		<cfset qGetProfileLockStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles_settings", {
+				"select" = "is_locked,locked_by_user_id,lock_date"
+			}), "is_locked,locked_by_user_id,lock_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfileLockStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfileLockStatus>
+<cfquery name="qGetProfileLockStatus" datasource="#application.datasource#">
 				select distinct Is_Locked, Locked_By_User_ID, Lock_Date
 				from Profiles_Settings
 			</cfquery>
+</cfif>
 
 			<cfreturn qGetProfileLockStatus />
 		</cffunction>
@@ -822,7 +850,21 @@
 			</cfquery>
 			<cfif GetLSApprovalAmount.recordcount GT 0>
 				<cfloop query="GetLSApprovalAmount">
-					<cfquery name="EnterLSApprovalAmount" datasource="#application.datasource#">
+					<cfset useLakebaseForEnterLSApprovalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>
+<cfif useLakebaseForEnterLSApprovalAmount>
+	<cftry>
+		<cfset application.oLakebase.insertRow("profile_ls_approval", {
+			"program_lump_sum_name_id" = "#Program_Lump_Sum_Name_ID#",
+			"profiles_id" = "#new_Profiles_ID#",
+			"approval_amount" = "#Approval_Amount#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForEnterLSApprovalAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEnterLSApprovalAmount>
+<cfquery name="EnterLSApprovalAmount" datasource="#application.datasource#">
 						INSERT INTO Profile_LS_Approval
 						(
 							Program_Lump_Sum_Name_ID,
@@ -836,19 +878,51 @@
 							'#Approval_Amount#'
 						)
 					</cfquery>
+</cfif>
 				</cfloop>
 			</cfif>
 		</cfif>
 
-		<cfquery name="GetMarginGroupApprovalAmount" datasource="#application.datasource#">
+		<cfset useLakebaseForGetMarginGroupApprovalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForGetMarginGroupApprovalAmount>
+	<cftry>
+		<cfset GetMarginGroupApprovalAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"deleted" = "eq.0",
+				"profile_id" = "eq.#arguments.Copy_Profile_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMarginGroupApprovalAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMarginGroupApprovalAmount>
+<cfquery name="GetMarginGroupApprovalAmount" datasource="#application.datasource#">
 				Select *
 				from Margin_Group_Profile_Approval_Margins
 				where Deleted = 0
 				and Profile_ID =  '#arguments.Copy_Profile_ID#'
 		</cfquery>
+</cfif>
 		<cfif GetMarginGroupApprovalAmount.recordcount GT 0>
 				<cfloop query="GetMarginGroupApprovalAmount">
-					<cfquery name="EnterGetMarginGroupApprovalAmount" datasource="#application.datasource#">
+					<cfset useLakebaseForEnterGetMarginGroupApprovalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForEnterGetMarginGroupApprovalAmount>
+	<cftry>
+		<cfset application.oLakebase.insertRow("margin_group_profile_approval_margins", {
+			"group_id" = "#Group_ID#",
+			"profile_id" = "#new_Profiles_ID#",
+			"amount" = "#Amount#",
+			"approval_method" = "#Approval_Method#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForEnterGetMarginGroupApprovalAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEnterGetMarginGroupApprovalAmount>
+<cfquery name="EnterGetMarginGroupApprovalAmount" datasource="#application.datasource#">
 						INSERT INTO Margin_Group_Profile_Approval_Margins
 						(
 							Group_ID,
@@ -864,17 +938,51 @@
 							'#Approval_Method#'
 						)
 					</cfquery>
+</cfif>
 				</cfloop>
 		</cfif>
-		<cfquery name="GetGroupApprovalRights" datasource="#application.datasource#">
+		<cfset useLakebaseForGetGroupApprovalRights = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_approval_rights")>
+<cfif useLakebaseForGetGroupApprovalRights>
+	<cftry>
+		<cfset GetGroupApprovalRights = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_approval_rights", {
+				"deleted" = "eq.0",
+				"user_profile_id" = "eq.#arguments.Copy_Profile_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetGroupApprovalRights = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetGroupApprovalRights>
+<cfquery name="GetGroupApprovalRights" datasource="#application.datasource#">
 				Select *
 				from Group_Approval_Rights
 				where Deleted = 0
 				and User_Profile_ID =  '#arguments.Copy_Profile_ID#'
 		</cfquery>
+</cfif>
 		<cfif GetGroupApprovalRights.recordcount GT 0>
 				<cfloop query="GetGroupApprovalRights">
-					<cfquery name="EnterGetGroupApprovalRights" datasource="#application.datasource#">
+					<cfset useLakebaseForEnterGetGroupApprovalRights = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_approval_rights")>
+<cfif useLakebaseForEnterGetGroupApprovalRights>
+	<cftry>
+		<cfset application.oLakebase.insertRow("group_approval_rights", {
+			"user_profile_id" = "#new_Profiles_ID#",
+			"group_id" = "#Group_ID#",
+			"group_type" = "#Group_type#",
+			"group_id_approval" = "#Group_ID_Approval#",
+			"group_id_margin" = "#Group_ID_Margin#",
+			"group_id_spend_dollar" = "#Group_ID_Spend_Dollar#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForEnterGetGroupApprovalRights = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEnterGetGroupApprovalRights>
+<cfquery name="EnterGetGroupApprovalRights" datasource="#application.datasource#">
 						INSERT INTO Group_Approval_Rights
 						(
 							User_Profile_Id,
@@ -894,20 +1002,50 @@
 							'#Group_ID_Spend_Dollar#'
 						)
 					</cfquery>
+</cfif>
 				</cfloop>
 		</cfif>
 
 		<!--- Operating Group --->
 		<cfif appSettings.getOperatingGroupOn()>
-			<cfquery name="GetOperatingGroupProfileMap" datasource="#application.datasource#">
+			<cfset useLakebaseForGetOperatingGroupProfileMap = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operating_group_profile_map")>
+<cfif useLakebaseForGetOperatingGroupProfileMap>
+	<cftry>
+		<cfset GetOperatingGroupProfileMap = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operating_group_profile_map", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#arguments.Copy_Profile_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatingGroupProfileMap = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatingGroupProfileMap>
+<cfquery name="GetOperatingGroupProfileMap" datasource="#application.datasource#">
 				Select *
 				from Operating_Group_Profile_Map
 				where Deleted = 0
 				and Profiles_ID =  '#arguments.Copy_Profile_ID#'
 			</cfquery>
+</cfif>
 			<cfif GetOperatingGroupProfileMap.recordcount GT 0>
 			<cfloop query="GetOperatingGroupProfileMap">
-				<cfquery name="EnterOperatingGroupProfileMap" datasource="#application.datasource#">
+				<cfset useLakebaseForEnterOperatingGroupProfileMap = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operating_group_profile_map")>
+<cfif useLakebaseForEnterOperatingGroupProfileMap>
+	<cftry>
+		<cfset application.oLakebase.insertRow("operating_group_profile_map", {
+			"operating_group_id" = "#Operating_Group_ID#",
+			"profiles_id" = "#new_Profiles_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForEnterOperatingGroupProfileMap = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEnterOperatingGroupProfileMap>
+<cfquery name="EnterOperatingGroupProfileMap" datasource="#application.datasource#">
 					INSERT INTO Operating_Group_Profile_Map
 					(
 						Operating_Group_ID,
@@ -919,21 +1057,51 @@
 						'#new_Profiles_ID#'
 					)
 				</cfquery>
+</cfif>
 			</cfloop>
 			</cfif>
 		</cfif>
 
 		<!------ Post Approval Status ----->
 		<cfif appSettings.getPgmPostApprovalStatus()>
-			<cfquery name="GetProfilePostApprovalStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForGetProfilePostApprovalStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_post_approval_status")>
+<cfif useLakebaseForGetProfilePostApprovalStatus>
+	<cftry>
+		<cfset GetProfilePostApprovalStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_post_approval_status", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#arguments.Copy_Profile_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProfilePostApprovalStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProfilePostApprovalStatus>
+<cfquery name="GetProfilePostApprovalStatus" datasource="#application.datasource#">
 				Select *
 				from Profile_Post_Approval_Status
 				where Deleted = 0
 				and Profiles_ID =  '#arguments.Copy_Profile_ID#'
 			</cfquery>
+</cfif>
 			<cfif GetProfilePostApprovalStatus.recordcount GT 0>
 				<cfloop query="GetProfilePostApprovalStatus" >
-					<cfquery name="EnterProfilePostApprovalStatus" datasource="#application.datasource#">
+					<cfset useLakebaseForEnterProfilePostApprovalStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_post_approval_status")>
+<cfif useLakebaseForEnterProfilePostApprovalStatus>
+	<cftry>
+		<cfset application.oLakebase.insertRow("profile_post_approval_status", {
+			"program_post_approval_status_id" = "#Program_Post_Approval_Status_ID#",
+			"profiles_id" = "#new_Profiles_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForEnterProfilePostApprovalStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEnterProfilePostApprovalStatus>
+<cfquery name="EnterProfilePostApprovalStatus" datasource="#application.datasource#">
 						INSERT INTO Profile_Post_Approval_Status
 						(
 							Program_Post_Approval_Status_ID,
@@ -945,6 +1113,7 @@
 							'#new_Profiles_ID#'
 						)
 					</cfquery>
+</cfif>
 				</cfloop>
 
 			</cfif>
@@ -952,9 +1121,22 @@
 		<!--- deductions --->
 		<!--- <cfif application.deductionLinksAvailable> --->
 		<cfif application.appSettingsGet.getDeduction_Module()>
-			<cfquery name="InsertDeductionsProfilesSettings" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
+<cfif useLakebaseForInsertDeductionsProfilesSettings>
+	<cftry>
+		<cfset application.oLakebase.insertRow("deductions_profiles_settings", {
+			"profiles_id" = "#new_Profiles_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertDeductionsProfilesSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertDeductionsProfilesSettings>
+<cfquery name="InsertDeductionsProfilesSettings" datasource="#application.datasource#">
 				INSERT INTO Deductions_Profiles_Settings (Profiles_ID) VALUES ('#new_Profiles_ID#')
 			</cfquery>
+</cfif>
 			<cfquery name="getDeductionsProfilesSettingsCol" datasource="#application.datasource#">
 					SELECT COLUMN_NAME as DDProfilesSettings
 					FROM INFORMATION_SCHEMA.columns
@@ -997,7 +1179,21 @@
 </cfif>
 			<cfif GetCustomertypeValues.recordcount GT 0>
 				<cfloop query="GetCustomertypeValues" >
-					<cfquery name="EnterGetOperatingGroupProfileMap" datasource="#application.datasource#">
+					<cfset useLakebaseForEnterGetOperatingGroupProfileMap = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_customer_type_settings")>
+<cfif useLakebaseForEnterGetOperatingGroupProfileMap>
+	<cftry>
+		<cfset application.oLakebase.insertRow("profile_customer_type_settings", {
+			"profiles_id" = "#new_Profiles_ID#",
+			"customer_type_id" = "#customer_type_id#",
+			"profile_customer_type_value" = "#Profile_Customer_Type_Value#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForEnterGetOperatingGroupProfileMap = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEnterGetOperatingGroupProfileMap>
+<cfquery name="EnterGetOperatingGroupProfileMap" datasource="#application.datasource#">
 						INSERT INTO Profile_Customer_Type_Settings
 						(
 							Profiles_ID,
@@ -1011,6 +1207,7 @@
 							#Profile_Customer_Type_Value#
 						)
 					</cfquery>
+</cfif>
 				</cfloop>
 			</cfif>
 		</cfif>

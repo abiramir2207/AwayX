@@ -100,10 +100,24 @@
 				</cfquery>
 </cfif>
 			<cfelse>
-				<cfquery name="Insert_Tax_Info" datasource="#application.datasource#">
+				<cfset useLakebaseForInsert_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForInsert_Tax_Info>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_tax_info", {
+			"billback_id" = "#Billback_ID#",
+			"tax_code_1_id" = "#form.Billbacks_Sales_Tax#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Tax_Info>
+<cfquery name="Insert_Tax_Info" datasource="#application.datasource#">
 					INSERT INTO BB_Tax_Info (Billback_ID, Tax_Code_1_ID)
 					VALUES('#Billback_ID#', #form.Billbacks_Sales_Tax#)
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfif>
 	</cfif>
@@ -1173,9 +1187,25 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	EXEC BB_Approve_Data_Validation '#Billback_ID#'
 </cfquery>
 
+<cfset useLakebaseForSel_DataVal_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForSel_DataVal_Result>
+	<cftry>
+		<cfset Sel_DataVal_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_approve_data_validation_success"
+			}), "bb_approve_data_validation_success"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSel_DataVal_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSel_DataVal_Result>
 <cfquery name="Sel_DataVal_Result" DATASOURCE="#Application.Datasource#">
 	SELECT BB_Approve_Data_Validation_Success FROM BIllback WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <cfif Sel_DataVal_Result.BB_Approve_Data_Validation_Success EQ 1>
 	<cfquery name="CreateExclusion" datasource="#application.datasource#">

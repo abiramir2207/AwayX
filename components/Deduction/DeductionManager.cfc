@@ -479,17 +479,50 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 				</CFQUERY>
 </cfif>
 				<cfif not qCheckIfExists.RecordCount>
-					<CFQUERY NAME="InsData" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForInsData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForInsData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_closure_detail", {
+			"deduction_id" = "#arguments.Deduction_ID#",
+			"dd_closure_id" = "#BBIDItem#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsData>
+<CFQUERY NAME="InsData" DATASOURCE="#Application.Datasource#">
 						INSERT INTO DD_Closure_Detail (arguments.Deduction_ID,arguments.DD_Closure_ID)
 						VALUES ('#arguments.Deduction_ID#','#BBIDItem#')
 					</CFQUERY>
+</cfif>
 				</cfif>
-				<CFQUERY NAME="UpdateBBBit" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForUpdateBBBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateBBBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#BBIDItem#"
+			},
+			{
+				"bb_associated_to_dd" = "1",
+				"bb_closing_method" = "2"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBBBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBBBit>
+<CFQUERY NAME="UpdateBBBit" DATASOURCE="#Application.Datasource#">
 					UPDATE 	Billback
 					SET 	BB_Associated_To_DD = 1,
 							BB_Closing_Method = 2
 					WHERE 	Billback_ID = '#BBIDItem#'
 				</CFQUERY>
+</cfif>
 			</CFLOOP>
 
 	</cffunction>

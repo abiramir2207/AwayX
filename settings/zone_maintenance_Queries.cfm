@@ -48,12 +48,25 @@
 	<cfset spError.number = ERR_NUMBER>
 	<cfinclude template="/settings/position_tree/sp_error_code.cfm">
 
-	<CFQUERY NAME="saveLastEditedBy" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveLastEditedBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_zones_last_edited_by_data")>
+<cfif useLakebaseForsaveLastEditedBy>
+	<cftry>
+		<cfset application.oLakebase.insertRow("service_zones_last_edited_by_data", {
+			"user_id" = "#request.AccessStructure.user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveLastEditedBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveLastEditedBy>
+<CFQUERY NAME="saveLastEditedBy" datasource="#application.datasource#">
 		INSERT INTO Service_Zones_Last_Edited_By_Data
 		(User_ID)
 		VALUES
 		('#request.AccessStructure.user_id#')
 	</CFQUERY>
+</cfif>
 </cfif>
 
 <cfset showWaitMessage = 1>

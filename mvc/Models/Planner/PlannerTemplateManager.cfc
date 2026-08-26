@@ -696,12 +696,31 @@ Description  :  Manager for Planner Templates
 
 		<cfelse>
 
-			<cfquery name="qAddPlannerTemplateFilters" datasource="#application.datasource#">
+			<cfset useLakebaseForqAddPlannerTemplateFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters")>
+<cfif useLakebaseForqAddPlannerTemplateFilters>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planner_template_filters", {
+			"planner_template_id" = "#nId#",
+			"group_level_id" = "#strGroupLevelID#",
+			"pg_group_type" = "#strGroupType#",
+			"allow_in_search" = "#bAllowInSearch#",
+			"allow_in_group_search" = "#bAllowInGroupSearch#",
+			"allow_filter" = "#bAllowFilter#",
+			"default_view" = "#arguments.default_view#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddPlannerTemplateFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddPlannerTemplateFilters>
+<cfquery name="qAddPlannerTemplateFilters" datasource="#application.datasource#">
 					INSERT INTO Planner_Template_Filters
 					(Planner_Template_ID, Group_Level_ID, PG_Group_Type, Allow_In_Search, Allow_In_Group_Search, Allow_Filter, default_view)
 				VALUES
 					('#nId#', '#strGroupLevelID#', '#strGroupType#', '#bAllowInSearch#', '#bAllowInGroupSearch#', '#bAllowFilter#', '#arguments.default_view#')
 			</cfquery>
+</cfif>
 
 		</cfif>
 
@@ -710,12 +729,27 @@ Description  :  Manager for Planner Templates
 
 			<cfloop index="idx" list="#lGroupList#">
 
-			<cfquery name="qAddCustomerFilters" datasource="#application.datasource#">
+			<cfset useLakebaseForqAddCustomerFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_customers")>
+<cfif useLakebaseForqAddCustomerFilters>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planner_template_filters_customers", {
+			"planner_template_id" = "#nId#",
+			"distributor_group_level_id" = "#strGroupLevelID#",
+			"distributor_group_id" = "#idx#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddCustomerFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddCustomerFilters>
+<cfquery name="qAddCustomerFilters" datasource="#application.datasource#">
 				INSERT INTO Planner_Template_Filters_Customers
 					(Planner_Template_ID,Distributor_Group_Level_ID,Distributor_Group_ID)
 				VALUES
 					('#nId#', '#strGroupLevelID#', '#idx#')
 			</cfquery>
+</cfif>
 
 			</cfloop>
 
@@ -723,12 +757,27 @@ Description  :  Manager for Planner Templates
 
 			<cfloop index="idx" list="#lGroupList#">
 
-			<cfquery name="qAddOperatorFilters" datasource="#application.datasource#">
+			<cfset useLakebaseForqAddOperatorFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_operators")>
+<cfif useLakebaseForqAddOperatorFilters>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planner_template_filters_operators", {
+			"planner_template_id" = "#nId#",
+			"operator_group_level_id" = "#strGroupLevelID#",
+			"operator_group_id" = "#idx#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddOperatorFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddOperatorFilters>
+<cfquery name="qAddOperatorFilters" datasource="#application.datasource#">
 				INSERT INTO Planner_Template_Filters_Operators
 					(Planner_Template_ID,Operator_Group_Level_ID,Operator_Group_ID)
 				VALUES
 					('#nId#', '#strGroupLevelID#', '#idx#')
 			</cfquery>
+</cfif>
 
 			</cfloop>
 
@@ -839,21 +888,53 @@ Description  :  Manager for Planner Templates
 		</cfquery>
 
 		<cfloop list="#strFirstParentIds#" index="idx">
-			<cfquery name="qAddPlannerProgramTemplate" datasource="#application.datasource#">
+			<cfset useLakebaseForqAddPlannerProgramTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_program_templates")>
+<cfif useLakebaseForqAddPlannerProgramTemplate>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planner_program_templates", {
+			"planner_template_id" = "#nId#",
+			"first_parent_id" = "#idx#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddPlannerProgramTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddPlannerProgramTemplate>
+<cfquery name="qAddPlannerProgramTemplate" datasource="#application.datasource#">
 				INSERT INTO Planner_Program_Templates
 					(Planner_Template_ID, First_Parent_ID)
 				VALUES
 				('#nId#', '#idx#')
 			</cfquery>
+</cfif>
 
 		</cfloop>
 
 		<!--- Repeat the same as above for the accrual records:--->
-		<cfquery name="qSetDeletedAccrual" datasource="#application.datasource#">
+		<cfset useLakebaseForqSetDeletedAccrual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_program_templates_accrual")>
+<cfif useLakebaseForqSetDeletedAccrual>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_program_templates_accrual",
+			{
+				"planner_template_id" = "eq.#nId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetDeletedAccrual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetDeletedAccrual>
+<cfquery name="qSetDeletedAccrual" datasource="#application.datasource#">
 			UPDATE  Planner_Program_Templates_Accrual
 			SET   Deleted = 1
 			WHERE Planner_Template_ID = '#nId#'
 		</cfquery>
+</cfif>
 		<cfif trim(strprogramTemplateIdsAccrual) neq "">
 			<cfquery name="qGetFirstParentIdsAccrual" datasource="#application.datasource#">
 				SELECT  First_Parent_ID

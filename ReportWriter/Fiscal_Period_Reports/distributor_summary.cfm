@@ -73,7 +73,29 @@ Distributor Summary:
 	
 	<cfset Total_To_Pay = Totalearnings.Total_Earned - TotalBillback.Total_Billed_Back>
 	
-	<cfquery name="InsertValue" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_distributor_summary")>
+<cfif useLakebaseForInsertValue>
+	<cftry>
+		<cfset application.oLakebase.insertRow("rp_distributor_summary", {
+			"fiscal_period_start_date" = "#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "#Fiscal_Period_End_Date#",
+			"legacy_ship_to" = "#Legacy_Ship_To#",
+			"shared_ship_to" = "#Shared_Ship_To#",
+			"total_dist_billed_back" = "#TotalBillback.Total_Billed_Back#",
+			"total_dist_earned" = "#Totalearnings.Total_Earned#",
+			"payment_amount" = "#Total_To_Pay#",
+			"distributor_id" = "#Distributor_ID#",
+			"total_allowance" = "#Totalearnings.Total_Allowance#",
+			"gross_sales" = "#TotalSales.Gross_Sales#",
+			"type" = "#TYPEID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertValue>
+<cfquery name="InsertValue" datasource="#application.datasource#">
 	INSERT INTO RP_Distributor_Summary
 	(
 		Fiscal_Period_Start_Date,
@@ -103,6 +125,7 @@ Distributor Summary:
 		'#TYPEID#'
 	)
 	</cfquery>
+</cfif>
 	
 </cfloop>
 

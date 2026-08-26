@@ -1720,16 +1720,53 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 				 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
 
 			<CFIF GPOGet_Existing.Program_Fixed_Price_Product_Data_ID EQ 0 OR GPOGet_Existing.recordcount EQ 0>
-				<CFQUERY NAME="InsertNewGPOProduct" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertNewGPOProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForInsertNewGPOProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_fixed_price_product_data", {
+			"program_id" = "#a.contractId#",
+			"contract_products_id" = "#contractProductsId#",
+			"fixed_price_value" = "#FixedPriceValue#",
+			"unit_of_measure_id" = "#a.Unit_Of_Measure_ID#",
+			"program_fixed_component_id" = "#a.FixedCompId#",
+			"market_price_rate" = "#prdRate#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewGPOProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewGPOProduct>
+<CFQUERY NAME="InsertNewGPOProduct" datasource="#application.datasource#">
 					INSERT INTO Program_Fixed_Price_Product_Data
 					(Program_ID, Contract_Products_ID, Fixed_Price_Value, Unit_Of_Measure_ID, Program_Fixed_Component_ID, Market_Price_Rate)
 					VALUES
 					('#a.contractId#', '#contractProductsId#', '#FixedPriceValue#', #a.Unit_Of_Measure_ID#, #a.FixedCompId#, #prdRate#)
 				</CFQUERY>
+</cfif>
 			<CFELSE>
 				<CFIF GPOGet_Existing.Program_Fixed_Price_Product_Data_ID NEQ 0>
 					<!--- Make sure to check if user entered a value on tier 1.  That is an override --->
-					<CFQUERY NAME="updateFixedPriceDataGPO" datasource="#application.datasource#">
+					<cfset useLakebaseForupdateFixedPriceDataGPO = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForupdateFixedPriceDataGPO>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_price_product_data",
+			{
+				"program_fixed_price_product_data_id" = "eq.#GPOGet_Existing.Program_Fixed_Price_Product_Data_ID#"
+			},
+			{
+				"fixed_price_value" = "#FixedPriceValue#",
+				"unit_of_measure_id" = "#a.Unit_Of_Measure_ID#",
+				"market_price_rate" = "#prdRate#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateFixedPriceDataGPO = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateFixedPriceDataGPO>
+<CFQUERY NAME="updateFixedPriceDataGPO" datasource="#application.datasource#">
 						UPDATE Program_Fixed_Price_Product_Data
 						SET
 							Fixed_Price_Value 	= '#FixedPriceValue#',
@@ -1737,6 +1774,7 @@ OPERATOR PRIORITY -> Rollup Parent as level, 6 as level_id
 							Market_Price_Rate	= #prdRate#
 						WHERE Program_Fixed_Price_Product_Data_ID = '#GPOGet_Existing.Program_Fixed_Price_Product_Data_ID#'
 					</CFQUERY>
+</cfif>
 				</CFIF>
 			</CFIF>
 

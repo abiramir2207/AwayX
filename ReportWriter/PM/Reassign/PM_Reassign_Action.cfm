@@ -180,10 +180,24 @@
 										User_Positions_ID = '#FORM.From_Owner_Position_ID#'								
 						</CFQUERY>
 					<CFELSEIF FORM.UPDATE EQ 0>
-						<CFQUERY NAME="Add_New_Owner" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForAdd_New_Owner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_owner_position")>
+<cfif useLakebaseForAdd_New_Owner>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pm_owner_position", {
+			"pm_item_master_id" = "#Item#",
+			"user_positions_id" = "#FORM.To_Owner_Position_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForAdd_New_Owner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAdd_New_Owner>
+<CFQUERY NAME="Add_New_Owner" DATASOURCE="#Application.Datasource#">
 							INSERT INTO PM_Owner_Position (PM_Item_Master_ID,User_Positions_ID) 
 							VALUES ('#Item#',#FORM.To_Owner_Position_ID#)	
 						</CFQUERY>
+</cfif>
 					</CFIF>
 				</CFIF>
 			<CFELSEIF FORM.From_Owner_Position_ID EQ "" AND FORM.To_Owner_Position_ID NEQ "">	

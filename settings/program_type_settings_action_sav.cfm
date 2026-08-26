@@ -21,7 +21,39 @@
 <cfswitch expression="#FORM.hiBit#">
 <cfcase value="1">
 	<cfif Len(FORM.selGeneric) eq 1>
-		<cfquery name="saveSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForsaveSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForsaveSettings>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_control_panel_options", {
+			"company_main_id" = "#request.AccessStructure.Company_Main_ID#",
+			"generic_type" = "#FORM.selGeneric#",
+			"created_type" = "#FORM.sel#",
+			"invoice_billback" = "#FORM.chkClaimPerfReq_1#",
+			"ib_required" = "#FORM.reqClaimPerfReq_1#",
+			"claim_period" = "#FORM.chkClaimPerfReq_2#",
+			"cp_required" = "#FORM.reqClaimPerfReq_2#",
+			"item_number" = "#FORM.chkClaimPerfReq_3#",
+			"in_required" = "#FORM.reqClaimPerfReq_3#",
+			"total_dollar_pound" = "#FORM.chkClaimPerfReq_4#",
+			"tdp_required" = "#FORM.reqClaimPerfReq_4#",
+			"menu_listing" = "#FORM.chkClaimPerfReq_5#",
+			"ml_required" = "#FORM.reqClaimPerfReq_5#",
+			"branded_point_of_sale" = "#FORM.chkClaimPerfReq_6#",
+			"bpos_required" = "#FORM.reqClaimPerfReq_6#",
+			"mandated_specification" = "#FORM.chkClaimPerfReq_7#",
+			"ms_required" = "#FORM.reqClaimPerfReq_7#",
+			"optional_specification" = "#FORM.chkClaimPerfReq_8#",
+			"os_required" = "#FORM.reqClaimPerfReq_8#",
+			"feature_sheet" = "#FORM.chkClaimPerfReq_9#",
+			"fs_required" = "#FORM.reqClaimPerfReq_9#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveSettings>
+<cfquery name="saveSettings" datasource="#application.datasource#">
 			INSERT INTO Program_Control_Panel_Options
 				(Company_Main_ID,
 				Generic_Type,
@@ -67,6 +99,7 @@
 				#FORM.chkClaimPerfReq_9#,
 				#FORM.reqClaimPerfReq_9#)
 		</cfquery>
+</cfif>
 	<cfelse>
 		<cfloop index="item" list="#FORM.sel#" delimiters=",">
 			<cfquery name="saveSettings" datasource="#application.datasource#">

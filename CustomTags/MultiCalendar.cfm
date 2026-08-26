@@ -393,10 +393,25 @@ SELECT * FROM RECURTYPE_TABLE
 WHERE	RECURTYPEID = #RECURTYPE#
 </cfquery>
 <CFSET RecurDate = #createodbcdate(startdate)#>
+<cfset useLakebaseForInsertRecurrance = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("recur_table")>
+<cfif useLakebaseForInsertRecurrance>
+	<cftry>
+		<cfset application.oLakebase.insertRow("recur_table", {
+			"eventid" = "#GETMAX.MAXID#",
+			"startdate" = "#RecurDate#",
+			"recurtypeid" = "#RecurType#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertRecurrance = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertRecurrance>
 <CFQUERY name="InsertRecurrance" datasource="#attributes.MultiCalDSN#">
 INSERT INTO RECUR_TABLE (eventID, StartDate, RecurTypeID)
 VALUES (#GETMAX.MAXID#, #RecurDate#, #RecurType#)
 </cfquery>
+</cfif>
 <cfloop index="RecurNum" FROM="2" TO="#RecurAmount#">
 <CFIF #RECURTYPE# eq 3>
 <CFSET RecurDate = #DateAdd(GetRecurTypes.dtepart, GetRecurTypes.dtenum, RecurDate)#>

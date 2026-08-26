@@ -2073,13 +2073,28 @@
 					returntype="query"
 					output="true"
 					displayname="getDDAutoMatchSettings">
-		<CFQUERY NAME="qGetAutoMatch" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForqGetAutoMatch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_auto_match")>
+<cfif useLakebaseForqGetAutoMatch>
+	<cftry>
+		<cfset qGetAutoMatch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_auto_match", {
+				"select" = "dd_auto_match_id,enabled,dollar_amount,dollar_amount_value,match_reference_number,match_distributor_bill_to,match_distributor_ship_to,auto_match_dd_reason_code_id,write_off_dd_reason_code_id,use_auto_match_dd_reason_code,use_write_off_dd_reason_code,deduction_status_after_auto_match,write_off_dollar_amount_value,auto_match_reconcile,reconcile_dollar_amount_value"
+			}), "dd_auto_match_id,enabled,dollar_amount,dollar_amount_value,match_reference_number,match_distributor_bill_to,match_distributor_ship_to,auto_match_dd_reason_code_id,write_off_dd_reason_code_id,use_auto_match_dd_reason_code,use_write_off_dd_reason_code,deduction_status_after_auto_match,write_off_dollar_amount_value,auto_match_reconcile,reconcile_dollar_amount_value"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAutoMatch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAutoMatch>
+<CFQUERY NAME="qGetAutoMatch" DATASOURCE="#Application.Datasource#">
 			SELECT	DD_Auto_Match_ID,Enabled,Dollar_Amount,Dollar_Amount_Value,Match_Reference_Number,Match_Distributor_Bill_To,
 						Match_Distributor_Ship_To,Auto_Match_DD_Reason_Code_ID,	Write_Off_DD_Reason_Code_ID,Use_Auto_Match_DD_Reason_Code,
 						Use_Write_Off_DD_Reason_Code,Deduction_Status_After_Auto_Match,Write_Off_Dollar_Amount_Value,Auto_Match_Reconcile <!--- 61842 --->
 						,Reconcile_Dollar_Amount_Value <!---98653--->
 			FROM	DD_Auto_Match
 		</CFQUERY>
+</cfif>
 		<cfreturn qGetAutoMatch />
 	</cffunction>
 <cffunction name="dumper" access="remote" output="false">

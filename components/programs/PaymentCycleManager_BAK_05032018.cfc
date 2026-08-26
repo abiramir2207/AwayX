@@ -88,10 +88,25 @@
 		</cfquery>
 </cfif>
 		
-		<cfquery name="qInsertPaymentType" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertPaymentType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForqInsertPaymentType>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_payment_cycle", {
+			"program_id" = "#arguments.programId#",
+			"discount_type_id" = "#arguments.discountTypeId#",
+			"payment_cycle_id" = "#arguments.paymentCycleId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertPaymentType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertPaymentType>
+<cfquery name="qInsertPaymentType" datasource="#application.datasource#">
 			INSERT INTO Program_Payment_Cycle (Program_ID, Discount_Type_ID, Payment_Cycle_ID)
 			VALUES	(#arguments.programId#, #arguments.discountTypeId#, #arguments.paymentCycleId#)
 		</cfquery>
+</cfif>
 		
 	</cffunction> --->
 

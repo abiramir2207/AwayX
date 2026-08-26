@@ -25,10 +25,23 @@
 	<cffunction name="logFreightCall" output="no" returntype="void">
 		<cfargument name="ProgramID" required="true" type="string">
 		
-			<cfquery name="InsertLogFreightAJAX" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertLogFreightAJAX = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("log_freight_ajax")>
+<cfif useLakebaseForInsertLogFreightAJAX>
+	<cftry>
+		<cfset application.oLakebase.insertRow("log_freight_ajax", {
+			"program_id" = "#arguments.ProgramID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertLogFreightAJAX = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertLogFreightAJAX>
+<cfquery name="InsertLogFreightAJAX" datasource="#application.datasource#">
 				INSERT INTO Log_Freight_AJAX(Program_ID)
 				VALUES('#arguments.ProgramID#')
-			</cfquery>	
+			</cfquery>
+</cfif>	
 	</cffunction>
 	
 	<cffunction name="warehouseChanged" output="no" returntype="array">

@@ -85,11 +85,25 @@
 		<CFIF Get_Rule_ID.RecordCount GT 0>
 			<CFSET FORM.Program_Formula_Pricing_Rule_ID = Get_Rule_ID.Program_Formula_Pricing_Rule_Mapped_ID>
 		<CFELSE>
-			<CFQUERY NAME="Save_Rule" DATASOURCE="#application.datasource#">
+			<cfset useLakebaseForSave_Rule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_mapped")>
+<cfif useLakebaseForSave_Rule>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_formula_pricing_rule_mapped", {
+			"program_id" = "#Program_ID#",
+			"formula_pricing_rule_id" = "#FORM.New_Formula_Pricing_Rule_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Rule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Rule>
+<CFQUERY NAME="Save_Rule" DATASOURCE="#application.datasource#">
 				INSERT INTO
 				Program_Formula_Pricing_Rule_Mapped(Program_ID, Formula_Pricing_Rule_ID)
 				VALUES (#Program_ID#, '#FORM.New_Formula_Pricing_Rule_ID#')
 			</CFQUERY>
+</cfif>
 			<CFSET FORM.Program_Formula_Pricing_Rule_ID = Save_Rule.Program_Formula_Pricing_Rule_Mapped_ID>
 		</CFIF>
 	</CFIF>

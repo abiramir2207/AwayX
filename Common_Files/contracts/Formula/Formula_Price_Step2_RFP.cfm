@@ -144,7 +144,25 @@ Original_Comm_Count----->
 		<CFSET Number_Of_Comms=Form.Number_Of_Comms>
 	</CFIF>
 
-	<CFQUERY NAME="getOverageData_Independent" datasource="#application.datasource#">
+	<cfset useLakebaseForgetOverageData_Independent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
+<cfif useLakebaseForgetOverageData_Independent>
+	<cftry>
+		<cfset getOverageData_Independent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_overage", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"calc_type" = "eq.1",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOverageData_Independent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOverageData_Independent>
+<CFQUERY NAME="getOverageData_Independent" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Formula_Pricing_Rule_Overage
 		WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
@@ -153,6 +171,7 @@ Original_Comm_Count----->
 		AND Calc_Type = 1<!------ independent ---->
 		Order By Overage_Index
 	</CFQUERY>
+</cfif>
 	<CFLOOP QUERY="getOverageData_Independent" endrow="4">
 		<CFSET i = Overage_Index>
 		<CFSET "INDEPENDENT_DESC_CALC#i#_1" 				= Description>
@@ -160,7 +179,25 @@ Original_Comm_Count----->
 		<CFSET "independent_amount_uom#i#_1" 				= UOM>
 	</CFLOOP>
 
-	<CFQUERY NAME="getOverageData_compounded" datasource="#application.datasource#">
+	<cfset useLakebaseForgetOverageData_compounded = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
+<cfif useLakebaseForgetOverageData_compounded>
+	<cftry>
+		<cfset getOverageData_compounded = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_overage", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"calc_type" = "eq.2",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOverageData_compounded = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOverageData_compounded>
+<CFQUERY NAME="getOverageData_compounded" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Formula_Pricing_Rule_Overage
 		WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
@@ -169,6 +206,7 @@ Original_Comm_Count----->
 		AND Calc_Type = 2<!------ compounded ---->
 		Order By Overage_Index
 	</CFQUERY>
+</cfif>
 	<CFLOOP QUERY="getOverageData_compounded" endrow="4">
 		<CFSET i = Overage_Index>
 		<CFSET "compounded_DESC_CALC#i#_1" 				= Description>

@@ -241,6 +241,21 @@ Description:	This file is responsible for handling programs that are being billb
 	<CFSET URL.BBID = FORM.Billback_ID>
 </CFIF>
 
+<cfset useLakebaseForgetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetPayeeInfo>
+	<cftry>
+		<cfset getPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_payee_type_id,bb_amount,claim_cases,claim_pounds,uploaded_billback,auto_billback,bb_deviations_override_price as bb_level_deviations_override_price_flag"
+			}), "billback_payee_type_id,bb_amount,claim_cases,claim_pounds,uploaded_billback,auto_billback,bb_deviations_override_price as bb_level_deviations_override_price_flag"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeInfo>
 <cfquery name="getPayeeInfo" datasource="#Application.Datasource#">
 	SELECT 	Billback_Payee_Type_ID, 
 			BB_Amount,
@@ -255,13 +270,29 @@ Description:	This file is responsible for handling programs that are being billb
 	FROM 	Billback
 	WHERE 	Billback_ID = '#FORM.Billback_ID#'
 </cfquery>
+</cfif>
 <cfset getPayeeID = billbackProgramManager.getPayeeID(form.billback_ID,getPayeeInfo.Billback_Payee_Type_ID) />
 
 <!--- D31454:Single Billback Per Invoice:   program search logic START --->
+<cfset useLakebaseForIIIvalue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForIIIvalue>
+	<cftry>
+		<cfset IIIvalue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "iii_p_upload_single_bb_per_invoice"
+			}), "iii_p_upload_single_bb_per_invoice"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIIIvalue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIIIvalue>
 <cfquery name="IIIvalue" datasource="#Application.Datasource#">
 SELECT            III_P_Upload_Single_BB_Per_Invoice 
 FROM        Billback_Settings
 </cfquery>
+</cfif>
 
 <cfif IIIvalue.III_P_Upload_Single_BB_Per_Invoice EQ 1 AND getPayeeInfo.Billback_Payee_Type_ID EQ 1>
 		<cfset useLakebaseForqDistList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>

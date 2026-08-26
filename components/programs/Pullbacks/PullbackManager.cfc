@@ -1235,7 +1235,27 @@ program_description,default_pullback_rate,ProgramControl_Panel_Options_id
 									 <cfset corpItemList = ValueList(qItemlist.BSA_Foodservice_items_master_id)>
 									<cfloop query="GetProducts">
 										<CFIF Listfind(corpItemList,GetProducts.BSA_Foodservice_items_master_id) >
-											<cfquery name="insertDisPullbackRates" datasource="#application.datasource#">
+											<cfset useLakebaseForinsertDisPullbackRates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pullback_details")>
+<cfif useLakebaseForinsertDisPullbackRates>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pullback_details", {
+			"customer_id" = "#CustomerId#",
+			"customer_program_id" = "#Customer_program_id#",
+			"product_id" = "#GetProducts.BSA_Foodservice_Items_Master_ID#",
+			"opr_program_id" = "#arguments.programId#",
+			"pullback" = "1",
+			"pullback_value" = "#PullbackValue#",
+			"pullbacks_created_by" = "#arguments.userId#",
+			"opr_contract_number" = "#ProgramInfo.contract_number#",
+			"customer_contract_number" = "#Customer_contract_number#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertDisPullbackRates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertDisPullbackRates>
+<cfquery name="insertDisPullbackRates" datasource="#application.datasource#">
 												INSERT INTO Pullback_Details
 												(
 													Customer_id,
@@ -1262,6 +1282,7 @@ program_description,default_pullback_rate,ProgramControl_Panel_Options_id
 													'#Customer_contract_number#'
 												)
 											</cfquery>
+</cfif>
 										</CFIF>
 									<!--- Product list--->
 									</cfloop>
@@ -1714,10 +1735,26 @@ program_description,default_pullback_rate,ProgramControl_Panel_Options_id
 					INSERT INTO Recapture_Program_Operator_List(Contract_Number, PG_Operator_Category_ID, Created_By)
 					VALUES('#arguments.ContractNumber#','#i#','#arguments.userID#')
 				</cfquery>
-				<cfquery name="qeRecaptureOperatorPGlistHistory" datasource="#application.datasource#">
+				<cfset useLakebaseForqeRecaptureOperatorPGlistHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("recapture_program_operator_list_history")>
+<cfif useLakebaseForqeRecaptureOperatorPGlistHistory>
+	<cftry>
+		<cfset application.oLakebase.insertRow("recapture_program_operator_list_history", {
+			"contract_number" = "#arguments.ContractNumber#",
+			"source_contract_main_id" = "#arguments.programID#",
+			"pg_operator_category_id" = "#i#",
+			"created_by" = "#arguments.userID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqeRecaptureOperatorPGlistHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqeRecaptureOperatorPGlistHistory>
+<cfquery name="qeRecaptureOperatorPGlistHistory" datasource="#application.datasource#">
 					INSERT INTO Recapture_Program_Operator_List_History(Contract_Number, Source_Contract_Main_ID, PG_Operator_Category_ID, Created_By)
 					VALUES('#arguments.ContractNumber#','#arguments.programID#','#i#','#arguments.userID#')
 				</cfquery>
+</cfif>
 			</cfloop>
 	</cffunction>
 
@@ -1790,11 +1827,26 @@ program_description,default_pullback_rate,ProgramControl_Panel_Options_id
 		<cfargument name="programID" required="true"  />
 		<cfargument name="userID" required="true"  />
 
-			<cfquery name="qRecaptureOperatorPGlist" datasource="#application.datasource#">
+			<cfset useLakebaseForqRecaptureOperatorPGlist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("recapture_program_template_list_history")>
+<cfif useLakebaseForqRecaptureOperatorPGlist>
+	<cftry>
+		<cfset qRecaptureOperatorPGlist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("recapture_program_template_list_history", {
+				"contract_number" = "eq.#arguments.ContractNumber#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqRecaptureOperatorPGlist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqRecaptureOperatorPGlist>
+<cfquery name="qRecaptureOperatorPGlist" datasource="#application.datasource#">
 				Select *
 				FROM Recapture_Program_Template_List_History
 				WHERE Contract_Number = '#arguments.ContractNumber#'
 			</cfquery>
+</cfif>
 
 			<cfif qRecaptureOperatorPGlist.recordcount EQ 0>
 				<cfquery name="qeRecaptureOperatorPGlistHistory" datasource="#application.datasource#">

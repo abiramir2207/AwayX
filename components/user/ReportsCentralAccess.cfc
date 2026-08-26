@@ -194,10 +194,26 @@
 			<cfargument name="Group_Icon" required="true" type="string" />
 			<cfargument name="User_ID" required="true" type="string" />
 			
-			<cfquery name="qInsertReportGroup" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsertReportGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_groups")>
+<cfif useLakebaseForqInsertReportGroup>
+	<cftry>
+		<cfset application.oLakebase.insertRow("report_groups", {
+			"group_label" = "#Arguments.Group_Label#",
+			"icon_used" = "#Arguments.Icon_Used#",
+			"group_icon" = "#Arguments.Group_Icon#",
+			"updated_userid" = "#Arguments.User_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertReportGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertReportGroup>
+<cfquery name="qInsertReportGroup" datasource="#application.datasource#">
 				Insert Into Report_Groups (Group_Label,Icon_Used,Group_Icon,Updated_UserID)
 								Values	 ('#Arguments.Group_Label#','#Arguments.Icon_Used#','#Arguments.Group_Icon#','#Arguments.User_ID#')
 			</cfquery>
+</cfif>
 			
 		</cffunction>
 		
@@ -206,11 +222,29 @@
 		<cffunction name="DeleteReportGroup" output="false">
 			<cfargument name="group_id" required="true" type="numeric" />
 			
-			<cfquery name="qDeleteReportGroup" datasource="#application.datasource#">
+			<cfset useLakebaseForqDeleteReportGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_groups")>
+<cfif useLakebaseForqDeleteReportGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("report_groups",
+			{
+				"group_id" = "eq.#arguments.group_id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteReportGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteReportGroup>
+<cfquery name="qDeleteReportGroup" datasource="#application.datasource#">
 				Update Report_Groups
 				Set Deleted = 1
 				Where Group_ID = '#arguments.group_id#'
 			</cfquery>
+</cfif>
 		</cffunction>
 
 	<!--- Update Report Group Details --->

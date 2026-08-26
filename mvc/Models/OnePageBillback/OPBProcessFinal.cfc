@@ -4,12 +4,27 @@
 		<cfset this.BBMgr = createObject("Component","components.Billback.BillbackManager").init()>
 
 	<cffunction name="getDDAutoMatchSettings" 	access="public" returntype="query" output="true" displayname="getDDAutoMatchSettings">
-		<CFQUERY NAME="qGetAutoMatch" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForqGetAutoMatch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_auto_match")>
+<cfif useLakebaseForqGetAutoMatch>
+	<cftry>
+		<cfset qGetAutoMatch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_auto_match", {
+				"select" = "dd_auto_match_id,enabled,dollar_amount,dollar_amount_value,match_reference_number,match_distributor_bill_to,match_distributor_ship_to,auto_match_dd_reason_code_id,write_off_dd_reason_code_id,use_auto_match_dd_reason_code,use_write_off_dd_reason_code,deduction_status_after_auto_match,write_off_dollar_amount_value,auto_match_reconcile"
+			}), "dd_auto_match_id,enabled,dollar_amount,dollar_amount_value,match_reference_number,match_distributor_bill_to,match_distributor_ship_to,auto_match_dd_reason_code_id,write_off_dd_reason_code_id,use_auto_match_dd_reason_code,use_write_off_dd_reason_code,deduction_status_after_auto_match,write_off_dollar_amount_value,auto_match_reconcile"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAutoMatch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAutoMatch>
+<CFQUERY NAME="qGetAutoMatch" DATASOURCE="#Application.Datasource#">
 			SELECT	DD_Auto_Match_ID,Enabled,Dollar_Amount,Dollar_Amount_Value,Match_Reference_Number,Match_Distributor_Bill_To,
 						Match_Distributor_Ship_To,Auto_Match_DD_Reason_Code_ID,	Write_Off_DD_Reason_Code_ID,Use_Auto_Match_DD_Reason_Code,
 						Use_Write_Off_DD_Reason_Code,Deduction_Status_After_Auto_Match,Write_Off_Dollar_Amount_Value,Auto_Match_Reconcile <!--- 61842 --->
 			FROM	DD_Auto_Match
 		</CFQUERY>
+</cfif>
 		<cfreturn qGetAutoMatch />
 	</cffunction>	
 
@@ -27,11 +42,27 @@
 			<cfelse>
 				<cfset splitNum = "#loopCount#">
 			</cfif>
-			<cfquery name="qGetDDAmount" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetDDAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForqGetDDAmount>
+	<cftry>
+		<cfset qGetDDAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#DDID#",
+				"select" = "dd_amount"
+			}), "dd_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDDAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDDAmount>
+<cfquery name="qGetDDAmount" datasource="#application.datasource#">
 				SELECT DD_Amount
 				FROM Deductions
 				WHERE Deduction_ID = '#DDID#'
 			</cfquery>
+</cfif>
 			<cfquery name="qGetBBInfo" datasource="#application.datasource#">
 				SELECT BB.Billback_ID
 				FROM Billback BB INNER JOIN BB_Approved BBA ON BBA.Billback_ID = BB.Billback_ID

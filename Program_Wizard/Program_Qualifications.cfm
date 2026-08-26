@@ -53,7 +53,24 @@
 </cfif>
         <cfif checkname.recordcount EQ 0>
           <!--- insert the record --->
-          <cfquery name="save_data" datasource="#application.datasource#">
+          <cfset useLakebaseForsave_data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications")>
+<cfif useLakebaseForsave_data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_qualifications", {
+			"qualification_name" = "#form.requirement_name#",
+			"type" = "#form.type#",
+			"value" = "#value#",
+			"isactive" = "#form.active#",
+			"updated_by" = "#request.AccessStructure.User_ID#",
+			"store_operator_type" = "#form.Store_Operator_Type#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsave_data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsave_data>
+<cfquery name="save_data" datasource="#application.datasource#">
             INSERT INTO Program_Qualifications(
                       qualification_name
                       ,type
@@ -70,6 +87,7 @@
 					,'#form.Store_Operator_Type#'
                     )
           </cfquery>
+</cfif>
         <cfelse>
           <table bgcolor="white" bordercolor="red" border="1" cellpadding="3" cellspacing="0">
             <tr>
@@ -82,11 +100,29 @@
         </cfif>
 
 <cfelseif form.deleterecord AND form.program_qualification_id neq "">
-    <cfquery name="delete_data" datasource="#application.datasource#">
+    <cfset useLakebaseFordelete_data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications")>
+<cfif useLakebaseFordelete_data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_qualifications",
+			{
+				"program_qualification_id" = "eq.#form.program_qualification_id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_data>
+<cfquery name="delete_data" datasource="#application.datasource#">
       UPDATE Program_Qualifications
       SET deleted = 1
       WHERE Program_Qualification_id = '#form.program_qualification_id#'
     </cfquery>
+</cfif>
 
 <cfelseif ! form.deleterecord AND form.program_qualification_id neq "">
     <cfset value ="">

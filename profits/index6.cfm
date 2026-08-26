@@ -25,12 +25,26 @@
 		
 		<!--- Then save the new group of products to the Pricing_Rule_Products table --->
 		<CFLOOP index="item" list="#form.AA_PRODUCT_LIST#">
-		<CFQUERY NAME="Save_Pricing_Rule_Products" datasource="#application.datasource#">
+		<cfset useLakebaseForSave_Pricing_Rule_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pricing_rule_products")>
+<cfif useLakebaseForSave_Pricing_Rule_Products>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pricing_rule_products", {
+			"pricing_rule_id" = "#FORM.PRID#",
+			"pricing_rule_products_item_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Pricing_Rule_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Pricing_Rule_Products>
+<CFQUERY NAME="Save_Pricing_Rule_Products" datasource="#application.datasource#">
 		Insert Into Pricing_Rule_Products
 		(Pricing_Rule_ID, Pricing_Rule_Products_Item_ID)
 		Values
 		('#FORM.PRID#','#item#')
 		</CFQUERY>
+</cfif>
 		</CFLOOP>
 
 <CFELSE>

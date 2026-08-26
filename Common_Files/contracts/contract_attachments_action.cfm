@@ -59,9 +59,24 @@
 				</cftry>
 			</cfif>
 			<cfif NOT useLakebaseForInsertSelection>
-				<CFQUERY NAME = "insert_selection" DATASOURCE = "#Application.Datasource#">
+				<cfset useLakebaseForinsert_selection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForinsert_selection>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"doc_id" = "#loop#",
+			"program_id" = "#FORM.Contract_Main_ID#",
+			"notes" = "#thisNote#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsert_selection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsert_selection>
+<CFQUERY NAME = "insert_selection" DATASOURCE = "#Application.Datasource#">
 					INSERT INTO Contract_Attachments(Doc_Id,Program_ID, Notes) VALUES ('#loop#',#FORM.Contract_Main_ID#, '#thisNote#')
 				</CFQUERY>
+</cfif>
 			</cfif>
 		</CFOUTPUT>
 		</CFLOOP>
@@ -91,7 +106,20 @@
 							</cftry>
 						</cfif>
 						<cfif NOT useLakebaseForSaveAttachments>
-							<CFQUERY NAME="Save_Attachments" datasource="#application.datasource#">
+							<cfset useLakebaseForSave_Attachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForSave_Attachments>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"program_id" = "#prg_id#",
+			"doc_id" = "#item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Attachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Attachments>
+<CFQUERY NAME="Save_Attachments" datasource="#application.datasource#">
 								INSERT	INTO Contract_Attachments
 								(
 									Program_ID,
@@ -103,6 +131,7 @@
 									'#item#'
 								)
 							</CFQUERY>
+</cfif>
 						</cfif>
 					</CFLOOP>
 			</CFLOOP>

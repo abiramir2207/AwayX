@@ -173,12 +173,29 @@
 			AND 	Deleted = 0
 		</cfquery>
 		
-		<cfquery name="qAddFixedProductData" datasource="#application.datasource#">
+		<cfset useLakebaseForqAddFixedProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForqAddFixedProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_fixed_price_product_data", {
+			"program_id" = "#renewed_program_id#",
+			"contract_products_id" = "#qAddContractProducts.Contract_Products_ID#",
+			"fixed_price_value" = "#qGetDiscountDataToAdd.New_Price#",
+			"unit_of_measure_id" = "#tmpRateUOM#",
+			"program_fixed_component_id" = "#qGetProgramFixedCompID.Program_Fixed_Component_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddFixedProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddFixedProductData>
+<cfquery name="qAddFixedProductData" datasource="#application.datasource#">
 			INSERT INTO Program_Fixed_Price_Product_Data
 				(Program_ID, Contract_Products_ID, Fixed_Price_Value, Unit_Of_Measure_ID, Program_Fixed_Component_ID)
 			VALUES
 				('#renewed_program_id#', '#qAddContractProducts.Contract_Products_ID#', '#qGetDiscountDataToAdd.New_Price#', '#tmpRateUOM#', '#qGetProgramFixedCompID.Program_Fixed_Component_ID#')
-		</cfquery>	
+		</cfquery>
+</cfif>	
 
 		<cfif qGetDiscountDataToAdd.Rate_UOM eq "CS">
 			<cfset volumeLB = volumeCS * qGetDiscountDataToAdd.Net_Weight />
@@ -212,12 +229,31 @@
 	<!--- loop over the discount data to add --->
 	<cfloop query="qGetDiscountDataToRemove">
 
-		<cfquery name="qRemoveContractProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForqRemoveContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqRemoveContractProducts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"contract_main_id" = "eq.#RENEWED_PROGRAM_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#qGetDiscountDataToRemove.BSA_Foodservice_Items_Master_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqRemoveContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqRemoveContractProducts>
+<cfquery name="qRemoveContractProducts" datasource="#application.datasource#">
 			UPDATE	Contract_Products
 			SET		Deleted = 1
 			WHERE	Contract_Main_ID = #RENEWED_PROGRAM_ID#
 			AND		BSA_Foodservice_Items_Master_ID = '#qGetDiscountDataToRemove.BSA_Foodservice_Items_Master_ID#'
 		</cfquery>
+</cfif>
 			
 		<cfquery name="qGetProgramFixedCompIDRemove" datasource="#application.datasource#">
 			SELECT 	DISTINCT Program_Fixed_Component_ID

@@ -133,9 +133,23 @@
 <CFIF FORM.Doc_ID NEQ "">
 	<CFLOOP LIST="#FORM.Doc_ID#" INDEX="loop">
 	<CFOUTPUT>
-		<CFQUERY NAME = "insert_selection" DATASOURCE = "#Application.Datasource#">
+		<cfset useLakebaseForinsert_selection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForinsert_selection>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_attachments", {
+			"doc_id" = "#loop#",
+			"program_id" = "#cryp.value#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsert_selection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsert_selection>
+<CFQUERY NAME = "insert_selection" DATASOURCE = "#Application.Datasource#">
 			INSERT INTO Contract_Attachments(Doc_Id,Program_ID) VALUES (#loop#,#cryp.value#)
 		</CFQUERY>
+</cfif>
 	</CFOUTPUT>
 	</CFLOOP>
 	<cflocation url="Contract_Edit_Menu.cfm?CID=#URL.CID#">
@@ -854,9 +868,25 @@ function hide17() { $('#sdoc17').hide(); location.reload(); }
 					<CFOUTPUT QUERY="Current_sel">
 						<!--- DATA OUTPUT --->
 						<TR ID="TR_Delete_#CurrentRow#" BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#" VALIGN="top">
-						<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
 								SELECT Name_First, Name_Last FROM _USERS WHERE User_ID = '#Uploaded_By#'
 						</CFQUERY>
+</cfif>
 							<CFSET SIZEinMB = #Doc_size#/1024>
 							<TD ID="TD1_#CurrentRow#" WIDTH="16%">#DateFormat(Uploaded_Date,"mm/dd/yyyy")#<BR>#User_Name.Name_First# #User_Name.Name_Last#&nbsp;</TD>
 							 	<cfset DecodedDoc_Uni_Name = Replace(Doc_Uni_Name,"á","charE1a","ALL") />

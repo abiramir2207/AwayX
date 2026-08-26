@@ -92,7 +92,21 @@
 		
 		<CFSET BBPaidAmount = GetBBAmount.Paid_Amount>
 		<CFSET SUMBBAmount = SUMBBAmount + BBPaidAmount>
-		<CFQUERY NAME="Insert_List" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForInsert_List = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks_list")>
+<cfif useLakebaseForInsert_List>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pay_multi_billbacks_list", {
+			"pay_multi_billbacks_id" = "#PayMultiBillbacksID#",
+			"billback_id" = "#Item#",
+			"paid_amount" = "#BBPaidAmount#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_List = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_List>
+<CFQUERY NAME="Insert_List" DATASOURCE="#Application.Datasource#">
 			INSERT INTO 
 			
 			Pay_Multi_Billbacks_List	(	Pay_Multi_Billbacks_ID,
@@ -103,6 +117,7 @@
 											'#Item#',
 											'#BBPaidAmount#'			)
 		</CFQUERY>
+</cfif>
 	<CFELSE>
 		<CFSET UnSuccessCount = UnSuccessCount + 1>
 		<CFIF UnSuccessCount EQ 1>
@@ -115,6 +130,24 @@
 
 
 
+<cfset useLakebaseForUpdateTotBBAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks")>
+<cfif useLakebaseForUpdateTotBBAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pay_multi_billbacks",
+			{
+				"pay_multi_billbacks_id" = "eq.#PayMultiBillbacksID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"total_paid_amount" = "#SUMBBAmount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTotBBAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTotBBAmount>
 <CFQUERY NAME="UpdateTotBBAmount" DATASOURCE="#Application.Datasource#">
 	UPDATE 	Pay_Multi_Billbacks
 	
@@ -123,6 +156,7 @@
 	WHERE 	Pay_Multi_Billbacks_ID = '#PayMultiBillbacksID#' AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
 <FORM NAME="PassBillback" ACTION="/billbacks/Check_Book/Trans_Create1.cfm" METHOD="POST">
 	<INPUT TYPE="Hidden" NAME="new_bb_check" VALUE="1">

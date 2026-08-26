@@ -59,12 +59,26 @@
 		<CFINCLUDE TEMPLATE="../keyGenerator.cfm">
 
 		
-		<CFQUERY NAME="CreateBillingInfoRecord" datasource="#application.datasource#" DBTYPE="ODBC">
+		<cfset useLakebaseForCreateBillingInfoRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_billing")>
+<cfif useLakebaseForCreateBillingInfoRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("company_billing", {
+			"company_billing_id" = "#Generated.Company_Billing_ID#",
+			"company_main_id" = "#Generated.Company_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreateBillingInfoRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreateBillingInfoRecord>
+<CFQUERY NAME="CreateBillingInfoRecord" datasource="#application.datasource#" DBTYPE="ODBC">
 			INSERT INTO Company_Billing
 			(Company_Billing_ID, Company_Main_ID)
 			VALUES
 			('#Generated.Company_Billing_ID#','#Generated.Company_Main_ID#')
 		</CFQUERY>
+</cfif>
 		
 	<CFLOCATION URL="company_tech_info.cfm?Company_Main_ID=#Generated.Company_Main_ID#" ADDTOKEN="No">
 	</CFCASE>

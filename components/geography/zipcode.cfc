@@ -106,11 +106,26 @@
 					Market_ZipCode.ZipCode = '#ThisZipCode#'
 		</cfquery>
 </cfif>
-		<cfquery name="insert_zip_code_entry" datasource="#application.datasource#">
+		<cfset useLakebaseForinsert_zip_code_entry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("market_zipcode")>
+<cfif useLakebaseForinsert_zip_code_entry>
+	<cftry>
+		<cfset application.oLakebase.insertRow("market_zipcode", {
+			"zipcode" = "#ThisZipCode#",
+			"service_market_id" = "#arguments.marketId#",
+			"assigned_by_user_id" = "#arguments.userId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsert_zip_code_entry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsert_zip_code_entry>
+<cfquery name="insert_zip_code_entry" datasource="#application.datasource#">
 			INSERT INTO	Market_ZipCode 
 					(ZipCode, Service_Market_ID, Assigned_By_User_ID)
 			VALUES 	('#ThisZipCode#', #arguments.marketId#, '#arguments.userId#')
 		</cfquery>
+</cfif>
 		
 	 </cfloop>
 	 

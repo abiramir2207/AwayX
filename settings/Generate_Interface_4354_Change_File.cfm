@@ -96,11 +96,26 @@
 			WHERE	Contract_Main.Contract_Main_ID = #thisId#
 		</cfquery>
 		<cfset contract_Number = qGetContractNumber.Contract_Number>
-		<cfquery name="qInsertIntoInterfaceFile" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertIntoInterfaceFile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("icm_interface_4354_changes_detail")>
+<cfif useLakebaseForqInsertIntoInterfaceFile>
+	<cftry>
+		<cfset application.oLakebase.insertRow("icm_interface_4354_changes_detail", {
+			"icm_interface_4354_changes_id" = "#uploadId#",
+			"program_number" = "#contract_Number#",
+			"program_id" = "#thisId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertIntoInterfaceFile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertIntoInterfaceFile>
+<cfquery name="qInsertIntoInterfaceFile" datasource="#application.datasource#">
 			INSERT INTO ICM_Interface_4354_Changes_Detail 
 			(ICM_Interface_4354_Changes_ID, Program_Number, Program_ID)
 			Values ('#uploadId#', '#contract_Number#', #thisId#)
 		</cfquery>
+</cfif>
 		
 	</cfloop>	
 	

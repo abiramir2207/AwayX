@@ -145,22 +145,57 @@
 				<cfset FORM.productGroupId = Product_ID />
 			</cfif>
 		
-			<CFQUERY NAME="saveContractProducts" datasource="#application.datasource#">
+			<cfset useLakebaseForsaveContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForsaveContractProducts>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_products", {
+			"bsa_foodservice_items_master_id" = "#Product_ID#",
+			"contract_main_id" = "#Contract_Main_ID#",
+			"product_type_id" = "4",
+			"product_group_level_id" = "#FORM.groupLevelProducts#",
+			"product_group_id" = "#FORM.productGroupId#",
+			"pricing_level_id" = "#form.Pricing_Level_ID#",
+			"is_group" = "#Is_Group#",
+			"dynamic_static_groups" = "#form.Dynamic_Static_Groups#",
+			"discounted_item" = "0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveContractProducts>
+<CFQUERY NAME="saveContractProducts" datasource="#application.datasource#">
 				INSERT INTO Contract_Products
 				(BSA_Foodservice_Items_Master_ID, Contract_Main_ID, Product_Type_ID, Product_Group_Level_ID, Product_Group_ID, Pricing_Level_ID, Is_Group, Dynamic_Static_Groups, Discounted_Item)
 				VALUES
 				('#Product_ID#', '#Contract_Main_ID#', 4, #FORM.groupLevelProducts#, '#FORM.productGroupId#', #form.Pricing_Level_ID#, #Is_Group#,  #form.Dynamic_Static_Groups#, 0)
 			</CFQUERY>
+</cfif>
 			
 			<!---set this contract product id--->
 			<cfset this.Contract_Products_ID = saveContractProducts.Contract_Products_ID />
 		
-			<CFQUERY NAME="InsertNewProduct" datasource="#application.datasource#">
+			<cfset useLakebaseForInsertNewProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
+<cfif useLakebaseForInsertNewProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_growth_component_product_data", {
+			"program_growth_component_id" = "#InsertIntoComponent.A_ID#",
+			"contract_products_id" = "#saveContractProducts.Contract_Products_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewProduct>
+<CFQUERY NAME="InsertNewProduct" datasource="#application.datasource#">
 				INSERT INTO Program_Growth_Component_Product_Data
 				(Program_Growth_Component_ID, Contract_Products_ID)
 				VALUES
 				('#InsertIntoComponent.A_ID#', '#saveContractProducts.Contract_Products_ID#')
 			</CFQUERY>
+</cfif>
 			
 			<!---if it's a group then call stored procedure to populate items in that group--->
 			<!---TSF: Modification Label 6676--->

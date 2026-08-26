@@ -312,10 +312,26 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							If the distributor list is empty, then distributor_id would be ""(blank) and not 0(zero).
 							--->
 							<cfif distributor_id neq "-1">
-								<CFQUERY name="qSaveDistributors" DATASOURCE="#application.datasource#">
+								<cfset useLakebaseForqSaveDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_distributor_filter")>
+<cfif useLakebaseForqSaveDistributors>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_auto_report_distributor_filter", {
+			"bb_auto_program_pay_period_id" = "#getBBAutoProgramPayPeriodID.BB_Auto_Program_Pay_Period_ID#",
+			"bb_auto_report_id" = "#arguments.reportID#",
+			"distributor_id" = "#distributor_id#",
+			"contract_main_id" = "#programID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveDistributors>
+<CFQUERY name="qSaveDistributors" DATASOURCE="#application.datasource#">
 									INSERT INTO BB_Auto_Report_Distributor_Filter(BB_Auto_Program_Pay_Period_ID,BB_Auto_Report_ID,Distributor_ID,Contract_Main_ID)
 									VALUES('#getBBAutoProgramPayPeriodID.BB_Auto_Program_Pay_Period_ID#','#arguments.reportID#','#distributor_id#','#programID#')
 								</CFQUERY>
+</cfif>
 							</cfif>
 						</cfloop>
 				</cfif>
@@ -355,10 +371,26 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							If the invoices list is empty, then invoice_header_id would be ""(blank) and not 0(zero).
 							--->
 							<cfif invoice_header_id neq "-1">
-								<CFQUERY name="qSaveInvoices" DATASOURCE="#application.datasource#">
+								<cfset useLakebaseForqSaveInvoices = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_invoice_filter")>
+<cfif useLakebaseForqSaveInvoices>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_auto_report_invoice_filter", {
+			"bb_auto_program_pay_period_id" = "#getBBAutoProgramPayPeriodID.BB_Auto_Program_Pay_Period_ID#",
+			"bb_auto_report_id" = "#arguments.reportID#",
+			"invoice_header_id" = "#invoice_header_id#",
+			"contract_main_id" = "#programID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveInvoices = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveInvoices>
+<CFQUERY name="qSaveInvoices" DATASOURCE="#application.datasource#">
 									INSERT INTO BB_Auto_Report_Invoice_Filter(BB_Auto_Program_Pay_Period_ID,BB_Auto_Report_ID,Invoice_Header_ID,Contract_Main_ID)
 									VALUES('#getBBAutoProgramPayPeriodID.BB_Auto_Program_Pay_Period_ID#','#arguments.reportID#','#invoice_header_id#','#programID#')
 								</CFQUERY>
+</cfif>
 							</cfif>
 						</cfloop>
 				</cfif>

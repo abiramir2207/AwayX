@@ -637,7 +637,52 @@
 			var rowData = arguments.rData;
 			var local.qInsert = "";
 		</cfscript>
-				<cfquery name="local.qInsert" datasource="#application.datasource#">
+				<cfset useLakebaseForlocal_qInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("y_deal_ui_upload")>
+<cfif useLakebaseForlocal_qInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("y_deal_ui_upload", {
+			"template" = "#rowData["Template"]#",
+			"batch_id" = "#rowData["Batch_ID"]#",
+			"record_type" = "#rowData["Record_Type"]#",
+			"header_action" = "#rowData["Header_Action"]#",
+			"external_program" = "#rowData["External_Program"]#",
+			"forge_program" = "#rowData["FORGE_Program"]#",
+			"title" = "#rowData["Title"]#",
+			"start" = "#rowData["Start"]#",
+			"[end]" = "#rowData["End"]#",
+			"rsp_id" = "#rowData["RSP_ID"]#",
+			"position_id" = "#rowData["Position_ID"]#",
+			"segment" = "#rowData["Segment"]#",
+			"sold_to" = "#rowData["Sold_To"]#",
+			"operator_id" = "#rowData["Operator_ID"]#",
+			"material" = "#rowData["Material"]#",
+			"rate" = "#rowData["Rate"]#",
+			"uom" = "#rowData["UOM"]#",
+			"discount_type" = "#rowData["Discount_Type"]#",
+			"component" = "#rowData["Component"]#",
+			"pays_to" = "#rowData["Pays_To"]#",
+			"frequency" = "#rowData["Frequency"]#",
+			"claim_mechanic" = "#rowData["Claim_Mechanic"]#",
+			"currency" = "#rowData["Currency"]#",
+			"volume" = "#rowData["Volume"]#",
+			"volume_lift" = "#rowData["Volume_Lift"]#",
+			"volume_uom" = "#rowData["VOLUME_UOM"]#",
+			"creator_id" = "#rowData["Creator_ID"]#",
+			"performance_start" = "#rowData["Performance_Start"]#",
+			"performance_end" = "#rowData["Performance_End"]#",
+			"performance_type" = "#rowData["Performance_Type"]#",
+			"planner_id" = "#rowData["Planner_ID"]#",
+			"group_id" = "#rowData["Group_ID"]#",
+			"everyday_unit_price" = "#rowData["EveryDay_Unit_Price"]#",
+			"scan_redemption_pct" = "#rowData["Scan_Redemption_Pct"]#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qInsert>
+<cfquery name="local.qInsert" datasource="#application.datasource#">
 					INSERT INTO Y_DEAL_UI_UPLOAD
 					(
 						Template,
@@ -713,6 +758,7 @@
 						'#rowData["Scan_Redemption_Pct"]#'
 					)
 				</cfquery>
+</cfif>
 		<cfreturn '' />
 	</cffunction>
 
@@ -777,7 +823,26 @@
 		<cfargument name="Batch_Id" type="any" required="true" />
 		<!--- <cfargument name="rData" type="any" required="true" /> --->
 
-		<cfquery name="qUpdateVol" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateVol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("y_deal_ui_upload")>
+<cfif useLakebaseForqUpdateVol>
+	<cftry>
+		<cfset application.oLakebase.updateRows("y_deal_ui_upload",
+			{
+				"batch_id" = "eq.#arguments.Batch_ID#",
+				"record_type" = "eq.M"
+			},
+			{
+				"volume" = "1",
+				"volume_uom" = "CS"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateVol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateVol>
+<cfquery name="qUpdateVol" datasource="#application.datasource#">
 			UPDATE Y_DEAL_UI_UPLOAD
 			    SET Volume = 1, <!---'#arguments.rData.Volume#',--->
 			    	Volume_UOM = 'CS'<!---'#arguments.rData.Volume_UOM#'--->
@@ -785,6 +850,7 @@
 			    		Record_Type	= 'M' 
 			    		<!---AND Material = '#arguments.rData.Material#'--->
 		</cfquery>
+</cfif>
 
 		<cfscript>
 			 return;

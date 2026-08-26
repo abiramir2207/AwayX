@@ -1335,12 +1335,28 @@
 		<cfset ValidSourceType = 1>
 
 		<cfif IsNumeric(arguments.aliasDef.sourceType)>
-		 <cfquery name="IsValidSourceType" datasource="#application.datasource#">
+		 <cfset useLakebaseForIsValidSourceType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_claim_source_xref")>
+<cfif useLakebaseForIsValidSourceType>
+	<cftry>
+		<cfset IsValidSourceType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_claim_source_xref", {
+				"source_type" = "eq.#arguments.aliasDef.sourceType#",
+				"select" = "source_type"
+			}), "source_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsValidSourceType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsValidSourceType>
+<cfquery name="IsValidSourceType" datasource="#application.datasource#">
 			SELECT Source_Type
 			FROM BB_Claim_Source_XREF
 			<!--- Do not use cfqueryparam. Some values may exceed integer limits --->
 			WHERE Source_Type = #arguments.aliasDef.sourceType#
 		  </cfquery>
+</cfif>
 			  <cfif  IsValidSourceType.recordcount eq 0>
 				<cfset ValidSourceType = 0>
 			  </cfif>

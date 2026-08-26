@@ -17,7 +17,26 @@ GROUP BY Distributor_ID, Shared_Ship_To, Legacy_Ship_To, Item_Number, BB_Summary
 
 <!---Loop through distinct records above--->
 	<cfloop query="BillbackSummary">
-		<cfquery name="InsertIntoBillbackSummary" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertIntoBillbackSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_summary")>
+<cfif useLakebaseForInsertIntoBillbackSummary>
+	<cftry>
+		<cfset application.oLakebase.insertRow("rp_billback_summary", {
+			"fiscal_period_start_date" = "#Fiscal_Period_Start_Date#",
+			"fiscal_period_end_date" = "#Fiscal_Period_End_Date#",
+			"legacy_ship_to" = "#Legacy_Ship_To#",
+			"shared_ship_to" = "#Shared_Ship_To#",
+			"distributor_id" = "#Distributor_ID#",
+			"item_number" = "#Item_Number#",
+			"total_billed_back" = "#Total_Billed_Back#",
+			"bb_summary_type" = "#BB_Summary_Type#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoBillbackSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoBillbackSummary>
+<cfquery name="InsertIntoBillbackSummary" datasource="#application.datasource#">
 		INSERT INTO RP_Billback_Summary
 		(
 			Fiscal_Period_Start_Date,
@@ -41,10 +60,24 @@ GROUP BY Distributor_ID, Shared_Ship_To, Legacy_Ship_To, Item_Number, BB_Summary
 			'#BB_Summary_Type#'
 		)
 		</cfquery>
+</cfif>
 	
 	</cfloop>
-	<!--- <cfquery name="GetAll" datasource="#application.datasource#">
+	<!--- <cfset useLakebaseForGetAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_summary")>
+<cfif useLakebaseForGetAll>
+	<cftry>
+		<cfset GetAll = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_billback_summary", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAll = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAll>
+<cfquery name="GetAll" datasource="#application.datasource#">
 	SELECT * FROM RP_Billback_Summary
 	</cfquery>
+</cfif>
 	
 	<cfdump var="#GetAll#"> --->

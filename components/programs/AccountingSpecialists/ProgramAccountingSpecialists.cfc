@@ -109,7 +109,20 @@
 		</cfquery>
 </cfif>
 		
-		<cfquery name="qInsertProcessor" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertProcessor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_accounting_specialist")>
+<cfif useLakebaseForqInsertProcessor>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_accounting_specialist", {
+			"user_id" = "#arguments.userId#",
+			"program_id" = "#arguments.contractMainId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertProcessor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertProcessor>
+<cfquery name="qInsertProcessor" datasource="#application.datasource#">
 		
 			INSERT INTO Program_Accounting_Specialist
 				(User_ID, Program_ID)
@@ -117,6 +130,7 @@
 				('#arguments.userId#', #arguments.contractMainId#)
 
 		</cfquery>
+</cfif>
 
    	</cffunction>
 	

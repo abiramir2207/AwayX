@@ -43,11 +43,26 @@
 				<cfset profilevisibility = 0/>
 			</cfif>		
 			<!---insert for each record--->
-			<cfquery name="qInsert" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_profile")>
+<cfif useLakebaseForqInsert>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_growth_component_profile", {
+			"profiles_id" = "#profIndx#",
+			"allow_user_to_view" = "#profilevisibility#",
+			"program_growth_component_name_id" = "#arguments.compNameId#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsert = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsert>
+<cfquery name="qInsert" datasource="#application.datasource#">
 				INSERT INTO	Program_Growth_Component_Profile
 										(Profiles_ID, Allow_User_To_View, Program_Growth_Component_Name_ID)
 				VALUES			(#profIndx#, #profilevisibility#, #arguments.compNameId#)
 			</cfquery>
+</cfif>
 
 		</cfloop>
 		
@@ -56,11 +71,27 @@
 	<cffunction name="getProfiles" output="false">
 		
 		<!---get all profiles --->
-		<cfquery name="qGetProfiles" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProfiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqGetProfiles>
+	<cftry>
+		<cfset qGetProfiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"select" = "profiles_id,profiles_desc"
+			}), "profiles_id,profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfiles>
+<cfquery name="qGetProfiles" datasource="#application.datasource#">
 			SELECT 	DISTINCT Profiles_ID, Profiles_Desc 
 			FROM 		Profiles 
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetProfiles />
 		

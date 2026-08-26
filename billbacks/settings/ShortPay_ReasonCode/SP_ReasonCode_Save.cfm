@@ -9,11 +9,26 @@
 
 <CFIF Form.RID EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_shortpay_reason")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("bb_shortpay_reason", {
+			"sp_reason_code" = "#FORM.SP_Reason_Code#",
+			"sp_reason_description" = "#Form.SP_Reason_Description#",
+			"deleted" = "#Form.Deleted#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		BB_ShortPay_Reason
 						(SP_Reason_Code,SP_Reason_Description,Deleted)
 		Values			('#FORM.SP_Reason_Code#','#Form.SP_Reason_Description#',#Form.Deleted#)
 	</CFQUERY>
+</cfif>
 <CFELSE>
 <!--- Update the record --->
 	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">

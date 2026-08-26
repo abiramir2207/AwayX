@@ -145,7 +145,31 @@
 		<cfset Description ="#arguments.CurrentBehavior#" />
 
 		<!--- Insert into db --->
-		<cfquery name="InsertWorkRequest" datasource="#application.datasource#">
+		<cfset useLakebaseForInsertWorkRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForInsertWorkRequest>
+	<cftry>
+		<cfset application.oLakebase.insertRow("work_request", {
+			"work_title" = "#arguments.Work_Title#",
+			"request_type" = "#arguments.Request_Type#",
+			"app_area" = "#arguments.App_Area#",
+			"user_created" = "#arguments.User_Created#",
+			"client_priority" = "#arguments.Client_Priority#",
+			"client_reference_number" = "#arguments.Client_Reference_Number#",
+			"item_status" = "1 - Open",
+			"urlenvironment" = "#arguments.URLEnvironment#",
+			"progbbddids" = "#arguments.ProgBBDDIDs#",
+			"userinfo" = "#arguments.UserInfo#",
+			"errorevent" = "#arguments.ErrorEvent#",
+			"currentbehavior" = "#arguments.CurrentBehavior#",
+			"expectedbehavior" = "#arguments.ExpectedBehavior#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertWorkRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertWorkRequest>
+<cfquery name="InsertWorkRequest" datasource="#application.datasource#">
 		INSERT INTO Work_Request
 		(
 			Work_Title,
@@ -182,6 +206,7 @@
 		)
 		SELECT @@Identity AS Work_Request_ID
 		</cfquery>
+</cfif>
 
 
 		<!--- Get user contact info --->
@@ -430,9 +455,24 @@
 			<cfset Punch_Type_ID = GetTypeID.Punch_Type_ID>
 		</cfif>
 		<cfparam name="Punch_Company_ID" default="1">
-		<!---<cfquery name="GetMapPunchCompany" datasource="#application.datasource#">
+		<!---<cfset useLakebaseForGetMapPunchCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForGetMapPunchCompany>
+	<cftry>
+		<cfset GetMapPunchCompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "mappunchcompany"
+			}), "mappunchcompany"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMapPunchCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMapPunchCompany>
+<cfquery name="GetMapPunchCompany" datasource="#application.datasource#">
 			SELECT MapPunchCompany FROM Customer_Settings
-		</cfquery>--->
+		</cfquery>
+</cfif>--->
 		<CFIF SupportEmail.MapPunchCompany EQ 0 OR SupportEmail.MapPunchCompany EQ "">
 			<!---Company name isn't going to be a perfect match for the db, so only use the left bit --->
 		<cfset CompanyNameForCompare = left(arguments.Company_Name, 11)>
@@ -557,7 +597,26 @@
 
 
 		<!--- Insert into Punch_Work_Request --->
-		<cfquery name="InsertToPunchWorkRequest" datasource="punchlist">
+		<cfset useLakebaseForInsertToPunchWorkRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_work_request")>
+<cfif useLakebaseForInsertToPunchWorkRequest>
+	<cftry>
+		<cfset application.oLakebase.insertRow("punch_work_request", {
+			"punch_id" = "#InsertWorkRequestToPunch.Punch_ID#",
+			"created_user_name" = "#GetUserInfo.Name_First# #GetUserInfo.Name_Last#",
+			"created_user_email" = "#GetUserInfo.User_Email#",
+			"created_user_phone" = "#GetUserInfo.Work_Phone_1#-#GetUserInfo.Work_Phone_2#-#GetUserInfo.Work_Phone_3#",
+			"requesting_url" = "#arguments.Installation_URL#",
+			"ba_support_email" = "#SupportEmail.BA_Support_Email#",
+			"app_work_request_id" = "#InsertWorkRequest.Work_Request_ID#",
+			"urlenvironment" = "#arguments.URLEnvironment#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertToPunchWorkRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertToPunchWorkRequest>
+<cfquery name="InsertToPunchWorkRequest" datasource="punchlist">
 		INSERT INTO Punch_Work_Request
 		(
 			Punch_ID,
@@ -581,6 +640,7 @@
 			'#arguments.URLEnvironment#'
 		)
 		</cfquery>
+</cfif>
 		<!--- end insert to punchlist using DSN--->
 
 

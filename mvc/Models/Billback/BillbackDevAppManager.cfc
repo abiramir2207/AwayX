@@ -1306,12 +1306,28 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		
 		<!--- if deviations have been run then check to see if billback has a lump sum component --->
 		<cfif rRunDeviation eq 0>
-			<cfquery name="qCheckForLumpSums" datasource="#application.datasource#">
+			<cfset useLakebaseForqCheckForLumpSums = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForqCheckForLumpSums>
+	<cftry>
+		<cfset qCheckForLumpSums = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_lumpsum_component", {
+				"billback_id" = "eq.#strBillbackIdID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckForLumpSums = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckForLumpSums>
+<cfquery name="qCheckForLumpSums" datasource="#application.datasource#">
 				SELECT	* 
 				FROM 	Billback_Program_Lumpsum_Component 
 				WHERE 	Billback_ID = '#strBillbackIdID#'
 				AND 	Deleted = 0
 			</cfquery>
+</cfif>
 			
 			<cfif qCheckForLumpSums.RecordCount>
 				<cfset rRunDeviation = 1 />

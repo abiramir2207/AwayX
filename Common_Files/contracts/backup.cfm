@@ -93,22 +93,57 @@
 
  	<CFIF checkForExistingTierInfo.recordcount EQ 0>
 	<!--- insert --->
-		<CFQUERY NAME="insertTierProductData" datasource="#application.datasource#">
+		<cfset useLakebaseForinsertTierProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_tier_data")>
+<cfif useLakebaseForinsertTierProductData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_growth_component_product_tier_data", {
+			"program_growth_component_product_data_id" = "#The_Program_Growth_Component_Product_Tier_Data_ID#",
+			"program_growth_component_tier_id" = "#Program_Growth_Component_Tier_ID#",
+			"rate" = "#Rate#",
+			"unit_of_measure_id" = "#Unit_Of_Measure_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertTierProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertTierProductData>
+<CFQUERY NAME="insertTierProductData" datasource="#application.datasource#">
 			INSERT INTO Program_Growth_Component_Product_Tier_Data
 			(Program_Growth_Component_Product_Data_ID,Program_Growth_Component_Tier_ID, Rate, Unit_Of_Measure_ID)
 			VALUES
 			('#The_Program_Growth_Component_Product_Tier_Data_ID#', '#Program_Growth_Component_Tier_ID#', '#Rate#','#Unit_Of_Measure_ID#')
 		</CFQUERY>
+</cfif>
 	
 	<CFELSE>
 	<!--- update --->
-		<CFQUERY NAME="updateTierData" datasource="#application.datasource#">
+		<cfset useLakebaseForupdateTierData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_tier_data")>
+<cfif useLakebaseForupdateTierData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_product_tier_data",
+			{
+				"program_growth_component_product_tier_data_id" = "eq.#checkForExistingTierInfo.Program_Growth_Component_Product_Tier_Data_ID#"
+			},
+			{
+				"rate" = "#Rate#",
+				"unit_of_measure_id" = "#Unit_Of_Measure_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTierData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTierData>
+<CFQUERY NAME="updateTierData" datasource="#application.datasource#">
 			UPDATE Program_Growth_Component_Product_Tier_Data
 			SET
 				Rate 				= '#Rate#',
 				Unit_Of_Measure_ID 	= '#Unit_Of_Measure_ID#'
 			WHERE Program_Growth_Component_Product_Tier_Data_ID = '#checkForExistingTierInfo.Program_Growth_Component_Product_Tier_Data_ID#'
 		</CFQUERY>
+</cfif>
 	</CFIF>
 
  </CFLOOP>

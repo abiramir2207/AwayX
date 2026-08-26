@@ -593,14 +593,43 @@
 				</cfquery>
 
 			<!--- Add program owner info here --->
-				<cfquery name="insProgramOwner" datasource="#application.datasource#">
+				<cfset useLakebaseForinsProgramOwner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_owner")>
+<cfif useLakebaseForinsProgramOwner>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_owner", {
+			"contract_main_id" = "#insert.Contract_Main_ID#",
+			"contract_number" = "#FORM.Contract_Number#",
+			"responsible_user_id" = "#form.Responsible_User_id#",
+			"creating_user_position_id" = "#This_User_Position_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsProgramOwner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsProgramOwner>
+<cfquery name="insProgramOwner" datasource="#application.datasource#">
 				 INSERT INTO Program_Owner(Contract_Main_ID, Contract_Number, Responsible_User_ID, Creating_User_Position_ID)
 				  VALUES('#insert.Contract_Main_ID#', '#FORM.Contract_Number#', '#form.Responsible_User_id#', '#This_User_Position_ID#')
 				</cfquery>
+</cfif>
 
 			<!---Add performance requirements--->
 				<!--- <cfloop index = "Requirement" list = "#PerfRequirements#"  delimiterS = ",">
-					<cfquery name="InsertPerfReq" datasource="#application.datasource#">
+					<cfset useLakebaseForInsertPerfReq = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("one_program_perf_mapping")>
+<cfif useLakebaseForInsertPerfReq>
+	<cftry>
+		<cfset application.oLakebase.insertRow("one_program_perf_mapping", {
+			"contract_main_id" = "#insert.Contract_Main_ID#",
+			"program_perf_req_id" = "#Requirement#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertPerfReq = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertPerfReq>
+<cfquery name="InsertPerfReq" datasource="#application.datasource#">
 					INSERT INTO One_Program_Perf_Mapping
 					(
 						Contract_Main_ID,
@@ -612,6 +641,7 @@
 						#Requirement#
 					)
 					</cfquery>
+</cfif>
 				</cfloop> --->
 
 		<!--- START: 25709: EZ Button/Anand Rao/28-Mar-2011 --->
@@ -937,12 +967,25 @@
 				</cfquery>
 </cfif>
 				<CFIF recordCheck.recordcount EQ 0>
-					<cfquery name="insertRecord" datasource="#Application.Datasource#">
+					<cfset useLakebaseForinsertRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForinsertRecord>
+	<cftry>
+		<cfset application.oLakebase.insertRow("contract_main_aux_data", {
+			"contract_main_id" = "#insert.Contract_Main_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertRecord>
+<cfquery name="insertRecord" datasource="#Application.Datasource#">
 						INSERT INTO Contract_Main_Aux_Data
 						(Contract_Main_ID)
 						VALUES
 						('#insert.Contract_Main_ID#')
 					</cfquery>
+</cfif>
 				</CFIF>
 
 				<cfquery name="saveAuxData" datasource="#Application.Datasource#">

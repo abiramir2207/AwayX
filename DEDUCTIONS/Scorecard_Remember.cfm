@@ -181,7 +181,26 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForInsertData>
-		<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForInsert_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard_customize")>
+<cfif useLakebaseForInsert_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("scorecard_customize", {
+			"user_id" = "#request.AccessStructure.User_ID#",
+			"scorecard_id" = "#Get_SC_ID.Scorecard_ID#",
+			"scorecard_display_id" = "#Get_Disp_ID.Scorecard_Display_ID#",
+			"scorecard_grouping_id" = "#Get_SC_GP_ID.Scorecard_Grouping_ID#",
+			"shr_ship_to" = "#URL.SC_Shr_Ship_To#",
+			"broker_shard" = "#URL.SC_Broker_Shard#",
+			"chk_hide_parent" = "#URL.chkHideParent#",
+			"chk_refresh_view" = "#URL.chkRefreshView#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Data>
+<CFQUERY NAME="Insert_Data" DATASOURCE="#Application.Datasource#">
 			INSERT INTO
 			Scorecard_Customize	(	User_ID,
 									Scorecard_ID,
@@ -201,6 +220,7 @@
 									'#URL.chkHideParent#',
 									'#URL.chkRefreshView#'	)
 		</CFQUERY>
+</cfif>
 	</cfif>
 </CFIF>
 

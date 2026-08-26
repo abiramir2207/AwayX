@@ -65,12 +65,27 @@ AND Component_ID = '#form.Component_ID#'
 <cfif isDefined("form.CriteriaID")>
 <cfloop list="#CriteriaID#" index="Criteria_ID">
 <!--- Insert new selections --->
-	<cfquery name="InsertIntoMainTable" datasource="#application.datasource#">
+	<cfset useLakebaseForInsertIntoMainTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_product_restriction")>
+<cfif useLakebaseForInsertIntoMainTable>
+	<cftry>
+		<cfset application.oLakebase.insertRow("component_product_restriction", {
+			"discount_type_id" = "#form.Discount_Type_ID#",
+			"component_id" = "#form.Component_ID#",
+			"criteria_restriction_id" = "#Criteria_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertIntoMainTable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertIntoMainTable>
+<cfquery name="InsertIntoMainTable" datasource="#application.datasource#">
 	INSERT INTO Component_Product_Restriction
 	(Discount_Type_ID, Component_ID, Criteria_Restriction_ID)
 	VALUES
 	('#form.Discount_Type_ID#', '#form.Component_ID#', '#Criteria_ID#')
 	</cfquery>
+</cfif>
 	
 <!--- Insert into mapping table --->
 	<cfquery name="InsertIntoMappingTable" datasource="#application.datasource#">
@@ -94,9 +109,24 @@ window.close();
 
 <body>
 <cfoutput>
+<cfset useLakebaseForRestrictedProductCriteria = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForRestrictedProductCriteria>
+	<cftry>
+		<cfset RestrictedProductCriteria = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "component_product_restriction_criteria"
+			}), "component_product_restriction_criteria"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRestrictedProductCriteria = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRestrictedProductCriteria>
 <cfquery name="RestrictedProductCriteria" datasource="#application.datasource#">
 SELECT Component_Product_Restriction_Criteria FROM General_Settings
 </cfquery>
+</cfif>
 <!--- Dev Note 12188 BSD: Added query to display component name --->
 <cfquery name="getComponentName" datasource="#application.datasource#">
 Select Program_Rebates_Component_Name

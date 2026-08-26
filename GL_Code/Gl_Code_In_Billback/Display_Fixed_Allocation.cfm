@@ -421,7 +421,30 @@
 					<TD>#DOLLARFORMAT(Calculated_Amount)#</TD>
 				</TR>	
 				<CFIF SavedAlready NEQ 1>
-				<CFQUERY NAME="InsertAllocation" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForInsertAllocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForInsertAllocation>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_allocation", {
+			"billback_id" = "#Billback_ID#",
+			"allocation_method" = "2",
+			"tot_allocation_amount" = "#TotBBAmount#",
+			"allocated_amount" = "#Calculated_Amount#",
+			"allocation_percent" = "#Allocation#",
+			"fund_number" = "#Fund_Number#",
+			"fund_description" = "#GetARPercent.DESCRIPTION#",
+			"scoa" = "#SOCA_Fixed#",
+			"a_r" = "#DistAR#",
+			"fiscal_year" = "#DISTFY#",
+			"program_id_list" = "#SameARProgs#",
+			"surrogate_item" = "#Surrogate_Item#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertAllocation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertAllocation>
+<CFQUERY NAME="InsertAllocation" DATASOURCE="#Application.Datasource#">
 					INSERT INTO
 					Gl_Code_Allocation	(	Billback_ID,
 											Allocation_Method,
@@ -449,6 +472,7 @@
 											'#SameARProgs#',
 											'#Surrogate_Item#'			)
 				</CFQUERY>
+</cfif>
 				</CFIF>
 			</CFLOOP>
 			<TR>
@@ -462,7 +486,23 @@
 		<CFELSE>
 			<CFSET InvalidAllocationTot = GetAllocationSum.CheckTotAllocation * 100>
 			<CFIF SavedAlready NEQ 1>
-			<CFQUERY NAME="InsertFailureInAllocation" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForInsertFailureInAllocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForInsertFailureInAllocation>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_code_allocation", {
+			"billback_id" = "#Billback_ID#",
+			"allocation_method" = "2",
+			"reason_id" = "3",
+			"program_id_list" = "#SameARProgs#",
+			"pending_status" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertFailureInAllocation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertFailureInAllocation>
+<CFQUERY NAME="InsertFailureInAllocation" DATASOURCE="#Application.Datasource#">
 				INSERT INTO 
 				Gl_Code_Allocation	(	Billback_ID,
 										Allocation_Method,										
@@ -476,6 +516,7 @@
 										'#SameARProgs#',
 										1				)
 			</CFQUERY>
+</cfif>
 			</CFIF>
 			<TR>
 				<TD COLSPAN="100%" STYLE="border-bottom: none">

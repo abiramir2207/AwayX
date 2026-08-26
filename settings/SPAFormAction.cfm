@@ -30,10 +30,24 @@
 			<cfset status = form[fname]>	
 			<cfif status eq 1>
 				<cfloop list="#form.profile_id#" index="i">
-					<cfquery name="qInsSPAModule" datasource="#application.datasource#">
+					<cfset useLakebaseForqInsSPAModule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_panel_access_modules_profiles")>
+<cfif useLakebaseForqInsSPAModule>
+	<cftry>
+		<cfset application.oLakebase.insertRow("settings_panel_access_modules_profiles", {
+			"settings_panel_access_modules_id" = "#SettingsPanelAccessModulesID#",
+			"profiles_id" = "#i#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsSPAModule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsSPAModule>
+<cfquery name="qInsSPAModule" datasource="#application.datasource#">
 						INSERT INTO Settings_Panel_Access_Modules_Profiles(Settings_Panel_Access_Modules_ID,Profiles_ID)
 						VALUES('#SettingsPanelAccessModulesID#','#i#')
 					</cfquery>
+</cfif>
 				</cfloop>
 			</cfif>
 		</cfif>

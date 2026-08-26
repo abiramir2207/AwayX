@@ -181,7 +181,25 @@
 		SET NOCOUNT OFF			
 	</CFQUERY>
 	<cfif Form.MatchAttch NEQ "" and application.oApplicationAppSettingsManager.getApplicationAppSettings().getWebserviceOn() EQ 0>
-		<cfquery name="InsertToPunch_File" datasource="punchlist">
+		<cfset useLakebaseForInsertToPunch_File = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForInsertToPunch_File>
+	<cftry>
+		<cfset application.oLakebase.insertRow("punch_file", {
+			"punch_id" = "#Get_Label_No.BA_Ticket_Number#",
+			"punch_file_name" = "#Form.WR_Document_Name#",
+			"punch_file_name_saved_as" = "#Actual_file_name#",
+			"uploaded_by" = "#GetUserName.uploadedBy#",
+			"filepathinapp" = "#FilePathInApp#",
+			"punch_file_size" = "#sizeoffile#",
+			"matchattch" = "#Form.MatchAttch#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertToPunch_File = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertToPunch_File>
+<cfquery name="InsertToPunch_File" datasource="punchlist">
 				INSERT INTO Punch_File
 				(	
 					Punch_ID,
@@ -203,6 +221,7 @@
 				'#Form.MatchAttch#'
 				)
 		</cfquery>
+</cfif>
 	</cfif>
 	<cfif Form.MatchAttch EQ "" and  len(#Get_Label_No.BA_Ticket_Number#) GT 0>	
 		<CFIF application.oApplicationAppSettingsManager.getApplicationAppSettings().getWebserviceOn() EQ 1>
@@ -258,13 +277,33 @@
 				)
 				</cfquery>
 			<cfelse>
-				<cfquery name="UpdatePunch_File" datasource="punchlist">
+				<cfset useLakebaseForUpdatePunch_File = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForUpdatePunch_File>
+	<cftry>
+		<cfset application.oLakebase.updateRows("punch_file",
+			{
+				"punch_id" = "eq.#Get_Label_No.BA_Ticket_Number#",
+				"punch_file_name" = "eq.#Form.WR_Document_Name#",
+				"punch_file_name_saved_as" = "eq.#Actual_file_name#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunch_File = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunch_File>
+<cfquery name="UpdatePunch_File" datasource="punchlist">
 				Update Punch_File
 				set deleted = 1
 				where Punch_ID = '#Get_Label_No.BA_Ticket_Number#'
 				and 	Punch_File_Name ='#Form.WR_Document_Name#'
 				and 	Punch_File_Name_Saved_As ='#Actual_file_name#'
 				</cfquery>
+</cfif>
 			</cfif>
 		</CFIF>
 	<!--- end punchlist using DSN --->

@@ -56,10 +56,23 @@
 <!--- This table stores the progress of the product count after margin call --->
 <cffunction name="setMarginLogInfo" output="false">
  <cfargument name="Program_ID" type="numeric" required="true" />
-	<cfquery name="qsetMarginLogInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForqsetMarginLogInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_margin_log")>
+<cfif useLakebaseForqsetMarginLogInfo>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_margin_log", {
+			"program_id" = "#arguments.Program_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqsetMarginLogInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqsetMarginLogInfo>
+<cfquery name="qsetMarginLogInfo" datasource="#application.datasource#">
 		INSERT INTO Program_Margin_Log(Program_ID)
 		VALUES('#arguments.Program_ID#')
 	</cfquery>
+</cfif>
 	<cfreturn 1 />
 </cffunction>
 

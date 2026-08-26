@@ -2915,7 +2915,20 @@ Description:	This file is responsible for managing Billback data.
 		<cfswitch expression="#Payee_Type_ID#">
 			<!--- Payee is distributor --->
 			<cfcase value="1">
-				<cfquery name="InsertPayee" datasource="#application.datasource#">
+				<cfset useLakebaseForInsertPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForInsertPayee>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_distributor", {
+			"billback_id" = "#arguments.Billback_ID#",
+			"distributor_id" = "#arguments.Payee_ID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertPayee>
+<cfquery name="InsertPayee" datasource="#application.datasource#">
 				INSERT INTO Billback_Distributor
 				(
 					Billback_ID,
@@ -2930,6 +2943,7 @@ Description:	This file is responsible for managing Billback data.
 				WHERE Billback_ID = '#arguments.Billback_ID#'
 				AND Distributor_ID = '#arguments.Payee_ID#'
 				</cfquery>
+</cfif>
 				<cfset Billback_Payee_ID = InsertPayee.Billback_Payee_ID>
 			</cfcase>
 			<!--- Payee is operator --->
