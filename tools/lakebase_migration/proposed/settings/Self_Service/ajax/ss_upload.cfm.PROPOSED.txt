@@ -1,0 +1,21 @@
+===== QUERY: qFileData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqFileData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcontent")>
+<cfif useLakebaseForqFileData>
+	<cftry>
+		<cfset qFileData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcontent", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFileData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFileData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSaveSelfServeLog =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

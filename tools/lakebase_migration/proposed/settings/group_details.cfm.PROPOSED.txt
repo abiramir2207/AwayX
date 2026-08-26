@@ -1,0 +1,41 @@
+===== QUERY: get_group =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_group = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_labels")>
+<cfif useLakebaseForget_group>
+	<cftry>
+		<cfset get_group = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_labels", {
+				"group_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_group = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_group>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#get_group.LastUpdated_UserId#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,115 @@
+/* 
+* ==================================================================================================== 
+*    @File: \Programs\product\rates.css
+*  @Author: Sharon Harris
+*    @Date: October 2019 
+* 
+* @Remarks: Product Rate page - Styles
+*
+* ==================================================================================================== 
+*/
+#page-container {
+	border: 0;
+	/* height: 99vh; */
+}
+.top_header {
+	height: 3px;	/* blue HR lines around header (override tailwind height for hr) */
+}
+
+.details-card {
+	background-color: #fff;
+	border-color: #d8d9dd;
+	border-radius: 5px;
+	border-width: 0px 1px 1px 1px;
+	box-shadow: 1px 1px 1px rgba(0,0,0, 0.3), -1px 0 1px rgba(0,0,0, 0.2);
+	margin: 1px 10px 5px 0;
+}
+.card-header {
+	background-color: #ffedd2;
+	border-radius: 5px 5px 0px 0px;
+	color: #343540;
+	font-size: 11px;
+	font-weight: 600;
+	height: 20px;	
+	padding: 5px 5px 5px 10px;
+}	
+.card-main {
+	/* background-color: #fff; */
+	/* border-color: #d8d9dd; */
+	/* border-radius: 0 0 5px 5px; */
+	/* border-style: solid; */
+	/* border-width: 0px 1px 1px 1px; */
+	font-size: 11px;
+	min-height: 25px;
+	padding-top:5px;
+	padding-left:4px;
+	padding-right:4px;
+	padding-bottom:4px;
+	width: 100%;
+}
+/*.card-main input,
+.card-main select { */
+input,
+select {
+	border: solid 1px #c4c5c7;
+	border-radius: 3px;
+	min-height: 14px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+	vertical-align: middle;
+}
+
+
+.filter-set {
+	background-color: #edeef2;
+	border: 1px solid #c4c5c7;
+	border-radius: 2px;
+	padding-bottom: 3px;
+	padding-top: 3px;
+}
+legend {
+	font-size: 11px;
+	font-weight: bold;
+}
+
+.inline-field button,
+.inline-field span,
+.inline-field fieldset,
+.inline-field input,
+.inline-field label {
+	display: inline-block;
+	vertical-align: middle;
+}
+.inline-field label {
+	margin-right: 5px;
+}
+.inline-field fieldset {
+	padding-left: 5px;
+	padding-right: 8px;
+}
+
+.btn-icon { color: #406be4; }
+.btn-icon-red { color: red; }
+
+.center-text {
+    margin: 0px auto 0px auto;	/* center text */
+}
+
+input:invalid {
+	border: 1px solid red;
+}
+input:valid {
+	border: 1px solid #c4c5c7;
+}
+
+/* Restore outline for focus since users may want to tab through the buttons */
+button.button:focus {
+	outline: 1px solid #0091ea !important;
+}
+
+/* .drop-down-arrow { */
+	/* background: url(/Images/arrow_link.gif) no-repeat right center; */
+	/* background-size:19px 15px; */
+/* } */

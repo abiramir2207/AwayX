@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:view="com.Program.MarketPrice.views.*" 
+			   xmlns:maps="com.Program.MarketPrice.maps.*" 
+			   xmlns:vos="com.Program.MarketPrice.vos.*" applicationComplete="applyRuntimeStyleSheet();">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:MPEventMap dispatcher="{this}" />
+		<!--<maps:ModelMap cache="local" dispatcher="{this}" />-->
+	</fx:Declarations>
+	<fx:Script><![CDATA[
+		import com.shared.models.SettingsManager;
+		import com.Program.MarketPrice.events.*;
+		import mx.controls.Alert;
+		import mx.styles.StyleManager;
+		import mx.core.mx_internal;
+		import mx.utils.ObjectUtil;
+
+		private function applyRuntimeStyleSheet():void {
+			//styleManager.loadStyleDeclarations("/flex/mainFx46.swf");
+		//	styleManager.loadStyleDeclarations("/flex/mainFx411.swf");
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+		}
+		
+		]]>
+	</fx:Script>
+
+	<!-- Views _______________________________________________________ -->
+
+	<mx:HBox width="850">
+		<view:MPPanel />
+	</mx:HBox>
+</s:Application>

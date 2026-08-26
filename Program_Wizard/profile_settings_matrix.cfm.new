@@ -1,0 +1,963 @@
+<!DOCTYPE HTML>
+<HTML>
+<HEAD>
+<TITLE>PROFILES: ACCESS SETTINGS MATRIX</TITLE>
+<LINK REL="STYLESHEET" TYPE="text/css" HREF="/common_files/locked-column.css">
+<LINK REL="STYLESHEET" TYPE="text/css" HREF="/common_files/ViewModes.css">
+<LINK REL="STYLESHEET" TYPE="text/css" HREF="/common_files/dataTable.css">
+
+
+<SCRIPT SRC="/Script/javascript/dhtml.js"></SCRIPT>
+<SCRIPT SRC="/Script/javascript/dom_common.js"></SCRIPT>
+<SCRIPT language="JavaScript" src="/script/javascript/string_functions.js"></SCRIPT>
+<SCRIPT language="JavaScript" src="/script/javascript/format_functions.js"></SCRIPT>
+<SCRIPT language="JavaScript" src="/Common_Files/scripts/allowonlytwodecimalplaces.js"></SCRIPT>
+
+<style>
+	html, body {
+		height: 100%;
+		}
+	/* Comment the code as a fix for IE 10 - "css expressions" are not a part of IE 10. */
+	//thead td {
+		//top: expression(parentNode.parentNode.parentNode.parentNode.scrollTop-1);
+		//z-index: 30;
+		//}
+		thead th, thead th.locked	{
+			font-size: 11px;
+			font-weight: bold;
+			text-align: center;
+			color: black;
+			border-right: 1px solid #dddddd;
+			position22:relative;
+			cursor: default;
+		}
+	TABLE.Maintable TD	{
+		border-bottom:solid ##93BEE2 1px;
+		font-size : 10px;
+		}
+	##header {
+		font-size: 12px;
+		}
+	.showOptions {
+		display: ;
+		}
+	.hideOptions {
+		display: none;
+		}
+	.requiredFieldsIndicator {
+		font-size: 22px;
+		color:red;
+		font-weight:bold;
+		}
+	.retroFieldsIndicator {
+		font-size: 22px;
+		color:green;
+		font-weight:bold;
+		vertical-align:middle;
+		}
+	#matrix-container {
+		overflow: auto;
+		width: 100%;
+		height22: 400;
+		}
+	.maximize {
+		position:absolute;
+		left:5px;
+		top:5px;
+		width: 100%;
+		height22: 700;
+		background-color: white;
+		z-index: 100;
+		margin: 5;
+		}
+	.minimize {
+		height22:400;
+		}
+	.over{
+		font-size: normalpt;
+		color: blue;
+		text-decoration: underline;
+		cursor: pointer;
+		}
+	.tooltipHide {
+		display:none;
+		}
+	.tooltipShow {
+		border:1px solid black;
+		background-color:lightyellow;
+		padding:3;
+		position:absolute;
+		z-index: 500;
+		width: 150;
+		left:3px;
+		}
+  .saving { font-weight: bold; color: #00529B; font-size: 1.15em; float:right; margin-top:10px; }
+</style>
+
+</HEAD>
+
+<cfquery name="getCurProfiles" datasource="#application.datasource#">
+	SELECT 	DISTINCT Profiles.Profiles_ID, Profiles_Desc, Profiles_Short_Desc,
+			ISNULL(Profiles_Settings.Approve_Pullback, 0) As Approve_Pullback, 2 as s_order
+	FROM 	Profiles
+	LEFT JOIN Profiles_Settings
+	ON		Profiles_Settings.Deleted = 0
+	AND		Profiles_Settings.Profiles_ID = Profiles.Profiles_ID
+	WHERE 	Profiles.Deleted = 0
+	UNION
+	SELECT	TOP 1 0, 'Any New Profiles', 'ANP',
+			1 As Approve_Pullback, 1 as s_order
+	FROM	Profiles
+	WHERE	Deleted = 0
+	ORDER BY s_order, Profiles_Desc
+</cfquery>
+
+<cfquery name="getCurChecks" datasource="#application.datasource#">
+	SELECT	*
+	FROM	Profile_Forbidden_Template
+	WHERE	template_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#URL.id#">
+</cfquery>
+
+<cfparam name="FormStatus" default="">
+<cfparam name="UseCustomerType" default = 0>
+<cfparam name="tablewidth" default="1024">
+<cfparam name="url.lockstate" default="0">
+
+<!---Initialize the appliation settings--->
+<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
+<cfset appSettings = genSettingsManager.get()>
+<cfset forbidType = appSettings.getForbidAllowProfilesInTemplates() />
+<cfset templateManager = CreateObject("component", "components.programs.template.TemplateManager").init() />
+<cfset UseCustomerType = appSettings.getCustomertype()>
+<cfset variables.bIsLSAutoPay = 0>
+<cfif templateManager.get(url.id).GENERICTYPE EQ "LSAutoPay">
+	<cfset variables.bIsLSAutoPay = 1>
+</cfif>
+<cfset profileList = valueList(getCurProfiles.profiles_id,",")>
+
+<cfset PAGETITLE = "PROGRAM TEMPLATES: PROFILES">
+<cfset PAGE_TITLE= "User Profiles Control Panel">
+<cfset GROUP= "Control_Panel">
+<cfset displayheader = 1 >
+<cfset pageName = "profile_settings_matrix">
+<cfset Active = 0>
+
+<cfset approvalGroupManager = CreateObject("component", "components.settings.ApprovalGroupManager").init() />
+<cfset approvalGroupType = approvalGroupManager.getGroupTypeInfo(productGroupLevelId=appSettings.getTemplateRestrictGroupLevel()) />
+<cfif NOT isDefined("Form.Allow_Approval_group")>
+	<cfset qGetTemplateAllowApprovalGroups = approvalGroupManager.getTemplateAllowApprovalGroups(ID) />
+	<cfset Form.Allow_Approval_group = ValueList(qGetTemplateAllowApprovalGroups.Group_ID)>
+</cfif>
+
+	<!---D38941 :: New Limited User Profile Edit Functionality START--->
+	<cfset actionListShort = "Access, Approval, Lumpsum, Billback, Agree, #appSettings.getPullbackLabelLower()#, Limited Revise">
+	<cfset variables.Options = listlen(actionListShort) />
+	<cfset actionListForbid = "
+						Profiles to forbid from using this template,
+						Profiles to forbid from approving this template,
+						Profiles to forbid from approving lumpsum,
+						Profiles to forbid from Approving billback with this template,
+						Profiles to allow only agree programs,
+						Profiles to forbid from approving #appSettings.getPullbackLabelLower()#,
+						Profiles to forbid from Limited Revise
+						">
+
+	<cfset actionListAllow = "
+							Allowed access to profiles,
+							Allowed approval to profiles,
+							Allowed lumpsum approval to profiles,
+							Allowed Billback approval to profiles,
+							Allowed agree only to profiles,
+							Allowed #appSettings.getPullbackLabelLower()# approval to profiles,
+							Allowed Limited Revise to profile
+							">
+	<!---D38941 :: New Limited User Profile Edit Functionality END--->
+
+
+		<SCRIPT>
+				<cfif forbidType EQ 1>
+				function staychecked(objs, obj) {
+				var sChkBx = objs + '_5';
+				var h = '<input type="checkbox" name="sChkBx" id="' + sChkBx + '" disabled="true" readonly="true">';
+				var oChkBx = 'document.matrixForm.' + objs + "_5";
+				document.getElementById('divA').innerHTML = h;
+				box1 = document.getElementById(objs + "_1");
+				box2 = document.getElementById(objs + "_2");
+				box3 = document.getElementById(objs + "_3");
+				/* If recapture (pullback) column exists. */
+				if(document.getElementById(objs + "_6")){
+				var box6 = document.getElementById(objs + "_6");
+				}
+
+				if(oChkBx){
+
+				}
+				else{
+					box5 = document.getElementById(objs + "_5");
+					}
+
+				if (box1.checked == true) {
+				if (obj == true) {
+					box2.checked = true;
+					box3.checked = true;
+					box5.checked = true;
+					if(box6){
+					box6.checked = true;
+					}
+				} else {
+					box2.checked = true;
+					box3.checked = true;
+					box5.checked = true;
+					if(box6){
+					box6.checked = true;
+					}
+				}
+				}
+
+				/* When "forbidType EQ 1 (cf code)", then whatever checkbox is selected is what is retricted in the profile, unlike
+				"forbidType EQ 0" where whatever checkbox is selected is what actually gets set in the profile - so these 2 are opposites
+				of each other.
+				When "forbidType EQ 1" - when the user does not have profile access (checkbox checked), the user should not be provided with
+				recapture (pullback) too.
+				*/
+				if(box2.checked == true){
+				if(box6){
+				box6.checked = true;
+				}
+				}
+				}
+				</cfif>
+
+				function checkRow(elId, tchk) {
+				var sChkBx = elId + '_5';
+				var h = '<input type="checkbox" name="sChkBx" id="' + sChkBx + '" disabled="true" readonly="true">';
+				var oChkBx = 'document.matrixForm.' + elId + '_5';
+				box2 = document.getElementById(elId + "_2");
+				box3 = document.getElementById(elId + "_3");
+				/* If recapture (pullback) column exists. */
+				if(document.getElementById(elId + "_6")){
+				var box6 = document.getElementById(elId + "_6");
+				}
+
+				if(document.matrixForm(elId + '_5')){
+				box5 = document.getElementById(elId + "_5");
+				box5.checked = false;
+				}
+				else{
+				document.getElementById('divA').innerHTML = h;
+				box5 = document.getElementById(elId + "_5");
+				box5.checked = false;
+				}
+
+				if (tchk == true) {
+				<cfif forbidType EQ 0>
+				box2.disabled = false;
+				box3.disabled = false;
+				box5.disabled = false;
+				<cfelse>
+				box2.checked = true;
+				box3.checked = true;
+				box5.checked = true;
+				if(box6){
+				box6.checked = true;
+				}
+				</cfif>
+				} else {
+				<cfif forbidType EQ 0>
+				box2.checked = false;
+				box2.disabled = true;
+				box3.checked = false;
+				box3.disabled = true;
+				box5.checked = false;
+				box5.disabled = true;
+				if(box6){
+				box6.checked = false;
+				box6.disabled = true;
+				}
+				<cfelse>
+				box2.checked = false;
+				box3.checked = false;
+				box5.checked = false;
+				if(box6){
+				box6.checked = false;
+				}
+				</cfif>
+				}
+				}
+
+				function check_uncheck(objs, obj){
+
+				/* approval checkbox */
+				box2 = document.getElementById(objs + "_2");
+				/* recapture (pullback) checkbox */
+				if(document.getElementById(objs + "_6")){
+				var box6 = document.getElementById(objs + "_6");
+
+				/* If approval checkbox is turned ON, recapture (pullback) checkbox is enabled. */
+				if(box2.checked == true){
+				box6.disabled = false;
+				}
+				/* If approval checkbox is turned OFF, recapture (pullback) checkbox is disabled. */
+				else{
+				box6.disabled = true;
+				box6.checked = false;
+				}
+				}
+				}
+
+				function chkColumn(colId, obj) {
+
+				listString = new String("<cfoutput>#profileList#</cfoutput>")
+				var profileList = listString.split(",");
+
+				for (var i=0; i<profileList.length; i++) {
+
+				MainInstance = document.getElementById("all_1");
+				boxcolumn = document.getElementById(profileList[i] + "_" + colId);
+				boxrow = document.getElementById(profileList[i] + "_1");
+				boxhead1 = document.getElementById("all_1");
+				boxhead2 = document.getElementById("all_2");
+				boxhead3 = document.getElementById("all_3");
+				boxhead4 = document.getElementById("all_4");
+				boxhead5 = document.getElementById("all_5");
+
+				if (obj == true){
+				boxcolumn.checked = true;
+				if (boxhead1.checked == true) {
+					<cfif forbidType EQ 0>
+						boxhead2.disabled = false;
+						boxhead3.disabled = false;
+						boxhead5.disabled = false;
+					<cfelse>
+						boxhead2.checked = true;
+						boxhead3.checked = true;
+						boxhead5.checked = true;
+					</cfif>
+					if (boxrow.checked = true){
+						checkRow(profileList[i], boxrow.checked);
+					} else {
+						checkRow(profileList[i], boxrow.checked);
+					}
+				}
+				} else {
+				boxcolumn.checked = false;
+				if (boxhead1.checked == false) {
+					<cfif forbidType EQ 0>
+						boxhead2.checked = false;
+						boxhead2.disabled = true;
+						boxhead3.checked = false;
+						boxhead3.disabled = true;
+						boxhead5.checked = false;
+						boxhead5.disabled = true;
+					<cfelse>
+						boxhead2.checked = false;
+						boxhead3.checked = false;
+						boxhead5.checked = false;
+					</cfif>
+					if (boxrow.checked = false){
+						checkRow(profileList[i], boxrow.checked);
+					} else {
+						checkRow(profileList[i], boxrow.checked);
+					}
+				}
+				}
+				}
+				}
+
+				function showObj(action, obj) {
+
+				object = document.getElementById(obj);
+
+				if (action == 'hide') {
+				object.style.display='none';
+				} else {
+				object.style.display='';
+				object.style.position='absolute';
+				}
+				}
+
+				function setClassName(objId, className) {
+				document.getElementById(objId).className = className;
+				}
+
+				function maximize() {
+				obj = document.getElementById("fullScr");
+
+				if (obj.innerHTML == 'Maximize +') {
+				obj.innerHTML = 'Minimize -';
+				// document.getElementById("matrix-container").style.height = screen.availHeight - 400;
+				setClassName('MasterContainer', 'maximize');
+				} else {
+				obj.innerHTML = 'Maximize +';
+				// document.getElementById("matrix-container").style.height = 400;
+				setClassName('MasterContainer', 'minimize');
+				}
+				}
+
+				function confirmCompletion(disableClickedButton, disableClickedButtonName) {
+				var clearCount1 = 0;
+				var clearCount2 = 0;
+				var clearCount3 = 0;
+				var clearCount4 = 0;
+				var clearCount5 = 0;
+				var errorCount1 = 0;
+				var errorCount2 = 0;
+				var errorCount3 = 0;
+				var errorCount4 = 0;
+				var errorCount5 = 0;
+				var errorExists = 0;
+				myString = new String("<cfoutput>#profileList#</cfoutput>")
+				var profileArray = myString.split(",");
+
+				<!------ Allow Profile for access and approve ----->
+				<cfif forbidType EQ 0><!------ forbidType = 1, is deny access ----->
+
+				for (var i=0; i<profileArray.length; i++) {
+
+				box1 = document.getElementById(profileArray[i] + "_1").checked;
+				box2 = document.getElementById(profileArray[i] + "_2").checked;
+				box3 = document.getElementById(profileArray[i] + "_3").checked;
+				box4 = document.getElementById(profileArray[i] + "_4").checked;
+
+				if (box1 == false) {
+					errorCount1++;
+				} else {
+					clearCount1++;
+				}
+				if (box2 == false) {
+					errorCount2++;
+				} else {
+					clearCount2++;
+				}
+				if (box3 == false) {
+					errorCount3++;
+				} else {
+					clearCount3++;
+				}
+				if (box4 == false) {
+					errorCount4++;
+				} else {
+					clearCount4++;
+				}
+				}
+
+				if (clearCount1 == 0) {
+				errorExists++;
+				queueMessage("You have to give create/view access to at least 1 profile", document.all.err_Forbid_Profile_1);
+				} else {
+				clearQueue(document.all.err_Forbid_Profile_1);
+				}
+
+				if (clearCount2 == 0) {
+				errorExists++;
+				queueMessage("You have to give approval access to at least 1 profile", document.all.err_Forbid_Profile_2);
+				} else {
+				clearQueue(document.all.err_Forbid_Profile_2);
+				}
+
+				if (clearCount3 == 0) {
+				errorExists++;
+				queueMessage("You have to give lumpsum approval access to at least 1 profile", document.all.err_Forbid_Profile_3);
+				} else {
+				clearQueue(document.all.err_Forbid_Profile_3);
+				}
+
+				if (clearCount4 == 0) {
+				errorExists++;
+				queueMessage("You have to give billback approval access to at least 1 profile", document.all.err_Forbid_Profile_4);
+				} else {
+				clearQueue(document.all.err_Forbid_Profile_4);
+				}
+
+				<!---
+				<cfif appSettings.getPullbacksOn() EQ 1>
+				if(!Any_Object_Like_Name_Checked("Forbid_Pullback_Profile_Approve"))
+				{
+
+					var bPullbackApprovalNeeded = document.all.pullback_approval_needed.value;
+
+					if(bPullbackApprovalNeeded == "1")
+					{
+						ErrorCount++;
+						<cfoutput>
+						queueMessage("You have to give #appSettings.getPullbackLabelLower()# approval access to at least 1 profile", document.all.err_Forbid_Profile_Approve_Pullback);
+						</cfoutput>
+					}
+				}
+				else
+				{
+					clearQueue(document.all.err_Forbid_Profile_Approve_Pullback);
+				}
+				</cfif>
+				--->
+				</cfif>
+
+				<!--- SHOW CONFIRMATION BOX IF ALL IS GOOD OR SHOW THE ERROR BOX --->
+				if(errorExists == 0)
+				{
+  			  $('form[name=matrixForm]').hide();
+  			  // display please wait message
+          var pleaseWait = '<div class="saving">saving data, please wait...</div>';
+          $('body').append( pleaseWait );
+
+  				matrixForm.action = "profile_settings_matrix_action.cfm"
+  				matrixForm.submit()
+  				if(disableClickedButton)
+  				{
+  				disableButton(disableClickedButtonName, true, false);
+  				}
+				}
+				else
+				{
+				showMessageWindow()
+				}
+				}
+
+				function changeDisableOtherCheckBoxes(thisObj, OtherObj, actionType) {
+				var bChangeEnable = 1;
+				if(actionType == 1)
+				{
+				OtherObj.checked = thisObj.checked;
+				}
+				else
+				{
+				if(OtherObj.bDisable)
+				{
+				bChangeEnable = 0;
+				}
+
+				if(bChangeEnable)
+				{
+				OtherObj.disabled = !(thisObj.checked);
+				}
+				}
+				}
+
+				function keepChecked(thisObj, OtherObj)	{
+				if(OtherObj.checked && !thisObj.checked)
+				{
+				thisObj.checked = true;
+				}
+				}
+
+				function checkDynStat() {
+				var groupDealChBx = document.all.Group_Deal;
+				var dynGroupDealChBx = document.all.Dynamic_Static_Groups;
+
+				//handle for group deal checkbox
+				//if it's checked then enable dynamic static group checkbox
+				if (groupDealChBx.checked == true)
+				{
+				dynGroupDealChBx.disabled = false;
+				}
+
+				//if it's not checked then uncheck disable dynamic static group checkbox and disable
+				if (groupDealChBx.checked == false)
+				{
+				dynGroupDealChBx.checked = false;
+				dynGroupDealChBx.disabled = true;
+				}
+				}
+
+				function showHideObject(thisObj, displayObj) {
+				var trObjStyle = displayObj.style;
+				if(thisObj.checked)
+				{
+				trObjStyle.display = "";
+				}
+				else
+				{
+				trObjStyle.display = "none";
+				}
+				}
+
+				function showHideRestrictOnApproalGroup(thisObj) {
+				var trObj = document.all.tr_Restrict_on_approal_Group.style;
+				if(thisObj.checked)
+				{
+				trObj.display = "";
+				}
+				else
+				{
+				trObj.display = "none";
+				}
+				}
+
+				function showSearchWindow(sUrl, FieldName) {
+				NewWindow(sUrl + '?FormName=matrixForm&groupLevelId=#appSettings.getTemplateRestrictGroupLevel()#&FieldName=' + FieldName , 'select_restrict_group_level_value' , 600 , 500 , 'yes' , 'yes');
+				return false;
+				}
+
+				function keepHeaderFixed(topPosition,leftPosition)
+				{
+				/* CODE FOR HORIZONTAL SCROLLING */
+
+				/* Find the element which is a "<td>" */
+				var cellObject = document.getElementsByTagName("td");
+
+				/*Loop through the "<td>" object. Look for specific "id" (below), then move that cell from the left based on scroll position.
+				The position of the "<td>" will match the scroll position.
+				*/
+				for(i=0;i<cellObject.length;i++)
+				{
+				if (cellObject[i].getAttribute('id') == 'locked') {
+
+				cellObject[i].style.left = leftPosition;
+				}
+				}
+
+				/* CODE FOR VERTICAL SCROLLING */
+				document.getElementById('bufferTD').style.top = topPosition;
+
+				<cfoutput>
+				<cfloop index="i" from="1" to="#variables.Options#">
+				<cfif (i NEQ 5 OR variables.bIsLSAutoPay EQ 1) OR (i NEQ 6 OR appSettings.getPullbacksOn())>
+				document.getElementById('topHead_#i#').style.top = topPosition;
+				</cfif>
+				</cfloop>
+				</cfoutput>
+				}
+		</SCRIPT>
+
+<!--- Set the width of the main tbody td cells--->
+<CFSET TD_Width = 105>
+<!--- Set the width of the Mass Update td cells --->
+<CFSET massUpdate_TD_Width = 90>
+
+<cfif IsDefined("url.ID")>
+	<cfset ID = url.ID>
+<cfelseif isDefined("form.ID")>
+	<cfset ID = form.ID>
+<cfelse>
+	<cfset ID = 0>
+</cfif>
+
+<body <!--- bgcolor="white" 	text="black"
+		link="blue"
+		vlink="blue"
+		alink="red"
+		rightmargin="0"
+		bottommargin="0"
+		onLoad="javascript:document.all.PleaseWaitMessage.style.display='none';" --->>
+
+<cfinclude template="/helpsystem/help_link.cfm">
+<cfinclude template="/settings/settings_title.cfm">
+<cfinclude template="/get_access_profile.cfm">
+
+
+
+<cfinclude template="header.cfm">
+<!---22 <cfinclude template="/includes/call_please_wait.cfm"> --->
+
+<cfif LockedBy_Current_User NEQ 1>
+	<cfset FormStatus = "disabled">
+</cfif>
+
+<cfinvoke component="components.general.General_Functions" method="Get_Application_Path" returnVariable="AppPath">
+<CFSET getProfileLockStatus = CreateObject("component", "components.settings.profiles.profile").getProfileLockStatus()>
+<!--- If a lock exists in the Db --->
+<cfif len(getProfileLockStatus.Locked_By_User_ID) GT 0>
+	<!--- if Locked by the Current User --->
+	<cfif url.lockstate EQ 1 AND getProfileLockStatus.Locked_By_User_ID EQ request.AccessStructure.user_id>
+		<CFSET Locked = CreateObject("component", "components.settings.profiles.profile").setProfilesLock(#request.AccessStructure.user_id#,1)>
+	<!--- if Locked by the Current User but URL.Lockstate is 0 then unlock and proceed --->
+	<cfelseif url.lockstate EQ 0 AND getProfileLockStatus.Locked_By_User_ID EQ request.AccessStructure.user_id>
+		<CFSET Locked = CreateObject("component", "components.settings.profiles.profile").setProfilesLock(#request.AccessStructure.user_id#,0)>
+	<!--- if Lock is more than 15 minutes old then unlock --->
+	<cfelseif datediff('n',getProfileLockStatus.Lock_date,Now()) GT 15>
+		<CFSET Locked = CreateObject("component", "components.settings.profiles.profile").setProfilesLock(#request.AccessStructure.user_id#,0)>
+	<!--- Else Leave in ReadOnly --->
+	<cfelse>
+		<CFSET Locked = 0 />
+	</cfif>
+
+<!--- If no lock exists in the database --->
+<cfelse>
+	<!--- If user is requesting edit mode then set to edit mode --->
+	<cfif url.lockstate EQ 1>
+		<CFSET Locked = CreateObject("component", "components.settings.profiles.profile").setProfilesLock(#request.AccessStructure.user_id#,1)>
+	<!--- Leave in ReadOnly Mode --->
+	<cfelse>
+		<CFSET Locked = CreateObject("component", "components.settings.profiles.profile").setProfilesLock(#request.AccessStructure.user_id#,0)>
+	</cfif>
+</cfif>
+
+<CF_MessageWindow>
+
+<cfoutput>
+<FORM ACTION="profile_settings_matrix.cfm" METHOD="post" NAME="matrixForm">
+<div id="divA" style="display:none">
+</div>
+<div id="MasterContainer">
+<cfset variables.retro = "<font size='2' color='red'><b>R</b></font>">
+<div style="margin:0 0 10px 0;">    <!--- 42176 --->
+	<span style="width:60%;display:inline-block;"><img src="/images/ico-info.gif"><span class="headingTip"> * Indicates required field &nbsp; | &nbsp; #variables.retro# Indicates field which will be saved retroactively to all previous versions</span></span>
+	<cfif LockedBy_Current_User EQ 1>
+		<span style="width:39%;text-align:right;display:inline-block;"><a href="javascript:confirmCompletion(1, 'save2_table')">#application.util.string.actionLinkFormat("save and continue")#</a></span>
+	</cfif>
+</div>
+<!---
+<table width="90%" cellspacing="0" cellpadding="0"  border="0" style="margin-top:-15px;">
+	<tr valign="middle">
+		<cfif forbidType EQ 0>
+			<td nowrap class="requiredFieldsIndicator">*</td>
+			<td nowrap>&nbsp;&nbsp; Required fields</td>
+			<td width="30%">&nbsp;</td>
+			<td nowrap class="retroFieldsIndicator">*</td>
+			<td nowrap>&nbsp;&nbsp; Fields which will be saved retroactively for all previous versions</td>
+		</cfif>
+		<cfif LockedBy_Current_User EQ 1>
+			<td width="100%" align="right">
+					<CF_button
+								button_name		=	"save1"
+								button_caption	=	"Save and Continue"
+								button_action	=	"confirmCompletion(1, 'save1_table');"
+								button_type		=	"javascript_link"
+								button_width	=	"250"
+								button_color	=	"Navy"
+								button_tip		=	"Save and Continue"
+								font_color		=	"White"
+								font_size		=	"12"
+								font_weight		=	"bold"
+								>
+			</td>
+		</cfif>
+	</tr>
+</table>
+--->
+<input type="hidden" name="ID" value="#URL.ID#">
+<input type="hidden" name="forbidtype" value="#forbidtype#">
+<!--- <DIV id=matrix-container onscroll="keepHeaderFixed(this.scrollTop-1,scrollLeft);"> --->
+<cfset variables.columnSizes = application.util.array.dtColumnSizeInPercent( listToArray( "2," & repeatString("1,", variables.Options) ) )>
+<TABLE class="datagrid" width="100%" height="50%" border="0" cellpadding="5" cellspacing="0">
+<cfloop array="#variables.columnSizes#" index="variables.columnPercentage">
+  <cfoutput><col width="#variables.columnPercentage#%"></cfoutput>
+</cfloop>
+<THEAD id="tbl_head">
+	<tr>
+		<th name="bufferTD"
+			id="bufferTD"
+			class="locked"
+			align="center"
+			valign="middle"
+			nowrap
+			style="z-index:40; font-weight:bold; text-align:left;">
+			<!---<cfif LockedBy_Current_User EQ 1>
+				<span id="fullScr"
+						onMouseOver="this.className='over'"
+						onMouseOut="this.className=''"
+						onclick="maximize()"
+						style="position: relative;">Maximize +</span>
+			</cfif><br>--->
+			Profiles to <cfif forbidType eq 1>Forbid<cfelse>Allow</cfif>
+		</th>
+		<cfloop index="i" from="1" to="#variables.Options#">
+
+			<cfif (i NEQ 5 OR variables.bIsLSAutoPay EQ 1) OR (i NEQ 6 OR appSettings.getPullbacksOn())>
+
+			<cfif forbidType EQ 1>
+				<cfset displayText = listgetat(actionListForbid,#i#)>
+			<cfelse>
+				<cfset displayText = listgetat(actionListAllow,#i#)>
+			</cfif>
+				<cfset displayTextShort = listgetat(actionListShort,#i#)>
+				<th	valign="middle"
+					nowrap
+					align="center"
+					id="topHead_#i#"
+					onmouseover="setClassName('Profile_#i#', 'tooltipShow');this.style.backgroundColor='lightyellow';"
+					onmouseout="setClassName('Profile_#i#', 'tooltipHide');this.style.backgroundColor='';">
+
+					<span id="err_Forbid_Profile_#i#"></span> &nbsp;
+
+					#displayTextShort# <cfif i NEQ 5 AND i NEQ 4>*</cfif> #variables.retro#
+					<cfif LockedBy_Current_User EQ 1>
+						<br /><input type="checkbox"
+
+								<cfif i EQ 1>
+									onClick="chkColumn('#i#', this.checked);"
+									id="all_#i#"
+								<cfelse>
+									id="all_#i#"
+									<cfif forbidType EQ 1>
+										ONCLICK="
+											if (document.getElementById('all_1').checked == true) {
+												staychecked('all', this.checked);
+											} else {
+												chkColumn('#i#', this.checked);
+											}
+											"
+									<cfelse>
+										ONCLICK="chkColumn('#i#', this.checked);"
+									</cfif>
+									<cfif (i NEQ 4 and i NEQ #variables.Options# and forbidType EQ 0)>
+										DISABLED
+									</cfif>
+								</cfif>
+								>
+					</cfif>
+
+					<div id="Profile_#i#" class="tooltipHide"
+						<cfif forbidType EQ 0>
+							<cfif LockedBy_Current_User EQ 1>
+								style="top:63px;"
+							<cfelse>
+								style="top:43px;"
+							</cfif>
+						<cfelse>
+							<cfif LockedBy_Current_User EQ 1>
+								style="top:48px;"
+							<cfelse>
+								style="top:28px;"
+							</cfif>
+						</cfif>>
+						#displayText#
+					</div>
+				</th>
+				</cfif>
+		</cfloop>
+	</tr>
+</THEAD>
+<TBODY id="tbl_body">
+<cfset qGetProfileForbidTemplate = templateManager.getProfileForbidTemplate(ID)>
+<cfloop query="getCurProfiles">
+
+	<TR onMouseOver="this.style.backgroundColor='##EEEEEE';" onMouseOut="this.style.backgroundColor='';">
+		<td class="locked2bad"
+			id="locked"
+			style="font-weight:normal;">
+				#getCurProfiles.profiles_desc#
+		</td>
+		<cfloop index="i" from="1" to="#variables.Options#">
+			<cfif (i NEQ 5 OR variables.bIsLSAutoPay EQ 1) OR (i NEQ 6 OR appSettings.getPullbacksOn())>
+			<cfquery name="ShouldBeChecked" dbtype="query">
+			SELECT 		*
+			FROM 		getCurChecks
+			WHERE 		Profile_ID = <cfqueryparam cfsqltype="cf_sql_integer" value="#getCurProfiles.Profiles_ID#">
+				AND 	forbid_access_type = <cfqueryparam cfsqltype="cf_sql_integer" value="#i#">
+			</cfquery>
+
+			<cfif ShouldBeChecked.Recordcount GT 0>
+				<cfset ShouldThisBeChecked = 1>
+			<cfelse>
+				<cfset ShouldThisBeChecked = 0>
+			</cfif>
+			<TD ALIGN="center">
+				<SPAN ID="ForbidCheckboxes">
+					<cfset chkbxName = getCurProfiles.Profiles_ID & "_Profile_Settings_" & getCurProfiles.profiles_short_desc & "_" & i>
+					<span id="err_#chkbxName#"></span>
+					<INPUT
+						TYPE="checkbox"
+					<cfif i EQ 1>
+						ONCLICK="checkRow(#getCurProfiles.Profiles_ID#, this.checked);"
+						ID="#getCurProfiles.Profiles_ID#_#i#"
+					<cfelse>
+						ID="#getCurProfiles.Profiles_ID#_#i#"
+						<cfif forbidType EQ 1>
+							ONCLICK="staychecked(#getCurProfiles.Profiles_ID#, this.checked);"
+						</cfif>
+						<cfif i NEQ 4 and forbidType EQ 0>
+							ONCLICK="check_uncheck(#getCurProfiles.Profiles_ID#, this.checked);"
+						</cfif>
+						<cfif i NEQ 4 and i NEQ #variables.Options# and forbidType EQ 0>
+							DISABLED
+						</cfif>
+					</cfif>
+						NAME="#chkbxName#"
+						VALUE="1"
+					<CFIF ShouldThisBeChecked EQ 1>
+						CHECKED
+					</CFIF>
+						#FormStatus#>
+				</SPAN>
+			</TD>
+			</cfif>
+		</cfloop>
+	</TR>
+</CFLOOP>
+</TBODY>
+</table>
+</div>
+				<!--- </div> --->
+</form>
+<!---22
+<div style="text-align:center;">
+	<cfif LockedBy_Current_User EQ 1>
+			<span style="width:39%;text-align:right;"><a href="javascript:confirmCompletion(1, 'save2_table')">#application.util.string.actionLinkFormat("save and continue")#</a></span>&nbsp;&nbsp;&nbsp;&nbsp;<br><br>
+	</cfif>
+</div>
+--->
+</cfoutput>
+
+<cfinclude template="/Common_Files/jQuery.cfm">
+
+<!--- Activate boxes where box1 is already checked. --->
+<cfif forbidType EQ 0 and FormStatus NEQ "Disabled">
+<script>
+	myString = new String("<cfoutput>#profileList#</cfoutput>")
+	profileArray = myString.split(",");
+
+	for (var i=0; i<profileArray.length; i++) {
+
+	 		boxMain = document.getElementById(profileArray[i] + "_1").checked;
+	 		boxa = document.getElementById(profileArray[i] + "_2");
+	 		boxb = document.getElementById(profileArray[i] + "_3");
+	 		<cfif NOT variables.bIsLSAutoPay EQ 1>
+	 			boxc = document.getElementById(profileArray[i] + "_5");
+	 		</cfif>
+	 		boxd = document.getElementById(profileArray[i] + "_6");
+
+
+	 	if (boxMain == true) {
+	 		boxa.disabled = false;
+	 		boxb.disabled = false;
+	 		<cfif NOT variables.bIsLSAutoPay EQ 1>
+	 			boxc.disabled = false;
+	 		</cfif>
+	 		if(boxd)
+			{
+				boxd.disabled = false;
+			}
+	 	} else {
+	 		boxa.disabled = true;
+	 		boxb.disabled = true;
+	 		<cfif NOT variables.bIsLSAutoPay EQ 1>
+	 			boxc.disabled = true;
+	 		</cfif>
+	 		if(boxd)
+			{
+				boxd.disabled = true;
+			}
+	 	}
+
+	}
+</script>
+</cfif>
+
+<!--- <cfset datatables.version = "1.9.1"> --->
+<cfinclude template="/common_files/dataTables.cfm">
+<script>
+var windowHeight = $(window).height(), sScrollY = ( windowHeight > 768 ? .59 : .45) * windowHeight;
+//alert(sScrollY)
+$('table.datagrid')
+		// .css("height", sScrollY + "px")
+		.dataTable( {
+		   "bAutoWidth": false
+		  ,"bSortClasses": false
+		  ,"bScrollCollapse": true
+  		,"bPaginate": false
+  		,"sScrollY": sScrollY         <!--- data grid height --->
+  		,"bScrollCollapse": true
+  		,"sDom": 't'
+			,"aoColumns": [
+											 {"bSortable":false, "bSearchable":false}
+											,{"bSortable":false, "bSearchable":false}
+											,{"bSortable":false, "bSearchable":false}
+											,{"bSortable":false, "bSearchable":false}
+											,{"bSortable":false, "bSearchable":false}
+											,{"bSortable":false, "bSearchable":false}
+											,{"bSortable":false, "bSearchable":false}
+			                ,{"bSortable":false, "bSearchable":false} ]    } );
+</script>
+</body>
+</html>

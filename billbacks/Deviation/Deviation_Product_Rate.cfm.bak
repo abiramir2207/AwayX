@@ -1,0 +1,1992 @@
+<CFIF NOT IsDefined("INC_Deviation_Constants")>
+	<CFINCLUDE TEMPLATE="/Billbacks/Deviation/Deviation_Constants.CFM">
+</CFIF>
+
+<cfif not isDefined("genSettingsManager")>
+	<!---get application settings--->
+	<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
+	<cfset appSettings = genSettingsManager.get()>
+</cfif>
+
+<CFIF NOT IsDefined("INC_Date_Graph_Settings")>
+	<CFINCLUDE TEMPLATE="/Billbacks/Deviation/Date_Graph_Settings.cfm">
+</CFIF>
+<CFSET Table_Width = 650>
+
+<CFPARAM NAME="URL.Billback_Product_Detail_ID"								DEFAULT="">
+<CFSET Billback_Product_Detail_ID=URL.Billback_Product_Detail_ID>
+
+<CFPARAM NAME="URL.BB_Product_Type_ID"										DEFAULT=1>
+<CFSET BB_Product_Type_ID=URL.BB_Product_Type_ID>
+
+<CFPARAM NAME="SHOW_DEVIATION_DETAIL_HEADER" 	DEFAULT=True>
+<CFPARAM NAME="SHOW_DEVIATION_DETAIL_FOOTER" 	DEFAULT=True>
+
+<cfset bbDeviationManager = CreateObject("component", "components.billback.BillbackDeviationManager").init() />
+<cfset bbDeviationManager.setAppSettings(appSettings) />
+
+<cfset objFreight = CreateObject("component","components.freight.FreightBracketSetting") />
+<cfset objFreight.getFreightSettings()  />
+
+<cfset useFreightCalcDelTypeFromInvoice = 0 />
+<cfif appsettings.getShow_Fixed_Freight() EQ 1
+	and (appsettings.getBBDeviationUseMaxPrice() EQ 1 OR appsettings.getBBDeviationUseMaxPrice() EQ 2)>
+	<cfset useFreightCalcDelTypeFromInvoice = 1 />
+</cfif>
+
+<CFIF SHOW_DEVIATION_DETAIL_HEADER>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+	<title>Billback <cfoutput>#appSettings.getDeviationLabel()#</cfoutput> - Rate</title>
+</head>
+
+<BODY BGCOLOR="White" TEXT="Black" LINK="Blue" VLINK="Blue" ALINK="Red" LEFTMARGIN="5" TOPMARGIN="5">
+<BLOCKQUOTE>
+
+<!------------------------------show spinner ---------------------------->
+
+<CFSET PW_Type="1">
+<SPAN CLASS="title2" ID="PleaseWaitMessage" ALIGN="CENTER">
+ <br><br><br>
+ <center><CFINCLUDE TEMPLATE="/includes/please_wait.cfm"></center>
+ <br><br><br>
+</SPAN>
+
+<SCRIPT>
+document.all.PleaseWaitMessage.style.display='none';
+</SCRIPT>
+
+<CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
+<br>
+<SCRIPT LANGUAGE="JavaScript">
+	function show_TR_Details(trName)
+	{
+		event.returnValue = false;
+		var trObj = document.getElementById(trName);
+		var bDisplay = "";
+		if(trObj.style.display.length == 0)
+		{
+			bDisplay = "none";
+		}
+		trObj.style.display = bDisplay;
+	}
+</SCRIPT>
+<CFELSE>
+	<BLOCKQUOTE>
+</CFIF>
+<CFIF ADDSCRIPT EQ "Yes">
+	<SCRIPT LANGUAGE="JavaScript" SRC="common_js.js"></SCRIPT>
+	<SCRIPT LANGUAGE="JavaScript">
+	window.onbeforeprint=new Function ("AllOpenLayers(1);");
+	</SCRIPT>
+</CFIF>
+<STYLE>
+TABLE.NotMaintable TD 
+{
+	border-bottom:none;
+}
+</STYLE>
+<CFSILENT>
+
+<CFQUERY  dataSource="#application.datasource#" NAME="getBB">
+	SELECT	top 1 Billback_Product.Billback_Id as ID,Billback_Product_Detail.BB_Product_Type_ID
+	FROM	Billback_Product_Detail
+	INNER JOIN Billback_Product
+	ON		Billback_Product.Deleted = 0
+	AND		Billback_Product.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID
+	WHERE	Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+
+</CFQUERY>
+<!--------------------------------------------------------------------------------------
+Get Program , Product Info for display and for being used in other queries				
+--------------------------------------------------------------------------------------->
+
+<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Product_Program">
+SELECT	Billback.Billback_ID, Billback.BB_Start_Date, Billback.BB_End_Date, Billback.BB_Code, Billback.BB_Title, Billback_Product.BB_Product_UOM,
+		Billback.Billback_Payee_Type_ID,
+		Billback_Program.Program_ID,
+		CASE 
+		WHEN Billback_Program.Program_ID IS NULL THEN
+			Billback_Program.BB_Program_Number
+		ELSE
+			Contract_Main.Contract_Number
+		END AS Contract_Number, 
+		Program_Control_Panel_Options.Created_Type, 
+		Program_Control_Panel_Options.Generic_Type,
+		Program_Control_Panel_Options.BidRequestStatusOn,
+		Program_Control_Panel_Options.BB_D_Template_Overrides_Deviation_Tolerances,
+		Program_Control_Panel_Options.BB_D_Purchase_Period_OverRide_Rate, 
+		BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID, BSA_Foodservice_Items_Master.Description, BSA_Foodservice_Items_Master.Item, BSA_Foodservice_Items_Master.UPC,		
+		BSA_Foodservice_Items_Master.Net_Weight, BSA_Foodservice_Items_Master.Gross_Weight,  
+		BSA_Foodservice_Items_Master.Del_Del_Cost, BSA_Foodservice_Items_Master.Del_Cust_Pickup,
+		CASE LTRIM(RTRIM(BSA_Foodservice_Items_Master.Inventory_UM))
+		WHEN 'LB' THEN 2
+		ELSE 1
+		END As Del_Cost_UOM
+		,Contract_Main.Manual_Cancel
+		,Distributor_id_earned
+		,IsNull(Type_Code_Desc.proxy_del_cost,0) As proxy_del_cost
+		,IsNull(gross_weight,0) As gross_weight,
+		ExpectedRate.ProductID AS ExpRT_ProductID,
+    	ExpectedRate.Rate AS ExpRT_Rate,
+    	ExpectedRate.Unit_Of_Measure_ID AS ExpRT_Unit_Of_Measure_ID,
+    	ExpectedRate.Expected_Rate_Flag AS ExpRT_Expected_Rate_Flag, -- 1 -> RATE = $0, 2 -> Rate = Less Program Rebate
+    	ExpectedRate.Contract_Number AS ExpRT_Contract_Number,
+    	ExpectedRate.Discount_Type_Id AS ExpRT_Discount_Type_Id
+		FROM	Billback_Product_Detail	
+		INNER JOIN	Billback_Product
+		ON
+		(
+			(Billback_Product.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(Billback_Product.Deleted = 0)
+		)
+		INNER JOIN	Billback_Program
+		ON
+		(
+			(Billback_Program.Billback_Program_ID = Billback_Product.Billback_Program_ID)
+			AND
+			(Billback_Program.Deleted = 0)
+		)
+		INNER JOIN	Billback
+		ON
+		(
+			(Billback.Billback_ID = Billback_Program.Billback_ID)
+			AND
+			(Billback.Deleted = 0)
+		)
+		LEFT JOIN	Contract_Main
+		ON
+		(
+				(Contract_Main.Contract_Main_ID = Billback_Program.Program_ID)				
+		)
+		LEFT JOIN	Program_Control_Panel_Options
+		ON
+		(
+			(Program_Control_Panel_Options.ProgramControl_Panel_Options_ID = Contract_Main.ProgramType_ID)
+		)
+		LEFT JOIN	BSA_Foodservice_Items_Master
+		ON
+		(
+			(BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = Billback_Product.Product_ID)			
+		)
+		LEFT JOIN Type_Code_Desc
+		ON
+		(
+			(BSA_Foodservice_Items_Master.Type_Code_Desc_ID = Type_Code_Desc.Type_Code_Desc_ID)			
+		)
+		LEFT JOIN dbo.udfGetBBExpectedRate('#getBB.Id#','1') ExpectedRate ON <!---,#getBB.BB_Product_Type_ID#'--->
+			ExpectedRate.ProductId  = Billback_Product.Product_ID
+	WHERE	
+		Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+		AND
+		Billback_Product_Detail.Deleted = 0
+</CFQUERY>
+
+<!-----------------------------------------------------------------------------	
+Set the variables to be used later for calulation adn also other queries
+-------------------------------------------------------------------------->
+
+<CFSET BSA_Foodservice_Items_Master_ID 	= Billback_Product_Program.BSA_Foodservice_Items_Master_ID>
+<CFSET Billback_Start_Date 					= Billback_Product_Program.BB_Start_Date>
+<CFSET Billback_End_Date 					= Billback_Product_Program.BB_End_Date>
+<CFSET Program_Number 						= Billback_Product_Program.Contract_Number>
+<CFSET Generic_Type 						= Billback_Product_Program.Generic_Type>
+<CFSET Created_Type 						= Billback_Product_Program.Created_Type>
+<CFSET Billback_Total_Days 					= DateDiff("d", Billback_Start_Date, Billback_End_Date) + 1>
+<CFSET Billback_ID 							= Billback_Product_Program.Billback_ID>
+<CFSET Net_Weight 							= Billback_Product_Program.Net_Weight>
+<CFSET Gross_Weight							= Billback_Product_Program.Gross_Weight>
+<CFSET Net_Weight 							= ReReplace(Net_Weight, "^0*", "", "All")>
+<CFSET Del_Del_Cost 						= Billback_Product_Program.Del_Del_Cost>
+<CFSET Del_Cust_Pickup 						= Billback_Product_Program.Del_Cust_Pickup>
+<CFSET Del_Cost_UOM							= Billback_Product_Program.Del_Cost_UOM>
+
+<CFSET Payable_Number 						= Billback_Product_Program.BB_Code>
+<CFSET Billback_Title 						= Billback_Product_Program.BB_Title>
+<CFSET Billback_UOM 						= Billback_Product_Program.BB_Product_UOM>
+
+<CFSET BB_Payee_Type_ID							= Billback_Product_Program.Billback_Payee_Type_ID>
+
+<CFSET Billback_Program_Program_ID			= Billback_Product_Program.Program_ID>
+
+<CFSET BB_D_Template_Overrides_Deviation_Tolerances = 0>
+<cfif Billback_Product_Program.BB_D_Template_Overrides_Deviation_Tolerances EQ 1>	
+	<CFSET BB_D_Template_Overrides_Deviation_Tolerances = 1>
+	<CFSET BB_D_Purchase_Period_OverRide_Rate = Billback_Product_Program.BB_D_Purchase_Period_OverRide_Rate />
+<cfelse>
+	<CFSET BB_D_Purchase_Period_OverRide_Rate = 0 />
+</cfif>
+
+<!---<cfset Get_Dist_ID = bbDeviationManager.getBillbackDistributor(Billback_ID, BB_Payee_Type_ID)>	--->
+<cfset PayTo = bbDeviationManager.getPayTo(BB_Payee_Type_ID, appSettings.getBBCheckPayTo())>
+<!---new for multi Dist BB's	--->
+<cfset Get_Dist_ID = bbDeviationManager.getBBProdDistId(Billback_ID, Billback_Product_Detail_ID)>	
+<CFSET Dist_ID = "">
+<CFIF Get_Dist_ID.RecordCount GT 0>
+	<CFSET Dist_ID = Get_Dist_ID.BSA_Foodservice_Customers_ID>
+</CFIF>
+
+<cfset zipCode = "0" />
+<cfif trim(Billback_Product_Program.Distributor_id_earned) neq "" and trim(Billback_Product_Program.Distributor_id_earned) neq '00000000-0000-0000-0000-000000000000'>
+	<cfset Get_Dist_Info = bbDeviationManager.getDistributorInfo(Billback_Product_Program.Distributor_id_earned) />
+	<cfset zipCode = Get_Dist_Info.zipCode />
+</cfif>
+		
+<cfset ProductReplacementID = "" />
+<cfif appSettings.getProductReplacementEnabled()>
+	<cfset BillbackDeviationManager = CreateObject("component", "components.billback.BillbackDeviationManager").init() />
+	<cfset ProductReplacementID = BillbackDeviationManager.getProductReplacementID(productId=BSA_Foodservice_Items_Master_ID)>
+</cfif>
+
+<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Rate_Tolerance">
+SELECT	BB_DPPR_Rate AS BB_Tolerance_DPP, 
+		BB_DPPO AS BB_Tolerance_DPPO, 
+		BB_TET AS BB_Tolerance_TET, 
+		BB_ERT AS BB_Tolerance_ERT
+FROM	BB_Basic_Setting_Detail
+WHERE
+		Billback_ID = '#Billback_ID#' AND
+		Contract_Main_Id = #Billback_Program_Program_ID#
+</CFQUERY>
+
+<cfif Billback_Rate_Tolerance.RecordCount eq 0>
+	<!--- 
+	D32309 : Event error value "" cannot be converted to a number on bbk deviations grid
+	It is possible that deviation ran agianst this billback before label D31930 was in place, handle for it 
+	Get any value available at billback level
+	--->
+	<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Rate_Tolerance">
+	SELECT	top 1 
+			BB_DPPR_Rate AS BB_Tolerance_DPP, 
+			BB_DPPO AS BB_Tolerance_DPPO, 
+			BB_TET AS BB_Tolerance_TET, 
+			BB_ERT AS BB_Tolerance_ERT
+	FROM	BB_Basic_Setting_Detail
+	WHERE
+			Billback_ID = '#Billback_ID#'
+	</CFQUERY>
+</cfif>
+
+<!--------------------------------------------------------------------------------------
+Get information for finding out the expected rate										
+--------------------------------------------------------------------------------------->
+
+<CFSET Rate_FieldName = "">
+<CFSWITCH EXPRESSION="#BB_Product_Type_ID#">
+	<CFCASE VALUE="1">
+		<CFSET Rate_FieldName = "0">
+		<CFSET Rate_ID_FieldName = "BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID">
+	</CFCASE>
+	<CFCASE VALUE="2">
+		<CFSET Rate_FieldName = "Program_Rebates_Product_Data.Rebate_Value">
+		<CFSET Rate_ID_FieldName = "Program_Rebates_Product_Data_ID">
+	</CFCASE>
+	<CFCASE VALUE="5">
+		<CFSET Rate_FieldName = "Program_Formula_Pricing_Rule_Products.Price">
+		<CFSET Rate_ID_FieldName = "Program_Formula_Pricing_Rule_Product_ID">
+	</CFCASE>
+	<CFCASE VALUE="11">
+		<CFSET Rate_FieldName = "0">
+		<CFSET Rate_ID_FieldName = "BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID">
+	</CFCASE>
+</CFSWITCH>
+<CFSET PGM_UOM_FIELD_NAME = "Unit_Of_Measure_ID" />
+<CFIF BB_Product_Type_ID EQ 11>
+	<CFSET PGM_UOM_FIELD_NAME = "UOM" />
+</CFIF>
+<cfset distributor_unauthorized = 0 />
+<CFQUERY  dataSource="#application.datasource#" NAME="Check_Distriburtor_UnAuthorized">
+	SELECT	ISNULL(BillBack_Program_Distributor.Unauthorized, 0) as Unauthorized
+	FROM	Billback_Product_Detail
+	INNER JOIN Billback_Product
+	ON		Billback_Product.Deleted = 0
+	AND		Billback_Product.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID
+	INNER JOIN BillBack_Program_Distributor
+	ON		BillBack_Program_Distributor.Deleted = 0
+	AND		BillBack_Program_Distributor.Billback_ID = Billback_Product.Billback_ID
+	AND		BillBack_Program_Distributor.Billback_Program_ID = Billback_Product.Billback_Program_ID
+	AND		BillBack_Program_Distributor.Distributor_ID = Billback_Product.Distributor_ID
+	WHERE	Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+	AND		Billback_Product_Detail.Deleted = 0
+</CFQUERY>
+<cfif Check_Distriburtor_UnAuthorized.recordCount>
+	<cfif Check_Distriburtor_UnAuthorized.Unauthorized eq 1>
+		<cfset distributor_unauthorized = 1 />
+	</cfif>
+</cfif>
+
+<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Program_Dates_Pre">
+	SELECT	Billback.Billback_ID, #Rate_ID_FieldName#, Contract_Products.BSA_Foodservice_Items_Master_ID,
+		<CFIF Billback_UOM EQ 1><!---- answer in cases --------->
+			<CFIF BB_Product_Type_ID NEQ "5">
+			CASE 		
+			WHEN #PGM_UOM_FIELD_NAME# = 1 THEN
+				ISNULL(CAST(#Rate_FieldName# AS Float), 0)
+			ELSE
+				ISNULL(CAST(#Rate_FieldName# AS Float), 0) * ISNULL(CAST(BSA_Foodservice_Items_Master.Net_Weight AS Float), 1)
+			END AS Product_Rate, 
+			<CFELSE><!---- Formula UOM = 2--->
+			ISNULL(CAST(#Rate_FieldName# AS Float), 0) * ISNULL(CAST(BSA_Foodservice_Items_Master.Net_Weight AS Float), 1)
+			 AS Product_Rate, 
+			</CFIF>			
+		<CFELSE><!---- answer in pounds --------->
+			<CFIF BB_Product_Type_ID NEQ "5">
+			CASE 		
+			WHEN #PGM_UOM_FIELD_NAME# = 1 THEN
+				ISNULL(CAST(#Rate_FieldName# AS Float), 0) / ISNULL(CAST(BSA_Foodservice_Items_Master.Net_Weight AS Float), 1)
+			ELSE
+				ISNULL(CAST(#Rate_FieldName# AS Float), 0)
+			END AS Product_Rate, 
+			<CFELSE><!---- Formula UOM = 2--->
+			ISNULL(CAST(#Rate_FieldName# AS Float), 0)
+			AS Product_Rate, 
+			</CFIF>			
+		</CFIF>		
+		CAST(#Rate_FieldName# AS Float) AS Product_Rate_IN_PGM_UOM, 
+		<CFIF BB_Product_Type_ID EQ "5">2 AS <CFELSE>#PGM_UOM_FIELD_NAME# </CFIF>Unit_Of_Measure_ID, 
+		BB_Program_Info.Approval_Start_Date AS Start_Date, BB_Program_Info.Approval_End_Date AS End_Date, 0 AS Doc_Type,
+		BB_Program_Info.Contract_Main_ID As Revision_Program_ID,
+		CASE 
+		WHEN Program_Product_Bid_Info.Won IS NULL OR Program_Product_Bid_Info.Won = 1 THEN 0
+		ELSE 1
+		END as Lost
+		FROM	Billback_Product_Detail	
+		INNER JOIN	Billback_Product
+		ON
+		(
+			(Billback_Product.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(Billback_Product.Deleted = 0)
+		)
+		INNER JOIN	Billback_Program
+		ON
+		(
+			(Billback_Program.Billback_Program_ID = Billback_Product.Billback_Program_ID)
+			AND
+			(Billback_Program.Deleted = 0)
+		)
+		INNER JOIN	Billback
+		ON
+		(
+			(Billback.Billback_ID = Billback_Program.Billback_ID)
+			AND
+			(Billback.Deleted = 0)
+		)
+		INNER JOIN	BB_Program_Info
+		ON
+		(
+			(BB_Program_Info.Contract_Number = '#Program_Number#')
+			AND
+			(BB_Program_Info.Deleted = 0)
+			AND
+			(
+				((DATEDIFF(d, BB_Program_Info.Approval_Start_Date, Billback.BB_End_Date) >= 0) AND (DATEDIFF(d, Billback.BB_End_Date, BB_Program_Info.Approval_End_Date) >= 0))
+				OR
+				((DATEDIFF(d, BB_Program_Info.Approval_Start_Date, Billback.BB_Start_Date) >= 0) AND (DATEDIFF(d, Billback.BB_Start_Date, BB_Program_Info.Approval_End_Date) >= 0))
+				OR
+				((DATEDIFF(d, Billback.BB_Start_Date, BB_Program_Info.Approval_End_Date) >= 0) AND (DATEDIFF(d, BB_Program_Info.Approval_End_Date, Billback.BB_End_Date) >= 0))
+				OR
+				((DATEDIFF(d, Billback.BB_Start_Date, BB_Program_Info.Approval_Start_Date) >= 0) AND (DATEDIFF(d, BB_Program_Info.Approval_Start_Date, Billback.BB_End_Date) >= 0))
+			)
+		)
+		INNER JOIN BB_Program_Deviation_Info
+		ON
+		(
+			(BB_Program_Deviation_Info.Billback_Program_ID = Billback_Program.Billback_Program_ID)
+			AND
+			(BB_Program_Deviation_Info.Deleted = 0)
+			AND
+			(BB_Program_Deviation_Info.Unauthorized_Payee = 0)
+		)
+		<CFIF BB_Product_Type_ID EQ 2>LEFT<CFELSE>INNER</CFIF> JOIN	Contract_Products
+		ON
+		(
+			(Contract_Products.Contract_Main_ID = BB_Program_Info.Contract_Main_ID)
+			AND
+			(Billback_Product.product_ID = Contract_Products.BSA_Foodservice_Items_Master_ID
+			<cfif appSettings.getProductReplacementEnabled() AND ProductReplacementID NEQ "">
+			OR	Contract_Products.BSA_Foodservice_Items_Master_ID = '#ProductReplacementID#'
+			</cfif>
+			)
+			<!------ discount_type = 10 is bid request in programs, but as claim adjustment already used up the id 10 in billback,
+				bid request has an id of 11 in billback, but when looking at program tables we have to keep using 10 ----->
+			AND			
+			(Contract_Products.Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID 
+			OR (Contract_Products.Product_Type_ID = 10 AND Billback_Product_Detail.BB_Product_Type_ID = 11))			
+			AND
+			(Contract_Products.Deleted = 0)
+		)
+		<CFIF BB_Product_Type_ID EQ 2>LEFT<CFELSE>INNER</CFIF> JOIN	BSA_Foodservice_Items_Master
+		ON
+		(
+			(BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = Contract_Products.BSA_Foodservice_Items_Master_ID)
+		)
+		LEFT JOIN Program_Product_Bid_Info
+		ON	Program_Product_Bid_Info.Deleted = 0
+		AND	Program_Product_Bid_Info.Program_ID = Contract_Products.Contract_Main_ID
+		AND	Program_Product_Bid_Info.Product_ID = Contract_Products.BSA_Foodservice_Items_Master_ID
+		<CFSWITCH EXPRESSION="#BB_Product_Type_ID#">
+		<CFCASE VALUE="1">
+		INNER JOIN	Program_Fixed_Price_Product_Data
+		ON
+		(
+			(Program_Fixed_Price_Product_Data.Contract_Products_ID = Contract_Products.Contract_Products_ID)
+			AND
+			(Program_Fixed_Price_Product_Data.Deleted = 0)
+			AND
+			(Program_Fixed_Price_Product_Data.Fixed_Price_Value IS NOT NULL)
+			AND
+			(Program_Fixed_Price_Product_Data.Fixed_Price_Value > '0.0000')
+		)
+		</CFCASE>
+		<CFCASE VALUE="2">
+		LEFT JOIN	Program_Rebates_Product_Data
+		ON
+		(
+			(Program_Rebates_Product_Data.Contract_Products_ID = Contract_Products.Contract_Products_ID)
+			AND
+			(Program_Rebates_Product_Data.Deleted = 0)
+			--AND (Program_Rebates_Product_Data.Rebate_Value IS NOT NULL)
+		)
+		</CFCASE>
+		<CFCASE VALUE="5">
+		INNER JOIN	Program_Formula_Pricing_Rule_Products
+		ON
+		(
+			(Program_Formula_Pricing_Rule_Products.Contract_Product_ID = Contract_Products.Contract_Products_ID)
+			AND
+			(Program_Formula_Pricing_Rule_Products.Deleted = 0)
+			AND
+			(Program_Formula_Pricing_Rule_Products.Price IS NOT NULL)
+		)
+		</CFCASE>
+		<CFCASE VALUE="11">
+		INNER JOIN	Program_Bid_Request_Product
+		ON
+		(
+			(Program_Bid_Request_Product.Contract_Products_ID = Contract_Products.Contract_Products_ID)
+			AND
+			(Program_Bid_Request_Product.Deleted = 0)
+			AND
+			(Program_Bid_Request_Product.Price IS NOT NULL)
+			
+		)
+		</CFCASE>
+		</CFSWITCH>
+	WHERE	
+		Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+		AND
+		Billback_Product_Detail.Deleted = 0
+		AND #distributor_unauthorized# = 0
+</CFQUERY>
+
+<!--- Billback was item lost --->
+<cfset CheckProductWon = 0 />
+<cfset ProductLost = 0>
+<CFIF (BB_Product_Type_ID IS 11 OR BB_Product_Type_ID IS 1 OR BB_Product_Type_ID IS 2) AND  appsettings.getLost_Bids_Deviated() IS 1 AND Billback_Product_Program.BidRequestStatusOn EQ 1>
+	<cfset CheckProductWon = 1 />
+	
+	<!--- Dev Note: KAL; D21475: Solo - Rate deviaion screen shows incorrect message --->
+	<cfquery name="BBProgramsList" datasource="#application.datasource#">
+		SELECT 		BB_Program_Info.Contract_Main_ID 
+		FROM 		Billback 
+		INNER JOIN	BB_Program_Info
+		ON
+		(
+			(Billback.Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="cf_sql_idstamp">)
+			AND
+			(BB_Program_Info.Contract_Number = <cfqueryparam value="#Program_Number#" cfsqltype="cf_sql_varchar">)
+			AND
+			(BB_Program_Info.Deleted = 0)
+			AND
+			(
+				((DATEDIFF(d, BB_Program_Info.Approval_Start_Date, Billback.BB_End_Date) >= 0) AND (DATEDIFF(d, Billback.BB_End_Date, BB_Program_Info.Approval_End_Date) >= 0))
+				OR
+				((DATEDIFF(d, BB_Program_Info.Approval_Start_Date, Billback.BB_Start_Date) >= 0) AND (DATEDIFF(d, Billback.BB_Start_Date, BB_Program_Info.Approval_End_Date) >= 0))
+				OR
+				((DATEDIFF(d, Billback.BB_Start_Date, BB_Program_Info.Approval_End_Date) >= 0) AND (DATEDIFF(d, BB_Program_Info.Approval_End_Date, Billback.BB_End_Date) >= 0))
+				OR
+				((DATEDIFF(d, Billback.BB_Start_Date, BB_Program_Info.Approval_Start_Date) >= 0) AND (DATEDIFF(d, BB_Program_Info.Approval_Start_Date, Billback.BB_End_Date) >= 0))
+			)
+		)
+	</cfquery>
+	
+	<!--- Dev Note: KAL; D21475: Solo - Rate deviaion screen shows incorrect message; Convert the program_ID's to a list  --->
+	<cfset BBProgramIDs = #ValueList(BBProgramsList.Contract_Main_ID)# />
+	
+	<cfquery name="IsProductLost" datasource="#application.datasource#">
+		SELECT Top 1 Won 
+		FROM Program_Product_Bid_Info
+			INNER JOIN Contract_Products ON 
+			Program_Product_Bid_Info.Product_ID = Contract_Products.BSA_Foodservice_Items_Master_ID
+			AND Contract_Products.Deleted = 0
+			AND Contract_Products.Contract_Main_ID = Program_Product_Bid_Info.Program_ID
+		WHERE Contract_Products.BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
+		AND Program_Product_Bid_Info.Program_ID IN (<cfqueryparam value="#BBProgramIDs#" cfsqltype="cf_sql_integer" list="true" separator=",">)
+		AND Program_Product_Bid_Info.deleted = 0
+		ORDER BY Won DESC
+	</cfquery>
+		
+	<cfif IsProductLost.Won IS NOT 1>
+		<!---- if original product is not won, see if the replacement product is won/lost ---->
+		<cfif appSettings.getProductReplacementEnabled() AND ProductReplacementID NEQ "">
+			<cfquery name="IsProductLost" datasource="#application.datasource#">
+				SELECT Top 1 Won  
+				FROM Program_Product_Bid_Info
+					INNER JOIN Contract_Products ON 
+					Program_Product_Bid_Info.Product_ID = Contract_Products.BSA_Foodservice_Items_Master_ID
+					AND Contract_Products.Deleted = 0
+					AND Contract_Products.Contract_Main_ID = Program_Product_Bid_Info.Program_ID
+				WHERE Contract_Products.BSA_Foodservice_Items_Master_ID = '#ProductReplacementID#'
+				AND Program_Product_Bid_Info.Program_ID IN (<cfqueryparam value="#BBProgramIDs#" cfsqltype="cf_sql_integer" list="true" separator=",">)
+				AND Program_Product_Bid_Info.deleted = 0
+				ORDER BY Won DESC
+			</cfquery>
+		</cfif>
+	</cfif>
+		
+	<cfif IsProductLost.Won IS NOT 1>
+		<cfset ProductLost = 1>
+	</cfif>
+</CFIF>
+
+<cfset sCurrentProductHasRatesInThesePrograms = "" />
+<cfif appSettings.getProductReplacementEnabled() AND ProductReplacementID NEQ "">
+	<CFQUERY DBTYPE="QUERY" NAME="CurrentProductHasRatesInThesePrograms">
+		SELECT DISTINCT Revision_Program_ID
+		FROM 	Billback_Program_Dates_Pre 
+		WHERE 	BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
+		AND		Lost = 0	
+	</CFQUERY>
+	<cfset sCurrentProductHasRatesInThesePrograms = ValueList(CurrentProductHasRatesInThesePrograms.Revision_Program_ID) />
+</cfif>
+
+<!---
+D13872 JRS -Identify how to handle BB purchase validation when sku number changes
+We need to account for bis status = lost at item lebel because of below reasons
+If there was a product replacement A=B
+Program has A as lost at 1.1/CS
+Program has B as won at 1.2/CS
+When billback has A, 
+the stored procedure will pick up B's rate and show 1.2/CS
+we need the cfm also to do the same other wise will show 1.1/CS which will not match the SP value
+So we are going to implement the logic to ignore products which are lost altogether even if the "product replacment" is on or off to avoid confusion
+Otherwise, originally even though teh stored procedure would caluclate a rate of 0/CS when the product is lost, the cfm would have shown the values.
+Which is alright as long as it was a value in cfm against 0 from sp
+But will have problem if we have a value in cfm against a different value from sp
+--->
+<CFQUERY DBTYPE="QUERY" NAME="Billback_Program_Dates">
+	SELECT	*
+	FROM	Billback_Program_Dates_Pre
+	WHERE	(BSA_Foodservice_Items_Master_ID IS NULL
+	OR		BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#')
+	AND		Lost = 0
+	<cfif appSettings.getProductReplacementEnabled() AND ProductReplacementID NEQ "">
+	<!----- Get rate/price from replacement product only if current product has no rate / price for a particular version ------>
+	UNION
+	SELECT	*
+	FROM	Billback_Program_Dates_Pre
+	WHERE	BSA_Foodservice_Items_Master_ID = '#ProductReplacementID#'
+	AND		Lost = 0
+	<cfif sCurrentProductHasRatesInThesePrograms NEQ "">
+	AND		Revision_Program_ID NOT IN (#sCurrentProductHasRatesInThesePrograms#)	
+	</cfif>
+	</cfif>
+</CFQUERY>
+
+<CFSET temp = QueryAddRow(Billback_Program_Dates)>
+<CFSET temp2 = QuerySetCell(Billback_Program_Dates, "Product_Rate", 0, temp) >
+<CFSET temp2 = QuerySetCell(Billback_Program_Dates, "Start_Date", Billback_Start_Date, temp)>
+<CFSET temp2 = QuerySetCell(Billback_Program_Dates, "End_Date", Billback_End_Date, temp)>
+<CFSET temp2 = QuerySetCell(Billback_Program_Dates, "Doc_Type", 1, temp)>
+
+</CFSILENT>
+<BR>
+<SPAN CLASS="Title2">Expected Rate Calculation</SPAN>
+<HR COLOR="Orange">
+
+<!------------------------------------------------
+Display header Info
+- program
+- product
+- Billback
+-------------------------------------------------->
+<CFOUTPUT>
+<cfif Billback_Product_Program.Manual_Cancel EQ 1><div style="font-weight:bold;color:##DF0000;font-size:12pt;margin-bottom:5px;" align="center">*** This is a Cancelled Program. ***</div></cfif>
+<TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0" WIDTH="#Table_Width#" ALIGN="CENTER">
+	<TR>
+		<TD COLSPAN="100%">
+		<B>Billback ## #Payable_Number# #Billback_Title# (#DateFormat(Billback_Start_Date, "mm/dd/yyyy")# - #DateFormat(Billback_End_Date, "mm/dd/yyyy")#) (#Billback_Total_Days# days)</B>
+		</TD>
+	</TR>
+	<TR>
+		<TD COLSPAN="100%">
+		<B>Program ## #Program_Number#</B> <CFIF Billback_Program_Program_ID NEQ "">(#ReReplaceNoCase(Generic_Type, "trade", application.returned_customer_setting.Trade_Label)# - #Created_Type#)<CFELSE>#DEVIATION_SHOW_PNF#</CFIF>
+		</TD>
+	</TR>
+	<TR>
+		<TD COLSPAN="100%"><strong><cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput> ## </strong>
+		<cfif trim(Billback_Product_Program.Distributor_id_earned) neq "" and trim(Billback_Product_Program.Distributor_id_earned) neq '00000000-0000-0000-0000-000000000000'>
+			<strong>#Get_Dist_Info.Ship_To#</strong>&nbsp;(#Get_Dist_Info.name#&nbsp;::&nbsp;#Get_Dist_Info.city#,&nbsp;::&nbsp;#Get_Dist_Info.state#)
+		 <cfelse>
+		 	No <cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput>
+		 </cfif>
+		</TD>
+	</TR>
+	<TR>
+		<TD COLSPAN="100%">
+		<CFIF BSA_Foodservice_Items_Master_ID NEQ "">
+		<B>Product: #Billback_Product_Program.Item# #Billback_Product_Program.UPC# #Billback_Product_Program.Description#</B> (Net Weight = #Net_Weight#) (#ListGetAt(Discount_Type_List, BB_Product_Type_ID, ",")#)
+		<CFELSE>
+		<B>Product: <font color="red">Not found in the system</font></B>
+		</CFIF>
+		</TD>
+	</TR>
+	<CFIF ProductLost EQ 1>
+	<TR>
+		<TD COLSPAN="100%">
+		
+		<B><font color="Red">This item has 100% rate deviation either because the item or proposal was marked as lost, or because the proposal was never updated as won/lost/split.</font></b>
+		</TD>
+	</TR>
+	</CFIF>
+	
+		
+</TABLE>
+<cfif distributor_unauthorized eq 1>
+	<BR>
+	<B><FONT COLOR="Red">This distributor is not authorized to billback against this program</FONT></B>
+	<BR>
+<cfelseif Billback_Product_Program.Manual_Cancel EQ 1>
+	<BR>
+	<B><FONT COLOR="Red">Rate Deviated 100% because Program was canceled</FONT></B>
+	<BR>
+<CFELSEIF BSA_Foodservice_Items_Master_ID NEQ "">
+<CFSILENT>
+<!--------------------------------------------
+Start date overlap along with each revisions
+to find out the rate
+--------------------------------------------->
+	
+	<CFQUERY DBTYPE="QUERY" NAME="Get_All_Dates">
+	SELECT	Billback_ID, Start_Date AS This_Date, Doc_Type + 0 AS Date_Type, Product_Rate, #ListLast(Rate_ID_FieldName, ".")#, Revision_Program_ID
+	FROM	Billback_Program_Dates
+	UNION
+	SELECT	Billback_ID, End_Date AS This_Date, Doc_Type + 2 AS Date_Type, Product_Rate, #ListLast(Rate_ID_FieldName, ".")#, Revision_Program_ID
+	FROM	Billback_Program_Dates	
+	</CFQUERY>
+	
+	<CFQUERY DBTYPE="QUERY" NAME="Get_All_Dates_Ordered">
+	SELECT	Billback_ID, This_Date, Date_Type, Product_Rate, #ListLast(Rate_ID_FieldName, ".")#, Revision_Program_ID
+	FROM	Get_All_Dates
+	ORDER BY 	This_Date, DATE_TYPE
+	</CFQUERY>
+	<!------ <cfdump var="#Get_All_Dates_Ordered#"><cfabort> ----->
+	
+	<CFSET P_Total_Days_With_Product= 0>
+	<CFSET This_Billback_Intervals	= "">
+	<CFSET Other_Billbacks_Started 	= 0>
+	<CFSET This_Billback_Started 	= false>
+	<CFSET Start_Counting			= false>
+	<CFSET D_First_Date				= "">
+	<CFSET D_Last_Date				= "">
+	<CFSET Stop_Loop				= false>
+	<CFSET last_Mile_Stone			= "">
+	<CFSET this_Rate				= "norate">
+	<CFSET Rate_ID_FieldValue		= "">
+	<CFSET Proper_Date_Span			= "">
+	<cfset revProgramId				= "">
+	<cfset arRevisionProperties = ArrayNew(1)>
+	
+	<CFLOOP QUERY="Get_All_Dates_Ordered">	
+		<CFIF Get_All_Dates_Ordered.Date_Type EQ 0>	
+			<!----- Other Billback STart ---->
+			<CFIF This_Billback_Started EQ true>
+				<CFSET Start_Counting = true>
+				<CFIF Other_Billbacks_Started LTE 0>
+					<CFSET D_First_Date	= Get_All_Dates_Ordered.This_Date>
+					<CFIF DATEDIFF("d", last_Mile_Stone, Get_All_Dates_Ordered.This_Date) GTE 0>
+					</CFIF>
+				</CFIF>
+			</CFIF>
+			<CFSET Other_Billbacks_Started 	= Other_Billbacks_Started + 1>
+			<CFSET this_Rate				= Get_All_Dates_Ordered.Product_Rate>
+			<cfset revProgramId				= Get_All_Dates_Ordered.Revision_Program_ID>
+			<CFSET Rate_ID_FieldValue		= Evaluate("Get_All_Dates_Ordered.#ListLast(Rate_ID_FieldName, ".")#")>
+		<CFELSEIF Get_All_Dates_Ordered.Date_Type EQ 1>
+			<!---- This Billback Start ---->		
+			<CFSET This_Billback_Started 	= true>
+			<CFIF Other_Billbacks_Started GT 0>
+				<CFSET Start_Counting = true>
+				<CFSET D_First_Date	= Get_All_Dates_Ordered.This_Date>
+			</CFIF>
+			<CFSET last_Mile_Stone			= Get_All_Dates_Ordered.This_Date>
+		<CFELSEIF Get_All_Dates_Ordered.Date_Type EQ 2>
+			<!---- Other billback End ---->
+			<CFSET Other_Billbacks_Started 	= Other_Billbacks_Started - 1>
+			<CFIF Other_Billbacks_Started LTE 0>
+				<CFIF Start_Counting>
+					<CFSET D_Last_Date	= Get_All_Dates_Ordered.This_Date>
+					<CFIF IsDate(D_First_Date) AND IsDate(D_Last_Date)>				
+						<CFIF DATEDIFF("d", D_First_Date, D_Last_Date) GTE 0>
+							<CFSET P_Total_Days_With_Product = P_Total_Days_With_Product + DATEDIFF("d", D_First_Date, D_Last_Date) + 1>
+							<CFSET This_Billback_Intervals = ListAppend(This_Billback_Intervals, "#D_First_Date#~#D_Last_Date#~#Rate_ID_FieldValue#~#this_Rate#", ",")>
+							<CFSET Proper_Date_Span			= ListAppend(Proper_Date_Span, D_First_Date, ",")>
+							<CFSET Proper_Date_Span			= ListAppend(Proper_Date_Span, D_Last_Date, ",")>
+							
+							<!------ populate array ----->
+							<cfset ArrayAppend(arRevisionProperties, getStRevisionProperties(D_First_Date, D_Last_Date, Rate_ID_FieldValue, this_Rate, revProgramId))>
+						</CFIF>
+						<CFSET last_Mile_Stone			= DateAdd("d", 1, Get_All_Dates_Ordered.This_Date)>
+					</CFIF>
+				</CFIF>
+				<CFSET Start_Counting = false>
+			</CFIF>
+			<CFSET this_Rate				= 0>
+			<cfset revProgramId				= "">
+			<CFSET Rate_ID_FieldValue		= "">
+		<CFELSEIF Get_All_Dates_Ordered.Date_Type EQ 3>
+			<!----- This Billback End ---->
+			<CFIF Start_Counting>
+				<CFSET D_Last_Date	= Get_All_Dates_Ordered.This_Date>
+				<CFIF IsDate(D_First_Date) AND IsDate(D_Last_Date)>				
+					<CFIF DATEDIFF("d", D_First_Date, D_Last_Date) GTE 0>
+						<CFSET P_Total_Days_With_Product = P_Total_Days_With_Product + DATEDIFF("d", D_First_Date, D_Last_Date) + 1>
+						<CFSET This_Billback_Intervals = ListAppend(This_Billback_Intervals, "#D_First_Date#~#D_Last_Date#~#Rate_ID_FieldValue#~#this_Rate#", ",")>			
+						<CFSET Proper_Date_Span			= ListAppend(Proper_Date_Span, D_First_Date, ",")>
+						<CFSET Proper_Date_Span			= ListAppend(Proper_Date_Span, D_Last_Date, ",")>
+						
+						<!------ populate array ----->
+						<cfset ArrayAppend(arRevisionProperties, getStRevisionProperties(D_First_Date, D_Last_Date, Rate_ID_FieldValue, this_Rate, revProgramId))>
+					</CFIF>
+				</CFIF>
+			</CFIF>
+			<CFSET This_Billback_Started 	= false>
+			<CFSET Stop_Loop				= true>
+			<CFSET Start_Counting			= false>		
+		</CFIF>		
+		<CFIF Stop_Loop>
+			<CFBREAK>
+		</CFIF>			
+	</CFLOOP>
+</CFSILENT> 
+<STYLE>
+TR.MaintableTHEAD TD 
+{
+	font-size : 11px;
+	border-bottom:solid 93BEE2 0px;
+	font-weight : bold;
+}
+</STYLE>
+<!-----------------------------------------
+Display the rates across each revision
+------------------------------------------>
+<cfset arRevisionPropertiesLen = ArrayLen(arRevisionProperties)>
+	<CFSILENT> 
+	<CFSET Total_Weighted_Rate=0>
+	<CFSET counter=1>
+	<CFSET Valid_Billback_Total_Days=0>
+	<CFSET Invoice_First_Date_For_Rabate 	= Now()>
+	<CFSET Invoice_Last_Date_For_Rabate 	= Now()>
+	
+	<!--- BJF: In some setting configurations these were never getting set. This should usually get overwritten --->
+	<CFSET 	Sample_Size_End_Date = Billback_End_Date>
+	<CFSET 	Sample_Size_Start_Date= Billback_End_Date>
+	
+	<cfif arRevisionPropertiesLen GT 0>
+		<CFSET first_Date_Set 					= arRevisionProperties[1]>
+		<CFSET last_Date_Set 					= arRevisionProperties[arRevisionPropertiesLen]>
+		<CFSET Invoice_First_Date_For_Rabate 	= first_Date_Set.firstDate>
+		<CFSET Invoice_Last_Date_For_Rabate 	= last_Date_Set.lastDate>
+	</cfif>
+	<CFIF appSettings.getBBDateDevInExpectedVol() EQ 1><!--- If date mismatch with program is already taken care of in volume, don't take it out of rate  ---->
+		<CFSET Valid_Billback_Total_Days = P_Total_Days_With_Product>
+	<CFELSEIF BB_Product_Type_ID EQ 2 OR appSettings.getBBFixedCalcTypesOn() EQ 1>		
+		<CFSET Valid_Billback_Total_Days = DateDiff("d", Billback_Start_Date, Billback_End_Date) + 1>
+	<CFELSE>
+		<!---- For fixed and formula, as date increase, price decrease ----->
+		<CFSET Valid_Billback_Total_Days = P_Total_Days_With_Product>
+	</CFIF>
+	
+	<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Volume_Tolerance">
+	SELECT	
+			BB_TET AS BB_Tolerance_TET			
+	FROM	BB_Basic_Setting_Detail
+	WHERE
+			Billback_ID = '#Billback_ID#' AND
+		Contract_Main_Id = #Billback_Program_Program_ID#
+	</CFQUERY>
+	<CFIF Billback_Volume_Tolerance.BB_Tolerance_TET EQ 1>
+		<CFSET check_Date="Invoice_Header.Invoice_Date">				
+	<CFELSE>
+		<CFSET check_Date="Invoice_Header.Ship_Date">
+	</CFIF>
+	<!----- Get the invoice, in case any component in rebate has percent UOM ----->
+	<CFQUERY NAME="Get_Invoice_For_This_Distributor_For_Rebate" DATASOURCE="#application.datasource#">
+		SELECT	ISNULL(CAST(<CFIF Billback_UOM EQ 1>CS_Unit_Price
+				<CFELSE>LB_Unit_Price
+				</CFIF> AS FLOAT), 0) AS UOM_Unit_Price ,
+				ISNULL(CAST(<CFIF Billback_UOM EQ 1>Cases_Invoiced
+				<CFELSE>Pounds_Invoiced
+				</CFIF> AS FLOAT), 0) AS UOM_Volume_Invoiced, 
+				ISNULL(Gross_Sales_Dollars, 0) Gross_Sales_Dollars,
+				Invoice_Header.Invoice_Version + '-' + Invoice_Header.Order_Number AS Invoice_Number,
+				#check_Date# AS Invoice_Check_Date
+		FROM	Invoice_Header
+				INNER JOIN Invoice_Detail
+				ON
+				Invoice_Detail.Deleted = 0
+				<cfif appSettings.getCheckOrderClass()>
+				AND Invoice_Detail.Order_Class IN (#ListQualify(appSettings.getOrderClassValue(), "'", ",")#)
+				</cfif>
+				AND Invoice_Detail.Invoice_Header_ID = Invoice_Header.Invoice_Header_ID
+				AND Invoice_Detail.BSA_Foodservice_Items_Master_ID IN ('#BSA_Foodservice_Items_Master_ID#'<cfif ProductReplacementID neq "">,'#ProductReplacementID#'</cfif>)
+				AND	ISNULL(Invoice_Detail.FOB_PRICE_IND, 'N') NOT IN ('X', 'C', 'B', 'K')
+				/* 21605 - Commenting the below based on the discussion with PAUL.
+				Paul said we need to count the records with Operator if the FOB indicator is not in the above list
+				*/
+				--- D22024 -- Uncommenting the Operator and commenting the Negative CS check -- We should do 21756 only in fixed rate
+				AND ISNULL(Invoice_Detail.BSA_Operator_ID, 0) = 0
+				AND ISNULL(Cast(Invoice_Detail.Cases_Invoiced as float), 0) > 0				
+		WHERE
+				<CFIF IsDefined("Invoice_First_Date_For_Rabate") AND IsDefined("Invoice_Last_Date_For_Rabate")>
+					<CFIF IsDate(Invoice_First_Date_For_Rabate) AND IsDate(Invoice_Last_Date_For_Rabate)>
+						DATEDIFF(d, #check_Date#, #CreateODBCDate(Invoice_First_Date_For_Rabate)#) <= 0
+						AND
+						DATEDIFF(d, #check_Date#, #CreateODBCDate(Invoice_Last_Date_For_Rabate)#) >= 0
+					<CFELSE><!----- If date is not proper, return nothing ----->
+						1 = 2
+					</CFIF>
+				<CFELSE><!----- If date is not proper, return nothing, may be in the case of fixed or formula ----->
+					1 = 2
+				</CFIF>
+				<CFIF Dist_ID NEQ "">
+					AND Invoice_Header.BSA_Foodservice_Customers_ID = '#Dist_ID#'
+				<CFELSE>
+					AND 1 = 2
+				</CFIF>		
+	</CFQUERY>
+	
+	<CFQUERY NAME="Get_Sum_Volume" DBTYPE="query">
+		SELECT	SUM(UOM_Volume_Invoiced) AS Total_Volume_UOM
+		FROM	Get_Invoice_For_This_Distributor_For_Rebate
+	</CFQUERY>
+	<CFSET Total_Volume_For_Percent_Calc = Get_Sum_Volume.Total_Volume_UOM>
+	 </CFSILENT> 
+
+	<!------ Find all the rates ----->
+	<cfset arBillbackRateDisplay = ArrayNew(1)>
+	<cfset invalidDatesTobeRemovedFromTotalValidSpan = 0>
+
+	<!------ <CFIF ListLen(This_Billback_Intervals,",") GT 0> ----->
+	<cfif arRevisionPropertiesLen GT 0>
+		<CFSET P_Valid_Discount_Type = 1>
+	<CFELSE>
+		<CFSET P_Valid_Discount_Type = 0>
+	</CFIF>
+<cfif arRevisionPropertiesLen GT 0><!----- if no version of the program that mathes date was found, no need to show this information ----->
+	<CFIF Generic_Type EQ DEVIATION_CONSTANTS_Trade_Shelter>
+	<CFELSE>
+		<!------ TODO: Dates has to be adjusted to take care of revisions ----->
+		<!------ use ED - 2(Y - Xn + X1-(n-1)) ----->
+		<CFOUTPUT>
+		<!--------------------- Show how we arrived at the sample size --------------->
+		<CFSET Open_layer_Desc="Invoice Sample Size Details">
+		<CF_openLayer
+			Border="#Border#"
+			BorderSize="#BorderSize#"  
+			BorderColor="#BorderColor#"  
+			Image="#Image#"
+			ImageOpen="#ImageOpen#"
+			Title="#Open_layer_Desc#"  
+			TitleClosed="#Open_layer_Desc#"  
+			TitleTooltip="#Open_layer_Desc#"  
+			TitleColor="#TitleColor#"  
+			TitleFont="#TitleFont#"
+			TitleSize="#TitleSize#"
+			IsClosed="Yes"
+			Width="#width#"
+			AddScript="#AddScript#">									
+			<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="#Table_Width#" CLASS="Maintable">
+				<TR>
+					<TD>Valid Billback Delivery Interval</TD>
+					<TD>&nbsp;</TD>
+					<TD>#DateFormat(Invoice_First_Date_For_Rabate, "mm/dd/yyy")#  -  #DateFormat(Invoice_Last_Date_For_Rabate, "mm/dd/yyyy")#</TD>
+				</TR>
+				<cfset Valid_Billback_Delivery_Interval = DateDiff("d", Invoice_First_Date_For_Rabate, Invoice_Last_Date_For_Rabate) + 1>
+				<TR>
+					<TD>Billback No of Days</TD>
+					<TD>&nbsp;</TD>
+					<TD>#Valid_Billback_Delivery_Interval#</TD>
+				</TR>
+				<CFIF BB_D_Template_Overrides_Deviation_Tolerances EQ 1><!--- BB_D_Purchase_Period_OverRide_Rate --->
+					<CFSET Sample_Size =  BB_D_Purchase_Period_OverRide_Rate>
+					<CFSET 	Sample_Size_End_Date = Billback_End_Date>
+					<CFSET 	Sample_Size_Start_Date=DateAdd("d", (BB_D_Purchase_Period_OverRide_Rate * -1) + 1, Sample_Size_End_Date)>
+					<TR>
+						<TD>Template Purchase Period Over Ride</TD>
+						<TD>&nbsp;</TD>
+						<TD>#BB_D_Purchase_Period_OverRide_Rate#</TD>
+					</TR>
+						
+				<CFELSE>
+					<TR>
+						<TD>#application.returned_customer_setting.distributor_label_singular# Purchase Period Ratio</TD>
+						<TD>&nbsp;</TD>
+						<TD>#Billback_Rate_Tolerance.BB_Tolerance_DPP#</TD>
+					</TR>
+					<CFSET Sample_Size = Valid_Billback_Delivery_Interval * Billback_Rate_Tolerance.BB_Tolerance_DPP>
+					<TR>
+						<TD>Sample Size</TD>
+						<TD>#Valid_Billback_Delivery_Interval# * #Billback_Rate_Tolerance.BB_Tolerance_DPP# = </TD>
+						<TD>#Sample_Size#</TD>
+					</TR>
+					<TR>
+						<TD>#application.returned_customer_setting.distributor_label_singular# Purchase Period Offset</TD>
+						<TD>&nbsp;</TD>
+						<TD>#Billback_Rate_Tolerance.BB_Tolerance_DPPO# days</TD>
+					</TR>	
+					<CFSET 	Purchase_Period_Buffer=DateAdd("d", (Billback_Rate_Tolerance.BB_Tolerance_DPPO * -1) + 1, Billback_End_Date)>
+					<TR>
+						<TD>#application.returned_customer_setting.distributor_label_singular# Purchase Period Buffer</TD>
+						<TD>&nbsp;</TD>
+						<TD>
+						<CFIF DateDiff("d", Purchase_Period_Buffer, Billback_End_Date) GTE 0>
+						#DateFormat(Purchase_Period_Buffer, "mm/dd/yyyy")# - #DateFormat(Billback_End_Date, "mm/dd/yyyy")#
+						<CFELSE>
+						No Buffer
+						</CFIF>
+						</TD>
+					</TR>
+						<CFSET 	Sample_Size_End_Date=DateAdd("d", -1, Purchase_Period_Buffer)>
+						<CFSET 	Sample_Size_Start_Date=DateAdd("d", (Sample_Size * -1) + 1, Sample_Size_End_Date)>
+					
+				</CFIF>
+				<TR>
+					<TD>Invoice Sample</TD>
+					<TD>&nbsp;</TD>
+					<TD>#DateFormat(Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(Sample_Size_End_Date, "mm/dd/yyyy")#</TD>
+				</TR>
+				
+				<TR>
+					<TD>Eligibility Trigger</TD>
+					<TD>&nbsp;</TD>
+					<TD>
+					#ListGetAt(DEVIATION_CONSTANTS_Trade_Eligibility_Triggers, Billback_Rate_Tolerance.BB_Tolerance_TET, ",")#						
+					</TD>
+				</TR>		
+			</TABLE>
+			<CFSET 	Current_Sample_Size_End_Date = Sample_Size_Start_Date>			
+		</CF_openLayer>
+		</CFOUTPUT>
+	</CFIF>
+
+
+		<CFLOOP from="1" to="#arRevisionPropertiesLen#" index="i">
+		<cfset stBillbackRateDisplay = StructNew()>
+		<cfset stRevisionProperties = arRevisionProperties[i]>
+		<CFSET product_Rate 		= stRevisionProperties.thisRate>
+		<CFSET program_ibf_Rate 		= 0 />
+		<CFSET program_obf_Rate 		= 0 />
+		<CFSET deliveryTypeToUse		= 0 />
+		<CFIF IsNumeric(product_Rate) OR BB_Product_Type_ID EQ 2>
+			<CFSET start_date 			= stRevisionProperties.firstDate>
+			<CFSET end_date 			= stRevisionProperties.lastDate>
+			<CFSET this_Interval_Days 	= DateDiff("d", start_date, end_date) + 1>
+			<CFSET this_Rate_Weight		= (this_Interval_Days/Valid_Billback_Total_Days) * 100>
+			<CFSET revisionProgramId	= stRevisionProperties.programId>
+			<cfset programDelType 		= 0 />
+			<cfset warehouseMasterId 	= 0 />
+			<cfif AppSettings.getShow_Fixed_Freight() eq 1>
+				<cfquery NAME="qGetProgramDelivertType" DATASOURCE="#application.datasource#">
+					SELECT	Freight_Component_Type
+					FROM	Contract_Main_Aux_Data
+					WHERE	Contract_Main_ID = <cfqueryparam value="#revisionProgramId#" cfsqltype="cf_sql_integer">
+				</cfquery>
+				<cfif qGetProgramDelivertType.Freight_Component_Type eq 1> <!--- DEL --->
+					<cfset programDelType = 1 />
+				<cfelseif qGetProgramDelivertType.Freight_Component_Type eq 4> <!--- FOB DC --->
+					<cfset programDelType = 4 />
+				</cfif>
+				
+				<cfquery NAME="qGetProgramDistributorWarehouse" DATASOURCE="#application.datasource#">
+					SELECT	Warehouse_Master_ID
+					FROM	Program_Distributor_Freight
+					WHERE	Deleted = 0
+					AND		Program_ID = <cfqueryparam value="#revisionProgramId#" cfsqltype="cf_sql_integer">
+					<CFIF Dist_ID NEQ "">
+					AND		Distributor_ID = <cfqueryparam value="#Dist_ID#" cfsqltype="cf_sql_varchar">
+					<CFELSE>
+					AND 1 = 2
+					</CFIF> 
+				</cfquery>
+				<cfif qGetProgramDistributorWarehouse.recordCount>
+					<cfset warehouseMasterId = qGetProgramDistributorWarehouse.Warehouse_Master_ID />
+				</cfif>
+			</cfif>
+				<!--- enhancement on rebate components for mcCain
+					  based on mcCain requirement, billback can be claimed based on the components level
+					  therefore, the devitation for rebate will be based on the selected components for the 
+					  specified billback/program.
+				--->
+			
+				<CFSAVECONTENT VARIABLE="This_Rebate_Details">
+				<CFIF BB_Product_Type_ID EQ 2><!----- If rebate go look for the components ---->
+				<TR VALIGN="top">
+					<TD COLSPAN="1">&nbsp;</TD>
+					<TD COLSPAN="9" BGCOLOR="##F5F5DC">
+					<CFSET Program_Rebates_Product_Data_ID = stRevisionProperties.idFieldValue>
+					<CFIF Program_Rebates_Product_Data_ID NEQ "" AND IsNumeric(Program_Rebates_Product_Data_ID)>
+						<CFQUERY NAME="Get_Rebate_Components" DATASOURCE="#application.datasource#">
+							SELECT	Rate, 
+									Program_Rebates_Component_Data.Unit_Of_Measure_ID, 
+									Units_of_Measure.Abbreviation, 
+									Program_Rebates_Component_Name.Program_Rebates_Component_Name,
+									Program_Rebates_Component_Data.Program_Rebates_Component_Data_ID,
+									Program_Rebates_Component_Name.Rebate_Percent_Option_ID
+							FROM	Program_Rebates_Component_Data
+									INNER JOIN Units_of_Measure
+									ON
+									Units_of_Measure.Unit_Of_Measure_ID = Program_Rebates_Component_Data.Unit_Of_Measure_ID
+									INNER JOIN Program_Rebates_Component
+									ON
+									Program_Rebates_Component.Program_Rebates_Component_ID = Program_Rebates_Component_Data.Program_Rebates_Component_ID
+									<cfif PayTo NEQ 0>
+									AND (Program_Rebates_Component.Component_Paid_To = #PayTo# or (Program_Rebates_Component.Component_Paid_To = 4 and #PayTo# IN (1,2)))
+									</cfif>
+									INNER JOIN Program_Rebates_Component_Name
+									ON Program_Rebates_Component_Name.Program_Rebates_Component_Name_ID = Program_Rebates_Component.Program_Rebates_Component_Name_ID
+								  	LEFT JOIN Billback_Program_Rebate_Component on  
+									Billback_Program_Rebate_Component.Program_Rebates_Component_Name_ID = Program_Rebates_Component_Name.Program_Rebates_Component_Name_ID and
+									Billback_Program_Rebate_Component.billback_id = '#Billback_id#' and 
+									Billback_Program_Rebate_Component.Billback_Program_ID = '#billback_program_program_id#'
+							WHERE
+									Program_Rebates_Product_Data_ID = #Program_Rebates_Product_Data_ID#
+									<cfif appSettings.Claims_at_Comp_Level>
+										and Billback_Program_Rebate_Component.Checked = 'true'
+										and Billback_Program_Rebate_Component.deleted = 0 
+									</cfif>
+						</CFQUERY>
+					</CFIF>
+					<CFSET Current_Item_Total_Component_Rate = 0>					
+					<TABLE CELLPADDING="2" CELLSPACING="0" WIDTH="100%" BORDER="0" CLASS="NotMaintable">
+						<TR BGCOLOR="EEEEEE">
+							<TD ID="header" WIDTH="30%"><B>Name</B></TD>
+							<TD ID="header" WIDTH="20%"><B>Rate</B></TD>
+							<TD ID="header" WIDTH="5%">&nbsp;</TD>
+							<TD ID="header" WIDTH="20%"><B>Net Weight</B></TD>
+							<TD ID="header" WIDTH="5%">&nbsp;</TD>
+							<TD ID="header" ALIGN="right" WIDTH="20%"><B>Rate / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+						</TR>
+						<CFIF Program_Rebates_Product_Data_ID NEQ "" AND IsNumeric(Program_Rebates_Product_Data_ID)>
+						<CFLOOP QUERY="Get_Rebate_Components">
+							<CFSET Add_Up_Rate = 0>
+						<TR>
+							<TD ID="header">#Program_Rebates_Component_Name#</TD>
+							<cfset Use_Rebate_Percent_Option_ID = Rebate_Percent_Option_ID>
+							<!---- If component uom = %, find rate / bb uom ----->
+							<CFSET percent_Detail_Expand = false>
+							<CFSET ReProgram_Rebates_Component_Data_ID = "">
+							<CFIF Unit_Of_Measure_ID  EQ 3>
+								<cfset Sample_Size_Start_Date = start_date />
+								<cfset Sample_Size_End_Date = End_date />								
+								<CFSAVECONTENT VARIABLE="This_Component_Percent_Details">
+									<CFQUERY NAME="Get_Invoice_Between_These_Dates" DBTYPE="query">
+										SELECT	*
+										FROM	Get_Invoice_For_This_Distributor_For_Rebate
+										WHERE
+												Invoice_Check_Date >= '#start_date#'
+												AND
+												Invoice_Check_Date <= '#End_date#'
+									</CFQUERY>
+									<CFSET This_UOM_Product_Rate_Percent = Rate>
+									<CFSET Percent_Amount_Total = 0>
+									<CFSET Percent_Detail_Display = "inline">
+									<CFIF SHOW_DEVIATION_DETAIL_HEADER>
+										<CFSET Percent_Detail_Display = "none">
+										<CFSET percent_Detail_Expand = true>
+									</CFIF>
+									<CFSET ReProgram_Rebates_Component_Data_ID = "TR_#request.app_general_functions.replaceHyphen(Program_Rebates_Component_Data_ID)#">
+									<TR STYLE="display:#Percent_Detail_Display#;" ID="#ReProgram_Rebates_Component_Data_ID#">
+									<TD COLSPAN="4">								
+									<TABLE align="right" BGCOLOR="##F0FFFF" CELLPADDING="0" CELLSPACING="0" WIDTH="80%" BORDER="0" CLASS="NotMaintable">
+									<CFIF Get_Invoice_Between_These_Dates.RecordCount Gt 0>
+									<TR BGCOLOR="EEEEEE">
+										<TD ID="header"><B>Invoice Number</B></TD>
+										<cfif Use_Rebate_Percent_Option_ID EQ 1>
+										<TD ID="header" ALIGN="right"><B>Price/#ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+										<TD ID="header">&nbsp;</TD>
+										</cfif>
+										<TD ID="header" ALIGN="right"><B>Volume #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+										<cfif Use_Rebate_Percent_Option_ID EQ 1>
+										<TD ID="header">&nbsp;</TD>				
+										</cfif>					
+										<TD ID="header" ALIGN="right"><B>Amount</B></TD>
+									</TR>						
+									<CFLOOP QUERY="Get_Invoice_Between_These_Dates">
+										<TR>
+											<TD STYLE="border-bottom:solid 93BEE2 1px; font-size : 10px;">#Invoice_Number#</TD>
+											<cfif Use_Rebate_Percent_Option_ID EQ 1>
+												<TD ALIGN="right" STYLE="border-bottom:solid 93BEE2 1px; font-size : 10px;">#NumberFormat(UOM_Unit_Price, DEVIATION_RATE_FORMAT)#</TD>
+												<TD ALIGN="center" STYLE="border-bottom:solid 93BEE2 1px; font-size : 10px;">&nbsp;*&nbsp;</TD>									
+												<CFSET Current_Percent_Amount = (UOM_Unit_Price * UOM_Volume_Invoiced)>
+											<cfelse>
+												<CFSET Current_Percent_Amount = Gross_Sales_Dollars>
+											</cfif>
+											<TD ALIGN="right" STYLE="border-bottom:solid 93BEE2 1px; font-size : 10px;">#NumberFormat(UOM_Volume_Invoiced, DEVIATION_VOLUME_FORMAT)#</TD>
+											<cfif Use_Rebate_Percent_Option_ID EQ 1>
+												<TD ALIGN="center" STYLE="border-bottom:solid 93BEE2 1px; font-size : 10px;">&nbsp;=&nbsp;</TD>
+											</cfif>
+											<CFSET Percent_Amount_Total = Percent_Amount_Total + Current_Percent_Amount>
+											<TD ALIGN="right" STYLE="border-bottom:solid 93BEE2 1px; font-size : 10px;">#NumberFormat(Current_Percent_Amount, DEVIATION_RATE_FORMAT)#</TD>
+										</TR>
+									</CFLOOP>
+									<CFELSE>
+										<TR>
+											<TD COLSPAN="4" STYLE="color:red;font-size:12px;">No invoice found</TD>
+										</TR>
+									</CFIF>
+									<TR>
+										<TD COLSPAN="3" ALIGN="right" ID="header"><B>&##931; Amount</B></TD>
+										<TD ID="header"><B>&nbsp;=&nbsp;</B></TD>
+										<TD ALIGN="right" ID="header"><B>#NumberFormat(Percent_Amount_Total, DEVIATION_RATE_FORMAT)#</B></TD>									
+									</TR>
+									<TR>
+										<TD COLSPAN="3" ALIGN="right" ID="header"><B>&##931; Volume</B></TD>
+										<TD ID="header"><B>&nbsp;=&nbsp;</B></TD>
+										<TD ALIGN="right" ID="header"><B>#NumberFormat(Total_Volume_For_Percent_Calc, DEVIATION_VOLUME_FORMAT)#</B></TD>									
+									</TR>
+									<CFIF Total_Volume_For_Percent_Calc NEQ 0 AND Total_Volume_For_Percent_Calc NEQ "">
+										<CFSET Add_Up_Rate = This_UOM_Product_Rate_Percent * (Percent_Amount_Total/Total_Volume_For_Percent_Calc) / 100>
+									</CFIF>
+									<TR>
+										<TD COLSPAN="3" ALIGN="right" ID="header"><B>#NumberFormat(This_UOM_Product_Rate_Percent, DEVIATION_PERCENT_FORMAT)#% ( #NumberFormat(Percent_Amount_Total, DEVIATION_RATE_FORMAT)# / #NumberFormat(Total_Volume_For_Percent_Calc, DEVIATION_VOLUME_FORMAT)#)</B></TD>
+										<TD ID="header"><B>&nbsp;=&nbsp;</B></TD>
+										<TD ALIGN="right" ID="header" style="border:2px solid blue;"><B>#NumberFormat(Add_Up_Rate, DEVIATION_RATE_FORMAT)#</B></TD>
+									</TR>
+									</TABLE>
+									</TD></TR>
+								</CFSAVECONTENT>
+							</CFIF>
+							<TD VALIGN="top"><CFIF Unit_Of_Measure_ID LT 3>#NumberFormat(Rate, DEVIATION_RATE_FORMAT)#<CFELSE>#Rate#</CFIF> <CFIF Unit_Of_Measure_ID LT 3>/</CFIF> #Abbreviation#</TD>
+							<CFIF Unit_Of_Measure_ID NEQ Billback_UOM  AND Unit_Of_Measure_ID  NEQ 3>
+								<TD><CFIF Unit_Of_Measure_ID EQ 1><CFSET Add_Up_Rate = Rate/Net_Weight>/<CFELSE><CFSET Add_Up_Rate = Rate*Net_Weight>*</CFIF></TD>
+								<TD>#Net_Weight#</TD>							
+							<CFELSE>
+								<CFIF Unit_Of_Measure_ID  NEQ 3>
+									<CFSET Add_Up_Rate = Rate>
+								</CFIF>
+								<TD COLSPAN="2">&nbsp;</TD>
+							</CFIF>
+							<TD VALIGN="bottom">=</TD>
+							<TD ALIGN="right" VALIGN="bottom"<CFIF percent_Detail_Expand> onClick="javaScript: show_TR_Details('#ReProgram_Rebates_Component_Data_ID#');" STYLE="cursor:pointer;color:blue;"</CFIF>>#NumberFormat(Add_Up_Rate, DEVIATION_RATE_FORMAT)#</TD>
+						</TR>
+						<CFIF Unit_Of_Measure_ID  EQ 3>
+							#This_Component_Percent_Details#
+						</CFIF>
+						<CFSET Current_Item_Total_Component_Rate = Current_Item_Total_Component_Rate + Add_Up_Rate>
+						</CFLOOP>
+						</CFIF>
+						<TR>
+							<TD COLSPAN="4" ALIGN="RIGHT" ID="header"><B>&##931; Rate / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+							<TD ALIGN="left" ID="header">=</TD>
+							<TD ALIGN="RIGHT" ID="header"><B>#NumberFormat(Current_Item_Total_Component_Rate, DEVIATION_RATE_FORMAT)#</B></TD>
+						</TR>
+					</TABLE>
+					</TD>
+				</TR>
+					<CFSET product_Rate = Current_Item_Total_Component_Rate>
+					<!----- If rebate go look for the components ---->
+				</CFIF>
+				<CFIF Billback_Product_Program.ExpRT_Discount_Type_Id eq 1 OR BB_Product_Type_ID NEQ 2>
+					<!------ 0 will be default rule for formula ----->
+					<cfset fixedPriceLogicType = 0>
+					<!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
+					<!---/////////////////////////////////////////// 
+					Rule 1. Program Fixed Components contain Delivered only
+					 - If there is entry in special price list, get delivered price at the end of the particular time span from special price list
+					 - Else get the lowest non-bid Delivered price in the window. Compare it with National Delivered Truckload Price from regular price list, take the lower of the both
+					Price - avg. Delivered Fixed Price = Rebate
+					Rule 2. Program Fixed Components contain FOB only
+					 - From invoice get the lost commonly occuring FOB price based on cased ordered
+					 - If no FOB price occurance, retrieve lowest non-bid Delivered price and subtract (del_del_cost + del_cust_pickup)
+					Price - avg. FOB Fixed Price = Rebate
+					Rule 3. Program Fixed Componets contain Delivered and FOB
+					 - From invoice get most commonly occuring price (FOB/delivered) based on cases ordered. If delivered applu rule, else apply rule 2
+					Rule 0. Old invoice amount scheme OR if appsetting.getBBDeviationUseMaxPrice() get max price from invoices
+					
+					Fixed_Component_Type: (1= delivered, 2 =FOB)
+					 ////////////////////////////////////////////////////--->
+					<!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
+					<!---#Billback_Product_Program.ExpRT_Discount_Type_Id# : 1 : AND #BSA_Foodservice_Items_Master_ID# : '' : #P_Valid_Discount_Type# : 1 :--->
+					<CFSET Total_Price=0>
+					<CFSET Total_Pounds_Invoiced = 0>	
+					<CFIF (BB_Product_Type_ID EQ 1 OR BB_Product_Type_ID EQ 5 OR BB_Product_Type_ID EQ 11 OR Billback_Product_Program.ExpRT_Discount_Type_Id eq 1) AND BSA_Foodservice_Items_Master_ID NEQ "" AND P_Valid_Discount_Type EQ 1>
+					<!------ Get Distributor Info ----->
+						
+						<cfset qGetBBDistributor = Get_Dist_ID>
+						<CFIF qGetBBDistributor.recordCount GT 0>
+							<CFSET BSA_Foodservice_Customers_ID = qGetBBDistributor.BSA_Foodservice_Customers_ID>
+							<cfset distributorId = qGetBBDistributor.BSA_Foodservice_Customers_ID>
+							
+							<CFIF Generic_Type EQ DEVIATION_CONSTANTS_Trade_Shelter>
+								<!------ to acccomodate getting invoice for each revision ----->
+								<CFIF appsettings.getBBDeviationUseMaxPrice()>
+									<!--- TODO: If app switch  use max price" is on, always use the same invoice date span for all versions of the program "--->
+									<CFSET 	Sample_Size_Start_Date = Invoice_First_Date_For_Rabate>
+									<CFSET 	Sample_Size_End_Date = Invoice_Last_Date_For_Rabate>
+								<CFELSE>
+									<CFSET 	Sample_Size_Start_Date = start_date>
+									<CFSET 	Sample_Size_End_Date = end_date>
+								</CFIF>
+							<CFELSE>
+							
+								<CFIF BB_D_Template_Overrides_Deviation_Tolerances EQ 1> <!--- BB_D_Purchase_Period_OverRide_Rate --->
+									<!--- if the template purchase period override is set, use that span all the time ---->
+									<CFSET 	Sample_Size_End_Date = Invoice_Last_Date_For_Rabate>
+									<CFSET 	Sample_Size_Start_Date = DateAdd("d", (BB_D_Purchase_Period_OverRide_Rate * -1) + 1, Sample_Size_End_Date)>
+								<CFELSEIF appsettings.getBBDeviationUseMaxPrice()>
+									<!--- If app switch  use max price" is on, always use the original invoice date span for all versions of the program "--->
+									<!---
+									If we were to set some thing it would look this this, but there is no need ro set var A = var A
+									<CFSET 	Sample_Size_Start_Date = Sample_Size_Start_Date />
+									<CFSET 	Sample_Size_End_Date = Sample_Size_End_Date />
+									--->
+								<CFELSE>
+									<!--- use the sample size and take the appropriate span for this program ---->
+									<cfset Sample_Size_Start_Date = Current_Sample_Size_End_Date>
+									<cfset currentSpan = DateDiff("d", start_date, end_date) + 1>
+									
+									<cfset currentSampleSizeLen = currentSpan * Billback_Rate_Tolerance.BB_Tolerance_DPP>
+									
+									<!--- currentSampleSizeLen - 1 because start amd end dates are inclusive--->
+									<cfset Sample_Size_End_Date = DateAdd("d", currentSampleSizeLen - 1, Sample_Size_Start_Date)>
+									
+									<CFSET 	Current_Sample_Size_End_Date = DateAdd("d", 1, Sample_Size_End_Date)>
+									<CFSET 	Current_Sample_Size_Start_Date = Sample_Size_Start_Date>
+								</CFIF>
+								<!-----
+								Example.
+								Billback Span: (05/06/2007 - 05/12/2007) (7 days)
+								Program Version 1: 9/1/2006 - 10/31/2007 (Effective Dates: 9/1/2006 - 5/9/2007)
+								Program Version 2: 5/10/2007 - 10/31/2007 (Effective Dates: 5/10/2007 - 10/31/2007)
+								Billback Valid Span: (05/06/2007 - 05/12/2007) (7 days) - out of which 4 days from version 1 and 3 days from version 2
+								
+								Case 1:
+								Template Purchase Period Over Ride: 10 
+								Invoice Sample for billback, version 1 and version 2 : 05/03/2007 - 05/12/2007 
+								
+								Case 2:
+								Template Purchase Period Over Ride: 0
+								Customer Purchase Period Ratio: 2 (from settings panel)
+								Sample Size: 7 * 2 = 14
+								Customer Purchase Period Offset: 2 days (from settings panel)
+								Invoice Sample for billback: 04/27/2007 - 05/10/2007 (14 days span with 2 days offset)
+								Invoice Sample for version 1: 04/27/2007 - 05/04/2007 (4 days * 2)
+								Invoice Sample for version 1: 05/05/2007 - 05/10/2007 (3 days * 2)
+								---->
+								
+							</CFIF>
+							<CFSET Product_ID = BSA_Foodservice_Items_Master_ID>
+							<!----- If fixed go look for the components ---->
+							<CFIF BB_Product_Type_ID EQ 1 OR BB_Product_Type_ID EQ 11 OR Billback_Product_Program.ExpRT_Discount_Type_Id eq 1>
+								<CFIF Product_ID NEQ "">									
+									<cfif BB_Product_Type_ID EQ 11>
+										<cfset qGetFixedComponents = bbDeviationManager.getBidRequestProductComponentDeliveryTypes(Product_ID, revisionProgramId, PayTo)>
+									<cfelseif BB_Product_Type_ID EQ 1>
+										<cfset qGetFixedComponents = bbDeviationManager.getFixedProductComponentDeliveryTypes(Product_ID, revisionProgramId, PayTo)>
+									<cfelse> <!--- special rate override from component calc --->
+										<CFQUERY  dataSource="#application.datasource#" NAME="getOverRide">
+											SELECT Contract_Main_Id 
+											FROM Contract_Main
+											WHERE Contract_Number = '#Billback_Product_Program.Contract_Number#' AND
+											Approved = 1 AND
+											Deleted = 0
+										</cfquery>
+										<cfset qGetFixedComponents = bbDeviationManager.getFixedProductComponentDeliveryTypes(Product_ID, getOverRide.Contract_Main_Id, PayTo)>
+									</cfif>
+									
+									<cfif qGetFixedComponents.recordCount EQ 0>
+										<cfset fixedPriceLogicType = 0>
+										<cfif appSettings.getFixedcomponents_on()>
+											<cfset fixedPriceLogicType = 1 />
+										</cfif>
+									<cfelseif qGetFixedComponents.recordCount EQ 1>										
+										<cfset fixedPriceLogicType = 0>
+										<cfif appSettings.getFixedcomponents_on()>
+											<cfset fixedPriceLogicType = qGetFixedComponents.Fixed_Component_Type />
+										</cfif>
+									<cfelse>										
+										<!------ more than 1, so find out which one to consider from invoice ----->
+										<cfset qGetMaxOccuringDeliveryType = bbDeviationManager.getInvoiceDetails(distributorId, Product_ID, Sample_Size_Start_Date, Sample_Size_End_Date, Billback_UOM, check_Date, 2)>
+										<cfset fixedPriceLogicType = 1><!--- D12681: default to DEL, so if no invlice found for DEL or FOB it will use DEL logic --->
+										<cfif qGetMaxOccuringDeliveryType.recordCount>
+											<cfset maxVolume = 0>
+											<cfloop query="qGetMaxOccuringDeliveryType">
+												<cfif TotalVolume GT maxVolume>
+													<cfif FOB_PRICE_IND EQ "Y">
+														<cfset fixedPriceLogicType = 2>
+														<cfset maxVolume = TotalVolume>
+													<cfelseif FOB_PRICE_IND EQ "N">
+														<cfset fixedPriceLogicType = 1>
+														<cfset maxVolume = TotalVolume>
+													</cfif>
+												</cfif>
+											</cfloop>
+										</cfif>										
+									</cfif>
+									<!--- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+													special Overide rate from program components
+										  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
+									<!---<cfif Billback_Product_Program.ExpRT_Discount_Type_Id eq 1 and BB_Product_Type_ID EQ 2>
+										<cfset fixedPriceLogicType = 1>
+									</cfif>	--->			
+									<!------ If the settings says not to look for all the different cases to find the price from price list, follow the case 0 which is the normal way ----->
+									<cfif appSettings.getBBFixedCalcTypesOn() NEQ 1 OR (fixedPriceLogicType NEQ 1 AND fixedPriceLogicType NEQ 2) OR objFreight.bFREIGHT_VERSION_ITEM>
+										<!------ get average delivered program price ----->
+										<cfset product_Rate = 0>
+										<cfif BB_Product_Type_ID eq 11>
+											<cfset qGetAvgProgramPrice = bbDeviationManager.getAvgProgramBidRequestPrice(revisionProgramId, Product_ID, Billback_UOM, fixedPriceLogicType, appSettings.getFixedcomponents_on(), PayTo)>
+										<cfelse>
+											<cfset qGetAvgProgramPrice = bbDeviationManager.getAvgProgramFixedPrice(revisionProgramId, Product_ID, Billback_UOM, fixedPriceLogicType, appSettings.getFixedcomponents_on(), PayTo, Dist_ID, programDelType, CheckProductWon, useFreightCalcDelTypeFromInvoice,objFreight.bFREIGHT_VERSION_ITEM)>
+											<!----
+											D13872 JRS -Identify how to handle BB purchase validation when sku number changes
+											If product replacement is set up,
+											If we did not get a fixed price from the program for this product,
+											find if there is a price for teh replacement product
+											----->
+											<cfif ProductReplacementID neq "">
+												<cfif not (qGetAvgProgramPrice.recordCount and isNumeric(qGetAvgProgramPrice.AvgProgramPrice) neq 0)>
+													<cfset qGetAvgProgramPrice = bbDeviationManager.getAvgProgramFixedPrice(revisionProgramId, ProductReplacementID, Billback_UOM, fixedPriceLogicType, appSettings.getFixedcomponents_on(), PayTo, Dist_ID, programDelType, CheckProductWon, useFreightCalcDelTypeFromInvoice,objFreight.bFREIGHT_VERSION_ITEM)>
+												</cfif>
+											</cfif>
+										</cfif>										
+										<cfif qGetAvgProgramPrice.recordCount>
+											<cfif isNumeric(qGetAvgProgramPrice.AvgProgramPrice)>
+												<cfset product_Rate = qGetAvgProgramPrice.AvgProgramPrice>
+											</cfif>
+											<cfif isNumeric(qGetAvgProgramPrice.IBF_Rate)>
+												<cfset program_ibf_Rate = qGetAvgProgramPrice.IBF_Rate />
+											</cfif>
+											<cfif isNumeric(qGetAvgProgramPrice.OBF_Rate)>
+												<cfset program_obf_Rate = qGetAvgProgramPrice.OBF_Rate />
+											</cfif>
+										</cfif>
+										<cfif NOT objFreight.bFREIGHT_VERSION_ITEM AND (Billback_Product_Program.ExpRT_Discount_Type_Id Neq 1 OR BB_Product_Type_ID NEQ 2)>
+											<cfset fixedPriceLogicType = 0>
+										</cfif>
+									</cfif>
+								</CFIF>								
+							</cfif>
+							<!---<cfoutput>  ::  #fixedPriceLogicType#  ::</cfoutput>--->
+							<TR VALIGN="top">
+								<TD colspan="10">
+								<cfif objFreight.bFREIGHT_VERSION_ITEM >
+									<!--- Special Handling For new Item level Freight Handling
+									**		components.freight.FreightBracketSetting  ** --->
+									<cfinclude template="Deviation_Fixed_Rate_Case_4.cfm">
+									
+									<cfswitch expression="#fixedPriceLogicType#">
+									<cfcase value="1">
+										<cfinclude template="Deviation_Fixed_Rate_Case_1_Freight.cfm">
+									</cfcase>
+									<cfcase value="2">
+										<cfinclude template="Deviation_Fixed_Rate_Case_2_Freight.cfm">
+									</cfcase>				
+									</cfswitch>
+								<cfelse>
+									<cfswitch expression="#fixedPriceLogicType#">
+									<cfcase value="1">
+										<cfinclude template="Deviation_Fixed_Rate_Case_1.cfm">
+									</cfcase>
+									<cfcase value="2">
+										<cfinclude template="Deviation_Fixed_Rate_Case_2.cfm">
+									</cfcase>
+									<cfdefaultcase>
+										<cfinclude template="Deviation_Fixed_Rate_Case_4.cfm">
+									</cfdefaultcase>				
+									</cfswitch>
+								</cfif>
+									<!--- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+													special Overide rate from program components
+										  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
+										<cfif Billback_Product_Program.ExpRT_Discount_Type_Id eq 1 and BB_Product_Type_ID EQ 2>
+											<CFSET product_Rate = Current_Item_Total_Component_Rate>
+										</cfif>	
+								
+								
+								<!--- fixedPriceLogicType = #fixedPriceLogicType# :: getBBDeviationUseMaxPrice = #appsettings.getBBDeviationUseMaxPrice()# :: getBBFixedCalcTypesOn = #appSettings.getBBFixedCalcTypesOn()# :: deliveryTypeToUse = #deliveryTypeToUse# --->
+							<!------ subtract program fixed price from paid price ----->
+							<TABLE bgcolor="FAF89A" CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="100%" CLASS="Maintable">
+							<COLGROUP>
+								<COL SPAN="1" WIDTH="90"></COL><!------ invoice # ----->
+								<COL SPAN="1" WIDTH="90"></COL><!------ invoice date ----->
+								<COL SPAN="1" ALIGN="RIGHT"></COL><!------ volume ----->
+								<COL SPAN="1" ALIGN="CENTER" WIDTH="90"></COL><!------ * ----->
+								<COL SPAN="1" ALIGN="RIGHT"></COL><!------ Price/CS ----->
+								<COL SPAN="1" ALIGN="CENTER" WIDTH="90"></COL><!------ = ----->
+								<COL SPAN="1" ALIGN="RIGHT" WIDTH="70"></COL><!------ Price ----->
+							</COLGROUP>
+							<CFSET Total_Weighted_Program_Rate=product_Rate>
+							<cfif NOT isNumeric(product_Rate)>
+								<cfset product_Rate = 0>
+							</cfif>
+							<cfif NOT isNumeric(avgPricePaid)>
+								<cfset avgPricePaid = 0>
+							</cfif>
+							<TR CLASS="MaintableTHEAD">
+								<TD COLSPAN="5" ALIGN="RIGHT"><B>
+									<cfif objFreight.bFREIGHT_VERSION_ITEM>
+										Validation
+									<cfelse>
+										<cfif appsettings.getBBDeviationUseMaxPrice() EQ 1>Max<cfelseif appsettings.getBBDeviationUseMaxPrice() EQ 2>Min<cfelse>Possible</cfif>
+									 	Invoice
+									</cfif>&nbsp;Price / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+								<TD ALIGN="CENTER"><B>=</B></TD>
+								<TD>#NumberFormat(avgPricePaid, DEVIATION_RATE_FORMAT)#</TD>
+							</TR>
+							<!--- **** Extra IBF/OBF Handling start *** --->
+							<CFIF useFreightCalcDelTypeFromInvoice AND (deliveryTypeToUse eq 1 or deliveryTypeToUse eq 4 or deliveryTypeToUse eq 5)>
+							<!--- IBF --->
+							<!--- If FDC/DEL, show IBF --->
+							<cfif deliveryTypeToUse Neq 5 >
+								<TR CLASS="MaintableTHEAD">
+									<TD COLSPAN="5" ALIGN="RIGHT"><B>
+										Invoice IBF / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+									<TD ALIGN="CENTER"><B>=</B></TD>
+									<TD>#NumberFormat(minmax_ibf_rate, DEVIATION_RATE_FORMAT)# </TD>
+								</TR>
+								<cfset avgPricePaid = avgPricePaid + minmax_ibf_rate />
+							</cfif>
+							
+							<!--- OBF --->
+							<cfif deliveryTypeToUse eq 1 or deliveryTypeToUse eq 5> <!--- If DEL, show OBF --->
+								<TR CLASS="MaintableTHEAD">
+									<TD COLSPAN="5" ALIGN="RIGHT"><B>
+										Invoice OBF / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+									<TD ALIGN="CENTER"><B>=</B></TD>
+									<TD>#NumberFormat(minmax_obf_rate, DEVIATION_RATE_FORMAT)#</TD>
+								</TR>
+								<cfset avgPricePaid = avgPricePaid + minmax_obf_rate />
+							</cfif>							
+							<TR CLASS="MaintableTHEAD">
+								<TD COLSPAN="5" ALIGN="RIGHT"><B>
+									Invoice
+									<cfif deliveryTypeToUse eq 4>FOB DC
+									<cfelseif deliveryTypeToUse eq 1 or deliveryTypeToUse eq 5>DEL
+									</cfif> 
+									Price / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+								<TD ALIGN="CENTER"><B>=</B></TD>
+								<TD>#NumberFormat(avgPricePaid, DEVIATION_RATE_FORMAT)#</TD>
+							</TR>
+							</CFIF>
+							<!--- **** Extra IBF/OBF Handling end *** --->
+							<TR CLASS="MaintableTHEAD">
+								<TD COLSPAN="5" ALIGN="RIGHT"><B>Program <cfif useFreightCalcDelTypeFromInvoice AND NOT objFreight.bFREIGHT_VERSION_ITEM AND NOT deliveryTypeToUse eq 5>FOB <cfelseif deliveryTypeToUse eq 5>DEL </cfif>Price / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+								<TD ALIGN="CENTER"><B>=</B></TD>
+								<TD>#NumberFormat(product_Rate, DEVIATION_RATE_FORMAT)#</TD>
+							</TR>
+							<!--- **** Extra IBF/OBF Handling start *** --->
+							<CFIF useFreightCalcDelTypeFromInvoice AND (deliveryTypeToUse eq 1 or deliveryTypeToUse eq 4)>
+								<!--- IBF --->
+								<!--- If FDC/DEL, show IBF --->
+								<TR CLASS="MaintableTHEAD">
+									<TD COLSPAN="5" ALIGN="RIGHT"><B>
+										Program IBF / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+									<TD ALIGN="CENTER"><B>=</B></TD>
+									<TD>#NumberFormat(program_ibf_Rate, DEVIATION_RATE_FORMAT)#</TD>
+								</TR>
+								<cfset product_Rate = product_Rate + program_ibf_Rate />
+							</cfif>
+							<!--- OBF --->
+							<cfif useFreightCalcDelTypeFromInvoice AND (deliveryTypeToUse eq 1 OR objFreight.bFREIGHT_VERSION_ITEM) > <!--- If DEL, show OBF --->
+								<TR CLASS="MaintableTHEAD">
+									<TD COLSPAN="5" ALIGN="RIGHT"><B>
+										Program <cfif objFreight.bFREIGHT_VERSION_ITEM>Freight<cfelse>OBF</cfif> / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+									<TD ALIGN="CENTER"><B>=</B></TD>
+									<TD>#NumberFormat(program_obf_Rate, DEVIATION_RATE_FORMAT)#</TD>
+								</TR>
+								<cfset product_Rate = product_Rate + program_obf_Rate />
+							</cfif>
+							<CFIF useFreightCalcDelTypeFromInvoice AND (deliveryTypeToUse eq 1 or deliveryTypeToUse eq 4)>
+								<TR CLASS="MaintableTHEAD">
+									<TD COLSPAN="5" ALIGN="RIGHT"><B>Program 
+										<cfif deliveryTypeToUse eq 4>FOB DC
+										<cfelseif deliveryTypeToUse eq 1>DEL
+										</cfif>
+										Price / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+									<TD ALIGN="CENTER"><B>=</B></TD>
+									<TD>#NumberFormat(product_Rate, DEVIATION_RATE_FORMAT)#</TD>
+								</TR>
+							</CFIF>
+							<!--- **** Extra IBF/OBF Handling end *** --->
+							<CFSET Total_Weighted_Rate_Display = avgPricePaid - product_Rate>
+							<cfif avgPricePaid EQ 0 OR product_Rate EQ 0>
+								<CFSET Total_Weighted_Rate_Display = 0>
+								<cfset invalidDatesTobeRemovedFromTotalValidSpan = invalidDatesTobeRemovedFromTotalValidSpan + this_Interval_Days>
+							</cfif>
+							<!--- Special rate override from component  --->
+							<cfif Billback_Product_Program.ExpRT_Discount_Type_Id NEQ 1 OR BB_Product_Type_ID NEQ 2>
+								<TR CLASS="MaintableTHEAD" TITLE="#NumberFormat(avgPricePaid, DEVIATION_RATE_FORMAT)# - #NumberFormat(product_Rate, DEVIATION_RATE_FORMAT)# = #NumberFormat(Total_Weighted_Rate_Display, DEVIATION_RATE_FORMAT)#">
+									<TD COLSPAN="5" ALIGN="RIGHT">
+									<B>Expected Rate / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")# &nbsp;&nbsp; (Invoice Price - Program Price) </B>
+									<br>(#NumberFormat(avgPricePaid, DEVIATION_RATE_FORMAT)# - #NumberFormat(product_Rate, DEVIATION_RATE_FORMAT)#)
+									</TD>
+									<TD ALIGN="CENTER"><B>=</B></TD>
+									<TD>#NumberFormat(Total_Weighted_Rate_Display, DEVIATION_RATE_FORMAT)#</TD>
+								</TR>
+							</cfif>	
+							</TABLE>
+							<!------ set the product rate to be the new product rate we just found ----->
+							<cfif Billback_Product_Program.ExpRT_Discount_Type_Id NEQ 1 OR BB_Product_Type_ID NEQ 2>
+								<cfset product_Rate = Total_Weighted_Rate_Display>
+							</cfif>
+							</TD>
+							</TR>
+						<cfelse>
+							<cfoutput><BR><FONT COLOR="Red"><B>Did not retrieve invoice information. Payee not found in the #lcase(application.returned_customer_setting.distributor_label_singular)# database</B></FONT><BR></cfoutput>
+						</cfif>
+					</CFIF>
+				</CFIF>
+				</CFSAVECONTENT>					
+			<cfset stBillbackRateDisplay.start_date 		= start_date>
+			<cfset stBillbackRateDisplay.end_date 			= end_date>
+			<cfset stBillbackRateDisplay.Sample_Size_Start_Date 		= Sample_Size_Start_Date>
+			<cfset stBillbackRateDisplay.Sample_Size_End_Date 			= Sample_Size_End_Date>
+			<cfset stBillbackRateDisplay.this_Interval_Days = this_Interval_Days>
+			<cfset stBillbackRateDisplay.this_Rate_Weight 	= this_Rate_Weight>
+			<cfset stBillbackRateDisplay.product_Rate 		= product_Rate>
+			<cfset stBillbackRateDisplay.This_Rebate_Details = This_Rebate_Details>
+			<cfset ArrayAppend(arBillbackRateDisplay, stBillbackRateDisplay)>
+			<CFSET counter=counter+1>
+		</CFIF>
+	</CFLOOP>
+<TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0" WIDTH="#Table_Width#" ALIGN="CENTER">
+	<TR>
+		<TD COLSPAN="100%">
+		<B>Total Interval: #Valid_Billback_Total_Days# days</B>
+		</TD>
+	</TR>
+	<CFIF NOT (BB_Product_Type_ID EQ 2 OR appSettings.getBBFixedCalcTypesOn() EQ 1)
+		AND appSettings.getBBDateDevInExpectedVol() EQ 0
+		>
+	<TR>
+		<TD COLSPAN="100%">
+		<B>Days not to count: #invalidDatesTobeRemovedFromTotalValidSpan# days <font color="red">(Any time span which has 0 rate will not be included to take the weighted rate)</font></B>
+		</TD>
+	</TR>	
+	<cfset Valid_Billback_Total_Days = Valid_Billback_Total_Days - invalidDatesTobeRemovedFromTotalValidSpan>
+	<TR>
+		<TD COLSPAN="100%">
+		<B>Total Valid Interval: #Valid_Billback_Total_Days# days</B>
+		</TD>
+	</TR>
+	</cfif>
+</TABLE>	
+</cfif><!----- <cfif arRevisionPropertiesLen GT 0> ----->
+	<TABLE CLASS="Maintable" WIDTH="#Table_Width#" CELLPADDING="2" CELLSPACING="0" ALIGN="center">
+	<COLGROUP>
+	<COL SPAN="4"></COL>
+	<COL SPAN="5" ALIGN="CENTER"></COL>
+	</COLGROUP>
+	<CFIF ListLen(This_Billback_Intervals,",") GT 0>		
+		<TR BGCOLOR="FFCE84" CLASS="MaintableTHEAD" STYLE="border-bottom:solid 93BEE2 1px;">
+			<TD>&nbsp;</TD>
+			<TD><B>From</B></TD>
+			<TD><B>To</B></TD>
+			<TD><B>No of Days</B></TD>
+			<TD>&nbsp;</TD>
+			<TD><B>Total Valid Interval</B></TD>
+			<TD>&nbsp;</TD>
+			<TD><B>Weight</B></TD>
+			<TD>&nbsp;</TD>
+			<TD ALIGN="right"><B>Rate/#ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</B></TD>
+			<TD>&nbsp;</TD>
+			<TD><B>Weighted Rate</B></TD>
+		</TR>
+		<CFSET P_Valid_Discount_Type = 1>
+	<CFELSE>
+		<TR CLASS="MaintableTHEAD">
+			<TD COLSPAN="100%"><B><FONT COLOR="Red">This discount type is not present in the required span for this payee</FONT></B></TD>
+		</TR>
+		<CFSET P_Valid_Discount_Type = 0>
+	</CFIF>
+	
+	<cfset Total_Weighted_Rate = 0>
+	<cfset arLen = ArrayLen(arBillbackRateDisplay)>
+	<cfloop index="i" from="1" to="#arLen#">
+		<cfset stBillbackRateDisplay = arBillbackRateDisplay[i]>
+		<CFSET start_date 			= stBillbackRateDisplay.start_date>
+		<CFSET end_date 			= stBillbackRateDisplay.end_date>
+		<CFSET this_Interval_Days 	= stBillbackRateDisplay.this_Interval_Days>
+		<CFSET this_Rate_Weight		= 0>
+		<cfif Valid_Billback_Total_Days NEQ 0>
+			<CFSET this_Rate_Weight=(this_Interval_Days/Valid_Billback_Total_Days) * 100>
+		</cfif>
+		<cfset product_Rate			= stBillbackRateDisplay.product_Rate>
+		<CFSET Weighted_Rate = (this_Rate_Weight * product_Rate) / 100>
+		<CFSET Total_Weighted_Rate = Total_Weighted_Rate + Weighted_Rate>	
+		<TR BGCOLOR=ccffcc>
+			<TD>&nbsp;</TD>
+			<TD>#DateFormat(start_date, "mm/dd/yyyy")#</TD>
+			<TD>#DateFormat(end_date, "mm/dd/yyyy")#</TD>
+			<TD>#this_Interval_Days#</TD>
+			<TD ALIGN="CENTER">/</TD>
+			<TD>#Valid_Billback_Total_Days#</TD>				
+			<TD ALIGN="CENTER">=</TD>
+			<TD>#NumberFormat(this_Rate_Weight, DEVIATION_VOLUME_FORMAT)# %</TD>
+			<TD ALIGN="CENTER">*</TD>
+			<TD ALIGN="right">#NumberFormat(product_Rate, DEVIATION_RATE_FORMAT)#</TD>
+			<TD ALIGN="CENTER">=</TD>
+			<TD ALIGN="CENTER">#NumberFormat(Weighted_Rate, DEVIATION_RATE_FORMAT)#</TD>
+		</TR>
+		<TR BGCOLOR=ccffcc>
+			<TD>&nbsp;</TD>
+			<TD colspan="11">invoice/price sample period: #DateFormat(stBillbackRateDisplay.Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(stBillbackRateDisplay.Sample_Size_End_Date, "mm/dd/yyyy")#</TD>
+		</TR>
+		#stBillbackRateDisplay.This_Rebate_Details#
+	</cfloop>
+<!---	<cfif Billback_Product_Program.ExpRT_Discount_Type_Id eq 1 and BB_Product_Type_ID EQ 2>
+		<TR CLASS="MaintableTHEAD" bgcolor="FFFF00">
+		<TD COLSPAN="10" ALIGN="RIGHT"><B>Expected Program Rate / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")# &nbsp;&nbsp;<CFIF NOT appsettings.getBBDeviationUseMaxPrice()> (&##931; Weighted Rate) </CFIF></B></TD>
+		<TD ALIGN="CENTER"><B>=</B></TD>
+		<TD<CFIF Billback_Product_Program.ExpRT_Expected_Rate_Flag EQ 0>style="border:solid 2px blue;"</CFIF>>#NumberFormat(product_Rate, DEVIATION_RATE_FORMAT)#</TD>
+	</TR>
+	<cfelse>--->
+		<TR CLASS="MaintableTHEAD" bgcolor="FFFF00">
+			<TD COLSPAN="10" ALIGN="RIGHT"><B>Expected Program Rate / #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")# &nbsp;&nbsp;<CFIF NOT appsettings.getBBDeviationUseMaxPrice()> (&##931; Weighted Rate) </CFIF></B></TD>
+			<TD ALIGN="CENTER"><B>=</B></TD>
+			<TD<CFIF Billback_Product_Program.ExpRT_Expected_Rate_Flag EQ 0>style="border:solid 2px blue;"</CFIF>>#NumberFormat(Total_Weighted_Rate, DEVIATION_RATE_FORMAT)#</TD>
+		</TR>
+	<!---</cfif>--->
+	<CFIF Billback_Product_Program.ExpRT_Expected_Rate_Flag EQ 1 OR Billback_Product_Program.ExpRT_Expected_Rate_Flag EQ 2>
+		<cfset OverRideRateFlag = Billback_Product_Program.ExpRT_Expected_Rate_Flag />
+		<CFIF OverRideRateFlag EQ 2>
+			<cfif Billback_Product_Program.ExpRT_Discount_Type_Id eq 1 >
+				<cfset rOver = avgPricePaid - Billback_Product_Program.ExpRT_Rate />
+				<cfset expRate = Total_Weighted_Rate - rOver />
+					<TR CLASS="MaintableTHEAD" bgcolor="FFFF00">
+						<TD COLSPAN="10" ALIGN="RIGHT"><B>Rate Override (#Billback_Product_Program.ExpRT_Contract_Number#)</B></TD>
+						<TD ALIGN="CENTER"><B>-</B></TD>
+						<TD>#NumberFormat(avgPricePaid, DEVIATION_RATE_FORMAT)# - #NumberFormat(Billback_Product_Program.ExpRT_Rate, DEVIATION_RATE_FORMAT)# = #NumberFormat(rOver, DEVIATION_RATE_FORMAT)# </TD>
+					</TR>
+			<cfelse>
+				<cfset rOver = Billback_Product_Program.ExpRT_Rate />
+				<cfset expRate = Total_Weighted_Rate - rOver />
+				<TR CLASS="MaintableTHEAD" bgcolor="FFFF00">
+					<TD COLSPAN="10" ALIGN="RIGHT"><B>Rate Override (#Billback_Product_Program.ExpRT_Contract_Number#)</B></TD>
+					<TD ALIGN="CENTER"><B>-</B></TD>
+					<TD>#NumberFormat(Billback_Product_Program.ExpRT_Rate, DEVIATION_RATE_FORMAT)#</TD>
+				</TR>
+			
+			</cfif>
+		<cfelse>
+			<!--- Expected Rate = 0 since Billback_Product_Program.Expected_Rate_Flag EQ 1 --->
+			<cfset expRate = 0 />
+		</CFIF>	
+			<TR CLASS="MaintableTHEAD" bgcolor="FFFF00">
+				<TD COLSPAN="10" ALIGN="RIGHT"><B><CFIF OverRideRateFlag EQ 1>Override Expected Rate (#Billback_Product_Program.ExpRT_Contract_Number#)
+			   		<CFELSEIF OverRideRateFlag EQ 2>Override Adjusted Rate (#Billback_Product_Program.ExpRT_Contract_Number#)</CFIF></B></TD>
+				<TD ALIGN="CENTER"><B>=</B></TD>
+				<TD style="border:solid 2px blue;">#NumberFormat(expRate, DEVIATION_RATE_FORMAT)# 
+			/ #ListGetAt(DEVIATION_QUANTITY_UOM, Billback_UOM, ",")#</TD>
+			</TR>
+	</CFIF>
+</TABLE>
+<CFELSE>
+	<BR>
+	<B><FONT COLOR="Red">This product does not exist in the system</FONT></B>
+	<BR>
+</CFIF>
+</CFOUTPUT>
+
+
+<!--------------------------------------------------------------------------------------
+Get information for finding out the invoive revenue for product types fixed and formula	
+--------------------------------------------------------------------------------------->
+
+<!----------------- show invoice days to be taken into account ------------------>
+
+<!------------------ End Invoice Info display for fixed and formula ----------------------------->
+<CFSILENT>
+
+<!----------------- Get deviation info from database -------------------------------------------->
+<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Product_Discount_Type_Rate">
+SELECT	Billback_Product.BB_Product_Quantity, Units_of_Measure.Unit_Of_Measure_Desc,Units_of_Measure.Unit_Of_Measure_Desc_Singular
+		, Billback_Product_Detail.BB_Rate
+		,CASE
+		WHEN Units_of_Measure.Unit_Of_Measure_ID = 1 THEN
+			BB_Rate_CS
+		ELSE
+			BB_Rate_LB
+		END AS Billback_Rate
+		,CASE
+		WHEN Units_of_Measure.Unit_Of_Measure_ID = 1 THEN
+			E_Rate_CS
+		ELSE
+			E_Rate_LB
+		END AS Expected_Rate,
+		ExpectedRate.ProductID AS ExpRT_ProductID,
+    	ExpectedRate.Rate AS ExpRT_Rate,
+    	ExpectedRate.Unit_Of_Measure_ID AS ExpRT_Unit_Of_Measure_ID,
+    	ExpectedRate.Expected_Rate_Flag AS ExpRT_Expected_Rate_Flag, -- 1 -> RATE = $0, 2 -> Rate = Less Program Rebate
+    	ExpectedRate.Contract_Number AS ExpRT_Contract_Number,
+    	ExpectedRate.Discount_Type_Id AS ExpRT_Discount_Type_Id
+		FROM	Billback_Product_Detail	
+		INNER JOIN	Billback_Product
+		ON
+		(
+			(Billback_Product.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(Billback_Product.Deleted = 0)
+		)
+		<CFSWITCH EXPRESSION="#BB_Product_Type_ID#">
+		<CFCASE VALUE="1">
+		INNER JOIN	BB_Fixed_Product_Rate
+		ON
+		(
+			(BB_Fixed_Product_Rate.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Fixed_Product_Rate.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		<CFCASE VALUE="2">
+		INNER JOIN	BB_Rebate_Product_Rate
+		ON
+		(
+			(BB_Rebate_Product_Rate.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Rebate_Product_Rate.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		<CFCASE VALUE="5">
+		INNER JOIN	BB_Formula_Product_Rate
+		ON
+		(
+			(BB_Formula_Product_Rate.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Formula_Product_Rate.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		<CFCASE VALUE="11">
+		INNER JOIN	BB_Bid_Request_Product_Rate
+		ON
+		(
+			(BB_Bid_Request_Product_Rate.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Bid_Request_Product_Rate.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		</CFSWITCH>
+		LEFT JOIN	Units_of_Measure
+		ON
+		(Units_of_Measure.Unit_Of_Measure_ID = Billback_Product.BB_Product_UOM)
+		LEFT JOIN dbo.udfGetBBExpectedRate('#Billback_ID#','1') ExpectedRate ON	<!--- ,'#getBB.BB_Product_Type_ID#' --->
+			ExpectedRate.ProductId  = Billback_Product.Product_ID
+	WHERE	
+		Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+		AND
+		Billback_Product_Detail.Deleted = 0
+</CFQUERY>
+</CFSILENT>
+
+<!------------- Show deviation calculation ------------------>
+<BR>
+<SPAN CLASS="Title2">Rate <cfoutput>#appSettings.getDeviationLabel()#</cfoutput> calculation</SPAN>
+<HR COLOR="Orange">
+<CFIF Billback_Product_Discount_Type_Rate.recordCount GT 0>
+	<CFOUTPUT>
+	<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" WIDTH="#Evaluate("Table_Width*2/3")#">	
+		<TR>
+			<TD>Total Amount Claimed</TD>
+			<TD>A1</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>		
+			#DollarFormat(Billback_Product_Discount_Type_Rate.BB_Rate)#
+			</TD>
+		</TR>
+		<TR>
+			<TD>Total Volume Claimed</TD>
+			<TD>V1</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>		
+			#Billback_Product_Discount_Type_Rate.BB_Product_Quantity# #Billback_Product_Discount_Type_Rate.Unit_Of_Measure_Desc#
+			</TD>
+		</TR>	
+		<TR>
+			<TD>Rate Claimed</TD>
+			<TD>R1 = A1 / V1</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>		
+			<cfif Billback_Product_Discount_Type_Rate.BB_Product_Quantity NEQ 0>
+				<CFSET Rate_Claimed=(Billback_Product_Discount_Type_Rate.BB_Rate/Billback_Product_Discount_Type_Rate.BB_Product_Quantity)>
+			<cfelse>
+				<CFSET Rate_Claimed=Billback_Product_Discount_Type_Rate.BB_Rate>
+			</cfif>
+			#NumberFormat(Rate_Claimed, DEVIATION_RATE_FORMAT)# / #Billback_Product_Discount_Type_Rate.Unit_Of_Measure_Desc_Singular#
+			</TD>
+		</TR>	
+		<CFIF Billback_Product_Discount_Type_Rate.ExpRT_Expected_Rate_Flag EQ 1 OR Billback_Product_Discount_Type_Rate.ExpRT_Expected_Rate_Flag EQ 2>
+			<cfset expRate = Weighted_Rate />
+			<!---  USE Weighted_Rate since Expected_Rate has the component Override baked in already
+				<cfset r = Billback_Product_Discount_Type_Rate.Expected_Rate + Billback_Product_Discount_Type_Rate.Rate />--->
+			<cfset OverRideRateFlag = Billback_Product_Discount_Type_Rate.ExpRT_Expected_Rate_Flag />
+			<cfif Billback_Product_Discount_Type_Rate.ExpRT_Discount_Type_Id eq 1 >
+				<cfset rOver = avgPricePaid - Billback_Product_Program.ExpRT_Rate />
+				<!---<cfset expRate = Total_Weighted_Rate - rOver />--->
+			<cfelse>
+				<cfset rOver = Billback_Product_Discount_Type_Rate.ExpRT_Rate />
+				
+			</cfif>
+			
+			<TR>
+				<TD><B>Expected Rate</B></TD>
+				<TD><B>ER</B></TD>
+				<TD>&nbsp:&nbsp;</TD>		
+				<TD>
+				<B>#NumberFormat(expRate, DEVIATION_RATE_FORMAT)# 
+				/ #Billback_Product_Discount_Type_Rate.Unit_Of_Measure_Desc_Singular#</B>
+				</TD>
+			</TR>
+			<CFIF OverRideRateFlag EQ 2>
+			<TR>
+				<TD><B>Rate Override (#Billback_Product_Discount_Type_Rate.ExpRT_Contract_Number#)</B></TD>
+				<TD><B>RO</B></TD>
+				<TD>&nbsp:&nbsp;</TD>		
+				<TD>
+				<B>#NumberFormat(rOver, DEVIATION_RATE_FORMAT)# 
+				/ #Billback_Product_Discount_Type_Rate.Unit_Of_Measure_Desc_Singular#</B>
+				</TD>
+			</TR>
+			</CFIF>
+			<TR>
+				<TD><B><CFIF OverRideRateFlag EQ 1>Override Expected Rate (#Billback_Product_Discount_Type_Rate.ExpRT_Contract_Number#)
+				   <CFElseIF OverRideRateFlag EQ 2>Override Adjusted Rate (#Billback_Product_Discount_Type_Rate.ExpRT_Contract_Number#)</CFIF></B></TD>
+				<TD><B><CFIF OverRideRateFlag EQ 2>R2 = ER - RO<cfelse>R2</cfif></B></TD>
+				<TD>&nbsp:&nbsp;</TD>		
+				<TD>
+				<B>#NumberFormat(Billback_Product_Discount_Type_Rate.Expected_Rate, DEVIATION_RATE_FORMAT)# 
+				/ #Billback_Product_Discount_Type_Rate.Unit_Of_Measure_Desc_Singular#</B>
+				</TD>
+			</TR>
+		<cfelse>
+		<TR>
+			<TD><B>Expected Rate</B></TD>
+			<TD><B>R2</B></TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>
+			<B>#NumberFormat(Billback_Product_Discount_Type_Rate.Expected_Rate, DEVIATION_RATE_FORMAT)# 
+			/ #Billback_Product_Discount_Type_Rate.Unit_Of_Measure_Desc_Singular#</B>
+			</TD>
+		</TR>
+		</CFIF>
+		<CFIF Billback_Rate_Tolerance.recordCount GT 0>
+			<CFSET rate_Tolerance = Billback_Rate_Tolerance.BB_Tolerance_ERT>
+		<CFELSE>
+			<CFSET rate_Tolerance = 0>
+		</CFIF>
+		<TR>
+			<TD>Rate Tolerance</TD>
+			<TD>R3</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>
+			#NumberFormat(rate_Tolerance,"___")#%
+			</TD>
+		</TR>
+		<TR>
+			<TD>Adjusted Expected Rate</TD>
+			<TD>R4 = R2 + (R2 * R3)</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>
+			<CFSET addAdjustedRate = (Billback_Product_Discount_Type_Rate.Expected_Rate * rate_Tolerance) / 100>
+			<CFSET adjusted_Expected_rate = Billback_Product_Discount_Type_Rate.Expected_Rate + addAdjustedRate>
+			#NumberFormat(adjusted_Expected_rate, DEVIATION_RATE_FORMAT)#
+			</TD>
+		</TR>
+		<TR>
+			<TD>#appSettings.getDeviationLabel()# Rate</TD>
+			<TD>R5 = R4 - R1</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>
+			<CFSET dev_Rate = adjusted_Expected_rate - Rate_Claimed>
+			#NumberFormat(dev_Rate, DEVIATION_RATE_FORMAT)#
+			</TD>
+		</TR>
+		<CFIF dev_Rate GT 0>
+			<CFSET dev_Rate = 0>
+		</CFIF>
+		<TR>
+			<TD>Effective #appSettings.getDeviationLabel()# Rate</TD>
+			<TD>R6</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>			
+			#NumberFormat(dev_Rate, DEVIATION_RATE_FORMAT)#
+			</TD>
+		</TR>		
+		<TR>
+			<TD>Rate #appSettings.getDeviationLabel()# Percentage</TD>
+			<TD>R7 = R6 / R1</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>
+			<CFSET dev_Rate_Percent = 0 />
+			<cfif Rate_Claimed NEQ 0>
+				<CFSET dev_Rate_Percent = (dev_Rate * 100) / Rate_Claimed>
+			</cfif>
+			#NumberFormat(dev_Rate_Percent, DEVIATION_PERCENT_FORMAT)#%
+			</TD>
+		</TR>
+		<TR>
+			<TD>#appSettings.getDeviationLabel()# Amount</TD>
+			<TD>A2 = A1 * R7</TD>
+			<TD>&nbsp:&nbsp;</TD>		
+			<TD>
+			<CFSET dev_Amount = (Billback_Product_Discount_Type_Rate.BB_Rate * dev_Rate_Percent) / 100>
+			#NumberFormat(dev_Amount, DEVIATION_RATE_FORMAT)#
+			</TD>
+		</TR>
+	</TABLE>
+	</CFOUTPUT>
+</CFIF>
+<CFIF SHOW_DEVIATION_DETAIL_FOOTER>
+<BR><BR>
+<TABLE ALIGN="CENTER" WIDTH="50%">
+	<TD ALIGN="CENTER">
+	<CF_button
+			button_name		=	""
+			button_caption	=	"print"
+			button_action	=	"printPage();"
+			button_type		=	"javascript_link"
+			button_width	=	"150"
+			button_color	=	"Navy"
+			button_tip		=	"print"
+			font_color		=	"White"
+			font_size		=	"12"
+			font_weight		=	"bold"
+		>
+	</TD>
+	<TD ALIGN="CENTER">
+	<CF_button
+			button_name		=	""
+			button_caption	=	"close this window"
+			button_action	=	"window.close();"
+			button_type		=	"javascript_link"
+			button_width	=	"150"
+			button_color	=	"Navy"
+			button_tip		=	"close this window"
+			font_color		=	"White"
+			font_size		=	"12"
+			font_weight		=	"bold"
+		>
+	</TD>
+</TABLE>
+		<BR><BR>
+		
+
+</BLOCKQUOTE>
+</BODY>
+</HTML>
+<CFELSE>
+	</BLOCKQUOTE>
+</CFIF>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Holds all View Injectors registered with Mate : SearchPanel -->
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.events.*;
+			import com.maps.MainEventMap;
+			import mx.controls.Alert;
+		]]>
+	</mx:Script>
+	
+	
+	<!-- SearchPanel View __________________________________________________________________ -->
+	
+	<Injectors target="{SearchPanel}">
+		<PropertyInjector id="injitems" targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector id="dp1" targetKey="dp1" source="{SearchManager}" sourceKey="arr1" />
+		<PropertyInjector id="dp2" targetKey="dp2" source="{SearchManager}" sourceKey="arr2" />
+		<PropertyInjector id="dp3" targetKey="dp3" source="{SearchManager}" sourceKey="arr3" />
+		<PropertyInjector id="dp4" targetKey="dp4" source="{SearchManager}" sourceKey="arr4" />
+		<PropertyInjector id="dp5" targetKey="dp5" source="{SearchManager}" sourceKey="arr5" />
+		<PropertyInjector id="dp6" targetKey="dp6" source="{SearchManager}" sourceKey="arr6" />
+		<PropertyInjector id="sRecordMessage" targetKey="sRecordMessage" source="{SearchManager}" sourceKey="sRecordMessage" />
+		<PropertyInjector id="AllText" targetKey="AllText" source="{SearchManager}" sourceKey="AllText" />
+		<PropertyInjector id="lblCol1" targetKey="lblCol1" source="{SettingsManager}" sourceKey="settings.appFlex.col1" />
+		<PropertyInjector id="lblCol2" targetKey="lblCol2" source="{SettingsManager}" sourceKey="settings.appFlex.col2" />
+		<PropertyInjector id="lblCol3" targetKey="lblCol3" source="{SettingsManager}" sourceKey="settings.appFlex.col3" />
+		<PropertyInjector id="lblCol4" targetKey="lblCol4" source="{SettingsManager}" sourceKey="settings.appFlex.col4" />
+		<PropertyInjector id="lblCol5" targetKey="lblCol5" source="{SettingsManager}" sourceKey="settings.appFlex.col5" />
+		<PropertyInjector id="lblCol6" targetKey="lblCol6" source="{SettingsManager}" sourceKey="settings.appFlex.col6" />
+		<PropertyInjector id="distLabel" targetKey="distLabel" source="{SettingsManager}" sourceKey="settings.appFlex.distLabel" />
+		<PropertyInjector id="oSettings" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector id="oAppFlex" targetKey="oAppFlex" source="{SettingsManager}" sourceKey="settings.appFlex" />
+		<PropertyInjector id="oneDistSelection" targetKey="oneDistSelection" source="{SettingsManager}" sourceKey="settings.oneDistSelection" />
+		<PropertyInjector id="arrUserList" targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" />
+		<PropertyInjector id="iButtonHeight" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight" />
+		<PropertyInjector id="iComboBoxHeight" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight" />
+		<PropertyInjector id="iTextInputHeight" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight" />
+		<ListenerInjector eventType="{SearchEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+	</Injectors>
+
+</EventMap>

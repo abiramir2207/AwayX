@@ -1,0 +1,66 @@
+===== QUERY: CSLGetContractInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCSLGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForCSLGetContractInfo>
+	<cftry>
+		<cfset CSLGetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#CTLKR_Export_Sales_Agreement_Main_ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCSLGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCSLGetContractInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: isContractCurrentlyLocked =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForisContractCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForisContractCurrentlyLocked>
+	<cftry>
+		<cfset isContractCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#CTLKR_Export_Sales_Agreement_Main_ID#",
+				"select" = "sales_agreement_is_locked,sales_agreement_locked_by_user_id"
+			}), "sales_agreement_is_locked,sales_agreement_locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisContractCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisContractCurrentlyLocked>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: unlockContractFromOtherUsers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForunlockContractFromOtherUsers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForunlockContractFromOtherUsers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"export_sales_agreement_id" = "eq.#CTLKR_Export_Sales_Agreement_Main_ID#"
+			},
+			{
+				"sales_agreement_is_locked" = "0",
+				"sales_agreement_locked_by_user_id" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlockContractFromOtherUsers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlockContractFromOtherUsers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

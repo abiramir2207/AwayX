@@ -1,0 +1,46 @@
+===== QUERY: getAssociatedDeductionID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAssociatedDeductionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForgetAssociatedDeductionID>
+	<cftry>
+		<cfset getAssociatedDeductionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_closure_id" = "eq.#URL.BBID#",
+				"dd_closure_type" = "eq.1",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssociatedDeductionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssociatedDeductionID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPayee =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForGetPayee>
+	<cftry>
+		<cfset GetPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayee>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BBInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

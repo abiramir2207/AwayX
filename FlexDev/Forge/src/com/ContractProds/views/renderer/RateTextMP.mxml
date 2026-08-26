@@ -1,0 +1,89 @@
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="85"
+	 paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+    implements="mx.controls.listClasses.IDropInListItemRenderer,mx.managers.IFocusManagerComponent">
+    <mx:Script>
+        <![CDATA[
+        	import mx.formatters.NumberFormatter;
+            import mx.controls.listClasses.ListData;
+            import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+            import mx.controls.listClasses.BaseListData;
+           	import mx.controls.advancedDataGridClasses.AdvancedDataGridItemRenderer
+            import mx.events.FlexEvent;
+
+            private var _listData:AdvancedDataGridListData;
+            // Define a property for returning the new value to the cell.
+			[Bindable]
+			public var itemSource:Object = new Object();
+            [Bindable]
+            public var value:Object;            
+
+            // Implement the drawFocus() method for the VBox.
+            override public function drawFocus(draw:Boolean):void {
+				txtInpMP.setFocus();
+            }
+             // Implement the setFocus() method for the VBox.
+            override public function setFocus():void {
+				txtInpMP.setFocus();
+            }
+
+            override public function get data():Object {
+                return super.data;
+            }
+            [Bindable]
+            override public function set data(value:Object):void {
+            	var s:String = '';
+					s = _listData.dataField;
+					s = s.replace('.prodRate.rateMP','');
+					txtInpMP.text = value[s]['prodRate']['rateMP'];
+					itemSource = _listData.item[s];
+                
+            } 
+            public function get listData():BaseListData
+            {
+                return _listData;
+            }
+
+            public function set listData(value:BaseListData):void
+            {
+                _listData = AdvancedDataGridListData(value);
+            } 
+     		 private function setRate(sTxt:String):void{
+          		var s:String = '';
+				s = _listData.dataField;
+				s = s.replace('.prodRate.rateMP','');
+            	this._listData.item[s]['prodRate']['rateMP'] = sTxt;
+				itemSource = _listData.item[s];
+            }
+            
+            public var _decFormat:NumberFormatter =  new NumberFormatter();
+            public function formatDecimal(s:String):String 
+		    {
+		    	_decFormat.precision = 4
+		    	if(!isNaN(Number(s))){
+		    		return _decFormat.format(s);
+		    	}
+		    	else{
+		    		return '';
+		    	}
+				
+		    }
+
+        ]]>
+    </mx:Script>
+    <mx:Binding destination="value" source="txtInpMP.text"/>
+    
+   <!-- <mx:ComboBox id="cbo" editable="false" width="80" labelField="abbreviation" change="setUom(this.cbo.selectedItem as Uom);" />-->
+    <mx:TextInput id="txtInpMP" 
+    		editable="false" text="" 
+    		change="setRate(this.txtInpMP.text)" width="75"/>
+    <mx:NumberValidator 
+    	precision="4" precisionError="The max precision is 4 deciamls."
+    	source="{txtInpMP}" 
+    	property="text" 
+    	required="false" 
+		invalidCharError="Please enter a valid number."
+		domain="real" 
+		invalid="txtInpMP.text=formatDecimal(txtInpMP.text)" 
+		allowNegative="false" 
+		negativeError="Please enter a positive number."/>
+</mx:VBox>

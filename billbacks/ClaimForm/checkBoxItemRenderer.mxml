@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center" implements="mx.core.IFactory">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.dataGridClasses.DataGridColumn;
+            
+            // name of property on our VO we're concerned with
+            public var dataField:String;
+            
+            // method required by IFactory
+            public function newInstance():*
+            {
+                return new checkBoxItemRenderer();
+            }
+            
+            // this override is essential for preventing random (un)checking when your DataGrid is scrolled
+            override public function set data(value:Object):void
+            {
+                // not sure of the details on when or why, but sometimes this method is passed a null value
+                if(value != null)
+                {
+                    super.data = value;
+                    // the parent DataGridColumn is passed as value before the real data arrives
+                    if(!(value is DataGridColumn))
+                    {
+                        // set itemRenderer's state based on the value held in the property specified by _dataField
+                        deleteCheckBox.selected = value[dataField];
+                    }
+                }
+            }
+            
+            // local click handler that dispatches the event
+            // so it can be handled in a  more appropriate place (such as the document holding the DataGrid)
+            private function onClick(e:MouseEvent):void
+            {
+                // attach our VO and _dataField onto the event so that it can be manipulated in the handler
+                // wherever that handler may be
+                var evt:SimpleItemClickEvent = new SimpleItemClickEvent(super.data, dataField);
+                dispatchEvent(evt);
+            }
+			
+		]]>
+	</mx:Script>
+	<mx:CheckBox id="deleteCheckBox" click="onClick(event)" />
+	
+</mx:VBox>

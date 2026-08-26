@@ -1,0 +1,119 @@
+===== QUERY: updBBAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdBBAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdBBAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"bb_amount" = "#TotalRebate#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDiscountList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetDiscountList>
+	<cftry>
+		<cfset GetDiscountList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"program_id" = "eq.#x#",
+				"deleted" = "eq.0",
+				"select" = "discount_list"
+			}), "discount_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDiscountList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetDiscountList>
+	<cftry>
+		<cfset GetDiscountList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"program_id" = "eq.#x#",
+				"deleted" = "eq.0",
+				"select" = "discount_list"
+			}), "discount_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetShipTo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetShipTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForqGetShipTo>
+	<cftry>
+		<cfset qGetShipTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#thisDistributor_Id_Earned#",
+				"deleted" = "eq.0",
+				"select" = "ship_to"
+			}), "ship_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetShipTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetShipTo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProductItem =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProductItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqGetProductItem>
+	<cftry>
+		<cfset qGetProductItem = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#thisProduct_ID#",
+				"deleted" = "eq.0",
+				"select" = "item"
+			}), "item"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductItem>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getCtNum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getBBEndDate =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

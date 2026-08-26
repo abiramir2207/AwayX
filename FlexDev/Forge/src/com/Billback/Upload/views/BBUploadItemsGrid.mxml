@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*" width="100%" height="100%">
+	<s:layout>
+		<s:VerticalLayout paddingLeft="5" paddingRight="5" 
+						  paddingTop="5" paddingBottom="5" />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:RadioButtonGroup id="rdoErrorDisplay" selectedValue="current"  itemClick="loadCurrentData(event);" />
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Upload.views.pm.BBUploadPModel;
+			import com.Billback.Edit.models.vos.BBToolsLock;
+			import com.Billback.Main.models.vos.BBHeader;
+			import com.Billback.Upload.events.BBUploadEvent;
+			import com.Billback.Upload.models.vos.BBUploadDetail;
+			import com.Billback.Upload.models.vos.BBUploadHeader;
+			import com.Billback.Upload.views.pm.BBUploadItemsPModel;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			
+			import flash.events.EventDispatcher;
+			import flash.events.IEventDispatcher;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.collections.ICollectionView;
+			import mx.collections.IList;
+			import mx.controls.Alert;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.controls.scrollClasses.ScrollBar;
+			import mx.core.ScrollPolicy;
+			import mx.events.DataGridEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.utils.ObjectUtil;
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBUploadItemsPModel;
+ 
+			[Bindable]
+			public var pUploadModel:BBUploadPModel;
+			
+			//[Bindable] public var objBBToolsLock:BBToolsLock = new BBToolsLock();
+			
+			[Bindable] 
+			public var filterInsert:Function =
+				function(inObject:Object):Boolean{
+					var b:Boolean = false;
+					var pattern:RegExp = /,/g;
+					//inObject.errMsg is the raw error from DB.  Might not be reliable.  need to sreip commas for error test
+					var sClean:String = inObject.errMsg.replace(pattern,"");
+					//errType should be 0 if no error.  might be a better test if it is set in middle tier.  for now , test the errMsg string for contents
+					b = (sClean.length > 0);  //inObject.errType != 0 || 
+					return b;
+				};
+			
+			private function displayErrors():void{
+				/*
+				if(chkErrors.selected){
+					dgBBUploadItem.filterInsert = this.filterInsert;
+				}
+				else{
+					//return true by default
+					dgBBUploadItem.filterInsert = function(inObject:Object):Boolean{return true;};
+				}
+				dgBBUploadItem.dispatchEvent(new Event("filterEvent"));
+				*/
+				var bDisplay:Boolean = false; 
+				if(chkErrors.selected)
+				{
+					bDisplay = true;
+				}
+				var bbh:BBUploadHeader = new BBUploadHeader(this.pModel.bbUploadHeader); 
+				//don't send details in reload event
+				bbh.bbUploadDetail = new Array();
+				var e:BBUploadEvent= new BBUploadEvent(BBUploadEvent.LOAD_BB_EDIT);
+				e.bbUploadHeader = bbh;
+				e.bDisplayAll = bDisplay;
+				this.dispatchEvent(e);
+				
+			}
+			
+			protected function dgBBUploadItem_creationCompleteHandler(event:FlexEvent):void
+			{
+				/* 	
+					this.chkErrors.selected = true;
+					this.displayErrors();
+				*/
+			}
+
+			private function loadCurrentData(event:ItemClickEvent):void
+			{
+				/* if(event.currentTarget.selectedValue == 'current'){
+					btnRefreshData.visible = true;
+					dataAsOf.visible = true;	
+					
+					// Set arrSelections to an empty array. This will uncheck all the checkboxes on the multidropdown. Populate
+					// "strDataLoadType" with the appropriate selection
+					 
+					//arrSelections = new Array();	
+					this.pModel.loadCurrent();		
+				}
+				else if(event.currentTarget.selectedValue == 'current_including_paid'){
+					btnRefreshData.visible = false;
+					dataAsOf.visible = false;
+				}				
+				
+				this.pModel.strDataLoadType = event.currentTarget.selectedValue;	 */
+			}
+			
+			public function focusOnCell(event:Event):void 
+			{
+				var selRowIndex:int;
+				var selColIndex:int;
+				selRowIndex=event.currentTarget.selectedIndex;
+				selColIndex=0;
+				var errorMsg:String = (event.currentTarget).selectedItem.toString();
+				var iStart:Number = -1; 
+				
+			/*	
+				// Column index calculation to set the focus to a particular cell  
+				if (errorMsg.indexOf("Detail row does not contain valid Item Number"))
+				{
+					selColIndex = 8; 
+				}		
+				else if (errorMsg.indexOf("Detail row does not contain valid program number"))
+				{
+					selColIndex = 11;
+				} 	
+				selColIndex = 0;*/
+				dgBBUploadItem.setFocus();
+				dgBBUploadItem.validateNow();
+				dgBBUploadItem.selectedIndex = selRowIndex;
+			}
+			
+			/* solving the issue with Header spacing when the Datagrid is scrolled */
+			protected function dgBBUploadItem_changeHeader():void
+			{
+				var strEditReadMode:String;
+				var iHeaderHeight:int;	
+				for each(var col:DataGridColumn in pModel.arrBBUploadItemsDgCols)
+				{
+					if(col.dataField == 'contractNumber')
+					{
+						if (col.editable)
+						{
+							strEditReadMode = "EDIT";
+						}
+						else
+						{
+							strEditReadMode = "READ";
+						}
+					}
+				}
+				iHeaderHeight = 55;
+				if (this.chkEdit.selected == true && strEditReadMode == 'EDIT')
+				{
+					iHeaderHeight = iHeaderHeight + 28;
+				}
+				
+				if (this.chkFilter.selected == true)
+				{
+					iHeaderHeight = iHeaderHeight + 28;
+				}
+				this.dgBBUploadItem.headerHeight = iHeaderHeight;
+				this.validateNow();
+			}
+		]]>
+	</fx:Script>
+<!--  	<s:VGroup id="vgHeader" width="100%">	--> 
+	
+		<s:HGroup verticalAlign="middle">
+			<s:Button label="reset" click="{dgBBUploadItem.resetFilters()}" />
+			<!--<s:Button label="update" click="{pModel.updateCols()}" />-->
+			<s:CheckBox label="filter" 
+						id="chkFilter" 
+						click="{dgBBUploadItem.displayHeaderOptions(chkFilter.selected,chkEdit.selected),dgBBUploadItem_changeHeader()}" 
+						selected="true"/> 
+			<s:CheckBox label="edit" 
+						id="chkEdit" 
+						click="{dgBBUploadItem.displayHeaderOptions(chkFilter.selected,chkEdit.selected),dgBBUploadItem_changeHeader()}"
+						enabled="{this.pUploadModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+						/>
+			<s:Label text="{(this.dgBBUploadItem.dataProvider as ICollectionView).length} item(s)" 
+					 verticalAlign="bottom"/>
+			<s:CheckBox label="display all rows" 
+						id="chkErrors" 
+					 	toolTip="Checking this will load all the Details rows in the below grid"
+						click="{this.pModel.displayErrors(chkErrors.selected)}"/>
+		</s:HGroup>
+		<filters:FilterDatagrid id="dgBBUploadItem" editable="true"
+								allowMultipleSelection="true" 
+								bAllowDelete="true" dispatcher="{this.parentDocument as IEventDispatcher}"
+							 	columns="{pModel.arrBBUploadItemsDgCols}"
+							 	dataProvider="{this.pModel.bbUploadHeader.bbUploadDetail}"
+							 	itemEditEnd="{this.pModel.itemEditEnd(event),this.dgBBUploadItem.dataProvider.disableAutoUpdate();}" 
+								creationComplete="dgBBUploadItem_creationCompleteHandler(event)"
+							 	change="{pModel.selectRow(this.dgBBUploadItem.selectedItem as BBUploadDetail)}"
+							 	minWidth="800" width="99%" height="100%"
+								horizontalScrollPolicy="{ScrollPolicy.AUTO}"
+								headerHeight="80"
+								resize="true" variableRowHeight="true"
+								headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+								headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	
+								> <!-- pModel.bbHeader.BBProdRate-->
+			</filters:FilterDatagrid>
+	<s:HGroup width="99%">
+		<s:Button label="delete" click="pModel.deleteBBUploadHeader()" visible="{this.pModel.bbUploadHeader.uploadType == '2'}" includeInLayout="{this.pModel.bbUploadHeader.uploadType == '2'}"/>
+		<s:Spacer width="75"/>
+		<s:VGroup>
+			<s:RadioButton groupName="rdoErrorDisplay" id="rdoShowSelected" value="showSelected" selected= "true" scaleX="0.9" scaleY="0.9" label="Show Error For Selected Row" fontSize="10" fontFamily="Verdana" fontWeight="bold"/>
+			<s:RadioButton groupName="rdoErrorDisplay" id="rdoShowAll" value="showAll" scaleX="0.9" scaleY="0.9"  label="Show All Detail Level Errors" fontSize="10" fontFamily="Verdana" fontWeight="bold"/>
+			<!--	<s:Label text="Show selected row error" fontSize="10" fontFamily="Verdana" fontWeight="bold" width="20" />-->
+		</s:VGroup>		
+		<!-- Show one of the list based on what the user picked -->
+		<s:List height="75" width="100%" color="red"
+				dataProvider="{new ArrayList(this.pModel.arrDetailError)}"
+				visible = "{rdoShowSelected.selected==true}"
+				includeInLayout="{rdoShowSelected.selected==true}"
+				doubleClick="focusOnCell(event)"
+				doubleClickEnabled="true" 
+				/>
+		<s:List height="75" width="100%" color="red"
+				dataProvider="{new ArrayList(this.pModel.arrDetailErrorAll)}"
+				visible = "{rdoShowAll.selected==true}"
+				includeInLayout="{rdoShowAll.selected==true}"
+				doubleClick="focusOnCell(event)"
+				doubleClickEnabled="true"
+				/>
+	</s:HGroup>
+	<!--<s:TextArea text="{ObjectUtil.toString(pModel.bbUploadDetail.errObj)}"
+				height="75" 
+				width="600"/>-->
+		
+	<!--selectionMode="singleRow" -->
+</s:Group>

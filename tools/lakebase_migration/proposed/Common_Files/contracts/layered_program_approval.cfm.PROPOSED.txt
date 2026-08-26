@@ -1,0 +1,1315 @@
+===== QUERY: getGlobalUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramVolumeForProfiles =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qProductsBeyondMaxRateList =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: local.Item_Deliverytype1 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_Item_Deliverytype1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_Item_Deliverytype1>
+	<cftry>
+		<cfset local.Item_Deliverytype1 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"item_deliverytype" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_Item_Deliverytype1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_Item_Deliverytype1>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.Item_Deliverytype2 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_Item_Deliverytype2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_Item_Deliverytype2>
+	<cftry>
+		<cfset local.Item_Deliverytype2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"item_deliverytype" = "eq.2",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_Item_Deliverytype2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_Item_Deliverytype2>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.getGroupValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getGlobalUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProductMarginCount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getExcludedProductMarginCount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getGroupvalues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGroupvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForgetGroupvalues>
+	<cftry>
+		<cfset getGroupvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getAllProductMargins.Type_Code_Desc_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupvalues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetStatValue =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetNetValue =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetFixedComponentIDs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFixedComponentIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqGetFixedComponentIDs>
+	<cftry>
+		<cfset qGetFixedComponentIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#contract_main_id#",
+				"deleted" = "eq.0",
+				"select" = "program_fixed_component_id"
+			}), "program_fixed_component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedComponentIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedComponentIDs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetPreviousOperatingIncome =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPreviousOperatingIncome = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproductpreviousversionmargins")>
+<cfif useLakebaseForqGetPreviousOperatingIncome>
+	<cftry>
+		<cfset qGetPreviousOperatingIncome = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproductpreviousversionmargins", {
+				"product_id" = "eq.#Product_ID#",
+				"select" = "operating_income,operatingmargin_percent"
+			}), "operating_income,operatingmargin_percent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPreviousOperatingIncome = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPreviousOperatingIncome>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getitemagreedcount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getitemvalues =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getgroupagreedcount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getgroupagreevalues =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

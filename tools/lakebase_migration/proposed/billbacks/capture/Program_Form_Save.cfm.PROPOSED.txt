@@ -1,0 +1,191 @@
+===== QUERY: GetStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ClearDev =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForClearDev = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForClearDev>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"deviation_ran_date" = javaCast("null",""),
+				"auto_deviation_on" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForClearDev = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForClearDev>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updBBAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdBBAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdBBAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"bb_amount" = "#TotalRebate#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPayeeType =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getDistributorID =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getPayeeID =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCreateTempTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCreateTempTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsertIntoTempTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: CheckCopied =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckCopied = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckCopied>
+	<cftry>
+		<cfset CheckCopied = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckCopied = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckCopied>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateBit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"volumeratesaved" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateLS =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForUpdateLS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_program_lumpsum_component_id" = "eq.#Billback_Program_Lumpsum_Component_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLS>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateLS =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForUpdateLS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_program_lumpsum_component_id" = "eq.#Billback_Program_Lumpsum_Component_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLS>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: TABLE_Create =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetDetailInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCreateTempTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsBB_DC =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteGridTableEntries =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

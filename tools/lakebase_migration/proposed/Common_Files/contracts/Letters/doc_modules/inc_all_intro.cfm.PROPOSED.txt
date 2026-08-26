@@ -1,0 +1,27 @@
+===== QUERY: thisTag.qProgramOperator =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetFreightComponentType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForthisTag_qGetFreightComponentType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForthisTag_qGetFreightComponentType>
+	<cftry>
+		<cfset thisTag.qGetFreightComponentType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#thisTag.CMID#",
+				"select" = "freight_component_type"
+			}), "freight_component_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetFreightComponentType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetFreightComponentType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: thisTag.qProgramDistributor =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

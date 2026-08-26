@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*" 
+		 xmlns:views="com.Admin.Alias.views.*"
+		 xmlns:mate="http://mate.asfusion.com/"
+		 xmlns:util="com.shared.components.spark.*"
+		 height="100%" 
+		 creationComplete="fnInitialize();"
+		 >
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mate:Listener type="{AliasEvent.RESET_INITIAL_FILTER}" method="resetInitialFilter"  />
+		 
+		<s:RadioButtonGroup id="rdoShowIgnore"  itemClick="this.resetInitialFilter(AsEvent)"  />
+		 
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Alias.events.*;
+			import com.Admin.Alias.events.AliasEvent;
+			import com.Admin.Alias.models.vos.AliasDef;
+			import com.Admin.Alias.views.AliasHeaderForm;
+			import com.Admin.Alias.views.pm.AliasItemsPModel;
+			import com.Admin.Alias.views.pm.AliasPModel;
+			import com.shared.components.HTMLToolTip;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			import com.Admin.Alias.views.pm.AliasUpload;
+		
+			import flash.utils.flash_proxy;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.controls.Alert;
+			import mx.controls.listClasses.ListData;
+			import mx.core.ScrollPolicy;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.managers.IFocusManagerComponent;
+			import mx.managers.IFocusManagerContainer;
+			import mx.managers.ToolTipManager;
+			import mx.events.ToolTipEvent;
+			import mx.controls.ToolTip;
+			import mx.utils.ObjectUtil;
+			import mx.controls.RadioButtonGroup;
+			
+			import spark.components.DataGrid;
+			import com.shared.components.spark.resize.ResizableTitledBorderBoxSkin;
+			import com.shared.components.spark.resize.ResizeManager;
+			
+			[Bindable]
+			public var AsEvent:AliasEvent;
+			[Bindable]
+			public var pModelUpload:AliasUpload;
+
+			public function fnInitialize():void  
+			{
+				//set tool tip maxwidth so that the rate decimal tool tip takes up more horizontally space than vertical
+				ToolTipManager.toolTipClass = HTMLToolTip;
+				ToolTip.maxWidth = 550;
+				if (this.pModel.aliasSourceType == 1)
+				{
+					var eOpr:AliasEvent = new AliasEvent(AliasEvent.SHOW_HIDE_ADDRESS_COLS);
+					eOpr.bShowAddressCols = false;
+					eOpr.iSelectedTab	 = this.pModel.dataProviderType;
+					eOpr.sSourceType 	 = this.pModel.aliasSourceType.toString();
+					this.dispatchEvent(eOpr);
+				}
+			}
+			
+			public var bEntityDetail:Boolean = true;
+			
+			/* This function will remove any filter on the Datagrid whenever a new tab is called  */
+			public function resetInitialFilter(event:AliasEvent):void
+			{
+				// this.cbShowUnassigned.dispatchEvent(new ItemClickEvent(ItemClickEvent.ITEM_CLICK));
+				// var rdoShowIgnoreSel:Object = this.rdoShowIgnore.
+				
+				var idxRdoSelected:int = 3; 
+				filter();
+				
+				this.pModel.setShowUnassigned(this.cbShowUnassigned.selected);
+				
+				//this.pModel.setShowIgnore(this.cbShowIgnore.selected);
+				// Alert.show(this.rdoShowIgnore.selectedIndex.toString());
+				
+				if (this.rdoShowIgnore3.selected)
+				{
+					idxRdoSelected = 3;
+				}
+				else if (this.rdoShowIgnore2.selected)
+				{
+					idxRdoSelected = 2;
+				}
+				else if (this.rdoShowIgnore1.selected)
+				{
+					idxRdoSelected = 1;
+				}
+				this.pModel.setShowIgnore(idxRdoSelected);
+				
+				if(this.pModel.aliasSelectedDef.aliasID != ""){
+					this.dgAlias.selectedItem = this.pModel.aliasSelectedDef;
+				}
+				else{
+					this.dgAlias.selectedIndex = -1;
+				}
+				//this.pModel.aliasCurrentSelectedDef.refresh();
+			}
+			
+			
+			/* Call this when the user hits the "Enter" key */
+			private function saveAliasesEnterKey(event:KeyboardEvent):void 
+			{
+				/* If the "Enter" key was clicked and the focus through tab is on the button titled "search alias" */
+				if (event.keyCode == Keyboard.ENTER && Object(focusManager.getFocus()).id == 'btnSave')
+				{	 		
+					triggerSaveAliases();
+					
+				}
+			}
+			
+			private function triggerSaveAliases():void
+			{
+				/* save Aliases */         
+				this.pModel.saveSelectedAlias(this.pModel.dataProviderType);
+				/* this call will get the entity description */
+				/* this.pModel.getDesc(this.pModel.dataProviderType.toString()); */
+			}
+			
+			/* Call this when the user hits the "Enter" key */
+			private function resetAliasesEnterKey(event:KeyboardEvent):void
+			{
+				/* If the "Enter" key was clicked and the focus through tab is on the button titled "reset" */
+				if (event.keyCode == Keyboard.ENTER && Object(focusManager.getFocus()).id == 'btnResetAlias')
+				{	 		
+					triggerResetAlias();
+				}		 				 		
+			}
+			
+			private function triggerResetAlias():void
+			{	 
+				this.pModel.resetSelectedAlias();
+				//this.stage.focus = null;
+				//dgAlias.setFocus();
+				//grid.selectedIndex = -1;
+				//dgAlias.dispatchEvent(new Keyboard(Keyboard.ESCAPE));
+				//dgAlias.dispatchEvent(new KeyboardEvent (KeyboardEvent.KEY_DOWN,true,false,0,27));
+				
+				/* In flex, whenever a user selects a cell on the grid and then takes the focus away from the grid and then when the user tabs into the grid
+				again, the focus is automatically taken to the cell which the user last visited. Though this feature is useful, it is not required when
+				the user clicks on "reset". After clicking on "reset", the tabbing action into the grid should always take the user to the first cell.
+				The solution is to set the editedItemPosition to the first cell and then remove focus from that cell and then put focus on the field (aliasID)
+				where focus is required. Now the last visited call becomes the first cell and on tabbing the user is taken to that cell. 
+				*/
+				/* 	The grid has "focusIn" event which calls "entityIDChange" function. When a user clicks on "reset", we do not want the entityID
+				and EntityDesc to be populated. So, set "bEntityDetail" to false.
+				*/
+				bEntityDetail =  false;
+				dgAlias.editedItemPosition = {rowIndex: 0, columnIndex: 1};
+				dgAlias.selectedIndex = -1;
+				callLater(gridFocusOut);
+				callLater(textInputFocusIn);			
+			}
+			
+			private function gridFocusOut():void
+			{
+				dgAlias.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_OUT));
+			}
+			
+			private function textInputFocusIn():void
+			{	
+				/* focus on the "Alias ID" textbox */
+				focusManager.setFocus(tiAliasID);
+				/* Call "this.pModel.resetSelectedAlias();" again to reset  as "dgAlias.editedItemPosition" above calls the "focusIn" event on the grid */
+				this.pModel.resetSelectedAlias();
+				//tiAliasID.text = '';
+				//tiAliasID.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_IN));
+			}
+			
+			private function entityIDChange():void{
+				/* 	We do not want the entityID and EntityDesc to be populated when a user clicks on reset. AliasID and AliasDesc is already not populated
+				as we use "this.pModel.resetSelectedAlias()", but since "dgAlias.editedItemPosition" calls the "focusIn" event, EntityID and EntityDesc
+				would get populated even though we use "this.pModel.resetSelectedAlias();" after "dgAlias.editedItemPosition" due to timing issue.
+				*/
+				if(bEntityDetail == true){			
+					this.pModel.getDesc(tiEntityID.text);
+					this.pModel.updateID(tiEntityID.text);
+				}
+				
+				/* Reset back to "true", which is the default. */
+				bEntityDetail = true;
+			}
+			
+			/* This is the filter logic for unassigned aliases - blank entityID or entityDesc  */	
+			[Bindable] 
+			public var filterInsertAll:Function =
+				function(inObject:Object):Boolean{
+					// return inObject.entityID == '' || inObject.entityDesc == '';
+					return (inObject.isAssigned == false); //&& (inObject.Unknown == true || inObject.Unknown == false)
+				};
+			
+			/*private function showUnassigned():void{
+				if(cbShowUnassigned.selected){
+					dgAlias.filterInsert = this.filterInsert;
+				}
+				else{
+					/// return true by default 
+					dgAlias.filterInsert =  function(inObject:Object):Boolean{return true;};
+				}
+				dgAlias.dispatchEvent(new Event("filterEvent"));
+			}*/
+			
+			[Bindable] 
+			public var filterInsertIgnore:Function =
+				function(inObject:Object):Boolean{
+					// return inObject.entityID == '' || inObject.entityDesc == '';
+					return (inObject.Unknown == true && (inObject.isAssigned == false || inObject.isAssigned == true)); 
+				};
+			[Bindable] 
+			public var filterInsertUnIgnore:Function =
+				function(inObject:Object):Boolean{
+					// return inObject.entityID == '' || inObject.entityDesc == '';
+					return (inObject.Unknown == false && (inObject.isAssigned == false || inObject.isAssigned == true));  
+				};
+			[Bindable] 
+			public var filterInsertIgnoreUna:Function =
+				function(inObject:Object):Boolean{
+					// return inObject.entityID == '' || inObject.entityDesc == '';
+					return inObject.Unknown == true && inObject.isAssigned == false;
+				};
+			
+			[Bindable] 
+			public var filterInsertUnaNi:Function =
+				function(inObject:Object):Boolean{
+					// return inObject.entityID == '' || inObject.entityDesc == '';
+					return inObject.Unknown == false && inObject.isAssigned == false;
+				};
+			
+			/*
+			rdoShowIgnore1 - show ignored
+			rdoShowIgnore2 - show unignored
+			rdoShowIgnore3 - show all
+			*/
+			private function filter():void{
+				if(this.cbShowUnassigned.selected && this.rdoShowIgnore1.selected){ 			// show unassigned and Show ignored 
+					dgAlias.filterInsert = this.filterInsertIgnoreUna;
+				}
+				else if(this.cbShowUnassigned.selected && this.rdoShowIgnore2.selected){		// show unassigned and show unignored
+					dgAlias.filterInsert = this.filterInsertUnaNi;
+				}
+				else if(this.cbShowUnassigned.selected && this.rdoShowIgnore3.selected){		// show unassigned and both ignore and not ignored
+					dgAlias.filterInsert = this.filterInsertAll;
+				}
+				else if(this.rdoShowIgnore1.selected){								// show Only ignore
+					dgAlias.filterInsert = this.filterInsertIgnore;	
+				}
+				else if(this.rdoShowIgnore2.selected){								// show Only ignore
+					dgAlias.filterInsert = this.filterInsertUnIgnore;	
+				}
+				else
+				{
+					/* return true by default */
+					//dgAlias.filterInsert =  function(inObject:Object):Boolean{return (this.selectedItem && inObject.aliasID == this.selectedItem.aliasID);};
+					dgAlias.filterInsert =  function(inObject:Object):Boolean{return (inObject.Unknown == true || inObject.Unknown == false);};
+				}
+				dgAlias.dispatchEvent(new Event("filterEvent"));
+			}
+			
+			private function showToolTip(item:Object):String
+			{
+				var desc:String = "";
+				if(item != null)
+				{
+					desc = item.entityAddress.toString();
+				}
+				return desc;
+			}
+
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:AliasItemsPModel;
+			
+			[Bindable]
+			private var sToolTip:String = "<textformat leading='8'>The Payee ID field is only applicable for EDI records.  When the Source Type of EDI is selected, the Payee ID field can be updated. </textformat>";
+			
+			public function fnPositionToolTip(event:ToolTipEvent):void
+			{
+				var pt:Point = event.currentTarget.contentToGlobal(new Point(0,0));
+				ToolTipManager.currentToolTip.y = pt.y - 50; // 68
+				ToolTipManager.currentToolTip.x = pt.x - 20;
+				ToolTipManager.currentToolTip.height = 50;
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace resize "com.shared.components.spark.resize.*";
+		
+		/*  Optional - you can make all Scroller's use the resizable scroller skin. */
+		s|Scroller {
+			skin-class: ClassReference("com.shared.components.spark.resize.ResizableScrollerSkin");
+		}
+		
+		/* you can restrict the resize direction in CSS like this: */
+		.resizePanel {
+			resize-direction: vertical;
+		}
+	</fx:Style>
+	<s:Group height="10%" id="vgSecondHeader">
+		<!--<s:BorderContainer width="1000" height="65">-->
+			   <util:TitledBorderBox height="85" cornerRadius="10" minHeight="60" minWidth="1195"
+									 backgroundColor="#ffffff" 
+									 borderColor="#c02025"
+									 width="1195"
+									 dropShadowVisible="false"
+									 skinClass="com.shared.components.spark.resize.ResizableTitledBorderBoxSkin"
+									 title="Edit Alias Details"
+									 paddingLeft="0" paddingRight="0" 
+									 paddingTop="0" paddingBottom="0" gap="0"
+									 id="editControlsBox">
+			<util:layout>
+				<s:HorizontalLayout 
+					paddingLeft="0" paddingRight="0" 
+					paddingTop="0" paddingBottom="0" gap="0"/>
+			</util:layout>
+			
+			<s:Form color="0x323232">
+				<s:layout>
+					<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+				</s:layout>
+				
+				<s:FormItem label="{this.pModel.labelText1}">
+					<s:TextInput id="tiAliasID" tabEnabled="true" width="150"  text="{this.pModel.aliasSelectedDef.aliasID.toString()}" change="this.pModel.updateAliasID(tiAliasID.text)" tabIndex="4" />
+				</s:FormItem>
+				
+				<s:FormItem label="Alias Desc" visible="{this.pModel.aliasSourceType != '11'}" includeInLayout="{this.pModel.aliasSourceType != '11'}"> 
+					<s:TextInput id="tiAliasDesc" tabEnabled="true" width="150" text="{this.pModel.aliasSelectedDef.aliasDesc.toString()}" change="this.pModel.updateAliasDesc(tiAliasDesc.text)" tabIndex="5" />			
+				</s:FormItem>	
+				
+				<!-- Unknown check box -->
+				
+ 				 <s:FormItem label="Ignore"> <!--  visible="{this.pModel.dataProviderType == 1}" includeInLayout="{this.pModel.dataProviderType == 1}"  -->
+						<s:CheckBox id="cbUnknown" 
+									selected="{this.pModel.aliasSelectedDef.Unknown}" 
+									click="this.pModel.updateUnknown(cbUnknown.selected)" 
+									tabFocusEnabled="false" /> <!--  visible="{this.pModel.dataProviderType == 1}" includeInLayout="{this.pModel.dataProviderType == 1}" -->
+					</s:FormItem>	 
+				 
+
+				<s:FormItem label="Unipro Num" visible="{this.pModel.aliasSourceType == '11'}" includeInLayout="{this.pModel.aliasSourceType == '11'}"> 
+						<s:TextInput id="tiUniproNum" tabEnabled="true" width="150" text="{this.pModel.aliasSelectedDef.aliasUniproNum.toString()}" change="this.pModel.updateAliasUniproNum(tiUniproNum.text)" tabIndex="5" />													
+				</s:FormItem>	
+
+			</s:Form>
+			
+			<s:Form color="0x323232" width="240">
+				<s:layout>
+					<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+				</s:layout>
+				
+				<s:FormItem label="ID">
+					<s:HGroup>		 
+						<s:TextInput id="tiEntityID" tabEnabled="true" width="150" text="{this.pModel.aliasSelectedDef.entityID.toString()}" change="entityIDChange()" tabIndex="6" />	
+						<s:Image id="imgSearch"
+								 source="/flex/assets/Images/search.gif" 
+								 tabEnabled="true"							 
+								 verticalAlign="bottom"
+								 horizontalAlign="left"
+								 click="this.pModel.getSearch()"
+								 useHandCursor="true"
+								 buttonMode="true"
+								 />			 
+					</s:HGroup>							
+				</s:FormItem>
+				<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Vendor} ID"  visible="{(this.pModel.dataProviderType == 0 &amp;&amp; (this.pModel.aliasSourceType == '1'))}" includeInLayout="{(this.pModel.dataProviderType == 0 &amp;&amp; (this.pModel.aliasSourceType == '1'))}"> <!--Payee ID-->
+					<s:HGroup  verticalAlign="middle">
+						<s:TextInput id="tiPayeeID" tabEnabled="true" width="150" text="{this.pModel.aliasSelectedDef.payeeID.toString()}" change="this.pModel.updatePayeeID(tiPayeeID.text)" tabIndex="6" />
+						<s:Image id="iconRatePrecisionInfo" 
+								 source="/flex/assets/Images/help.gif"
+								 toolTipShow="fnPositionToolTip(event);"
+								 width="14" height="14" 
+								 toolTip="{sToolTip}" verticalAlign="bottom" horizontalAlign="center"  
+								 />	
+					</s:HGroup>
+				</s:FormItem>
+				<s:FormItem>
+					<s:TextInput id="tiEntityDesc" width="150" text="{this.pModel.aliasSelectedDef.entityDesc.toString()}" includeInLayout="false" visible="false" change="this.pModel.updateDesc(tiEntityDesc.text)" />			
+					<s:Label text="{this.pModel.aliasSelectedDef.entityDesc.toString()}" fontWeight="bold" />
+				</s:FormItem>
+				
+				<s:FormItem label="Loc" visible="{this.pModel.aliasSourceType == '11'}" includeInLayout="{this.pModel.aliasSourceType == '11'}"> 
+					<s:TextInput id="tiLoc" tabEnabled="true" width="150" text="{this.pModel.aliasSelectedDef.aliasLoc.toString()}" change="this.pModel.updateAliasLoc(tiLoc.text)" tabIndex="5" />
+				</s:FormItem>		
+
+			</s:Form>
+			
+			<s:Form color="0x323232" width="85">
+				<s:layout>
+					<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+				</s:layout>
+				
+				<s:FormItem>	
+					<s:Button id="btnSave" label="save alias" tabIndex="7" click="triggerSaveAliases()" keyDown="saveAliasesEnterKey(event)" />
+				</s:FormItem>
+				
+			</s:Form>
+			
+			<s:Form color="0x323232" width="85">
+				<s:layout>
+					<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+				</s:layout>
+				
+				<s:FormItem>	
+					<s:Button id="btnResetAlias" label="reset" tabIndex="8" click="triggerResetAlias()" keyDown="resetAliasesEnterKey(event)" />
+				</s:FormItem>	
+				
+			</s:Form>
+			
+			<s:Form color="0x323232">
+				<s:layout>
+					<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+				</s:layout>
+				
+				<!-- In the Halo theme, using the "label" and "fontWeight" properties of the CheckBox aligned the text next to the checkbox. 
+				For Spark theme, I had to use the "horizontal layout" with the "s:Label" technique.
+				-->
+				<s:FormItem>
+					<s:Group>
+					<s:layout><s:HorizontalLayout verticalAlign="bottom" gap="0"/></s:layout> 
+						<s:CheckBox id="cbShowUnassigned" 
+									selected="{this.pModel.showUnassigned}" 
+									click="resetInitialFilter(AsEvent)" 
+									tabFocusEnabled="false" />
+						<s:Label text="show unassigned" fontWeight="bold" />
+					</s:Group>
+					<s:Group fontWeight="bold">
+						<s:layout><s:HorizontalLayout verticalAlign="bottom" gap="0"/></s:layout> 
+						<!--<s:CheckBox id="cbShowIgnore" 
+									selected="{this.pModel.showIgnore}" 
+									click="this.resetInitialFilter(AsEvent)"
+									tabFocusEnabled="false" /><s:Label text="show ignore " fontWeight="bold" /> -->
+							<s:RadioButton group="{rdoShowIgnore}" id="rdoShowIgnore1" value = "1"  color="0x000000" /><s:Label text="show ignored" fontWeight="bold" /><s:Spacer width="3" /> 
+							<s:RadioButton group="{rdoShowIgnore}" id="rdoShowIgnore2" value = "2"  color="0x000000"/><s:Label text="show unignored" fontWeight="bold" /><s:Spacer width="3" />
+							<s:RadioButton group="{rdoShowIgnore}" id="rdoShowIgnore3" value = "3"  color="0x000000" selected="true"/><s:Label text="show all" fontWeight="bold" />
+					</s:Group>
+				</s:FormItem>	
+				
+			</s:Form>	
+			
+			<s:Form color="0x323232">
+				<s:layout>
+					<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+				</s:layout>
+				
+				<s:FormItem>	
+					<s:Button id="assignEntity" label="assign selected" click="{this.pModel.assignAllUnassigned(this.pModel.dataProviderType,tiEntityID.text,tiEntityDesc.text)}" tabFocusEnabled="false" />
+				</s:FormItem>
+				
+			</s:Form>	
+			
+			<s:Form color="0x323232">
+				<s:layout>
+					<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+				</s:layout>
+				
+				<s:FormItem>	
+					<s:Button id="saveSelectedRows" label="save selected" click="{this.pModel.saveSelectedRows(this.pModel.dataProviderType)}" tabFocusEnabled="false" />
+				</s:FormItem>
+								
+				<s:FormItem>
+					<!-- GAP -->
+				</s:FormItem>
+				
+				<s:FormItem visible="{((this.pModel.aliasSourceType == '11')||(this.pModel.aliasSourceType == '14'))}" includeInLayout="{((this.pModel.aliasSourceType == '11')||(this.pModel.aliasSourceType == '14'))}">
+					<s:Button label="upload csv file" enabled="true" click="pModelUpload.onLoadFileClick();" toolTip="upload csv file to load alias."/>	
+				</s:FormItem>
+				
+			</s:Form>	
+			
+		</util:TitledBorderBox>
+		<!--</s:BorderContainer>-->
+	</s:Group>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:VGroup id="vgItemsGrid" height="100%">
+		<!-- Note: allowMultipleSelection="true" does not work with the "selectedItem" property -->
+		<filters:FilterDatagrid id="dgAlias"  
+								bAllowDelete="true" horizontalScrollPolicy="{ScrollPolicy.ON}"
+								columns="{pModel.arrAliasItemsDgCols}"
+								dataProvider="{this.pModel.aliasCurrentSelectedDef}"
+								width="1198" height="85%"							
+								click="{pModel.selectAliasDef(dgAlias.selectedItem as AliasDef)}"
+								selectedItem="{this.pModel.aliasSelectedDef}"
+								editable="true"
+								tabIndex="9" dataTipFunction="showToolTip"
+								headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+								headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"								
+								>
+			<!--   selectedItem="{this.pModel.aliasSelectedDef}"
+			Label 31571: itemFocusOut="{pModel.selectAliasDef(dgAlias.selectedItem as AliasDef)};entityIDChange();" (This was the last solution. Now the grid is disabled.)
+			itemEditEnd="this.pModel.aliasCurrentSelectedDef.disableAutoUpdate()" (disable the sort on the grid)
+			itemEditEnd="{pModel.selectAliasDef(dgAlias.selectedItem as AliasDef)};entityIDChange();" (this also worked, like "itemFocusOut")
+			itemEditEnd="{this.pModel.itemEditEnd(event)}" (Initial code)
+			//(Not needed) - dispatcher="{this.parentDocument as IEventDispatcher}" - Adding dispatcher property here makes sure that the eventmap knows where the dispacher is being sent from
+			-->
+		</filters:FilterDatagrid>
+		</s:VGroup>	
+	</s:VGroup>	
+</s:Group>
+
+
+

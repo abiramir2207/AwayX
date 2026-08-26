@@ -1,0 +1,6 @@
+===== QUERY: Get_User_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Save_password =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

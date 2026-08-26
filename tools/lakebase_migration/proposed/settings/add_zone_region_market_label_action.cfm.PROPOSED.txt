@@ -1,0 +1,12 @@
+===== QUERY: checkForExistingLabel =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: saveLabel =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateLabel =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: saveLastUpdate =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

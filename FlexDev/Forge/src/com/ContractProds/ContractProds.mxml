@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml"
+		   xmlns:s="library://ns.adobe.com/flex/spark"
+		   layout="vertical" height="100%" width="100%"
+		   paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+		   xmlns:view="com.ContractProds.views.*"
+		   xmlns:maps="com.ContractProds.maps.*"
+		   xmlns:vos="com.ContractProds.vos.*"
+		   implements="com.shared.models.IModuleBa">
+	
+	<mx:Script><![CDATA[
+		import com.ContractProds.events.*;
+		import com.shared.vos.Settings;
+		import com.shared.events.MainEvent;
+		import com.shared.models.SettingsManager;
+		import mx.controls.Alert;
+		import mx.styles.StyleManager;
+		import mx.utils.ObjectUtil;
+		
+		private function applyRuntimeStyleSheet():void {
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+		}
+		
+		//[Bindable]
+		// private var _settings:Settings;
+		
+		public function setSettings(settings:Settings):void{
+			var event:MainEvent = new MainEvent ( MainEvent.SET_LOCAL_APP_SETTINGS );
+			event.settings = settings;
+			this.dispatchEvent( event );
+		}
+	]]>
+	</mx:Script>
+	
+	<!-- Event Maps __________________________________________________ -->
+	<maps:ContractProdsEventMap dispatcher="{this}" />
+	<!--<maps:ModelMap cache="local" dispatcher="{this}" />-->
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox height="100%" width="100%"> <!-- width="1000" height="680" -->
+		<view:SearchPanel height="100%" width="100%" />
+	</mx:HBox>
+</mx:Module>

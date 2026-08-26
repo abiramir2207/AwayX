@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This is the main application file. -->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  
+	xmlns:views="com.views.*" 
+	xmlns:maps="com.maps.*" 
+	xmlns:vos="com.vos.*"
+	preinitialize="applyRuntimeStyleSheet();" preloader="com.components.baProgressBar">
+
+ <mx:Script>
+    <![CDATA[
+        import mx.controls.dataGridClasses.DataGridColumn;
+    	import mx.controls.dataGridClasses.DataGridHeader;
+	    import flash.utils.getTimer;
+	    import mx.collections.ArrayCollection;
+	    import mx.utils.StringUtil;
+	    import mx.rpc.events.FaultEvent;
+	    import mx.rpc.events.ResultEvent;
+	    import mx.controls.Alert;
+		import mx.utils.ObjectUtil;
+		import mx.managers.CursorManager;
+		import mx.styles.StyleManager;
+
+		public function applyRuntimeStyleSheet():void {
+            StyleManager.loadStyleDeclarations("/flex/assets/styles/mainFx.swf") 
+        }
+
+    ]]>
+  </mx:Script>
+
+ 	<maps:MainEventMap />
+ 	<!-- On Initial load, the active tab is the "search" tab. The controls on the other tabs get
+	instantiated only when we click on those tabs, otherwise those controls are not available.	
+	By using creationPolicy="all", all the controls are created on load. 
+	-->
+	<views:ProgramSearchPanel creationPolicy="all" />
+
+</mx:Application>

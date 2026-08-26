@@ -1,0 +1,21 @@
+===== QUERY: BBInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBBInfo>
+	<cftry>
+		<cfset BBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#BillbackID#",
+				"select" = "bb_title,bb_code,bb_reference"
+			}), "bb_title,bb_code,bb_reference"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

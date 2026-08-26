@@ -1,0 +1,45 @@
+===== QUERY: qRemoval =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqRemoval = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForqRemoval>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"program_id" = "eq.#url.programID#",
+				"doc_id" = "eq.#form.doc_id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqRemoval = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqRemoval>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqProgram>
+	<cftry>
+		<cfset qProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#url.programID#",
+				"select" = "contract_number,contract_title"
+			}), "contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

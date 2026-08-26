@@ -1,0 +1,84 @@
+===== QUERY: qCompDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCompDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForqCompDetails>
+	<cftry>
+		<cfset qCompDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#arguments.Component_Name_ID#",
+				"select" = "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+			}), "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCompDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCompDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCompDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCompDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForqCompDetails>
+	<cftry>
+		<cfset qCompDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#arguments.Component_Name_ID#",
+				"select" = "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+			}), "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCompDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCompDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCompDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCompDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForqCompDetails>
+	<cftry>
+		<cfset qCompDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#arguments.Component_Name_ID#",
+				"select" = "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+			}), "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCompDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCompDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCompDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCompDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForqCompDetails>
+	<cftry>
+		<cfset qCompDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#arguments.Component_Name_ID#",
+				"select" = "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+			}), "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCompDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCompDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

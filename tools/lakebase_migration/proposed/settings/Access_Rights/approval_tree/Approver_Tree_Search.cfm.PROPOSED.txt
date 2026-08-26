@@ -1,0 +1,84 @@
+===== QUERY: GOD_UserPositions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGOD_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForGOD_UserPositions>
+	<cftry>
+		<cfset GOD_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.GOD",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGOD_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGOD_UserPositions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ZONE_UserPositions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForZONE_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForZONE_UserPositions>
+	<cftry>
+		<cfset ZONE_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.ZONE",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForZONE_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForZONE_UserPositions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: REGION_UserPositions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForREGION_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForREGION_UserPositions>
+	<cftry>
+		<cfset REGION_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.REGION",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForREGION_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForREGION_UserPositions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: MARKET_UserPositions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForMARKET_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForMARKET_UserPositions>
+	<cftry>
+		<cfset MARKET_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.MARKET",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForMARKET_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForMARKET_UserPositions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

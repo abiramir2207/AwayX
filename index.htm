@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+	<HEAD>
+		<TITLE>Welcome To Blacksmith Applications, Inc.</TITLE>
+	</HEAD>
+<BODY>
+	<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
+		function Is ()
+		{   
+			
+			var checkFor = "MSIE";
+			var MSIEIndex = navigator.appVersion.indexOf(checkFor);
+			this.version = parseFloat(navigator.appVersion.substring(MSIEIndex + checkFor.length, (navigator.appVersion.length)));
+		}
+		var isHttps = true
+		function checkVersion()
+		{
+			var is = new Is();
+			if(is.version < 5.5)
+			{		
+				window.location.href = '/getie.cfm';
+			}
+			else
+			{
+				//window.location.href = '/index2.htm';
+				if(isHttps)
+				{
+					window.location.href = "https://" + location.hostname + "/index2.cfm"
+				}
+				else
+				{
+					window.location.href = "http://" + location.hostname + "/index2.cfm"
+				}
+			}
+		}
+		checkVersion();
+	</SCRIPT>
+</BODY>
+</HTML>

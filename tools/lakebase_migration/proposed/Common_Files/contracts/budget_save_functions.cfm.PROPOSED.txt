@@ -1,0 +1,27 @@
+===== QUERY: vars.original =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: vars.isBudgetChanged =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: OffInvoiceActualDetail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForOffInvoiceActualDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("off_invoice_actual_detail")>
+<cfif useLakebaseForOffInvoiceActualDetail>
+	<cftry>
+		<cfset OffInvoiceActualDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("off_invoice_actual_detail", {
+				"limit" = "1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOffInvoiceActualDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOffInvoiceActualDetail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

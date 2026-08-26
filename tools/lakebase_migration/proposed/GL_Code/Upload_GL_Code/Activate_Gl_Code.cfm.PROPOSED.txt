@@ -1,0 +1,207 @@
+===== QUERY: CurrActive =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCurrActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForCurrActive>
+	<cftry>
+		<cfset CurrActive = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"current_active_data" = "eq.1",
+				"select" = "created_date"
+			}), "created_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCurrActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCurrActive>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ChangePreAct =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForChangePreAct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForChangePreAct>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_activation",
+			{
+				"previous_active_data" = "eq.1"
+			},
+			{
+				"previous_active_data" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForChangePreAct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForChangePreAct>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PreActive =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPreActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForPreActive>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_activation",
+			{
+				"created_date" = "eq.#CurrActive.Created_Date#"
+			},
+			{
+				"current_active_data" = "0",
+				"previous_active_data" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPreActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPreActive>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CurActive =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: GetGL_Code_Upload_ID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetGL_Code_Upload_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetGL_Code_Upload_ID>
+	<cftry>
+		<cfset GetGL_Code_Upload_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"created_date" = "eq.#FORM.Created_Date#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetGL_Code_Upload_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetGL_Code_Upload_ID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: offTonightBit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForoffTonightBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForoffTonightBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"activate_tonight" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"activate_tonight" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForoffTonightBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForoffTonightBit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ONTonightBit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForONTonightBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForONTonightBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"gl_code_upload_id" = "eq.#GetGL_Code_Upload_ID.GL_Code_Upload_ID#'",
+				"deleted" = "eq.0"
+			},
+			{
+				"activate_tonight" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForONTonightBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForONTonightBit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetAllDate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetAllDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetAllDate>
+	<cftry>
+		<cfset GetAllDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"current_active_data" = "eq.0",
+				"activate_tonight" = "eq.0",
+				"deleted" = "eq.0",
+				"select" = "created_date"
+			}), "created_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllDate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPreviousActiveDate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPreviousActiveDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetPreviousActiveDate>
+	<cftry>
+		<cfset GetPreviousActiveDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"previous_active_data" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "created_date"
+			}), "created_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPreviousActiveDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPreviousActiveDate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetActiveData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetActiveData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetActiveData>
+	<cftry>
+		<cfset GetActiveData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetActiveData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetActiveData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

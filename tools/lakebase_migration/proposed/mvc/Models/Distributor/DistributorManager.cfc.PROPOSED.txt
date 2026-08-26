@@ -1,0 +1,6 @@
+===== QUERY: qGetAllBuyingGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetAllFamilyNames =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

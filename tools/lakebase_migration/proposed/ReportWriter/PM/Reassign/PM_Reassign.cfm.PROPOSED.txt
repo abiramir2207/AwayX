@@ -1,0 +1,158 @@
+===== QUERY: Get_FAR =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: Get_Sponsor =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: getUserPosition =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_FAR_Sel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_FAR_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_far")>
+<cfif useLakebaseForGet_FAR_Sel>
+	<cftry>
+		<cfset Get_FAR_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_far", {
+				"pm_far_deleted" = "eq.0",
+				"pm_far_id" = "eq.#FORM.From_PM_Far_ID#",
+				"select" = "pm_far_description"
+			}), "pm_far_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_FAR_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_FAR_Sel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_ToFAR_Sel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_ToFAR_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_far")>
+<cfif useLakebaseForGet_ToFAR_Sel>
+	<cftry>
+		<cfset Get_ToFAR_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_far", {
+				"pm_far_deleted" = "eq.0",
+				"pm_far_id" = "eq.#FORM.To_PM_Far_ID#",
+				"select" = "pm_far_description"
+			}), "pm_far_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_ToFAR_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_ToFAR_Sel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Sponsor_Sel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Sponsor_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_sponsor")>
+<cfif useLakebaseForGet_Sponsor_Sel>
+	<cftry>
+		<cfset Get_Sponsor_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_sponsor", {
+				"pm_sponsor_deleted" = "eq.0",
+				"pm_sponsor_id" = "eq.#FORM.From_PM_Sponsor_ID#",
+				"select" = "pm_sponsor_name_first,pm_sponsor_name_last"
+			}), "pm_sponsor_name_first,pm_sponsor_name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Sponsor_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Sponsor_Sel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_ToSponsor_Sel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_ToSponsor_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_sponsor")>
+<cfif useLakebaseForGet_ToSponsor_Sel>
+	<cftry>
+		<cfset Get_ToSponsor_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_sponsor", {
+				"pm_sponsor_deleted" = "eq.0",
+				"pm_sponsor_id" = "eq.#FORM.To_PM_Sponsor_ID#",
+				"select" = "pm_sponsor_name_first,pm_sponsor_name_last"
+			}), "pm_sponsor_name_first,pm_sponsor_name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_ToSponsor_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_ToSponsor_Sel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Position_Sel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Position_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForGet_Position_Sel>
+	<cftry>
+		<cfset Get_Position_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#FORM.From_Owner_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Position_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Position_Sel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_ToPosition_Sel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_ToPosition_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForGet_ToPosition_Sel>
+	<cftry>
+		<cfset Get_ToPosition_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#FORM.To_Owner_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_ToPosition_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_ToPosition_Sel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

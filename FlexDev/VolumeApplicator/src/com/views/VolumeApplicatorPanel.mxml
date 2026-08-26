@@ -1,0 +1,2446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	This is the main display page which has all the display components in it.
+-->
+
+<mx:Canvas 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:ba="com.components.*" 
+	paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"
+	resizeEffect="Resize" resize="true"  
+	horizontalScrollPolicy="auto" verticalScrollPolicy="auto" 
+	width="100%" height="100%">
+	
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		
+		<![CDATA[
+			import com.asfusion.mate.events.Dispatcher;
+			import com.events.*;
+			import com.events.VolumeApplicatorEvent;
+			import com.models.*;
+			import com.vos.*;
+			
+			import flash.display.Sprite;
+			import flash.events.*;
+			import flash.external.ExternalInterface;
+			import flash.net.FileFilter;
+			import flash.net.FileReference;
+			import flash.net.FileReferenceList;
+			import flash.utils.getTimer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.Grouping;
+			import mx.collections.GroupingCollection;
+			import mx.collections.GroupingField;
+			import mx.collections.IViewCursor;
+			import mx.collections.SummaryField;
+			import mx.collections.SummaryObject;
+			import mx.collections.SummaryRow;
+			import mx.containers.ControlBar;
+			import mx.containers.Panel;
+			import mx.containers.TabNavigator;
+			import mx.controls.AdvancedDataGrid;
+			import mx.controls.AdvancedDataGridBaseEx;
+			import mx.controls.Alert;
+			import mx.controls.TextArea;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.controls.dataGridClasses.DataGridHeader;
+			import mx.controls.listClasses.IDropInListItemRenderer;
+			import mx.controls.listClasses.ListBase;
+			import mx.core.IUITextField;
+			import mx.events.AdvancedDataGridEvent;
+			import mx.events.CloseEvent;
+			import mx.events.CollectionEvent;
+			import mx.events.DataGridEvent;
+			import mx.events.DropdownEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.graphics.RadialGradient;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ObjectUtil;
+			import mx.utils.StringUtil;
+			
+			private var downloadFileRef:FileReference = new FileReference();
+			
+	 			
+			[Bindable] private var ProgramsReturned:Number;
+			[Bindable] private var Duration_Time:Number;  
+	    	[Bindable] public  var arrSavedItems:Array = new Array();
+			[Bindable] public  var arrUserList:Array = new Array();
+			[Bindable]
+			/* **********************************************************************  
+				DECLARATIONS BELOW ARE FOR THE PROPERTYINJECTORYS
+				THESE VALUES GET SET IN THE MainEventMap.mxml INJECTORS 
+				- Anand Rao/09-Jun-09
+			*********************************************************************** */
+			public var dgVolumeData:ArrayCollection= new ArrayCollection;
+			
+			[Bindable] public var dgVolumeDataEdit:ArrayCollection= new ArrayCollection;		
+			[Bindable] public var dgVolumeSumData:ArrayCollection= new ArrayCollection;
+	 		[Bindable] public var eventsArrColl:ArrayCollection = new ArrayCollection;
+			[Bindable] public var oSettings:Settings = null;
+			[Bindable] public var iUserID:String = "";
+			[Bindable] public var programTitle:String = "";
+			//[Bindable] public var programQtyUOMIDX:String = "";		
+			//[Bindable] public var programUOMType:String = "";
+			[Bindable] public var volumeQtyUOMIDX:String = "";
+			[Bindable] public var volumeUOMType:String = "";
+			[Bindable] public var programNumber:String = "";
+			[Bindable] public var programKeyword:String = "";
+			[Bindable] public var prgAreaStartDate:String = "";
+	 		[Bindable] public var prgAreaEndDate:String = "";
+			[Bindable] public var prgAreaSpanDays:String = "" ;
+			[Bindable] public var prgProgramType:String = "";
+			[Bindable] public var minGlobalVolume:String = "";
+			[Bindable] public var minGlobalVolumeSizeCS:String = "";
+			[Bindable] public var minGlobalVolumeSizeLB:String = "";
+			[Bindable] public var maxGlobalVolume:String = "";
+			[Bindable] public var maxGlobalVolumeSizeCS:String = "";
+			[Bindable] public var maxGlobalVolumeSizeLB:String = "";	
+			[Bindable] public var GroupADefault:String = "";	
+			[Bindable] public var GroupBDefault:String = "";	
+			[Bindable] public var prgProgramID:String = "";
+			[Bindable] public var usrProfileID:String = "";
+			[Bindable] public var sCustomerLabel:String = "";
+			[Bindable] public var sItemLabel:String = "";
+			[Bindable] public var sPoundLabel:String = "";
+			[Bindable] public var sOperatorLabel:String = "";
+			[Bindable] public var bOprShowSetting:String;
+			[Bindable] public var bDirectShipmentShowSetting:String;
+			[Bindable] public var bBillbackShowSetting:String;
+			[Bindable] public var bCreditsShowSetting:String;
+			[Bindable] public var bPanDetailsDisplay:String;
+			[Bindable] public var strPanVolumeHelpText:String;
+			[Bindable] public var nRebatePercentageOnNetSales:Number = 0;
+			[Bindable] public var prgUserID:String = "";
+			[Bindable] public var vScroll:int = 0;
+			[Bindable] public var storeItemForUpdate:Object = null;
+			[Bindable] public var bOpportunityVolumeShow:Boolean;
+			[Bindable] public var bCasesVolumeShow:Boolean;
+			[Bindable] public var bPoundsVolumeShow:Boolean;
+			[Bindable] public var bOpportunityCasesVolumeShow:Boolean;
+			[Bindable] public var bOpportunityPoundsVolumeShow:Boolean;
+			[Bindable] public var dpProductGroupType:ArrayCollection= new ArrayCollection;
+			[Bindable] public var dpUOM:ArrayCollection= new ArrayCollection;
+			[Bindable] public var dpApplyAction:ArrayCollection= new ArrayCollection;
+			[Bindable] public var bExcludeAutoVolumeUpdates:Boolean = false;
+			[Bindable] public var bSaveEnabled:Boolean = true;
+			[Bindable] public var volumePageUOMCS:Number = 1;
+			[Bindable] public var volumePageUOMLB:Number = 0;
+			[Bindable] public var autoVolumeExcludeUpdatedData:String = "";
+			
+
+			[Bindable] 
+			public var dpTotal:ArrayCollection = new ArrayCollection([ 
+	           {TotColumn:'Grand Total:', TotalCases:0.00,TotalPounds:0.00,TotalDollars:0.00,TotalOppCases:0.00,TotalOppPounds:0.00}     
+	         ]); 
+	    
+			[Bindable] 
+	    	public var dpEdTotal:ArrayCollection = new ArrayCollection([ 
+	           {TotColumn:'Grand Total:', TotalCases:0.00,TotalPounds:0.00,TotalDollars:0.00,TotalOppCases:0.00,TotalOppPounds:0.00}     
+	         ]);
+	        
+				
+			public var _dataField:String;
+			public var dollarSum:Number = 0;
+			public var poundsSum:Number = 0;
+			public var casesSum:Number 	= 0;
+			public var panHelp:Panel;
+			public var evt:AdvancedDataGridEvent;
+			public var nProductGroupLevelEventId:Number = 0;
+		 	
+				
+			
+		 	/**
+		 	*  This function saves the datagrid values to the database
+	 		*/	
+			public function fnSaveChanges(strSaveType:String):void
+			{
+				var casesTotal:Number 	= 0;
+				var poundsTotal:Number  = 0;
+				var errorFlag:Number 	= 0;
+				var saveType:String;
+				
+				saveType = strSaveType;
+				
+				this.bSaveEnabled = false;
+				
+				for each(var oItem:Object in dgEd.dataProvider.source)
+				{
+					casesTotal = casesTotal + removeCommas(oItem['cases']); 
+					poundsTotal = poundsTotal + removeCommas(oItem['pounds']);
+				}
+				
+				/*  ********************************************************************** 
+					Before saving check whether the Setting for the Global value are validated
+					if the minGlobalVolume or MaxGlobalVolume is set and if so make sure 
+					that the user entered values are not more than or less than the value
+					in the settings.
+				 ********************************************************************** */
+				if (minGlobalVolume.valueOf() == "true" || maxGlobalVolume.valueOf() == "true")
+				{
+					if (maxGlobalVolume.valueOf() == "true")
+					{
+						if(volumeUOMType == "Cases")
+						{
+							if (casesTotal >  Number(maxGlobalVolumeSizeCS))
+							{
+								Alert.show("The total " + programKeyword.toString() + " volume you have entered (" + casesTotal.toString() + " " + volumeUOMType.toString() + ") exceeds the template maximum " + programKeyword.toString() + " volume of " + maxGlobalVolumeSizeCS.toString() +  "\nPlease adjust the volume accordingly.", "Volume Error Alert!");
+								errorFlag = 1;  
+							}
+						}
+						else
+						{
+							if (poundsTotal >  Number(maxGlobalVolumeSizeLB))
+							{
+								Alert.show("The total " + programKeyword.toString() + " volume you have entered (" + poundsTotal.toString() + " " + volumeUOMType.toString() + ") exceeds the template maximum " + programKeyword.toString() + " volume of " + maxGlobalVolumeSizeLB.toString() +  "\nPlease adjust the volume accordingly.", "Volume Error Alert!");
+								errorFlag = 1;
+							}
+						}
+					}	
+					if (minGlobalVolume.valueOf() == "true")
+					{
+						if(volumeUOMType == "Cases")
+						{
+							if (casesTotal <  Number(minGlobalVolumeSizeCS))
+							{
+								Alert.show("The total " + programKeyword.toString() + " volume you have entered (" + casesTotal.toString() + " " + volumeUOMType.toString() + ") is less than the template minimum " + programKeyword.toString() + " volume of " + minGlobalVolumeSizeCS.toString() + "\nPlease adjust the volume accordingly.", "Volume Error Alert!");
+								errorFlag = 1;
+							}
+						}
+						else
+						{
+							if (poundsTotal <  Number(minGlobalVolumeSizeLB))
+							{
+								Alert.show("The total " + programKeyword.toString() + " volume you have entered (" + poundsTotal.toString() + " " + volumeUOMType.toString() + ") is less than the template minimum " + programKeyword.toString() + " volume of " + minGlobalVolumeSizeLB.toString() + "\nPlease adjust the volume accordingly.", "Volume Error Alert!");
+								errorFlag = 1;
+							}
+						}
+					}
+				}
+				
+				if (errorFlag == 0)
+				{
+					/* ********************************************************************** 
+						If errorFlag == 0 which means no error happened with the max or min 
+						volume setting then go ahead and save the value in the DataGrid	
+					********************************************************************** */
+					var eventSaveChanges:VolumeApplicatorEvent = new VolumeApplicatorEvent(VolumeApplicatorEvent.SAVE_CHANGES);
+					eventSaveChanges.dgVolumeDataEditSet = this.dgVolumeDataEdit.source;
+					eventSaveChanges.appProgramID = this.prgProgramID;
+					eventSaveChanges.userId = this.prgUserID;
+					eventSaveChanges.nProductGroupLevel = this.nProductGroupLevelEventId;
+					eventSaveChanges.excludeAutoVolumeUpdates = this.excludeAutoVolumeUpdates.selected;
+					eventSaveChanges.saveType = saveType;
+					this.dispatchEvent(eventSaveChanges);
+				}
+				
+				if (errorFlag == 1 && this.bSaveEnabled == false){
+					this.bSaveEnabled = true;
+				}
+			}
+			
+			
+			[Bindable (event="evtBEnableButton")]
+			public function fnEnableSave(e:Event):void
+			{
+				this.bSaveEnabled = true;
+			}			
+			
+			/**
+			* This function forecasts the Volume and sets it across all the records in the
+			* datagrid  
+			*/  
+			[Bindable (event="evtFnForceForecast")]
+			public function fnForceForecast():void
+			{
+				var gpA:RadioButtonGroup =  GroupA;
+				var eventForceForecast:VolumeApplicatorEvent = new VolumeApplicatorEvent(VolumeApplicatorEvent.GET_VOLUME_EDIT);
+				eventForceForecast.dgVolumeDataEditSet = this.dgVolumeDataEdit.source;
+				eventForceForecast.appEditMode = "EDIT-FORECAST"; 
+				eventForceForecast.appProgramID = this.prgProgramID;
+				this.dispatchEvent(eventForceForecast); 
+			}
+	 		
+			/**
+			* This function captures which column header was clicked and set it to 
+			* the curDateField  
+			*/  
+		 	private function headerReleaseFunc(event:AdvancedDataGridEvent):void
+		 	{
+				curDataField = event.dataField;
+			} 
+			
+			/**
+			* This function compares and sorts the rows in the datagrid 
+			*/ 
+			private function sortCompareFunc(Obj1:Object, Obj2:Object):int
+			{
+				return ObjectUtil.numericCompare(Obj1[curDataField],Obj2[curDataField]);
+			}
+			
+			private function set curDataField(dataField:String):void
+			{
+				this._dataField = dataField;
+			}
+			
+			private function get curDataField():String
+			{
+				return this._dataField;
+			}
+	  
+	  		/**
+	  		* This function Filters the records in the Datagrid based on the
+	  		* Group A, Group B and Checkbox for the Show Zero Volume 		
+			*/ 
+			[Bindable (event="evtFilterVolume")]
+			public function fnFilterVolume(evt:Event):void
+	 		{
+				var returnVal:Boolean = false;
+			 	try	
+			 	{
+		 			this.dgVolumeData.filterFunction = this.volumeFilterFunc;
+	 		  		this.dgVolumeData.refresh(); // actual
+	 		    	fnDoTotal();
+				} 
+				catch(err:Error){}
+			}
+	 				
+	 		/** 
+	 		* Function to do the filtering of the Datagrid
+	 		*/ 
+	 		public function  volumeFilterFunc(item:Object):Boolean
+	 		{
+	 			var chkChecked:Boolean = false;
+				var returnVal:Boolean = false;
+	 			try 
+				{
+					var gpB:RadioButtonGroup 	= this.GroupB;
+					var rdoSelectedVal:String = this.GroupB.selectedValue.toString();
+			  		var chkControl:CheckBox 	= this.chkShowZeroVol;
+					var searchBasedOn:String = this.GroupA.selectedValue.toString();
+					
+					var searchString:String = this.tiSearch.text.toLowerCase();
+					
+					//operator fields
+					var operatorId:String = String(item["operator_id"]).toLowerCase();
+					var operatorName:String = String(item["operator_name"]).toLowerCase();
+					
+					//distributor fields
+					var name:String = String(item["name"]).toLowerCase();
+					var shrShipTo:String = String(item["shr_ship_to"]).toLowerCase();
+					
+					//item fields
+					var itemNum:String = String(item["item"]).toLowerCase();
+					var description:String = String(item["description"]).toLowerCase();
+				
+					/* **********************************************************************
+						At times the checkControl.selected throws an error saying that the 
+						object has null reference, so this will be solved and the default
+						value of false will be taken as the value of chkChecked 
+					********************************************************************** */
+					chkChecked = chkControl.selected;
+				}	
+				catch(err:Error){}
+				
+	 			if (rdoSelectedVal == null)
+				{
+			  		/* ********************************************************************** 
+			  			If none of the value is selected then (remote possibility, very highly 
+			  			unlikely) then set the values to the default value 
+			  		********************************************************************** */
+			  		this.GroupB.selectedValue = GroupBDefault;
+			  		rdoSelectedVal = GroupBDefault;
+				}
+	 
+	 			if (chkChecked)
+	 			{
+	 				// if checked then display +ve, -ve and 0 volume records
+	 				if ((item.invoice_type == rdoSelectedVal) && ((parseInt(item.cases) >= 1) || (parseInt(item.cases) <= 0))) 
+	 				{
+						
+						if(searchString != ""){
+							if(searchBasedOn == 'Distributor'){
+								if(name.search(searchString) != -1 || shrShipTo.search(searchString) != -1){
+									returnVal = true;
+								}
+							}
+							else if(searchBasedOn == 'Product'){
+								if(itemNum.search(searchString) != -1 || description.search(searchString) != -1){
+									returnVal = true;
+								}
+							}
+							else if(searchBasedOn == 'Operator'){
+								if(itemNum.search(searchString) != -1 || description.search(searchString) != -1 || operatorId.search(searchString) != -1 || operatorName.search(searchString) != -1){
+									returnVal = true;
+								}
+							}
+						}
+						else{
+							returnVal = true;
+						}
+	 					
+	 				}
+	 			}
+	 			else
+	 			{
+	 				// if not checked then display +ve and -ve only leaving out the 0 volume records
+	 				if ((item.invoice_type == rdoSelectedVal)  && (parseInt(item.cases) != 0)) //&& ((parseInt(item.cases) >= 1) || (parseInt(item.cases) < 0)) )
+	 				{
+						if(searchString != ""){
+							if(searchBasedOn == 'Distributor'){
+								if(name.search(searchString) != -1 || shrShipTo.search(searchString) != -1){
+									returnVal = true;
+								}
+							}
+							else if(searchBasedOn == 'Product'){
+								if(itemNum.search(searchString) != -1 || description.search(searchString) != -1){
+									returnVal = true;
+								}
+							}
+							else if(searchBasedOn == 'Operator'){
+								if(itemNum.search(searchString) != -1 || description.search(searchString) != -1 || operatorId.search(searchString) != -1 || operatorName.search(searchString) != -1){
+									returnVal = true;
+								}
+							}
+						}
+						else{
+							returnVal = true;
+						}
+	 				}
+	 			}
+	 			return returnVal;
+	 		}
+	 
+	  		/**
+	  	 	* This function gets called when the tabNavigator is created and loaded 
+	  	 	*/
+	 		public function fnTbMainComplete():void
+	 		{
+	 		}
+	 
+	  		/** 
+	  		* This function gets called when the user comes into the edit tab 
+	  		*/ 
+			public function toggleStateEdit(state:int):void
+			{
+				if(state == 0) // Click for Right Panel full screen
+				{
+					this.currentState = "fullRight";
+				}	
+				else if (state == 1)  // Click for the split screen with the control panel option
+				{
+					this.currentState = "";
+					toggleState('fullAll');
+				}
+			}
+	
+			/**
+			* This function gets called whenever the user changes the mode in the 
+			* view to full screen and toggles back to the split mode screen
+			*/   
+			public function toggleState(state:String):void
+			{
+				if(state == "fullRight") // Click for Right Panel full screen
+				{
+					this.currentState 				= "fullRight";
+					iconRight.visible 				= false;
+					iconAllR.visible 					= true;
+					iconRight.includeInLayout = false;
+					iconAllR.includeInLayout 	= true;
+				}
+				else if(state == "fullAll") // Click for both Panels Shared Screen
+				{
+					this.currentState 				= "";
+					iconAllR.visible 					= false;
+					iconRight.visible 				= true;
+					iconAllR.includeInLayout 	= false;
+					iconRight.includeInLayout = true;
+				}
+			}
+					
+			public function ShowEditData():void
+			{
+				var eventVol:VolumeApplicatorEvent = new VolumeApplicatorEvent(VolumeApplicatorEvent.GET_VOLUME_EDIT);
+				eventVol.appProgramID = this.prgProgramID;
+				this.dispatchEvent(eventVol);		
+			}				
+			
+			/**
+			* This function gets called whenever the user changes a Group A option
+			* in the control panel on the left 		
+			*/ 
+			public function ShowHideColumns():void 
+			{
+				var gpA:RadioButtonGroup = GroupA;
+		   		var gpB:RadioButtonGroup = GroupB;
+		   		var eventVol:VolumeApplicatorEvent = new VolumeApplicatorEvent(VolumeApplicatorEvent.GET_VOLUME_DETAILS);
+		   		var eventFilterResults:VolumeApplicatorEvent = new VolumeApplicatorEvent(VolumeApplicatorEvent.FILTER_RESULTS);
+				/* ********************************************************************** 
+					Reset all the columns ie. set the columns to false so that we can 
+					again set what needs to be displayed in this function.
+				********************************************************************** */
+		    	ResetFilters();
+	
+				/* **********************************************************************
+					 Reset the GroupB radio button and the zero volume check box to 
+					 the Default values before we grab the new set of data to be 
+					 loaded in the Data Grid.
+					 
+					 If we need to reset the values back to default, it has to be 
+					 done here but commented for now as it is not needed.
+				********************************************************************** */ 
+		   		/* check what is the selectedValue and set the visible columns accordingly */
+		   	
+		   		ItemNo.visible 			= true;
+				ItemDesc.visible 		= true;
+	 			ItemNoTot.visible 	= true;
+				ItemDescTot.visible = true;  
+				
+				/* **********************************************************************
+					Check for the selected Group A option and based on that we change the 
+					columns that gets displayed to the user.			  
+				********************************************************************** */	
+		   		try
+				{
+					if (gpA.selectedValue == "Operator" || gpA.selection.id == "rdoOperator")
+					{
+						OpNo.visible 				= true;
+						OpName.visible 			= true;
+						CustNo.visible 			= false;
+						CustName.visible 		= false;
+		 				OpNoTot.visible 		= true;
+						OpNameTot.visible 	= true;
+						CustNoTot.visible 	= false;
+						CustNameTot.visible = false;  
+						eventVol.appGroupA 	= "OPERATOR";
+	  	 			}
+					else if(gpA.selectedValue == "Customer" || gpA.selection.id == "rdoCus") 
+		   			{
+						if (bOprShowSetting == 'true')
+		   				{
+		   					DistNotOnProgram.visible 		= true;
+		   					DistNotOnProgramTot.visible = true;
+		   				}
+						CustNo.visible							= true;
+						CustName.visible						=	true;
+						OpNo.visible 								= false;
+						OpName.visible 							= false;
+						CustNoTot.visible 					= true;
+		   				CustNameTot.visible					= true;
+		   				OpNoTot.visible 						= false;
+		   				OpNameTot.visible 					= false;
+						ItemNo.visible 							= false;
+						ItemDesc.visible 						= false;
+						ItemNoTot.visible 					= false;
+						ItemDescTot.visible 				= false;
+						eventVol.appGroupA 					= "CUSTOMER";
+					}
+					else if(gpA.selectedValue == "Item" ||  gpA.selection.id == "rdoItem")
+					{
+						CustNo.visible			= false;
+						CustName.visible		=	false;
+						OpNo.visible 				= false;
+						OpName.visible 			= false;
+						CustNoTot.visible		= false;
+						CustNameTot.visible	=	false;
+						OpNoTot.visible 		= false;
+						OpNameTot.visible 	= false;
+	 					eventVol.appGroupA 	= "ITEM";
+					}
+			  		eventVol.appPrgMode 	= "VIEW"
+			  		eventVol.appProgramID = this.prgProgramID;
+					this.dispatchEvent(eventVol); 
+					fnDoTotal();
+				}
+				catch(err:Error){}
+			} 
+	 
+	 		/**
+	 		* This function reset all the controls before setting them to the 
+	 		* correct values
+	 		*/
+			public function ResetFilters():void
+			{	
+				DistNotOnProgram.visible 		= false;
+		   		DistNotOnProgramTot.visible = false;	
+				CustNo.visible							=	false;
+				CustName.visible						= false;
+				OpNo.visible								=	false;
+				OpName.visible							=	false;
+				ItemNo.visible							=	false;
+				ItemDesc.visible						=	false;
+	 			CustNoTot.visible						=	false;
+				CustNameTot.visible					=	false;
+				OpNoTot.visible							=	false;
+				OpNameTot.visible						=	false;
+				ItemNoTot.visible						=	false;
+				ItemDescTot.visible					=	false;  
+			}
+	 
+	 		/**
+	 		* This function formats the dollars with the dollar sign
+	 		*/ 
+			public function fnFormatDollars(item:Object, column:AdvancedDataGridColumn):String 
+	    	{
+	      		return dollarFormatter.format(item[column.dataField]);
+	    	}
+	
+			/** 
+			* This function formats the number which is used for Cases and Pounds 
+			*/
+		 	public function fnFormatNumber(item:Object, column:AdvancedDataGridColumn):String 
+	    	{
+	    		return numberFormatter.format(item[column.dataField]);
+	    	}    
+	    
+			/**
+			* This function resizes the columns and also gets called whenever the
+			* data changes in the grid resulting in the resize of the columns 
+			*/
+			public function resizeCols(event:Event=null) : void
+	   		{
+	 			fnDoTotal();
+	 		}
+	
+			public function resizeEdCols(event:Event=null) : void
+	   		{
+	   			fnDoEdTotal();
+	   		}
+	   	
+			/** 
+			* This function resizes the Grand total Datagrid whenever a column is
+			* stretched in the master Data Grid 
+			*/
+	   		public function resizeCol(event:AdvancedDataGridEvent) : void
+	   		{
+	  	 	 	AdvancedDataGridColumn(dgTot.columns[event.columnIndex]).width = AdvancedDataGridColumn(dg.columns[event.columnIndex]).width;
+	   		}
+	  			
+	   		public function resizeEdCol(event:AdvancedDataGridEvent) : void
+	   		{
+				AdvancedDataGridColumn(dgEdTot.columns[event.columnIndex]).width = AdvancedDataGridColumn(dgEd.columns[event.columnIndex]).width;
+	 		}
+	   		  			
+			/**
+			 * This function calculates the total on the master Datagrid and displays
+			 * it on the Grand Total Datagrid at the bottom of the main grid
+			 */
+			public function fnDoTotal():void
+			{
+				var iCasesTotal:Number	  = 0.0;
+				var iPoundsTotal:Number   = 0.0;
+				var iNetDollars:Number 	  = 0.0;
+				var iDollars:Number 		  = 0.0;
+				var iOppCasesTotal:Number	  = 0.0;
+				var iOppPoundsTotal:Number   = 0.0;
+				var gpA:RadioButtonGroup  = this.GroupA;
+				var gpB:RadioButtonGroup  = this.GroupB;
+			  	try	
+			  	{  
+			  		var rdoSelectedVal:String = gpB.selectedValue.toString();
+			  		// Loop over the dataprovider and get the total of all the rows 
+			  		for (var i:int=0;i<this.dg.dataProvider.length;i++)  
+			  		{ 
+			  			if (this.dg.dataProvider[i].invoice_type == rdoSelectedVal)
+			  			{    
+			  				iCasesTotal	 += Number(this.dg.dataProvider[i].cases);            //add the net_wt property value to the total
+			  				iPoundsTotal += Number(this.dg.dataProvider[i].pounds);
+			  				iNetDollars  += Number(this.dg.dataProvider[i].net_dollar);      
+							iDollars	+= Number(this.dg.dataProvider[i].dollar);
+							iOppCasesTotal	 += Number(this.dg.dataProvider[i].Opportunity_Volume_CS);	
+							iOppPoundsTotal	 += Number(this.dg.dataProvider[i].Opportunity_Volume_LB);
+						}
+					}
+				
+					for each(var item:Object in dpTotal)
+					{	
+						item.TotColumn			 = "Grand Total:";
+						/*
+						item.TotalCases 		 = numberFormatter.format(Number(parseFloat(iCasesTotal.toString())));
+						item.TotalPounds 		 = numberFormatter.format(Number(parseFloat(iPoundsTotal.toString())));
+						*/
+						
+						item.TotalCases 		 = numberFormatter.format(iCasesTotal);
+						item.TotalPounds 		 = numberFormatter.format(iPoundsTotal);
+						item.TotalNetDollars = iNetDollars;
+						item.TotalDollars 	 = iDollars;
+						item.TotalOppCases		 = numberFormatter.format(iOppCasesTotal);
+						item.TotalOppPounds 		 = numberFormatter.format(iOppPoundsTotal);
+					}
+					this.dgTot.dataProvider.refresh();
+				  	this.dgTot.invalidateList();
+				  	this.dgTot.invalidateDisplayList();
+			   
+			  		if(gpA.selectedValue == "Customer" || gpA.selection.id == "rdoCus")
+					{
+						if (bOprShowSetting == 'true')
+			   			{
+							DistNotOnProgramTot.width = DistNotOnProgram.width;
+			  				CustNoTot.width 					= CustNo.width;
+			   			}
+					}
+			  		CustNameTot.width 				= CustName.width;
+				  	OpNoTot.width 						= OpNo.width;
+				  	OpNameTot.width 					= OpName.width;
+				  	ItemNoTot.width 					= ItemNo.width;
+				  	ItemDescTot.width 				= ItemDesc.width;
+				  	CasesTot.width 						= Cases.width;
+				  	PoundsTot.width 					= Pounds.width;
+				  	//DollarsTot.width 					= Dollars.width;
+				  	GrossDollarsTot.width 		= GrossDollars.width;
+				  	NetDollarsTot.width 			=  NetDollars.width;
+				  	OppCasesTot.width 						= OppCases.width;
+				  	OppPoundsTot.width 					= OppPounds.width;
+					dgTot.regenerateStyleCache(true);
+				}	  	
+			   catch(err:Error){}
+			}
+	    
+	    	/**
+	     	* This function calculates the total on the master Datagrid and displays
+	     	* it on the Grand Total Datagrid at the bottom of the main grid
+			*/
+	    
+			[Bindable (event="evtFnDoEdTotal")]
+	    	public function fnDoEdTotal():void
+	    	{
+				var iCasesTotal:Number	= 0.0;
+	    		var iPoundsTotal:Number = 0.0;
+	    		var iNetDollars:Number 	= 0.0;
+	    		var iDollars:Number 		= 0.0;
+	    		var iOppCasesTotal:Number	= 0.0;
+	    		var iOppPoundsTotal:Number = 0.0;
+				if(bPanDetailsDisplay == "false")
+				{
+					try 
+					{
+						/* **********************************************************************
+							This will throw an error after loading and toggleStateEdit is called as 
+							the child is already removed from tbMain hence it is placed in the try -
+							catch block
+						********************************************************************** */
+						this.canDetails.visible= false;
+						this.tbMain.removeChildAt(1);
+					}
+					catch(err:Error){}
+				}
+				try 
+				{
+					for (var i:int=0;i<this.dgEd.dataProvider.length;i++)  
+				  	{ 
+				      	iCasesTotal	 += removeCommas(this.dgEd.dataProvider[i].cases);            
+				      	iPoundsTotal += removeCommas(this.dgEd.dataProvider[i].pounds);
+				      	iNetDollars  += removeCommas(this.dgEd.dataProvider[i].net_dollar);
+				      	iOppCasesTotal += removeCommas(this.dgEd.dataProvider[i].Opportunity_Volume_CS);
+			    		iOppPoundsTotal += removeCommas(this.dgEd.dataProvider[i].Opportunity_Volume_LB);
+		    		}
+		    		for each(var item:Object in dpEdTotal) 
+			    	{
+			    		item.TotColumn			 = "Grand Total:";
+			    		item.TotalCases 		 = numberFormatter.format(iCasesTotal);
+			    		item.TotalPounds 		 = numberFormatter.format(iPoundsTotal);
+			    		item.TotalNetDollars = iNetDollars;
+			    		item.TotalOpportunityCases	= numberFormatter.format(iOppCasesTotal);
+			    		item.TotalOpportunityPounds	= numberFormatter.format(iOppPoundsTotal);
+					}
+					this.dgEdTot.dataProvider.refresh();
+					this.dgEdTot.invalidateList();
+					this.dgEdTot.invalidateDisplayList();
+				}
+				catch(err:Error)
+		  		{}
+				try
+				{
+					/*
+			 		chkSelection_edTot.width = chkSelection_ed.width;
+			 		iconColTot.width 				 = iconCol.width;
+				  	ItemNo_edTot.width 			 = ItemNo_ed.width;
+				  	ItemDesc_edTot.width 		 = ItemDesc_ed.width;
+				  	Cases_edTot.width 			 = Cases_ed.width;
+				  	Pounds_edTot.width 			 = Pounds_ed.width;
+				  	Dollars_edTot.width 		 = Dollars_ed.width;
+				  	GrossDollars_edTot.width = GrossDollars_ed.width;
+				  	NetDollars_edTot.width 	 = NetDollars_ed.width;
+				  	Opp_Cases_edTot.width = Opp_Cases_ed.width;
+				  	Opp_Pounds_edTot.width = Opp_Pounds_ed.width;
+					*/
+				  	dgEdTot.regenerateStyleCache(true);
+					
+				}
+				catch(err:Error)
+				{}
+			}
+	 
+			public function dgCreationComplete():void
+		 	{
+		 	}
+			
+			public function dgEdCreationComplete():void
+		 	{	
+				dgEd.addEventListener(CollectionEvent.COLLECTION_CHANGE, resizeEdCols, false, 0, true);
+				fnDoEdTotal();
+		 	}
+	 
+	 		/**
+			*	This function sets the style for cerain columns in the datagrid
+			*/
+		 	public function dataGrid_styleFunction (data:Object, column:AdvancedDataGridColumn) : Object  
+			{
+				var output:Object;
+				if (data.children != null )  
+		      	{  
+		          	output = {fontWeight:"bold", fontSize:14}  
+		      	}
+				return output;
+			}
+	
+			/** 
+	 		* This function removes the commas from the string and return it as a number 
+			*/
+			public function removeCommas(commaNum:String):Number 
+			{
+				var newString:String = new String();
+				for (var k:int = 0; k<commaNum.length; k++)
+				{
+					if (commaNum.charAt(k) != ",") 
+					{
+						newString += commaNum.charAt(k);
+					}
+				}
+				var numValue:Number = new Number(newString);
+				return numValue;
+			}
+	
+	 		/**
+	 		* This function is called everytime an edit is made to a Pounds or the
+			* Cases value and the user presses &lt;Enter&gt; key or clicks outside the
+			* edited cell. This function updates Pounds or the Cases value and
+			* the Net Dollar and also calls the function to update the Grand total
+			* grid as a result of the data change in the Pounds, Cases and
+			* Net Dollar cells.
+			*/
+			public function fnComputeCSLB(evt:AdvancedDataGridEvent):void  
+			{
+				var colName:String = dgEd.columns[evt.columnIndex].dataField;
+				
+				// Alert.show(colName);
+	             
+				// The String sent to the clipboard
+	      		var dataString:String 		= "";
+	      		var netWeightVal:Number 	= 0;
+		   		var casesVal:Number 		= 0;
+				var poundsVal:Number 		= 0;
+				var oppCasesVal:Number 		= 0;
+				var oppPoundsVal:Number 	= 0;
+				var basePrice:Number 		= 0;
+				var bCalculatedVal:Number	= 0;		
+				var data:Object 			= evt.currentTarget.dataProvider[evt.rowIndex];
+				
+	 			/* 
+	 				Dev Notes: D22634/Anand Rao/10-May-10
+	 				Bagcraft - Volume applicator deselects items randomly
+	 				The datagrid was refreshing while clicking on the checkboxes and hence 
+	 				we need to do the below calculation only if the datafield the user
+	 				clicked was either 'cases' or 'pounds'
+	 			*/
+				if (colName == 'cases' || colName=='pounds')
+		 		{
+		 			try
+		 			{
+						casesVal		= Math.round(removeCommas(data['cases']));
+					  	netWeightVal 	= removeCommas(data['net_weight']);
+					  	poundsVal 	 	= Math.round(removeCommas(data['pounds']));
+					  	basePrice 	 	= removeCommas(data['base_price_cs']);
+				  
+						/* ********************************************************************** 	
+							if either case of pounds is entered as 0 then set the case value as
+							1 and calculate the pounds and net_dollar accordingly
+						********************************************************************** */
+				  		if (casesVal == 0 || poundsVal == 0)
+				  		{
+				  			casesVal 	= 1; 
+				  			poundsVal 	= Math.round(casesVal * netWeightVal);
+				  		} 
+				  
+				  		// 22416/Anand Rao/17-Feb-10
+				  		/* 
+				  		If the Pounds value is 0 and the netweight is less than 1 then make pounds to be 1
+				  		pounds cannot be 0 as it is causing a divide by 0 error in some places.
+				  		*/
+				  		  
+						if ((poundsVal == 0) && (netWeightVal < 1))
+				  		{
+				  			poundsVal = 1;
+				  			casesVal = poundsVal / netWeightVal;
+				  		}	 
+				  		  
+						if (colName == "cases")
+						{
+							data['pounds'] =  Math.round(casesVal * netWeightVal); //  casesVal * netWeightVal 
+							data['cases'] = casesVal;
+							/*
+								If the pounds value happens to be zero and the net weight value is less than 1
+								then make the pounds value to be 1.
+							*/
+							if ((data['pounds']== 0) && (netWeightVal < 1))
+							{
+								data['pounds'] = 1;
+								data['cases'] = Math.round(poundsVal / netWeightVal);
+							}
+							// if netweight is less than 1 then cases will be pounds divided by the net weight
+							if (netWeightVal < 1)
+							{
+								data['cases'] = Math.round(data['pounds'] / netWeightVal);
+							}
+						} 
+						else if (colName == "pounds")
+						{
+							data['cases'] =  Math.round(poundsVal / netWeightVal); // poundsVal / netWeightVal
+							data['pounds'] = poundsVal;
+							// if the data['cases'] after calculation turned out to be 0 then change it to 1 
+							// this happens when pounds is edited and the cases changes to 0
+							if (data['cases']== 0)
+							{
+								data['cases'] = 1;
+								data['pounds'] = Math.round(netWeightVal);
+							}
+							// if net_weight = 15 user types in 28 in the lbs column case value will become 2 and in the case we want to set pound value = 30 
+							if (netWeightVal > 1)
+							{
+								data['pounds'] = Math.round(data['cases'] * netWeightVal);
+							}
+						}
+				 		casesVal		 = removeCommas(data['cases']);
+						data['net_dollar'] = casesVal * basePrice;
+						/*
+						Dev Notes: D22634/Anand Rao/10-May-10
+	 					Bagcraft - Volume applicator deselects items randomly
+						When the user tried to select more than a few rows and entered a value
+						in the text box for allocating, the datagrid was scrolling to the 
+						selected row. This code block is put in place to avoid that. 
+						*/
+						vScroll = dgEd.verticalScrollPosition;
+						storeItemForUpdate = dgEd.selectedItem;;
+						dgEd.dataProvider.refresh();
+						dgEd.verticalScrollPosition = vScroll;
+			 			dgEd.selectedItem = storeItemForUpdate;
+			 			fnDoEdTotal();
+			 		}
+			 		catch(err:Error)
+			 		{}   
+			 	}
+			 	/* handle for Opportunity Volume */
+			 	else if (colName == 'Opportunity_Volume_CS' || colName=='Opportunity_Volume_LB')
+		 		{
+		 			try
+		 			{
+						oppCasesVal		= Math.round(removeCommas(data['Opportunity_Volume_CS']));
+					  	netWeightVal 	= removeCommas(data['net_weight']);
+					  	oppPoundsVal 	= Math.round(removeCommas(data['Opportunity_Volume_LB']));
+					  	basePrice 	 	= removeCommas(data['base_price_cs']);
+				  
+						/* ********************************************************************** 	
+							if either case of pounds is entered as 0 then set the case value as
+							1 and calculate the pounds and net_dollar accordingly
+						********************************************************************** */
+				  		if (oppCasesVal == 0 && oppPoundsVal == 0)
+				  		{
+				  			oppCasesVal 	= 1; 
+				  			oppPoundsVal 	= Math.round(oppCasesVal * netWeightVal);
+				  		}
+						
+						/* ***********************************************************************
+							at this point we know that we have either opportunity case volume or
+							opportunity pound volume so if opportunity case volume is 0 then convert
+							it or if opportunity pound volume is 0 then convert it
+						 *********************************************************************** */
+						if (oppCasesVal == 0)
+						{
+							oppCasesVal = oppPoundsVal / netWeightVal;
+						}
+						else if (oppPoundsVal == 0)
+						{
+							oppPoundsVal 	= Math.round(oppCasesVal * netWeightVal);
+						}
+				  
+				  		// 22416/Anand Rao/17-Feb-10
+				  		/* 
+				  		If the Pounds value is 0 and the netweight is less than 1 then make pounds to be 1
+				  		pounds cannot be 0 as it is causing a divide by 0 error in some places.
+				  		*/
+				  		  
+						if ((oppPoundsVal == 0) && (netWeightVal < 1))
+				  		{
+				  			oppPoundsVal = 1;
+				  			oppCasesVal = oppPoundsVal / netWeightVal;
+				  		}	 
+				  		  
+						if (colName == "Opportunity_Volume_CS")
+						{
+							data['Opportunity_Volume_LB'] =  Math.round(oppCasesVal * netWeightVal); //  casesVal * netWeightVal 
+							data['Opportunity_Volume_CS'] = oppCasesVal;
+							/*
+								If the pounds value happens to be zero and the net weight value is less than 1
+								then make the pounds value to be 1.
+							*/
+							if ((data['Opportunity_Volume_LB']== 0) && (netWeightVal < 1))
+							{
+								data['Opportunity_Volume_LB'] = 1;
+								data['Opportunity_Volume_CS'] = Math.round(oppPoundsVal / netWeightVal);
+							}
+							// if netweight is less than 1 then cases will be pounds divided by the net weight
+							if (netWeightVal < 1)
+							{
+								data['Opportunity_Volume_CS'] = Math.round(data['Opportunity_Volume_LB'] / netWeightVal);
+							}
+						} 
+						else if (colName == "Opportunity_Volume_LB")
+						{
+							data['Opportunity_Volume_CS'] =  Math.round(oppPoundsVal / netWeightVal); // poundsVal / netWeightVal
+							data['Opportunity_Volume_LB'] = oppPoundsVal;
+							// if the data['cases'] after calculation turned out to be 0 then change it to 1 
+							// this happens when pounds is edited and the cases changes to 0
+							if (data['Opportunity_Volume_CS']== 0)
+							{
+								data['Opportunity_Volume_CS'] = 1;
+								data['Opportunity_Volume_LB'] = Math.round(netWeightVal);
+							}
+							// if net_weight = 15 user types in 28 in the lbs column case value will become 2 and in the case we want to set pound value = 30 
+							if (netWeightVal > 1)
+							{
+								data['Opportunity_Volume_LB'] = Math.round(data['Opportunity_Volume_CS'] * netWeightVal);
+							}
+						}
+				 		oppCasesVal		 	= removeCommas(data['Opportunity_Volume_CS']);
+						data['net_dollar'] 	= oppCasesVal * basePrice;
+						/*
+						Dev Notes: D22634/Anand Rao/10-May-10
+	 					Bagcraft - Volume applicator deselects items randomly
+						When the user tried to select more than a few rows and entered a value
+						in the text box for allocating, the datagrid was scrolling to the 
+						selected row. This code block is put in place to avoid that. 
+						*/
+						vScroll = dgEd.verticalScrollPosition;
+						storeItemForUpdate = dgEd.selectedItem;;
+						dgEd.dataProvider.refresh();
+						dgEd.verticalScrollPosition = vScroll;
+			 			dgEd.selectedItem = storeItemForUpdate;
+			 			fnDoEdTotal();
+			 		}
+			 		catch(err:Error)
+			 		{}   
+			 	}
+			}
+			
+			/**
+			* This function evenly allocates the value entered in the text box for all
+			* rows that has been selected and also update the Grand Total grid
+			* after the data is assigned to the master Grid. If the value after
+			* dividing has decimal in it then they are rounded off.
+			*/
+			public function fnEvenlyAllocate():void
+			{
+				var txtAllocateVal:String		= this.txtAllocate.text;
+				var iTxtAllocateVal:Number 		= 0; 
+				var iSelectedRows:int 			= 0;	
+				var iVolumeVal:Number 			= 0;
+			 	var dataString:String 			= "";
+		    	var netWeightVal:Number 		= 0;
+			  	var casesVal:Number 			= 0;
+				var poundsVal:Number 			= 0;
+				var basePrice:Number 			= 0;
+				var iTotalVolAccounted:Number 	= 0;
+				var iUnaccountedVol:Number 		= 0;
+				var iTotalVolAllocated:Number 	= 0;
+				var iTotalVolBalance:Number 	= 0;
+				var iTmpPercentCSVal:Number 	= 0;
+				var iTmpPercentLBVal:Number 	= 0;
+			 
+			 	if (StringUtil.trim(txtAllocateVal) == ""){
+			 		txtAllocateVal = "0";
+			 	}
+			 	iTxtAllocateVal = removeCommas(txtAllocateVal);
+				for each(var iItem:Object in dgEd.dataProvider.source){
+					iSelectedRows = iSelectedRows + 1; 
+				}
+				// Added this if condition for D21996/Anand Rao/12-Jan-10
+				if (iSelectedRows >= removeCommas(txtAllocateVal)){
+					iVolumeVal =  Math.round(removeCommas(txtAllocateVal) / iSelectedRows);
+				}
+				else{
+					iVolumeVal = Math.floor(removeCommas(txtAllocateVal) / iSelectedRows);
+				}
+					
+				for each(var oItem:Object in dgEd.dataProvider.source){
+					netWeightVal = removeCommas(oItem['net_weight']);
+					// cases should be updated 1 stands for Case
+					if (volumeQtyUOMIDX == '1'){
+						// we do not allow 0 cases so if rounding is lessthan or equal to 0 then it is considered 1 case 
+						if (iVolumeVal == 0){
+							iVolumeVal = 1;
+						} 
+						oItem['cases']  = iVolumeVal;
+					 	oItem['pounds'] =  Math.round(iVolumeVal * netWeightVal);
+						// Make sure if the pounds value is 0 we make it 1 and calculate the cases accordingly
+					 	if ((oItem['pounds'] == 0) && (netWeightVal < 1)){
+					 		oItem['pounds'] = 1;
+					 		oItem['cases'] 	= Math.round(oItem['pounds']/netWeightVal);
+					 	}
+					 	iTotalVolAllocated += iVolumeVal;
+					}
+					// Pounds should be updated 2 stands for Pounds
+					else if (volumeQtyUOMIDX == '2'){
+						// pounds cannot be 0 hence allocate the minimum value
+						if ((iVolumeVal == 0) && (netWeightVal < 1)){
+							iVolumeVal = 1;
+						}
+						oItem['pounds'] = iVolumeVal;
+						oItem['cases']  =  Math.round((iVolumeVal / netWeightVal));
+						if (oItem['cases'] == 0){
+							oItem['cases'] 	= 1;
+						 	oItem['pounds'] = Math.round(netWeightVal);
+						 }
+						iTotalVolAllocated += oItem['pounds'];
+					}
+					basePrice = removeCommas(oItem['base_price_cs']);
+					casesVal = oItem['cases'];
+					oItem['net_dollar'] = casesVal * basePrice;
+				}
+				/* 
+					Logic to allocate the extra volume to the item if volume entered 
+					by the user is greater than what has been allocated, only then 
+					run the loop and start allocating 1 unit to each item till 
+					the user entered volume is reached. 
+					
+				*/ 
+				if (iTotalVolAllocated < iTxtAllocateVal){
+					for each(var oItem2:Object in dgEd.dataProvider.source){
+					  	if (iTotalVolAllocated >= iTxtAllocateVal){
+							break;
+						}
+					  	netWeightVal = removeCommas(oItem2['net_weight']);
+						// cases should be updated 1 stands for Case
+					  	if (volumeQtyUOMIDX == '1'){
+							oItem2['cases']  = oItem2['cases'] + 1;
+						 	oItem2['pounds'] =  Math.round(oItem2['cases'] * netWeightVal);
+						 	iTotalVolAllocated++;
+						}
+						// Pounds should be updated 2 stands for Pounds
+						else if (volumeQtyUOMIDX == '2'){
+							oItem2['pounds'] = oItem2['pounds'] + 1 ;
+						 	oItem2['cases']  =  Math.round((oItem2['pounds'] / netWeightVal));
+						 	iTotalVolAllocated++;
+						 }
+						basePrice				= removeCommas(oItem2['base_price_cs']);
+						casesVal 				= oItem2['cases'];
+						oItem2['net_dollar']	= casesVal * basePrice;
+					}
+				}
+				vScroll = this.dgEd.verticalScrollPosition;
+				storeItemForUpdate = this.dgEd.selectedItem;;
+				this.dgEd.dataProvider.refresh();
+				this.dgEd.verticalScrollPosition = vScroll;
+				this.dgEd.selectedItem = storeItemForUpdate;
+				fnDoEdTotal();
+				this.applyAction.selectedIndex = 0;
+			}
+	
+			/**
+			 * This function evenly allocates the value entered in the text box for all
+			 * opportunity rows that has been selected and also update the Grand Total grid
+			 * after the data is assigned to the master Grid. If the value after
+			 * dividing has decimal in it then they are rounded off.
+			 */
+			public function fnEvenlyAllocateOpp():void
+			{
+				var txtAllocateVal:String		= this.txtAllocate.text;
+				var iTxtAllocateVal:Number 		= 0; 
+				var iSelectedRows:int 			= 0;	
+				var iVolumeVal:Number 			= 0;
+				var dataString:String 			= "";
+				var netWeightVal:Number 		= 0;
+				var casesVal:Number 			= 0;
+				var poundsVal:Number 			= 0;
+				var basePrice:Number 			= 0;
+				var iTotalVolAccounted:Number 	= 0;
+				var iUnaccountedVol:Number 		= 0;
+				var iTotalVolAllocated:Number 	= 0;
+				var iTotalVolBalance:Number 	= 0;
+				var iTmpPercentCSVal:Number 	= 0;
+				var iTmpPercentLBVal:Number 	= 0;
+				
+				if (StringUtil.trim(txtAllocateVal) == ""){
+					txtAllocateVal = "0";
+				}
+				iTxtAllocateVal = removeCommas(txtAllocateVal);
+				for each(var iItem:Object in dgEd.dataProvider.source){
+					iSelectedRows = iSelectedRows + 1; 
+				}
+				// Added this if condition for D21996/Anand Rao/12-Jan-10
+				if (iSelectedRows >= removeCommas(txtAllocateVal)){
+					iVolumeVal =  Math.round(removeCommas(txtAllocateVal) / iSelectedRows);
+				}
+				else{
+					iVolumeVal = Math.floor(removeCommas(txtAllocateVal) / iSelectedRows);
+				}
+				
+				for each(var oItem:Object in dgEd.dataProvider.source){
+					netWeightVal = removeCommas(oItem['net_weight']);
+					// cases should be updated 1 stands for Case
+					if (volumeQtyUOMIDX == '1'){
+						// we do not allow 0 cases so if rounding is lessthan or equal to 0 then it is considered 1 case 
+						if (iVolumeVal == 0){
+							iVolumeVal = 1;
+						} 
+						oItem['Opportunity_Volume_CS']  = iVolumeVal;
+						oItem['Opportunity_Volume_LB'] =  Math.round(iVolumeVal * netWeightVal);
+						// Make sure if the pounds value is 0 we make it 1 and calculate the cases accordingly
+						if ((oItem['Opportunity_Volume_LB'] == 0) && (netWeightVal < 1)){	
+							oItem['poOpportunity_Volume_LBunds'] = 1;
+							oItem['Opportunity_Volume_CS'] 	= Math.round(oItem['Opportunity_Volume_LB'] / netWeightVal);
+						}
+						iTotalVolAllocated += iVolumeVal;
+					}
+					// Pounds should be updated 2 stands for Pounds
+					else if (volumeQtyUOMIDX == '2'){
+						// pounds cannot be 0 hence allocate the minimum value
+						if ((iVolumeVal == 0) && (netWeightVal < 1)){
+							iVolumeVal = 1;
+						}
+						oItem['Opportunity_Volume_LB'] = iVolumeVal;
+						oItem['Opportunity_Volume_CS']  =  Math.round((iVolumeVal / netWeightVal));
+						if (oItem['Opportunity_Volume_CS'] == 0){
+							oItem['Opportunity_Volume_CS'] 	= 1;
+							oItem['Opportunity_Volume_LB'] = Math.round(netWeightVal);
+						}
+						iTotalVolAllocated += oItem['Opportunity_Volume_CS'];
+					}
+				}
+				/* 
+				Logic to allocate the extra volume to the item if volume entered 
+				by the user is greater than what has been allocated, only then 
+				run the loop and start allocating 1 unit to each item till 
+				the user entered volume is reached. 
+				
+				*/ 
+				if (iTotalVolAllocated < iTxtAllocateVal){
+					for each(var oItem2:Object in dgEd.dataProvider.source){
+						if (iTotalVolAllocated >= iTxtAllocateVal){
+							break;
+						}
+						netWeightVal = removeCommas(oItem2['net_weight']);
+						// cases should be updated 1 stands for Case
+						if (volumeQtyUOMIDX == '1'){
+							oItem2['Opportunity_Volume_CS']  = oItem2['Opportunity_Volume_CS'] + 1;
+							oItem2['Opportunity_Volume_LB'] =  Math.round(oItem2['Opportunity_Volume_CS'] * netWeightVal);
+							iTotalVolAllocated++;
+						}
+							// Pounds should be updated 2 stands for Pounds
+						else if (volumeQtyUOMIDX == '2'){
+							oItem2['Opportunity_Volume_LB'] = oItem2['Opportunity_Volume_LB'] + 1 ;
+							oItem2['Opportunity_Volume_CS']  =  Math.round((oItem2['Opportunity_Volume_LB'] / netWeightVal));
+							iTotalVolAllocated++;
+						}
+					}
+				}
+				vScroll = this.dgEd.verticalScrollPosition;
+				storeItemForUpdate = this.dgEd.selectedItem;;
+				this.dgEd.dataProvider.refresh();
+				this.dgEd.verticalScrollPosition = vScroll;
+				this.dgEd.selectedItem = storeItemForUpdate;
+				fnDoEdTotal();
+				this.applyAction.selectedIndex = 0;
+			}
+			
+			public function fnCheckSelected():Boolean{
+				
+				var bIsRowSelected:Boolean = false;
+				
+				for each(var iItem:Object in dgEd.dataProvider.source){
+					if(iItem['isSelected'] == true){
+						bIsRowSelected = true;
+						break;
+					}
+				}
+				return bIsRowSelected;
+			}
+			
+			public function fnApplyToSelectedItems(applyChoice:String):void
+			{
+				var txtAllocateVal:String  		= this.txtAllocate.text;
+				var iTxtAllocateVal:Number 		= 0; 
+				var iSelectedRows:int 			= 0;	
+				var iVolumeVal:Number 			= 0;
+			 	var dataString:String 			= "";
+		    	var netWeightVal:Number 		= 0;
+			  	var casesVal:Number 			= 0;
+				var poundsVal:Number 			= 0;
+				var basePrice:Number 			= 0;
+				var iTotalVolAccounted:Number 	= 0;
+				var iUnaccountedVol:Number 		= 0;
+				var iTotalVolAllocated:Number 	= 0;
+				var iTotalVolBalance:Number 	= 0;
+				var iTmpPercentCSVal:Number 	= 0;
+				var iTmpPercentLBVal:Number 	= 0;
+			 
+			 	if (StringUtil.trim(txtAllocateVal) == ""){
+			 		txtAllocateVal = "0";
+			 	}
+			 	iTxtAllocateVal = removeCommas(txtAllocateVal);
+			 	iVolumeVal = removeCommas(txtAllocateVal);
+				
+				// User selected the button: Apply To Selected Items
+				if(applyChoice == '1'){
+			
+					if (!fnCheckSelected()){
+						Alert.show("Check one or more rows for applying volume.","BSA Help Alert!");
+					}
+					else{
+						for each(var oItem:Object in dgEd.dataProvider.source){
+							if(oItem['isSelected'] == true){
+								netWeightVal = removeCommas(oItem['net_weight']);
+								// cases should be updated 1 stands for Case
+							  	if (volumeQtyUOMIDX == '1'){
+									// we do not allow 0 cases so if rounding is lessthan or equal to 0 then it is considered 1 case 
+									if (iVolumeVal == 0){
+										iVolumeVal = 1;
+									} 
+									oItem['cases']  = iVolumeVal;
+								 	oItem['pounds'] =  Math.round(iVolumeVal * netWeightVal);
+									// Make sure if the pounds value is 0 we make it 1 and calculate the cases accordingly
+								 	if ((oItem['pounds'] == 0) && (netWeightVal < 1)){
+										oItem['pounds'] = 1;
+								 		oItem['cases'] 	= Math.round(oItem['pounds']/netWeightVal);
+								 	}
+								 	iTotalVolAllocated += iVolumeVal;
+								}
+								// Pounds should be updated 2 stands for Pounds
+								else if (volumeQtyUOMIDX == '2'){
+									// pounds cannot be 0 hence allocate the minimum value
+									if ((iVolumeVal == 0) && (netWeightVal < 1)){
+										iVolumeVal = 1;
+									}
+									oItem['pounds']	= iVolumeVal;
+								 	oItem['cases'] 	=  Math.round((iVolumeVal / netWeightVal));
+								 	if (oItem['cases'] == 0){
+								 		oItem['cases'] = 1;
+								 		oItem['pounds'] = Math.round(netWeightVal);
+								 	}
+								 	iTotalVolAllocated += oItem['pounds'];
+								}
+								// Apply percent
+								else{
+									// for percent the value can't be 0 and we have to have a net weight
+									if ((iVolumeVal == 0) && (netWeightVal < 1)){
+										iVolumeVal = 1;
+									}
+									iTmpPercentLBVal	= oItem['pounds'];
+									iTmpPercentCSVal 	= oItem['cases'];
+									oItem['pounds'] 	= iTmpPercentLBVal + ((iTmpPercentLBVal * iVolumeVal) / 100);
+									oItem['cases']  	= iTmpPercentCSVal + ((iTmpPercentCSVal * iVolumeVal) / 100);
+									
+									iTotalVolAllocated += (iTotalVolAllocated * iVolumeVal) / 100;
+								}
+								basePrice 	 		= removeCommas(oItem['base_price_cs']);
+								casesVal 			= oItem['cases'];
+								oItem['net_dollar'] = casesVal * basePrice;
+							} //if 
+						} // for each
+					
+					vScroll = this.dgEd.verticalScrollPosition;
+					storeItemForUpdate = this.dgEd.selectedItem;;
+					this.dgEd.dataProvider.refresh();
+					this.dgEd.verticalScrollPosition = vScroll;
+					this.dgEd.selectedItem = storeItemForUpdate;
+					fnDoEdTotal();  
+					}// ENDS else for iSelectedRows == 0  
+				}// ENDS if(applyChoice == '1')
+				// User selected the button: Apply To All Items
+				else if (applyChoice == '2'){
+					for each(var osItem:Object in dgEd.dataProvider.source){
+						netWeightVal = removeCommas(osItem['net_weight']);
+						// cases should be updated 1 stands for Case
+						if (volumeQtyUOMIDX == '1'){
+							// we do not allow 0 cases so if rounding is lessthan or equal to 0 then it is considered 1 case 
+							if (iVolumeVal == 0){
+								iVolumeVal = 1;
+							} 
+							osItem['cases']  = iVolumeVal;
+						 	osItem['pounds'] =  Math.round(iVolumeVal * netWeightVal);
+							// Make sure if the pounds value is 0 we make it 1 and calculate the cases accordingly
+						 	if ((osItem['pounds'] == 0) && (netWeightVal < 1)){
+						 		osItem['pounds'] = 1;
+						 		osItem['cases'] = Math.round(osItem['pounds']/netWeightVal);
+						 	}
+						 	iTotalVolAllocated += iVolumeVal;
+						}
+						// Pounds should be updated 2 stands for Pounds
+						else if (volumeQtyUOMIDX == '2'){
+							// pounds cannot be 0 hence allocate the minimum value
+							if ((iVolumeVal == 0) && (netWeightVal < 1)){
+								iVolumeVal = 1;
+							}
+							osItem['pounds'] = iVolumeVal;
+						 	osItem['cases']  =  Math.round((iVolumeVal / netWeightVal));
+						 	if (osItem['cases'] == 0){
+						 		osItem['cases'] = 1;
+						 		osItem['pounds'] = Math.round(netWeightVal);
+						 	}
+						 	iTotalVolAllocated += osItem['pounds'];
+						}
+						// Apply percent
+						else{
+							// for percent the value can't be 0 and we have to have a net weight
+							if ((iVolumeVal == 0) && (netWeightVal < 1)){
+								iVolumeVal = 1;
+							}
+							iTmpPercentLBVal = osItem['pounds'];
+							iTmpPercentCSVal = osItem['cases'];
+							osItem['pounds'] = (iTmpPercentLBVal + ((iTmpPercentLBVal * iVolumeVal) / 100));
+							osItem['cases']  = (iTmpPercentCSVal + ((iTmpPercentCSVal * iVolumeVal) / 100));
+							
+							iTotalVolAllocated += (iTotalVolAllocated * iVolumeVal) / 100;
+						}
+						basePrice 	 			= removeCommas(osItem['base_price_cs']);
+						casesVal 				= osItem['cases'];
+						osItem['net_dollar']	= casesVal * basePrice;
+					} // ENDS for each(var oItem:Object in dgEd.dataProvider.source)
+
+					vScroll = this.dgEd.verticalScrollPosition;
+					storeItemForUpdate = this.dgEd.selectedItem;;
+					this.dgEd.dataProvider.refresh();
+					this.dgEd.verticalScrollPosition = vScroll;
+					this.dgEd.selectedItem = storeItemForUpdate;
+					fnDoEdTotal(); 
+				} // ENDS else if (applyChoice == '2')
+				
+				//reset the apply action after the volume action has run
+				this.applyAction.selectedIndex = 0;
+			}
+	
+			public function fnApplyToSelectedOppItems(applyChoice:String):void
+			{
+				var txtAllocateVal:String  		= this.txtAllocate.text;
+				var iTxtAllocateVal:Number 		= 0; 
+				var iSelectedRows:int 			= 0;	
+				var iVolumeVal:Number 			= 0;
+				var dataString:String 			= "";
+				var netWeightVal:Number 		= 0;
+				var casesVal:Number 			= 0;
+				var poundsVal:Number 			= 0;
+				var basePrice:Number 			= 0;
+				var iTotalVolAccounted:Number 	= 0 ;
+				var iUnaccountedVol:Number 		= 0;
+				var iTotalVolAllocated:Number 	= 0;
+				var iTotalVolBalance:Number 	= 0;
+				var iTmpPercentCSVal:Number 	= 0;
+				var iTmpPercentLBVal:Number 	= 0;
+				
+				if (StringUtil.trim(txtAllocateVal) == ""){
+					txtAllocateVal = "0";
+				}
+				iTxtAllocateVal = removeCommas(txtAllocateVal);
+				iVolumeVal = removeCommas(txtAllocateVal);
+				
+				// User selected the button: Apply To Selected Items
+				if(applyChoice == '4'){
+					
+					if (!fnCheckSelected()){
+						Alert.show("Check one or more rows for applying volume.","BSA Help Alert!");
+					}
+					else{	
+						for each(var oItem:Object in dgEd.dataProvider.source){
+							if(oItem['isSelected'] == true){
+								netWeightVal = removeCommas(oItem['net_weight']);
+								// cases should be updated 1 stands for Case
+								if (volumeQtyUOMIDX == '1'){
+									// we do not allow 0 cases so if rounding is lessthan or equal to 0 then it is considered 1 case 
+									if (iVolumeVal == 0){
+										iVolumeVal = 1;
+									} 
+									oItem['Opportunity_Volume_CS']  = iVolumeVal;
+									oItem['Opportunity_Volume_LB'] =  Math.round(iVolumeVal * netWeightVal);
+									// Make sure if the pounds value is 0 we make it 1 and calculate the cases accordingly
+									if ((oItem['Opportunity_Volume_LB'] == 0) && (netWeightVal < 1)){
+										oItem['Opportunity_Volume_LB'] = 1;
+										oItem['Opportunity_Volume_CS'] = Math.round(oItem['Opportunity_Volume_LB']/netWeightVal);
+									}
+									iTotalVolAllocated += iVolumeVal;
+								}
+									// Pounds should be updated 2 stands for Pounds
+								else if (volumeQtyUOMIDX == '2'){
+									// pounds cannot be 0 hence allocate the minimum value
+									if ((iVolumeVal == 0) && (netWeightVal < 1)){
+										iVolumeVal = 1;
+									}
+									oItem['Opportunity_Volume_LB'] = iVolumeVal;
+									oItem['Opportunity_Volume_CS']  =  Math.round((iVolumeVal / netWeightVal));
+									if (oItem['Opportunity_Volume_CS'] == 0){
+										oItem['Opportunity_Volume_CS'] = 1;
+										oItem['Opportunity_Volume_LB'] = Math.round(netWeightVal);
+									}
+									iTotalVolAllocated += oItem['Opportunity_Volume_LB'];
+								}
+									// Apply percent
+								else{
+									// for percent the value can't be 0 and we have to have a net weight
+									if ((iVolumeVal == 0) && (netWeightVal < 1)){
+										iVolumeVal = 1;
+									}
+									
+									iTmpPercentLBVal = oItem['Opportunity_Volume_LB'];
+									iTmpPercentCSVal = oItem['Opportunity_Volume_CS'];
+									oItem['Opportunity_Volume_LB'] = iTmpPercentLBVal + ((iTmpPercentLBVal * iVolumeVal) / 100);
+									oItem['Opportunity_Volume_CS']  = iTmpPercentCSVal + ((iTmpPercentCSVal * iVolumeVal) / 100);
+									
+									iTotalVolAllocated += (iTotalVolAllocated * iVolumeVal) / 100;
+								}
+							} //if 
+						} // for each
+						
+						vScroll = this.dgEd.verticalScrollPosition;
+						storeItemForUpdate = this.dgEd.selectedItem;;
+						this.dgEd.dataProvider.refresh();
+						this.dgEd.verticalScrollPosition = vScroll;
+						this.dgEd.selectedItem = storeItemForUpdate;
+						fnDoEdTotal(); 
+						// this.txtAllocate.text = "0";  
+					}// ENDS else for iSelectedRows == 0  
+				}// ENDS if(applyChoice == '1')
+					// User selected the button: Apply To All Items
+				else if (applyChoice == '5'){
+					for each(var osItem:Object in dgEd.dataProvider.source){
+						// Alert.show(osItem['cases']);
+						netWeightVal = removeCommas(osItem['net_weight']);
+						// cases should be updated 1 stands for Case
+						if (volumeQtyUOMIDX == '1'){
+							// we do not allow 0 cases so if rounding is lessthan or equal to 0 then it is considered 1 case 
+							if (iVolumeVal == 0){
+								iVolumeVal = 1;
+							} 
+							osItem['Opportunity_Volume_CS']  = iVolumeVal;
+							osItem['Opportunity_Volume_LB'] =  Math.round(iVolumeVal * netWeightVal);
+							// Make sure if the pounds value is 0 we make it 1 and calculate the cases accordingly
+							if ((osItem['Opportunity_Volume_LB'] == 0) && (netWeightVal < 1)){
+								osItem['Opportunity_Volume_LB'] = 1;
+								osItem['Opportunity_Volume_CS'] = Math.round(osItem['Opportunity_Volume_LB'] / netWeightVal);
+							}
+							iTotalVolAllocated += iVolumeVal;
+						}
+							// Pounds should be updated 2 stands for Pounds
+						else if (volumeQtyUOMIDX == '2'){
+							// pounds cannot be 0 hence allocate the minimum value
+							if ((iVolumeVal == 0) && (netWeightVal < 1)){
+								iVolumeVal = 1;
+							}
+							osItem['Opportunity_Volume_LB'] = iVolumeVal;
+							osItem['Opportunity_Volume_CS']  =  Math.round((iVolumeVal / netWeightVal));
+							if (osItem['Opportunity_Volume_CS'] == 0){
+								osItem['Opportunity_Volume_CS'] = 1;
+								osItem['Opportunity_Volume_LB'] = Math.round(netWeightVal);
+							}
+							iTotalVolAllocated += osItem['Opportunity_Volume_LB'];
+							
+						}
+							// Apply percent
+						else{
+							// for percent the value can't be 0 and we have to have a net weight
+							if ((iVolumeVal == 0) && (netWeightVal < 1)){
+								iVolumeVal = 1;
+							}
+							
+							iTmpPercentLBVal = osItem['Opportunity_Volume_LB'];
+							iTmpPercentCSVal = osItem['Opportunity_Volume_CS'];
+							osItem['Opportunity_Volume_LB'] = (iTmpPercentLBVal + ((iTmpPercentLBVal * iVolumeVal) / 100));
+							osItem['Opportunity_Volume_CS']  = (iTmpPercentCSVal + ((iTmpPercentCSVal * iVolumeVal) / 100));
+							
+							iTotalVolAllocated += (iTotalVolAllocated * iVolumeVal) / 100;
+							
+						}
+					} // ENDS for each(var oItem:Object in dgEd.dataProvider.source)
+					
+					vScroll = this.dgEd.verticalScrollPosition;
+					storeItemForUpdate = this.dgEd.selectedItem;;
+					this.dgEd.dataProvider.refresh();
+					this.dgEd.verticalScrollPosition = vScroll;
+					this.dgEd.selectedItem = storeItemForUpdate;
+					fnDoEdTotal();
+				} // ENDS else if (applyChoice == '2')
+				
+				//reset the apply action after the volume action has run
+				this.applyAction.selectedIndex = 0;
+			}
+			
+			/**
+	 		* This function is called from fnShowHelp when the user clicks on the Help.
+	 		* It creates a popup window and displays it.
+	 		* 
+	 		* @see #fnShowHelp()
+	 		* @see #closePopUp()   	 
+	 		*/
+			public function fnCreateHelpPopup():void
+			{
+			 	var vb:VBox 			= new VBox();
+			 	var txtHelp:TextArea  	= new TextArea();
+			  	var cbHelp:ControlBar 	= new ControlBar();
+				var spcHelp:Spacer 		= new Spacer();
+				var btnClose:Button 	= new Button();
+				spcHelp.percentWidth 	= 100;
+				/* **********************************************************************
+					If the Help text is not set, display a default message to the User 
+				********************************************************************** */
+				if (strPanVolumeHelpText == "")
+				{
+					strPanVolumeHelpText = "<b>Volume Applicator Help:<br><br><font color='#FF3333'><p>Volume Help " + 
+																 "text needs to be set in the Settings Panel. Contact your System " + 
+																 "Administrator.</p></font></b> ";
+				}
+				txtHelp.htmlText		 	= strPanVolumeHelpText.toString();
+			  	txtHelp.wordWrap 			= true;
+				btnClose.label 				= "Close";
+				btnClose.addEventListener(MouseEvent.CLICK, closePopUp);
+				cbHelp.addChild(spcHelp);
+				cbHelp.addChild(btnClose);
+				vb.setStyle("paddingBottom", 5);
+				vb.setStyle("paddingLeft", 5);
+				vb.setStyle("paddingRight", 5);
+				vb.setStyle("paddingTop", 5);
+				vb.addChild(txtHelp);
+				panHelp 			 = new Panel();
+				panHelp.title  = "Volume Applicator Help";
+				panHelp.width  = 400;
+				panHelp.height = 450;
+				txtHelp.width	 = panHelp.width - 20;
+				txtHelp.height = panHelp.height - 95;
+				panHelp.horizontalScrollPolicy = "Off";
+				panHelp.verticalScrollPolicy = "Off";
+				panHelp.addChild(vb);
+				panHelp.addChild(cbHelp);
+			}
+			
+			/** 
+			* This function is called when the User clicks on the Help image or text
+			* 
+			* @see #fnCreateHelpPopup() 
+			* @see #closePopUp()  
+			*/
+			public function fnShowHelp(evt:MouseEvent):void
+			{
+				fnCreateHelpPopup();
+				PopUpManager.addPopUp(panHelp, this, true);
+	      		PopUpManager.centerPopUp(panHelp);
+			}
+	
+			/**
+			 * This function is called when the User clicks on the Help Close button 
+			 * 
+			 * @see #fnCreateHelpPopup()  		 
+			 * @see #fnShowHelp()
+			 
+			 */
+			
+			public function closePopUp(evt:MouseEvent):void 
+			{
+	    		PopUpManager.removePopUp(panHelp);
+			}
+			
+			protected function cbGroupProductGroupBy_changeHandler(evt:ListEvent):void
+			{
+			
+				var eventProductGroupType:VolumeApplicatorEvent = new VolumeApplicatorEvent(VolumeApplicatorEvent.GET_VOLUME_EDIT);
+				this.nProductGroupLevelEventId = ComboBox(evt.target).selectedItem.Product_Group_Level_ID;
+				eventProductGroupType.appEditMode = "EDIT"; 
+				eventProductGroupType.appProgramID = this.prgProgramID;
+				eventProductGroupType.nProductGroupLevel = this.nProductGroupLevelEventId;
+				this.dispatchEvent(eventProductGroupType);
+				
+			}
+			
+			protected function applyAction_changeHandler(event:ListEvent):void
+			{
+				var nApplyActionId:Number = ComboBox(event.target).selectedItem.data;
+				if (nApplyActionId == 1){
+					fnApplyToSelectedItems('1');
+				}
+				else if (nApplyActionId == 2){
+					fnApplyToSelectedItems('2');
+				}
+				else if (nApplyActionId == 3){
+					fnEvenlyAllocate();
+				}
+				else if (nApplyActionId == 4){
+					fnApplyToSelectedOppItems('4');
+				}
+				else if (nApplyActionId == 5){
+					fnApplyToSelectedOppItems('5');
+				}
+				else if (nApplyActionId == 6){
+					fnEvenlyAllocateOpp();
+				}
+				
+			}
+			
+			protected function cbUom_changeHandler(event:ListEvent):void
+			{
+				volumeQtyUOMIDX = ComboBox(event.target).selectedItem.data;
+			}
+			
+			/* Export the grid data to Excel. */
+			public function callExportXLS():void
+			{	
+				var strProdList:String  ='';
+					
+				/* (String.fromCharCode(9) means tab) */
+				var strProdListHeaderTop:String = '[' + programNumber + ']' +  ' - ' + programTitle + String.fromCharCode(13) + String.fromCharCode(10);
+				strProdListHeaderTop = strProdListHeaderTop + 'Program Span: '  + prgAreaStartDate + ' - ' +  prgAreaEndDate + ' ('+prgAreaSpanDays+ ' days)' + String.fromCharCode(13) + String.fromCharCode(10) + String.fromCharCode(13) + String.fromCharCode(10);
+				
+				var strProdListHeader:String = 'Product Number' + String.fromCharCode(9) + 'Product Description' + String.fromCharCode(9);
+					
+					if(bCasesVolumeShow && bPoundsVolumeShow){	
+						strProdListHeader = strProdListHeader + 'Volume (cases)' + String.fromCharCode(9) + 'Volume (pounds)' + String.fromCharCode(9);
+					}
+					else if(bCasesVolumeShow){
+						strProdListHeader = strProdListHeader + 'Volume (cases)' + String.fromCharCode(9);					
+					}
+					else if(bPoundsVolumeShow){
+						strProdListHeader = strProdListHeader + 'Volume (pounds)' + String.fromCharCode(9);		
+					}
+					
+					strProdListHeader = strProdListHeader + String.fromCharCode(10);
+					//strProdListHeader = strProdListHeader + 'Net $' + String.fromCharCode(13) + String.fromCharCode(10);
+					
+						
+					for each(var o:Object in dgVolumeDataEdit)
+					{
+						strProdList = strProdList + '="' + o['item'] + '"' + String.fromCharCode(9) + o['description'] + String.fromCharCode(9)
+						
+						if(bCasesVolumeShow && bPoundsVolumeShow){	
+							strProdList = strProdList + o['cases'] + String.fromCharCode(9) + o['pounds'] + String.fromCharCode(9);
+						}
+						else if(bCasesVolumeShow){
+							strProdList = strProdList + o['cases'] + String.fromCharCode(9);					
+						}
+						else if(bPoundsVolumeShow){
+							strProdList = strProdList + o['pounds'] + String.fromCharCode(9);		
+						}
+						
+						strProdList = strProdList + String.fromCharCode(10);
+						//strProdList = strProdList + o['net_dollar'] + String.fromCharCode(13) + String.fromCharCode(10);
+						
+					}
+						strProdList = strProdListHeaderTop +  strProdListHeader + strProdList;
+						//downloadFileRef.save(strProdList,"Volume_Prod_List.xls");
+						
+						var sendRequest:URLRequest = null;
+						
+						sendRequest=new URLRequest("/flex/csv_Report.cfm?fileName=Volume_Prod_List&ext=xls");
+						
+						sendRequest.method = URLRequestMethod.POST;
+						
+						/* Dev Note: (60384) - Remove these special characters while sending the Excel data to CF. 
+						The issue was with the "&" character, but removed some other characters too, so that the 
+						issue does not come up again for some other character.
+						*/
+						var excludeChars:RegExp = /[&:#?@%+\/]/g;
+						strProdList= strProdList.replace(excludeChars,"");
+						
+						sendRequest.data = strProdList;
+						
+						//sendRequest.contentType = 'text/plain';
+						flash.net.navigateToURL(sendRequest,'_blank');
+			}
+			
+		]]>	
+	
+	</mx:Script>
+
+	<!-- Setting the States here -->
+
+	<mx:states>
+		
+		<mx:State name="fullRight">
+			
+			<mx:SetProperty target="{pnlSelected}" name="x" value="-210" />
+			
+			<mx:RemoveChild target="{pnlSelected}" />
+			
+			<mx:SetProperty target="{col1}" name="width" value="0%" />
+			
+			<mx:SetProperty target="{col2}" name="width" value="100%" />
+			
+			<mx:SetProperty target="{fullBox}" name="height" value="100%" />
+			
+			<mx:SetProperty target="{pnlAll}" name="height" value="100%" />
+			
+			<mx:SetProperty target="{pnlAll}" name="width" value="100%" />
+		
+		</mx:State>
+	
+	</mx:states>	
+ 
+	<mx:transitions>
+		
+		<mx:Transition id="showAll" fromState="fullRight" toState="">
+			
+			<mx:Sequence>
+				
+				<mx:Move duration="300" target="{pnlSelected}" />
+				
+				<mx:Resize duration="300" target="{pnlAll}" />
+			
+			</mx:Sequence>
+		
+		</mx:Transition>
+		
+		<mx:Transition id="showRight" fromState="" toState="fullRight">
+			
+			<mx:Parallel>
+				
+				<mx:Fade duration="300" target="{pnlSelected}" alphaFrom="0" alphaTo="1"/>
+				
+				<mx:Resize duration="300" target="{pnlAll}" />
+			
+			</mx:Parallel>
+		
+		</mx:Transition>
+	
+	</mx:transitions>
+	
+	<mx:constraintColumns>
+		
+		<mx:ConstraintColumn id="col1" width="40%"/>
+		
+		<mx:ConstraintColumn id="col2" width="60%"/>
+	
+	</mx:constraintColumns>
+	
+	<mx:constraintRows>
+		
+		<mx:ConstraintRow id="row1" height="60%"/>
+		
+		<mx:ConstraintRow id="row2" height="40%"/>
+	
+	</mx:constraintRows> 
+	
+	<!-- Formatters & Validators for the Currency and Number -->
+	
+	<mx:CurrencyFormatter id="dollarFormatter" precision="2"  useNegativeSign="true" />
+	
+	<mx:NumberFormatter id="numberFormatter" precision="0" />
+	
+	<mx:NumberValidator id="numValidator" minValue="0" maxValue="999999" domain="real" />
+	
+	<mx:HDividedBox id="fullBox" height="100%" width="100%" paddingTop="0" paddingRight="0" paddingBottom="0" paddingLeft="0" top="2" right="2" bottom="2" left="2">
+
+		<mx:Panel id="pnlSelected" minWidth="185" maxWidth="185" minHeight="603" name="selectedPrograms" title="Volume Options" top="2" right="col1:2" bottom="row1:2" left="2">
+			
+			<mx:VBox width="100%" left="5" height="100%">
+				
+				<mx:TabNavigator id="tbNavList" width="100%" height="100%" creationComplete="this.tbNavList.selectedIndex = 0" historyManagementEnabled="false">
+				
+					<mx:Canvas label="Volume" width="100%" height="100%" toolTip="Volume Options"><!-- icon="@Embed(source='/flex/assets/Images/volume.png')" -->
+					
+						<mx:VBox paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5">
+					
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<mx:Text color="red" htmlText="[Select one option from &lt;br&gt; Group A and B]" />
+								<!--
+								<mx:Label text="[Select one option from Group A and B]" color="red"  />
+								-->
+								<mx:Label text="Group A" fontWeight="bold" />
+								
+								<mx:RadioButtonGroup id="GroupA" change="ShowHideColumns();" />
+								
+								<mx:RadioButton label="{sCustomerLabel}" group="{GroupA}" selected="{GroupADefault=='CUSTOMER'}"  id="rdoCus"/>
+								
+								<mx:RadioButton label="{sItemLabel}" group="{GroupA}" id="rdoItem" selected="{GroupADefault=='ITEM'}"/>
+								
+								<!-- Display the Operator radio button only for the Operator templates -->
+								
+								<mx:HBox visible="{bOprShowSetting=='true'}">
+									
+									<mx:RadioButton label="{sOperatorLabel}" group="{GroupA}"  id="rdoOperator" visible="{bOprShowSetting=='true'}"  includeInLayout="{bOprShowSetting=='true'}" selected="{GroupADefault=='OPERATOR'}" />							
+				 				
+								</mx:HBox>
+						
+							</mx:VBox>
+						 
+							<!--
+						 	Values returned from DB DIR-SHIP - 1, BBK - 2, CRD - 3, INV - 4
+						  	-->
+						
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<mx:Text text="[Select one from Group B]" color="red" />
+								<!--
+								<mx:Label text="[Select one from Group B]"  color="red" />
+								-->
+								<mx:Label text="Group B" fontWeight="bold"/>
+							
+								<mx:RadioButtonGroup enabled="true" id="GroupB"  change="fnFilterVolume(this.evt);" />
+							
+								<mx:HBox visible="{bOprShowSetting=='false'}">
+								
+									<mx:RadioButton group="{GroupB}" label="Invoices"   value="INV"  selected="{GroupBDefault=='4'}" visible="{bOprShowSetting=='false'}" includeInLayout="{bOprShowSetting=='false'}" />
+							
+								</mx:HBox>
+							
+								<mx:HBox visible="{bDirectShipmentShowSetting=='true' || bDirectShipmentShowSetting=='1'}">	
+								
+									<mx:RadioButton group="{GroupB}" label="Direct Shipment" value="DIR-SHIP" selected="{GroupBDefault=='1'}" includeInLayout="{bDirectShipmentShowSetting=='true' || bDirectShipmentShowSetting=='1'}"/>
+							
+								</mx:HBox>
+						
+								<mx:HBox visible="{bBillbackShowSetting=='true' || bBillbackShowSetting=='1'}" >
+								
+									<mx:RadioButton group="{GroupB}" label="Billbacks" value="BBK"  selected="{GroupBDefault=='2'}" includeInLayout="{bBillbackShowSetting=='true'|| bBillbackShowSetting=='1'}" />
+							
+								</mx:HBox>
+							
+								<mx:HBox visible="{bCreditsShowSetting=='true'|| bCreditsShowSetting=='1'}" >
+								
+									<mx:RadioButton group="{GroupB}" label="Credits" value="CRD"  selected="{GroupBDefault=='3'}" includeInLayout="{bCreditsShowSetting=='true'|| bCreditsShowSetting=='1'}" />
+							
+								</mx:HBox>
+							
+								<mx:Spacer height="10"/>
+							
+								<mx:CheckBox id="chkShowZeroVol" label="Show Zero Volume"  change="fnFilterVolume(this.evt);" />
+
+							</mx:VBox>
+					
+						</mx:VBox>
+				
+					</mx:Canvas>
+				
+				</mx:TabNavigator>
+			
+			</mx:VBox>
+		
+		</mx:Panel>
+
+		<mx:Panel id="pnlAll" bottom="row2:2" height="100%" left="col2:2" right="2" top="2" name="VolumeApplicatorHeader" title="Volume Applicator"> 
+ 
+			<!-- HELP DISPLAY CONTROLS // click="//Alert.show(strPanVolumeHelpText)" -->
+<mx:HBox width="100%">
+	<mx:Button id="HELP" label="[HELP]" fontWeight="bold" useHandCursor="true" buttonMode="true" paddingLeft="5" paddingRight="5" click="fnShowHelp(event)"/>
+	<mx:CheckBox id="excludeAutoVolumeUpdates" width="90%" label="Exclude from auto volume updates" textAlign="right" selected="{this.bExcludeAutoVolumeUpdates}" toolTip="{this.autoVolumeExcludeUpdatedData.length ? ('Updated by ' + this.autoVolumeExcludeUpdatedData) : ''}" />
+</mx:HBox>
+			
+			<mx:TabNavigator id="tbMain" width="100%" height="100%" creationComplete="this.tbMain.selectedIndex = 0" change="toggleStateEdit(this.tbMain.selectedIndex);">
+				
+				<mx:Canvas label="Edit" width="100%" height="100%" toolTip="Edit the Volume records" activate="toggleStateEdit(this.tbMain.selectedIndex)" creationComplete="toggleStateEdit(this.tbMain.selectedIndex)">
+					
+					<mx:VBox height="100%" width="100%" horizontalAlign="left">
+						
+						<mx:HBox width="100%" paddingLeft="5" verticalAlign="middle" borderColor="#000000" borderThickness="1">
+							
+							<mx:Label text="Display By" fontSize="11" fontWeight="bold" />
+							
+							<mx:Image width="14" height="14" source="/flex/assets/images/help.gif" useHandCursor="true" buttonMode="true" toolTip="Changing the current view using the Display By feature will not automatically save any edits you have made to the forecast since your last save event.  To see the results of your modifications, please be sure to save first." />
+							
+							<mx:ComboBox id="cbGroupProductGroupBy" dataProvider="{dpProductGroupType}" labelField="Group_Level_Desc" change="cbGroupProductGroupBy_changeHandler(event)" width="140" dropdownWidth="200" />
+							
+							<mx:Label text="Apply" fontSize="11" fontWeight="bold" />
+							
+							<mx:TextInput id="txtAllocate" width="65" text="" textAlign="right"/>
+							
+							<mx:ComboBox id="cbUom" width="75" dataProvider="{dpUOM}" selectedIndex="0" change="cbUom_changeHandler(event)" />
+							
+							<!--
+							<mx:Label text=" {volUOMType} " fontSize="11" fontWeight="bold" />
+							-->
+							<mx:ComboBox id="applyAction" change="applyAction_changeHandler(event)" dataProvider="{dpApplyAction}" />
+		
+							<!--
+							<mx:Button click="fnApplyToSelectedItems('1')" label="Apply To Selected Items" paddingLeft="0" paddingRight="0" />
+							
+							<mx:Label text="OR" fontSize="11" fontWeight="bold"/>
+							
+							<mx:Button click="fnApplyToSelectedItems('2')" label="Apply To All Items"  paddingLeft="0" paddingRight="0" />
+							
+							<mx:Label text="OR" fontSize="11" fontWeight="bold"/>
+							
+							<mx:Button click="fnEvenlyAllocate()" label="Apply As Total Prg Vol"  paddingLeft="0" paddingRight="0" />
+							-->
+							<mx:Image width="14" height="14" source="/flex/assets/images/help.gif" useHandCursor="true" buttonMode="true" toolTip="Volume can only be a whole integer.  While evenly allocating volume, if volume becomes a fraction it will be rounded up or down accordingly to become a whole integer." />
+							<!--
+							<mx:Spacer width="35" />
+							-->
+							<mx:Button id="ForceButton" click="fnForceForecast()" label="Forecast" height="20" paddingLeft="0" paddingRight="0" enabled="{bSaveEnabled}" /><!--width="100"  -->
+							
+							<mx:Button id="SaveOnlyButton" click="fnSaveChanges('1')" label="Save" height="20" paddingLeft="0" paddingRight="0" enabled="{bSaveEnabled}" /><!-- width="105"  -->
+							
+							<mx:Button id="SaveButton" click="fnSaveChanges('2')" label="Save / Close" height="20" paddingLeft="0" paddingRight="0" enabled="{bSaveEnabled}" /><!-- width="105"  -->
+							
+							<mx:Button id="btnExportXLS" click="callExportXLS()" label="Export to Excel" height="20" paddingLeft="0" paddingRight="0" />
+					
+						</mx:HBox>
+						
+						<mx:HBox  height="2.5%" verticalAlign="top" borderThickness="2" borderColor="#949599" backgroundColor="#FFEFD7" width="100%">
+						
+							<mx:HBox width="50%" textAlign="left" verticalAlign="middle">
+								
+								<mx:Text text="[{programNumber}] - {programTitle}" fontWeight="bold" fontSize="10"/>
+							
+							</mx:HBox>
+							
+							<mx:HBox width="50%" horizontalAlign="right" id="topLegend" textAlign="right" verticalAlign="middle">
+								
+								<mx:Image source="/flex/assets/images/star.gif" horizontalAlign="right" width="8" height="8" verticalAlign="middle" /> 
+								
+								<mx:Label text=" - User edited record" textAlign="right" />
+								
+							</mx:HBox>
+							
+						</mx:HBox>
+						
+						<mx:HBox width="100%" height="2.5%" verticalAlign="top" borderThickness="2" borderColor="#949599" backgroundColor="#FFEFD7" ><!-- #99FF99 -->
+							
+							<mx:Text text="{programKeyword} Span: {prgAreaStartDate} - {prgAreaEndDate} ({prgAreaSpanDays} days)" fontWeight="bold" fontSize="10"/>
+							
+							<mx:Text text="{prgProgramType}" fontWeight="bold" fontSize="10" />
+							<!-- TESTING THE VARIABLES FOR THE VALUES -->
+					  		<!--<mx:Text text="bPanDetailsDisplay: -{bPanDetailsDisplay}- strPanVolumeHelpText : -{strPanVolumeHelpText}-" />-->  <!-- -->
+							
+						</mx:HBox>
+						
+						<mx:HBox width="98%" height="85%" verticalAlign="top">
+		 	 
+							<!--***************************** MAIN DATAGRID TO EDIT THE DATA ****************************-->
+							<mx:VBox width="100%" height="100%">
+							
+								<mx:HBox width="100%" height="90%">
+
+									<mx:AdvancedDataGrid horizontalScrollPolicy="off" allowMultipleSelection="true" id="dgEd" 
+										left="0" right="0" width="100%"  headerRelease="headerReleaseFunc(event)"     
+									 	height="100%" verticalAlign="top" draggableColumns="false"  editable="true"
+										resize="{resizeEdCols()}" columnStretch="{resizeEdCol(event)}" creationComplete="dgEdCreationComplete()"
+										itemFocusOut="fnComputeCSLB(event);" defaultLeafIcon="{null}" dataProvider="{dgVolumeDataEdit}" 
+					  					displayItemsExpanded="true" displayDisclosureIcon="true" tabEnabled="true" focusEnabled="true">
+										<mx:groupedColumns>
+											
+											<mx:AdvancedDataGridColumn width="20" dataField="isSelected" rendererIsEditor="true" headerRenderer="com.components.chBoxSelectAll" id="chkSelection_ed" itemRenderer="com.components.chBoxIsSelected" editorDataField="varCbSelected" />
+				  			
+											<mx:AdvancedDataGridColumn dataField="user_edited_ed" headerText=" " width="25" id="iconCol" itemRenderer="com.components.recTypeIndicator" editable="false" visible="true" />
+
+											<mx:AdvancedDataGridColumnGroup headerText="{sItemLabel}">   
+										
+												<mx:AdvancedDataGridColumn id="ItemNo_ed" headerText="Number" visible="true" dataField="item" editable="false" width="140"/>
+										
+												<mx:AdvancedDataGridColumn id="ItemDesc_ed" headerText="Description" visible="true" dataField="description" editable="false" width="300"/>
+									
+											</mx:AdvancedDataGridColumnGroup>
+									
+											<mx:AdvancedDataGridColumnGroup headerText="Volume">
+									
+												<mx:AdvancedDataGridColumn id="Cases_ed" headerText="Cases"  visible="{bCasesVolumeShow}" dataField="cases" editable="true"   sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber" textAlign="right" styleFunction="{dataGrid_styleFunction}" width="80">
+																								
+													<mx:itemEditor>
+											
+														<mx:Component>
+												
+															<mx:TextInput restrict="0-9.,-" maxChars="9" />
+															 
+														</mx:Component>
+				               				
+													</mx:itemEditor>
+										
+												</mx:AdvancedDataGridColumn>
+										
+												<mx:AdvancedDataGridColumn id="Pounds_ed" headerText="{sPoundLabel}" visible="{bPoundsVolumeShow}" dataField="pounds" editable="true" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber"  textAlign="right" styleFunction="{dataGrid_styleFunction}" width="120">
+											
+													<mx:itemEditor>
+				              		
+														<mx:Component>
+				                  	
+															<mx:TextInput restrict="0-9.,-" maxChars="9" />
+				                  
+														</mx:Component>
+				               	
+													</mx:itemEditor>		
+										
+												</mx:AdvancedDataGridColumn>
+									
+											</mx:AdvancedDataGridColumnGroup>
+									
+											<mx:AdvancedDataGridColumn id="Dollars_ed" headerText="Dollars" visible="false" dataField="dollar" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatDollars"  textAlign="right" />
+									
+											<mx:AdvancedDataGridColumn id="GrossDollars_ed" headerText="Gross $" visible="false" dataField="dollar" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatDollars"  textAlign="right"/>
+											<!--
+											<mx:AdvancedDataGridColumn id="NetDollars_ed" headerText="Net $" visible="true" dataField="net_dollar" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatDollars"  textAlign="right" width="70"/>
+											-->
+				 					
+											<mx:AdvancedDataGridColumnGroup headerText="Opportunity Volume" visible="{bOpportunityVolumeShow}" id="Opp_Volume_Header_Ed">   
+										
+												<mx:AdvancedDataGridColumn id="Opp_Cases_ed" headerText="Cases"  visible="{bOpportunityCasesVolumeShow}" dataField="Opportunity_Volume_CS" editable="true" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber" textAlign="right" styleFunction="{dataGrid_styleFunction}" width="135">
+												
+													<mx:itemEditor>
+					                			
+														<mx:Component>
+					                  				
+															<mx:TextInput restrict="0-9.,-" maxChars="9" />
+					                  			
+														</mx:Component>
+					               			
+													</mx:itemEditor>									
+										
+												</mx:AdvancedDataGridColumn>
+										
+												<mx:AdvancedDataGridColumn id="Opp_Pounds_ed" headerText="{sPoundLabel}" visible="{bOpportunityPoundsVolumeShow}" dataField="Opportunity_Volume_LB" editable="true" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber"  textAlign="right" styleFunction="{dataGrid_styleFunction}" width="135">
+											
+													<mx:itemEditor>
+				              					
+														<mx:Component>
+				                  					
+															<mx:TextInput restrict="0-9.,-" maxChars="9" />
+				                  				
+														</mx:Component>
+				               				
+													</mx:itemEditor>		
+										
+												</mx:AdvancedDataGridColumn>
+									
+											</mx:AdvancedDataGridColumnGroup>
+									
+											<mx:AdvancedDataGridColumn id="RecType_ed" headerText="Record Type" visible="false" editable="false" dataField="invoice_type"/>
+									
+											<mx:AdvancedDataGridColumn id="original_cases_ed" visible="false" editable="false" dataField="original_cases" />
+									
+											<mx:AdvancedDataGridColumn id="original_pounds_ed" visible="false" editable="false" dataField="original_pounds" />
+									
+											<mx:AdvancedDataGridColumn id="original_net_dollar_ed" visible="false" editable="false" dataField="original_net_dollar" />
+									
+											<mx:AdvancedDataGridColumn id="net_weight_ed" visible="false" editable="false" dataField="net_weight" />
+				 					
+											<mx:AdvancedDataGridColumn id="base_price_cs_ed" visible="false" editable="false" dataField="base_price_cs" />
+				  			 
+										</mx:groupedColumns>
+				  			
+									</mx:AdvancedDataGrid>
+						
+								</mx:HBox>
+						
+								<mx:HBox width="100%" height="10%">
+				  			
+									<mx:AdvancedDataGrid horizontalScrollPolicy="off" allowMultipleSelection="true" id="dgEdTot" 
+				  				  		verticalAlign="top" draggableColumns="false"  editable="false" dataProvider="{dpEdTotal}"
+					  					showHeaders="false" rowCount="1" height="33%" creationComplete="{resizeEdCols()}" fontWeight="bold"
+					  					fontSize="10" width="100%"> 
+				  					
+										<mx:groupedColumns> 
+				  					
+											<mx:AdvancedDataGridColumn id="chkSelection_edTot" visible="true" editable="false" width="{chkSelection_ed.width}" />
+											
+											<mx:AdvancedDataGridColumn id="iconColTot" visible="true" editable="false" width="{iconCol.width}" />
+											
+				  							<mx:AdvancedDataGridColumn id="ItemNo_edTot" visible="true" editable="false" width="{ItemNo_ed.width}" />
+				  						
+											<mx:AdvancedDataGridColumn id="ItemDesc_edTot" visible="true" editable="false" dataField="TotColumn" textAlign="right" width="{ItemDesc_ed.width}"/>
+				  						
+											<mx:AdvancedDataGridColumn id="Cases_edTot" visible="{bCasesVolumeShow}" editable="false"     textAlign="right" dataField="TotalCases" width="80"/>
+				  						
+											<mx:AdvancedDataGridColumn id="Pounds_edTot"  visible="{bPoundsVolumeShow}"   editable="false"    textAlign="right" dataField="TotalPounds" width="120"/>
+					 					
+											<mx:AdvancedDataGridColumn id="Dollars_edTot"   visible="false"  editable="false"   textAlign="right" dataField="TotalDollars"  labelFunction="fnFormatDollars" width="{Dollars_ed.width}"/>
+				  						
+											<mx:AdvancedDataGridColumn id="GrossDollars_edTot" visible="false" editable="false"   textAlign="right" width="{GrossDollars_ed.width}"/>
+											
+											<!--
+				  							<mx:AdvancedDataGridColumn id="NetDollars_edTot"   visible="true"   editable="false"  textAlign="right" dataField="TotalNetDollars"  labelFunction="fnFormatDollars" width="{NetDollars_ed.width}"/>
+											-->
+				  							<mx:AdvancedDataGridColumn id="Opp_Cases_edTot" visible="{bOpportunityCasesVolumeShow}"   editable="false" textAlign="right" dataField="TotalOpportunityCases" width="135"/>
+											
+					  						<mx:AdvancedDataGridColumn id="Opp_Pounds_edTot"  visible="{bOpportunityPoundsVolumeShow}"   editable="false" textAlign="right" dataField="TotalOpportunityPounds" width="135"/>
+											
+											<mx:AdvancedDataGridColumn id="RecType_edTot" visible="false" editable="false" width="{RecType_ed.width}"/>
+											
+					  						<mx:AdvancedDataGridColumn id="original_cases_edTot" visible="false" editable="false"  width="{original_cases_ed.width}" />
+											
+					  						<mx:AdvancedDataGridColumn id="original_pounds_edTot" visible="false" editable="false"  width="{original_pounds_ed.width}" />
+											
+					  						<mx:AdvancedDataGridColumn id="original_net_dollar_edTot" visible="false" editable="false" width="{original_net_dollar_ed.width}"/>
+											
+					  						<mx:AdvancedDataGridColumn id="net_weight_edTot" visible="false" editable="false" width="{net_weight_ed.width}"  />
+											
+											<mx:AdvancedDataGridColumn id="base_price_cs_edTot" visible="false" editable="false" width="{base_price_cs_ed.width}" />
+									
+										</mx:groupedColumns>
+				  				
+									</mx:AdvancedDataGrid>  
+				  				
+								</mx:HBox>	
+				  				
+							</mx:VBox>
+				  			
+						</mx:HBox>
+							
+					</mx:VBox>
+						
+				</mx:Canvas>
+				
+				<mx:Canvas id="canDetails" label="Details" width="100%" height="100%" toolTip="View the Details"  creationComplete="ShowHideColumns()" activate="fnFilterVolume(this.evt);">	<!--activate="fnFilterVolume();" -->	
+				
+					<mx:VBox height="100%" width="100%" horizontalAlign="left" >
+							
+						<!--*******************************	FILTER FIELDS	*******************************-->
+								
+						<mx:HBox width="100%" height="20"><!-- borderStyle="solid"-->
+									
+							<mx:VBox height="100%" width="100%">
+										
+								<mx:HBox width="100%">
+											
+									<mx:HBox width="3%" horizontalAlign="left" verticalAlign="middle" paddingLeft="5" >
+												
+										<mx:Image id="iconRight" useHandCursor="true" buttonMode="true"	mouseChildren="false" source="/Flex/assets/images/fullScreen.png" width="20" height="20" click="toggleState('fullRight')" toolTip="Click for Right Panel Full Screen" />
+												
+										<mx:Image id="iconAllR" useHandCursor="true" buttonMode="true" mouseChildren="false" source="/Flex/assets/images/sharedScreen.png" width="20" height="20" click="toggleState('fullAll')" toolTip="Click for both Panels Shared Screen" visible="false" includeInLayout="false"/>
+											 
+									</mx:HBox>
+										
+									<mx:HBox width="97%" horizontalAlign="left" verticalAlign="middle" paddingLeft="5"  textAlign="left">
+											
+										<mx:Label fontWeight="bold"  fontSize="10"  text="User Selection: Group A: {this.GroupA.selection.label} / Group B: {this.GroupB.selection.label} "  />
+										<mx:HBox width="3%" horizontalAlign="left" verticalAlign="middle" paddingLeft="10">
+											<mx:Label  fontSize="11"  text="Search:" />
+											<mx:TextInput id="tiSearch" height="20" keyUp="fnFilterVolume(event)" />
+										</mx:HBox>
+										
+									</mx:HBox>
+										
+								</mx:HBox>
+									
+							</mx:VBox>
+								
+						</mx:HBox>
+						
+						<mx:HBox height="2.5%" verticalAlign="top" borderThickness="2" borderColor="#949599" backgroundColor="#FFEFD7" width="100%" >	
+								
+							<mx:HBox width="100%" textAlign="left">
+									
+								<mx:Text text="[{programNumber}] - {programTitle}"  fontWeight="bold"  fontSize="12"/>
+								
+							</mx:HBox>
+							
+						</mx:HBox>	
+							
+						<mx:HBox width="100%" height="2.5%" verticalAlign="top" borderThickness="2" borderColor="#949599" backgroundColor="#FFEFD7" >
+								
+							<mx:Text text="{programKeyword} Span: {prgAreaStartDate} - {prgAreaEndDate} ({prgAreaSpanDays} days)" fontWeight="bold" fontSize="12"/>
+								
+							<mx:Text text="{prgProgramType}" fontWeight="bold" fontSize="12"/>
+							
+						</mx:HBox>	
+							
+						<mx:HBox width="95%" height="85%" verticalAlign="top">
+					 	 
+					 	 <!--***************************** MAIN DATAGRID TO DISPLAY THE DATA ****************************-->
+					 	
+							<mx:VBox width="100%" height="100%" creationComplete="fnFilterVolume(this.evt);">
+						  	
+								<mx:HBox width="100%" height="90%">
+					  			
+									<mx:AdvancedDataGrid horizontalScrollPolicy="off" allowMultipleSelection="true" id="dg" 
+										left="0" right="0" width="100%"  headerRelease="headerReleaseFunc(event)"     
+									 	height="100%" verticalAlign="top" draggableColumns="false"  editable="false"
+									 	resize="{resizeCols()}" columnStretch="{resizeCol(event)}"  
+									 	creationComplete="dgCreationComplete()"  dataProvider="{dgVolumeData}" 
+							 		 	 displayItemsExpanded="true" displayDisclosureIcon="true" ><!-- defaultLeafIcon="{null}"--> 
+										
+										<mx:groupedColumns>
+											
+											
+											<mx:AdvancedDataGridColumn dataField="distributor_not_on_program" headerText=" " id="DistNotOnProgram" itemRenderer="com.components.DistIndicator" editable="false" visible="false" width="20"/><!-- visible="{bOprShowSetting=='false'}" -->
+											
+											<mx:AdvancedDataGridColumn id="CustNo" headerText="{sCustomerLabel} #" visible="true" dataField="shr_ship_to" editable="false"/>
+											
+											<mx:AdvancedDataGridColumn id="CustName" headerText="{sCustomerLabel} Name" visible="true" dataField="name" editable="false"/>
+											
+											<mx:AdvancedDataGridColumnGroup headerText="{sOperatorLabel}">
+								      	
+												<mx:AdvancedDataGridColumn id="OpNo" headerText="Number"  visible="false" dataField="operator_id" editable="false" width="80"/>
+												
+												<mx:AdvancedDataGridColumn id="OpName" headerText="Name" visible="false" dataField="operator_name" editable="false" width="140"/>
+											
+											</mx:AdvancedDataGridColumnGroup>	
+											
+											<mx:AdvancedDataGridColumnGroup headerText="{sItemLabel}">   
+												
+												<mx:AdvancedDataGridColumn id="ItemNo" headerText="Number" visible="false" dataField="item" editable="false" width="80"/>
+												
+												<mx:AdvancedDataGridColumn id="ItemDesc" headerText="Description" visible="false" dataField="description" editable="false" width="180"/>
+											
+											</mx:AdvancedDataGridColumnGroup>
+											
+											<mx:AdvancedDataGridColumnGroup headerText="Volume">   
+												
+												<mx:AdvancedDataGridColumn id="Cases" headerText="Cases"  visible="{bCasesVolumeShow}" dataField="cases" editable="false"   sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber"  textAlign="right" styleFunction="{dataGrid_styleFunction}" width="80">
+													
+													<mx:itemEditor>
+					                	
+														<mx:Component>
+					                  	
+															<mx:TextInput  restrict="0-9.,-" maxChars="9" />
+					                  
+														</mx:Component>
+					               	
+													</mx:itemEditor>									
+												
+												</mx:AdvancedDataGridColumn>
+												
+												<mx:AdvancedDataGridColumn id="Pounds" headerText="{sPoundLabel}" visible="{bPoundsVolumeShow}" dataField="pounds" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber"  textAlign="right" styleFunction="{dataGrid_styleFunction}" width="80">
+													
+													<mx:itemEditor>
+					              		
+														<mx:Component>
+					                		
+															<mx:TextInput  restrict="0-9.,-" maxChars="9" />
+					                	
+														</mx:Component>
+					              	
+													</mx:itemEditor>		
+												
+												</mx:AdvancedDataGridColumn>
+											
+											</mx:AdvancedDataGridColumnGroup>
+											
+											<!--
+											<mx:AdvancedDataGridColumn id="Dollars" headerText="Dollars" visible="true" dataField="dollar" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatDollars"  textAlign="right" width="80"/>
+											-->
+											<mx:AdvancedDataGridColumn id="GrossDollars" headerText="Gross Dollar" visible="false" dataField="dollar" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatDollars"  textAlign="right"/>
+											
+											<mx:AdvancedDataGridColumn id="NetDollars" headerText="Net Dollar" visible="false" dataField="net_dollar" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatDollars"  textAlign="right"/>
+											
+											<mx:AdvancedDataGridColumn id="RecType" headerText="Record Type" visible="false" editable="false" dataField="invoice_type"/>
+											
+											<mx:AdvancedDataGridColumnGroup headerText="Opportunity Volume" visible="{bOpportunityVolumeShow}">   
+												
+												<mx:AdvancedDataGridColumn id="OppCases" headerText="Cases"  visible="{bOpportunityCasesVolumeShow}" dataField="Opportunity_Volume_CS" editable="false"   sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber"  textAlign="right" styleFunction="{dataGrid_styleFunction}" width="80">
+													
+													<mx:itemEditor>
+					                					
+														<mx:Component>
+					                  						
+															<mx:TextInput  restrict="0-9.,-" maxChars="9" />
+					                  					
+														</mx:Component>
+					               					
+													</mx:itemEditor>									
+												
+												</mx:AdvancedDataGridColumn>
+												
+												<mx:AdvancedDataGridColumn id="OppPounds" headerText="{sPoundLabel}" visible="{bOpportunityPoundsVolumeShow}" dataField="Opportunity_Volume_LB" editable="false" sortCompareFunction="sortCompareFunc" labelFunction="fnFormatNumber"  textAlign="right" styleFunction="{dataGrid_styleFunction}" width="80">
+													
+													<mx:itemEditor>
+					              						
+														<mx:Component>
+					                						
+															<mx:TextInput  restrict="0-9.,-" maxChars="9" />
+					                					
+														</mx:Component>
+					              					
+													</mx:itemEditor>		
+												
+												</mx:AdvancedDataGridColumn>
+											
+											</mx:AdvancedDataGridColumnGroup>
+											
+											<mx:AdvancedDataGridColumn id="original_cases" visible="false" editable="false" dataField="original_cases" />
+											
+											<mx:AdvancedDataGridColumn id="original_pounds" visible="false" editable="false" dataField="original_pounds" />
+											
+											<mx:AdvancedDataGridColumn id="original_net_dollar" visible="false" editable="false" dataField="original_net_dollar" />
+											
+											<mx:AdvancedDataGridColumn id="net_weight" visible="false" editable="false" dataField="net_weight" />
+					 						
+											<mx:AdvancedDataGridColumn id="base_price_cs" visible="false" editable="false" dataField="base_price_cs" />
+										 	
+											<mx:AdvancedDataGridColumn id="contract_main_id" visible="false" editable="false" dataField="contract_main_id" />
+										
+										</mx:groupedColumns>
+									
+									</mx:AdvancedDataGrid> 
+					  		
+								</mx:HBox>
+					  		
+								<mx:HBox width="100%" height="10%">
+					  			
+									<!--************************ DATAGRID FOR TOTALLING **********************************-->
+									
+									<mx:AdvancedDataGrid horizontalScrollPolicy="off" allowMultipleSelection="true" id="dgTot" 
+					  				  	verticalAlign="top" draggableColumns="false"  editable="false" dataProvider="{dpTotal}"
+					  					showHeaders="false" rowCount="1" height="33%" creationComplete="{resizeCols()}" fontWeight="bold"
+					  					fontSize="10" width="100%"> 
+					  				
+										<mx:groupedColumns >
+					  					
+											<mx:AdvancedDataGridColumn id="DistNotOnProgramTot" visible="false" editable="false" width="{DistNotOnProgram.width}" />
+					  					
+											<mx:AdvancedDataGridColumn id="CustNoTot" visible="true"  editable="false" width="{CustNo.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="CustNameTot" visible="true"  editable="false" dataField="TotColumn" textAlign="right" width="{CustName.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="OpNoTot"   visible="false"  editable="false" width="{OpNo.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="OpNameTot"   visible="false" editable="false" width="{OpName.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="ItemNoTot" visible="false" editable="false" width="{ItemNo.width}"  />
+					  					
+											<mx:AdvancedDataGridColumn id="ItemDescTot" visible="false" editable="false" dataField="TotColumn" textAlign="right" width="{ItemDesc.width}"  />
+					  					
+											<mx:AdvancedDataGridColumn id="CasesTot" visible="{bCasesVolumeShow}"   editable="false" textAlign="right" dataField="TotalCases" width="{Cases.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="PoundsTot"  visible="{bPoundsVolumeShow}"   editable="false"   textAlign="right" dataField="TotalPounds" width="{Pounds.width}"/>
+					  						<!--
+											<mx:AdvancedDataGridColumn id="DollarsTot"   visible="true"  editable="false"   textAlign="right" dataField="TotalDollars"  labelFunction="fnFormatDollars" width="{Dollars.width}"/>
+					  						-->
+											<mx:AdvancedDataGridColumn id="OppCasesTot" visible="{bOpportunityCasesVolumeShow}"   editable="false"     textAlign="right" dataField="TotalOppCases" width="{OppCases.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="OppPoundsTot"  visible="{bOpportunityPoundsVolumeShow}"   editable="false"    textAlign="right" dataField="TotalOppPounds" width="{OppPounds.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="GrossDollarsTot"   visible="false"   editable="false"   textAlign="right" width="{GrossDollars.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="NetDollarsTot"   visible="false"   editable="false"  textAlign="right" dataField="TotalNetDollars"  labelFunction="fnFormatDollars" width="{NetDollars.width}"/>
+											
+											<mx:AdvancedDataGridColumn id="RecTypeTot" visible="false" editable="false" width="{RecType.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="original_casesTot" visible="false" editable="false"  width="{original_cases.width}" />
+					  					
+											<mx:AdvancedDataGridColumn id="original_poundsTot" visible="false" editable="false"  width="{original_pounds.width}" />
+					  					
+											<mx:AdvancedDataGridColumn id="original_net_dollarTot" visible="false" editable="false" width="{original_net_dollar.width}"/>
+					  					
+											<mx:AdvancedDataGridColumn id="net_weightTot" visible="false" editable="false" width="{net_weight.width}"  />
+											
+											<mx:AdvancedDataGridColumn id="base_price_csTot" visible="false" editable="false" width="{base_price_cs.width}" />
+					 						
+											<mx:AdvancedDataGridColumn id="contract_main_idTot" visible="false" editable="false" width="{contract_main_id.width}"  />  						
+					  				
+										</mx:groupedColumns>
+					 				
+									</mx:AdvancedDataGrid>  
+								
+								</mx:HBox>	
+					  	
+							</mx:VBox>		
+					  
+						</mx:HBox>
+					
+					</mx:VBox>
+				
+				</mx:Canvas>
+		
+			</mx:TabNavigator>
+	
+		</mx:Panel>
+
+	</mx:HDividedBox>
+
+</mx:Canvas>
+
+<!-- END -->

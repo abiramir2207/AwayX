@@ -1,0 +1,41 @@
+===== QUERY: getTargetStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetTargetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetTargetStatus>
+	<cftry>
+		<cfset getTargetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_target_enabled,pm_lastupdated_date,pm_lastupdated_userid"
+			}), "program_margin_target_enabled,pm_lastupdated_date,pm_lastupdated_userid"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTargetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTargetStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getcostvariables =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetcostvariables = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForgetcostvariables>
+	<cftry>
+		<cfset getcostvariables = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cost_sequence", {
+				"deleted" = "eq.0",
+				"order" = "cost_sequence_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcostvariables = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcostvariables>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

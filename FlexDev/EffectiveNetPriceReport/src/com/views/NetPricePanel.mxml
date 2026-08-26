@@ -1,0 +1,755 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	xmlns:ba="com.components.*" 
+	paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"
+	resizeEffect="Resize" resize="true" 
+	horizontalScrollPolicy="auto" verticalScrollPolicy="auto" 
+	width="100%" height="100%"
+	creationComplete="this.initListeners();">
+
+ 	<mx:Style>
+        .red{
+            color: #c02025;
+            fontWeight: bold;
+        }         
+    </mx:Style>
+	<mx:Script>
+	<![CDATA[
+		import mx.states.SetProperty;
+		import mx.collections.XMLListCollection;
+		import com.events.*;		
+		import com.models.*;
+		import com.vos.*;
+		
+		import mx.collections.ArrayCollection;
+		import flash.events.*;
+		import mx.controls.Alert;
+		import mx.utils.ObjectUtil;
+		
+		import mx.printing.*;
+		import mx.events.CollectionEvent;
+		import mx.events.DataGridEvent;
+		import mx.events.ListEvent;
+		
+		// DECLARATIONS BELOW ARE FOR THE PROPERTYINJECTORS
+		// THESE VALUES GET SET IN THE MainEventMap.mxml INJECTORS 
+		[Bindable] public var dpReportData:ArrayCollection = new ArrayCollection;
+		[Bindable] public var dpReportDataTotal:ArrayCollection = new ArrayCollection;
+		
+		[Bindable] public var dpAllBuyingGroup:Array = new Array;
+		[Bindable] public var dpAllFamily:Array = new Array;
+		[Bindable] public var dpAllRegion:Array = new Array;
+		[Bindable] public var dpAllBroker:Array = new Array;
+		[Bindable] public var dpAllTypeCode:Array = new Array;
+		
+		[Bindable] public var sSODate:String = "";
+		
+		[Bindable] private var _iColumnWidthId:int;
+		[Bindable] private var _iColumnWidthDesc:int;
+		[Bindable] private var _iColumnWidthValues:int;
+		
+		//-******************** Private varibles
+		private var _settings:NetPriceSettings = new NetPriceSettings();
+		
+		// Label variables
+		[Bindable] private var _sSharedShipToLabel:String = "";
+		[Bindable] private var _sDistributorLabel:String = "";
+		[Bindable] private var _sFamilyLabel:String = "";
+		[Bindable] private var _sBuyingGroupLabel:String = "";
+		[Bindable] private var _sRegionLabel:String = "";
+		[Bindable] private var _sBrokerLabel:String = "";
+		[Bindable] private var _sItemLabel:String = "";
+		[Bindable] private var _sTypeCodeLabel:String = "";
+		
+		[Bindable] private var _bHeaderWordWrap : Boolean = true;
+		[Bindable] private var _bDescFieldWordWrap : Boolean = true;
+		[Bindable] private var _iComboBoxSize:int = 10;
+		
+		[Bindable] private var _cfHeaderTooltipRenderer:ClassFactory = new ClassFactory(com.components.baDataGridItemRenderer);
+		[Bindable] private var _cfHeaderTotalRenderer:ClassFactory = new ClassFactory(com.components.baDataGridItemRenderer);
+		
+		//-******************** Public getters and setters
+				
+		public function get settings():NetPriceSettings 
+		{
+			return _settings;
+		}
+		public function set settings(s:NetPriceSettings):void 
+		{
+			this._settings = s;
+			_sSharedShipToLabel = this._settings.appFlex.shardshiptolabel;
+			_sDistributorLabel = this._settings.appFlex.distributorlabel;
+			_sFamilyLabel = this._settings.appFlex.familylabel;
+			_sBuyingGroupLabel = this._settings.appFlex.buyinggrouplabel;
+			_sRegionLabel = this._settings.appFlex.regionlabel;
+			_sBrokerLabel = this._settings.appFlex.brokerlabel;
+			_sItemLabel = this._settings.appFlex.itemlabel;
+			_sTypeCodeLabel = this._settings.appFlex.typecodelabel;			 
+			 
+		}
+		
+		[Bindable (event="ColumnWidthIdChanged")]
+		public function get ColumnWidthId():int 
+		{
+				return _iColumnWidthId;
+		}
+		public function set ColumnWidthId(val:int):void 
+		{
+			this._iColumnWidthId = val;
+			dispatchEvent(new Event('ColumnWidthIdChanged'));
+		}
+		
+		
+		[Bindable (event="ColumnWidthDescChanged")]
+		public function get ColumnWidthDesc():int 
+		{
+				return _iColumnWidthDesc;
+		}
+		public function set ColumnWidthDesc(val:int):void 
+		{
+			this._iColumnWidthDesc = val;
+			dispatchEvent(new Event('ColumnWidthDescChanged'));
+		}
+		
+		[Bindable (event="ColumnWidthValuesChanged")]
+		public function get ColumnWidthValues():int 
+		{
+				return _iColumnWidthValues;
+		}
+		public function set ColumnWidthValues(val:int):void 
+		{
+			this._iColumnWidthValues = val;
+			dispatchEvent(new Event('ColumnWidthValuesChanged'));
+		}
+		
+		//-********* Format functions ****************
+		private function fnFormatDollars(item:Object, column:DataGridColumn):String 
+		    {
+		      return dollarFormatter.format(item[column.dataField]);
+		    }
+		private function fnFormatPercent(item:Object, column:DataGridColumn):String 
+			{
+				return percentageFormatterOneDecimal.format(item[column.dataField]);
+			}
+		private function fnFormatCaseVolume(item:Object, column:DataGridColumn):String 
+			{
+				return numberFormatterZeroDecimal.format(item[column.dataField]);
+			}
+		private function fnFormatPoundVolume(item:Object, column:DataGridColumn):String 
+			{
+				return numberFormatterTwoDecimal.format(item[column.dataField]);
+			}
+		private function fnFormatCaseRate(item:Object, column:DataGridColumn):String 
+			{
+				return dollarFormatter.format(item[column.dataField]);
+			}
+		private function fnFormatPoundRate(item:Object, column:DataGridColumn):String 
+			{
+				return dollarFormatter.format(item[column.dataField]);    				
+			}
+		private function fnFormatIndex(item:Object, column:DataGridColumn):String 
+			{
+				return numberFormatterZeroDecimal.format(item[column.dataField]);    				
+			}
+		
+		//-********* User Action Functions ****************
+		private function enterSearchBox(event:KeyboardEvent):void 
+		{                
+		 		if (event.keyCode == Keyboard.ENTER)
+		 		/* call main filter method */                 
+			 	filterReport(event);
+		}
+		private function filterReport(event:Event):void{
+			if(		inpDistributorSearchKeyword.text.length > 0
+				||	inpProductSearchKeyword.text.length > 0
+				|| 	cmbBuyingGroup.selectedIndex != 0
+				|| 	cmbFamily.selectedIndex != 0
+				|| 	cmbRegion.selectedIndex != 0
+				|| 	cmbBroker.selectedIndex != 0
+				|| 	cmbTypeCode.selectedIndex != 0
+			)
+			{
+				setFilter();				
+			}
+			else
+			{
+				resetFilters(event);
+			}			
+ 	   	}
+ 	   	
+ 	   	private function setFilter():void{
+	   			   		
+			
+			var event:NetPriceEvent = new NetPriceEvent(NetPriceEvent.FILTER_RESULTS);
+			event.eDistributorKeyword = inpDistributorSearchKeyword.text;
+			event.eBuyingGroup 	= cmbBuyingGroup.selectedLabel;
+			event.eFamilyName	= cmbFamily.selectedLabel;
+			event.eRegion		= cmbRegion.selectedLabel;
+			event.eBroker		= cmbBroker.selectedLabel;
+			event.eProductKeyword = inpProductSearchKeyword.text;
+			event.eTypeCode		= cmbTypeCode.selectedLabel;
+			
+			this.dispatchEvent(event);
+	   	}
+	   	
+	   	private function resetFilters(e:Event):void
+		{	
+			var event:NetPriceEvent = new NetPriceEvent(NetPriceEvent.RESET_FILTER);
+			this.dispatchEvent(event);
+			
+			resetControls();
+		}
+		
+		private function resetControls():void
+		{
+			inpDistributorSearchKeyword.text = "";
+			cmbBuyingGroup.selectedIndex = 0;
+			cmbFamily.selectedIndex = 0;
+			cmbRegion.selectedIndex = 0;
+			cmbBroker.selectedIndex = 0;
+			inpProductSearchKeyword.text = "";
+			cmbTypeCode.selectedIndex = 0;
+		}
+		
+		private function callPrint():void
+		{
+			
+			var event:NetPriceEvent = new NetPriceEvent(NetPriceEvent.PRINT_PAGE);
+			event.ePage = this; // needed to do addChild
+			event = setDisplaySettings(event);
+			this.dispatchEvent(event);			
+		}
+		
+		private function callExportCSV(e:Event):void
+		{
+			
+			var event:NetPriceEvent = new NetPriceEvent(NetPriceEvent.EXPORT_CSV);
+			event.userId = settings.userId;
+			event.eDataGrid = DataGrid;
+			this.dispatchEvent(event);
+			
+		}
+		
+		private function callRefreshData():void
+		{
+			var event:NetPriceEvent = new NetPriceEvent(NetPriceEvent.GET_REPORT_REFRESH_DATA);
+			this.dispatchEvent(event);
+		}
+		
+		private function setDisplaySettings(event:NetPriceEvent):NetPriceEvent
+		{
+			
+			event.eShowBroker = chShowBroker.selected;
+			event.eShowRegion = chShowRegion.selected;
+			event.eShowFamily = chShowFamily.selected;
+			event.eShowBuyingGroup = chShowBuyingGroup.selected;
+			event.eShowTypeCode = chShowTypeCode.selected;
+			
+			event.eShowCase = rdCase.selected;
+			event.eShowPound = rdPound.selected;
+			
+			event.eOptionBNetSales = rdOptionBNetSales.selected;
+			event.eOptionBPercentageDiscount = rdOptionBPercentageDiscount.selected;
+			event.eOptionBSpendingRate = rdOptionBSpendingRate.selected;
+						
+			return event;
+			
+		}
+		
+		/* Handle user clicking on panel icons to hide or show list panel */
+		private function toggleState(state:String):void
+		{
+			if(state == "fullRight")
+			{
+				resizeColumnWidth();
+				this.currentState = "fullRight";
+				iconRight.visible = false;
+				iconAllR.visible = true;
+				iconRight.includeInLayout = false;
+				iconAllR.includeInLayout = true;
+				//ColumnWidthDesc = ColumnWidthDesc + 50;					
+			}
+			else if(state == "fullAll")
+			{
+				resetColumnWidth();
+				this.currentState = "";
+				iconAllR.visible = false;
+				iconRight.visible = true;
+				iconAllR.includeInLayout = false;
+				iconRight.includeInLayout = true;
+				//ColumnWidthDesc = ColumnWidthDesc - 50;
+				//pnlSelected.height = "100%";
+				//pnlSelected.SetProperty("height", "100%");
+				//SetProperty(pnlSelected, "height", "100%");
+			}
+		}
+			
+		private function resizeColumnWidth():void
+		{
+			var columns:Array = DataGrid.columns;
+			var column:DataGridColumn;
+			var columnCount:int = columns.length;
+			var iColWidthOccupied:Number = 0;
+			var iWidthDiff:Number = 0;
+			var iWidthPerCol:int = 0;
+			var iWordWrapCols:int = 0;
+			var k:int = 0;
+			
+			for(k = 0; k < columnCount; k++)
+			{
+				column = columns[k];
+				if(column.visible)
+				{
+					iColWidthOccupied += column.width;
+					if(column.wordWrap)
+					{
+						iWordWrapCols ++;						
+					} 
+				}	
+			}
+			iWidthDiff = DataGrid.width + pnlSelected.width - iColWidthOccupied;
+			if(iWidthDiff > 0)
+			{
+				iWidthPerCol = Math.ceil(iWidthDiff / iWordWrapCols);
+				//increment the width on the desc columns
+				for(k = 0; k < columnCount; k++)
+				{
+					column = columns[k];
+					if(column.visible && column.wordWrap)
+					{
+						column.width = column.width + iWidthPerCol;
+						resizeTotalColumnAtIndex(k);					
+					}	
+				}
+			}
+		}
+		
+		private function resetColumnWidth():void
+		{
+			var columns:Array = DataGrid.columns;
+			var column:DataGridColumn;
+			var columnCount:int = columns.length;
+			var iColWidthOccupied:Number = 0;
+			var iWidthDiff:Number = 0;
+			var iWidthPerCol:int = 0;
+			var iWordWrapCols:int = 0;
+			
+			for(var k:int = 0; k < columnCount; k++)
+			{
+				column = columns[k];
+				if(column.visible && column.wordWrap)
+				{
+					column.width = ColumnWidthDesc;
+					resizeTotalColumnAtIndex(k);		
+				}	
+			}			
+		}
+		
+		//************ Functions for total grid
+		private function resizeCols(event:Event=null) : void
+   		{
+   			if(DataGrid.rowCount > DataGrid.dataProvider.length)
+   				dgtot.width = DataGrid.width;
+	   		else
+	   			dgtot.width = DataGrid.width-16;
+   		}
+   		
+   		private function resizeCol(event : DataGridEvent) : void
+   		{
+   			resizeTotalColumnAtIndex(event.columnIndex);
+   		}
+   		
+   		private function resizeTotalColumnAtIndex(iColIndex : int) : void
+   		{
+   			DataGridColumn(dgtot.columns[iColIndex]).width = DataGridColumn(DataGrid.columns[iColIndex]).width;
+   		}
+   		
+   		private function scrollTotal(event:Event=null) : void
+   		{
+   			dgtot.horizontalScrollPosition = DataGrid.horizontalScrollPosition;
+   		}
+   		
+   		private function initListeners():void
+		{
+			//enterSearchBox
+			inpDistributorSearchKeyword.addEventListener(KeyboardEvent.KEY_DOWN, enterSearchBox, false, 0, true);
+			inpProductSearchKeyword.addEventListener(KeyboardEvent.KEY_DOWN, enterSearchBox, false, 0, true);
+			
+			// filterReport
+			btnSearch.addEventListener(MouseEvent.CLICK, filterReport, false, 0, true);
+			
+			cmbFamily.addEventListener(ListEvent.CHANGE, filterReport, false, 0, true);
+			cmbBuyingGroup.addEventListener(ListEvent.CHANGE, filterReport, false, 0, true);
+			cmbRegion.addEventListener(ListEvent.CHANGE, filterReport, false, 0, true);
+			cmbBroker.addEventListener(ListEvent.CHANGE, filterReport, false, 0, true);
+			cmbTypeCode.addEventListener(ListEvent.CHANGE, filterReport, false, 0, true);
+			
+			// resetFilters
+			btnReset.addEventListener(MouseEvent.CLICK, resetFilters, false, 0, true);
+			
+			// callExportCSV
+			btnExportCSV.addEventListener(MouseEvent.CLICK, callExportCSV, false, 0, true);
+		}
+		
+	]]>
+	</mx:Script>
+
+	<!-- Formatters & Validators for the Currency and Number -->
+	<mx:CurrencyFormatter id="dollarFormatter" precision="2" />
+	<mx:NumberFormatter id="numberFormatterZeroDecimal" precision="0" />
+	<mx:NumberFormatter id="numberFormatterTwoDecimal" precision="2" />
+	<ba:PercentageFormatter id="percentageFormatterOneDecimal" precision="1" />
+	
+	
+	<!-- States _______________________________________________________ -->
+	<mx:states>
+		<mx:State name="fullRight">
+			<mx:SetProperty target="{pnlSelected}" name="x" value="-210" />
+			<mx:RemoveChild target="{pnlSelected}" />
+			<mx:SetProperty target="{col1}" name="width" value="0%" />
+			<mx:SetProperty target="{col2}" name="width" value="100%" />
+			<mx:SetProperty target="{fullBox}" name="height" value="100%" />
+			<mx:SetProperty target="{pnlAll}" name="height" value="100%" />
+			<mx:SetProperty target="{pnlAll}" name="width" value="100%" />
+			<mx:SetProperty target="{vboxAll}" name="height" value="100%" />			
+		</mx:State>
+		<mx:State name="">
+			<mx:SetProperty target="{pnlSelected}" name="height" value="100%" />			
+		</mx:State>
+	</mx:states>
+	
+	<mx:transitions>
+		<mx:Transition id="showAll" fromState="fullRight" toState="">
+			<mx:Sequence>
+				<mx:Move duration="300" target="{pnlSelected}" />
+				<mx:Resize duration="300" target="{pnlAll}" />
+				<!--<mx:SetProperty target="{pnlSelected}" name="height" value="100%" />-->
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition id="showRight" fromState="" toState="fullRight">
+			<mx:Parallel>
+				<mx:Fade duration="300" target="{pnlSelected}" alphaFrom="0" alphaTo="1"/>
+				<mx:Resize duration="300" target="{pnlAll}" />
+			</mx:Parallel>
+		</mx:Transition>
+	</mx:transitions>
+
+	<mx:constraintColumns>
+		<mx:ConstraintColumn id="col1" width="40%"/>
+		<mx:ConstraintColumn id="col2" width="60%"/>
+	</mx:constraintColumns>
+	
+	<mx:constraintRows>
+		<mx:ConstraintRow id="row1" height="60%"/>
+		<mx:ConstraintRow id="row2" height="40%"/>
+	</mx:constraintRows>
+
+	<!-- Views _______________________________________________________ -->
+	
+
+<mx:HDividedBox id="fullBox" height="100%" width="100%" paddingTop="0" paddingRight="0" paddingBottom="0" paddingLeft="0" top="2" right="2" bottom="2" left="2">
+
+	<!--******************************* (LEFT NAV)	*********************************************-->
+	<mx:Panel id="pnlSelected" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333" 
+			height="{pnlAll.height}"
+			top="2" right="col1:2" bottom="row1:2" left="2"
+			name="Left Panel" title="Options"
+			>
+		<mx:VBox height="100%" width="100%" left="5">
+		<!--*******************************	Some UI Stuff	***************************************************************-->
+			<mx:HBox verticalAlign="top" horizontalGap="0" >
+				<mx:Label text="{_sDistributorLabel}" width="60" />
+					<mx:TextInput 
+						tabEnabled="true"
+						width="130" 
+					  	text="" 
+					  	id="inpDistributorSearchKeyword" 
+					  	toolTip="Keyword search on any of the fields:&#13; {_sDistributorLabel}, {_sBrokerLabel}, {_sRegionLabel}, {_sFamilyLabel}, {_sBuyingGroupLabel}."
+						/>
+			</mx:HBox>
+			<mx:HBox verticalAlign="top" horizontalGap="0" >
+				<mx:Label text="{_sItemLabel}" width="60" />
+					<mx:TextInput 
+						tabEnabled="true"
+						width="130"  
+					  	text="" 
+					  	id="inpProductSearchKeyword" 
+					  	toolTip="Keyword search on any of the fields:&#13; {_sItemLabel}, {_sTypeCodeLabel}."
+						/>
+			</mx:HBox>
+			<mx:HBox verticalAlign="bottom">
+				<mx:Button 
+					label="search"
+					id="btnSearch">
+				</mx:Button>	
+				<mx:Button 
+					label="reset"
+					id="btnReset">
+				</mx:Button>			
+				
+			</mx:HBox>
+			
+			<mx:ComboBox 
+				toolTip="filter:{_sFamilyLabel}" 
+				id="cmbFamily" 
+				labelField="Family_Name"
+				width="189"
+				dataProvider ="{dpAllFamily}"				
+				rowCount="{_iComboBoxSize}"
+				>
+			</mx:ComboBox>
+			
+			<mx:ComboBox 
+				toolTip="filter:{_sBuyingGroupLabel}" 
+				id="cmbBuyingGroup" 
+				labelField="Buying_Group_Name"
+				width="189"
+				dataProvider ="{dpAllBuyingGroup}"				
+				rowCount="{_iComboBoxSize}"
+				>
+			</mx:ComboBox>
+			
+			<mx:ComboBox 
+				toolTip="filter:{_sRegionLabel}" 
+				id="cmbRegion" 
+				labelField="Region_Name"
+				width="189"
+				dataProvider ="{dpAllRegion}"				
+				rowCount="{_iComboBoxSize}"
+				>
+			</mx:ComboBox>
+			
+			<mx:ComboBox 
+				toolTip="filter:{_sBrokerLabel}" 
+				id="cmbBroker" 
+				labelField="Broker_Name"
+				width="189"
+				dataProvider ="{dpAllBroker}"				
+				rowCount="{_iComboBoxSize}"
+				>
+			</mx:ComboBox>
+			
+			<mx:ComboBox 
+				toolTip="filter:{_sTypeCodeLabel}" 
+				id="cmbTypeCode" 
+				labelField="Type_Code_Desc"
+				width="189"
+				dataProvider ="{dpAllTypeCode}"				
+				rowCount="{_iComboBoxSize}"
+				>
+			</mx:ComboBox>
+			
+			<mx:HBox verticalAlign="bottom">
+				<!--
+				<mx:Button 
+					click="callPrint()"
+					label="print">
+				</mx:Button>
+				-->
+				<mx:Button 
+					label="export CSV"
+					id="btnExportCSV">
+				</mx:Button>
+			</mx:HBox>
+			
+			<mx:Label width="100%" color="blue" text="Option A"/>
+			<mx:RadioButtonGroup id="rdGrpUomType" />
+			<mx:RadioButton groupName="rdGrpUomType" id="rdCase" value="1" label="Per Case" selected="true" />	
+			<mx:RadioButton groupName="rdGrpUomType" id="rdPound" value="2" label="Per Pound" />
+			
+			<mx:Label width="100%" color="blue" text="Option B"/>
+			<mx:RadioButtonGroup id="rdOptionB" />
+			<mx:RadioButton groupName="rdOptionB" id="rdOptionBNetSales" value="1" label="Net Sales" selected="true" />	
+			<mx:RadioButton groupName="rdOptionB" id="rdOptionBSpendingRate" value="2" label="Spending Rate" />
+			<mx:RadioButton groupName="rdOptionB" id="rdOptionBPercentageDiscount" value="3" label="% Discount" />
+			
+			
+		</mx:VBox>
+	</mx:Panel>
+	<mx:Panel id="pnlAll" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333"
+			height="100%" 
+			horizontalScrollPolicy="auto" verticalScrollPolicy="auto"
+			bottom="row2:2" left="col2:2" right="2" top="2"
+			name="Main Panel" title="Effective Net Price Report: {this.DataGrid.dataProvider.length} records">
+		
+		<mx:VBox id="vboxAll" height="100%" width="100%" creationPolicy="queued" creationIndex="5">
+		<!--*******************************	Some UI Stuff	***************************************************************-->
+			<mx:HBox width="100%" height="20" verticalAlign="middle" id="oHBox">
+				<mx:VBox height="100%">
+					<mx:HBox width="100%">
+						<mx:Image id="iconRight" 
+							source="/Flex/assets/images/fullScreen.png"
+							width="20" height="20" click="toggleState('fullRight')" toolTip="Click for Right Panel Full Screen"/>
+						<mx:Image id="iconAllR" 
+							source="/Flex/assets/images/sharedScreen.png"
+							width="20" height="20" click="toggleState('fullAll')" toolTip="Click for both Panels Shared Screen" visible="false" includeInLayout="false" />
+						
+					</mx:HBox>					
+				</mx:VBox>
+				<mx:Spacer width="20" />
+				<mx:CheckBox id="chShowFamily" label="{_sFamilyLabel}" toolTip="show or hide {_sFamilyLabel}"/>
+				<mx:CheckBox id="chShowBuyingGroup" label="{_sBuyingGroupLabel}" toolTip="show or hide {_sBuyingGroupLabel}"/>
+				<mx:CheckBox id="chShowRegion" label="{_sRegionLabel}" toolTip="show or hide {_sRegionLabel}"/>
+				<mx:CheckBox id="chShowBroker" label="{_sBrokerLabel}" toolTip="show or hide {_sBrokerLabel}"/>
+				<mx:CheckBox id="chShowTypeCode" label="{_sTypeCodeLabel}" toolTip="show or hide {_sTypeCodeLabel}"/>
+				<!--
+				<mx:Button 
+					click="callRefreshData()"
+					label="refresh" />
+				<mx:Text id="dataAsOf" text=" Data as of: {sSODate}" styleName="red" toolTip="The time stamp for the data in the current view."/>
+				-->
+			</mx:HBox>
+			
+			<!-- canvas used instead of vbox to place the total grid on the top and the data grid at the bottom
+			The data grid is placed over the total grid so that the scroll bar of the total grid is not visible 
+			-->
+			<mx:Canvas width="100%" height="100%" id="oCanvas">
+				<mx:DataGrid 
+					id="dgtot" 
+					dataProvider="{dpReportDataTotal}"
+					allowMultipleSelection="true"
+					editable="false" 
+					width="100%" height="{dgtot.rowHeight*2}" 
+					headerHeight="40" 
+					lockedColumnCount="4" 
+					horizontalScrollPolicy="on"
+					showHeaders="false"
+					rowCount="1"					
+					selectable="false"
+					draggableColumns="false"
+					creationComplete="{resizeCols()}"
+					>
+					<mx:columns>
+						<!-- Distributor -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthId}" dataField="Distributor_ID" headerText="{_sSharedShipToLabel}" editable="false" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Distributor_Name" headerText="{_sDistributorLabel} Name" editable="false" wordWrap="{_bDescFieldWordWrap}" />							
+						<!-- Item -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthId}" dataField="Item" headerText="{_sItemLabel}" editable="false" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Item_Description" headerText="Description" editable="false" wordWrap="{_bDescFieldWordWrap}" />
+						<!-- Family / Buying Group -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Family_Name" headerText="{_sFamilyLabel}" editable="false" visible="{chShowFamily.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Buying_Group_Name" headerText="{_sBuyingGroupLabel}" editable="false" visible="{chShowBuyingGroup.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<!-- Region / Broker -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Region_Name" headerText="{_sRegionLabel}" editable="false" visible="{chShowRegion.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Broker_Name" headerText="{_sBrokerLabel}" editable="false" visible="{chShowBroker.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<!-- Type Code -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Type_Code_Desc" headerText="{_sTypeCodeLabel}" editable="false" visible="{chShowTypeCode.selected}" wordWrap="{_bDescFieldWordWrap}" />
+												
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTotalRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Cases_Invoiced" headerText="INV CS" editable="false" visible="{rdCase.selected}" labelFunction="fnFormatCaseVolume" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTotalRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Pounds_Invoiced" headerText="INV LB" editable="false" visible="{rdPound.selected}" labelFunction="fnFormatPoundVolume" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTotalRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Sales_Dollar" headerText="INV $" editable="false" labelFunction="fnFormatDollars" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Base_Sales_CS" headerText="PRICE CS" editable="false" visible="{rdCase.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Base_Sales_LB" headerText="PRICE LB" editable="false" visible="{rdPound.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatPoundRate" />
+						
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Trade_Rate_CS" headerText="TRADE CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Trade_Rate_LB" headerText="TRADE LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Operator_Rate_CS" headerText="OPER CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Operator_Rate_LB" headerText="OPER LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Rate_CS" headerText="TOTAL $ CS"  editable="false" visible="{rdCase.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Rate_LB" headerText="TOTAL $ LB"  editable="false" visible="{rdPound.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatPoundRate" />
+						
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Trade_PERCENT_DISCOUNT" headerText="TRADE %"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" labelFunction="fnFormatPercent" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Operator_PERCENT_DISCOUNT" headerText="OPER %"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" labelFunction="fnFormatPercent" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_PERCENT_DISCOUNT" headerText="TOTAL % DISC"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" labelFunction="fnFormatPercent" />
+						
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Net_Sales_CS" headerText="NET CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Net_Sales_LB" headerText="NET LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_AVG_Net_Sales_CS" headerText="AVE NET CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_AVG_Net_Sales_LB" headerText="AVE NET LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Net_Sales_Index" headerText="NET INDEX"  editable="false" visible="{rdOptionBNetSales.selected}" labelFunction="fnFormatIndex" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Return_On_Sales" headerText="RETURN ON NET"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" labelFunction="fnFormatPercent" />
+							
+					</mx:columns>
+				</mx:DataGrid>
+				
+				<mx:DataGrid 
+					id="DataGrid" 
+					dataProvider="{dpReportData}"
+					allowMultipleSelection="true"
+					editable="false" 
+					width="100%" height="100%" 
+					y="{dgtot.height - 17}"
+					variableRowHeight="true" 
+					headerHeight="40" 
+					lockedColumnCount="4" 
+					horizontalScrollPolicy="on"
+					draggableColumns="false"
+					resize="{resizeCols()}" 
+					columnStretch="{resizeCol(event)}"
+		    		creationComplete="{DataGrid.addEventListener(CollectionEvent.COLLECTION_CHANGE, resizeCols, false, 0, true)}"
+		    		scroll="{scrollTotal()}"
+					>
+					<mx:columns>
+						<!-- Distributor -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthId}" dataField="Distributor_ID" headerText="{_sSharedShipToLabel}" editable="false" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Distributor_Name" headerText="{_sDistributorLabel} Name" editable="false" wordWrap="{_bDescFieldWordWrap}" />							
+						<!-- Item -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthId}" dataField="Item" headerText="{_sItemLabel}" editable="false" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Item_Description" headerText="Description" editable="false" wordWrap="{_bDescFieldWordWrap}" />
+						<!-- Family / Buying Group -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Family_Name" headerText="{_sFamilyLabel}" editable="false" visible="{chShowFamily.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Buying_Group_Name" headerText="{_sBuyingGroupLabel}" editable="false" visible="{chShowBuyingGroup.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<!-- Region / Broker -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Region_Name" headerText="{_sRegionLabel}" editable="false" visible="{chShowRegion.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Broker_Name" headerText="{_sBrokerLabel}" editable="false" visible="{chShowBroker.selected}" wordWrap="{_bDescFieldWordWrap}" />
+						<!-- Type Code -->
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthDesc}" dataField="Type_Code_Desc" headerText="{_sTypeCodeLabel}" editable="false" visible="{chShowTypeCode.selected}" wordWrap="{_bDescFieldWordWrap}" />
+												
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTotalRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Cases_Invoiced" headerText="INV CS" editable="false" visible="{rdCase.selected}" labelFunction="fnFormatCaseVolume" />
+						
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTotalRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Pounds_Invoiced" headerText="INV LB" editable="false" visible="{rdPound.selected}" labelFunction="fnFormatPoundVolume" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTotalRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Sales_Dollar" headerText="INV $" editable="false" labelFunction="fnFormatDollars" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Base_Sales_CS" headerText="PRICE CS" editable="false" visible="{rdCase.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Base_Sales_LB" headerText="PRICE LB" editable="false" visible="{rdPound.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatPoundRate" />
+						
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Trade_Rate_CS" headerText="TRADE CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Trade_Rate_LB" headerText="TRADE LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Operator_Rate_CS" headerText="OPER CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Operator_Rate_LB" headerText="OPER LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBSpendingRate.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Rate_CS" headerText="TOTAL $ CS"  editable="false" visible="{rdCase.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Rate_LB" headerText="TOTAL $ LB"  editable="false" visible="{rdPound.selected &amp;&amp; (rdOptionBSpendingRate.selected || rdOptionBNetSales.selected)}" labelFunction="fnFormatPoundRate" />
+						
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Trade_PERCENT_DISCOUNT" headerText="TRADE %"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Operator_PERCENT_DISCOUNT" headerText="OPER %"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_PERCENT_DISCOUNT" headerText="TOTAL % DISC"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" labelFunction="fnFormatPercent" />
+						
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Net_Sales_CS" headerText="NET CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Net_Sales_LB" headerText="NET LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_AVG_Net_Sales_CS" headerText="AVE NET CS"  editable="false" visible="{rdCase.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatCaseRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_AVG_Net_Sales_LB" headerText="AVE NET LB"  editable="false" visible="{rdPound.selected &amp;&amp; rdOptionBNetSales.selected}" labelFunction="fnFormatPoundRate" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Net_Sales_Index" headerText="NET INDEX"  editable="false" visible="{rdOptionBNetSales.selected}" labelFunction="fnFormatIndex" />
+						<mx:DataGridColumn headerRenderer="{_cfHeaderTooltipRenderer}" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthValues}" dataField="Total_Return_On_Sales" headerText="RETURN ON NET"  editable="false" visible="{rdOptionBPercentageDiscount.selected}" labelFunction="fnFormatPercent" />
+							
+					</mx:columns>
+				</mx:DataGrid>
+					
+					<!--<mx:DataGridColumn headerWordWrap="true" dataField="Distributor_ID" headerText="Distributor" editable="false" 
+							wordWrap="true">
+							<mx:itemRenderer>
+								<mx:Component>
+									<mx:Label text="{data.Distributor_ID}{'\n'}{data.Distributor_Name}" />									
+								</mx:Component>
+							</mx:itemRenderer>
+						</mx:DataGridColumn>-->
+						<!--
+						<mx:DataGridColumn headerRenderer="com.components.baDataGridItemRenderer" headerWordWrap="{_bHeaderWordWrap}" width="{ColumnWidthId}" dataField="Distributor_ID" headerText="{oSettings.appFlex.shardshiptolabel}" editable="false">
+							<mx:itemRenderer>
+								<mx:Component>
+									<mx:Label text="{listData.label}" />									
+								</mx:Component>
+							</mx:itemRenderer>
+						</mx:DataGridColumn>
+						-->
+				</mx:Canvas>
+				<!--</mx:VBox>-->
+		</mx:VBox>
+
+	</mx:Panel>
+		
+</mx:HDividedBox>
+
+	<!--*********************************	BOTTOM PANEL (Import Button) ************************************************************-->
+	
+
+</mx:Canvas>

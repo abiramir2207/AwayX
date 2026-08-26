@@ -1,0 +1,40 @@
+===== QUERY: qGetCustKey =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetCustKey = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForqGetCustKey>
+	<cftry>
+		<cfset qGetCustKey = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "customer_keyword"
+			}), "customer_keyword"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCustKey = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCustKey>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetSingleSignOnInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSingleSignOnInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetSingleSignOnInfo>
+	<cftry>
+		<cfset GetSingleSignOnInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "singlesign_on,ssl_on"
+			}), "singlesign_on,ssl_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSingleSignOnInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSingleSignOnInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

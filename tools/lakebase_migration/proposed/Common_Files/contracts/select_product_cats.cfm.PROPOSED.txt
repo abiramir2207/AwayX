@@ -1,0 +1,12 @@
+===== QUERY: GetTypeGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: GetQBrands =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: GetTypeCodes =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: GetBrands =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

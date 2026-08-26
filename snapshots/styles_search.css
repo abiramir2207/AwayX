@@ -1,0 +1,166 @@
+/* ---------------------------------------------------------------------------------------------- */
+/* Modifiers used by the snapshots. They are applied after the global style sheet.                */
+/* ---------------------------------------------------------------------------------------------- */
+
+
+/* section titles ------------------------------------------------------------------------------- */
+div.summary				{background-color:	#71000a;}
+div.top_ten_items		{background-color:	#71000a;}
+div.top_ten_distributors{background-color:	#71000a;}
+div.top_ten_categories	{background-color:	#71000a;}
+div.top_ten_claims		{background-color:	#71000a;}
+div.top_ten_operators	{background-color:	#71000a;}
+
+/* data grid headers ---------------------------------------------------------------------------- */
+td.summary				{background-color:	#bc1930;}
+td.top_ten_items		{background-color:	#bc1930;}
+td.top_ten_distributors	{background-color:	#bc1930;}
+td.top_ten_categories	{background-color:	#bc1930;}
+td.top_ten_claims		{background-color:	#bc1930;}
+td.top_ten_operators	{background-color:	#bc1930;}
+
+/* buttons -------------------------------------------------------------------------------------- */
+a.nav
+{
+	color:				#71000a;
+	background-color:	#FFFFFF;
+	background: #bc1930;
+	background: -moz-linear-gradient(top,  #bc1930 0%, #71000a 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bc1930), color-stop(100%,#71000a));
+	background: -webkit-linear-gradient(top,  #bc1930 0%,#71000a 100%);
+	background: -o-linear-gradient(top,  #bc1930 0%,#71000a 100%);
+	background: -ms-linear-gradient(top,  #bc1930 0%,#71000a 100%);
+	background: linear-gradient(top,  #bc1930 0%,#71000a 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bc1930', endColorstr='#71000a',GradientType=0 );	
+}
+
+a:hover.nav
+{
+	color:				#FFFFFF;
+	background-color:	#71000a;
+}
+
+/* search forms ---------------------------------------------------------------------------------- */
+
+div.main_div
+{
+	margin:					100px auto 0px auto;
+	padding:				50px 0px 100px 0px;
+	text-align:				center;
+	width:					75%;
+	border:					1px #EEEEEE solid;
+
+    -webkit-border-radius:	10px;
+    -moz-border-radius:		10px;
+    border-radius:			10px;
+	
+	
+	background: rgb(242,242,242); /* Old browsers */
+	/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2YyZjJmMiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNjMWMxYzEiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+	background: -moz-linear-gradient(top,  rgba(242,242,242,1) 0%, rgba(193,193,193,1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(242,242,242,1)), color-stop(100%,rgba(193,193,193,1))); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  rgba(242,242,242,1) 0%,rgba(193,193,193,1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  rgba(242,242,242,1) 0%,rgba(193,193,193,1) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  rgba(242,242,242,1) 0%,rgba(193,193,193,1) 100%); /* IE10+ */
+	background: linear-gradient(top,  rgba(242,242,242,1) 0%,rgba(193,193,193,1) 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f2f2f2', endColorstr='#c1c1c1',GradientType=0 ); /* IE6-8 */
+
+
+
+
+}
+
+input.search_button
+{
+	width:					135px;
+	height:					27px;
+
+	border-top:				1px #AA0000 solid;
+	border-right:			1px #AA0000 solid;
+	border-bottom:			1px #AA0000 solid;
+	border-left:			1px #AA0000 solid;
+
+	background-color:		#c42f2f;
+	color:					#FFFFFF;
+	font-size:				11px;
+	font-weight:			bold;
+	padding:				0px 0px 0px 0px;
+	margin:					0px 0px 0px 0px;
+	
+	cursor:					default;
+	cursor:					pointer;
+}
+
+input.search_field
+{
+	width:					400px;
+	height:					25px;
+
+	border-top:				1px #AA0000 solid;
+	border-right:			1px #AA0000 solid;
+	border-bottom:			1px #AA0000 solid;
+	border-left:			1px #AA0000 solid;
+
+	background-color:		#FFFFFF;
+	color:					#0000cc;
+	font-size:				16px;
+	font-weight:			bold;
+	padding:				0px 0px 0px 5px;
+	margin:					0px 0px 0px 0px;
+
+	background: #dddddd;
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2RkZGRkZCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmZWZlZmUiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+	background: -moz-linear-gradient(top,  #dddddd 0%, #fefefe 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#dddddd), color-stop(100%,#fefefe));
+	background: -webkit-linear-gradient(top,  #dddddd 0%,#fefefe 100%);
+	background: -o-linear-gradient(top,  #dddddd 0%,#fefefe 100%);
+	background: -ms-linear-gradient(top,  #dddddd 0%,#fefefe 100%);
+	background: linear-gradient(top,  #dddddd 0%,#fefefe 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dddddd', endColorstr='#fefefe',GradientType=0 );
+
+
+}
+
+select.search_field
+{
+	font-size:			16px;
+	width:				120px;
+}
+
+/* links to operators, distributors and product groups areas ---------------------------------------- */
+td.groups_bookmarks
+{
+	background-color:	#EEEEEE;
+	border-bottom:		1px #cccccc solid;
+	border-top:			1px #cccccc solid;
+}
+
+
+
+/* this uses the css sprites mechanism to display nav buttons --------------------------------------- */
+/* http://www.noobcube.com/tutorials/html-css/css-background-image-sprites-a-beginners-guide-/ ------ */
+img.operator, img.distributor, img.product
+{background: url(../images/item_buttons.png) no-repeat 0 0; width:125px; height:25px;}
+img.operator	{background-position:   0px   0px;}
+img.distributor	{background-position: 	-125px 0px;}
+img.product		{background-position: 	-250px 0px;}
+</style>
+
+/* used by the links on the serarch page that take the user to the item groups*/
+a.nav_links
+{
+	color:				#ffffff; 
+	text-decoration:	none;
+}
+
+
+
+
+
+
+
+
+
+
+

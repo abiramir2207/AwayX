@@ -1,0 +1,1097 @@
+<!---------------------------------------------------------------------------------------------------------------------
+      Template: \settings\Advanced_Budget\fixedBudget.cfm
+      Date:     June 10, 2011
+      Author:   Chris Nguyen
+      Purpose:  Add/edit fixed budget
+----------------------------------------------------------------------------------------------------------------------->
+
+<cfparam name="form.entries_list" default="">
+<cfparam name="form.bySearch"      default="">
+<cfset url.bySearch = form.bySearch>
+
+<cfscript>
+  const = {};                    // constants structure
+  const.entry_prefix = "PC_";    // form element name for individual position/customer budget
+  const.unselected = -1;         // unselected value for drop-down option
+  const.customers = 4;
+
+  // unique css class constants used as jQuery selectors
+  class = {};
+  class.current = "cur";
+  class.budget = "budget";
+  class.difference = "dif";
+  class.committed = "com";
+  class.actual = "act";
+  class.balance = "bal";
+
+  positionManager = CreateObject("component", "components.geography.position").init();
+  qGetHQPosition  = positionManager.getHQPosition();
+  HQPositionLabel = qGetHQPosition.Position_Label;
+  form.Budget_Contribution_Factor_Type_Id = 1;    // restore value after returing from position pop-up
+
+  vars = {};
+</cfscript>
+
+<cfsavecontent variable="vars.htmlHead">
+<link rel="stylesheet" type="text/css" href="/common_files/datatable.css">
+<link rel="stylesheet" type="text/css" href="/common_files/prettyPhoto.css">
+<link rel="stylesheet" type="text/css" href="/common_files/impromptu.css">
+<link rel="stylesheet" href="/styles/jQueryUI_18/jquery-ui-1.8.14.custom.css" type="text/css" />
+<style type="text/css">
+.action { font-weight:bold; }
+.calc_label { font-weight:bold; margin: 0 2px 0 40px; font-size:1.1em; color:#003366; }
+.calc_value { background:url('/images/gradback.png') repeat-x scroll 0 0 #B9C9FE; border:1px solid #CDCDCD; color:black; width:100px; text-align:right; margin-right:15px; color:#003366; display:inline-block;}
+.dollar { text-align:right; }
+.ds { position:relative; top:-2px; }
+.fieldset2 { margin:1%; padding:0 1em .5em; border:0 none; border-top:#cccccc 1px solid; width:96%}
+.label { text-align: left; width: 180px; font-weight:bold; margin:8px 0 0 4px; display:inline-block; }
+.label2 { width: 180px !important; }
+.legend2 { margin:0.5em; padding:0 1.5em; background:transparent; color:#003366; font-size:1.1em; font-weight:bold; }
+.legend2 a { font-size:8pt; margin-left:10px; }
+.mid { text-align:center; }
+.notif { margin:0 0 4px 0;}
+.total { text-align:right; }
+.overabove { font-weight:bold; font-size:11px; color:black !important; }
+#ulFixed { list-style-type:none; margin:7px 0; }
+#ulFixed li { float:left; margin-right:15px; }
+div.excel { margin:5px 0; text-align:center; }
+div.excel a { margin-right:15px; }
+#mass_allocate a{ margin-left:2px; position:relative; top:-5px;}
+#mass_allocate input{ position:relative; top:-3px;}
+#mass_allocate span{ position:relative; top:-3px;}
+</style>
+<script type="text/javascript" src="/Script/javascript/Ajax_JS/jqueryui-1.8.10.min.js"></script>
+</cfsavecontent>
+
+<cfhtmlhead text="#vars.htmlHead#">
+
+<!----- Save form into the database, redirect to listing page ----->
+<cfif form.clicked_save eq "1">
+  <!---<cfdump var="#form#"> <cfabort>--->
+  <cfset saveFixedBudget()>
+  <script type="text/javascript">
+    <!---place the new budget id into the form element when applicable--->
+    if ( document.forms[budget_form].budget_id.value == "0" ) {
+      document.forms[budget_form].budget_id.value = "<cfoutput>#form.budget_id#</cfoutput>";
+    }
+		<cfif form.next_action eq "export">
+      <cfparam name="form.query_string" default="">
+      <cflocation url="/settings/advanced_budget/exportBudget.cfm?budget_id=#form.budget_id#&#form.query_string#">
+		</cfif>
+    document.forms[budget_form].command.value = "templates";
+    document.forms[budget_form].submit();
+  </script>
+</cfif>
+
+<!----- Load form from database ----->
+<cfif form.load_fromdb eq "1">
+  <cfset loadFixedBudget()>
+</cfif>
+
+<cfscript>
+  if ( form.allocation_position_level eq const.customers ) {
+   vars.allocation_type = "Customer";
+   const.not_released_id = "00000000-0000-0000-0000-000000000000";
+  }
+  else {
+   vars.allocation_type = "Position";
+   const.not_released_id = "0";
+  }
+</cfscript>
+<!---add "not released" entry if it is missing--->
+<cfif not ListFind(form.entries_list, const.not_released_id)>
+  <cfset form.entries_list = form.entries_list & ((form.entries_list eq "") ? "" : ",") & const.not_released_id>
+</cfif>
+<!--------------------------------------------------------------------------------------------------------------------->
+<cfinclude template="actionFormat.cfm">
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<div style="margin-top:10px">
+<fieldset id="mainfieldset" style="padding:0px; border: 1px solid blue;">
+	<legend style="font: bold 14px sans-serif; color: red;">Budget - <cfif form.budget_id eq 0>Add<cfelse><cfif qGetCreateBudget.Create_Budget>Edit<cfelse>View</cfif></cfif></legend>
+
+<cfset vars.hide = application.util.string.actionLinkFormat("hide")>
+<cfset vars.show = application.util.string.actionLinkFormat("show")>
+
+<fieldset class="fieldset2">
+<legend class="legend2">Basic Information <a href="##" id="animate"><cfoutput>#vars.hide#</cfoutput></a></legend>
+
+<div id="basic">
+<!----- Common form elements ----->
+<cfinclude template="budgetgeneral.cfm">
+
+<!----- Form elements for fixed budgets ----->
+<cfoutput>
+<input type="hidden" name="entries_list" id="entries_list" value="#form.entries_list#" />
+<input type="hidden" name="budget_status" value="" />
+<input type="hidden" name="next_action" value="templates" />
+<div style="float:left; margin-left:20px;">
+<div class="notif">
+<label for="Budget_Dollar" class="label label2">Total Budget Dollars:</label>
+<input name="Budget_Dollar" class="numberinput dollar" value="#DollarFormat(NumericValue(form.Budget_Dollar))#"
+            type="text" #form.read_only# id="total_budget_dollar" size="10" maxlength="15" <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>/>
+</div>
+<cfif appSettings.getBudgetSingleLevelForFixed()><!--- Options are HQ, Zone, Region, Market and Customer --->
+<div class="notif">
+<label class="label label2">Allocation Control:</label>
+<select id="select_point" name="allocation_position_level" class="apl" <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>>
+ <option value="#const.unselected#">select</option>
+ <option <cfif form.Allocation_Position_Level eq 0>selected</cfif> value="0">#HQPositionLabel#</option>
+ <option <cfif form.Allocation_Position_Level eq 1>selected</cfif> value="1">#application.returned_customer_setting.zone_label_plural#</option>
+ <option <cfif form.Allocation_Position_Level eq 2>selected</cfif> value="2">#application.returned_customer_setting.region_label_singular#</option>
+ <option <cfif form.Allocation_Position_Level eq 3>selected</cfif> value="3">#application.returned_customer_setting.market_label_singular#</option>
+ <option <cfif form.Allocation_Position_Level eq 4>selected</cfif> value="4">Customer</option>
+</select>
+</div>
+<cfelse>
+<div class="notif">
+<label class="label label2">Allocation Control:</label>
+<input name="allocation_position_level" type="radio" value="5" class="apl" <cfif form.allocation_position_level neq "4">checked</cfif> <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>><b>Position</b>
+</div>
+<div class="notif">
+<label class="label label2">&nbsp;</label>
+<input name="allocation_position_level" type="radio" value="#const.customers#" class="apl" <cfif form.allocation_position_level eq "4">checked</cfif> <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>><b>Customer</b>
+</div>
+</cfif>
+<div class="notif">
+<label for="notification_threshold_commitments" class="label">Notif. Threshold Commitment:<span id="error_notification_threshold_commitments"></span></label>
+<input name="notification_threshold_commitments" #form.read_only# type="text"
+       class="numberinput" size="5" maxlength="10" value="#form.notification_threshold_commitments#" <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>/>%
+</div>
+<div class="notif">
+<label for="notification_threshold_actuals" class="label">Notif. Threshold Actual:<span id="error_notification_threshold_actuals"></span></label>
+<input name="notification_threshold_actuals" #form.read_only# type="text"
+            class="numberinput" size="5" maxlength="10" value="#form.notification_threshold_actuals#" <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>/>%
+</div>
+<cf_emailRecipient
+          intEmails_name  = "notification_emails"
+          intEmails_value = "#form.Notification_Emails#"
+          intEmails_size  = "rows=5 cols=85"
+          intEmails_label = '<strong>Notification Emails:</strong>'
+          include         = "internal"
+          include_jQuery   = false
+          include_jQueryUI = false
+          include_jQueryCSS= false
+          table_class      = "none"
+          position         = ""
+          >
+</div>
+</div>  <!---basic--->
+</fieldset>
+
+<!---<hr style="color:orange; clear:both"/>--->
+<fieldset class="fieldset2">
+<legend class="legend2" id="allocation_type">#vars.allocation_type#s</legend>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<!----- Position/Customer popup link & datagrid ----->
+<ul id="ulFixed">
+<CFIF qGetCreateBudget.Create_Budget eq 0>
+ <li>#application.util.string.actionTextGrayedOut("add " & lcase(vars.allocation_type) & "s")#</li>
+ <li>#application.util.string.actionTextGrayedOut("save")#</li>
+ <cfset local.query_string = "bySearch=#url.bySearch#&byClassIDs=#url.byClassIDs#&byBudgetCodes=#trim(url.byBudgetCodes)#&byGroupIDs=#url.byGroupIDs#&byBudgetTypeIDs=#url.byBudgetTypeIDs#&bySegmentIDs=#url.bySegmentIDs#">
+ <li><a href="index.cfm?#local.query_string#">#application.util.string.actionLinkFormat("return to budgets list")#</a></li>
+ <li>&nbsp;</li>
+ <li>#application.util.string.actionTextGrayedOut("multi-delete")#</li>
+ <li>&nbsp;</li>
+ <li>#application.util.string.actionTextGrayedOut("multi-assign")#</li>
+<CFELSE>
+ <li><a href="##" id="add_entries">#application.util.string.actionLinkFormat("add " & lcase(vars.allocation_type) & "s")#</a></li>
+ <li><a href="##" class="save_fixed">#application.util.string.actionLinkFormat("save")#</a></li>
+ <cfset local.query_string = "bySearch=#form.bySearch#&byClassIDs=#url.byClassIDs#&byBudgetCodes=#trim(url.byBudgetCodes)#&byGroupIDs=#url.byGroupIDs#&byBudgetTypeIDs=#url.byBudgetTypeIDs#&bySegmentIDs=#url.bySegmentIDs#">
+ <li><a href="index.cfm?#local.query_string#">#application.util.string.actionLinkFormat("return to budgets list")#</a></li>
+ <li>&nbsp;</li>
+ <li><a href="javascript:remove()">#application.util.string.actionLinkFormat("multi-delete")#</a></li>
+ <li>&nbsp;</li>
+ <li id="mass_allocate"><span class="ds">$</span><input name="mass_budget" type="text" class="numberinput" size="10"> <a href="##">#application.util.string.actionLinkFormat("multi-assign")#</a></li>
+</CFIF>
+</ul>
+<!--- include current query string in posting form --->
+<input type="hidden" name="query_string" value="#local.query_string#">
+
+<!--- form.entries_list = comma-delimited list of all selected positions --->
+<cfquery name="qEntries" Datasource="#application.datasource#">
+<cfif form.allocation_position_level eq const.customers>
+  SELECT   Customers.Bsa_FoodService_Customers_Id  AS Entry_ID
+         , Customers.Name
+         , Customers.Bsa_FoodService_Customers_Id
+         , Customers.Address_1
+         , Customers.City
+         , Customers.State
+         , Customers.ZipCode
+         , Customers.Shr_Ship_To
+         , Isnull( bda.Budget_Dollar, 0 )    AS Budget_Dollar
+         , Isnull( bda.Committed_Dollar, 0 ) AS Committed_Dollar
+         , Isnull( bda.Actual_Dollar, 0 )    AS Actual_Dollar
+    FROM ( SELECT   'Not Released' AS Name
+                  , '#const.not_released_id#' AS Bsa_FoodService_Customers_Id
+                  , ''             AS Address_1
+                  , ''             AS City
+                  , ''             AS State
+                  , ''             AS ZipCode
+                  , ''             AS Shr_Ship_To
+           UNION
+           SELECT   Name
+                  , Bsa_FoodService_Customers_Id
+                  , Address_1
+                  , City
+                  , State
+                  , ZipCode
+                  , Shr_Ship_To
+             FROM Bsa_FoodService_Customers
+            WHERE
+                 <cfif Len(form.entries_list)>
+                   Bsa_FoodService_Customers_Id IN ( <cfqueryparam cfsqltype="cf_sql_varchar" value="#form.entries_list#" list="true"> )
+                 <cfelse>
+                   1 = 0
+                 </cfif> ) Customers
+         LEFT JOIN Budget_Distributor_Allocation bda
+           ON Customers.Bsa_FoodService_Customers_Id = bda.Bsa_FoodService_Customers_Id
+                AND bda.Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+  ORDER BY Bsa_FoodService_Customers_Id
+<cfelse>
+  SELECT Up.User_Positions_Id  AS Entry_ID
+         , Up.Position_Label
+         , Up.Position_Level
+         , Isnull( bPa.Budget_Dollar, 0 )    AS Budget_Dollar
+         , Isnull( bPa.Committed_Dollar, 0 ) AS Committed_Dollar
+         , Isnull( bPa.Actual_Dollar, 0 )    AS Actual_Dollar
+    FROM ( SELECT 0                AS User_Positions_Id
+                  , 'Not Released' AS Position_Label
+                  , 99             AS Position_Level
+           UNION
+           SELECT User_Positions_Id
+                  , Position_Label
+                  , CASE
+                     WHEN User_Positions.Service_Market_Id IS NOT NULL THEN 3
+                     WHEN User_Positions.Service_Region_Id IS NOT NULL
+                          AND User_Positions.Service_Market_Id IS NULL THEN 2
+                     WHEN User_Positions.Service_Zone_Id IS NOT NULL
+                          AND User_Positions.Service_Region_Id IS NULL
+                          AND User_Positions.Service_Market_Id IS NULL THEN 1
+                     ELSE 0
+                   END AS Position_Level
+             FROM User_Positions
+            WHERE <cfif Len(form.entries_list)>
+                     User_Positions_ID IN ( <cfqueryparam cfsqltype="cf_sql_varchar" value="#form.entries_list#" list="true"> )
+                  <cfelse>
+                     1 = 0
+                  </cfif> ) Up
+         LEFT JOIN Budget_Position_Allocation bPa
+           ON Up.User_Positions_Id = bPa.User_Position_Id
+                AND bPa.Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+</cfif>
+</cfquery>
+
+<div style="clear:both;width:100%;margin-top:30px;">
+<table class="datagrid" id="datagrid">
+<thead>
+<tr>
+ <th class="mid"><input id="toggle_all" type="checkbox" <!---checked=checked--->></th>
+ <th>#vars.allocation_type#</th>
+ <th class="mid">#((form.allocation_position_level eq const.customers) ? "Address" : "Level")#</th>
+ <th class="mid">Current</th>
+ <th class="dollar">Budget</th>
+ <th class="mid">Difference</th>
+ <th class="mid">Committed</th>
+ <th class="mid">Actual</th>
+ <th class="mid">Balance</th>
+ <th>Action</th>
+</tr>
+</thead>
+<tfoot>
+<tr>
+ <th>&nbsp;</th>
+ <th>&nbsp;</th>
+ <th class="total">Subtotal:</th>
+ <th class="total" id="current_total"></th>
+ <th class="total" id="budget_total"></th>
+ <th class="total" id="difference_total"></th>
+ <th class="total" id="committed_balance"></th>
+ <th class="total" id="actual_total"></th>
+ <th class="total" id="actual_balance"></th>
+ <th>&nbsp;</th>
+</tr>
+</tfoot>
+<tbody>
+
+<cfsetting enablecfoutputonly="true">
+<cfloop query="qEntries">
+<cfset budgetElement = const.entry_prefix & ElementName(qEntries.Entry_ID)>   <!---form element name for budget amount--->
+<cfparam name="form.#budgetElement#" default="0.00">
+<cfset tableRowId = "tr" & qEntries.Entry_ID>             <!---tr row identification for deletion--->
+<cfoutput><tr id=#tableRowId#></cfoutput>
+ <cfset overabove = ((qEntries.Entry_ID eq const.not_released_id) ? "overabove": "")>
+ <cfoutput><td class="mid"><cfif Len(overabove) eq 0 or 1><input id=CB#qEntries.CurrentRow# type=checkbox class="cb"></cfif></td></cfoutput>
+ <cfset level_Name = "">
+ <cfif form.allocation_position_level eq const.customers>
+  <cfoutput><td <cfif Len(overabove)>class="#overabove#"</cfif>>#qEntries.Name# #((len(qEntries.Shr_Ship_To)) ? "(" & trim(qEntries.Shr_Ship_To) & ")" : "")#</td><td>#(trim(qEntries.Address_1) & '<br>' & trim(qEntries.City) & ' ' & trim(qEntries.State) & ' ' & trim(qEntries.ZipCode))#</td></cfoutput>
+ <cfelse>
+   <cfswitch expression="#qEntries.Position_Level#">
+     <cfcase value="0"> <cfset level_Name = HQPositionLabel> </cfcase>
+     <cfcase value="1"> <cfset level_Name = application.returned_customer_setting.zone_label_plural> </cfcase>
+     <cfcase value="2"> <cfset level_Name = application.returned_customer_setting.region_label_singular> </cfcase>
+     <cfcase value="3"> <cfset level_Name = application.returned_customer_setting.market_label_singular> </cfcase>
+   </cfswitch>
+  <cfoutput><td <cfif Len(overabove)>class="#overabove#"</cfif>>#qEntries.Position_Label#</td><td>#level_Name#</td></cfoutput>
+ </cfif>
+ <cfoutput><td class="dollar #class.current# #overabove#">#dollarformat( qEntries.Budget_Dollar )#</td></cfoutput>
+ <cfoutput><td class=dollar><input type=text name=#budgetElement# size=11 id=#qEntries.Entry_ID# value="#DollarFormat( NumericValue( form[budgetElement] ) )#" class="#class.budget# dollar"/></td></cfoutput>
+ <cfoutput><td class="dollar #class.difference# #overabove#">#dollarformat( qEntries.Budget_Dollar - NumericValue( form[budgetElement] ) )#</td></cfoutput>
+ <cfoutput><td class="dollar #class.committed# #overabove#">#dollarformat( qEntries.Committed_Dollar )#</td></cfoutput>
+ <cfoutput><td class="dollar #class.actual# #overabove#">#dollarformat( qEntries.Actual_Dollar )#</td></cfoutput>
+ <cfoutput><td class="dollar #class.balance# #overabove#">#dollarformat( qEntries.Budget_Dollar - max(qEntries.Committed_Dollar, qEntries.Actual_Dollar) )#</td>
+ <td><cfif qEntries.Entry_ID neq const.not_released_id><CFIF qGetCreateBudget.Create_Budget eq 0>#application.util.string.actionTextGrayedOut("delete")#<CFELSE><a href="javascript:dp('#tableRowId#')" class="action">#ActionText("delete")#</a></CFIF></cfif></td></cfoutput>
+<cfoutput></tr></cfoutput>
+</cfloop>
+<cfsetting enablecfoutputonly="false">
+</tbody>
+</table>
+</div>
+</fieldset>  <!---positions--->
+
+<div class="excel">
+<CFIF qGetCreateBudget.Create_Budget eq 0>
+#application.util.string.actionTextGrayedOut('save')#&nbsp;&nbsp;&nbsp;&nbsp;
+<a href='##' id='export'>#ActionText('export to excel')#</a>
+#application.util.string.actionTextGrayedOut('import from excel')#
+<CFELSE>
+<a href='##' class='save_fixed'>#ActionText('save')#</a>
+<a href='/images/programs/sample_fixed_budget_upload.png' rel="prettyPhoto" title="Sample of a fixed budget upload template.">#ActionText('view sample upload template')#</a>
+<a href='##' id='export'>#ActionText('export to excel')#</a>
+<a href='##' id='import'>#ActionText('import from excel')#</a>
+</CFIF>
+</div>
+</fieldset>
+</div>
+
+
+<CF_MessageWindow>
+</cfoutput>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cffunction name="ElementName" output="false" hint="I return the valid form element name.">
+  <cfargument name="element_name" required="true" hint="I am the original element name.">
+
+  <cfreturn replace(arguments.element_name, '-', '_', 'all')>
+</cffunction>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cffunction name="labelInMessage" output="false">
+  <cfargument name="label" required="true">
+  <!---make the label in lowered case and remove the colon--->
+  <cfreturn Lcase(Replace(arguments.label, ":", ""))>
+</cffunction>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cffunction name="loadFixedBudget" output="false">
+  <cfset var vars = {}>
+  <cfquery name="vars.qBudget" datasource="#application.datasource#">
+      SELECT Budget_desc
+             , Budget_Group_Id
+             , Budget_Class_Id
+             , Budget_Contribution_Factor_Type_Id
+             , Budget_Code
+             , Notification_Threshold_Commitments
+             , Notification_Threshold_Actuals
+             , Allocation_Position_Level
+             , Budget_Dollar
+             , Business_Segment_Id
+             , Notification_Emails
+             , Is_Perpetual <!---D64149 --->
+        FROM Budget
+       WHERE Budget.Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+  </cfquery>
+  <cfquery name="vars.qEntries" datasource="#application.datasource#">
+    <!---customers based--->
+    <cfif vars.qBudget.Allocation_Position_Level eq const.customers>
+      SELECT Bsa_FoodService_Customers_Id
+             , Budget_Dollar
+        FROM Budget_Distributor_Allocation
+       WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+    <!---positions based--->
+    <cfelse>
+      SELECT User_Position_ID
+             , Budget_Dollar
+        FROM Budget_Position_Allocation
+       WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+     </cfif>
+  </cfquery>
+  <cfscript>
+     form.Budget_desc      = vars.qBudget.Budget_desc;
+     form.Budget_Group_Id  = vars.qBudget.Budget_Group_Id;
+     form.Budget_Class_Id  = vars.qBudget.Budget_Class_Id;
+     form.Budget_Contribution_Factor_Type_Id = vars.qBudget.Budget_Contribution_Factor_Type_Id;
+     form.Budget_Code      = vars.qBudget.Budget_Code;
+     form.Notification_Threshold_Commitments  =  vars.qBudget.Notification_Threshold_Commitments;
+     form.Notification_Threshold_Actuals      =  vars.qBudget.Notification_Threshold_Actuals;
+     form.Allocation_Position_Level           =  vars.qBudget.Allocation_Position_Level;
+     form.Budget_Dollar                       =  vars.qBudget.Budget_Dollar;
+     form.Business_Segment_Id = vars.qBudget.Business_Segment_Id;
+     form.Notification_Emails = vars.qBudget.Notification_Emails;
+     if (vars.qBudget.Allocation_Position_Level eq const.customers) {
+       form.entries_list = ValueList(vars.qEntries.Bsa_FoodService_Customers_Id);
+     }
+     else {
+       form.entries_list = ValueList(vars.qEntries.User_Position_ID);
+     }
+     form.Is_Perpetual = vars.qBudget.Is_Perpetual;//D64149
+  </cfscript>
+  <cfloop query="vars.qEntries">
+		<!---initialize budget dollar form elements--->
+    <cfscript>
+      if (vars.qBudget.Allocation_Position_Level eq const.customers) {
+        vars.budgetElement = const.entry_prefix & ElementName(vars.qEntries.Bsa_FoodService_Customers_Id);
+      }
+      else {
+        vars.budgetElement = const.entry_prefix & vars.qEntries.User_Position_ID;
+      }
+      form[vars.budgetElement] = vars.qEntries.Budget_Dollar;
+    </cfscript>
+  </cfloop>
+</cffunction>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cffunction name="NumericValue" output="false" hint="I return the numeric value of a string.">
+  <cfargument name="numericString" required="true" hint="I am the numeric string.">
+  <cfset arguments.numericString = Replace(arguments.numericString, '$', '', 'all')>
+  <cfset arguments.numericString = Replace(arguments.numericString, ',', '', 'all')>
+
+  <cfset lenBefore = Len(arguments.numericString) />
+  <cfset arguments.numericString = Replace(arguments.numericString, '(', '', 'all')>
+  <cfset arguments.numericString = Replace(arguments.numericString, ')', '', 'all')>
+  <cfset lenAfter = Len(arguments.numericString) />
+  <cfif lenBefore NEQ lenAfter>
+  	<cfset arguments.numericString = "-" & arguments.numericString / >
+  </cfif>
+
+  <cfif Len(Trim( arguments.numericString )) eq 0>
+    <cfreturn 0>
+  <cfelseif IsNumeric( arguments.numericString )>
+    <cfreturn arguments.numericString>
+  <cfelse>
+    <cfreturn 0>
+  </cfif>
+</cffunction>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cffunction name="saveFixedBudget" output="false">
+  <cfset var vars = {}>
+  <cftransaction>
+  <cfquery name="vars.saveBudget" datasource="#application.datasource#">
+    <!---budget_id is greater than zero, update existing budget--->
+    <cfif form.Budget_Id gt 0>
+      UPDATE Budget
+         SET   Budget_Code = <cfqueryparam value="#form.Budget_Code#" cfsqltype="cf_sql_varchar">
+             , Budget_Desc = <cfqueryparam value="#form.Budget_Desc#" cfsqltype="cf_sql_varchar">
+             , Budget_Group_Id = <cfqueryparam value="#form.Budget_Group_ID#" cfsqltype="cf_sql_integer">
+             , Budget_Class_Id = <cfqueryparam value="#form.Budget_Class_ID#" cfsqltype="cf_sql_integer">
+             , Budget_Contribution_Factor_Type_ID = <cfqueryparam value="1" cfsqltype="cf_sql_integer">
+             , Notification_Threshold_Commitments = <cfqueryparam value="#form.Notification_Threshold_Commitments#" cfsqltype="cf_sql_decimal" scale=2>
+             , Notification_Threshold_Actuals = <cfqueryparam value="#form.Notification_Threshold_Actuals#" cfsqltype="cf_sql_decimal" scale=2>
+             , Allocation_Position_Level = <cfqueryparam value="#form.Allocation_Position_Level#" cfsqltype="cf_sql_integer">
+             , Budget_Dollar = <cfqueryparam value="#NumericValue(form.Budget_Dollar)#" cfsqltype="cf_sql_decimal" scale=2>
+             , Budget_Status = <cfqueryparam value="#form.Budget_Status#" cfsqltype="cf_sql_varchar">
+             , Business_Segment_Id = <cfqueryparam value="#Val(form.Business_Segment_Id)#" cfsqltype="cf_sql_integer">
+             , Notification_Emails = <cfqueryparam value="#form.Notification_Emails#" cfsqltype="cf_sql_varchar">
+			 , Is_Perpetual = <cfqueryparam value="#form.Is_Perpetual#" cfsqltype="cf_sql_bit"><!---D64149 --->
+       WHERE Budget.Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+
+       <cfinclude template="last_update.cfm">       <!--- 36874 --->
+    <cfelse>
+    	SET NOCOUNT ON
+      INSERT INTO BUDGET
+          ( <!---01---> Budget_Desc
+          , <!---02---> Budget_Group_ID
+          , <!---03---> Budget_Class_ID
+          , <!---04---> Budget_Contribution_Factor_Type_ID
+          , <!---05---> Notification_Threshold_Commitments
+          , <!---06---> Notification_Threshold_Actuals
+          , <!---07---> Allocation_Position_Level
+          , <!---08---> Budget_Dollar
+          , <!---09---> Active
+          , <!---10---> Budget_Code
+          , <!---11---> Budget_Status
+          , <!---12---> Business_Segment_Id
+          , <!---13---> Notification_Emails
+          , <!---14---> Last_Updated_By
+          , <!---15---> Is_Perpetual<!---D64149 --->
+          )
+      VALUES
+          ( <!---01---> <cfqueryparam value="#form.Budget_Desc#" cfsqltype="cf_sql_varchar">
+          , <!---02---> <cfqueryparam value="#form.Budget_Group_ID#" cfsqltype="cf_sql_integer">
+          , <!---03---> <cfqueryparam value="#form.Budget_Class_ID#" cfsqltype="cf_sql_integer">
+          , <!---04---> <cfqueryparam value="1" cfsqltype="cf_sql_integer">
+          , <!---05---> <cfqueryparam value="#form.Notification_Threshold_Commitments#" cfsqltype="cf_sql_decimal" scale=2>
+          , <!---06---> <cfqueryparam value="#form.Notification_Threshold_Actuals#" cfsqltype="cf_sql_decimal" scale=2>
+          , <!---07---> <cfqueryparam value="#form.Allocation_Position_Level#" cfsqltype="cf_sql_integer">
+          , <!---08---> <cfqueryparam value="#NumericValue(form.Budget_Dollar)#" cfsqltype="cf_sql_decimal" scale=2>
+          , <!---09---> 0
+          , <!---10---> <cfqueryparam value="#form.Budget_Code#" cfsqltype="cf_sql_varchar">
+          , <!---11---> <cfqueryparam value="#form.Budget_Status#" cfsqltype="cf_sql_varchar">
+          , <!---12---> <cfqueryparam value="#Val(form.Business_Segment_Id)#" cfsqltype="cf_sql_integer">
+          , <!---13---> <cfqueryparam value="#form.Notification_Emails#" cfsqltype="cf_sql_varchar">
+          , <!---14---> <cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="cf_sql_varchar">
+		  , <!---15---> <cfqueryparam value="#form.Is_Perpetual#" cfsqltype="cf_sql_varchar"><!---D64149 --->
+          )
+      <!---get the new Budget_Id--->
+    	SELECT Budget_Id = @@IDENTITY
+    	SET NOCOUNT OFF
+    </cfif>
+  </cfquery>
+
+  <cfif form.Budget_Id eq 0>
+    <!---get the new Budget_Id--->
+    <cfset form.Budget_Id = vars.saveBudget.Budget_Id>
+  </cfif>
+
+  <cfif form.Allocation_Position_Level eq const.customers>
+    <cfset saveCustomers()>
+  <cfelse>
+    <cfset savePositions()>
+  </cfif>
+  </cftransaction>
+</cffunction>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cffunction name="saveCustomers" output="false">
+  <cfset var vars = {}>
+  <cfoutput>
+  <!---remove customers no longer needed--->
+  <cfquery name="vars.removals" datasource="#application.datasource#">
+    DELETE Budget_Distributor_Allocation
+     WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+           <cfif Len( form.entries_list )>
+            AND NOT Bsa_FoodService_Customers_Id IN ( <cfqueryparam cfsqltype="cf_sql_varchar" value="#form.entries_list#" list="true"> )
+           </cfif>
+  </cfquery>
+
+  <!----- Save selected customers ----->
+  <cfloop list="#form.entries_list#" index="vars.customer_id">
+    <!---determine the budget form element name for the position--->
+    <cfset vars.budgetElement = const.entry_prefix & ElementName(vars.customer_id)>
+    <!---does the row exist?--->
+    <cfquery name="vars.rowExists" datasource="#application.datasource#">
+      SELECT 1
+        FROM Budget_Distributor_Allocation
+       WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+             AND Bsa_FoodService_Customers_Id = <cfqueryparam value="#vars.customer_id#" cfsqltype="cf_sql_varchar">
+    </cfquery>
+    <cfquery name="vars.saveCustomer" datasource="#application.datasource#">
+      <!---row is there, update it--->
+      <cfif vars.rowExists.recordCount gt 0>
+        UPDATE Budget_Distributor_Allocation
+           SET Budget_Dollar = <cfqueryparam value="#NumericValue(form[vars.budgetElement])#" cfsqltype="cf_sql_decimal" scale=2>
+         WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+               AND Bsa_FoodService_Customers_Id = <cfqueryparam value="#vars.customer_id#" cfsqltype="cf_sql_varchar">
+      <cfelse>
+        <!---row does not exist, create one--->
+        INSERT INTO Budget_Distributor_Allocation
+          ( Budget_Id
+          , Bsa_FoodService_Customers_Id
+          , Budget_Dollar
+          , Committed_Dollar
+          , Actual_Dollar
+          )
+          VALUES
+          ( <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+          , <cfqueryparam value="#vars.customer_id#" cfsqltype="cf_sql_varchar">
+          , <cfqueryparam value="#NumericValue(form[vars.budgetElement])#" cfsqltype="cf_sql_decimal" scale=2>
+          , <cfqueryparam value="0" cfsqltype="cf_sql_decimal" scale=2>
+          , <cfqueryparam value="0" cfsqltype="cf_sql_decimal" scale=2>
+          )
+      </cfif>
+    </cfquery>
+  </cfloop>
+
+  <!--- store values in history table--->
+  <cfquery name="vars.saveHistory" datasource="#application.datasource#">
+    INSERT INTO Budget_Distributor_Allocation_History
+                (  Budget_Distributor_Allocation_Id
+                 , Budget_Id
+                 , Bsa_FoodService_Customers_Id
+                 , Budget_Dollar
+                 , Committed_Dollar
+                 , Actual_Dollar )
+          SELECT Budget_Distributor_Allocation_Id
+                 , Budget_Id
+                 , Bsa_FoodService_Customers_Id
+                 , Budget_Dollar
+                 , Committed_Dollar
+                 , Actual_Dollar
+            FROM Budget_Distributor_Allocation
+           WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+  </cfquery>
+  </cfoutput>
+</cffunction>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cffunction name="savePositions" output="false">
+  <cfset var vars = {}>
+  <cfoutput>
+  <!---remove positions no longer needed--->
+  <cfquery name="vars.removals" datasource="#application.datasource#">
+    DELETE Budget_Position_Allocation
+     WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+           <cfif Len( form.entries_list )>
+            AND NOT User_Position_Id IN ( <cfqueryparam cfsqltype="cf_sql_varchar" value="#form.entries_list#" list="true"> )
+           </cfif>
+  </cfquery>
+
+  <!----- Save selected positions ----->
+  <cfloop list="#form.entries_list#" index="vars.position_id">
+    <!---determine the budget form element name for the position--->
+    <cfset vars.budgetElement = const.entry_prefix & vars.position_id>
+    <!---does the row exist?--->
+    <cfquery name="vars.rowExists" datasource="#application.datasource#">
+      SELECT 1
+        FROM Budget_Position_Allocation
+       WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+             AND User_Position_Id = <cfqueryparam value="#vars.position_id#" cfsqltype="cf_sql_integer">
+    </cfquery>
+    <cfquery name="vars.savePosition" datasource="#application.datasource#">
+      <!---row is there, update it--->
+      <cfif vars.rowExists.recordCount gt 0>
+        UPDATE Budget_Position_Allocation
+           SET Budget_Dollar = <cfqueryparam value="#NumericValue(form[vars.budgetElement])#" cfsqltype="cf_sql_decimal" scale=2>
+         WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+               AND User_Position_Id = <cfqueryparam value="#vars.position_id#" cfsqltype="cf_sql_integer">
+      <cfelse>
+        <!---row does not exist, create one--->
+        INSERT INTO Budget_Position_Allocation
+          ( Budget_Id
+          , User_Position_Id
+          , Budget_Dollar
+          , Created_Date
+          , Committed_Dollar
+          , Actual_Dollar
+          )
+          VALUES
+          ( <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+          , <cfqueryparam value="#vars.position_id#" cfsqltype="cf_sql_integer">
+          , <cfqueryparam value="#NumericValue(form[vars.budgetElement])#" cfsqltype="cf_sql_decimal" scale=2>
+          , GetDate()
+          , <cfqueryparam value="0" cfsqltype="cf_sql_decimal" scale=2>
+          , <cfqueryparam value="0" cfsqltype="cf_sql_decimal" scale=2>
+          )
+      </cfif>
+    </cfquery>
+  </cfloop>
+
+  <!--- store values in history table--->
+  <cfquery name="vars.savePositionHistory" datasource="#application.datasource#">
+    INSERT INTO Budget_Position_Allocation_History
+                (  Budget_Position_Allocation_Id
+                 , Budget_Id
+                 , User_Position_Id
+                 , Budget_Dollar
+                 , Committed_Dollar
+                 , Actual_Dollar )
+          SELECT Budget_Position_Allocation_Id
+                 , Budget_Id
+                 , User_Position_Id
+                 , Budget_Dollar
+                 , Committed_Dollar
+                 , Actual_Dollar
+            FROM Budget_Position_Allocation
+           WHERE Budget_Id = <cfqueryparam value="#form.Budget_Id#" cfsqltype="cf_sql_integer">
+  </cfquery>
+
+  </cfoutput>
+</cffunction>
+
+
+
+
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<cfinclude template="/common_files/dataTables.cfm">
+<cfset files_to_pull = [  "/Script/javascript/jquery.dataTables-api.js"
+                          , "/Script/javascript/jquery.cfjs.min.js"
+                          , "/Script/javascript/jquery-impromptu.3.1.min.js"
+                          , "/script/javascript/google/base.min.js"
+                          , "/script/javascript/google/string.min.js"
+                          , "/script/javascript/google/emailaddress.min.js"
+                          , "/Script/javascript/jquery.calculation.js"
+                          , "/Script/javascript/jquery.prettyPhoto.js"
+                          , "/Script/javascript/math_functions.js"   ]>
+<cf_include files="#arrayToList(files_to_pull)#">
+<script type="text/javascript">
+<!---adjust screen width based on user's monitor resolution--->
+// $('#mainfieldset').css('width', ($(window).width() <= 700) ? "800px" : "100%");
+var remaining = 0, allocated = 0, basic_display = 1;
+<!---turn off loading from db flag--->
+document.forms[budget_form].load_fromdb.value  = "0";
+<cfif form.Allocation_Position_Level eq const.customers>
+	var column_width = [ "4%", "19%", "15%", "9%", "9%", "9%", "9%", "9%", "9%", "4%" ];
+<cfelse>
+	var column_width = [ "4%", "25%", "9%", "9%", "9%", "9%", "9%", "9%", "9%", "4%" ];
+</cfif>
+var x_filter = '';
+var datagrid = $('table#datagrid').dataTable({
+	 "bAutoWidth": true
+	,"bPaginate": false
+  ,"bSortClasses": false
+  ,"bScrollCollapse": true
+  <!---refresh subtotals when filtering string is changed--->
+  ,"fnDrawCallback": function() { var filter = $('#datagrid_filter input').val(); if (x_filter !== filter) { calc_subtotals(); } x_filter = filter; }
+  ,"sDom": 'f<"calc">ti'
+  ,"sScrollXInner": "100%"
+  ,"aaSorting": []
+  ,"aoColumns": [   {"sWidth": column_width[0], "bSortable":true,  "bSearchable":false, "sSortDataType":"dom-checkbox" }
+                  , {"sWidth": column_width[1], "bSortable":true,  "bSearchable":true}
+                  , {"sWidth": column_width[2], "bSortable":true,  "bSearchable":true}
+                  , {"sWidth": column_width[3], "bSortable":true,  "bSearchable":false, "sType":"currency" }
+                  , {"sWidth": column_width[4], "bSortable":false, "bSearchable":false, "sType":"currency" }
+                  , {"sWidth": column_width[5], "bSortable":false, "bSearchable":false, "sType":"currency" }
+                  , {"sWidth": column_width[6], "bSortable":false, "bSearchable":false, "sType":"currency" }
+                  , {"sWidth": column_width[7], "bSortable":false, "bSearchable":false, "sType":"currency" }
+                  , {"sWidth": column_width[8], "bSortable":true,  "bSearchable":false, "sType":"currency" }
+                  , {"sWidth": column_width[9], "bSortable":false, "bSearchable":false}   ]
+}).fnSetFilteringDelay();
+<!---$(window).resize(function(){ datagrid.fnAdjustColumnSizing(); });--->
+calc_allocated();
+<!-------------------------------------------------------------------------------------------------------------------->
+<!---forceNumeric() plug-in implementation--->
+$.fn.forceNumeric = function ( auto_jump_next_row ) {
+   return this.each(function () {
+       $(this).keydown(function (e) {
+
+           var key = e.which || e.keyCode;
+		   	  // alert(key);
+           if (!e.shiftKey && !e.altKey && !e.ctrlKey &&
+           <!---numbers--->( key >= 48 && key <= 57 ) ||
+           <!---Numeric keypad--->( key >= 96 && key <= 105 ) ||
+           <!---comma, period and minus--->key == 190 || key == 188 || key == 109 || key == 189 ||
+           <!---Backspace and Tab and Enter--->key == 8 || key == 9 || key == 13 ||
+           <!---Home and End--->key == 35 || key == 36 ||
+           <!---left, up and right, down arrows--->( key >= 37 && key <= 40 ) ||
+           <!---Del and Ins--->key == 46 || key == 45 ||
+           <!---Decimal point on numeric keypad---> key == 110)
+           {
+             if ( auto_jump_next_row ) {
+               <!---go to next row--->
+               if ( key == 13 || key == 40 ) {
+                 e.preventDefault();
+                 <!---locate the next tr with input text--->
+                 var parent_tr = $(this).parents('tr'),
+                     elem = parent_tr.next('tr').find('input:text');
+                 <!---if found focus the new budget amount--->
+                 if ( elem.attr('id') )
+                  document.getElementById(elem.attr('id')).focus();
+               }
+               <!---go to previous row--->
+               else if ( key == 38 ) {
+                 <!---locate the prev tr with input text--->
+                 var parent_tr = $(this).parents('tr'),
+                     elem = parent_tr.prev('tr').find('input:text');
+                 <!---if found focus the new budget amount--->
+                 if ( elem.attr('id') )
+                  document.getElementById(elem.attr('id')).focus();
+               }
+             }
+             return true;
+           }
+           return false;
+       });
+   });
+}
+$(".numberinput").forceNumeric( 0 );
+$(<cfoutput>".#class.budget#"</cfoutput>).forceNumeric( 1 );
+<!--------------------------------------------------------------------------------------------------------------------->
+function calc_allocated() {
+  // allocated = subtotal_by_class( <cfoutput>'.#class.budget#'</cfoutput>, datagrid.fnGetNodes() );  <!---total of all entries--->
+  allocated = subtotal_by_class( <cfoutput>'.#class.budget#'</cfoutput> );
+  remaining = addNumbers( Number( dollar_edit_format( $('#total_budget_dollar').val() ) ), -allocated );
+  $('div.calc').html('<span class="calc_label">Allocated:</span> <span class="calc_value">' + $.DollarFormat(allocated) + '</span><span class="calc_label">Remaining:</span> <span class="calc_value">' + $.DollarFormat(remaining) + '</span>');
+	calc_subtotals();
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function calc_subtotals() {
+  <!---calculate subtotals of visible entries (excluding filtered entries)--->
+  $('#budget_total').html( $.DollarFormat( subtotal_by_class( <cfoutput>'.#class.budget#'</cfoutput> ) ) );
+  $('#current_total').html( $.DollarFormat( subtotal_by_class( <cfoutput>'.#class.current#'</cfoutput> ) ) );
+ // $('#difference_total').html( $.DollarFormat( subtotal_by_class( <cfoutput>'.#class.difference#'</cfoutput> ) ) );
+  $('#difference_total').html( $.DollarFormat( subtotal_by_class_override( <cfoutput>'.#class.difference#'</cfoutput> ) ) );
+  $('#committed_balance').html( $.DollarFormat( subtotal_by_class( <cfoutput>'.#class.committed#'</cfoutput> ) ) );
+  $('#actual_total').html( $.DollarFormat( subtotal_by_class( <cfoutput>'.#class.actual#'</cfoutput> ) ) );
+  $('#actual_balance').html( $.DollarFormat( subtotal_by_class_override( <cfoutput>'.#class.balance#'</cfoutput> ) ) );
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+/*
+	90293 - Budget - difference & balance columns not summing correctly / Anand Rao/16-Mar-2020
+	the below function was written so that the negative value with () will be handled correctly 
+	as the other function was not summing the negative values correctly.
+*/
+function subtotal_by_class_override(element_class)
+{
+	var Tot = 0.00;
+	$(element_class).each(function(){
+		Tot += parseFloat(($(this).text()).replace("$","").replace("(","-").replace(")",""));
+	});
+	return Tot;	
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function subtotal_by_class( element_class, context ) {
+	if ( !context ) {
+		return $(element_class).sum();
+	}
+  else {
+    return $(element_class, context).sum();
+  }
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function dp( tr_id ) {
+  datagrid.fnDeleteRow( $('#' + tr_id)[0] );
+  calc_allocated();
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function dollar_edit_format( amt ) {
+  <!---remove dollar signs, commas--->
+  var result = amt.replace("$", "").replace("%24", "").replace(/\,/g,"").replace(/%2C/g,"");
+  <!---is this a negative dollar amount enclosed with a pair of parentheses?--->
+  if ( $.FindNoCase('(', result) ) {
+  	result = '-' + result.replace("(", "").replace(")","");  <!---add negative sign, remove parentheses--->
+  }
+  return result;
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function remove() {
+ if ($('.cb:checked').length == 0)
+  $.prompt('Please check the boxes in the first column to select the positions to delete.' );
+ else {
+  $('#datagrid tbody tr').each(function(){
+   var row_id = $(this).attr('id');
+   var check_box = $(this).find(':checkbox:eq(0)');
+   if (( check_box.attr("checked") == "checked" ) && ( row_id !== 'tr' + '<cfoutput>#const.not_released_id#</cfoutput>'))
+     datagrid.fnDeleteRow( $('#' + row_id)[0] );
+  });
+  calc_allocated();
+ }
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function save_fixed() {
+  var error_cnt = 0;
+  <!---validate form fields--->
+  if ( $.trim(document.forms[budget_form].budget_code.value).length )
+    clearQueue(document.all.error_budget_code);
+  else {
+    error_cnt++; queueMessage("Please enter the " + <cfoutput>"#labelInMessage(formlabels.code)#."</cfoutput>, document.all.error_budget_code);
+  }
+  if ( $.trim(document.forms[budget_form].budget_desc.value).length )
+    clearQueue(document.all.error_budget_desc);
+  else {
+    error_cnt++; queueMessage("Please enter the " + <cfoutput>"#labelInMessage(formlabels.desc)#."</cfoutput>, document.all.error_budget_desc);
+  }
+  if ( document.forms[budget_form].budget_class_id.value != 0 )
+    clearQueue(document.all.error_budget_class_id);
+  else {
+    error_cnt++; queueMessage("Please select the " + <cfoutput>"#labelInMessage(formlabels.class)#."</cfoutput>, document.all.error_budget_class_id);
+  }
+  if ( document.forms[budget_form].budget_group_id.value != 0 )
+    clearQueue(document.all.error_budget_group_id);
+  else {
+    error_cnt++; queueMessage("Please select the " + <cfoutput>"#labelInMessage(formlabels.group)#."</cfoutput>, document.all.error_budget_group_id);
+  }
+  if ( $.trim(document.forms[budget_form].notification_threshold_commitments.value).length
+    && $.IsValid("integer", document.forms[budget_form].notification_threshold_commitments.value)
+    && $.IsValid("range", document.forms[budget_form].notification_threshold_commitments.value, 0, 999) )
+    clearQueue(document.all.error_notification_threshold_commitments);
+  else {
+    error_cnt++; queueMessage("Please enter a whole number between 0 and 999 for notification threshold for commitment.", document.all.error_notification_threshold_commitments);
+  }
+  if ( $.trim(document.forms[budget_form].notification_threshold_actuals.value).length
+   &&  $.IsValid("integer", document.forms[budget_form].notification_threshold_actuals.value)
+   &&  $.IsValid("range", document.forms[budget_form].notification_threshold_actuals.value, 0, 999) )
+    clearQueue(document.all.error_notification_threshold_actuals);
+  else {
+    error_cnt++; queueMessage("Please enter a whole number between 0 and 999 for notification threshold for actual.", document.all.error_notification_threshold_actuals);
+  }
+  <cfif busSegMgr.isEnabled>
+    if ( document.forms[budget_form].business_segment_id.value != 0 )
+      clearQueue(document.all.error_business_segment_id);
+    else {
+      error_cnt++; queueMessage("Please select the " + <cfoutput>"#labelInMessage(formlabels.segment)#."</cfoutput>, document.all.error_business_segment_id);
+    }
+  </cfif>
+  if ( (goog.string.isEmpty(document.all.notification_emails.value)) || (goog.format.EmailAddress.isValidAddress(document.all.notification_emails.value)) ) {
+    clearQueue(document.all.error_notification_emails);
+  }
+  else {
+    error_cnt++; queueMessage("Please review and correct the email addresses", document.all.error_notification_emails);
+  }
+
+  if ( error_cnt > 0 ) {
+    showMessageWindow();
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function set_entries_list() {
+  <!---find all nodes (includes hidden) with budget class, gather all id values & join them together--->
+  document.forms[budget_form].entries_list.value = $(<cfoutput>'.#class.budget#'</cfoutput>, datagrid.fnGetNodes()).map(function() { return this.id; } ).get().join(',');
+}
+<!--------------------------------------------------------------------------------------------------------------------->
+function switchfactor( factor ) {
+  if ( factor.value == 1 )
+    return false;
+  if ( factor.value == 2 )
+    document.forms[budget_form].command.value = "editAccrual";
+  if ( factor.value == 3 )
+    document.forms[budget_form].command.value = "editVariable";
+  document.forms[budget_form].submit();
+}
+<!---events for toggle all checkbox------------------------------------------------------------------------------------>
+var $checkboxes = $('.cb');               <!---the other checkboxes--->
+$('#toggle_all').change(function(e){      <!---listen for the change event on the toggle--->
+ if ( this.checked )
+  $checkboxes.attr('checked','checked');  <!---if checked, select all the checkboxes--->
+ else
+  $checkboxes.removeAttr('checked');      <!---if not checked, deselect all the checkboxes--->
+ e.stopPropagation();
+});
+<!---events for multi-assign link------------------------------------------------------------------------------------>
+$('#mass_allocate a').click(function (e) {                <!---events for multi-assign link--->
+ var $mass_amt = $('#mass_allocate input');               <!---locate the mass amount element--->
+ if ($('.cb:checked').length == 0)
+  $.prompt('Please check the boxes in the first column to select the positions to assign.' );
+ else if ($.trim( $mass_amt.val() ).length == 0) {
+  var fnCallBack = function() { $('#mass_allocate input').focus(); };
+  $.prompt('Please enter the assignment amount.', { callback: fnCallBack });
+ }
+ else {
+  var new_val = $.DollarFormat( dollar_edit_format( $mass_amt.val() ) );  <!---format the new budget amount--->
+  $('#datagrid tbody tr').each(function(){                <!---scan thru all rows--->
+   var check_box = $(this).find( ':checkbox:eq(0)' );
+   if ( check_box.attr("checked") == "checked" )          <!---if row is checked apply the new budget amount--->
+     $(this).find('input:text:eq(0)').val( new_val );
+  });
+  calc_allocated();                                       <!---recalculate allocated total & remaining amt--->
+ }
+});
+<!---events for hide/show basic info--------------------------------------------------------------------------------->
+$('#animate').click(function () {
+ $('#basic').animate({ opacity:'toggle', height:'toggle' }, 'fast');
+ basic_display = ((basic_display == 1) ? 0 : 1);          <!---toggle display of basic info--->
+ if (basic_display == 0)
+   $('#animate').html( <cfoutput>"#vars.show#"</cfoutput> );
+ else
+   $('#animate').html( <cfoutput>"#vars.hide#"</cfoutput> );
+});
+<!---events for individual budget dollars---------------------------------------------------------------------------->
+$('.' + <cfoutput>'#class.budget#'</cfoutput>).bind({
+ blur: function(){ var $this = $(this); var formatted_val = $.DollarFormat( dollar_edit_format( $this.val() ) ); $this.val( formatted_val );  <!---apply dollar format ---> }
+ ,focus: function(){ $(this).select(); }
+ ,change: function() { var $this = $(this); var parent_tr = $this.parents('tr'),
+           <cfoutput> curr_amt  = dollar_edit_format( parent_tr.find('.#class.current#').html() ),
+                      new_amt   = dollar_edit_format( $this.val() ),
+                      committed = dollar_edit_format( parent_tr.find('.#class.committed#').html() ),
+                      actual    = dollar_edit_format( parent_tr.find('.#class.actual#').html() );
+                      parent_tr.find('.#class.difference#').html( $.DollarFormat( new_amt - curr_amt ) );
+                      parent_tr.find('.#class.balance#').html( $.DollarFormat( new_amt - Math.max( committed, actual ) ) );</cfoutput>
+                      calc_allocated(); }
+})
+<!---events for total budget dollars-------------------------------------------------------------------------------->
+$('#total_budget_dollar')
+ .blur(function(){ var $this = $(this); var formatted_val = $.DollarFormat( dollar_edit_format( $this.val() ) );
+                       $this.val( formatted_val );  <!---apply dollar format & right-justify it--->
+ })
+ .focus(function() { $(this).select(); })
+ //.focus(function(){ var $this = $(this); var edit_val = $this.val().replace(/\$/g, "");
+ //                       $this.val( edit_val );   <!---remove dollar sign, left-justify it--->
+ //})
+ .change(function() { calc_allocated(); });
+<!---set up impromptu & related function---------------------------------------------------------------------------->
+$.prompt.setDefaults( { opacity:'0.3', prefix:'cleanblue', top:'35%' } );
+function close_budget() { document.forms[budget_form].submit(); };
+<!---events for save action----------------------------------------------------------------------------------------->
+$('.save_fixed').click(function(e) {
+  e.preventDefault();
+  if ( save_fixed() ) {     <!---no validation error--->
+    set_entries_list();    <!---refresh the positions list--->
+    datagrid.fnFilter('');  <!---bring back all rows including hidden ones to save--->
+    document.forms[budget_form].clicked_save.value = "1";
+    if ( remaining != 0 ) {
+      <!---need to perform the submit action in the callback function otherwise the prompt popup would close automatically!--->
+      <!---$.prompt( "The remaining amount is " + $.DollarFormat(remaining), { callback:close_budget } );--->
+      $.prompt( "You cannot activate the budget until the remaining amount is $0.", { callback:close_budget } );
+    }
+    else {
+      document.forms[budget_form].budget_status.value = "validated";
+      close_budget();       <!---submit the form--->
+    }
+  }
+});
+<!---events for allocation control radio buttons-------------------------------------------------------------------->
+$('.apl').change(function() {
+  $('#entries_list').val('');     <!---reset the selected entries list to blank--->
+  document.forms[budget_form].submit();
+});
+<!---events for import from excel link-------------------------------------------------------------------------------->
+$('#import').click(function(e) {
+	var height = 400, width = 550;
+	<cfoutput>
+	NewWindow("/settings/advanced_budget/importbudget.cfm?data_handler=import_handler&budget_id=#form.budget_id#&height=" + height + "&width=" + width, "importwindow", width, height, "no", "no");
+  </cfoutput>
+});
+function import_handler() {
+	/*done with import from Excel, reload data from db and refresh the page*/
+	$('input[name=load_fromdb]').val("1");
+	$('input[name=next_action]').val("");
+  close_budget();       <!---submit the form--->
+}
+<!---events for export to excel link-------------------------------------------------------------------------------->
+$('#export').click(function(e) {
+ e.preventDefault();
+ if ( save_fixed() ) {     <!---no validation error--->
+    set_entries_list();    <!---refresh the positions list--->
+    datagrid.fnFilter('');  <!---bring back all rows including hidden ones to save--->
+    document.forms[budget_form].clicked_save.value = "1";
+    if ( remaining == 0 ) {
+      document.forms[budget_form].budget_status.value = "validated";
+    }
+    document.forms[budget_form].next_action.value = "export";
+    close_budget();       <!---submit the form--->
+ }
+});
+<!---events for add entries action link----------------------------------------------------------------------------->
+
+
+$('#add_entries').click(function(e) {
+ e.preventDefault();
+ <!---refresh the selected entries list--->
+ set_entries_list();
+ <!---current checked value is customer--->
+<cfif appSettings.getBudgetSingleLevelForFixed()><!--- User can only select one - HQ, Zone, Region, Market or Customer --->
+ var allocationLevel = $('.apl').val();
+ var RestrictPositionLevel = allocationLevel;
+<cfelse>
+ var allocationLevel = $('.apl:checked').val();
+ var RestrictPositionLevel = -1; // no need to restrict on level, all levels are allowed
+</cfif>
+
+ if ( allocationLevel == <cfoutput>#const.customers#</cfoutput> ) {
+	NewWindow("/billbacks/search_screens/PM_select_distributors.cfm?Formname=" + budget_form
+	            + "&FieldName=entries_list&SelectSingleSearchResultOnly=0&OnlyDistributorsUnderMe=0&Business_Segment_Id=" +<cfoutput>#form.Business_Segment_Id#</cfoutput>
+	            , "distributorwindow", 850, 600, "yes", "yes");<!--- D28618: Position Drop Down Fields filtered based on Program Business Segment   Added URL variable Business Segment ID--->
+ }
+ else {
+  NewWindow("/Search_Screens/Select_User_Position.cfm?FormName=" + budget_form
+              + "&FieldName=entries_list&AllowImportAll=1&EnableListOfPositionsAboveMine=1&RestrictPositionLevel=" + RestrictPositionLevel + "&Business_Segment_Id=" +<cfoutput>#form.Business_Segment_Id#</cfoutput>
+              , "Positionwindow", 850, 600, "yes", "yes");<!--- D28618: Position Drop Down Fields filtered based on Program Business Segment   Added URL variable Business Segment ID--->
+ }
+});
+
+ $("a[rel^='prettyPhoto']").prettyPhoto({ social_tools:'', theme:'light_rounded', opacity:0.3 });  <!--- 47143 --->
+ </script>

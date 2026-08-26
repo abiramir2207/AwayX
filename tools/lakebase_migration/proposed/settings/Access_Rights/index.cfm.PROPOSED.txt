@@ -1,0 +1,89 @@
+===== QUERY: GetCustomerTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForGetCustomerTypes>
+	<cftry>
+		<cfset GetCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustomerTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: #Query_Name2# =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFor#Query_Name2# = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_customer_type_settings")>
+<cfif useLakebaseFor#Query_Name2#>
+	<cftry>
+		<cfset #Query_Name2# = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_customer_type_settings", {
+				"profiles_id" = "eq.#i#",
+				"customer_type_id" = "eq.#j#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFor#Query_Name2# = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFor#Query_Name2#>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Update_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: margin_approval_method =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFormargin_approval_method = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseFormargin_approval_method>
+	<cftry>
+		<cfset margin_approval_method = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_approval_method"
+			}), "program_margin_approval_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormargin_approval_method = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormargin_approval_method>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getApprovalMargin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetApprovalMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetApprovalMargin>
+	<cftry>
+		<cfset getApprovalMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"group_id" = "eq.#GroupCount#",
+				"profile_id" = "eq.#i#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetApprovalMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetApprovalMargin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: TableExists =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

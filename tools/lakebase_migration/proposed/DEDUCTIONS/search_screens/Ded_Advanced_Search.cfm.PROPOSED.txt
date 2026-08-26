@@ -1,0 +1,22 @@
+===== QUERY: GetBillTo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBillTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_bill_to")>
+<cfif useLakebaseForGetBillTo>
+	<cftry>
+		<cfset GetBillTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_bill_to", {
+				"deleted" = "eq.0",
+				"order" = "name.asc",
+				"select" = "distributor_bill_to_id,shr_bill_to,name"
+			}), "distributor_bill_to_id,shr_bill_to,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillTo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

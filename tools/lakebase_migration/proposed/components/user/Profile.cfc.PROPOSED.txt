@@ -1,0 +1,48 @@
+===== QUERY: qGtProfileName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGtProfileName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqGtProfileName>
+	<cftry>
+		<cfset qGtProfileName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"profiles_id" = "eq.#arguments.profileId#",
+				"select" = "profiles_desc,profiles_short_desc"
+			}), "profiles_desc,profiles_short_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGtProfileName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGtProfileName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetSettings_Panel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSettings_Panel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForqGetSettings_Panel>
+	<cftry>
+		<cfset qGetSettings_Panel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles_settings", {
+				"profiles_id" = "eq.#arguments.profileId#",
+				"select" = "settings_panel"
+			}), "settings_panel"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSettings_Panel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSettings_Panel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.qGetCreateBudget =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: local.Profiles =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

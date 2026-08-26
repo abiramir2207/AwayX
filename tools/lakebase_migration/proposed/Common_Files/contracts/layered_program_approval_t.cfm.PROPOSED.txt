@@ -1,0 +1,49 @@
+===== QUERY: getGlobalUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramVolumeForProfiles =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qProductsBeyondMaxRateList =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: isEditing =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForisEditing = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForisEditing>
+	<cftry>
+		<cfset isEditing = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#getProgramInfo.contract_main_id#",
+				"contract_is_locked" = "eq.1",
+				"contract_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisEditing = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisEditing>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This is the popup for payment history. -->    
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+ <mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+	<![CDATA[
+			import mx.controls.Alert;
+			import mx.controls.Button;
+			import mx.managers.CursorManager;
+			[Bindable]
+ 
+ 			private function openExternalURL(iContractMainID:String):void
+			{
+				var jsURL:String = "/common_files/contracts/view_contract_payment_history.cfm?ContractId=" + iContractMainID;
+				var jscommand:String = "window.open('"+ jsURL + "','winPaymentHistory','height=620,width=870,toolbar=no,scrollbars=yes');";
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);"); 
+				navigateToURL(url, "_self"); 
+			}
+	]]>
+</mx:Script>
+
+	 <mx:VBox id="imgPmtHolder">
+		<mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+			source="{getSource(data.payment_history)}" 
+			click="openExternalURL(data.contract_main_id.toString())" 
+			useHandCursor="true" buttonMode="true" 
+			mouseChildren="false" toolTip="Payment History for {data.contract_number}">
+
+			<mx:Script>
+				<![CDATA[
+					[Bindable]
+					private var imgPaymentHist:String;
+					private function getSource(pymntInfo):String
+					{
+							if (pymntInfo == 1 && data.is_catalog == 0){
+								imgPaymentHist = "/flex/assets/images/time-money.gif";
+							}
+							else{
+								/* ************************************************************** 
+								I am not setting the one pixel image as it shows a clickable one
+								pixel image and we do not want someone to click that 1pxl image.
+								So, we are not setting a imagepath for the Image tag so nothing 
+								gets displayed for the records that fall in the else category 
+								************************************************************** */
+								imgPaymentHist = ""; // Earlier this was  "assets/images/noImg.gif";
+							}
+						return imgPaymentHist;
+					}	 
+				]]>
+			</mx:Script>
+		</mx:Image>	
+	 </mx:VBox>
+</mx:HBox>

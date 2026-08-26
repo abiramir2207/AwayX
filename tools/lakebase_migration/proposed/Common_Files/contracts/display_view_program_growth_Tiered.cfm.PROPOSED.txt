@@ -1,0 +1,24 @@
+===== QUERY: getComponents =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetAllContractInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetAllContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetAllContractInfo>
+	<cftry>
+		<cfset GetAllContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#CSLGetContractInfo.ProgramType_ID#",
+				"select" = "growth_auto_pay"
+			}), "growth_auto_pay"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllContractInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

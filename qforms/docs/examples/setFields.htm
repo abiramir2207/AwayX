@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<HTML>
+<HEAD>
+	<TITLE>qForms Examples: setFields/getFields</TITLE>
+	<!--// load the documentation style sheet //-->
+	<LINK REL="StyleSheet" HREF="../css/docs.css" TYPE="text/css" MEDIA="screen">
+	<!--// load the qForm JavaScript API //-->
+	<SCRIPT SRC="../../lib/qforms.js"></SCRIPT>
+	<SCRIPT LANGUAGE="JavaScript">
+	<!--//
+	// set the path to the qForms directory
+	qFormAPI.setLibraryPath("../../lib/");
+	// this loads all the default libraries
+	qFormAPI.include("*");
+	//-->
+	</SCRIPT>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff">
+
+<P><TABLE WIDTH="800" BORDER="0" CELLSPACING="0" CELLPADDING="0" ALIGN="Center">
+<TR>
+	<TD WIDTH="800" COLSPAN="3"><IMG SRC="../images/top.gif" WIDTH="800" HEIGHT="132" BORDER="0" ALT=""></TD>
+</TR>
+<TR>
+	<TD WIDTH="60" BACKGROUND="../images/left.gif"><IMG SRC="../images/spacer.gif" WIDTH="60" HEIGHT="250" BORDER="0" ALT=""></TD>
+	<TD ALIGN="Left" VALIGN="Top">
+	<!--// [start] insert main content //-->
+
+<P><B CLASS="Heading">setFields/getFields</B><BR>
+This example illustrates how qForms can populate your form based upon an associative
+array (also known as a "structure.") It also shows off how qForms can return the
+current as a structure.</P>
+
+<FORM ACTION="showdata.htm" METHOD="GET" NAME="frmExample">
+<P>Name: [*]<BR>
+<INPUT TYPE="Text" NAME="Name" SIZE="40"></P>
+
+<P>E-mail: [*]<BR>
+<INPUT TYPE="Text" NAME="Email" SIZE="40"></P>
+
+<P>Receive product updates via e-mail?<BR>
+<INPUT TYPE="Radio" NAME="EmailUpdates" VALUE="1"> Yes
+<INPUT TYPE="Radio" NAME="EmailUpdates" VALUE="0" CHECKED> No
+
+<P>Favorite activities:<BR>
+<SELECT NAME="FavoriteActivities" SIZE="6" MULTIPLE>
+	<OPTION>Reading</OPTION>
+	<OPTION>Writing</OPTION>
+	<OPTION>Music</OPTION>
+	<OPTION>Sports</OPTION>
+	<OPTION>Hiking</OPTION>
+	<OPTION>Other</OPTION>
+</SELECT>
+
+<BLOCKQUOTE>[*] Required fields</BLOCKQUOTE>
+
+<P>
+<INPUT TYPE="Button" VALUE="setFields" onClick="populate();">
+<INPUT TYPE="Button" VALUE="getFields" onClick="showForm();">
+<INPUT TYPE="Reset" VALUE="Reset">
+</FORM>
+
+<P ALIGN="Center">
+[<A HREF="./index.htm">More Examples</A>]
+[<A HREF="../index.htm">Documentation</A>]
+</P>
+
+<SCRIPT LANGUAGE="JavaScript">
+<!--//
+// initialize the qForm object
+objForm = new qForm("frmExample");
+
+function populate(){
+	// create the associative array
+	stcForm = new Object();
+	// populate the array with the form fields as the key, 
+	// and the value for the fields as the value
+	stcForm.Name = "Dan G. Switzer, II";
+	stcForm.Email = "dswitzer@pengoworks.com";
+	stcForm.EmailUpdates = "1";
+	// since no values is given, no value will be selected
+	stcForm.FavoriteActivities = "Reading";
+	
+	// populate the form
+	objForm.setFields(stcForm);
+}
+
+function showForm(){
+	// if all you want to do is display the content of the form in an alert
+	// box for debugging information, use the objForm.dump() method instead.
+	// this will do the exact same thing as this function.
+	var str = "";
+	struct = objForm.getFields();
+	for( key in struct ) str += key + " = " + struct[key] + "\n";
+	alert(str);
+}
+
+//-->
+</SCRIPT>
+
+
+	<!--// [ end ] insert main content //-->
+	<IMG SRC="../images/spacer.gif" WIDTH="680" HEIGHT="1" BORDER="0" ALT=""><BR>
+	</TD>
+	<TD WIDTH="60" BACKGROUND="../images/right.gif"><IMG SRC="../images/spacer.gif" WIDTH="60" HEIGHT="250" BORDER="0" ALT=""></TD>
+</TR>
+<TR>
+	<TD WIDTH="800" COLSPAN="3"><IMG SRC="../images/bottom.gif" WIDTH="800" HEIGHT="110" BORDER="0" ALT=""></TD>
+</TR>
+</TABLE></P>
+
+</BODY>
+</HTML>

@@ -1,0 +1,79 @@
+===== QUERY: InsertDeductions =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateDeductions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDeductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"dd_stage" = "#DD_Stage_ID#",
+				"dd_ded_action_id" = "#InsertDeductions.DD_Ded_Action_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDeductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDeductions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPosition =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForGetPosition>
+	<cftry>
+		<cfset GetPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPosition>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Save_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Insert_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: LockDD =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"is_locked" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

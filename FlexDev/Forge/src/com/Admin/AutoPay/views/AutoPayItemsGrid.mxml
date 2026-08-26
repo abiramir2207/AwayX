@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.AutoPay.events.AutoPayEvent;
+			import com.Admin.AutoPay.models.vos.AutoPayDetail;
+			import com.Admin.AutoPay.views.pm.AutoPayItemsPModel;
+			import com.shared.components.StringUtils;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import flashx.textLayout.container.ScrollPolicy;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:AutoPayItemsPModel;
+			[Bindable]
+			private var iWidth:Number = 175;
+			[Bindable]
+			private var iHeight:Number = 15;
+			[Bindable]
+			private var iPadding:Number = 3;
+			
+			[Bindable] 
+			public var filterInsert:Function =
+				function(inObject:Object):Boolean{
+					var b:Boolean = true;  //inObject.errType != 0 ||
+					if(inObject.Billback_id == '0' || inObject.Billback_id == ''){
+						b = false;
+					}
+					return b;
+				};
+			
+			public function hideEmptyPayPeriod(e:AutoPayEvent):void{
+				if(e.b){
+					dgAutoPayItem.filterInsert = this.filterInsert;
+				}
+				else{
+					//return true by default
+					dgAutoPayItem.filterInsert = function(inObject:Object):Boolean{return true;};
+				}
+				dgAutoPayItem.dispatchEvent(new Event("filterEvent"));
+			}
+			
+		]]>
+	</fx:Script>
+	<!--<s:Label text="Look at all of this Grid Data" />-->
+	
+	<!--<mx:AdvancedDataGrid id="dgAutoPayItem" editable="true" 
+						 selectionMode="singleRow" 
+						 columns="{pModel.arrAutoPayItemsDgCols}"
+						 dataProvider="{new ArrayCollection(pModel.acItemData)}"
+						 width="100%" height="100%" >-->
+	<s:BorderContainer width="810" height="60" toolTip="Total Amounts for current data set">
+		<s:HGroup width="800">
+			<s:Form width="100%" color="0x323232">
+				<s:layout>
+					<s:FormLayout id="frmLay" gap="0" paddingTop="0" paddingBottom="0" paddingRight="75"  /><!--variableRowHeight="false" rowHeight="30"-->
+				</s:layout>
+				<s:FormItem label="Amount" height="{iHeight}">
+					<s:TextInput id="Amount" width="{iWidth-75}" height="{iHeight}" 
+								 editable="false" borderVisible="false" textAlign="right" 
+								 text="{StringUtils.FormatNumberDollarDec2(pModel.totals.bbAmount)}"/>
+				</s:FormItem>
+				<s:FormItem label="Recapture" height="{iHeight}">
+					<s:TextInput id="Recapture" width="{iWidth-75}" height="{iHeight}" 
+								 editable="false" borderVisible="false" textAlign="right" 
+								 text="{StringUtils.FormatNumberDollarDec2(pModel.totals.recaptureAmount)}"/>
+				</s:FormItem>
+				<s:FormItem label="Deviations" height="{iHeight}">
+					<s:TextInput id="Deviations" width="{iWidth-75}" height="{iHeight}" 
+								 editable="false" borderVisible="false" textAlign="right" 
+								 text="{StringUtils.FormatNumberDollarDec2(pModel.totals.deviationAmount)}"/>
+				</s:FormItem>
+			</s:Form>
+			<s:Form width="100%" color="0x323232">
+				<s:layout>
+					<s:FormLayout id="frmLay2" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+				</s:layout>
+				<!--<s:FormHeading fontSize="10"  label=""/>-->
+				<s:FormItem label="Reports" height="{iHeight}">
+					<s:TextInput id="reports" width="{iWidth}" height="{iHeight}" 
+								 editable="false" borderVisible="false" text="{pModel.totals.reportCount}"/>
+				</s:FormItem>
+				<s:FormItem label="Billbacks" height="{iHeight}">
+					<s:TextInput id="billbacks" width="{iWidth}" height="{iHeight}" 
+								 editable="false" borderVisible="false" text="{pModel.totals.billbackCount}"/>
+				</s:FormItem>
+				<s:FormItem label="Programs" height="{iHeight}">
+					<s:TextInput id="programs" width="{iWidth}" height="{iHeight}" 
+								 editable="false" borderVisible="false" text="{pModel.totals.programCount}"/>
+				</s:FormItem>
+			</s:Form>
+			
+			<s:Form width="100%" color="0x323232" height="100%">
+				<s:layout>
+					<s:FormLayout verticalAlign="bottom" horizontalAlign="right" id="frmLay3" gap="0" paddingTop="0" paddingBottom="0"  />
+				</s:layout>
+				<s:FormItem label="" height="{iHeight}">
+					<s:TextInput id="count" height="{iHeight}" textAlign="right"
+								 editable="false" borderVisible="false" 
+								 text="({pModel.acAutoPay.length} records)"/>
+				</s:FormItem>
+			</s:Form>
+		</s:HGroup>
+		
+	</s:BorderContainer>
+	<s:Group>
+		<filters:FilterDatagrid id="dgAutoPayItem" editable="true" x="10" 
+								verticalScrollPolicy="{ScrollPolicy.ON}"
+								rowCount="14" rowHeight="18" fontSize="10"
+								columns="{pModel.arrAutoPayItemsDgCols}"
+								dataProvider="{this.pModel.acAutoPay}" 
+								dispatcher="{this.parentDocument as IEventDispatcher}"
+								width="100%" height="100%"
+								selectedItem="{this.pModel.autoPayDetail}"
+								change="pModel.selectRow(event.itemRenderer.data as AutoPayDetail)">
+		</filters:FilterDatagrid>
+	</s:Group>
+<!--	
+	headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+	headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"-->
+	<!--***************************    SELECTED AUTO PAY REPORT DATA    ***************************-->
+	<s:BorderContainer width="810" height="64" toolTip="Details and Actions for selected Report">
+		<s:HGroup>
+			<s:Form width="100%" color="0x323232">
+				<s:layout>
+					<s:FormLayout id="frmLay4" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+				</s:layout>
+				<s:FormItem label="Report Id" height="{iHeight}">
+					<s:TextInput id="reportId" width="{iWidth}" height="{iHeight}" editable="false" borderVisible="false" text="{this.pModel.autoPayDetail.reportId}"/>
+				</s:FormItem>
+				<s:FormItem label="Title" height="{iHeight}">
+					<s:TextInput id="title" width="{iWidth}" height="{iHeight}" editable="false" borderVisible="false" text="{this.pModel.autoPayDetail.reportTitle}"/>
+				</s:FormItem>
+				<s:FormItem label="Actions" height="{iHeight + 5}">
+					<s:HGroup>
+						<!-- <s:Image id="imgView" source="/images/view.gif" buttonMode="true" toolTip="View this Report"/> -->
+						<s:Image id="imgApprove" 
+								 source="/images/checkmark.gif" 
+								 buttonMode="true" 
+								 toolTip="{this.pModel.actions.sApproveTip}" 
+								 enabled="{this.pModel.actions.bEditMode}" 
+								 click="this.pModel.approveReport(this.pModel.autoPayDetail.reportId)"
+								 visible="{this.pModel.actions.bApprove}"/>
+						<s:Image id="imgDelete" 
+								 source="/images/delete_new2.gif" 
+								 buttonMode="true" 
+								 toolTip="{this.pModel.actions.sDeleteTip}" 
+								 enabled="{this.pModel.actions.bEditMode}"
+								 click="this.pModel.deleteReport(this.pModel.autoPayDetail.reportId)"
+								 visible="{this.pModel.actions.bDelete}"/>
+						<s:Image id="imgCopy" 
+								 source="/Images/copy.png" 
+								 buttonMode="true" 
+								 toolTip="{this.pModel.actions.sCopyTip}" 
+								 enabled="{this.pModel.actions.bEditMode}"
+								 click="this.pModel.copyReport(this.pModel.autoPayDetail.reportId)"
+								 visible="{this.pModel.actions.bCopy}"/>
+						<s:Image id="imgEdit" 
+								 source="/Images/edit.gif" 
+								 buttonMode="true" 
+								 toolTip="{this.pModel.actions.sEditTip}" 
+								 enabled="{this.pModel.actions.bEditMode}"
+								 click="this.pModel.editReport(this.pModel.autoPayDetail.reportId)"
+								 visible="{this.pModel.actions.bEdit}"/>
+						<s:Image id="imgRun" 
+								 source="/Images/Green_Play.jpg" 
+								 buttonMode="true" 
+								 toolTip="{this.pModel.actions.sRunTip}" 
+								 enabled="{this.pModel.actions.bEditMode}"
+								 click="this.pModel.runReport(this.pModel.autoPayDetail.reportId)"
+								 visible="{this.pModel.actions.bRun}"/>
+						<s:Image id="imgExp" 
+								 source="/Images/excel_icon.gif" 
+								 buttonMode="true" width="23" height="23"
+								 toolTip="{this.pModel.actions.sExportTip}" 
+								 click="this.pModel.exportUniversal(this.pModel.autoPayDetail.reportId)"
+								 visible="{this.pModel.actions.bExport}"/>
+								<!-- enabled="{this.pModel.actions.bEditMode}" -->
+						
+						<!-- billbacks/Auto_BB_Report/create_pdf_holder.cfm?Report_ID=92&Contract_Main_ID=1061 -->
+					</s:HGroup>
+				</s:FormItem>
+			</s:Form>
+			<s:Form width="100%" color="0x323232">
+				<s:layout>
+					<s:FormLayout id="frmLay5" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+				</s:layout>
+				<!--<s:FormHeading fontSize="10"  label=""/>-->
+				<s:FormItem label="Start" height="{iHeight}">
+					<s:TextInput id="start" width="{iWidth}" height="{iHeight}" editable="false" borderVisible="false" text="{StringUtils.FormatDate(this.pModel.objSelectedReport.START)}"/>
+				</s:FormItem>
+				<s:FormItem label="End" height="{iHeight}">
+					<s:TextInput id="end" width="{iWidth}" height="{iHeight}" editable="false" borderVisible="false" text="{StringUtils.FormatDate(this.pModel.objSelectedReport.END)}"/>
+				</s:FormItem>
+			</s:Form>
+			<s:Form width="100%" color="0x323232">
+				<s:layout>
+					<s:FormLayout id="frmLay6" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+				</s:layout>
+				<!--<s:FormHeading fontSize="10"  label=""/>-->
+				<s:FormItem label="Status" height="{iHeight}">
+					<s:TextInput id="status" width="{iWidth}" height="{iHeight}" editable="false" borderVisible="false" text="{this.pModel.autoPayDetail.reportStatus.description}"/>
+				</s:FormItem>
+				<s:FormItem label="Amount" height="{iHeight}">
+					<s:TextInput id="reportAmount" width="{iWidth}" height="{iHeight}" editable="false" borderVisible="false" text="{StringUtils.FormatNumberDollarDec2(this.pModel.objSelectedReport.AMOUNT)}"/>
+				</s:FormItem>
+			</s:Form>
+		</s:HGroup>
+	</s:BorderContainer>
+
+	<!--</mx:AdvancedDataGrid>-->
+</s:Group>

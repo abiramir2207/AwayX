@@ -1,0 +1,382 @@
+===== QUERY: getTypeDescription =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: insertBasicInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertBasicInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateGroup =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_volume_groups")>
+<cfif useLakebaseForupdateGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_volume_groups",
+			{
+				"bid_rule_group_id" = "eq.#currentnode.Bid_Rule_Group_ID#"
+			},
+			{
+				"group_index" = "#i#",
+				"range_start" = "#currentnode.Range_Start#",
+				"range_end" = "#currentnode.Range_End#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateGroup>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: deleteGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: insertTypeCode =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateTypeCode =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
+<cfif useLakebaseForupdateTypeCode>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_items",
+			{
+				"bid_rule_item_id" = "eq.#currentnode.type_id#"
+			},
+			{
+				"deleted" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTypeCode>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: deleteTypeCode =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordeleteTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
+<cfif useLakebaseFordeleteTypeCode>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_items",
+			{
+				"bid_rule_item_id" = "eq.#currentnode.Bid_Rule_Item_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteTypeCode>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertOverage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_item_group_amounts")>
+<cfif useLakebaseForupdateAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_item_group_amounts",
+			{
+				"bid_rule_item_group_amount_id" = "eq.#thisOverageAmountID#"
+			},
+			{
+				"amount" = "#thisOverageAmount#",
+				"uom" = "#thisOverageAmountUOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertOverage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertOverage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_item_group_amounts")>
+<cfif useLakebaseForupdateAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_item_group_amounts",
+			{
+				"bid_rule_item_group_amount_id" = "eq.#thisOverageAmountID#"
+			},
+			{
+				"amount" = "#thisOverageAmount#",
+				"uom" = "#thisOverageAmountUOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertModifier =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateModifier =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateModifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_modifiers")>
+<cfif useLakebaseForupdateModifier>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_modifiers",
+			{
+				"bid_rule_modifier_id" = "eq.#currentnode.Bid_Rule_Modifier_ID#"
+			},
+			{
+				"modifier_index" = "#x#",
+				"modifier_amount" = "#currentnode.Modifier_Amount#",
+				"modifier_desc" = "#currentnode.Modifier_Desc#",
+				"modifier_uom" = "#currentnode.Modifier_UOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateModifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateModifier>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeleteMod =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeleteMod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_modifiers")>
+<cfif useLakebaseForDeleteMod>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_modifiers",
+			{
+				"bid_rule_modifier_id" = "eq.#currentnode.Bid_Rule_Modifier_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteMod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteMod>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertExceptionGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: bindGroupToRule =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateGroupInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateGroupInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_groups")>
+<cfif useLakebaseForupdateGroupInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("exception_groups",
+			{
+				"exception_group_id" = "eq.#currentnode.Exception_Group_ID#"
+			},
+			{
+				"group_name" = "#currentnode.Name#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateGroupInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateGroupInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateGroupInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateGroupInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_groups")>
+<cfif useLakebaseForupdateGroupInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("exception_groups",
+			{
+				"exception_group_id" = "eq.#currentnode.Exception_Group_ID#"
+			},
+			{
+				"group_name" = "#currentnode.Name#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateGroupInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateGroupInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getGroupProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_group_products")>
+<cfif useLakebaseForgetGroupProducts>
+	<cftry>
+		<cfset getGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("exception_group_products", {
+				"deleted" = "eq.0",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: addProductToGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: RemoveProductFromGroup =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForRemoveProductFromGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_group_products")>
+<cfif useLakebaseForRemoveProductFromGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("exception_group_products",
+			{
+				"product_id" = "eq.#x#",
+				"exception_group_id" = "eq.#currentnode.Exception_Group_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRemoveProductFromGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRemoveProductFromGroup>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertOverage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_item_group_amounts")>
+<cfif useLakebaseForupdateAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_item_group_amounts",
+			{
+				"bid_rule_item_group_amount_id" = "eq.#thisOverageAmountID#"
+			},
+			{
+				"amount" = "#thisOverageAmount#",
+				"uom" = "#thisOverageAmountUOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertOverage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertOverage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_item_group_amounts")>
+<cfif useLakebaseForupdateAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_item_group_amounts",
+			{
+				"bid_rule_item_group_amount_id" = "eq.#thisOverageAmountID#"
+			},
+			{
+				"amount" = "#thisOverageAmount#",
+				"uom" = "#thisOverageAmountUOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: deleteExceptionGroup =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordeleteExceptionGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_exception_groups")>
+<cfif useLakebaseFordeleteExceptionGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_exception_groups",
+			{
+				"bid_rule_id" = "eq.#BidRule.Basic.Bid_Rule_ID#",
+				"exception_group_id" = "eq.#currentNode.Exception_Group_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteExceptionGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteExceptionGroup>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateLastModified =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

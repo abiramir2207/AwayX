@@ -1,0 +1,103 @@
+/*
+  * ==================================================================================================== 
+  *    @File: \billbacks\gm\settlement.css
+  *  @Author: Sharon Harris
+  *    @Date: July 2020
+  * 
+  * @Remarks: Settlement - under edit tab
+  *
+  * ==================================================================================================== 
+*/
+#settlement_top {
+	margin-bottom: 5px;
+}
+.hdr-top {
+	font-size: 14px;
+	margin: 5px 0 5px 5px;
+}
+#settlement_top fieldset {
+	background-color: #edeef2;
+	border: 1px solid #c4c5c7;
+	border-radius: 2px;
+	display: inline;
+	padding: 2px 5px 2px 10px;
+	margin:  5px;
+}
+#settlement_top label {
+	font-weight: bold;
+	opacity: .7;
+}
+
+/* aligning columns */
+.flex-container {
+	display: flex;
+}
+.flex-column {
+	align-items: flex-start;
+	display:table;
+	border-spacing: 2px 10px;
+	line-height: 10px;
+	margin-left: 10px;
+	margin-right: 10px;
+	width: 20%;
+}
+.flex-column:first-of-type {
+	width: 26%;
+}
+
+.detail-row {
+	display: table-row;
+}
+	.detail-row.hidden,
+	.detail-row > span.hidden {display:none;}
+
+	.detail-row > span.empty {opacity:0;}
+
+	.detail-row > span,
+	.detail-row > label {
+		font-size: 11px;
+	}
+	.detail-row > label {
+		text-align: right;
+		padding-right: 5px;
+	}
+	.detail-row > * {
+		display: table-cell;
+	}
+
+/* end aligning columns */
+
+
+/* Split the bottom part of the screen between Deductions and Closing Details */
+.split {
+	display: flex;
+}
+#ded_area {
+	/* flex: 0 0 33%; */
+	width: 350px;
+	margin-right: 5px;
+}
+#closing_area {
+	/* flex: 0 0 40%; */
+	width: 500px;
+
+}
+
+/* Override some shared_style card styles */
+.card-header {
+	font-size: 14px;
+	height: 25px;
+}
+.card-main {
+	padding-left:10px;
+}
+
+
+.horiz-aligner {
+	display: flex;
+	align-items: center;
+}
+.horiz-aligner > textarea {
+	margin: 5px;
+	width: 170px;
+}

@@ -1,0 +1,1009 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:view="com.Billback.Edit.views.*"
+			   xmlns:maps="com.Billback.Main.maps.*"
+			   xmlns:mapsEdit="com.Billback.Edit.maps.*"
+			   width="100%" height="100%"
+			   creationComplete="initApp()"
+			   xmlns:mate="http://mate.asfusion.com/">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here  applicationComplete="applyRuntimeStyleSheet();"  -->
+		<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.Models.Billback.BillbackManager" />
+		
+		<maps:BBMainEventMap />
+		
+	</fx:Declarations>
+	
+	<fx:Script><![CDATA[
+		import com.Admin.Alias.events.AliasEvent;
+		import com.Billback.Edit.events.BBEditEvent;
+		import com.Billback.Edit.models.vos.BBDeductionFilterParms;
+		import com.Billback.Edit.models.vos.BBProdRate;
+		import com.Billback.Main.events.BBMainEvent;
+		import com.Billback.Main.models.IBBEdit;
+		import com.Billback.Main.models.IBBRawEDI;
+		import com.Billback.Main.models.IBBSearch;
+		import com.Billback.Main.models.IBBUpload;
+		import com.Billback.Main.models.vos.BBClosingDetail;
+		import com.Billback.Main.models.vos.BBComponent;
+		import com.Billback.Main.models.vos.BBDetails;
+		import com.Billback.Main.models.vos.BBHeader;
+		import com.Billback.Main.models.vos.BBPrgDistItemRate;
+		import com.Billback.Main.models.vos.BBSettlement;
+		import com.Billback.Main.models.vos.BBSettlementAction;
+		import com.Billback.Main.models.vos.Billback;
+		import com.Billback.Main.models.vos.Payee;
+		import com.Billback.Main.models.vos.Status;
+		import com.Billback.Main.models.vos.Type;
+		import com.Billback.Main.views.pm.BBMainPModel;
+		import com.Billback.Search.vos.BBFilterDef;
+		import com.Billback.Search.vos.BBFilterParams;
+		import com.Billback.Search.vos.BBSearchGridColumnSize;
+		import com.Billback.Upload.models.vos.BBRawEDIHeader;
+		import com.Billback.Upload.models.vos.BBUploadDetail;
+		import com.Billback.Upload.models.vos.BBUploadDetailError;
+		import com.Billback.Upload.models.vos.BBUploadHeader;
+		import com.Billback.Upload.models.vos.BBUploadLog;
+		import com.Deduction.Main.models.vos.Deduction;
+		import com.shared.components.MenuItem;
+		import com.shared.components.StringUtils;
+		import com.shared.components.chBoxIsSelected;
+		import com.shared.components.chBoxIsSelectedDg;
+		import com.shared.components.filters.FilterAdvancedDatagrid;
+		import com.shared.components.filters.FilterDatagrid;
+		import com.shared.components.spark.BorderContainerLabel;
+		import com.shared.events.MainEvent;
+		import com.shared.models.IModuleBa;
+		import com.shared.models.SettingsManager;
+		import com.shared.models.entity.vos.Lock;
+		import com.shared.models.entity.vos.User;
+		import com.shared.views.skins.FormItemSkinBa;
+		import com.shared.views.skins.FormSkinBa;
+		import com.shared.vos.AppFlex;
+		import com.shared.vos.Component;
+		import com.shared.vos.Program;
+		import com.shared.vos.Uom;
+		
+		import flash.system.ApplicationDomain;
+		import flash.system.SecurityDomain;
+		
+		import mx.controls.Alert;
+		import mx.controls.Menu;
+		import mx.controls.MenuBar;
+		import mx.core.Application;
+		import mx.core.IVisualElement;
+		import mx.core.mx_internal;
+		import mx.events.FlexEvent;
+		import mx.events.ModuleEvent;
+		import mx.managers.IDragManager;
+		import mx.managers.PopUpManager;
+		import mx.modules.IModuleInfo;
+		import mx.modules.ModuleManager;
+		import mx.rpc.remoting.RemoteObject;
+		import mx.styles.StyleManager;
+		import mx.utils.ObjectUtil;
+		
+		import spark.modules.ModuleLoader;
+		
+		import flashx.textLayout.edit.IEditManager;
+		import flashx.textLayout.elements.TextFlow;
+		
+		/* Presentation Model */
+		[Bindable]
+		public var pModel:BBMainPModel;
+		
+		private var alert:Alert;
+		private var appflex:AppFlex;
+		private var bb:Billback = new Billback();
+		private var bbdistPrdRt:BBPrgDistItemRate;
+		private var bbh:BBHeader;
+		private var bbCloseDt:BBClosingDetail;
+		private var bbComp:BBComponent;
+		private var bbbDedFiltre:BBDeductionFilterParms;
+		private var bbProgram:Program;
+		private var bbPrgDistItmRte:BBPrgDistItemRate;
+		private var bbProd:BBProdRate;
+		private var bbSettle:BBSettlement;
+		private var bbSettlAct:BBSettlementAction;
+		private var bbUploadHeader:BBUploadHeader = new BBUploadHeader();
+		private var bbRawEDIHeader:BBRawEDIHeader = new BBRawEDIHeader();
+		private var bbUploaddetail:BBUploadDetail;
+		private var bbUploaddetailError:BBUploadDetailError;
+		private var bbFilterDef:BBFilterDef;
+		private var bbFilterParm:BBFilterParams;
+		private var bbDridFilterColSize:BBSearchGridColumnSize;
+		private var deduction:Deduction;
+		private var bbDeductionFilterParms:BBDeductionFilterParms;
+		private var bbClosingDetail:BBClosingDetail;
+		private var bbSettlementAction:BBSettlementAction;
+		private var bbDtl:BBDetails;
+		private var chBox:chBoxIsSelected;
+		private var chBoxDg:chBoxIsSelectedDg;
+		private var ded:Deduction;
+		private var lock:Lock;
+		private var filterDg:FilterDatagrid;
+		private var frmSkin:FormSkinBa;
+		private var frmItemSkin:FormItemSkinBa;
+		private var iDragManager:IDragManager;
+		private var menuItem:MenuItem;
+		private var menu:Menu;
+		private var menuBar:MenuBar;
+		private var popUp:PopUpManager;
+		private var prg:Program;
+		private var prgComp:Component;
+		private var rmtObj:mx.rpc.remoting.mxml.RemoteObject;
+		private var rmtObjAs:mx.rpc.remoting.RemoteObject;
+		private var selectedPayee:Payee;
+		private var status:Status;
+		private var type:Type;
+		private var uom:Uom;
+		private var user:User;
+		
+		private const MAX_CHILDREN:uint = 5;
+		private var dictUpload:Dictionary 	= new Dictionary(true);
+		private var dictEdit:Dictionary 	= new Dictionary(true);
+		private var dictEditBBh:Dictionary = new Dictionary(true);
+		//private var dictUpload:Dictionary = new Dictionary(true);
+		private var BBCorrections:ModuleLoader;
+		
+		private var bbHCurrent:BBHeader = new BBHeader();
+		private var bbUpHist:BBUploadLog;
+		private var closingMethodList:Array= new Array();
+		private var bbAnalysts:Array= new Array();
+		private var payeeList:Array = new Array();
+		//	private var reDirector:String = 'EDIT';
+		
+		public var i:int = 0;
+		
+		//hack for modules
+		/* private var hist:HistoryManager;
+		private var ak:AcknowledgeMessageExt;
+		private var rm:RemotingMessage; */
+		
+		private var bbMainEvt:BBMainEvent = new BBMainEvent(BBMainEvent.EDIT_BB);
+		
+		protected function applyRuntimeStyleSheet():void
+		{
+			//styleManager.loadStyleDeclarations("/flex/mainFx410.swf");
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+		}
+		
+		/* Calling any module after the search module causes an issue when a user visits the grid using the scorecard. 
+		The status used to visit the scorecard was not being retained consistently on the status dropdown. Once the billback 
+		lookupdata is retrived, then calling these modules fixes the issue.
+		Note: DataLookUp is being called from the "searchModReady" function below and the other modules are being called from "BBSearchManager" */
+		public function loadModsBBSearch(e:BBMainEvent):void
+		{
+			//load the search Screen
+			if(tnavHome.numChildren == 0){
+				this.loadSearch();
+				//this.loadBBCorrections();	
+				//this.loadAlias();
+			}			
+		}
+		
+		public function loadModsBBCorrections(e:BBMainEvent):void
+		{
+			//load the corrections Screen
+			this.loadBBCorrections();
+		}
+		
+		public function loadModsAlias(e:BBMainEvent):void
+		{
+			//load the alias Screen	
+			this.loadAlias();	
+		}
+		
+		/* ......................................................................................................
+		..........................................  LOAD MOD  ...................................................
+		.........................................................................................................*/
+		public var info:IModuleInfo;
+		
+		/* BB Search dispatchs an event to send BBId and BBHeader obj here via a listenerinjector in eventMap */
+		
+		private var com_shared_components_spark_BorderContainerLabel_obj:com.shared.components.spark.BorderContainerLabel;
+		public function loadBBEdit(e:BBMainEvent):void {
+			if (navigator.numChildren <= MAX_CHILDREN) {
+				// this.sBBId = e.bbId;
+				var dtNow:Date = new Date();
+				//this.bbHCurrent= e.bbHeader;
+				//this.closingMethodList= e.closingMethodList;
+				//this.bbAnalysts = e.bbAnalysts;
+				this.payeeList = e.payeeList;
+				//this.reDirector = e.reDirector;
+				var BBEditMod:ModuleLoader = new ModuleLoader();
+				//sId becomes the ID of the module
+				var sId:String = 'v' + e.bbHeader.billbackIDInt.toString() + '_' + dtNow.getTime().toString();
+				
+				var bLoaded:Boolean = false;
+				var idx:uint;
+				var len:uint = navigator.numChildren;
+				var ichild2:IBBEdit;
+				//look for loaded mod -> xtra logic needed for Create bb with bbid = 0
+				for (idx=0; idx<len; idx++) {
+					var mod2:ModuleLoader = navigator.getChildAt(idx) as ModuleLoader;
+					if(mod2){
+						var arr:Array = com.shared.components.StringUtils.listToArray(mod2.id,'_');
+						if(arr[0] == 'v' + e.bbHeader.billbackIDInt.toString() &&  arr[0] != 'v0'){
+							bLoaded = true;
+							sId = mod2.id;
+							break;
+						}
+					}
+				}
+				if(bLoaded){
+					//BBEditMod = dictEdit[sId];
+					//	var ichild:IBBEdit = dictEdit[sId].child;
+					/* Call setters in the module  */
+					dictEdit[sId].child.setSettings(this.pModel.oSettings);
+					navigator.selectedChild = dictEdit[sId];
+					/* DONT RELOAD IN CASE USER MADE UPDATES */
+					//ichild.setBB(e.bbHeader);
+					//ichild.setClosingMethods(e.closingMethodList);
+				}
+				else if(navigator.numChildren <= MAX_CHILDREN){
+					
+					/* info = ModuleManager.getModule("com/Billback/Edit/BBEdit.swf");
+					var x:DisplayObject = info.factory.create() as DisplayObject;
+					var z:ModuleManager; */				
+					
+					var s:String = 'com/Billback/Edit/BBEdit.swf';
+					dictEdit[sId] = BBEditMod; //this['BBEditMod' + i.toString()];
+					i++;
+					dictEditBBh[sId] = e.bbHeader;
+					dictEdit[sId].id = sId;
+					if(e.bbHeader.billbackIDInt){
+						dictEdit[sId].label = e.bbHeader.BBtype.description + ": " + ' (' + e.bbHeader.BBCode + ')'; // + i.toString()
+					}
+					else{
+						dictEdit[sId].label = 'new';
+					}
+					var childDomain:ApplicationDomain = new ApplicationDomain(ApplicationDomain.currentDomain);
+					//set dictionary firsyt since Load() -> editModReady() needs the data
+					dictEdit[sId].addEventListener(ModuleEvent.READY, editModReady,false,0,true);
+					dictEdit[sId].applicationDomain = childDomain;
+					dictEdit[sId].loadModule(s);
+					//add to ui and select
+					navigator.addChild(dictEdit[sId]);
+					navigator.selectedChild = dictEdit[sId];
+				}
+				
+			}
+			else{
+				showAlert();
+			}
+			//System.gc();
+		}
+		
+		private function loadSearch():void {
+			if (navigator.numChildren <= MAX_CHILDREN) {
+				var BBSearchMod:ModuleLoader;
+				BBSearchMod = new ModuleLoader();
+				var s:String = 'com/Billback/Search/BBSearch.swf';
+				BBSearchMod.label = "Search";
+				BBSearchMod.addEventListener(ModuleEvent.READY, searchModReady,false,0,true);
+				//BBSearchMod.creationPolicy = "all";
+				BBSearchMod.loadModule(s);
+				tnavHome.addChildAt(BBSearchMod,0);
+				tnavHome.selectedIndex = 0;
+				//textField.text = "  Load - "+System.totalMemory.toString()+"\n"+textField.text;	
+			}
+		}
+		
+		public function loadBBUpload(e:BBMainEvent):void {
+			if (navigator.numChildren <= MAX_CHILDREN) {
+				this.bbUploadHeader = e.bbUploadHeader;
+				
+				var BBUploadMod:ModuleLoader;
+				BBUploadMod = new ModuleLoader();
+				var sId:String = 'v' + e.bbUploadHeader.bbHeaderID.toString() + e.bbUploadHeader.uploadID.toString();
+				
+				//if already loaded, select it
+				if(dictUpload[sId]){
+					BBUploadMod = dictUpload[sId];
+					var ichild:IBBUpload = BBUploadMod.child as IBBUpload;
+					/* Call setters in the module  */
+					ichild.setSettings(this.pModel.oSettings);
+					/*DONT RELOAD IN CASE USER MADE UPDATES */
+					//ichild.setBB(e.bbUploadHeader);
+				}
+				else{ //else load it up
+					var s:String = 'com/Billback/Upload/BBUpload.swf';
+					BBUploadMod.label = 'ID: ' + e.bbUploadHeader.uploadID + ' / ' + e.bbUploadHeader.uploadType + ': ' + ' (' + e.bbUploadHeader.BBReference + ')';
+					BBUploadMod.addEventListener(ModuleEvent.READY, uploadModReady,false,0,true);
+					BBUploadMod.loadModule(s);
+					BBUploadMod.id = sId;
+					dictUpload[sId] = BBUploadMod;
+					
+					navigator.addChild(BBUploadMod);
+					
+				}
+				navigator.selectedChild = BBUploadMod;
+			}
+			else{
+				showAlert();
+			}
+		}
+		
+		public function loadRawEDIUpload(e:BBMainEvent):void {
+			if (navigator.numChildren <= MAX_CHILDREN) {
+				this.bbRawEDIHeader = e.bbRawEDIHeader;
+				
+				var BBRawEDIMod:ModuleLoader;
+				BBRawEDIMod = new ModuleLoader();
+				var sId:String = 'v' + e.bbRawEDIHeader.BBUploadIIIPHID.toString() + e.bbRawEDIHeader.UploadID.toString();
+				
+				//if already loaded, select it
+				if(dictUpload[sId]){
+					BBRawEDIMod = dictUpload[sId];
+					var ichild:IBBRawEDI = BBRawEDIMod.child as IBBRawEDI;
+					/* Call setters in the module  */
+					ichild.setSettings(this.pModel.oSettings);
+					/*DONT RELOAD IN CASE USER MADE UPDATES */
+					ichild.setBBRawEDI(e.bbRawEDIHeader);
+				}
+				else{ //else load it up
+					var s:String = 'com/Billback/Upload/BBRawEDI.swf';
+					BBRawEDIMod.label = 'EDI Upload ID: ' + e.bbRawEDIHeader.UploadID + ' / '   + ' (' + e.bbRawEDIHeader.BBNumber + ')';
+					BBRawEDIMod.addEventListener(ModuleEvent.READY, rawEDIModReady,false,0,true);
+					BBRawEDIMod.loadModule(s);
+					BBRawEDIMod.id = sId;
+					dictUpload[sId] = BBRawEDIMod;
+					navigator.addChild(BBRawEDIMod);
+				}
+				navigator.selectedChild = BBRawEDIMod;
+			}
+			else{
+				showAlert();
+			}
+		}//close
+			
+		
+		
+		public function loadBBCorrections():void {
+			var BBCorrections:ModuleLoader;
+			BBCorrections = new ModuleLoader();
+			var s:String = 'com/Billback/Upload/BBCorrections.swf';
+			BBCorrections.label = 'Upload'; // Earlier E-Corrections 
+			BBCorrections.addEventListener(ModuleEvent.READY, correctionsModReady,false,0,true);
+			BBCorrections.loadModule(s);
+			
+			tnavHome.addChild(BBCorrections);
+		}
+		
+		public function loadAlias():void {
+			var AliasMain:ModuleLoader;
+			AliasMain = new ModuleLoader();
+			var s:String = 'com/Admin/Alias/Alias.swf';
+			AliasMain.label = 'Alias';
+			AliasMain.addEventListener(ModuleEvent.READY, aliasModReady,false,0,true);
+			AliasMain.loadModule(s);
+			
+			tnavHome.addChild(AliasMain);
+		}
+		
+		public function loadDeviations(e:BBMainEvent):void {
+			if (navigator.selectedChild) {
+				this.bbHCurrent = e.bbHeader;
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var modDevApp:ModuleLoader = new ModuleLoader();
+				var ichild:IBBEdit = mod.child as IBBEdit;
+				var idx:int = navigator.getChildIndex(mod);
+				//e.bbHeader.BBCode
+				// if(mod.url == "com/Billback/Edit/BBEdit.swf" && (ichild.getBBId() == e.bbHeader.billbackIDInt.toString()) || e.bbHeader.billbackIDInt ==0){
+				if(mod.url == "com/Billback/Edit/BBEdit.swf" && (ichild.getBB().billbackIDInt = e.bbHeader.billbackIDInt) || e.bbHeader.billbackIDInt == 0){;
+					navigator.removeChild(mod);
+					//mod.unloadModule();
+					//delete dictEdit[mod.id];
+					//mod.removeElement(ichild as IVisualElement);
+					//ichild = null;
+					dictEditBBh[mod.id] = e.bbHeader;
+					modDevApp.label = "Deviations: " + ' (' + e.bbHeader.BBCode + ')';
+					modDevApp.addEventListener(ModuleEvent.READY, deviationModReady,false,0,true);
+					modDevApp.loadModule('com/Billback/Deviation/BillbackDevApp.swf');
+					modDevApp.id = mod.id;
+					navigator.addChildAt(modDevApp,idx);
+					navigator.selectedChild = modDevApp;
+				}
+				else{
+					//textField.text = "NO UnLoad of Search "+System.totalMemory.toString()+"\n"+textField.text;
+				}
+				
+			}
+		}
+		private function showAlert():void{
+			Alert.show('Unable to open Billback.  Max number of open items has been reached [ ' + MAX_CHILDREN + ' ].','Maximum Tabs Alert');
+		}
+		
+		/* ......................................................................................................
+		.....................................  MOD READY HANDLERS  ..............................................
+		.........................................................................................................*/
+		
+		public function searchModReady(e:Event):void {
+			var mod:ModuleLoader = new ModuleLoader();
+			mod = e.currentTarget as ModuleLoader;
+			var ichild:* = mod.child as IBBSearch;
+			if (mod.child != null) {                    
+				/* Call data getters in the module  */
+				ichild.getLoadLookupData(pModel.oSettings.userId);
+				//ichild.getAllColumnsSize(pModel.oSettings.userId);
+				ichild.setSettings(this.pModel.oSettings);
+				ichild.setSearch(pModel.oSettings.userId,pModel.oSettings.status);
+			} else {                
+				trace("BB Search Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,searchModReady);
+			//tnavHome.selectedChild = mod;
+		}
+		
+		
+		public function editModReadySelectTab(e:Event):void {
+			var mod:ModuleLoader;
+			mod = e.currentTarget as ModuleLoader;
+			var ichild:IBBEdit = mod.child as IBBEdit;
+			if (mod.child != null) {                    
+				/* Call setters in the module  */
+				var sId:String = mod.id;
+				dictEdit[sId].child.setSelectedTab(1);
+				dictEdit[sId].child.setSettings(this.pModel.oSettings);
+				/* need to get BBHeader obj from Search screen event */
+				dictEdit[sId].child.setPayeeList(this.payeeList);
+				dictEdit[sId].child.setClosingMethods(this.closingMethodList);
+				dictEdit[sId].child.setBBAnalysts(this.bbAnalysts);
+				dictEdit[sId].child.setBB(dictEditBBh[sId]);
+				
+			} else {                
+				trace("BB Edit Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,editModReadySelectTab);
+		}
+		public function editModReady(e:Event):void {
+			var mod:ModuleLoader;
+			mod = e.currentTarget as ModuleLoader;
+			//var ichild:IBBEdit = mod.child as IBBEdit;
+			if (mod.child != null) {                    
+				/* Call setters in the module  */
+				var sId:String = mod.id;
+				dictEdit[sId].child.setSelectedTab(0);
+				dictEdit[sId].child.setSettings(this.pModel.oSettings);
+				/* need to get BBHeader obj from Search screen event */
+				dictEdit[sId].child.setPayeeList(this.payeeList);
+				dictEdit[sId].child.setClosingMethods(this.closingMethodList);
+				dictEdit[sId].child.setBBAnalysts(this.bbAnalysts);
+				dictEdit[sId].child.setBB(dictEditBBh[sId]);
+				// dictEdit[sId].child.setReDirector(this.reDirector);
+			} else {                
+				trace("BB Edit Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,editModReady);
+		}
+		
+		public function uploadModReady(e:Event):void {
+			var mod:ModuleLoader;
+			mod = e.currentTarget as ModuleLoader;
+			var ichild:IBBUpload = mod.child as IBBUpload;
+			if (mod.child != null) {                    
+				/* Call setters in the module  */
+				ichild.setSettings(this.pModel.oSettings);
+				/* need to get BBHeader obj from Search screen event */
+				ichild.setBB(this.bbUploadHeader);
+				
+			} else {                
+				trace("BB Edit Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,uploadModReady);
+			//select
+			//navigator.selectedChild = mod;
+		} 
+		
+		public function rawEDIModReady(e:Event):void {
+			var mod:ModuleLoader;
+			mod = e.currentTarget as ModuleLoader;
+			var ichild:IBBRawEDI = mod.child as IBBRawEDI;
+			if (mod.child != null) {                    
+				/* Call setters in the module  */
+				ichild.setSettings(this.pModel.oSettings);
+				/* need to get BBHeader obj from Search screen event */
+				ichild.setBBRawEDI(this.bbRawEDIHeader);
+				
+			} else {                
+				trace("BB Raw EDI Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,rawEDIModReady);
+			//select
+			//navigator.selectedChild = mod;
+		} 
+		
+		public function correctionsModReady(e:Event):void {
+			var mod:ModuleLoader = new ModuleLoader();
+			mod = e.currentTarget as ModuleLoader;
+			//set private var so we can access mod from other methods (remoe_bbUpload)
+			this.BBCorrections = mod;
+			var ichild:IBBUpload = mod.child as IBBUpload;
+			if (mod.child != null) {                    
+				/* Call setters in the module  */
+				ichild.setSettings(this.pModel.oSettings);
+				
+			} else {                
+				trace("BB Corrections Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,correctionsModReady);
+			//select
+			//tnavHome.selectedChild = mod;
+		}
+		
+		public function aliasModReady(e:Event):void {
+			var mod:ModuleLoader = new ModuleLoader();
+			mod = e.currentTarget as ModuleLoader;
+			//var ichild:* = mod.child as IBBSearch;
+			var ichild:* = mod.child as IModuleBa;
+			if (mod.child != null) {                    
+				/* Call setters in the module  */
+				ichild.setSettings(this.pModel.oSettings);
+				
+			} else {                
+				trace("Alias Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,aliasModReady);
+			//select
+			//tnavHome.selectedChild = mod;
+		}
+		
+		public function deviationModReady(e:Event):void {
+			var mod:ModuleLoader = new ModuleLoader();
+			mod = e.currentTarget as ModuleLoader;
+			var ichild:IBBEdit = mod.child as IBBEdit;
+			if (mod.child != null) {                    
+				/* Call setters in the module  */
+				ichild.setSettings(this.pModel.oSettings);
+				/* need to get BBHeader obj from Search screen event */
+				ichild.setBB(this.bbHCurrent);
+				ichild.setClosingMethods(this.closingMethodList);
+				// ichild.setReDirector(this.reDirector);
+			} else {                
+				trace("BB Edit Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,deviationModReady);
+			//select
+			//navigator.selectedChild = mod;
+		} 
+		
+		public function changeModuleLabel(e:BBMainEvent):void {
+			if (navigator.selectedChild  && navigator.selectedChild is ModuleLoader) {
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				focusManager.setFocus(navigator);
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var sId:String = mod.id;
+				var arrModId:Array = com.shared.components.StringUtils.listToArray(mod.id,'_');
+				var iModId:int = parseInt(arrModId[0].toString().replace('v',''));
+				var dtNow:Date = new Date();
+				
+				if(mod.url == "com/Billback/Edit/BBEdit.swf" && (e.bbHeader.billbackIDInt != iModId))
+				{
+					if(e.bbHeader.billbackIDInt){
+						
+						dictEdit[sId].label = e.bbHeader.BBtype.description + ": " + ' (' + e.bbHeader.BBCode + ')';
+						
+						/*
+						delete dictEdit[sId];
+						delete dictEditBBh[sId];
+						
+						var sId2:String = 'v' + e.bbHeader.billbackIDInt.toString() + '_' + dtNow.getTime().toString();
+						mod.id = sId;
+						dictEdit[iModId].label = e.bbHeader.BBtype.description + ": " + ' (' + e.bbHeader.BBCode + ')';
+						
+						var s:String = 'com/Billback/Edit/BBEdit.swf';
+						dictEdit[sId] = mod; 
+						dictEditBBh[sId] = e.bbHeader;
+						dictEdit[sId].id = sId;
+						dictEdit[sId].child.setSettings(this.pModel.oSettings);
+						dictEdit[sId].label = e.bbHeader.BBtype.description + ": " + ' (' + e.bbHeader.BBCode + ')'; 
+						navigator.selectedChild = dictEdit[sId];
+						*/
+					}
+					navigator.setFocus();
+				}		 
+			}
+			this.gc()
+		}	
+		
+		/* ......................................................................................................
+		.........................................  MOD LOCK/UNLOCK  ..................................................
+		.........................................................................................................*/
+		
+		/* Unlock (set to read-only) opened and locked billback(s) in flex other than what the user requested to lock */
+		public function UnLockBBEdit(e:BBMainEvent):void {
+			if (navigator.selectedChild  && navigator.selectedChild is ModuleLoader) {
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				focusManager.setFocus(navigator);
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var sId:String = mod.id;
+				
+				/* Loop over the dictionary object which stores already opened billback modules */
+				for each (var oItem:Object in dictEdit) {
+					/* Just ignore the one which the user requests to lock. Send a request to unlock the other opened and locked (in flex) billback(s) */
+					if(oItem.id != sId){
+						/* "dictEdit[oItem.id]" is the module. We need to use ".child" notation. */
+						dictEdit[oItem.id].child.setLockedUnlocked();
+					}
+				}	
+				
+				/*for each (var oItem:BBHeader in dictEditBBh) {
+				if(oItem.billbackIDInt != e.bbHeader.billbackIDInt){					
+				dictEdit[sId].child.setLock(dictEditBBh[sId]);
+				}
+				}*/
+			}				
+		}
+		
+		/* Unlock (set to read-only) opened and locked uploaded BB in flex other than what the user requested to lock */
+		public function UnLockBBUpload(e:BBMainEvent):void {
+			if (navigator.selectedChild  && navigator.selectedChild is ModuleLoader) {
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				focusManager.setFocus(navigator);
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var sId:String = mod.id;
+				
+				/* Loop over the dictionary object which stores already opened BB upload modules */
+				for each (var oItem:Object in dictUpload) {
+					/* Just ignore the one which the user requests to lock. Send a request to unlock the other opened and locked (in flex) uploaded BB's */
+					if(oItem.id != sId){
+						/* "dictEdit[oItem.id]" is the module. We need to use ".child" notation. */
+						dictUpload[oItem.id].child.setLockedUnlocked();
+					}
+				}	
+			}				
+		}
+		
+		/* ......................................................................................................
+		.........................................  MOD UNLOAD  ..................................................
+		.........................................................................................................*/
+		
+		public function unLoadBBEdit(e:BBMainEvent):void {
+			if (navigator.selectedChild  && navigator.selectedChild is ModuleLoader) {
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				focusManager.setFocus(navigator);
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var sId:String = mod.id;
+				var ichild:IBBEdit = mod.child as IBBEdit;
+				var bLoaded:Boolean = false;
+				var idx:uint;
+				var len:uint = navigator.numChildren;
+				var ichild2:IBBEdit;
+				
+				//look for loaded mod -> xtra logic needed for Cretae bb with bbid = 0
+				/* for (idx=0; idx<len; idx++) {
+				var mod2:ModuleLoader = navigator.getChildAt(idx) as ModuleLoader;
+				if(mod2){
+				var arrMod2:Array = com.shared.components.StringUtils.listToArray(mod2.id,':');
+				var arrMod:Array = com.shared.components.StringUtils.listToArray(mod.id,':');
+				if(arrMod2[1] == arrMod[1]){
+				sId = mod2.id;
+				break;
+				}
+				}
+				} */
+				var arrModId:Array = com.shared.components.StringUtils.listToArray(mod.id,'_');
+				var iModId:int = parseInt(arrModId[0].toString().replace('v',''));
+				
+				if(mod.url == "com/Billback/Edit/BBEdit.swf" && (iModId == 0 || e.bbHeader.billbackIDInt == 0 || e.bbHeader.billbackIDInt == iModId)){  // && (arrModId[0] == e.bbHeader.billbackIDInt.toString() || arrModId[0] == 0 || e.bbHeader.billbackIDInt)
+					navigator.setFocus();
+					navigator.removeChild(mod);
+					//mod.un
+					delete dictEdit[sId];
+					delete dictEditBBh[sId];
+					
+					var b:Boolean = false;
+					for each(var sKey:String in dictEdit){
+						b = true
+					}
+					if(!b){
+						mod.unloadModule();
+					}
+					else{
+						mod.removeElement(ichild as IVisualElement);
+					}
+					ichild = null;
+					mod = null;
+				}
+				else{
+					//textField.text = "NO UnLoad of Search "+System.totalMemory.toString()+"\n"+textField.text;
+				}		 
+			}
+			this.gc()
+		}
+		
+		public function unLoadBillbackDevApp(e:BBMainEvent):void {
+			if (navigator.selectedChild) {
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var modNew:ModuleLoader = new ModuleLoader();
+				var ichild:IBBEdit = mod.child as IBBEdit;
+				var sId:String = mod.id;
+				var idx:int = navigator.selectedIndex;
+				if(mod.url == "com/Billback/Deviation/BillbackDevApp.swf" && (ichild.getBB().billbackIDInt = e.bbHeader.billbackIDInt) || e.bbHeader.billbackIDInt == 0){;
+					navigator.removeChild(mod);
+					mod.removeElement(ichild as IVisualElement);
+					ichild = null;
+					//mod.label = "Edit: " + ' (' + e.bbHeader.BBCode + ')';
+					modNew = dictEdit[sId];
+					if(e.sState == 'settlement'){
+						modNew.addEventListener(ModuleEvent.READY, editModReadySelectTab,false,0,true);
+					}
+					else{
+						modNew.addEventListener(ModuleEvent.READY, editModReady,false,0,true);
+					}
+					navigator.addChildAt(modNew,idx);
+					navigator.selectedChild = modNew;
+					modNew.dispatchEvent(new ModuleEvent(ModuleEvent.READY));
+				}
+				else{
+					//textField.text = "NO UnLoad of Search "+System.totalMemory.toString()+"\n"+textField.text;
+				}
+				
+			}
+			this.gc()
+		}
+		
+		public function unLoadBBUpload(e:BBMainEvent):void {
+			if (navigator.selectedChild && navigator.selectedChild is ModuleLoader) {
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var ichild:IBBUpload = mod.child as IBBUpload;
+				//after a user deleted a corrections record, remove it from the list in the corrections screen
+				if(e.bbId == 'delete'){
+					var bbCorrections:IBBUpload = this.BBCorrections.child as IBBUpload;
+					if(bbCorrections){
+						bbCorrections.setBB(e.bbUploadHeader);
+					}
+				}
+				var sId:String = mod.id;
+				if(mod.url == "com/Billback/Upload/BBUpload.swf" && ((mod.id == 'v' + e.bbUploadHeader.bbHeaderID.toString() + e.bbUploadHeader.uploadID.toString()) || e.bbUploadHeader.bbHeaderID == 0) )
+					
+					/* ((!ichild.getBB()
+					|| !e.bbUploadHeader
+					||	ichild.getBB().BBReference == e.bbUploadHeader.BBReference) 
+					|| (!ichild.getBB().BBReference) 
+					|| (ichild.getBB().BBReference == '')))*/
+				{
+					navigator.removeChild(mod);
+					delete dictUpload[sId];
+				}
+				else{
+					//textField.text = "NO UnLoad of Search "+System.totalMemory.toString()+"\n"+textField.text;
+				}
+				
+			}
+			this.gc()
+		}
+		
+		public function unLoadRawEDI(e:BBMainEvent):void {
+			if (navigator.selectedChild && navigator.selectedChild is ModuleLoader) {
+				/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+				var mod:ModuleLoader = navigator.selectedChild as ModuleLoader;
+				var ichild:IBBRawEDI = mod.child as IBBRawEDI;
+				//after a user deleted a corrections record, remove it from the list in the corrections screen
+				//var s:String = 'com/Billback/Upload/BBRawEDI.swf';
+				//BBRawEDIMod.label = 'ID: ' + e.bbRawEDIHeader.UploadID + ' / '   + ' (' + e.bbRawEDIHeader.BBNumber + ')';
+				//var idx:int = navigator.selectedIndex;
+				var sId:String = mod.id;
+				if(mod.url == "com/Billback/Upload/BBRawEDI.swf" && (ichild.getBBRawEDI().BBUploadIIIPHID == e.bbRawEDIHeader.BBUploadIIIPHID) && (ichild.getBBRawEDI().UploadID == e.bbRawEDIHeader.UploadID) || e.bbRawEDIHeader.UploadID == 0){;
+					navigator.removeChild(mod);
+					delete dictUpload[sId];
+					//mod.removeElement(ichild as IVisualElement);
+					//ichild = null;
+					//mod.label = "Edit: " + ' (' + e.bbHeader.BBCode + ')';
+					/*modNew = dictEdit[sId];
+					 
+					navigator.addChildAt(modNew,idx);
+					navigator.selectedChild = modNew;
+					modNew.dispatchEvent(new ModuleEvent(ModuleEvent.READY));*/
+				}
+				else{
+					//textField.text = "NO UnLoad of Search "+System.totalMemory.toString()+"\n"+textField.text;
+				}
+				
+			}
+			this.gc()
+		}
+		
+		public function updateSearchBBHeader(e:BBMainEvent):void {
+			var mod:ModuleLoader = new ModuleLoader();
+			mod = tnavHome.getChildAt(0)  as ModuleLoader;
+			var ichild:* = mod.child as IBBSearch;
+			if (mod.child != null) {                    
+				/* Call function in the search module  */
+				ichild.setUpdateSearchBBHeader(e.bbHeader);
+			} else {                
+				trace("BB Search Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,updateSearchBBHeader);
+		}
+		
+		public function deleteSearchBBHeader(e:BBMainEvent):void {
+			var mod:ModuleLoader = new ModuleLoader();
+			mod = tnavHome.selectedChild as ModuleLoader;
+			var ichild:* = mod.child as IBBSearch;
+			if (mod.child != null) {                    
+				/* Call function in the search module  */
+				ichild.setDeleteSearchBBHeader(e.bbHeader);
+			} else {                
+				trace("BB Search Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,deleteSearchBBHeader);
+		}
+		
+		private function gc():void{
+			System.gc();
+			/* try
+			{
+			new LocalConnection().connect("anything");
+			new LocalConnection().connect("anything");
+			}
+			catch (e:*) {} // ignore intentionally
+			*/
+			textField.text = "    GC - "+System.totalMemory.toString()+"\n"+textField.text;
+		}
+		
+		/* Set the textinput focus on the "Payee" textinput on the Alias page, when the "Alias" tab is clicked */
+		public function setTextInputFocus():void
+		{
+			/* When the "Alias" tab is clicked */
+			if(tnavHome.selectedIndex == 2)	{	
+				var setInitialFocus:AliasEvent = new AliasEvent(AliasEvent.SET_INITIAL_FOCUS);
+				this.dispatchEvent(setInitialFocus);
+			}
+			
+		}		
+		
+		public function initApp():void
+		{
+			// add keyboard event handler
+			this.addEventListener(KeyboardEvent.KEY_UP,bbKeyHandler);	
+			applyRuntimeStyleSheet();
+		}
+		
+		private function bbKeyHandler(event:KeyboardEvent):void 
+		{
+			var bShiftPressed:Boolean = event.shiftKey;
+			var bCTRLPressed:Boolean = event.ctrlKey;
+			var selectedTab:int = navigator.selectedIndex;
+			
+			if (bCTRLPressed) {
+				var curKeyCode:int = event.keyCode;
+				
+				// New BB = CTRL+SHIFT+N(78)
+				if (bShiftPressed && curKeyCode == 78) {
+					var e:BBMainEvent = new BBMainEvent(BBMainEvent.EDIT_BB);
+					var bbH:BBHeader = new BBHeader();
+					e.bbHeader = bbH;
+					e.payeeList = new Array(bbH.payee);
+					e.closingMethodList = this.closingMethodList; // Send in the closingMethod List too for the edit screen dropdown instead of loading from CF.
+					e.bbAnalysts = this.bbAnalysts; // Send in the analysts List too for the edit screen dropdown instead of loading from CF.
+					this.dispatchEvent(e);
+				}
+				
+				// Undo = CTRL+Z(90)
+				if (curKeyCode == 90) {
+					if(event.target.hasOwnProperty('textFlow')){
+						this.undoAction(event.target.textFlow);					
+					}
+				}
+				
+				// Redo = CTRL+Y(89)
+				if (curKeyCode == 89) {
+					if(event.target.hasOwnProperty('textFlow')){
+						this.redoAction(event.target.textFlow);
+					}
+				}
+				// Redo = CTRL+Y(89)
+				if (curKeyCode == 89) {
+					if(event.target.hasOwnProperty('textFlow')){
+						this.redoAction(event.target.textFlow);
+					}
+				}
+				
+				// Toggle = CTRL+`(192) / Toggle back = CTRL+SHIFT+`(192)
+				
+				if (curKeyCode == 192) {
+					if(bShiftPressed){selectedTab--;}							// if shift pressed then move left(-)
+					else{selectedTab++;}										// if no shift pressed then move right(+)
+					
+					if(selectedTab < 0){selectedTab = (navigator.length-1);} 	// if @ first then set to last
+					if(selectedTab > (navigator.length-1)){selectedTab = 0}		// if @ last then set to first
+					navigator.selectedIndex = selectedTab;
+				}
+				
+				
+				// Toggle = CTRL+ Rt Arrow (39)
+				if (curKeyCode == 39) {
+					selectedTab++;												// move right(+)
+					if(selectedTab > (navigator.length-1)){selectedTab = 0}		// if @ last then set to first
+					navigator.selectedIndex = selectedTab;
+				}
+				
+				// Toggle = CTRL+ Lt. Arrow (37)
+				if (curKeyCode == 37) {
+					selectedTab--;												// move left(-)
+					if(selectedTab < 0){selectedTab = (navigator.length-1);} 	// if @ first then set to last
+					navigator.selectedIndex = selectedTab;
+				}
+				
+			}
+		}
+		
+		public function undoAction( textFlow:TextFlow ):void
+		{
+			if( textFlow.interactionManager is IEditManager ) 
+			{
+				IEditManager( textFlow.interactionManager ).undo();
+			}
+		}
+		
+		public function redoAction( textFlow:TextFlow ):void
+		{
+			if( textFlow.interactionManager is IEditManager )
+			{
+				IEditManager( textFlow.interactionManager ).redo();
+			}
+		}
+		
+		public function loadBBClosingMethods(e:BBMainEvent):void	{
+			this.closingMethodList = e.closingMethodList;
+		}
+		
+		public function loadBBAnalysts(e:BBMainEvent):void	{
+			this.bbAnalysts = e.bbAnalysts;
+		}
+		
+		
+	]]>
+	</fx:Script>
+	<s:TextArea id="textField" text="XXX" height="60" visible="false" includeInLayout="false"/>
+	<!--<s:ButtonBarButton skinClass="com.shared.views.skins.TabBarButtonSkinBa"/>-->
+	<!--<s:VGroup width="100%" height="100%" gap="0">
+	
+	<s:TabBar id="tabsNav" dataProvider="{navigator}" skinClass="com.shared.views.skins.TabBarBa"/>
+	<mx:ViewStack id="navigator" width="100%" height="100%" tabFocusEnabled="false" paddingBottom="0" paddingTop="0" paddingLeft="0" paddingRight="0">
+	<s:NavigatorContent label="Home"  width="100%" height="100%">
+	<s:BorderContainer width="100%" height="100%" borderColor="#24303A" cornerRadius="0">
+	<s:Scroller width="100%" height="100%">
+	<s:Group>
+	<s:layout>
+	<s:VerticalLayout />
+	</s:layout>
+	<s:TabBar id="tabsHome" dataProvider="{tnavHome}"/>
+	<mx:ViewStack id="tnavHome" width="100%" height="100%" tabFocusEnabled="false" change="setTextInputFocus()">
+	
+	</mx:ViewStack>
+	</s:Group>
+	</s:Scroller>
+	</s:BorderContainer>
+	</s:NavigatorContent>		
+	</mx:ViewStack>
+	</s:VGroup>-->
+	
+	<mx:TabNavigator borderColor="#000000" borderAlpha=".2" id="navigator" 
+					 width="100%" tabHeight="22" height="100%" tabFocusEnabled="false" 
+					 tabStyleName="tab" selectedTabTextStyleName="tab" 
+					 paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+		<mx:TabNavigator borderColor="#000000" borderAlpha=".2" id="tnavHome" width="100%" tabHeight="22" label="Home" height="100%" tabFocusEnabled="false" 
+						 change="setTextInputFocus()" tabStyleName="tab" selectedTabTextStyleName="tab"
+						 paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="2">
+		</mx:TabNavigator>		
+	</mx:TabNavigator>
+	
+</s:Application>

@@ -1,0 +1,18 @@
+===== QUERY: UpdateClosing =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: UpdatePayReqFlag =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: UpdateReasonCode =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: UpdateReasonCode =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Get_ReasonCode =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: SelectedReasonCode =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

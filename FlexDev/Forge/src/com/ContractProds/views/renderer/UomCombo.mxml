@@ -1,0 +1,122 @@
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="85"
+	 paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+    implements="mx.controls.listClasses.IDropInListItemRenderer,mx.managers.IFocusManagerComponent">
+    <mx:Script>
+        <![CDATA[
+			import com.ContractProds.events.ComponentEvent;
+			import com.asfusion.mate.events.Dispatcher;
+			import com.shared.vos.Item;
+			import com.shared.vos.Uom;
+			
+			import mx.controls.Alert;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridItemRenderer;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			import mx.controls.listClasses.BaseListData;
+			import mx.controls.listClasses.ListData;
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+			import mx.utils.object_proxy;
+
+            private var _listData:AdvancedDataGridListData;
+            // Define a property for returning the new value to the cell.
+			[Bindable]
+			public var itemSource:Object = new Object();
+            [Bindable]
+            public var value:Object;            
+
+            // Implement the drawFocus() method for the VBox.
+            override public function drawFocus(draw:Boolean):void {
+                cboUom.setFocus();
+            }
+             // Implement the setFocus() method for the VBox.
+            override public function setFocus():void {
+                cboUom.setFocus();
+            }
+
+            override public function get data():Object {
+                return super.data;
+            }
+            
+            override public function set data(value:Object):void {
+            	//var o:Object = value[_listData.dataField];
+            	var s:String = '';
+            	var i:int = 0; //counter
+				s = _listData.dataField;
+				//s = s.replace('.prodRate.uom','');
+                cboUom.dataProvider = value[s]['uomDp'];
+                //cboUom.selectedItem = value[s]['prodRate']['uom'];
+				itemSource = _listData.item[s];
+                
+				for each(var u:Uom in cboUom.dataProvider){
+					if(value[s]['prodRate']['uom']['uomId'] == 0){
+						if (u.bDefault){
+							cboUom.selectedIndex = i;
+							break;
+						}
+					}
+					else{
+						if (u.uomId == value[s]['prodRate']['uom']['uomId']){
+							cboUom.selectedIndex = i;
+							break;
+						}
+					}
+					i++;
+				}
+			  setUom(this.cboUom.selectedItem as Uom)
+                
+            } 
+            public function get listData():BaseListData
+            {
+                return _listData;
+            }
+
+            public function set listData(value:BaseListData):void
+            {
+                _listData = AdvancedDataGridListData(value);
+            } 
+          private function setUom(u:Uom):void{
+          		var s:String = '';
+				var varianceMp:Number;
+				s = _listData.dataField;
+				//s = s.replace('.prodRate.uom','');
+            	this._listData.item[s]['prodRate']['uom'] = u;
+				//KRAFT
+				if(this._listData.item[s]['prodRate']['rateMP'] > 0){
+					if(u.uomId == 2){
+						this._listData.item[s]['prodRate']['rateMP'] = this._listData.item[s]['prodRate']['rateMPLB'];
+						this._listData.item.customPrintCharge.printMinPrice = this._listData.item.customPrintCharge.printMinPriceLB;
+					}
+					else{
+						this._listData.item[s]['prodRate']['rateMP'] = this._listData.item[s]['prodRate']['rateMPCS'];
+						this._listData.item.customPrintCharge.printMinPrice = this._listData.item.customPrintCharge.printMinPriceCS;
+					}
+					
+					if(s.indexOf('1') == 0){//if fixed component, variance is calced
+						this._listData.item[s]['prodRate']['varianceMP'] = this._listData.item[s]['prodRate']['rateMP'] - this._listData.item[s]['prodRate']['rate'];
+					}
+					else{//if rebate, the variance is the ProdRate.rate
+						if(u.uomId == 3){
+							this._listData.item[s]['prodRate']['varianceMP'] = this._listData.item[s]['prodRate']['rateMP'] *(this._listData.item[s]['prodRate']['rate']/100);
+							varianceMp = this._listData.item[s]['prodRate']['rate'];
+						}else{
+							this._listData.item[s]['prodRate']['varianceMP'] = this._listData.item[s]['prodRate']['rate'];
+							varianceMp = (this._listData.item[s]['prodRate']['varianceMP']/this._listData.item[s]['prodRate']['rateMP'])*100;
+						}
+					}
+					this._listData.item[s]['prodRate']['variancePercMP'] = varianceMp;
+				}
+				
+				itemSource = _listData.item[s];
+				
+            }
+
+        ]]>
+    </mx:Script>
+    <mx:Binding destination="value" source="itemSource"/>
+    
+    <mx:ComboBox id="cboUom" 
+    			editable="false"
+    			width="75" 
+    			labelField="abbreviation" 
+    			change="setUom(this.cboUom.selectedItem as Uom);" />
+</mx:VBox>

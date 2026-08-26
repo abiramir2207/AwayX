@@ -1,0 +1,25 @@
+===== QUERY: programsToCancel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForprogramsToCancel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mass_program_change_header")>
+<cfif useLakebaseForprogramsToCancel>
+	<cftry>
+		<cfset programsToCancel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("mass_program_change_header", {
+				"skip" = "eq.0",
+				"complete" = "eq.0",
+				"select" = "contract_main_id,notes"
+			}), "contract_main_id,notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForprogramsToCancel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForprogramsToCancel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateProgramNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

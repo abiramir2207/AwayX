@@ -1,0 +1,23 @@
+===== QUERY: q_Data_Integration_Read =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_Data_Integration_Exists =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForq_Data_Integration_Exists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration")>
+<cfif useLakebaseForq_Data_Integration_Exists>
+	<cftry>
+		<cfset q_Data_Integration_Exists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_integration", {
+				"select" = "integration_type"
+			}), "integration_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_Data_Integration_Exists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_Data_Integration_Exists>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

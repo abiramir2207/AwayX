@@ -1,0 +1,114 @@
+===== QUERY: qGetAllDistributorsDistributorID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAllDistributorsDistributorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_distributor")>
+<cfif useLakebaseForqGetAllDistributorsDistributorID>
+	<cftry>
+		<cfset qGetAllDistributorsDistributorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_distributor", {
+				"deleted" = "eq.0",
+				"distributor_group_level_id" = "eq.#arguments.groupLevel#",
+				"distributor_group_id" = "eq.#arguments.groupID#",
+				"limit" = "1",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllDistributorsDistributorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllDistributorsDistributorID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetAllDistributor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAllDistributor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForqGetAllDistributor>
+	<cftry>
+		<cfset qGetAllDistributor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"bsa_foodservice_customers_id" = "eq.#this.groupDistributorId#",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllDistributor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllDistributor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDistributorGroup =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDistributorGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_distributor")>
+<cfif useLakebaseForqGetDistributorGroup>
+	<cftry>
+		<cfset qGetDistributorGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_distributor", {
+				"deleted" = "eq.0",
+				"distributor_id" = "eq.#arguments.distributorId#",
+				"select" = "distributor_group_level_id,distributor_group_id"
+			}), "distributor_group_level_id,distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistributorGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistributorGroup>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: prodGroupDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForprodGroupDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForprodGroupDetails>
+	<cftry>
+		<cfset prodGroupDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_segment_id" = "eq.#arguments.distributorGroupID#",
+				"select" = "'' as shr_ship_to,'' as ship_to,distributor_label_plural#' as name"
+			}), "'' as shr_ship_to,'' as ship_to,distributor_label_plural#' as name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForprodGroupDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForprodGroupDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetGroupsSaved =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetGroupsSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForqGetGroupsSaved>
+	<cftry>
+		<cfset qGetGroupsSaved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.1",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupsSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupsSaved>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

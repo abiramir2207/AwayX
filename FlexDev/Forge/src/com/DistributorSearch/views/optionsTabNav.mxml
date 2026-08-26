@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Contents of the Left Hand Search Options -->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" >
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			public var dp1:Array = new Array();
+			[Bindable]
+			public var dp2:Array = new Array();
+			[Bindable]
+			public var dp3:Array = new Array();
+			[Bindable]
+			public var dp4:Array = new Array();
+			[Bindable]
+			public var dp5:Array = new Array();
+			[Bindable]
+			public var dp6:Array = new Array();
+			[Bindable]
+			public var items:ArrayCollection = new ArrayCollection();
+			
+		]]>
+	</mx:Script>
+	<mx:TabNavigator id="tbNavList" width="100%" height="100%" creationComplete="this.tbNavList.selectedIndex = 0" creationPolicy="all">
+					<mx:Canvas id="fCanvas" label="search" width="100%" height="100%">
+						<mx:VBox width="100%" height="100%" paddingLeft="5" paddingRight="5">
+						
+							<mx:TextInput tabEnabled="true" text="" id="searchField" width="200" 
+									toolTip="Keyword search on any of the fields:&#13; {this.parentDocument.distLabel} Id, {this.parentDocument.distLabel} name, {this.parentDocument.lblCol1}, {this.parentDocument.lblCol2}, {this.parentDocument.lblCol3}, {this.parentDocument.lblCol4}." 
+									height="20"
+									/>  <!--	{this.parentDocument.iTextInputHeight} -->
+							<mx:Spacer width="3" /> 
+							<mx:HBox width="100%">
+								<mx:Button width="63" id="btnFilter" tabEnabled="true" label="search" toolTip="search" height="16"  /> <!--{this.parentDocument.iButtonHeight}-->
+								<mx:Button id="btnReset" label="reset" tabEnabled="true" width="63" height="16" />		<!--{this.parentDocument.iButtonHeight}-->
+							</mx:HBox>
+								
+							<mx:CheckBox id="chFilterSelected" label="view selected" tabEnabled="true" toolTip="show only the currently selected {this.parentDocument.distLabel}s"/>
+							<mx:VBox id="vbxSearch" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+								<mx:ComboBox toolTip="Filter: {this.parentDocument.lblCol1}" id="cbo1" dataProvider="{this.dp1}" width="175"  tabEnabled="true" rowCount="15" height="15"></mx:ComboBox> <!-- {this.parentDocument.iComboBoxHeight} -->
+								<mx:ComboBox toolTip="Filter: {this.parentDocument.lblCol2}" id="cbo2" dataProvider="{this.dp2}" width="175"  tabEnabled="true" rowCount="15" height="15"></mx:ComboBox> <!-- {this.parentDocument.iComboBoxHeight} -->
+								<mx:ComboBox toolTip="Filter: {this.parentDocument.lblCol3}" id="cbo3" dataProvider="{this.dp3}" width="175"  tabEnabled="true" rowCount="15" height="15"></mx:ComboBox> <!-- {this.parentDocument.iComboBoxHeight} -->
+								<mx:ComboBox toolTip="Filter: {this.parentDocument.lblCol4}" id="cbo4" dataProvider="{this.dp4}" width="175"  tabEnabled="true" rowCount="15" height="15"></mx:ComboBox> <!-- {this.parentDocument.iComboBoxHeight} -->
+								<mx:ComboBox toolTip="Filter: {this.parentDocument.lblCol5}" id="cbo5" dataProvider="{this.dp5}" width="175"  tabEnabled="true" rowCount="15" height="15"></mx:ComboBox> <!-- {this.parentDocument.iComboBoxHeight} -->
+								<mx:ComboBox toolTip="Filter: {this.parentDocument.lblCol6}" id="cbo6" dataProvider="{this.dp6}" width="175"  tabEnabled="true" rowCount="15" height="15"></mx:ComboBox> <!-- {this.parentDocument.iComboBoxHeight} -->
+							</mx:VBox>
+						</mx:VBox>
+					</mx:Canvas>
+					<mx:Canvas label="create list" width="100%" height="100%">
+						<mx:VBox  id="crList" width="100%" height="100%" paddingLeft="5">
+							<mx:TextArea height="300" width="150" id="txtCrList"
+								 toolTip="To search for a list of {this.parentDocument.distLabel}s:&#13;Type or paste in a list of {this.parentDocument.distLabel} numbers.  Separate each {this.parentDocument.distLabel} number by the enter key. Click search."
+								 wordWrap="false" editable="true" enabled="true">
+								<mx:text></mx:text>
+							</mx:TextArea>
+							<mx:Button id="btnCreateList" label="search" height="16" /> <!-- {this.parentDocument.iButtonHeight} -->
+						</mx:VBox>
+					</mx:Canvas>
+					<mx:Canvas label="favorites" width="100%" height="100%">
+						<mx:VBox id="svSearch" width="100%" height="100%" paddingLeft="5">
+							<mx:List id="lsUserList" dataProvider="{this.parentDocument.arrUserList}" 
+									labelField="LIST_NAME" height="300" width="150" doubleClickEnabled="true" 
+									toolTip="To save a list of your favorite {this.parentDocument.distLabel}s:&#13;Place a checkmark next to the {this.parentDocument.distLabel}s you want to save.  Give your list of favorite {this.parentDocument.distLabel}s a name in the field called 'Favorites Name'. Click save.&#13;&#13;To see one of your favorites:&#13;Double click on the Favorites Name.&#13;The Favorites list will appear on the right hand side." />
+							<mx:HBox>
+								<mx:Button id="btnGetListItems" label="search" toolTip="Display the {this.parentDocument.distLabel}s in the selected list" height="16" /> <!-- {this.parentDocument.iButtonHeight} -->
+								<mx:Button id="btnDeleteList" label="delete" toolTip="Delete the selected list" height="16" /> <!-- {this.parentDocument.iButtonHeight} -->
+							</mx:HBox>
+							<mx:Button id="btnSaveUserList" label="save selected" toolTip="Save selected {this.parentDocument.distLabel}s for later use"  height="16"/> <!-- {this.parentDocument.iButtonHeight} -->
+							<mx:Text text="list name:"/>
+							<mx:TextInput id="tListName" maxChars="20" width="150" />
+						</mx:VBox>
+					</mx:Canvas>
+				</mx:TabNavigator>
+</mx:Canvas>

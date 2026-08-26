@@ -1,0 +1,6 @@
+===== QUERY: GetPurgedPrograms =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetPurgedBillbacks =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

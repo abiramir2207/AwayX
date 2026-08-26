@@ -1,0 +1,92 @@
+===== QUERY: get_summary =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_summary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_product_summary")>
+<cfif useLakebaseForget_summary>
+	<cftry>
+		<cfset get_summary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_product_summary", {
+				"product_group_id" = "eq.#product_group_id#",
+				"pr_date_period" = "eq.#pr_date_period#",
+				"deleted" = "eq.0",
+				"select" = "pr_product_summary_id,pr_purchases_cases,pr_purchases_dollars,pr_street_cases,pr_street_dollars,pr_street_cases_percent,pr_street_dollars_percent,pr_operator_discounted_cases,pr_operator_discounted_dollars,pr_operator_discounted_cases_percent,pr_operator_discounted_dollars_percent,pr_mrkt_shelter_case_rate,pr_mrkt_shelter_dollars,pr_operator_discounted_case_rate,pr_operator_discounted_dollars_cr,pr_investment_case_rate,pr_investment_dollars,pr_date_period,deleted,created_date,product_group_id,product_group_description"
+			}), "pr_product_summary_id,pr_purchases_cases,pr_purchases_dollars,pr_street_cases,pr_street_dollars,pr_street_cases_percent,pr_street_dollars_percent,pr_operator_discounted_cases,pr_operator_discounted_dollars,pr_operator_discounted_cases_percent,pr_operator_discounted_dollars_percent,pr_mrkt_shelter_case_rate,pr_mrkt_shelter_dollars,pr_operator_discounted_case_rate,pr_operator_discounted_dollars_cr,pr_investment_case_rate,pr_investment_dollars,pr_date_period,deleted,created_date,product_group_id,product_group_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_summary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_summary>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_operators =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_operators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_product_tt_operators")>
+<cfif useLakebaseForget_operators>
+	<cftry>
+		<cfset get_operators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_product_tt_operators", {
+				"product_group_id" = "eq.#product_group_id#",
+				"pr_date_period" = "eq.#pr_date_period#",
+				"deleted" = "eq.0",
+				"select" = "ttop_operators_id,pr_product_summary_id,ttop_contract_number,ttop_contract_title,ttop_contract_type,ttop_cases,ttop_share,ttop_dollars,deleted,created_date,pr_date_period,product_group_id"
+			}), "ttop_operators_id,pr_product_summary_id,ttop_contract_number,ttop_contract_title,ttop_contract_type,ttop_cases,ttop_share,ttop_dollars,deleted,created_date,pr_date_period,product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_operators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_operators>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_items =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_items = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_product_tt_items")>
+<cfif useLakebaseForget_items>
+	<cftry>
+		<cfset get_items = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_product_tt_items", {
+				"product_group_id" = "eq.#product_group_id#",
+				"pr_date_period" = "eq.#pr_date_period#",
+				"deleted" = "eq.0",
+				"select" = "ttit_items_id,pr_product_summary_id,ttit_item_number,ttit_item_description,ttit_dollars,ttit_cases,ttit_dollars_per_cases,ttit_net,ttit_index,deleted,created_date,pr_date_period,product_group_id"
+			}), "ttit_items_id,pr_product_summary_id,ttit_item_number,ttit_item_description,ttit_dollars,ttit_cases,ttit_dollars_per_cases,ttit_net,ttit_index,deleted,created_date,pr_date_period,product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_items = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_items>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_distributors =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_distributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_product_tt_distributors")>
+<cfif useLakebaseForget_distributors>
+	<cftry>
+		<cfset get_distributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_product_tt_distributors", {
+				"product_group_id" = "eq.#product_group_id#",
+				"pr_date_period" = "eq.#pr_date_period#",
+				"deleted" = "eq.0",
+				"select" = "ttds_distributors_id,pr_product_summary_id,ttds_distributor_sold_to,ttds_distributor_name,ttds_distributor_region,ttds_cases,ttds_share,ttds_dollars,deleted,created_date,pr_date_period,product_group_id"
+			}), "ttds_distributors_id,pr_product_summary_id,ttds_distributor_sold_to,ttds_distributor_name,ttds_distributor_region,ttds_cases,ttds_share,ttds_dollars,deleted,created_date,pr_date_period,product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_distributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_distributors>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

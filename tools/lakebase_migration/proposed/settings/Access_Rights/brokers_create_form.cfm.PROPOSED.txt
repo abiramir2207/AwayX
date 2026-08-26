@@ -1,0 +1,48 @@
+===== QUERY: getBrokerInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetBrokerInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForgetBrokerInfo>
+	<cftry>
+		<cfset getBrokerInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"bsa_foodservice_brokers_id" = "eq.#URL.Broker_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBrokerInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBrokerInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getLOBFoodserviceTitle =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetLOBFoodserviceTitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForgetLOBFoodserviceTitle>
+	<cftry>
+		<cfset getLOBFoodserviceTitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"deleted" = "eq.0",
+				"line_of_business" = "eq.F",
+				"select" = "line_of_business_name,line_of_business_id"
+			}), "line_of_business_name,line_of_business_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLOBFoodserviceTitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLOBFoodserviceTitle>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRegions =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetZones =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

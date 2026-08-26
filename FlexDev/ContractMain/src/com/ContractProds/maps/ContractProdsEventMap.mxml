@@ -1,0 +1,716 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Holds all event handlers registered with Mate : SearchEvent and native : FlexEvent -->
+<LocalEventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.ContractProds.events.*;
+			import com.ContractProds.models.*;
+			import com.ContractProds.views.pm.*;
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import com.shared.models.SettingsManager;
+			import com.shared.vos.Settings;
+			
+			import mx.events.*;
+			//import com.ContractProds.vos.*;
+			[Bindable]
+			private var source:String = 'mvc.models.Program.Component.ComponentManager';
+		]]>
+	</mx:Script>
+ 	<mate:Debugger level="{Debugger.ERROR}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  ....................................................... -->
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Item.ItemSearchService</strong></p> -->
+	<mx:RemoteObject id="roSearchService" destination="ColdFusion" source="mvc.Models.Item.ItemSearchService" />
+	<mx:RemoteObject id="roContractProd" destination="ColdFusion" source="mvc.Models.ContractProd.ContractProd" />
+	<mx:RemoteObject id="roComponentDef" destination="ColdFusion" source="mvc.Models.Program.Component.ComponentDefManager" />
+	<mx:RemoteObject id="roComponent" destination="ColdFusion" source="mvc.Models.Program.Component.ComponentManager" />
+	<mx:RemoteObject id="roProgram" destination="ColdFusion" source="mvc.Models.Program.ProgramManager" />
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="roErrorService" destination="ColdFusion" source="mvc.Models.ErrorService" />
+	<!--- Handles User List (Favorites) Logic <p>roItemListService : <strong>mvc.models.Item.ItemList</strong></p> -->
+	<mx:RemoteObject id="roItemListService" destination="ColdFusion" source="mvc.Models.Item.ItemList" />
+
+	<!-- FlexEvent.PREINITIALIZE ....................................................... -->
+	<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+			Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" debug="true">
+		<ObjectBuilder generator="{SettingsManager}" cache="global" />
+		<ObjectBuilder generator="{FilterManager}" id="oFilterManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{ComponentManager}" id="oComponentManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{SearchManager}" id="oSearchManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{GridManager}" id="oGridManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{ComponentDefManager}" id="oComponentDefManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{FilterPM}" id="oFilterPM" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{ListManager}" id="oListManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{ComponentPM}" id="oComponentPM" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{ProdUploadPM}" id="oProdUploadPM" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{FavoritePM}" id="oFavoritePM" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{GridDataPM}" id="oGridDataPM" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{BAError}" id="oBAError" />
+		<!--<MethodInvoker generator="{SettingsManager}" method="loadParameters" />	-->
+		<!--call db for other settings-->
+		<!--<EventAnnouncer type="{SearchEvent.LOAD_APP_SETTINGS}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>-->
+		
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE ....................................................... -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}">
+		<!--load flash Vars ()-->
+		<!--for sharedObjects test: <MethodInvoker generator="{SearchManager}" method="loadResults" />-->
+		<!--Get 180 day table items -->
+		<!--
+		<EventAnnouncer type="{SearchEvent.GET_MINI_ITEMS}" generator="{SearchEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+		</EventAnnouncer>
+		-->
+		<!--Get Items -->
+		<!--<EventAnnouncer type="{SearchEvent.GET}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.programId" sourceCache="global" targetKey="programId"/>
+			<Property source="{SettingsManager}" sourceKey="settings.discountType" sourceCache="global" targetKey="discountType"/>
+			<Property source="{SettingsManager}" sourceKey="settings.statusFilterOn" sourceCache="global" targetKey="statusFilterOn"/>
+		</EventAnnouncer>-->
+		
+		<EventAnnouncer type="{SearchEvent.LOAD_SO}" generator="{SearchEvent}" />
+		<!--Populate the Saved Lists -->
+		<!--<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" sourceCache="global" targetKey="userId"/>
+		</EventAnnouncer>-->
+		<!--Get discount types on a program template -->
+		<EventAnnouncer type="{SearchEvent.GET_DISC_TYPES_ON_PRG_TEMPLATE}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.programId" sourceCache="global" targetKey="programId"/>
+		</EventAnnouncer>
+		<!--Get Component Defs -->
+		<EventAnnouncer type="{ComponentEvent.GET_COMPONENT_DEFS}" generator="{ComponentEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.programId" sourceCache="global" targetKey="programId"/>
+			<Property source="{SettingsManager}" sourceKey="settings.bMarketPrice" sourceCache="global" targetKey="bMarketPrice"/>
+		</EventAnnouncer>
+	</EventHandlers>
+	
+	 <!--SAVE SETTINGS .......................................................-->
+	 <!---@see com.ContractProds.models.SettingsManager#SaveSettings()
+			Invoke : com.ContractProds.models.SettingsManager.SaveSettings()-->
+	<EventHandlers type="{SearchEvent.SAVE_SETTINGS}" id="eSAVE_SETTINGS">
+        <!--Store passed in values (flashvars)-->
+		<MethodInvoker 	generator="{SettingsManager}" method="SaveSettings" 
+						arguments="{event.settings}" />
+    </EventHandlers>
+    
+	<!--GET ITEMS .......................................................-->
+    <!---			@see #roSearchService
+	    ** RemoteInvoke : roSearchService.getItems()
+	    		@see com.ContractProds.models.SearchManager#itemResults() 
+	    ** Handler : com.ContractProds.models.SearchManager.itemResults()   
+		**		ProgramId , DiscountType_Id, StatusFilter, bAll (1 NO FILTER: GET ALL prods then cache them in so), bMP (Market Price?), TemplateFilterId -->
+	<EventHandlers type="{SearchEvent.GET}" id="eGET">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getCompItems" arguments="{[event.programId,event.discountType,event.statusFilterOn,1,event.bMarketPrice,event.templateFilterId]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="itemResults" arguments="{resultObject}" />
+				<!--Get Components....don't go until we have items 
+				<EventAnnouncer type="{ComponentEvent.LOAD_PROGRAM}" generator="{ComponentEvent}" >
+					<Property source="{SettingsManager}" sourceKey="settings.programId" sourceCache="global" targetKey="programId"/>
+				</EventAnnouncer>-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="ITEM SEARCH SERVICE (get items)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--GET ITEMS ....................................................... ProgramId , DiscountType_Id, StatusFilter, bAll (0 means use templateFilter), bMP (Market Price?), TemplateFilterId-->
+	<EventHandlers type="{SearchEvent.GET_PROGRAM_PRODUCTS}" id="eGET_PROGRAM_PRODUCTS" debug="true">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getCompItems" arguments="{[event.programId,event.discountType,event.statusFilterOn,0,event.bMarketPrice,event.templateFilterId]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="validateProgramProducts" arguments="{resultObject}" />
+				<!--Get Components....don't go until we have items -->
+				<!--<EventAnnouncer type="{ComponentEvent.LOAD_PROGRAM}" generator="{ComponentEvent}" >
+					<Property source="{SettingsManager}" sourceKey="settings.programId" sourceCache="global" targetKey="programId"/>
+				</EventAnnouncer>-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="ITEM SEARCH SERVICE (get items)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--GET GET_COMPONENT_DEFS .......................................................-->
+    <!---			@see #roComponentDef
+	    ** RemoteInvoke : roComponentDef.getComponentDef()
+	    		@see com.ContractProds.models.SearchManager#saveComponentDefs() 
+	    ** Handler : com.ContractProds.models.SearchManager.saveComponentDefs()   -->
+	<EventHandlers type="{ComponentEvent.GET_COMPONENT_DEFS}" id="eGET_COMPONENT_DEFS" debug="true">
+		<RemoteObjectInvoker instance="{roComponentDef}" showBusyCursor="true" method="getComponentDef" arguments="{[event.programId,event.bMarketPrice]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ComponentDefManager}" method="saveComponentDefs" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="COMPONENT SERVICE (get component def)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--GET LOAD_COMPONENT .......................................................-->
+    <!---			@see #roComponent
+	    ** RemoteInvoke : roComponent.getComponent()
+	    		@see com.ContractProds.models.SearchManager#saveComponents() 
+	    ** Handler : com.ContractProds.models.SearchManager.saveComponents()   -->
+	<EventHandlers type="{ComponentEvent.LOAD_COMPONENT}" id="eLOAD_COMPONENT" debug="true">
+		<RemoteObjectInvoker instance="{roComponent}" showBusyCursor="true" method="getComponent" arguments="{event.programId}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ComponentManager}" method="saveComponents" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="COMPONENT SERVICE (get component)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<EventHandlers type="{ComponentEvent.LOAD_PROGRAM}" id="eLOAD_PROGRAM" debug="true">
+		<RemoteObjectInvoker instance="{roProgram}" showBusyCursor="true" method="getProgram" arguments="{[event.programId,event.bMarketPrice]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ComponentManager}" method="saveComponents" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="COMPONENT SERVICE (load program)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--SAVE SAVE_DATA .......................................................-->
+    <!---			@see #roComponentDef
+	    ** RemoteInvoke : roComponentDef.getComponentDef()
+	    		@see com.ContractProds.models.SearchManager#saveComponentDefs() 
+	    ** Handler : com.ContractProds.models.SearchManager.saveComponentDefs()   -->
+	<EventHandlers type="{ComponentEvent.SAVE_DATA}" id="eSAVE_DATA" debug="true">
+		<RemoteObjectInvoker instance="{roComponent}" showBusyCursor="true" method="saveComponentData" arguments="{[event.programId, event.acComponents,event.bMarketPrice]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ComponentManager}" method="callWrapper" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (save data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--LOAD_SO  .......................................................-->
+	<EventHandlers type="{SearchEvent.LOAD_SO}" id="eLOAD_SO">
+		<MethodInvoker 	generator="{SearchManager}" method="loadSOitems" />
+	</EventHandlers>
+	
+	<!--UPDATE COMBOBOX FILTERS .......................................................-->
+	<!--- 	   @see com.ContractProds.models.SearchManager#updFilters()
+	    ** Invoke : com.ContractProds.models.SearchManager.updFilters()  -->
+	<EventHandlers type="{SearchEvent.UPD_CB_FILTERS}" id="eUPD_CB_FILTERS">
+        <MethodInvoker generator="{SearchManager}" method="updFilters" />
+    </EventHandlers>
+    
+    <!--FILTER  .......................................................-->
+    <!--- 	   @see com.ContractProds.models.SearchManager#itemFilter()
+	    ** Invoke : com.ContractProds.models.SearchManager.itemFilter()  -->
+	<EventHandlers type="{SearchEvent.FILTER}" debug="true" id="eFILTER">
+        <MethodInvoker 	generator="{SearchManager}" method="itemFilter" 
+        				arguments="{event}" />
+    </EventHandlers>
+    <!--event.searchFieldText,event.brand,event.qBrand,event.typeCode,event.typeGroup,event.bfilterMiniItem,event.programDiscountTypes,event.lblStatus-->
+     <!--RESET FILTER  .......................................................-->
+     <!--- 	   @see com.ContractProds.models.SearchManager#filterReset()
+	    ** Invoke : com.ContractProds.models.SearchManager.filterReset()  -->
+	<EventHandlers type="{SearchEvent.RESET_FILTER}" id="eRESET_FILTER">
+        <MethodInvoker 	generator="{SearchManager}" method="filterReset" />
+    </EventHandlers>
+    
+    <!--FILTER SELECTED  .......................................................-->
+    <!--- 	   @see com.ContractProds.models.SearchManager#filterSelected()
+	    ** Invoke : com.ContractProds.models.SearchManager.filterSelected()  -->
+	<EventHandlers type="{SearchEvent.FILTER_SELECTED}" id="eFILTER_SELECTED">
+        <MethodInvoker 	generator="{SearchManager}" method="filterSelected" />
+    </EventHandlers>
+    
+    <!--FILTER RATES  .......................................................-->
+    <!--- 	   @see com.ContractProds.models.SearchManager#filterRates()
+	    ** Invoke : com.ContractProds.models.SearchManager.filterRates()  -->
+	<EventHandlers type="{SearchEvent.FILTER_RATES}" id="eFILTER_RATES">
+        <MethodInvoker 	generator="{SearchManager}" method="itemFilter"
+        	 arguments="{event}" /> <!--filterRates only filters on rates and ignores other filter selections-->
+    </EventHandlers>
+    
+      <!--FILTER MINI ITEMS (180 table)  .......................................................-->
+      <!---    @see com.ContractProds.models.SearchManager#filterMiniItems()
+	    ** Invoke : com.ContractProds.models.SearchManager.filterMiniItems()  -->
+
+	<EventHandlers type="{SearchEvent.FILTER_MINI_ITEMS}" id="eFILTER_MINI_ITEMS">
+        <MethodInvoker generator="{SearchManager}" method="filterMiniItems" />
+    </EventHandlers>
+  
+  	  <!--SAVE_FILTER_PARMS (180 table)  .......................................................-->
+      <!---   -->
+
+	<EventHandlers type="{SearchEvent.SAVE_FILTER_PARMS}" id="eSAVE_FILTER_PARMS">
+        <MethodInvoker generator="{FilterManager}" method="setFilterParms" arguments="{event.oFilterParms}" />
+    </EventHandlers>
+    
+    <!--CREATE USER ITEM LIST  .......................................................-->
+    <!--- 	   @see com.ContractProds.models.SearchManager#createList()
+	    ** Invoke : com.ContractProds.models.SearchManager.createList()  -->
+	<EventHandlers type="{SearchEvent.CREATE_LIST}" id="eCREATE_LIST">
+        <MethodInvoker 	generator="{SearchManager}" method="createList"
+        				arguments="{[event.iList]}" />
+    </EventHandlers>
+    <!--DISPLAY USER ITEM LIST  .......................................................-->
+    <!--- 	   @see com.ContractProds.models.SearchManager#displayList()
+	    ** Invoke : com.ContractProds.models.SearchManager.displayList()  -->
+	<EventHandlers type="{SearchEvent.GET_USERLIST_ITEMS}" id="eGET_USERLIST_ITEMS">
+        <MethodInvoker 	generator="{SearchManager}" method="displayList"
+        				arguments="{[event.arrUserListItems]}" />
+    </EventHandlers>
+    
+	<!--GET SAVED USER ITEM LIST  .......................................................-->
+  <!--- 			@see #roItemListService
+	    ** RemoteInvoke : roItemListService.getUserItemList()
+	    		@see com.ContractProds.models.ListManager#userItemListResults() 
+	    ** Handler : com.ContractProds.models.ListManager.userItemListResults()   -->
+	<EventHandlers type="{SearchEvent.GET_USERLIST}" id="eGET_USERLIST" debug="true">
+        <RemoteObjectInvoker instance="{roItemListService}" showBusyCursor="true" method="getUserItemList" 
+        						arguments="{event.userId}">		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ListManager}" method="userItemListResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (get)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+    
+    <!--SAVE NEW USER ITEM LIST  .......................................................-->
+    <!--- 			@see #roItemListService
+	    ** RemoteInvoke : roItemListService.saveUserItemList()
+	    		@see com.ContractProds.models.ListManager#saveItemListResults() 
+	    ** Handler : com.ContractProds.models.ListManager.saveItemListResults()   -->
+	<EventHandlers type="{SearchEvent.SAVE_USERLIST}" id="eSAVE_USERLIST">
+        <RemoteObjectInvoker instance="{roItemListService}" showBusyCursor="true" method="saveUserItemList" 
+        						arguments="{[event.userId,event.userListItemsName,event.arrUserListItems]}" debug="true">		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!--<MethodInvoker generator="{ListManager}" method="saveItemListResults" arguments="{resultObject}" />-->
+				<!--reload user list ** in handler so we know the save is done -->
+				<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+					<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+				</EventAnnouncer>
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (save)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		
+    </EventHandlers>
+    
+	<!--DELETE USER ITEM LIST  .......................................................-->
+	<!--- 			@see #roItemListService
+	    ** RemoteInvoke : roItemListService.deleteUserItemList()
+	    		@see #eGET_USERLIST
+	    ** Handler : AnnounceEvent :  GET_USERLIST  -->
+	<EventHandlers type="{SearchEvent.DELETE_USERLIST}" id="eDELETE_USERLIST">
+        <RemoteObjectInvoker instance="{roItemListService}" showBusyCursor="true" method="deleteUserItemList" 
+        						arguments="{event.userListId}">	 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!--reload user list after the delete-->
+				<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+					<Property source="{SettingsManager}" sourceKey="settings.userId" sourceCache="global" targetKey="userId"/>
+				</EventAnnouncer>
+				<!--<MethodInvoker generator="{ListManager}" method="deleteItemListResults" arguments="{data.tmpUserId}" />-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event-->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (delete)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+    
+    <!--GET DISTRIBUTOR ITEMS (180 DAY TABLE).......................................................-->
+    <!--- 			@see #roSearchService
+	    ** RemoteInvoke : roSearchService.getMiniItemMasterItems()
+	    		@see com.ContractProds.models.SearchManager#miniItemResults() 
+	    ** Handler : com.ContractProds.models.SearchManager.miniItemResults()   -->
+	<EventHandlers type="{SearchEvent.GET_MINI_ITEMS}" id="eGET_MINI_ITEMS" debug="true">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getMiniItemMasterItems" arguments="{event.programId}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="miniItemResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event-->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (item invoice query)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	  <!--..............................................................................................................-->
+	   <!--- 	RETURN WHAT DISCOUNT TYPES EXIST ON A PROGRAM TEMPLATE	
+	   				@see #roSearchService
+	    ** RemoteInvoke : roSearchService.getRebateTypes()
+	    		@see com.ContractProds.models.SearchManager#programDiscountTypesResult() 
+	    ** Handler : com.ContractProds.models.SearchManager.programDiscountTypesResult()   -->
+	<EventHandlers type="{SearchEvent.GET_DISC_TYPES_ON_PRG_TEMPLATE}" id="eGET_DISC_TYPES_ON_PRG_TEMPLATE">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getRebateTypes" arguments="{event.programId}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="programDiscountTypesResult" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event-->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (discount types on a program template query)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+    
+    <!--LOAD APP SETTINGS ** ONLY NEEDED IF WE CUSTOM SETTINGS FOR vos .......................................................-->
+    <!--- 			@see #roSearchService
+	    ** RemoteInvoke : roSearchService.getSettingsObject()
+	    		@see com.ContractProds.models.SettingsManager#setAppSettings() 
+	    ** Handler : com.ContractProds.models.SettingsManager.setAppSettings()   
+	    		@see com.ContractProds.models.SearchManager#settings
+	    ** Handler : com.ContractProds.models.SearchManager.settings()-->
+	<EventHandlers type="{SearchEvent.LOAD_APP_SETTINGS}" id="eLOAD_APP_SETTINGS" debug="true">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ConProdSettings}" method="setAppSettings" arguments="{resultObject}" />
+				<!--<MethodInvoker cache="global" generator="{SearchManager}" method="settings" >
+					<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings" targetKey="settings"/>
+				</MethodInvoker>-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+   
+ 	<!--...............................................................................................................................-->
+ 	<!--....................................................... COMPONENT EVENTS.......................................................-->
+ 	<!--...............................................................................................................................-->
+
+    <!---................ SELECT_COMPONENT_TYPE ...............  -->
+	<EventHandlers type="{ComponentEvent.SELECT_COMPONENT_TYPE}" debug="true" id="eSELECT_COMPONENT_TYPE">
+        <MethodInvoker 	generator="{ComponentDefManager}" method="setComponentDefs" 
+        				arguments="{event}" />
+    </EventHandlers>
+    <!---............... SELECT_COMPONENT_DEF ................ -->
+    <EventHandlers type="{ComponentEvent.SELECT_COMPONENT_DEF}" debug="true" id="eSELECT_COMPONENT_DEF">
+        <MethodInvoker 	generator="{ComponentDefManager}" method="setComponentDef" 
+        				arguments="{event.compDef}" />
+    </EventHandlers>
+    <!---............... SELECT_COMPONENT_DEF ................ -->
+    <EventHandlers type="{ComponentEvent.SELECT_COMPONENT_DEF_BYID}" debug="true" id="eSELECT_COMPONENT_DEF_BYID">
+        <MethodInvoker 	generator="{ComponentDefManager}" method="selectComponentDef" 
+        				arguments="{event.sId}" />
+    </EventHandlers>
+    <!---............... SELECT ................ -->
+    <EventHandlers type="{ComponentEvent.SELECT}" debug="true" id="ecomp_SELECT">
+        <MethodInvoker 	generator="{ComponentManager}" method="setComponent" 
+        				arguments="{event.component}" />
+    </EventHandlers>
+    <!---............... ADD ................ -->
+    <EventHandlers type="{ComponentEvent.ADD}" debug="true" id="ecomp_ADD">
+        <MethodInvoker 	generator="{ComponentManager}" method="addComponent" 
+        				arguments="{event.component}" />
+        <MethodInvoker 	generator="{SearchManager}" method="addComponent" 
+        				arguments="{event.component}" />
+        <MethodInvoker 	generator="{GridManager}" method="addComponent" 
+        				arguments="{event.component}" />
+    </EventHandlers>
+     <!---............... UPDATE ................ -->
+    <EventHandlers type="{ComponentEvent.UPDATE}" debug="true" id="eComp_UPDATE">
+        <MethodInvoker 	generator="{ComponentManager}" method="updateComponent" 
+        				arguments="{event.component}" />
+    </EventHandlers>
+        <!---............... DELETE ................ -->
+    <EventHandlers type="{ComponentEvent.DELETE}" debug="true" id="ecomp_DELETE">
+        <MethodInvoker 	generator="{ComponentManager}" method="deleteComponent" 
+        				arguments="{event.component}" />
+       <MethodInvoker 	generator="{SearchManager}" method="deleteComponent" 
+        				arguments="{event.component}" />
+        <MethodInvoker 	generator="{GridManager}" method="deleteComponent" 
+        				arguments="{event.component}" />
+    </EventHandlers>
+     <!---............... SET_RATE_UOM ................ -->
+    <EventHandlers type="{ComponentEvent.SET_RATE_UOM}" debug="true" id="eSET_RATE_UOM">
+        <MethodInvoker 	generator="{ComponentManager}" method="setSelectedRateUom" 
+        				arguments="{[event.prodRate,'',event.iUomAction]}" />
+        <MethodInvoker 	generator="{SearchManager}" method="setSelectedRateUom" 
+        				arguments="{[event.prodRate,event.iUomAction]}" />
+    </EventHandlers>
+    <!---............... SET_RATE ................ -->
+    <EventHandlers type="{ComponentEvent.SET_RATE}" debug="true" id="eSET_RATE">
+        <MethodInvoker 	generator="{ComponentManager}" method="setRate" 
+        				arguments="{[event.sRate,event.item,event.sId]}" />
+    </EventHandlers>
+    <!---............... SET_UOM ................ -->
+    <EventHandlers type="{ComponentEvent.SET_UOM}" debug="true" id="eSET_UOM">
+        <MethodInvoker 	generator="{ComponentManager}" method="setUom" 
+        				arguments="{[event.uom,event.item,event.sId]}" />
+    </EventHandlers>
+	<!---............... SET_VOL ................ -->
+	<EventHandlers type="{ComponentEvent.SET_VOL}" debug="true" id="eSET_VOL">
+		<MethodInvoker 	generator="{ComponentManager}" method="setVol" 
+						arguments="{[event.nRate,event.item]}" />
+	</EventHandlers>
+    <!---............... SET_SINGLE_RATE_UOM ................ -->
+    <EventHandlers type="{ComponentEvent.SET_SINGLE_RATE_UOM}" debug="true" id="eSET_SINGLE_RATE_UOM">
+        <MethodInvoker 	generator="{ComponentManager}" method="setRateUom" 
+        				arguments="{[event.prodRate,event.item,event.sId]}" />
+        <!--<MethodInvoker 	generator="{SearchManager}" method="setSelectedRateUom" 
+        				arguments="{event.prodRate}" />-->
+    </EventHandlers>
+     <!---............... IMPORT_PROD_RATE_LIST ................ -->
+    <EventHandlers type="{ComponentEvent.IMPORT_PROD_RATE_LIST}" debug="true" id="eIMPORT_PROD_RATE_LIST">
+        <MethodInvoker 	generator="{SearchManager}" method="createList" 
+        				arguments="{event.prodRateList}" />
+    </EventHandlers>
+     <!---............... EXPORT_PROD_RATE_LIST ................ -->
+    <EventHandlers type="{ComponentEvent.EXPORT_PROD_RATE_LIST}" debug="true" id="eEXPORT_PROD_RATE_LIST">
+        <MethodInvoker 	generator="{SearchManager}" method="exportList" 
+        				arguments="{event.prodRateList}" />
+    </EventHandlers>
+     <!---............... SET_RESULT_LOG ................ -->
+    <EventHandlers type="{ComponentEvent.SET_RESULT_LOG}" debug="true" id="eSET_RESULT_LOG">
+        <MethodInvoker 	generator="{ComponentManager}" method="setResultLog" 
+        				arguments="{event}" />
+    </EventHandlers>
+    <!---............... LOAD_PROD_RATE ................ -->
+    <EventHandlers type="{ComponentEvent.LOAD_PROD_RATE}" debug="true" id="eLOAD_PROD_RATE">
+        <MethodInvoker 	generator="{SearchManager}" method="loadProdRates" />
+    </EventHandlers>
+    <!---............... SET_PAYEE ................ -->
+   <EventHandlers type="{ComponentEvent.SET_PAYEE}" debug="true" id="eSET_PAYEE" dispatcherType="global" useWeakReference="true">
+        <MethodInvoker 	generator="{ComponentManager}" method="setPayee" arguments="{event}" />
+   </EventHandlers>
+	<!---............... DISPLAY_LIST_RATE ................ -->
+	<EventHandlers type="{ComponentEvent.DISPLAY_LIST_RATE}" debug="true" id="eDISPLAY_LIST_RATE">
+		<MethodInvoker 	generator="{SearchManager}" method="displayListRate" arguments="{[event.arr1,event.arr2,event.arr3]}" />
+	</EventHandlers>
+	<!---............... DELETE_PROD_RATE ................ -->
+	<EventHandlers type="{ComponentEvent.DELETE_PROD_RATE}" debug="true" id="eDELETE_PROD_RATE">
+		<MethodInvoker 	generator="{ComponentManager}" method="removeProdRate" arguments="{event.prodRate}" />
+	</EventHandlers>
+    <!---............... LOAD_COMPONENT ................ -->
+   <!-- <EventHandlers type="{ComponentEvent.LOAD_COMPONENT}" debug="true" id="eLOAD_COMPONENT">
+        <MethodInvoker 	generator="{ComponentManager}" method="saveComponents" />
+    </EventHandlers>-->
+    
+    
+	
+	<!--BSA CUSTOM ERROR HANDLER  .......................................................-->
+	<EventHandlers type="{SearchEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  .......................................................-->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+     <mx:Script>
+		<![CDATA[
+			import com.ContractProds.models.*;
+			import com.ContractProds.views.*;
+		]]>
+	</mx:Script>
+	<!--................................................................................................................................-->
+	<!--.............................................................. INJECTORS .......................................................-->
+	<!--................................................................................................................................-->
+	
+	<!-- SearchPanel View ....................................................... -->
+     <Injectors target="{SearchPanel}" debug="true">
+		<PropertyInjector id="items" targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector id="sRecordMessage" targetKey="sRecordMessage" source="{SearchManager}" sourceKey="sRecordMessage" />
+		<PropertyInjector id="oSettings" sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="true" />
+		<PropertyInjector id="iButtonHeight" sourceCache="global" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight"  softBinding="true" />
+		<PropertyInjector id="iComboBoxHeight" sourceCache="global" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight"  softBinding="true" />
+		<PropertyInjector id="iTextInputHeight" sourceCache="global" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight"  softBinding="true" />
+		<PropertyInjector targetKey="acComponents" source="{ComponentManager}" sourceKey="acComponents" />
+		<PropertyInjector targetKey="program" source="{ComponentManager}" sourceKey="program" />
+	</Injectors>
+	
+	<!-- Components Manager ....................................................... -->
+     <Injectors target="{ComponentManager}" debug="true">
+     	<ObjectBuilder generator="{SearchManager}"  constructorArguments="{scope.dispatcher}" />
+		<PropertyInjector targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+	</Injectors>
+	
+	<!-- Components PModel ....................................................... -->
+     <Injectors target="{ComponentPM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="true" />
+		<PropertyInjector targetKey="componentDef" source="{ComponentDefManager}" sourceKey="componentDef" />
+		<PropertyInjector targetKey="acComponentDefs" source="{ComponentDefManager}" sourceKey="acComponentDefs" />
+		<PropertyInjector targetKey="component" source="{ComponentManager}" sourceKey="component" />
+		<PropertyInjector targetKey="program" source="{ComponentManager}" sourceKey="program" />
+		<PropertyInjector targetKey="acComponents" source="{ComponentManager}" sourceKey="acComponents" />
+		<PropertyInjector targetKey="acResultsLog" source="{ComponentManager}" sourceKey="acResultsLog" />
+	</Injectors>
+	<Injectors target="{ProdUploadPM}" debug="true">
+		<PropertyInjector targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector targetKey="component" source="{ComponentManager}" sourceKey="component" />
+	</Injectors>
+	
+	<!-- Components View ....................................................... -->
+     <Injectors target="{ComponentUI}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ ComponentPM }"/>
+		<PropertyInjector targetKey="pModelPrdUpld" source="{ ProdUploadPM }"/>
+	</Injectors>
+	<!-- User List View ....................................................... -->
+     <Injectors target="{UserItemLists}" debug="true">
+		<PropertyInjector targetKey="pModelPrdUpld" source="{ ProdUploadPM }"/>
+	</Injectors>
+	
+	<!-- Filter PModel 	....................................................... -->
+     <Injectors target="{FilterPM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="true" />
+		 <!--<PropertyInjector targetKey="componentDef" source="{ComponentManager}" sourceKey="componentDef" />-->
+		<PropertyInjector targetKey="dpBrand" source="{SearchManager}" sourceKey="arrBrand" />
+		<PropertyInjector targetKey="dpQBrand" source="{SearchManager}" sourceKey="arrQBrand" />
+		<PropertyInjector targetKey="dpTypeCode" source="{SearchManager}" sourceKey="arrTypeCode" />
+		<PropertyInjector targetKey="dpTypeGroup" source="{SearchManager}" sourceKey="arrTypeGroup" />
+		<PropertyInjector targetKey="dpPrgTypesDiscList" source="{SearchManager}" sourceKey="arrProgramDiscountTypesList" />
+		<PropertyInjector targetKey="dpItemStatusList" source="{SearchManager}" sourceKey="arrItemStatusList" />
+		
+		<PropertyInjector targetKey="oFilterParms" source="{ FilterManager }" sourceKey="oFilterParms" />
+		<PropertyInjector sourceCache="global"  targetKey="statusFilterOn" source="{SettingsManager}" sourceKey="settings.statusFilterOn"  softBinding="true" />
+		<PropertyInjector sourceCache="global" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight"  softBinding="true" />
+		<PropertyInjector sourceCache="global" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight"  softBinding="true" />
+		<PropertyInjector sourceCache="global" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight"  softBinding="true" />
+	</Injectors>
+	<!-- Filter View 	....................................................... -->
+     <Injectors target="{Filter}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ FilterPM }"/>
+	</Injectors>
+
+	<!-- Favorite PModel ....................................................... -->
+     <Injectors target="{FavoritePM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector id="arrUserList" targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" />
+		<PropertyInjector targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+	</Injectors>
+	<!-- Favorite View ....................................................... -->
+     <Injectors target="{Favorite}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ FavoritePM }"/>
+	</Injectors>
+	
+	<!-- GridData PModel ....................................................... -->
+     <Injectors target="{GridDataPM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="true" />
+		<PropertyInjector targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector targetKey="sRecordMessage" source="{SearchManager}" sourceKey="sRecordMessage" />
+		<PropertyInjector id="statusFilterOn" sourceCache="global"  targetKey="statusFilterOn" source="{SettingsManager}" sourceKey="settings.statusFilterOn"  softBinding="true" />
+		<PropertyInjector targetKey="arrDgItemsCols" source="{GridManager}" sourceKey="arrDgItemsCols" />
+		<PropertyInjector targetKey="oFilterParms" source="{ FilterManager }" sourceKey="oFilterParms" />
+		<PropertyInjector targetKey="bShowFixed" source="{ ComponentManager }" sourceKey="bShowFixed" />
+		<PropertyInjector targetKey="bShowRebate" source="{ ComponentManager }" sourceKey="bShowRebate" />
+	</Injectors>
+	<!-- GridData View ....................................................... -->
+     <Injectors target="{GridData}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ GridDataPM }"/>
+		 <PropertyInjector targetKey="pModelComp" source="{ ComponentPM }"/>
+		<!--<ListenerInjector eventType="{SearchEvent.FILTER_MINI_ITEMS}" method="filterEventHandler" />-->
+		<ListenerInjector eventType="{SearchEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+	</Injectors>
+	<!-- GridManager  ....................................................... -->
+     <Injectors target="{GridManager}" debug="true">
+		<PropertyInjector sourceCache="global" source="{SettingsManager}" sourceKey="settings" targetKey="oSettings"  softBinding="true" />
+		<PropertyInjector targetKey="program" source="{ComponentManager}" sourceKey="program" />
+	</Injectors>
+
+	
+	<!-- SearchManager  ....................................................... -->
+     <Injectors target="{SearchManager}" debug="true">
+		<PropertyInjector targetKey="oFilterParms" source="{ FilterManager }" sourceKey="oFilterParms" />
+		<PropertyInjector targetKey="acComponents" source="{ComponentManager}" sourceKey="acComponents" />
+		<PropertyInjector targetKey="component" source="{ComponentManager}" sourceKey="component" />
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" softBinding="true" />
+	</Injectors>
+	
+</LocalEventMap>

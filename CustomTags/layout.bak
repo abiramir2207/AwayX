@@ -1,0 +1,839 @@
+<!---------------------------------------------------------------------------------------------------------------------
+      Template: \CustomTags\layout.cfm
+      Date:     2012 July
+      Author:   Chris Nguyen
+      Purpose:  Layout template for web pages.
+                This displays Forge heading with user name, timestamp & home page icons on the right side.
+                It loads jQuery, displays horizontal menu below Forge heading.
+
+      Remarks:  'layoutID' parameter identifies values to be used on page title and on horizontal menu.
+
+                  For new layoutID you will need to:
+
+                  a.  Specify page title & put it in 'page_title' variable
+                  b.  Specify menu links & put them in 'menus' array of structures
+                        * text = required, string value to be displayed in the menu
+                        * href = required only when onclick is not defined
+                        * onclick = required only when href is not defined
+
+                'selectedIndex' optional parameter - identifies the current selected option, use this when href is
+                   not available and onclick is used. It is a numeric value and is a JavaScript array index
+                   ( e.g. for 1st position pass 0, 2nd position pass in 1 ).
+
+                   2016 April - Pass blank to let it be assigned automatically (based on template file name).
+---------------------------------------------------------------------------------------------------------------------->
+<cfif thisTag.executionMode is "start"><!DOCTYPE html>
+<html>
+<head>
+<cfsilent>
+<cfparam name="attributes.layoutID" default="">                 <!---value is required--->
+<cfparam name="attributes.selectedIndex" default="">            <!---value is required when onclick is used and href is not--->
+<cfset variables.menu = []>
+<CFINCLUDE TEMPLATE="/get_access_profile.cfm">
+
+    <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
+    <cfset appSettings = genSettingsManager.get()>
+
+<cfswitch expression="#attributes.layoutID#">
+  <!--------------------------------->
+  <!--- settings - default vendor --->
+  <!--------------------------------->
+  <cfcase value="defaultVendor">
+    <cfset variables.menu = [  { text="#application.returned_customer_setting.operator_label_plural#", href='/settings/default_vendor/operators.cfm' }
+                              ,{ text="#application.returned_customer_setting.distributor_label_plural#", href='/settings/default_vendor/distributors.cfm' }
+                            ]>
+    <cfset variables.page_title = "DEFAULT VENDOR & BB CLOSING METHOD">
+  </cfcase>
+  <!----------------------------------->
+  <!--- settings - price protection --->
+  <!----------------------------------->
+  <cfcase value="priceProtection">
+    <cfset variables.menu = [  { text="Create Job", href="price_protection_index.cfm" }
+                              ,{ text="Jobs Scheduled", href="price_protection_index.cfm?type=1" }
+                              ,{ text="Jobs Successful", href="price_protection_index.cfm?type=2" }
+                              ,{ text="Jobs Failed", href="price_protection_index.cfm?type=3" }
+                            ]>
+    <cfset variables.page_title = "PRICE PROTECTION">
+    <cfparam name="url.type" default="">
+    <cfswitch expression="#url.type#">
+      <cfcase value="1">
+        <cfset attributes.selectedIndex = 1>
+      </cfcase>
+      <cfcase value="2">
+        <cfset attributes.selectedIndex = 2>
+      </cfcase>
+      <cfcase value="3">
+        <cfset attributes.selectedIndex = 3>
+      </cfcase>
+      <cfdefaultcase>
+        <cfset attributes.selectedIndex = 0>
+      </cfdefaultcase>
+    </cfswitch>
+  </cfcase>
+  <!----------------------------->
+  <!--- settings - membership --->
+  <!----------------------------->
+  <cfcase value="membership">
+    <cfset variables.menu = [  { text="buying group", href="#ajaxlink('#cgi.script_name#?display_type=1')#" }
+                              ,{ text="#application.returned_customer_setting.family_name_label_singular#", href="#ajaxlink('#cgi.script_name#?display_type=2')#" }
+                            ]>
+    <cfset variables.page_title = "MEMBERSHIP">
+  </cfcase>
+  <!----------------------------------->
+  <!--- settings - manage documents --->
+  <!----------------------------------->
+  <cfcase value="manageDocuments">
+    <cfset variables.menu = [  { text="Search", href="/Common_Files/Documents/Attach_Document.cfm?bFromSettings=1" }
+                              ,{ text="Upload", href="/Common_Files/Documents/create_document_details.cfm?bFromSettings=1" }
+                            ]>
+    <cfset variables.page_title = "MANAGE DOCUMENTS">
+  </cfcase>
+
+    <!----------------------------------->
+  <!--- settings - modify preactive dates --->
+  <!----------------------------------->
+  <cfcase value="modifyPreactive">
+    <cfset variables.menu = [  { text="modify pre-active dates", href="/Settings/Modify_Preactive_Dates/index.cfm?display_type=0" }
+                              ,{ text="delete pre-active dates", href="/Settings/Modify_Preactive_Dates/index.cfm?display_type=1" }
+                            ]>
+    <cfset variables.page_title = "MODIFY PRE-ACTIVE">
+  </cfcase>
+
+  <!----------------------------------->
+  <!--- settings - edit master data --->
+  <!----------------------------------->
+  <cfcase value="editMasterData">
+    <cfset variables.menu = [  { text="Product", href="/settings/edit_master_data/index.cfm?type=Product" }
+                              ,{ text="Distributor", href="/settings/edit_master_data/index.cfm?type=Distributor" }
+                            ]>
+    <cfset variables.page_title = "EDIT MASTER DATA">
+  </cfcase>
+  <!--------------------------------------->
+  <!--- settings - application settings --->
+  <!--------------------------------------->
+  <cfcase value="applicationSettings">
+    <cfscript>
+      variables.menu = [  { text="settings", href="app_settings.cfm?command=Settings1" } ];
+      attributes.selectedIndex = form.command eq "Settings1" ? 0 : attributes.selectedIndex;
+    </cfscript>
+
+    <cfif request.AccessStructure.User_Rights_ID EQ 9999>
+      <cfset arrayAppend(variables.menu, { text="internal settings", href="app_settings.cfm?command=Settings2" })>
+      <cfset attributes.selectedIndex = form.command eq "Settings2" ? 1 : attributes.selectedIndex>
+    </cfif>
+
+    <cfscript>
+      arrayAppend(variables.menu, { text="approval settings", href="app_settings.cfm?command=Settings3" });
+      attributes.selectedIndex = form.command eq "Settings3" ? 2 : attributes.selectedIndex;
+    </cfscript>
+
+    <cfif NOT Application.oApplicationAppSettingsManager.getApplicationAppSettings().LDAP_SSO_Enabled>
+      <cfset arrayAppend(variables.menu, { text="password settings", href="app_settings.cfm?command=Settings4" })>
+      <cfset attributes.selectedIndex = form.command eq "Settings4" ? arrayLen(variables.menu) - 1 : attributes.selectedIndex>
+    </cfif>
+
+    <cfif Application.oApplicationAppSettingsManager.getApplicationAppSettings().ApprovalViaEmail
+       OR appSettings.get_Setting('BB_Approval_Via_Email') eq 1 >
+      <cfset arrayAppend(variables.menu, { text="approval via email", href="app_settings.cfm?command=ApprovalViaEmail" })>
+      <cfset attributes.selectedIndex = form.command eq "ApprovalViaEmail" ? arrayLen(variables.menu) - 1 : attributes.selectedIndex>
+    </cfif>
+
+    <cfscript>
+      arrayAppend(variables.menu, { text="report settings", href="app_settings.cfm?command=Settings5" });
+      attributes.selectedIndex = form.command eq "Settings5" ? arrayLen(variables.menu) - 1 : attributes.selectedIndex;
+
+      arrayAppend(variables.menu, { text="labels", href="app_settings.cfm?command=LabelMaster" });
+      attributes.selectedIndex = form.command eq "LabelMaster" ? arrayLen(variables.menu) - 1 : attributes.selectedIndex;
+    </cfscript>
+
+    <cfif Application.oApplicationAppSettingsManager.getApplicationAppSettings().LDAP_SSO_Enabled
+       OR Application.oApplicationAppSettingsManager.getApplicationAppSettings().singlesign_on eq 2>
+      <cfset arrayAppend(variables.menu, { text="LDAP/SSO settings", href="app_settings.cfm?command=LDAPSettings" })>
+      <cfset attributes.selectedIndex = form.command eq "LDAPSettings" ? arrayLen(variables.menu) - 1 : attributes.selectedIndex>
+    </cfif>
+          
+
+    <cfset variables.page_title = "APPLICATION GENERAL SETTINGS">
+  </cfcase>
+  <!------------------------------------------->
+  <!--- settings - volume forecast settings --->
+  <!------------------------------------------->
+  <cfcase value="volumeForecastSettings">
+    <cfset variables.menu = [  { text="class", onClick="JavaScript: return clickheader('class', 0);" }
+                              ,{ text="group", onClick="JavaScript: return clickheader('group', 0);"  }
+                              ,{ text="labels", onClick="JavaScript: return clickheader('labels', 0);"  }
+                              ,{ text="plan", onClick="JavaScript: return clickheader('plan', 0);"  }
+                              ,{ text="inv. research", onClick="JavaScript: return clickheader('research', 0);"  }
+                            ]>
+    <cfset variables.page_title = "VOLUME FORECAST">
+  </cfcase>
+  <!------------------------------------>
+  <!--- settings - business segments --->
+  <!------------------------------------>
+  <cfcase value="businessSegments">
+
+    <cfset variables.menu = [  { text="Enable", onClick="JavaScript: return submitForm('dEnable');" }
+                              ,{ text="Active #appSettings.getbusiness_segment_label()#", onClick="JavaScript: return submitForm('dActiveBusinessSegment');"  }
+                              ,{ text="InActive #appSettings.getbusiness_segment_label()#", onClick="JavaScript: return submitForm('dInActiveBusinessSegment');"  }
+                            ]>
+                    <!---D48353 :: Business Segment - Class Code Tab is missing START --->
+    <cfif appSettings.getClassCodesOn()>
+      <cfset arrayAppend(variables.menu,{ text="Class Codes", onClick="JavaScript: return submitForm('dClassCodes');" })>
+    </cfif>
+    <!---D48353:: Business Segment - Class Code Tab is missing END--->
+    <cfset variables.page_title = "SEGMENTS">
+  </cfcase>
+  <!------------------------------------>
+  <!--- settings - rebate components --->
+  <!------------------------------------>
+  <cfcase value="rebateComponents">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                              ,{ text="Business Rules", onClick="JavaScript: return submitDataForm('busRule', 4);"  }
+                           ]>
+    <!---display edit tab if in edit mode--->
+    <cfif form.display eq "edit">
+        <cfset arrayAppend(variables.menu, { text="Edit Component", onClick="JavaScript: return submitDataForm('update', 5);"  })>
+    </cfif>
+    <cfset variables.page_title = ucase("#Application.RebateLabel# COMPONENTS")>
+  </cfcase>
+  <!-------------------------------------->
+  <!--- settings - operator management --->
+  <!-------------------------------------->
+  <cfcase value="operatorManagement">
+    <cfset variables.menu = [  { text="Manage", href="select_operators.cfm?tabSetter=1" }
+                              ,{ text="Types", href="select_operators.cfm?tabSetter=2" }
+                            ]>
+    <cfset variables.page_title = "OPERATOR MANAGEMENT">
+  </cfcase>
+  <!-------------------------------------------->
+  <!--- settings - margin - items to exclude --->
+  <!-------------------------------------------->
+  <cfcase value="marginItemsToExclude">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                            ]>
+    <cfset variables.page_title = "MARGIN - ITEMS TO EXCLUDE">
+  </cfcase>
+  <!-------------------------------------->
+  <!--- settings - lump sum components --->
+  <!-------------------------------------->
+  <cfcase value="lumpSumComponents">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                              ,{ text="Sample Labels", onClick="JavaScript: return submitDataForm('labelSample', 4);"  }
+                           ]>
+    <cfset variables.page_title = ucase("#Application.LumpsumLabel# COMPONENTS")>
+  </cfcase>
+  <!------------------------------------>
+  <!--- settings - growth components --->
+  <!------------------------------------>
+  <cfcase value="growthComponents">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                           ]>
+    <cfset variables.page_title = "GROWTH COMPONENTS">
+  </cfcase>
+  <!------------------------------>
+  <!--- settings - gl accounts --->
+  <!------------------------------>
+  <cfcase value="glAccounts">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                            ]>
+  <!---D42774 --->
+  <cfoutput> <cfset variables.page_title = "#trim(ucase(Application.GLAccountLabel))#S"> </cfoutput>
+<!---D42774 --->
+  </cfcase>
+  <!----------------------------------->
+  <!--- settings - freight settings --->
+  <!----------------------------------->
+  <cfcase value="freightSettings">
+    <cfset variables.menu = [  { text="Brackets", href="index.cfm?Action=AddFreightBracket" }
+                              ,{ text="Upload OBF", href="index.cfm?Action=UploadOBF" }
+                            ]>
+    <cfset variables.page_title = "FREIGHT SETTINGS">
+  </cfcase>
+  <!---------------------------------->
+  <!--- settings - formula pricing --->
+  <!---------------------------------->
+  <cfcase value="formulaPricing">
+    <cfset variables.menu = [  { text="Pricing Rules", href="index.cfm" }
+                              ,{ text="Inactive Rules", href="index.cfm?active=false" }
+                              ,{ text="Add New", href="Formula_Price_Step1.cfm" }
+                           ]>
+    <cfif attributes.FORMULA_PAGE_NAME EQ 4>
+      <cfset arrayAppend( variables.menu, { text="Programs", href="Formula_Price_Programs.cfm?RID=#URL.RID#" } )>
+    </cfif>
+    <CFIF attributes.FORMULA_PAGE_NAME EQ 5>
+      <cfset arrayAppend( variables.menu, { text="Edit Rule", href="Formula_Price_Step1.cfm?RID=#URL.RID#" } )>
+    </cfif>
+    <cfset variables.page_title = "FORMULA PRICING">
+  </cfcase>
+  <!----------------------------------->
+  <!--- settings - fixed components --->
+  <!----------------------------------->
+  <cfcase value="fixedComponents">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                              ,{ text="Business Rules", onClick="JavaScript: return submitDataForm('busRule', 4);"  }
+                            ]>
+    <cfif form.display eq "edit">
+      <cfset arrayAppend(variables.menu, { text="Edit Component", onClick="JavaScript: return submitDataForm('update', 5);"  })>
+    </cfif>
+
+    <cfset variables.page_title = "FIXED COMPONENTS">
+  </cfcase>
+  <!--------------------------------------->
+  <!--- settings - discount identifiers --->
+  <!--------------------------------------->
+  <cfcase value="discountIdentifiers">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                            ]>
+    <cfset variables.page_title = "DISCOUNT IDENTIFICATION CODES">
+  </cfcase>
+  <!--------------------------->
+  <!--- settings - currency --->
+  <!--------------------------->
+  <cfcase value="currency">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                            ]>
+    <cfset variables.page_title = "CURRENCY">
+  </cfcase>
+  <!------------------------------------->
+  <!--- settings - competitive data   --->
+  <!------------------------------------->
+  <cfcase value="competitiveData">
+    <cfset LabelComp           = Createobject("component", "components.settings.labels.labels").init() />
+    <cfset qGetWonByLabel      = LabelComp.getGeneralLabels('Won By') />
+    <cfset qGetCategoryLabel   = LabelComp.getGeneralLabels('Category') />
+    <cfset qGetPackageLabel    = LabelComp.getGeneralLabels('Package') />
+    <cfset qGetSourceLabel     = LabelComp.getGeneralLabels('Source') />
+    <cfset qGetSourceTypeLabel = LabelComp.getGeneralLabels('Source Type') />
+
+    <cfset variables.menu = [  { text="#qGetWonByLabel.General_Labels_Label#", href="/settings/competitive_data/competitive_data.cfm" }
+                              ,{ text="#qGetCategoryLabel.General_Labels_Label#", href="/settings/competitive_data/competitive_data_category.cfm" }
+                              ,{ text="#qGetPackageLabel.General_Labels_Label#", href="/settings/competitive_data/competitive_data_package.cfm" }
+                              ,{ text="#qGetSourceLabel.General_Labels_Label#", href="/settings/competitive_data/competitive_data_source.cfm" }
+                              ,{ text="#qGetSourceTypeLabel.General_Labels_Label#", href="/settings/competitive_data/competitive_data_source_type.cfm" }
+                           ]>
+    <cfset variables.page_title = "COMPETITIVE DATA">
+  </cfcase>
+  <!---------------------------------->
+  <!--- settings - claim mechanics --->
+  <!---------------------------------->
+  <cfcase value="claimMechanics">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                            ]>
+    <cfset variables.page_title = "CLAIM MECHANICS">
+  </cfcase>
+  <!-------------------------->
+  <!--- settings - budgets --->
+  <!-------------------------->
+  <cfcase value="budgets">
+    <cfset variables.menu = [   { text="class", onclick="javascript: return clickheader('listbudgetclass', 0);" }
+                               ,{ text="group", onclick="javascript: return clickheader('listBudgetGroup', 0);" }
+                               ,{ text="labels", onclick="javascript: return clickheader('listBudgetLabel', 0);" }
+                               ,{ text="adj types", onclick="javascript: return clickheader('listAdjustmentTypes', 0);" }
+                            ]>
+    <cfset profile = CreateObject("component","components.user.Profile").init()>
+    <cfset Get_Profile_Settings = profile.getProfileSettings(request.AccessStructure.Profiles_ID)>
+    <cfif ( Get_Profile_Settings.Budgets_Actual_Adjustment )>
+      <cfset arrayAppend(variables.menu, {text="act adj", onclick="javascript: return clickheader('listActAdjustment', 0);"})>
+    </cfif>
+    <!---need the current budget id in the form structure (required passed in value)--->
+    <cfif attributes.budget_id eq 0>
+      <cfset arrayAppend(variables.menu, {text="budget", onclick="javascript: return clickheader('listBudget', 0);"})>
+    <cfelse>
+
+        <!---query the db to find out the budget type--->
+        <cfquery name="qBudgetType" datasource="#application.datasource#">
+            SELECT Budget_Contribution_Factor_Type_Id
+                   , Overlays
+                   , Overlay_Recapture
+                   , Recapture
+                   , ISNULL(Added_From_Number, '') as Added_From_Number
+              FROM Budget
+             WHERE Budget.Budget_Id = <cfqueryparam value="#attributes.Budget_Id#" cfsqltype="cf_sql_integer">
+        </cfquery>
+        <cfif qBudgetType.Added_From_Number neq "">
+        <cfset arrayAppend(variables.menu, {text="budget", onclick="javascript: return clickheader('listBudget', 0);"})>
+        <cfelse>            
+      <!---<CFIF Get_Profile_Settings.Create_Budget eq 0  and qBudgetType.Budget_Contribution_Factor_Type_ID eq "2">
+        <cfset arrayAppend(variables.menu, {text="budget", onclick="javascript: return clickheader('listBudget', 0);"})>
+      <CFELSE>--->
+          <cfset variables.menu = []>
+        <!---special handling for accrual budget: add accrual tabs based on the budget type saved
+             in the db, do not show these tabs when users switch the budget type to accrual and
+             have not clicked the save button (they may click the other tabs w/o clicking save on
+             budget page)--->
+        <cfif qBudgetType.Budget_Contribution_Factor_Type_ID eq "1">
+          <cfset arrayAppend(variables.menu, {text="budget", onclick="javascript: return clickheader('editFixed', 0);"})>
+        <cfelseif qBudgetType.Budget_Contribution_Factor_Type_ID eq "2">
+          <cfset appSettings = application.oApplicationAppSettingsManager.getApplicationAppSettings()>
+          <cfscript>
+            // assign budget tab to editing accrual budget
+            arrayAppend(variables.menu, {text="budget", onclick="javascript: return clickheader('editAccrual', 0);"});
+            arrayAppend(variables.menu, {text="#lcase(application.returned_customer_setting.Distributor_Label_Plural)#", onclick="javascript: return clickheader('editDistributors', 0);"});
+            arrayAppend(variables.menu, {text="products", onclick="javascript: return clickheader('editProducts', 0);"});
+            if ( ( qBudgetType.Recapture eq 1 ) or ( qBudgetType.Overlay_Recapture eq 1 ) or ( qBudgetType.Overlays eq 1 ) )
+              arrayAppend(variables.menu, {text="advanced", onclick="javascript: return clickheader('editRecaptures', 0);"});
+              arrayAppend(variables.menu, {text="accrual adj", onclick="javascript: return clickheader('listAdjustments', 0);"});
+          </cfscript>
+        <cfelseif qBudgetType.Budget_Contribution_Factor_Type_ID eq "3">
+          <cfset arrayAppend(variables.menu, {text="budget", onclick="javascript: return clickheader('editVariable', 0);"})>
+        </cfif>
+        </cfif>
+        <cfset arrayAppend(variables.menu, {text="templates", onclick="javascript: return clickheader('templates', 0);"})>
+      <!---</CFIF>--->
+    </cfif>
+      <!---D42242 :: Create links w/in the application for client to run report to see Orphaned BB's and Programs--->
+      <cfset arrayAppend(variables.menu, {text="research", onclick="javascript: return clickheader('research', 0);"})>
+      <!---D42242 :: Create links w/in the application for client to run report to see Orphaned BB's and Programs--->
+    <cfset variables.page_title = "PROGRAMS: BUDGETS">
+
+    <!---determine current selected option based on command in the form structure  (required passed in value)--->
+    <cfloop from=1 to="#arrayLen(variables.menu)#" index="menusIndex">
+      <cfif variables.menu[menusIndex].onclick contains ( "'" & attributes.command & "'")>
+        <cfset attributes.selectedIndex = menusIndex - 1>
+        <cfbreak>
+      </cfif>
+    </cfloop>
+    <cfset request.menus = variables.menu>
+  </cfcase>
+  <!------------------------------------->
+  <!--- settings - vendor management  --->
+  <!------------------------------------->
+  <cfcase value="vendorManagement">
+    <cfset variables.menu = [  { text="Vendor Xref", href="index.cfm?tabvalue=listvendorxref" }
+                              ,{ text="Vendor Master", href="index.cfm?tabvalue=listvendormaster" }
+                            ]>
+    <cfset variables.page_title = "VENDOR MANAGEMENT">
+  </cfcase>
+  <!---------------------------------->
+  <!--- settings - upload payables --->
+  <!---------------------------------->
+  <cfcase value="uploadPayables">
+    <cfset variables.menu = []>
+    <cfset menuIdx = 0>
+    <cfloop list="#attributes.Step_List#" index="thisStep">
+      <cfset menuIdx = menuIdx + 1>
+      <cfset arrayAppend(variables.menu, { text=thisStep, href="index.cfm?Show_Tab=#menuIdx#"
+      <!---, onclick="javaScript: Change_Tab();" --->
+      })>
+    </cfloop>
+    <cfset variables.page_title = "BILLBACK UPLOAD UTILITY">
+  </cfcase>
+
+  <!--------------------------------->
+  <!--- settings - rebill package --->
+  <!--------------------------------->
+  <cfcase value="rebillPackage">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 1);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 2);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 3);"  }
+                              ,{ text="Variable Size", onClick="JavaScript: return submitDataForm('varsize', 4);"  }
+                              ,{ text="Rebill Settings", onClick="JavaScript: return submitDataForm('rebillSettings', 5);"  }
+                           ]>
+    <cfset variables.page_title = "REBILL PACKAGES">
+  </cfcase>
+  <!---------------------------->
+  <!--- settings - reprocess --->
+  <!---------------------------->
+  <cfcase value="reProcess">
+    <cfset variables.menu = [  { text="Program", onClick="JavaScript: return submitDataForm('program', 1);" }
+                              ,{ text="Operator", onClick="JavaScript: return submitDataForm('operator', 2);"  }
+                           ]>
+    <cfset variables.page_title = "RE-PROCESS">
+  </cfcase>
+
+  <!--------------------------------------->
+  <!--- settings - deduction assignment --->
+  <!--------------------------------------->
+  <cfcase value="deductionAssignment">
+    <!--- pulled logic from \deductions\assignment\index.cfm --->
+    <cfif application.returned_customer_setting.DD_Assignment_Based_On_Customer EQ 1>
+      <cfset Step_List="View,Analyst,Default">
+    <cfelse>
+
+      <cfif appSettings.getDDAssignmentBasedOnShrShipto()>
+        <cfset Step_List="View,Analyst,Market,Customer,Supervisor,Default,Assign Supervisor">
+      <cfelse>
+        <cfset Step_List="View,Analyst,Market,Family,Supervisor,Default,Assign Supervisor">
+      </cfif>
+    </cfif>
+
+    <cfset variables.menu = []>
+    <cfset menuIdx = 0>
+    <cfloop list="#Step_List#" index="thisStep">
+      <cfset menuIdx = menuIdx + 1>
+      <cfset arrayAppend(variables.menu, { text=thisStep, href="index2.cfm?Show_Step=#menuIdx#" })>
+    </cfloop>
+    <cfset variables.page_title = "DEDUCTION ASSIGNMENT">
+  </cfcase>
+  <!--------------------------------------->
+  <!--- settings - billback assignment  --->
+  <!--------------------------------------->
+  <cfcase value="billBackAssignment">
+    <cfset variables.menu = [  { text="View", href="index.cfm?command=view" }
+                              ,{ text="Analyst", href="index.cfm?command=analyst" }
+                              ,{ text="Assign Market", href="index.cfm?command=market" }
+                              ,{ text="Assign #LCase(application.returned_customer_setting.distributor_label_singular)#", href="index.cfm?command=distributor" }
+                              ,{ text="Assign #LCase(application.returned_customer_setting.operator_label_singular)#", href="index.cfm?command=operator" }
+                              ,{ text="Supervisor", href="index.cfm?command=supervisor" }
+                              ,{ text="Assign Supervisor", href="index.cfm?command=assign-supervisor" }
+                              ,{ text="Director", href="index.cfm?command=director" }
+                              ,{ text="Assign Director", href="index.cfm?command=assign-director" }
+                           ]>
+  <!---77024 :: BB Assignment - by template START--->
+      <cfif val(appSettings.get_Setting('BB_Assignment_By_Template')) EQ 1>
+      <cfset arrayAppend(variables.menu, { text="template",  href="index.cfm?command=template" })>
+    </cfif>  
+    <!---77024 :: BB Assignment - by template END--->
+    <cfset variables.page_title = "BILLBACK ASSIGNMENT">
+  </cfcase>
+
+  <!--------------------------->
+  <!--- settings - auto pay --->
+  <!--------------------------->
+  <cfcase value="autoPay">
+    <cfscript>
+      /// 48219 ///
+      variables.page_title = "MANAGE AUTO PAY";
+      application.oController.getObject(path="components.Billback.BBAutoReportGet",       name="BBReportGet",bReload=1).init();
+      application.oController.getObject(path="components.Billback.BBAutoReportAjaxCaller",name="BBReportAjaxCaller",bReload=1).init();
+      application.oController.getObject(path="components.Billback.BB_Auto_Report_Period", name="BBReportPeriod",bReload=1);
+      application.oController.getObject(path="components.Billback.BBAutoReportUpdate",    name="BBReportUpdate",bReload=1).init();
+      request.auto_pay = { editing_by_me = 0,
+                                    lock = application.oBBReportGet.getReportLockInfo()
+                         };
+		selectedTab = 0;
+      	variables.menu = [{ text="Auto Pay Report", href="/billbacks/auto_bb_report/BB_Auto_Report_View.cfm" }];
+		selectedTab = selectedTab + 1;
+      // auto pay is locked + editing by me - show more options
+      if (request.auto_pay.lock.processing eq 0 and  request.auto_pay.lock.locked and request.auto_pay.lock.Locked_By_User_Id eq request.accessStructure.User_Id) {
+        request.auto_pay.editing_by_me = 1;
+        // pass nav_index to highlight selected navigation option, copy report (within auto pay listing) calls the same code without
+        // nav_index parameter
+
+        if (application.oBBReportGet.getAutoPayType() eq 2) {
+          arrayAppend(variables.menu, { text="Create Report", href="/billbacks/auto_bb_report/BB_Auto_Report_Create_Report.cfm?nav_index=#selectedTab#" });
+		  selectedTab = selectedTab + 1;
+		  arrayAppend(variables.menu, { text="Create Exception", href="/billbacks/auto_bb_report/BB_Auto_Report_Create_Report.cfm?nav_index=#selectedTab#&create_exception=1" });
+		  selectedTab = selectedTab + 1;
+        }
+        else if (application.appSettingsGet.getBBAutoReportAllowManual()) {
+          arrayAppend(variables.menu, { text="Create Manual", href="/billbacks/auto_bb_report/BB_Auto_Report_Create_Report.cfm?nav_index=#selectedTab#" });
+		  selectedTab = selectedTab + 1;
+		  arrayAppend(variables.menu, { text="Create Exception", href="/billbacks/auto_bb_report/BB_Auto_Report_Create_Report.cfm?nav_index=#selectedTab#&create_exception=1" });
+		  selectedTab = selectedTab + 1;
+        }
+		arrayAppend(variables.menu, { text="Apply Deviations", href="/ReportWriter/apply_deviations.cfm?nav_index=#selectedTab#" });
+		selectedTab = selectedTab + 1;
+      }  // locked + editing by me
+		arrayAppend(variables.menu, { text="View Deleted", href="/billbacks/auto_bb_report/BB_Auto_Report_View.cfm?nav_index=#selectedTab#&Del=1" });
+		selectedTab = selectedTab + 1;
+		arrayAppend(variables.menu, { text="Research", href="/billbacks/auto_bb_report/auto_pay_research.cfm?nav_index=#selectedTab#" });
+		selectedTab = selectedTab + 1;
+		arrayAppend(variables.menu, { text="Settings", href="/billbacks/auto_bb_report/auto_pay_settings.cfm?nav_index=#selectedTab#" });
+    </cfscript>
+  </cfcase>
+
+  <cfcase value="autoPayResearch">
+    <cfset variables.menu = [ { text='Program Pacing',   href="/billbacks/auto_bb_report/Auto_Pay_Research.cfm?selectedTab=0"  }
+									          	,{ text='Monthly Pacing',  href="/billbacks/auto_bb_report/Auto_Pay_Research.cfm?selectedTab=1" }
+                              				  	,{ text='Open Pay Periods',  href="/billbacks/auto_bb_report/Auto_Pay_Research.cfm?selectedTab=2" }]>
+    <cfset variables.page_title = "Auto Pay Research">
+  </cfcase>
+  <!----------------------------------->
+  <!--- settings - alias management --->
+  <!----------------------------------->
+  <cfcase value="aliasManagement">
+    <cfset variables.menu = [  { text="Search Aliases", onClick="JavaScript: return submitDataForm('search', 1);" }
+                              ,{ text="Add New Product Alias", onClick="JavaScript: return submitDataForm('addProd', 2);"  }
+                              ,{ text="Add New #application.returned_customer_setting.distributor_label_singular# Alias", onClick="JavaScript: return submitDataForm('addDist', 3);"  }
+                            ]>
+    <cfset variables.page_title = "ALIAS MANAGEMENT">
+  </cfcase>
+
+  <!------------------------------>
+  <!--- vendor batching layout --->
+  <!------------------------------>
+  <cfcase value="vendorBatching">
+    <cfset billbackLabels = createObject("component", "mvc.Models.SettingsService").getBBLabels() />
+    <cfset variables.menu = [  { text=billBackLabels["Vendor"], href='/gl_code/vendor_management/vendorBatching.cfm' }
+                              ,{ text=billBackLabels["Billback"], href='/gl_code/vendor_management/billBackBatching.cfm' }
+                            ]>
+    <cfset variables.page_title = ucase(billBackLabels["Vendor"] & " Batching")>
+  </cfcase>
+  <!-------------------------------->
+  <!--- profit model xref layout --->
+  <!-------------------------------->
+  <cfcase value="profit-models-xref">
+    <cfset jQueryUI.version = "1.8.23">
+    <cfset variables.menu = [  { text="Settings", href='/settings/prof_model_xref/settings.cfm' }
+                              ,{ text="Planning Groups", href='/settings/prof_model_xref/pgtypes.cfm' }
+                              ,{ text=application.returned_customer_setting.Item_Label & ' to ' & application.returned_customer_setting.Operator_Label_Singular & ' Group',  href='/settings/prof_model_xref/item.cfm'  }
+                              ,{ text=application.returned_customer_setting.Operator_Label_Singular & ' to ' & application.returned_customer_setting.Distributor_Label_Singular & ' Group', href='/settings/prof_model_xref/operator.cfm' }
+                            ]>
+    <cfset variables.page_title = "PROFITABILITY MODEL XREF">
+  </cfcase>
+
+  <!------------------------------------------>
+  <!--- profit model classification layout --->
+  <!------------------------------------------>
+  <cfcase value="profit-models-classification">
+    <cfset jQueryUI.version = "1.8.23">
+    <cfset variables.menu = [  { text="Classification", href='/settings/prof_model_classification/listClassification.cfm' }
+                              ,{ text=application.returned_customer_setting.Operator_Label_Singular, href='/settings/prof_model_classification/operator.cfm' }
+                              ,{ text='Template', href='/settings/prof_model_classification/template.cfm' }
+                            ]>
+    <cfset variables.page_title = "PROFITABILITY MODEL CLASSIFICATION">
+  </cfcase>
+  <!------------------------------------>
+  <!--- profit model excludes layout --->
+  <!------------------------------------>
+  <cfcase value="profitability-models">
+    <cfset jQueryUI.version = "1.8.23">
+    <cfset variables.menu = [  { text=application.returned_customer_setting.Item_Label, href='/settings/prof_model_excludes/item.cfm'         }
+                              ,{ text=application.returned_customer_setting.Distributor_Label_Singular,  href='/settings/prof_model_excludes/distributor.cfm'  }
+                              ,{ text=application.returned_customer_setting.Operator_Label_Singular,     href='/settings/prof_model_excludes/operator.cfm'     }
+                              ,{ text='Template',     href='/settings/prof_model_excludes/template.cfm'     }
+                            ]>
+    <cfset variables.page_title = "PROFITABILITY MODEL EXCLUDES">
+  </cfcase>
+
+  <!------------------------------>
+  <!--- volume forecast layout --->
+  <!------------------------------>
+  <cfcase value="volume-forecast">
+    <cfset variables.page_title = "Volume Forecast">
+    <cfset variables.menu = [   { text='Volume Forecast List',     href='/common_files/volume/listVF.cfm'              }
+                               ,{ text='Volume Forecast Summary',  href='/common_files/volume/summary/forecast.cfm'    }
+                               ,{ text='Distributor Summary',      href='/common_files/volume/summary/distributors.cfm'}
+                               ,{ text='Planning Group Summary',   href='/common_files/volume/summary/pg.cfm'          }
+                            ]>
+    <cfloop array="#variables.menu#" index="item">
+      <cfif cgi.script_name eq item.href>
+        <cfset variables.page_title = ucase(item.text)>
+      </cfif>
+    </cfloop>
+  </cfcase>
+
+  <!----------------------------->
+  <!--- programs - view letters --->
+  <!----------------------------->
+  <cfcase value="viewLetters">
+  <cfset variables.page_title = "VIEW LETTERS">
+   <cfset appSettings = application.oApplicationAppSettingsManager.getApplicationAppSettings()>
+   <!--- Dev Note(57550) - These 2 links are not for "standard" and "GM" (custom 1) letters. --->
+   <cfif appSettings.getlettersavailable()  EQ 1 OR appSettings.getlettersavailable()  EQ 2>
+    <cfset variables.menu = [ ]>
+   <cfelse>
+	   <cfif Get_Profile_Settings.Generate_Program_letters>
+			<cfset variables.menu = [  { text='view letters',   href='/common_files/contracts/Letters/view_letters.cfm?display=view&CID=' & url.CID }
+									  ,{ text='generate letters',  href='/common_files/contracts/Letters/view_letters.cfm?display=edit&CID=' & url.CID }
+									]>
+		<cfelse>
+			<cfset variables.menu = [  { text='view letters',   href='/common_files/contracts/Letters/view_letters.cfm?display=view&CID=' & url.CID } ]>
+		</cfif>
+  </cfif>
+  </cfcase>
+<!--- D62230 :: 8.0 - In Settings have distributor, operator & product searches with no filters START --->
+  <cfcase value="masterdata">
+    <cfset businessSegManager = CreateObject("component", "components.programs.business_segment.BusinessSegmentManager") />
+    <cfif businessSegManager.isEnabled() AND (! businessSegManager.isEnabledForDistributor() OR ! businessSegManager.isEnabledForProduct() OR ! businessSegManager.isEnabledForOperator() )>
+    <cfset variables.menu = [  { text='distributor',   href="/settings/master_data/distributor_master_data.cfm"  }
+                                              ,{ text='product',  href="/settings/master_data/product_master_data.cfm" }
+                                              ,{ text='operator',  href="/settings/master_data/operator_master_data.cfm" }
+                                              ,{ text='vendor',  href="/settings/master_data/vendor_master_data.cfm" }
+                                              ,{ text='system planning groups',  href="/settings/master_data/system_planning_groups.cfm" }
+                                              ]>
+    <cfelse>
+    <cfset variables.menu = [  { text='distributor',   href="/settings/master_data/distributor_master_data.cfm"  }
+                                              ,{ text='product',  href="/settings/master_data/product_master_data.cfm" }
+                                              ,{ text='operator',  href="/settings/master_data/operator_master_data.cfm" }
+                                              ,{ text='vendor',  href="/settings/master_data/vendor_master_data.cfm" }
+                                              ]>
+    </cfif>
+    <cfset variables.page_title = "MASTER DATA">
+  </cfcase>
+<!--- D62230 :: 8.0 - In Settings have distributor, operator & product searches with no filters END --->
+
+<!--- START: 66060	Claims Input Accelerator - OCR Design and Planning - Phase 1 / Anand Rao / 01-Mar-2017 --->  
+  <cfcase value="OCR_Upload">
+    <cfset variables.menu = [  { text="Active", onClick="JavaScript: return submitDataForm('active', 0);" }
+                              ,{ text="Inactive", onClick="JavaScript: return submitDataForm('inactive', 1);"  }
+                              ,{ text="Add New", onClick="JavaScript: return submitDataForm('add', 2);"  }
+                           ]>
+    <!---display edit tab if in edit mode--->
+    <cfif form.display eq "edit">
+        <cfset arrayAppend(variables.menu, { text="Edit OCR Setting", onClick="JavaScript: return submitDataForm('update', 3);"  })>
+    </cfif>
+    <cfset variables.page_title = ucase("cia templates")>
+  </cfcase>
+<!--- END: 66060	Claims Input Accelerator - OCR Design and Planning - Phase 1 / Anand Rao / 01-Mar-2017 --->    
+  <cfdefaultcase>   <!--- we should never reach to here --->
+    <cfset variables.page_title = "Untitled">
+    <cfset variables.menu = []>
+  </cfdefaultcase>
+</cfswitch>
+<!--- load jQueryUI to take care of popup calendars ( datepicker() ) --->
+<cfif structKeyExists(attributes, "jQueryUI")>
+  <cfset jQueryUI.version = attributes.jQueryUI>
+</cfif>
+</cfsilent>
+<title><cfoutput>#variables.page_title#</cfoutput></title> <cfinclude template="/common_files/jQuery.cfm">
+<style>
+  body { margin:0; padding:0; }
+  /* styles for horizontal menu options */
+  #hMenU {list-style:none;background:url(/Images/gradient.jpg) #a7caf2 no-repeat;color:#FFF;line-height:30px !important;margin:0;padding:0;}
+  #hMenU li {display:inline;padding:0 4.5px;}
+  #hMenU a:link,#hMenU a:visited,#hMenU a:hover,#hMenU a:active {font-weight:700;font-size:1.25em;color:#FFF;padding:0 8px 2px;margin-left:8px; text-decoration:none;}
+  #hMenU a:hover,#hMenU a.selected {background-color:#FFF;color:#000 !important;}
+  #toPtiTle table, #toPtiTle td {border-style:none;}
+</style>
+</head><!--------------------------------------------------------------------------------------------------------------------->
+<body>
+<cfif structKeyExists(attributes, 'margin')>
+  <div style="margin:<cfoutput>#attributes.margin#</cfoutput>">
+</cfif>
+<!--- display Forge heading with environment name, page title, user name, timestamp and home page icons on the right side --->
+<cfswitch expression="#attributes.layoutID#">
+  <!--------------------->
+  <!--- common layout --->
+  <!--------------------->
+  <cfcase value="vendorBatching,aliasManagement,autoPay,billBackAssignment,deductionAssignment,reProcess,rebillPackage,uploadPayables,vendorManagement,budgets,claimMechanics,competitiveData,currency,discountIdentifiers,fixedComponents,formulaPricing,freightSettings,glAccounts,growthComponents,lumpSumComponents,marginItemsToExclude,operatorManagement,rebateComponents,businessSegments,volumeForecastSettings,applicationSettings,editMasterData,manageDocuments,membership,priceProtection,defaultVendor,modifyPreactive,masterdata,OCR_Upload">
+    <cfinclude template="/helpsystem/help_link.cfm">
+    <table border="0" cellpadding="2" cellspacing="0" width="100%" id="toPtiTle">
+      <tr>
+        <td align="left" bgcolor="#A7CAF2" width="100%" height="25" style="background-image: url(/Images/gradient.jpg); background-repeat:no-repeat;">
+          <cfoutput><span style="color:white; font-size:14px; font-weight: bold; padding-left:5px; letter-spacing:1.75px">#variables.page_title#</span></cfoutput>
+        </td>
+      </tr>
+    </table>
+  </cfcase>
+  <!------------------------------------------>
+  <!--- profit model classification layout --->
+  <!------------------------------------------>
+  <cfcase value="profit-models-classification,profitability-models,profit-models-xref">
+    <form action="/common_files/csv.cfm" method ="post" id="csv_form">
+      <input type="hidden" name="csv_text" id="csv_text">
+      <input type="hidden" name="csv_file_name" id="csv_file_name" value="export.csv">
+    </form>
+    <cfoutput>
+    <table border="0" cellpadding="2" cellspacing="0" width="100%">
+      <tr>
+        <td align="left" bgcolor="##A7CAF2" width="100%" height="25" style="background-image: url(/Images/gradient.jpg); background-repeat:no-repeat;">
+          <span style="color:white; font-size:14px; font-weight: bold; padding-left:5px; letter-spacing:1.75px">#ucase(variables.page_title)#</span>
+        </td>
+      </tr>
+    </table>
+    </cfoutput>
+  </cfcase>
+  <!------------------------------>
+  <!--- volume forecast layout --->
+  <!------------------------------>
+  <cfcase value="volume-forecast">
+    <cfinclude template="/includes/header.cfm">
+  </cfcase>
+</cfswitch>
+<cfsilent>
+<!------------------------------->
+<!--- display horizontal menu --->
+<!------------------------------->
+<cfset variables.menuCnt = 0>
+<cfsavecontent variable="variables.horizontal_menu">
+<ul id="hMenU">
+  <cfloop array=#variables.menu# index="menuItem">
+    <cfset variables.menuCnt = variables.menuCnt + 1>
+    <cfoutput>
+    <li <cfif attributes.layoutID eq "uploadPayables"> style="line-height:30px;" </cfif>>
+      <cfif variables.menuCnt gt 1> | </cfif>
+      <a <cfif structKeyExists(menuItem, 'onclick')> onclick="#menuItem.onclick#" </cfif>
+          <cfif structKeyExists(menuItem, 'href')> href="#menuItem.href#" <cfelse> href="##" </cfif>
+          <cfif attributes.layoutID eq "uploadPayables"> style="font-size:1em;" </cfif>  > #lcase(menuItem.text)# </a>
+    </li></cfoutput>
+  </cfloop>
+</ul>
+</cfsavecontent>
+</cfsilent>
+<cfoutput>#application.util.string.compress( variables.horizontal_menu )#</cfoutput>
+<!--------------------------------------------------------------------------------------------------------------------->
+<div id="layoutBody">
+
+<!---------------------------------------------------------------------------------------------------------------------> <cfelse>
+
+<!--- main content from parent code is displayed here --->
+</div>   <!---id="layoutBody"--->
+<!--------------------------------------------------------------------------------------------------------------------->
+ <!--- footer section --->
+ <div id="layoutFoot" style='margin-top:10px;'>
+ <cfswitch expression="#attributes.layoutID#">
+   <!--- volume forecast layout --->
+   <cfcase value="volume-forecast">
+    <!--- display disclaimer for summaries --->
+    <cfif cgi.script_name contains "summary">
+    <div style="clear:both;font-size:0.85em;text-align:center;"><b>Note:</b> The summarized values in this summary vary from the other summaries due to rounding logic that is imbedded at the detail level of each level of aggregation.</div>
+    </cfif>
+   </cfcase>
+ </cfswitch>
+</div>
+<cfif structKeyExists(attributes, 'margin')>
+  </div>   <!--- style="margin:#attributes.margin#"> --->
+</cfif>
+<cfsavecontent variable="variables._jsSelected">
+<script>
+ jQuery(function(){
+   var jMenuSelected = 0;
+   <cfif len(attributes.selectedIndex)>
+     jMenuSelected = jQuery('#hMenU li:eq(<cfoutput>#attributes.selectedIndex#</cfoutput>) a');
+     jMenuSelected.addClass( 'selected' );
+   <cfelse>
+     /* find selected option & then highlight it */
+     jQuery('#hMenU li a[href]').each(function() {
+       if ( jQuery(this).attr('href').toLowerCase() === <cfoutput>'#cgi.script_name#'.toLowerCase()</cfoutput>) {
+         jMenuSelected = jQuery(this);
+         jMenuSelected.addClass( 'selected' );
+         return false;
+       }
+     });
+   </cfif>
+
+   _pleaseWait = function() {
+     jQuery('#layoutBody, .fixedHeader').hide();
+     jQuery('#layoutFoot').html('Processing request, please wait... <img src="/Images/ajax-loader.gif" border=0 height="15" width="15">');
+   };
+
+   jQuery('#hMenU a').click( function() {
+     /* remove fixed header elements
+        hide page body, display a waiting message while new page content is being loaded */
+     if ( jMenuSelected ) {
+       jMenuSelected.removeClass( 'selected' );
+     }
+     _pleaseWait();
+   });
+
+   /* preload image for quicker display */
+   var image = jQuery('<img />').attr('src', '/Images/ajax-loader.gif');
+ });
+</script>
+</cfsavecontent>
+<cfoutput>#application.util.string.compress( variables._jsSelected )#</cfoutput>
+<!--- injects style for focused element here instead of using Application.cfc which places the same code oustide of </html> tag --->
+<cfinclude template="/common_files/focus.cfm">     <!--- 47143 --->
+</body>
+</html>
+</cfif>     <!--- if thisTag.executionMode is "start" --->

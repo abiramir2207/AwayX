@@ -1,0 +1,21 @@
+===== QUERY: var_selectQuery =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvar_selectQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_setting_category")>
+<cfif useLakebaseForvar_selectQuery>
+	<cftry>
+		<cfset var_selectQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_setting_category", {
+				"order" = "name.asc",
+				"select" = "application_setting_category_id,name"
+			}), "application_setting_category_id,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_selectQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_selectQuery>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

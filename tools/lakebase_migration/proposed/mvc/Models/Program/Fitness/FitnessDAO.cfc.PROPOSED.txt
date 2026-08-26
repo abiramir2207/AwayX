@@ -1,0 +1,97 @@
+===== QUERY: qGetFitnessSearchData =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetFitnessDetailDataDropTmp =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetDropDownData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDropDownData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDropDownData>
+	<cftry>
+		<cfset qGetDropDownData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_unit_id" = "neq.NONE",
+				"select" = "business_segment_id as sid,business_unit_desc as label"
+			}), "business_segment_id as sid,business_unit_desc as label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDropDownData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDropDownData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDropDownData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDropDownData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDropDownData>
+	<cftry>
+		<cfset qGetDropDownData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_unit_id" = "neq.NONE",
+				"select" = "business_segment_id as sid,business_unit_desc as label"
+			}), "business_segment_id as sid,business_unit_desc as label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDropDownData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDropDownData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDropDownData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDropDownData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDropDownData>
+	<cftry>
+		<cfset qGetDropDownData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_unit_id" = "neq.NONE",
+				"select" = "business_segment_id as sid,business_unit_desc as label"
+			}), "business_segment_id as sid,business_unit_desc as label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDropDownData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDropDownData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDropDownData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDropDownData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDropDownData>
+	<cftry>
+		<cfset qGetDropDownData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_unit_id" = "neq.NONE",
+				"select" = "business_segment_id as sid,business_unit_desc as label"
+			}), "business_segment_id as sid,business_unit_desc as label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDropDownData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDropDownData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetReportData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

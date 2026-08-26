@@ -1,0 +1,28 @@
+===== QUERY: UpdateEntry =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateEntry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForUpdateEntry>
+	<cftry>
+		<cfset application.oLakebase.updateRows("auto_checkbook",
+			{
+				"auto_checkbook_id" = "eq.#Auto_Checkbook#"
+			},
+			{
+				"program_id" = "#Program_ID#",
+				"distributor_id" = "#Distributor_ID#",
+				"send_to" = "#Send_To#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateEntry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateEntry>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertEntry =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

@@ -1,0 +1,61 @@
+===== QUERY: getprogramdetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetprogramdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
+<cfif useLakebaseForgetprogramdetails>
+	<cftry>
+		<cfset getprogramdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_period_dates", {
+				"bsa_program_id" = "eq.#getwebservicedetails.bsa_program_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetprogramdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetprogramdetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: itemcount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForitemcount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForitemcount>
+	<cftry>
+		<cfset itemcount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemcount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemcount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: familycount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForfamilycount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForfamilycount>
+	<cftry>
+		<cfset familycount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#",
+				"select" = "product_group"
+			}), "product_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfamilycount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfamilycount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

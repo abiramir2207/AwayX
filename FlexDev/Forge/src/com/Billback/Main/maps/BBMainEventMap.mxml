@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" 
+	xmlns:mate="http://mate.asfusion.com/">
+	<fx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import com.Billback.Main.events.*;
+			import com.Billback.Main.models.*;
+			import com.Billback.Main.views.*;
+			import com.Billback.Main.views.pm.*;
+			import com.shared.events.MainEvent;
+			import com.shared.models.*;
+			import com.shared.vos.*;
+			import mx.events.*;
+			
+			//import com.ContractProds.vos.*;
+			
+			[Bindable]
+			private var bDebug:Boolean = true;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!--<mate:Debugger level="{Debugger.ALL}" />-->
+		<!-- load up an instance of the remote objects -->
+		<!-- Remote Services  ***************************************************************************************** -->
+		<mx:RemoteObject id="MainService"	destination="ColdFusion" 	source="mvc.Models.Billback.BillbackManager" />
+		<mx:RemoteObject id="LoadService"	destination="ColdFusion"	source="mvc.Models.Billback.BillbackLoadManager" />
+		<!--- Main functionality including initial dataload <p>roMainService : <strong>mvc.models.Distributor.DistributorMainService</strong></p> -->
+		<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+		<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+		
+		<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+		<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+		Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+		<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+			<ObjectBuilder generator="{BBMainManager}" id="oBBMainManager" />
+			<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" />
+			<ObjectBuilder generator="{BBMainPModel}" id="oBBMainPModel" />
+			<ObjectBuilder generator="{DownloadManager}" id="oDownloadManager" />
+			<ObjectBuilder generator="{BAError}" id="oBAError" />
+			<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" />
+		</EventHandlers>
+		
+		<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+		<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" useWeakReference="true" debug="{bDebug}">
+			<!--call db for other settings-->
+			<EventAnnouncer type="{BBMainEvent.BB_MAIN_LOAD_APP_SETTINGS}" generator="{BBMainEvent}">
+				<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+				<Property source="{SettingsManager}" sourceKey="settings.status" targetKey="status" />
+				<Property source="{SettingsManager}" sourceKey="settings.timeZoneOffset" targetKey="timeZoneOffset" />
+				<Property source="{SettingsManager}" sourceKey="settings.useDayLightSavingsTime" targetKey="useDayLightSavingsTime" />
+			</EventAnnouncer>
+			<!--Get Data ********  modify the property tag to send to the get GET ************-->
+			<!--<EventAnnouncer type="{BBMainEvent.GET}" generator="{BBMainEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+			</EventAnnouncer>-->
+			<EventAnnouncer type="{BBMainEvent.GET_BB_CLOSINGMETHODS}" generator="{BBMainEvent}" />
+			<EventAnnouncer type="{BBMainEvent.GET_BB_ANALYSTS}" generator="{BBMainEvent}" />
+		</EventHandlers>
+		
+		<!--GET DATA ******** modify this event to get data from CF ************ -->
+		<!---	The main GET Event Should call a wrapper function in CF that will get ALL Data needed (complex Object possibly) for the initial load of the app.
+		We should not see 10 remote calls to load up the app.		
+		@see #roMainService
+		** RemoteInvoke : roMainService.getDistributors()
+		@see com.ContractProds.models.MainManager#getMyData() 
+		** Handler : com.ContractProds.models.MainManager.getMyData()   -->
+		<!--<EventHandlers type="{BBMainEvent.GET}" id="eGET">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getMyData" arguments="{event.programId}">
+		<resultHandlers>
+		<MethodInvoker generator="{MainManager}" method="dataResults" arguments="{resultObject}" />
+		</resultHandlers>	
+		<faultHandlers>	
+		<EventAnnouncer type="{BBMainEvent.BSA_ERROR}" generator="{BBMainEvent}" >
+		<Properties sBaError="SEARCH SERVICE (get data)" />
+		<Properties oBaError="{fault}" />
+		</EventAnnouncer>
+		</faultHandlers>
+		</RemoteObjectInvoker>
+		</EventHandlers>-->
+		
+		
+		<!-- ************************************************
+		ADD NEW EventHandlers Here   *******************
+		************************************************-->
+		
+		<!--LOAD APP SETTINGS *************************************************************************** -->
+		<!--- 			@see #roMainService
+		** RemoteInvoke : roMainService.getSettingsObject()
+		@see com.ContractProds.models.SettingsManager#setAppSettings() 
+		** Handler : com.ContractProds.models.SettingsManager.setAppSettings()   -->
+		<EventHandlers type="{BBMainEvent.BB_MAIN_LOAD_APP_SETTINGS}" useWeakReference="true"  debug="{bDebug}" >
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{[event.userId,event.timeZoneOffset,event.useDayLightSavingsTime]}" debug="{bDebug}" >
+				
+				<resultHandlers>
+					<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+					<!-- after settings are applied (user has been validated) load Modules-->
+					<EventAnnouncer type="{BBMainEvent.LOAD_MODS_BBSEARCH}" generator="{BBMainEvent}" >
+					</EventAnnouncer>
+				</resultHandlers>
+				
+				<faultHandlers>
+					<EventAnnouncer type="{BBMainEvent.BSA_ERROR}" generator="{BBMainEvent}">
+						<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--............... DOWNLOAD_FILE ............................................-->
+		<EventHandlers type="{MainEvent.DOWNLOAD_FILE}" debug="true" id="eDOWNLOAD_FILE" useWeakReference="true">
+			<MethodInvoker generator="{DownloadManager}" method="downloadFile" arguments="{event}" />
+		</EventHandlers>
+		
+		<!--GET Closing Methods ******** modify this event to get closing Methods ************ -->	   
+		<EventHandlers type="{BBMainEvent.GET_BB_CLOSINGMETHODS}" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{LoadService}" showBusyCursor="true" method="getAllClosingMethods" debug="{bDebug}" >
+				<resultHandlers>
+					<EventAnnouncer type="{BBMainEvent.LOAD_BB_CLOSINGMETHODS}" generator="{BBMainEvent}" >
+						<Properties closingMethodList="{resultObject}" />
+					</EventAnnouncer>
+				</resultHandlers>
+				<faultHandlers>
+					<EventAnnouncer type="{BBMainEvent.BSA_ERROR}" generator="{BBMainEvent}">
+						<Properties sBaError="BILLBACK CLOSING METHODS (getAllClosingMethods)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET BB ANALYSTS ******** modify this event to get analysts ************ -->	   
+		<EventHandlers type="{BBMainEvent.GET_BB_ANALYSTS}" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{LoadService}" showBusyCursor="true" method="getAnalysts" debug="{bDebug}" >
+				<resultHandlers>
+					<EventAnnouncer type="{BBMainEvent.LOAD_BB_ANALYSTS}" generator="{BBMainEvent}" >
+						<Properties bbAnalysts="{resultObject}" />
+					</EventAnnouncer>
+				</resultHandlers>
+				<faultHandlers>
+					<EventAnnouncer type="{BBMainEvent.BSA_ERROR}" generator="{BBMainEvent}">
+						<Properties sBaError="BILLBACK ANALYSTS (getAnalysts)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--SET STATE FOR SEARCH ITEMS *************************************************************************** -->
+		
+		
+		
+		<!--	*****************************************************************************************
+		***		BSA CUSTOM ERROR HANDLER 		*************************************************
+		***************************************************************************************** -->
+		
+		<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.ContractProds.models.BAError#showBAError()
+		** Invoke : com.ContractProds.models.BAError.showBAError()		
+		*			@see #roErrorService
+		** RemoteInvoke : roErrorService.logError()
+		*		@see com.ContractProds.models.BAError#logError() 
+		** faultHandler : com.ContractProds.models.BAError.showBAError()   -->
+		<EventHandlers type="{BBMainEvent.BSA_ERROR}">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+				<Properties BAErrorString="{event.sBaError}" />
+			</MethodInvoker>
+			<!--log error on server-->	
+			<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+				<faultHandlers>
+					<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+					<!--call method -->
+					<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+						<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+					</MethodInvoker>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+		<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+				<Properties BAErrorString="UNHANDLED" />
+			</MethodInvoker>
+			<!--log error on server-->	
+			<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+		</EventHandlers>
+		
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+		<Injectors target="{BillbackMain}">
+			<ListenerInjector eventType="{BBMainEvent.LOAD_BB_CLOSINGMETHODS}" method="loadBBClosingMethods"  useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.LOAD_BB_ANALYSTS}" method="loadBBAnalysts"  useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.EDIT_BB}" method="loadBBEdit" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.UNLOCK_BB}" method="UnLockBBEdit" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.CLOSE_BB}" method="unLoadBBEdit" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.EDIT_BB_UPLOAD}" method="loadBBUpload" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.CLOSE_BB_UPLOAD}" method="unLoadBBUpload" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.UNLOCK_BB_UPLOAD}" method="UnLockBBUpload" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.LOAD_DEVIATIONS}" method="loadDeviations" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.CLOSE_DEVIATIONS}" method="unLoadBillbackDevApp" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.LOAD_MODS_BBSEARCH}" method="loadModsBBSearch" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.LOAD_MODS_BBCORRECTIONS}" method="loadModsBBCorrections" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.LOAD_MODS_ALIAS}" method="loadModsAlias" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.CHANGE_LABEL}" method="changeModuleLabel" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.UPDATE_SEARCH_BBHEADER}" method="updateSearchBBHeader" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.DELETE_SEARCH_BBHEADER}" method="deleteSearchBBHeader" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.LOAD_BB_RAW_EDI_DETAIL}" method="loadRawEDIUpload" useWeakReference="true" />
+			<ListenerInjector eventType="{BBMainEvent.CLOSE_BB_RAW_EDI_DETAIL}" method="unLoadRawEDI" useWeakReference="true" />
+		</Injectors>
+		
+		<!-- BBMainPModel ....................................................... -->
+		<Injectors target="{BBMainPModel}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+		</Injectors>
+		
+		<!-- Billback  ....................................................... -->
+		<Injectors target="{BillbackMain}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{BBMainPModel}"  softBinding="false" />
+		</Injectors>
+		
+		<!-- BBMainEventManager ....................................................... -->
+		<Injectors target="{BBMainManager}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+		</Injectors>
+		
+		<!-- MPPanel .......................................................
+		<Injectors target="{BBMainPanel}" debug="false">
+		<PropertyInjector targetKey="pModel" source="{BBMainEventPModel}" softBinding="false"/>
+		</Injectors> -->
+		
+	</fx:Declarations>
+</EventMap>

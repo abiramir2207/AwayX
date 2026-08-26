@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.Admin.Redi.views.*" 
+		 xmlns:comps="com.Admin.Redi.components.*" 
+		 xmlns:filters="com.shared.components.filters.*"
+		 xmlns:z="com.shared.components.spark.*" 
+		 xmlns:ba="com.shared.views.renderer.*"
+		 width="100%" height="100%">
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{pModel.iPadding}" paddingLeft="{pModel.iPadding}" paddingRight="{pModel.iPadding}" paddingTop="{pModel.iPadding}" />
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.events.RediEvent;
+			import com.Admin.Redi.models.vos.RediCorrectionHeader;
+			import com.Admin.Redi.views.pm.RediPModel;
+			import com.shared.models.utils.dateutils.DateUtils;
+			import com.shared.views.skins.DataGridHeaderBackgroundSkinBa;
+			import com.shared.views.skins.DataGridHeaderSeparatorSkinBa;
+			
+			import mx.collections.ArrayList;
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:RediPModel;
+			[Bindable]
+			private var iFrmWidth:Number = 150;
+			
+			public function resetFilters():void{
+				
+				this.chkReProcess.selected = false;
+				this.dgRediOpen.resetFilters();
+				this.pModel.filterReprocess(false);
+				/*var evt:RediEvent = new RediEvent(RediEvent.FILTER);
+				evt.b = 0;
+				this.dispatchEvent(evt)*/
+			}
+			
+		]]>
+	</fx:Script>
+	<s:BorderContainer height="138" width="{pModel.iWidth}">
+		<s:VGroup paddingBottom="0" paddingLeft="{pModel.iPaddingfrm}" paddingRight="{pModel.iPaddingfrm}" paddingTop="{pModel.iPaddingfrm}" gap="0">
+			<s:HGroup width="875">
+				<z:BorderContainerLabel sText="Selected Correction :: {pModel.rediCorrectionHeader.sourceType} {pModel.rediCorrectionHeader.sourceTypeDesc}"
+									iHeight="{pModel.iHeight}" iWidth="300" textAlign="center">
+					<s:HGroup width="450" horizontalAlign="right">
+						<ba:BaButton label="refresh data" 
+									 click="{this.pModel.loadRediOpen();this.resetFilters();}" 
+									 height="{pModel.iHeight - 2}" 
+									 toolTip="Refresh all data in the Open Corrections view." />
+					</s:HGroup>
+				</z:BorderContainerLabel>
+			</s:HGroup>
+			<s:HGroup>
+				<s:VGroup width="33%">
+					<s:Form color="0x323232" width="{iFrmWidth + 130}">
+						<s:layout>
+							<s:FormLayout id="frmLay1" gap="{pModel.iPadding}" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+						</s:layout>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Name">
+							<s:TextInput id="tiOriginalDistExtName" text="{pModel.rediCorrectionHeader.originalCustomer.aliasName}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}"  >
+							<s:TextInput id="tiOriginalDistExtId" text="{pModel.rediCorrectionHeader.originalCustomer.aliasShipTo}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Inv. #"  >
+							<s:TextInput id="tiOrigInvNum" text="{pModel.rediCorrectionHeader.invoiceNumber}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+					</s:Form>
+					<s:HGroup width="100%">
+						<ba:BaButton label="edit" 
+									 click="this.pModel.openCorrectionEdit(this.dgRediOpen.selectedItem as RediCorrectionHeader,event)"
+									 toolTip="Edit/Correct the currently selected (highlighted in the grid data) invoice correction."  />
+						<ba:BaButton label="delete" 
+									 click="{this.pModel.deleteCorrection(this.dgRediOpen.selectedItem as RediCorrectionHeader)}" 
+									 toolTip="Delete the currently selected (highlighted in the grid data) invoice correction."  />
+					</s:HGroup>
+				</s:VGroup>
+				<s:VGroup width="33%">
+					<s:Form color="0x323232" width="{iFrmWidth + 130}">
+						<s:layout>
+							<s:FormLayout id="frmLay2" gap="{pModel.iPadding}" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+						</s:layout>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Final_Buyer_Label} Name">
+							<s:TextInput id="tiFinalDistExtName" text="{pModel.rediCorrectionHeader.finalCustomer.aliasName}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Final_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}"  >
+							<s:TextInput id="tiFinalDistExtId" text="{pModel.rediCorrectionHeader.finalCustomer.aliasShipTo}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						<s:FormItem label="PO #" >
+							<s:TextInput id="tiPONum" text="{pModel.rediCorrectionHeader.poNum}"   width="{iFrmWidth}" editable="false"   />
+						</s:FormItem>
+					</s:Form>
+				</s:VGroup>
+				<s:VGroup width="33%">
+					<s:Form color="0x323232" width="{iFrmWidth + 130}" enabled="{this.pModel.lock.bEditMode}">
+						<s:layout>
+							<s:FormLayout id="frmLay3" gap="{pModel.iPadding}" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+						</s:layout>
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Inv. Date" >
+							<s:TextInput id="tiOrigInvDate" text="{DateUtils.dateFormat(pModel.rediCorrectionHeader.invoiceDate)}"  width="{iFrmWidth}" editable="false"   />
+						</s:FormItem>	
+						<s:FormItem label="Total Cases">
+							<s:TextInput id="tiTotCases" text="{pModel.rediCorrectionHeader.InvCases}"  width="75" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="Total Dollars" >
+							<s:TextInput id="tiTotDollars" text="{pModel.rediCorrectionHeader.InvDollars}"  width="75" editable="false"  />
+						</s:FormItem>
+						<s:FormItem label="Message" >
+							<s:TextArea id="tiMessage" text="{pModel.rediCorrectionHeader.errorMessage}"  width="{iFrmWidth +10}" editable="false" height="48"  />
+						</s:FormItem>
+					</s:Form>
+				</s:VGroup>
+			<!--	<s:VGroup width="33%">
+					
+				</s:VGroup>-->
+			</s:HGroup>
+			<!--
+			<s:Form width="100%" color="0x323232">
+				<s:layout>
+					<s:FormLayout id="frmLay4" gap="0" paddingTop="0" paddingBottom="0" />
+				</s:layout>
+				<s:Button label="refresh data" click="{this.pModel.loadRediOpen()}" />
+			</s:Form> 
+			-->
+		</s:VGroup>
+	</s:BorderContainer>
+	<s:BorderContainer width="{pModel.iWidth}">
+		<s:VGroup paddingBottom="{pModel.iPaddingfrm}" paddingLeft="{pModel.iPaddingfrm}" paddingRight="{pModel.iPaddingfrm}" paddingTop="{pModel.iPaddingfrm}" gap="3">
+			<z:BorderContainerLabel sText="Actions" sToolTip="Process multiple invoice corrections by selecting them using the checkbox."
+									iHeight="{pModel.iHeight}" width="100%" 
+									textAlign="center"/>
+				<s:HGroup width="100%" gap="3" id="hgActions">
+					<ba:BaButton label="clear filters" click="this.resetFilters()" 
+								 toolTip="Clear all filters in the data grid." />
+					<ba:BaButton label="delete" click="this.pModel.deleteSelectedCorrection()" 
+								 toolTip="Delete selected (checked) invoice correction records." />
+					<s:Spacer width="12"/>
+					<s:CheckBox id="chkReProcess" 
+								click="{this.pModel.filterReprocess(this.chkReProcess.selected)}" 
+								toolTip="Check to see if any invoice corrections are available for reprocess."/>
+					<ba:BaButton label="reprocess" 
+								 enabled="{this.chkReProcess.selected}"
+								 click="this.pModel.reprocess()" 
+								 toolTip="Select and reprocess redistribution invoices.  Only invoice corrections that are available for reprocess are displayed.  " />
+					<s:Spacer width="12"/>
+					<ba:BaButton label="export"
+								 click="this.pModel.extract()" 
+								 toolTip="Extract open corrections data to a .csv file.  " />
+				</s:HGroup>
+		</s:VGroup>
+	</s:BorderContainer>
+	
+	<s:Group width="100%" height="100%">
+		<filters:FilterAdvancedDatagrid dragEnabled="false"
+										doubleClick="{pModel.openCorrectionEdit(this.dgRediOpen.selectedItem as RediCorrectionHeader,event)}"
+										click="{pModel.selectCorrectionEdit(this.dgRediOpen.selectedItem as RediCorrectionHeader)}"
+										keyDown="pModel.enterRow(event,this.dgRediOpen.selectedItem as RediCorrectionHeader);"
+										oSettings="{pModel.oSettings}"
+										allowMultipleSelection="true"
+										liveScrolling="true" 
+										sortExpertMode="true" 
+										headerWordWrap="true"
+										horizontalScrollPolicy="on"
+										id="dgRediOpen" 
+										dispatcher="{this}"
+										dataProvider="{pModel.acRediOpen}"
+										editable="true"
+										width="100%" height="100%" minHeight="200"
+										top="0" left="0" right="0" bottom="0"
+										doubleClickEnabled="true"
+										tabEnabled="true" tabChildren="true"
+										groupedColumns="{pModel.arrRediOpenDgCols}"
+										sortableColumns="true"
+										filterInsert="{pModel.funcFilterInsert}"
+										resize="true"
+										headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+										headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+										verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"  />
+			
+		<!--	filterInsert="{pModel.funcFilterInsert}" 
+			oFilterParms="{pModel.oFilterParms}" 
+			oSettings="{pModel.oSettings}"
+			itemEditEnd="pModel.itemEditEnd(event);"
+			allowMultipleSelection="true"
+			liveScrolling="true" 
+			sortExpertMode="true"
+			horizontalScrollPolicy="on"
+			id="dgItems" dispatcher="{this}"
+			dataProvider="{pModel.items}"
+			editable="true"
+			width="100%" height="100%" minHeight="200"
+			top="0" left="0" right="0" bottom="0"
+			doubleClickEnabled="true"
+			itemDoubleClick="pModel.selectRow(event);"
+			keyDown="pModel.enterRow(event);"
+			tabEnabled="true" tabChildren="true"
+			headerRelease="pModel.Call_Sort_Data(event);"
+			groupedColumns="{pModel.arrDgItemsCols}"
+			sortableColumns="true"> -->
+	</s:Group>
+	
+	
+</s:Group>

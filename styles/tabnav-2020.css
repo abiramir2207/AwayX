@@ -1,0 +1,120 @@
+/*
+  * ==================================================================================================== 
+  *    @File: /styles/tabnav-2020.css
+  *  @Author: Chris Nguyen
+  *    @Date: Feburary 2020
+  * 
+  * @Remarks: 2020 styles for horizontal navigation tabs
+  * 
+  *        <nav>
+  *          <ul>
+  *              <li name="options" class="nav active">options</li>
+  *              <li name="tools" class="nav">tools</li>
+  *          </ul>
+  *        </nav>
+  *
+  * ==================================================================================================== 
+*/
+nav {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: #dae1e7;
+    border-bottom-width: 1px;
+    display: flex;
+    justify-content: space-between;
+    margin: 0 0 4px 0;
+    padding: 0;
+}
+nav ul {
+    border-color: #dae1e7;
+    border-style: solid;
+    border-width: 0;
+    box-sizing: inherit;
+    color: Black;
+    display: flex;
+    list-style: none;
+    margin: 0;
+    margin-bottom: -1px;
+    margin-left: 0.5rem;
+    padding: 0;
+    width: 100%;
+}
+nav li.nav {
+    background: #c4c5c7;
+    border-color: #dae1e7;
+    border-style: solid;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    border-width: 1px;
+    box-sizing: inherit;
+    color: #343540;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    height: 20px;
+    line-height: 20px;
+    list-style: none;
+    margin: 0px 4px 0 0;
+    text-align: center;
+    min-width: 12%;
+    padding: 0 3px;
+}
+nav li.home {
+    padding: 0 10px;
+    width: auto;
+    min-width: auto;
+}
+nav li.nav:hover {
+    background: #D8D9DD;
+    color: #406be4;
+}
+li.hidden {
+    display: none;
+}
+nav li.active {
+    background: #FFF;
+    display: block;
+    border-bottom: 0;
+}
+nav li.active:hover {
+    background: #FFF;
+    display: block;
+    border-bottom: 0;
+}
+
+nav li.subnav {
+    border-width: 1px;
+    box-sizing: inherit;
+    color: #343540;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    height: 20px;
+    line-height: 20px;
+    list-style: none;
+    margin: 0px 4px 0 0;
+    text-align: center;
+    min-width: 12%;
+    padding: 0 3px;
+}
+nav li.subnav:hover {
+    color: #406be4;
+}
+
+i.closetab {
+    color: #343540;
+    font-style: normal;
+    float: right;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 50px;
+}
+i.closetab:hover {
+    color: #406be4;
+    background-color: #c4c5c7;
+}
+nav li.active i.closetab:hover {
+    color: #406be4;
+    background-color: #d8d9dd;
+}

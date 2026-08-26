@@ -1,0 +1,65 @@
+===== QUERY: qGetToleranceSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetToleranceSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForqGetToleranceSettings>
+	<cftry>
+		<cfset qGetToleranceSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "billback_tolerance_settings_id,cannot_exceed_percent,cannot_exceed_dollar,billback_status_id_below,billback_status_id_exceed,auto_deviation_inc_manual_bb,maximum_dollar_amount_checked,maximum_dollar_amount,billback_status_for_max_dollar_amt,last_updated_date,last_updated_by,auto_deviation_family_level,billback_ls_auto_process_amt,autoprocess_check_bb_beyond_budget"
+			}), "billback_tolerance_settings_id,cannot_exceed_percent,cannot_exceed_dollar,billback_status_id_below,billback_status_id_exceed,auto_deviation_inc_manual_bb,maximum_dollar_amount_checked,maximum_dollar_amount,billback_status_for_max_dollar_amt,last_updated_date,last_updated_by,auto_deviation_family_level,billback_ls_auto_process_amt,autoprocess_check_bb_beyond_budget"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetToleranceSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetToleranceSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBillbackStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetClosingMethods =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetClosingMethods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForqGetClosingMethods>
+	<cftry>
+		<cfset qGetClosingMethods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"benabled" = "eq.1",
+				"order" = "vchbillback_closing_method_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClosingMethods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClosingMethods>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUserName>
+	<cftry>
+		<cfset qGetUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetToleranceSettings.Last_Updated_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

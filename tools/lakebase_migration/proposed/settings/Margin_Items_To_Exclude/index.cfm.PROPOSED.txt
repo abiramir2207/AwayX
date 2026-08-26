@@ -1,0 +1,21 @@
+===== QUERY: qDiscountTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqDiscountTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_type")>
+<cfif useLakebaseForqDiscountTypes>
+	<cftry>
+		<cfset qDiscountTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_type", {
+				"deleted" = "eq.0",
+				"select" = "discount_type_id"
+			}), "discount_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDiscountTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDiscountTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

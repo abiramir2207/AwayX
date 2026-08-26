@@ -1,0 +1,67 @@
+===== QUERY: getInstallationDates =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: getInstallationLabels =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetInstallationLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_installation_label")>
+<cfif useLakebaseForgetInstallationLabels>
+	<cftry>
+		<cfset getInstallationLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_installation_label", {
+				"inserted_date" = "eq.#getInstallationDates.Installed_Date#",
+				"select" = "labels"
+			}), "labels"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetInstallationLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetInstallationLabels>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getMissingLabels =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetMissingLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_installation")>
+<cfif useLakebaseForgetMissingLabels>
+	<cftry>
+		<cfset getMissingLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_installation", {
+				"release_version" = "eq.#ReleaseVersion#",
+				"label_number" = "not.is.null",
+				"select" = "label_number as label_number"
+			}), "label_number as label_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMissingLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMissingLabels>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPunchTitle =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPunchTitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch")>
+<cfif useLakebaseForgetPunchTitle>
+	<cftry>
+		<cfset getPunchTitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("punch", {
+				"punch_id" = "eq.#Label_Number#",
+				"select" = "punch_title"
+			}), "punch_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPunchTitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPunchTitle>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

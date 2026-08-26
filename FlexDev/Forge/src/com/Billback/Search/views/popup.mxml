@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Popup that shows valid and invalid program ID's, while adding favorites. -->
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   xmlns:local="com.shared.views.renderer.*"
+			   backgroundColor="0xffffff"
+			   close="PopUpManager.removePopUp(this)"
+			   color="0x333333"	
+			   name="Billback Details"	
+			   title="Billback Details">
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			//import flash.events.Event;
+			//import mx.events.*;
+			import mx.managers.PopUpManager;
+			import com.shared.components.StringUtils;
+			import com.Billback.Search.events.BBSearchEvent;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			//import com.asfusion.mate.events.Dispatcher;
+			import com.Billback.Main.models.vos.BBHeader;
+			import com.shared.vos.Settings;
+			
+			public var dDispatcher:IEventDispatcher;
+			
+			[Bindable]
+			public var ObjBBHeader:BBHeader = new BBHeader();
+			
+			[Bindable]
+			public var oSettings:Settings = new Settings();
+			
+			public var iBillbackIDInt:int = 0;
+			
+			
+			public function getBillbackDetails():void
+			{
+				//if(!ObjBBHeader.details.billbackIDInt)
+				//{
+				var eventBBDetails:BBSearchEvent = new BBSearchEvent(BBSearchEvent.GET_BILLBACK_DETAILS);
+				eventBBDetails.ebillbackIDInt = ObjBBHeader.billbackIDInt; 
+				dDispatcher.dispatchEvent(eventBBDetails);
+				//}
+			}
+			
+			public function copyBB():void
+			{
+				var eventCopyBB:BBSearchEvent = new BBSearchEvent(BBSearchEvent.COPY_BILLBACK);
+				eventCopyBB.ebillbackIDInt = ObjBBHeader.billbackIDInt;
+				eventCopyBB.userId = this.parentDocument.pModel.oSettings.userId;
+				dDispatcher.dispatchEvent(eventCopyBB);
+				PopUpManager.removePopUp(this);
+			}
+			
+			
+			/* Email function */
+			private function openEmailPage() : void{  
+				var winjscommand:String ="/BillbackID_Wrapper.cfm?Billback_ID_Int="+ObjBBHeader.billbackIDInt+"&Page_Relocate=/billbacks/common/bb_email_create.cfm";
+				var jscommand:String = "window.open('"+winjscommand+"','winPrint','height=2000,width=2000,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=no');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self");
+			}
+			
+			/* Print function */
+			private function openPrintPage() : void{  
+				var winjscommand:String ="/BillbackID_Wrapper.cfm?Billback_ID_Int="+ObjBBHeader.billbackIDInt+"&Page_Relocate=/billbacks/common/bb_printer_friendly.cfm";
+				var jscommand:String = "window.open('"+winjscommand+"','winPrint','height=600,width=1000,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=no');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self");
+			}
+			
+			/* Open Docs function */
+			private function openDocs(docIndex:int) : void{
+				
+				var strPathName:String;
+				strPathName = ObjBBHeader.details.uniqueFileName[docIndex];
+				
+				var winjscommand:String ="/BillbackID_Wrapper.cfm?Billback_ID_Int="+ObjBBHeader.billbackIDInt+"&Page_Relocate="+ObjBBHeader.details.domainName+"/GetDocument.cfm?FilePath=data_files/uploaded/documents/uploaded_doc/"+strPathName+"&ShowDocs=1";
+				var jscommand:String = "window.open('"+winjscommand+"','winPrint','height=600,width=800,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=no');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self");
+			}
+			
+			/* Show the "Billback Agree" reasons */
+			private function buildToolTip(item:Object):String
+			{
+				var myString:String = "";
+				if(item != null && item.Agree_Reasons)
+				{
+					myString = "AGREE REASONS:\n";
+					/*myString = myString + item.Agree_Reasons.toArray().join("\n");*/
+					myString = myString + item.Agree_Reasons.toString().replace(",","\n");
+				}
+				return myString;
+			}
+		]]>
+	</fx:Script>
+	
+	<!--<s:VGroup width="770">
+	<s:HGroup horizontalAlign="right" width="770">		
+	<s:Label text="[close]" fontWeight="bold" fontSize="9" click="PopUpManager.removePopUp(this)"/>
+	</s:HGroup>
+	</s:VGroup>-->
+	
+	<!-- I tried paddingLeft on the "TitleWindow" skin, but it did not work and so I have added it here. 
+	This will create some gap between the left part of the window and the content.
+	-->
+	<s:VGroup width="100%" paddingLeft="5">
+		<s:HGroup width="100%">
+			<s:HGroup horizontalAlign="left">
+				<s:Label text="Print" fontWeight="bold" color="blue" textAlign="right" click="openPrintPage()" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+				<s:Label text="Email" fontWeight="bold" color="blue" textAlign="right" click="openEmailPage()" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+				<s:Label text="Copy" fontWeight="bold" color="blue" textAlign="right" click="copyBB()" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+			</s:HGroup>
+		</s:HGroup>
+		
+		<s:HGroup width="100%" />
+		
+		<s:HGroup width="100%">
+			<s:VGroup width="33%">			
+				<s:Label text="Payable" fontWeight="bold" textAlign="left" />
+				<mx:Text id="Program"  textAlign="left"  data="{ObjBBHeader.BBCode}"/>	
+			</s:VGroup>
+			<s:VGroup width="33%">
+				<s:Label text="Date Span" fontWeight="bold" textAlign="left" />
+				<mx:Text id="DateSpan"  textAlign="left" data="{StringUtils.getDate(ObjBBHeader.startDate.toString())} - {StringUtils.getDate(ObjBBHeader.endDate.toString())}"/>
+			</s:VGroup>
+			<s:VGroup width="33%">
+				<s:Label text="Analyst" fontWeight="bold" textAlign="left" />
+				<mx:Text id="RSP"  textAlign="left" data="{ObjBBHeader.analyst.fullName}"/>
+			</s:VGroup>
+		</s:HGroup>
+		
+		<s:HGroup width="100%">
+			<s:VGroup width="67%">			
+				<s:Label text="Title" fontWeight="bold" textAlign="left" />
+				<mx:Text id="Title"  textAlign="left"  data="{ObjBBHeader.title}"/>	
+			</s:VGroup>
+			<s:VGroup width="33%" visible="{ObjBBHeader.details.lockedBy != ''}" includeInLayout="{ObjBBHeader.details.lockedBy != ''}">			
+				<s:Label text="Locked By" fontWeight="bold" textAlign="left" />
+				<mx:Text id="LockedBy"  textAlign="left"  data="{ObjBBHeader.details.lockedBy}"/>	
+			</s:VGroup>
+		</s:HGroup>
+		
+		<s:HGroup width="100%">
+			<s:VGroup width="33%">			
+				<s:Label text="Check #" visible="{ObjBBHeader.checkNumber != ''}" includeInLayout="{ObjBBHeader.checkNumber != ''}" fontWeight="bold" textAlign="left" />
+				<mx:Text id="CheckNo"  textAlign="left"  data="{ObjBBHeader.checkNumber}"/>	
+			</s:VGroup>
+			<s:VGroup width="33%">
+				<s:Label text="Reference #" visible="{ObjBBHeader.referenceNumber != ''}" includeInLayout="{ObjBBHeader.referenceNumber != ''}" fontWeight="bold" textAlign="left" />
+				<mx:Text id="ReferenceNo"  textAlign="left" data="{ObjBBHeader.referenceNumber}"/>
+			</s:VGroup>
+		</s:HGroup>
+		
+		<!-- Start: Using mx instead of spark, as Repeaters require a halo based container (Got this error message)-->
+		<mx:HBox width="100%" >
+			<mx:VBox width="100%" visible="{ObjBBHeader.details.documentList.toString() !=''}" includeInLayout="{ObjBBHeader.details.documentList.toString() !=''}">			
+				<s:Label text="Document Attachment"  fontWeight="bold" textAlign="left" />
+				<mx:Repeater id="getDocsAttached" dataProvider="{ObjBBHeader.details.documentList}"> 
+					<!-- To get the name for the click event, use this code - event.currentTarget.getRepeaterItem() -->
+					<mx:Text id="DocsAttached" data="{getDocsAttached.currentItem}" click="{openDocs(event.target.repeaterIndices.toString())}" fontWeight="bold" color="blue" useHandCursor="true" mouseChildren="false" buttonMode="true"/>	
+				</mx:Repeater>	
+			</mx:VBox>
+		</mx:HBox>
+		
+		<!-- START: 39812	Validate EDI files for potential billback duplicate/Anand Rao/16-Jan-2014 -->
+		<mx:HBox width="100%">
+			<mx:VBox width="100%" visible="{oSettings.appSettings.EnableBBDupCheck = true &amp;&amp; ObjBBHeader.BBUploadDupGroupID != 0}" includeInLayout="{oSettings.appSettings.EnableBBDupCheck = true &amp;&amp; ObjBBHeader.BBUploadDupGroupID != 0}">			
+				<s:Label text="EDI Duplicate" fontWeight="bold" textAlign="left" visible="{oSettings.appSettings.EnableBBDupCheck = true &amp;&amp; ObjBBHeader.BBUploadDupGroupID != 0}" includeInLayout="{oSettings.appSettings.EnableBBDupCheck = true &amp;&amp; ObjBBHeader.BBUploadDupGroupID != 0}"/>
+				<mx:Text id="EDIDupMessage" textAlign="left" text="This Billback is flagged as an EDI Duplicate!" />	
+			</mx:VBox>
+		</mx:HBox>
+		<!-- END: 39812	Validate EDI files for potential billback duplicate/Anand Rao/16-Jan-2014 -->
+		
+		<mx:HBox width="100%">
+			<mx:VBox width="100%" visible="{ObjBBHeader.details.interfaceMessage != ''}" includeInLayout="{ObjBBHeader.details.interfaceMessage != ''}">			
+				<s:Label text="Interface Info" fontWeight="bold" textAlign="left" visible="{ObjBBHeader.details.interfaceMessage != ''}" includeInLayout="{ObjBBHeader.details.interfaceMessage != ''}"/>
+				<mx:Text id="InterfaceInfo" textAlign="left" data="{ObjBBHeader.details.interfaceMessage}" />	
+			</mx:VBox>
+		</mx:HBox>
+		<!-- End: Using mx instead of spark, as Repeaters require a halo based container (Got this error message)-->
+		
+		<s:HGroup width="100%">
+			<s:HGroup width="33%" verticalAlign="middle">			
+				<s:Label text="Claimed Amt" fontWeight="bold" verticalAlign="bottom" textAlign="left" />
+				<mx:Text id="ClaimedAmt" textAlign="left"  data="{StringUtils.getDollarDec3(ObjBBHeader.amount.toString())}"/>	
+			</s:HGroup>
+			<s:HGroup width="33%" verticalAlign="middle">
+				<s:Label text="Claimed vs Expected" fontWeight="bold" textAlign="left" />
+				<mx:Text id="ClaimedvsExpected"  textAlign="left" data="{StringUtils.getDollarDec3(ObjBBHeader.details.claimedVsExpected.toString())}"/>
+			</s:HGroup>
+		</s:HGroup>
+		<s:HGroup width="100%">
+			<s:HGroup width="33%" verticalAlign="middle">			
+				<s:Label text="Expected Amt" fontWeight="bold" textAlign="left" />
+				<mx:Text id="ExpectedAmt"  textAlign="left"  data="{StringUtils.getDollarDec3(ObjBBHeader.details.expectedAmount.toString())}"/>	
+			</s:HGroup>
+			<s:HGroup width="33%" verticalAlign="middle">
+				<s:Label text="Claimed vs Paid" fontWeight="bold" textAlign="left" />
+				<mx:Text id="ClaimedvsPaid"  textAlign="left" data="{StringUtils.getDollarDec3(ObjBBHeader.details.claimedVsPaid.toString())}"/>
+			</s:HGroup>
+		</s:HGroup>
+		<s:HGroup width="100%">
+			<s:HGroup width="33%" verticalAlign="middle">			
+				<s:Label text="Paid Amt" fontWeight="bold" textAlign="left" />
+				<mx:Text id="PaidAmt"  textAlign="left"  data="{StringUtils.getDollarDec3(ObjBBHeader.details.paidAmount.toString())}"/>	
+			</s:HGroup>
+			<s:HGroup width="33%" verticalAlign="middle">
+				<s:Label text="Expected vs Paid" fontWeight="bold" textAlign="left" />
+				<mx:Text id="ExpectedvsPaid"  textAlign="left" data="{StringUtils.getDollarDec3(ObjBBHeader.details.expectedVsPaid.toString())}"/>
+			</s:HGroup>
+		</s:HGroup>
+		
+		<s:HGroup width="100%" />
+		
+		<s:HGroup width="100%">	
+			<s:Label text="Workflow" fontWeight="bold" textAlign="left"/>
+		</s:HGroup>
+		<s:HGroup width="100%">
+			<mx:DataGrid textAlign="left" 
+						 dataProvider="{ObjBBHeader.details.workflowAction}" 
+						 rowCount="{ObjBBHeader.details.workflowAction.length &lt; 4 ? ObjBBHeader.details.workflowAction.length : 4}" 
+						 width="100%" 
+						 dataTipFunction="buildToolTip">
+				<mx:columns>
+					<mx:DataGridColumn dataField="Action"  width="75" headerText="Action" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Name"  width="110" headerText="Name" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Position"  width="110" headerText="Position" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Profiles_Desc"  width="110" headerText="Profile" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="120" headerText="Authority Sequence" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Action_Date"  width="120" headerText="Date" labelFunction="StringUtils.formatDateTime" showDataTips="true"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</s:HGroup>
+		
+		<s:HGroup width="100%" />
+		
+		<s:HGroup width="100%" visible="{ObjBBHeader.details.CRADetails.length &lt; 1 ? false : true}" includeInLayout="{ObjBBHeader.details.CRADetails.length &lt; 1 ? false : true}">	
+			<s:Label text="CRA" fontWeight="bold" textAlign="left"/>
+			<s:Label text="[currently responsible for approval]" textAlign="left"/>
+		</s:HGroup>
+		<s:HGroup width="100%" visible="{ObjBBHeader.details.CRADetails.length &lt; 1 ? false : true}" includeInLayout="{ObjBBHeader.details.CRADetails.length &lt; 1 ? false : true}">
+			<mx:DataGrid textAlign="left" 
+						 dataProvider="{ObjBBHeader.details.CRADetails}" 
+						 rowCount="{ObjBBHeader.details.CRADetails.length &lt; 4 ? ObjBBHeader.details.CRADetails.length : 4}" 
+						 width="100%">
+				<mx:columns>
+					<mx:DataGridColumn dataField="User_Full_Name"  width="100" headerText="Name"/>
+					<mx:DataGridColumn dataField="Position_Label"  width="100" headerText="Position"/>
+					<mx:DataGridColumn dataField="Profiles_Desc"  width="100" headerText="Profile"/>
+					<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="150" headerText="Authority Sequence"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</s:HGroup>
+		
+		<s:HGroup width="100%" />
+		
+		<s:HGroup visible="{ObjBBHeader.details.NRADetails.length &lt; 1 ? false : true}" includeInLayout="{ObjBBHeader.details.NRADetails.length &lt; 1 ? false : true}" width="100%">	
+			<mx:Label text="NRA" fontWeight="bold" textAlign="left"/>
+			<mx:Label text="- after the above person(s) take action, below is a list of person(s) that may need to take approval action." textAlign="left"/>
+		</s:HGroup>
+		<s:HGroup visible="{ObjBBHeader.details.NRADetails.length &lt; 1 ? false : true}" includeInLayout="{ObjBBHeader.details.NRADetails.length &lt; 1 ? false : true}" width="100%">
+			<mx:DataGrid textAlign="left" 
+						 dataProvider="{ObjBBHeader.details.NRADetails}"  
+						 rowCount="{ObjBBHeader.details.NRADetails.length &lt; 4 ? ObjBBHeader.details.NRADetails.length : 4}" 
+						 width="100%">
+				<mx:columns>
+					<mx:DataGridColumn dataField="User_Full_Name"  width="100" headerText="Name" />
+					<mx:DataGridColumn dataField="Position_Label"  width="100" headerText="Position"/>
+					<mx:DataGridColumn dataField="Profiles_Desc"  width="100" headerText="Profile"/>
+					<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="150" headerText="Authority Sequence" />
+				</mx:columns>
+			</mx:DataGrid>
+		</s:HGroup>
+		<s:HGroup width="100%" horizontalAlign="right" paddingRight="10">
+			<mx:Text paddingLeft="0" textAlign="right" click="PopUpManager.removePopUp(this);" useHandCursor="true" mouseChildren="false" buttonMode="true">
+				<mx:htmlText>					
+					<![CDATA[
+					<b><font color="#FF0000">[ </font><font color="#0000FF">close</font><font color="#FF0000"> ]</font></b>
+					]]>
+				</mx:htmlText>	
+			</mx:Text>
+			<!--<mx:Text text="[" paddingRight="0" />
+			<s:Label text="center window" paddingLeft="0" fontWeight="bold" color="blue" textAlign="right" click="PopUpManager.centerPopUp(this);" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+			<s:Label text="]" paddingLeft="0"/>-->
+		</s:HGroup>
+	</s:VGroup>
+</s:TitleWindow>

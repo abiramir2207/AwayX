@@ -1,0 +1,185 @@
+===== QUERY: qMakeWIP =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qMakeRFA =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getAgreementStartDate =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: ApproveContract =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: UpdateContarctStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qSetLockStatusOtherPrograms =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSetLockStatus1 =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSetLockStatus0 =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qrygetLookupStandardCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetLookupStandardCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_costs")>
+<cfif useLakebaseForqrygetLookupStandardCosts>
+	<cftry>
+		<cfset qrygetLookupStandardCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_costs", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupStandardCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupStandardCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetLookupNamedPlaceType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetLookupNamedPlaceType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_named_place_type")>
+<cfif useLakebaseForqrygetLookupNamedPlaceType>
+	<cftry>
+		<cfset qrygetLookupNamedPlaceType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_named_place_type", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupNamedPlaceType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupNamedPlaceType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetLookupPalletType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetLookupPalletType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_pallet_type")>
+<cfif useLakebaseForqrygetLookupPalletType>
+	<cftry>
+		<cfset qrygetLookupPalletType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_pallet_type", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupPalletType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupPalletType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetLookupDestinationPorts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetLookupDestinationPorts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_ports")>
+<cfif useLakebaseForqrygetLookupDestinationPorts>
+	<cftry>
+		<cfset qrygetLookupDestinationPorts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_ports", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupDestinationPorts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupDestinationPorts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetLookupRelocationCost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetLookupRelocationCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_origin_relocation")>
+<cfif useLakebaseForqrygetLookupRelocationCost>
+	<cftry>
+		<cfset qrygetLookupRelocationCost = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_origin_relocation", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupRelocationCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupRelocationCost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetFreightCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetFreightCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForqrygetFreightCosts>
+	<cftry>
+		<cfset qrygetFreightCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"select" = "export_additional_freight_cost,export_additional_inland_fuel_surcharge,export_additional_ocean_fuel_surcharge"
+			}), "export_additional_freight_cost,export_additional_inland_fuel_surcharge,export_additional_ocean_fuel_surcharge"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetFreightCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetFreightCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetMiscCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetMiscCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_misc_cost")>
+<cfif useLakebaseForqrygetMiscCosts>
+	<cftry>
+		<cfset qrygetMiscCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_misc_cost", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"export_misc_cost" = "neq.0",
+				"order" = "show_order_sequence.asc",
+				"select" = "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+			}), "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetMiscCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetMiscCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetBorderCrossingAgentRecords =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qrygetNotifyCustomerRecords =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qrygetNotes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForqrygetNotes>
+	<cftry>
+		<cfset qrygetNotes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"select" = "export_special_conditions,export_internal_notes"
+			}), "export_special_conditions,export_internal_notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetNotes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

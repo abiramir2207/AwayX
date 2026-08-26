@@ -1,0 +1,111 @@
+===== QUERY: qgetHistoryCount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qgetUserPosition =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForqgetUserPosition>
+	<cftry>
+		<cfset qgetUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#arguments.UserPositionID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetUserPosition>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetClaimMechanics =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetClaimMechanics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForqgetClaimMechanics>
+	<cftry>
+		<cfset qgetClaimMechanics = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"program_id" = "eq.#arguments.ProgramID#",
+				"select" = "claim_mechanics"
+			}), "claim_mechanics"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetClaimMechanics = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetClaimMechanics>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetChangedPrograms =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetPaymentTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetPaymentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqgetPaymentTypes>
+	<cftry>
+		<cfset qgetPaymentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#arguments.Payment_Type_ID#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetPaymentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetPaymentTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetPaymentCycle =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetPaymentCycle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_cycle")>
+<cfif useLakebaseForqgetPaymentCycle>
+	<cftry>
+		<cfset qgetPaymentCycle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_cycle", {
+				"payment_cycle_id" = "eq.#arguments.Payment_Cycle_ID#",
+				"select" = "payment_cycle"
+			}), "payment_cycle"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetPaymentCycle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetPaymentCycle>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUserName>
+	<cftry>
+		<cfset qGetUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#UserID#",
+				"select" = "name_first + ' ' + name_last as name"
+			}), "name_first + ' ' + name_last as name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

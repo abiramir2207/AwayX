@@ -1,0 +1,206 @@
+===== QUERY: qGetBidRequest =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBidRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForqGetBidRequest>
+	<cftry>
+		<cfset qGetBidRequest = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "program_bid_request_id,open_date,open_time,date_needed,expected_reply_date,line_item,bid_request_status_id,status_changed_by,status_changed_date,program_bid_source_id,program_bid_source_type_id"
+			}), "program_bid_request_id,open_date,open_time,date_needed,expected_reply_date,line_item,bid_request_status_id,status_changed_by,status_changed_date,program_bid_source_id,program_bid_source_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBidRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBidRequest>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qBidRequest =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateBidRequest =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertBidRequest =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForqStatus>
+	<cftry>
+		<cfset qStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "bid_request_status_id"
+			}), "bid_request_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qApplyStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qApplyStatusHistory =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckProgramApproved =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckProgramApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqCheckProgramApproved>
+	<cftry>
+		<cfset qCheckProgramApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "approved"
+			}), "approved"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckProgramApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckProgramApproved>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkRevision =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckRevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckRevision>
+	<cftry>
+		<cfset checkRevision = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "revision_of_contract_main_id,contract_status_type_idx"
+			}), "revision_of_contract_main_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckRevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckRevision>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateParentRevision =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateParentRevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdateParentRevision>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#revisionId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateParentRevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateParentRevision>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: setBidProdsToLost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForsetBidProdsToLost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request_product")>
+<cfif useLakebaseForsetBidProdsToLost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_bid_request_product",
+			{
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#"
+			},
+			{
+				"won" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetBidProdsToLost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetBidProdsToLost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: setBidProdsToLost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForsetBidProdsToLost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request_product")>
+<cfif useLakebaseForsetBidProdsToLost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_bid_request_product",
+			{
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#"
+			},
+			{
+				"won" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetBidProdsToLost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetBidProdsToLost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#arguments.programId#"
+			},
+			{
+				"deleted" = "Deleted"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getIsProgramBidSourceOtherExist =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: InsProgramBidSourceOther =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdProgramBidSourceOther =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

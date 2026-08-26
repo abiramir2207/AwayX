@@ -1,0 +1,3 @@
+===== QUERY: Get_Connection_Status =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

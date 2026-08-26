@@ -1,0 +1,20 @@
+===== QUERY: Get_Warehouses =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Warehouses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_freight_charges")>
+<cfif useLakebaseForGet_Warehouses>
+	<cftry>
+		<cfset Get_Warehouses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_freight_charges", {
+				"select" = "warehouse"
+			}), "warehouse"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Warehouses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Warehouses>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

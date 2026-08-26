@@ -1,0 +1,275 @@
+===== QUERY: qgetContractUOMLabel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetContractUOMLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForqgetContractUOMLabel>
+	<cftry>
+		<cfset qgetContractUOMLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#arguments.Contract_Quantity_UOM_IDX#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetContractUOMLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetContractUOMLabel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetContract_Main_Aux_Data =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetContract_Main_Aux_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqgetContract_Main_Aux_Data>
+	<cftry>
+		<cfset qgetContract_Main_Aux_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#arguments.CSL_Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetContract_Main_Aux_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetContract_Main_Aux_Data>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDiscountIdentifier =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForqGetDiscountIdentifier>
+	<cftry>
+		<cfset qGetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#arguments.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountIdentifier>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetPaymentCycles =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetPaymentCycles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_cycle")>
+<cfif useLakebaseForqgetPaymentCycles>
+	<cftry>
+		<cfset qgetPaymentCycles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_cycle", {
+				"payment_cycle_id" = "eq.#arguments.PaymentCycle#",
+				"select" = "payment_cycle"
+			}), "payment_cycle"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetPaymentCycles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetPaymentCycles>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qBrokerNames =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qBrokerIds =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: drpTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetFixedPriceProductsFromTable =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qgetfixedproductprice =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: DROPTMPTABLES =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetVolumePool =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetVolumePool = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForqGetVolumePool>
+	<cftry>
+		<cfset qGetVolumePool = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"parent_id" = "eq.#arguments.Program_Growth_Component_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVolumePool = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVolumePool>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetValidProductsWithVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qDeleteTmp =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUser_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqUser_Name>
+	<cftry>
+		<cfset qUser_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUser_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForqGetUOM>
+	<cftry>
+		<cfset qGetUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"select" = "unit_of_measure_id,unit_of_measure_desc,unit_of_measure_desc_singular,abbreviation,abbreviation_singular"
+			}), "unit_of_measure_id,unit_of_measure_desc,unit_of_measure_desc_singular,abbreviation,abbreviation_singular"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetfixedbaseprice =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qDeleteTbl =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetPreviousVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetProgramRenewalFrom =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetProgramRenewalFromContract =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetRenewedProgramLatestVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qgetPreviousVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qDeleteTbl =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetPreviousVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetProgramRenewalFrom =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetProgramRenewalFromContract =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetRenewedProgramLatestVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qgetPreviousVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetProgramTypeOnEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetProgramTypeOnEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqgetProgramTypeOnEmail>
+	<cftry>
+		<cfset qgetProgramTypeOnEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.ProgramTypeID#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetProgramTypeOnEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetProgramTypeOnEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetGroupsSaved =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetGroupsSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForqGetGroupsSaved>
+	<cftry>
+		<cfset qGetGroupsSaved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_operators", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.1",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupsSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupsSaved>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updFixedComp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdFixedComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForupdFixedComp>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component",
+			{
+				"program_id" = "eq.#arguments.ContractMainID#",
+				"program_fixed_component_name_id" = "eq.#arguments.CompID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdFixedComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdFixedComp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

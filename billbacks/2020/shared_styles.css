@@ -1,0 +1,124 @@
+/*
+  * ==================================================================================================== 
+  *    @File: \billbacks\2020\shared_styles.css
+  *  @Author: Sharon Harris
+  *    @Date: April 2020
+  * 
+  * @Remarks: GM Custom Billbacks - shared styles - includes common styles used across the GM Custom pages
+  *
+  * ==================================================================================================== 
+*/
+html {
+	box-sizing: border-box;		/* width includes border and padding */
+  }
+  *, *:before, *:after {
+	box-sizing: inherit;		/* inherit from html but allow local override if needed */
+  }
+
+/* collapsible section */
+.sectionHeader {
+	background-color: #FFCE84;
+	border:1px solid #FFCE84;
+	color: #343540;
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: normal;
+	min-height: 22px;
+	padding: 3px 6px 1px 6px;
+	text-align: left;
+	transition: 0.4s;
+	width: 100%;
+	display: flex;
+}
+.sectionHeader:hover {
+	border: 1px solid #406be4;
+	color: black;
+	opacity: 90%;
+}
+.sectionHeader:focus {  /* remove distracting focus border */
+	outline:0;
+}	
+
+#record_count {
+	font-weight: 600;
+    }
+
+
+
+/* Card style */
+.details-card {
+	background-color: #fff;
+	border-color: #d8d9dd;
+	border-radius: 5px;
+	border-width: 0px 1px 1px 1px;
+	box-shadow: 1px 1px 1px rgba(0,0,0, 0.3), -1px 0 1px rgba(0,0,0, 0.2);
+	margin: 1px 2px 3px 2px;
+}
+.card-header {
+	background-color: #ffedd2;
+	border-radius: 5px 5px 0px 0px;
+	color: #343540;
+	font-size: 11px;
+	font-weight: 600;
+	height: 20px;		/* depends on box-sizing */
+	padding: 5px 5px 5px 10px;
+}
+.card-main {
+	font-size: 11px;
+	min-height: 25px;
+	padding-top:5px;
+	padding-left:4px;
+	padding-right:4px;
+	padding-bottom:4px;
+	width: 100%;
+}
+
+/* Mass edit in the column header */
+div.mass_apply {
+    width: 100%;
+    text-align: center;
+}
+input.mass {
+	width: 80%;
+}
+
+i.mass_apply {
+	cursor: pointer;
+}
+.massEditIcon {
+	color: #406be4;
+	font-size: 14px;
+	margin: 0 0 0 5px;
+}
+input::placeholder {
+    color: #aaa;
+    opacity: 0.8;
+    text-align: center;
+}
+
+
+/* misc styles */
+input[type=radio], input[type=checkbox] {
+	position: relative;
+	top: 2px;
+	margin: 3px 3px 3px 4px;
+}
+input[type="text"], input[type=textarea] {
+	border: 1px solid #c4c5c7;
+	border-radius: .15rem;
+	padding: 0 3px;
+}
+button.delay {
+    opacity: 0;
+}
+.ml1 {
+    margin-left: 1em;
+}
+select {
+	border: 1px solid #c4c5c7;
+	padding: 0 3px;
+}
+.btn-icon { color: #406be4; }
+
+
+

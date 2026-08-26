@@ -1,0 +1,21 @@
+===== QUERY: itemcount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForitemcount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrebatechildrendetails")>
+<cfif useLakebaseForitemcount>
+	<cftry>
+		<cfset itemcount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrebatechildrendetails", {
+				"bsa_program_id" = "eq.#bsa_program_id#",
+				"message_type" = "eq.S"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemcount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemcount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,20 @@
+===== QUERY: qGetGroupType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetGroupType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqGetGroupType>
+	<cftry>
+		<cfset qGetGroupType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "group_by_group_type"
+			}), "group_by_group_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,27 @@
+===== QUERY: delete_zip_code_entry =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordelete_zip_code_entry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("market_zipcode")>
+<cfif useLakebaseFordelete_zip_code_entry>
+	<cftry>
+		<cfset application.oLakebase.updateRows("market_zipcode",
+			{
+				"deleted" = "eq.0",
+				"zipcode" = "eq.#ThisZipCode#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_zip_code_entry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_zip_code_entry>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insert_zip_code_entry =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

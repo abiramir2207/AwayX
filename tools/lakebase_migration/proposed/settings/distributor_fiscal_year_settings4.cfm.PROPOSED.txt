@@ -1,0 +1,27 @@
+===== QUERY: deletePriorDistributorCalendar =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordeletePriorDistributorCalendar = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_fiscal_year")>
+<cfif useLakebaseFordeletePriorDistributorCalendar>
+	<cftry>
+		<cfset application.oLakebase.updateRows("distributor_fiscal_year",
+			{
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"distributor_id" = "eq.#Form.Distributor_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletePriorDistributorCalendar = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletePriorDistributorCalendar>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: saveFiscalYear =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

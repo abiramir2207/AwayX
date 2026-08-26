@@ -1,0 +1,22 @@
+===== QUERY: getPunch_function =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPunch_function = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_function")>
+<cfif useLakebaseForgetPunch_function>
+	<cftry>
+		<cfset getPunch_function = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("punch_function", {
+				"displayonappworkrequest" = "eq.1",
+				"order" = "punch_function_desc.asc",
+				"select" = "punch_function_id,punch_function_desc"
+			}), "punch_function_id,punch_function_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPunch_function = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPunch_function>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

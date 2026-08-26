@@ -1,0 +1,187 @@
+===== QUERY: qryNewUploads =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryNewUploads = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqryNewUploads>
+	<cftry>
+		<cfset qryNewUploads = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#qryRecordsToProcess.OCR_Upload_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryNewUploads = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryNewUploads>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryTestset =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryTestset = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log_testset")>
+<cfif useLakebaseForqryTestset>
+	<cftry>
+		<cfset qryTestset = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log_testset", {
+				"ocr_upload_id" = "eq.#qryRecordsToProcess.OCR_Upload_TestSet_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryTestset = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryTestset>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryGetOCRTestSet2 =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qryUpdDetailSummary =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryUpdDetailSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryUpdDetailSummary>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_test_log_detail_summary",
+			{
+				"ocr_upload_test_log_detail_summary_id" = "eq.#qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#"
+			},
+			{
+				"ocr_step_actual" = "#qryNewUploads.OCR_Step#",
+				"total_invoices_actual" = "#TotalInvoicesActual#",
+				"total_line_items_actual" = "#TotalLineItemsActual#",
+				"total_amount_actual" = "#TotalAmountActual#",
+				"total_quantity_actual" = "#TotalQuantityActual#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdDetailSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdDetailSummary>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryUpdDetailSummaryDisplay1 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryUpdDetailSummaryDisplay1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryUpdDetailSummaryDisplay1>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_test_log_detail_summary",
+			{
+				"ocr_upload_test_log_detail_summary_id" = "eq.#qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#"
+			},
+			{
+				"display_status" = "COMPLETE",
+				"idone" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdDetailSummaryDisplay1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdDetailSummaryDisplay1>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryUpdDetailSummaryDisplay2 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryUpdDetailSummaryDisplay2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryUpdDetailSummaryDisplay2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_test_log_detail_summary",
+			{
+				"ocr_upload_test_log_detail_summary_id" = "eq.#qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#"
+			},
+			{
+				"display_status" = "IN PROGRESS"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdDetailSummaryDisplay2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdDetailSummaryDisplay2>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryUpdDetailSummaryDisplay3 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryUpdDetailSummaryDisplay3 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryUpdDetailSummaryDisplay3>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_test_log_detail_summary",
+			{
+				"ocr_upload_test_log_detail_summary_id" = "eq.#qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#"
+			},
+			{
+				"display_status" = "ERROR",
+				"idone" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdDetailSummaryDisplay3 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdDetailSummaryDisplay3>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryTestLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryTestLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryTestLog>
+	<cftry>
+		<cfset qryTestLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_test_log_detail_summary", {
+				"select" = "ocr_upload_test_log_id"
+			}), "ocr_upload_test_log_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryTestLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryTestLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryRecordsToProcess2 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryRecordsToProcess2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryRecordsToProcess2>
+	<cftry>
+		<cfset qryRecordsToProcess2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_test_log_detail_summary", {
+				"ocr_upload_test_log_id" = "eq.#OCRUploadTestLogID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryRecordsToProcess2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryRecordsToProcess2>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryGetMaxDate =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: updTestLog =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

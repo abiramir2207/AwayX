@@ -1,0 +1,134 @@
+/* upload.css */
+
+/**** Styles shared in upload files ****/
+* { 
+	box-sizing: border-box; 
+	margin-top: 0;
+	margin-bottom: 0;
+	padding: 0;
+}
+body { 
+	overflow: hidden;
+}
+iframe {
+	border: 0;
+	box-sizing: border-box;
+	width: 100%;
+	padding: 0;
+}
+/* Bottom area under grids */
+/* https://philipwalton.github.io/solved-by-flexbox/demos/vertical-centering/ */
+.horiz-aligner {
+	display: flex;
+	align-items: center;
+	/* justify-content: center; */
+}
+.horiz-aligner > textarea {
+	margin: 10px;
+	/* width: 130px; */
+}
+
+/**** Upload & history sub-tab ****/
+#searchArea {
+	margin: 5px 5px;
+	display: inline;
+	justify-content: space-between;
+}
+#searchArea input {
+	min-height: 17px;
+}
+#searchArea input.medium {
+	width: 100px;
+}
+
+fieldset {
+	background-color: #edeef2;
+	border: 1px solid #c4c5c7;
+	border-radius: 2px;
+	display: inline;
+	padding: 2px 5px 2px 10px;
+	margin:  5px;
+}
+#dateSet {
+	display: inline;
+	margin-left: 60px;
+}
+
+input.date {
+	min-height: 17px;
+    width: 62px;
+}
+#uploadBBList {
+	width: 150px;
+	min-height: 70px;
+	margin: 5px 5px 0 5px;
+	overflow: auto;
+	border: 1px solid #343540;
+	padding: 4px;
+	text-align: left;
+}
+
+/**** Corrections sub-tab ****/
+#actionArea {
+	margin: 5px 5px;
+}
+#menuBar {
+	margin: 5px 1px 1px 5px;
+}
+#spacer1 {
+	padding-left: 25px;
+	padding-right: 25px;
+}
+
+
+section#header_elements label, 
+section#header_elements input, 
+section#header_elements button { 
+	margin-bottom: 4px;
+}
+section#header_elements input:not(.date) {
+	min-height: 17px;
+	width: 140px;
+}
+section#header_elements {
+    border: 0px solid #9B9B9C;
+    /* height: 178px; */
+    clear: both;
+    display: flex;
+    margin-top: 3px;
+    overflow: auto;
+}
+section#header_elements article {
+	/* width: 33%; */
+	width: 29%;
+	padding: 0px 10px;
+	display: block;
+}
+
+section#header_elements article:nth-of-type(3) {
+	width: 18%;		/* third column narrower (dates) */
+} 
+section#header_elements label {
+	width: 35%;
+	color: #343540;
+	display: inline-block;
+	padding-right: 5px;
+	text-align: right;
+}
+section#header_elements article.smallL label {
+	width: 25%;
+}
+section#header_elements article.wideL label {
+	width: 40%;
+}
+section#header_elements fieldset#bbUploadHeader {
+	background-color: white;
+	margin-top: 0px;
+	height:60px;
+	width: 150%;		/* span into next column */
+	/* width: 100%; */
+}
+
+section#header_elements input.error {
+	border: 1px solid red;
+}

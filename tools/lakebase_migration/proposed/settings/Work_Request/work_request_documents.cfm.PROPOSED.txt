@@ -1,0 +1,142 @@
+===== QUERY: DeleteWR_AttachedDoc =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeleteWR_AttachedDoc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForDeleteWR_AttachedDoc>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request_document",
+			{
+				"work_request_document_id" = "eq.#URL.Work_Request_Document_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "#request.accessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteWR_AttachedDoc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteWR_AttachedDoc>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeleteWR_AttachedDoc_Punch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeleteWR_AttachedDoc_Punch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForDeleteWR_AttachedDoc_Punch>
+	<cftry>
+		<cfset application.oLakebase.updateRows("punch_file",
+			{
+				"punch_id" = "eq.#getDeletedWR_AttachedDoc.BA_Ticket_Number#",
+				"punch_file_name" = "eq.#getDeletedWR_AttachedDoc.WR_Document_Name#",
+				"punch_file_name_saved_as" = "eq.#getDeletedWR_AttachedDoc.Actual_File_Name#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "#request.accessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteWR_AttachedDoc_Punch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteWR_AttachedDoc_Punch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PunchID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPunchID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForPunchID>
+	<cftry>
+		<cfset PunchID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#Work_Request_ID#",
+				"select" = "ba_ticket_number"
+			}), "ba_ticket_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPunchID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPunchID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Doc_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Doc_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForGet_Doc_Details>
+	<cftry>
+		<cfset Get_Doc_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request_document", {
+				"matchattch" = "eq.#MatchAttch#",
+				"deleted" = "eq.0",
+				"order" = "wr_document_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Doc_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Doc_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Doc_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Doc_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForGet_Doc_Details>
+	<cftry>
+		<cfset Get_Doc_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request_document", {
+				"matchattch" = "eq.#MatchAttch#",
+				"deleted" = "eq.0",
+				"order" = "wr_document_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Doc_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Doc_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CreatedUserInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCreatedUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCreatedUserInfo>
+	<cftry>
+		<cfset CreatedUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreatedUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreatedUserInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Item =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Get_Item =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--- 
+This is the check box in the column header of the datagrid used to "Select All" or "de-Select All
+-->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    implements="mx.controls.listClasses.IDropInListItemRenderer"
+    creationComplete="onComplete()">
+    
+    <mx:Script> 
+    		<![CDATA[
+       		import mx.controls.Alert;
+					import mx.utils.ObjectUtil;
+          import mx.events.CollectionEvent;
+          import mx.controls.dataGridClasses.DataGridListData;
+          import mx.collections.ArrayCollection;
+	        import mx.controls.AdvancedDataGrid;
+	        import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+	        import mx.controls.listClasses.BaseListData;
+            
+          private var _listData:BaseListData;
+          private var _dataGrid:AdvancedDataGrid;
+          private var _dataField:String;
+          [Bindable] private var _CBselected:Boolean = false;
+          [Bindable] private var _headerLabel:String;
+            
+          private function onComplete():void 
+          {
+          	cb.setStyle("fontWeight", this.getStyle("fontWeight"));
+          }
+            
+          [Bindable("dataChange")]
+          public function get listData():BaseListData
+          {
+          	return _listData;
+          }
+        
+          public function set listData(value:BaseListData):void
+          {
+          	_listData = value;
+            _dataGrid = value.owner as AdvancedDataGrid;
+            _dataField = (value as DataGridListData).dataField;
+          }
+            
+          override public function set data(value:Object):void 
+          {
+          	super.data = value;
+						var column:AdvancedDataGridColumn = value as AdvancedDataGridColumn;
+            column.sortable = false;
+            callLater(checkForSelectedItemsFast);
+          }
+            
+          private function checkForSelectedItems():void 
+          {
+          	var dp:ArrayCollection = _dataGrid.dataProvider as ArrayCollection;
+          	var n:Number = 0;
+            for each (var oItem:Object in dp) 
+            {
+            	if(oItem[_dataField])
+              	n++
+            }
+            if(n == dp.length)
+            {
+            	_CBselected = true;
+            }
+            }
+            
+            private function checkForSelectedItemsFast():void 
+            {
+            	var dp:ArrayCollection = _dataGrid.dataProvider as ArrayCollection;
+              var n:Number = 0;
+              for each (var oItem:Object in dp) 
+              {
+              	if(oItem[_dataField])
+              	{
+                	n++
+                }
+                else
+                {
+                	_CBselected = false;
+                  break;
+                }
+            	}
+              if(n == dp.length)
+              {
+              	_CBselected = true;
+              } 
+            }
+            
+            private function onCBchange(event:Event):void 
+            {
+            	var dp:ArrayCollection = _dataGrid.dataProvider as ArrayCollection;
+              for each (var oItem:Object in dp) 
+              {
+              	oItem[_dataField] = cb.selected;
+            	}
+              _dataGrid.invalidateList();
+            }
+        ]]> 
+    </mx:Script>
+	<mx:VBox height="100%" width="100%" horizontalAlign="center" verticalAlign="middle">	
+		<mx:Label text="Count" fontWeight="bold" fontSize="11" fontFamily="Arial" />
+    	<mx:CheckBox id="cb" horizontalCenter="0"
+        change="onCBchange(event)" selected="{_CBselected}" />
+	</mx:VBox>	
+</mx:Canvas>

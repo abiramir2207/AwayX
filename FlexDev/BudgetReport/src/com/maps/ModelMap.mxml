@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.maps.MainEventMap;
+		]]>
+	</mx:Script>
+	
+	
+	<!-- MainPanel View __________________________________________________________________ -->
+	
+	<Injectors target="{MainPanel}">
+		<PropertyInjector targetKey="dpData" source="{MainManager}" sourceKey="acData" />
+		<PropertyInjector targetKey="dpClasses" source="{MainManager}" sourceKey="arrAllClass" />
+		<PropertyInjector targetKey="dpSimpleBudget" source="{MainManager}" sourceKey="arrSimpleBudget" />
+		<PropertyInjector targetKey="dpBudgetAssociation" source="{MainManager}" sourceKey="arrBudgetAssociation" />
+		<PropertyInjector targetKey="dpUserPositions" source="{MainManager}" sourceKey="arrUserPositions" />
+			
+	</Injectors>
+
+
+
+</EventMap>

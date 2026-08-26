@@ -1,0 +1,43 @@
+===== QUERY: qGetRCAModule =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetRCAModule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_central_access")>
+<cfif useLakebaseForqGetRCAModule>
+	<cftry>
+		<cfset qGetRCAModule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("report_central_access", {
+				"report_id" = "eq.#fName#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRCAModule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRCAModule>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdRCAModule =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdRCAModule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_central_access")>
+<cfif useLakebaseForqUpdRCAModule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("report_central_access",
+			{
+				"report_id" = "eq.#fName#"
+			},
+			{
+				"level_code" = "#level#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdRCAModule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdRCAModule>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

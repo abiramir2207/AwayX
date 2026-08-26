@@ -1,0 +1,21 @@
+===== QUERY: getCurrentValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCurrentValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForgetCurrentValue>
+	<cftry>
+		<cfset getCurrentValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#url.Contract_main_id#",
+				"select" = "autoadd_distributor_thirdpartyclaims"
+			}), "autoadd_distributor_thirdpartyclaims"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

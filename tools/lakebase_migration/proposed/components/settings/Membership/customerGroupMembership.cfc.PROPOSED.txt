@@ -1,0 +1,12 @@
+===== QUERY: family =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: buyinggroup =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: shipto =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: allowedstartdate =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

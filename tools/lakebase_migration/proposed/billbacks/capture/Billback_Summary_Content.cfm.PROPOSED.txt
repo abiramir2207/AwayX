@@ -1,0 +1,338 @@
+===== QUERY: GetBillbackSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForGetBillbackSettings>
+	<cftry>
+		<cfset GetBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program,use_dflt_prg"
+			}), "default_program,use_dflt_prg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: IsDefaultProgramOnBillback =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForIsDefaultProgramOnBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForIsDefaultProgramOnBillback>
+	<cftry>
+		<cfset IsDefaultProgramOnBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"program_id" = "eq.#GetBillbackSettings.Default_Program#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsDefaultProgramOnBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsDefaultProgramOnBillback>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getBBSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetBBSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForgetBBSettings>
+	<cftry>
+		<cfset getBBSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "enable_bb_dup_check"
+			}), "enable_bb_dup_check"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetCMName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCMName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForGetCMName>
+	<cftry>
+		<cfset GetCMName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#Get_Billback_Info.ClaimMechanics#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCMName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCMName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdatePaymentType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdatePaymentType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdatePaymentType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Get_Billback_Info.Billback_ID#"
+			},
+			{
+				"claimmechanics" = "#GetCMName.Payment_Type_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePaymentType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePaymentType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: VolumeSums =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetVendor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetVendor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForGetVendor>
+	<cftry>
+		<cfset GetVendor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approved", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "vendor_master_id"
+			}), "vendor_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetVendorNum =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetVendorNum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForGetVendorNum>
+	<cftry>
+		<cfset GetVendorNum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "uploaded_vendor_id"
+			}), "uploaded_vendor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorNum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorNum>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetVendorNum =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetVendorNum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForGetVendorNum>
+	<cftry>
+		<cfset GetVendorNum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "uploaded_vendor_id"
+			}), "uploaded_vendor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorNum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorNum>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetVendorNum =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetVendorNum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForGetVendorNum>
+	<cftry>
+		<cfset GetVendorNum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "uploaded_vendor_id"
+			}), "uploaded_vendor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorNum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorNum>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DefaultBB =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDefaultBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForDefaultBB>
+	<cftry>
+		<cfset DefaultBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program,use_dflt_prg"
+			}), "default_program,use_dflt_prg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefaultBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefaultBB>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetVendorInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetVendorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGetVendorInfo>
+	<cftry>
+		<cfset GetVendorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#GetVendorNum.Uploaded_Vendor_ID#",
+				"select" = "vendor_name,vendor_id,active_code,address_1,address_2,city,state,zipcode"
+			}), "vendor_name,vendor_id,active_code,address_1,address_2,city,state,zipcode"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetVendorInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetVendorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGetVendorInfo>
+	<cftry>
+		<cfset GetVendorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#GetVendorNum.Uploaded_Vendor_ID#",
+				"select" = "vendor_name,vendor_id,active_code,address_1,address_2,city,state,zipcode"
+			}), "vendor_name,vendor_id,active_code,address_1,address_2,city,state,zipcode"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetParentInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetParentInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetParentInfo>
+	<cftry>
+		<cfset GetParentInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Get_Billback_Info.BB_Parent_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetParentInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetParentInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getGroupDistintItemDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGroupDistintItemDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_program_products")>
+<cfif useLakebaseForgetGroupDistintItemDetails>
+	<cftry>
+		<cfset getGroupDistintItemDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_program_products", {
+				"select" = "item_bb_volume_cs,item_bb_volume_lb,item_expected_volume_cs,item_expected_volume_lb,item_approved_volume_cs,item_approved_volume_lb,group_id,billback_program_id,billback_product_id,dist_id,isproductonprogram,legacy_id"
+			}), "item_bb_volume_cs,item_bb_volume_lb,item_expected_volume_cs,item_expected_volume_lb,item_approved_volume_cs,item_approved_volume_lb,group_id,billback_program_id,billback_product_id,dist_id,isproductonprogram,legacy_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupDistintItemDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupDistintItemDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getdistdetails =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getdistvolumedetails =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getgroupdetails =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getgroupvolumedetails =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getBBprogramdetails =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetBillbackIds =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: User_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

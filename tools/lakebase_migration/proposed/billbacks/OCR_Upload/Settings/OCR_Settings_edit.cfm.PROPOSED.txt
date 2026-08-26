@@ -1,0 +1,21 @@
+===== QUERY: GetUserLastEdited =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserLastEdited = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserLastEdited>
+	<cftry>
+		<cfset GetUserLastEdited = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetOCRSettings.Updated_By#",
+				"select" = "name_first + ' ' + name_last as userlastedited"
+			}), "name_first + ' ' + name_last as userlastedited"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLastEdited = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLastEdited>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

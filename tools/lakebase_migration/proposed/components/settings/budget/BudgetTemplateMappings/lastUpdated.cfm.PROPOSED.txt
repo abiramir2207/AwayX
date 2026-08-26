@@ -1,0 +1,23 @@
+===== QUERY: qGetLastUpdated =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetLastUpdated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_template_mappings")>
+<cfif useLakebaseForqGetLastUpdated>
+	<cftry>
+		<cfset qGetLastUpdated = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_template_mappings", {
+				"deleted" = "eq.0",
+				"order" = "created_on.desc",
+				"limit" = "1",
+				"select" = "created_by,created_on"
+			}), "created_by,created_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLastUpdated = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLastUpdated>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,615 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Alias.Alias;
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.Admin.Alias.events.*;
+			import com.Admin.Alias.models.*;
+			import com.Admin.Alias.views.pm.*;
+			import com.Admin.Alias.views.*;
+			import com.shared.models.*;
+			import com.shared.events.MainEvent;
+			//import com.ContractProds.vos.*;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!--<mate:Debugger level="{Debugger.ALL}" />-->
+		<!-- load up an instance of the remote objects -->
+		<!-- Remote Services  ***************************************************************************************** -->
+		<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.Models.Admin.Alias.AliasManager" />
+		<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+		<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+		<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+		
+		<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+		<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+		Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+		<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+			<ObjectBuilder generator="{AliasManager}" id="oAliasManager" constructorArguments="{scope.dispatcher}"  />
+			<!--<ObjectBuilder generator="{AliasItemsGridManager}" id="oAliasItemsGridManager" constructorArguments="{scope.dispatcher}"  />-->
+			<ObjectBuilder generator="{AliasGridManager}" id="oAliasGridManager" constructorArguments="{scope.dispatcher}"  />
+			<!--<ObjectBuilder generator="{AliasProgramsGridManager}" id="oAliasProgramsGridManager" constructorArguments="{scope.dispatcher}"  />-->
+			<ObjectBuilder generator="{AliasUpload}" id="oAliasUpload" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" />
+			<ObjectBuilder generator="{AliasPModel}" id="oAliasPModel" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{AliasItemsPModel}" id="oAliasItemsPModel" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BAError}" id="oBAError"  />
+		</EventHandlers>
+		
+		<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+		<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" useWeakReference="true" debug="false">
+			<!-- It is already being called from the Main event map. comment it out. -->
+			<!--call db for other settings  sourceCache="global"
+			<EventAnnouncer type="{AliasEvent.ALIAS_LOAD_APP_SETTINGS}" generator="{AliasEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+			</EventAnnouncer>
+			-->
+			<EventAnnouncer type="{AliasEvent.GET_SOURCE_TYPES}" generator="{AliasEvent}" >
+			</EventAnnouncer>
+			<!--Get Data ********  modify the property tag to send to the get GET ************-->
+			<!--<EventAnnouncer type="{AliasEvent.GET}" generator="{AliasEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+			</EventAnnouncer>-->
+		</EventHandlers>
+		
+		<!-- GET SOURCE TYPES *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getSourceTypes()
+		@see com.Admin.Alias.models.AliasManager#SourceTypesResults() 
+		** Handler: AliasManager.SourceTypesResults -->   
+		<EventHandlers type="{AliasEvent.GET_SOURCE_TYPES}" id="eGET_SOURCE_TYPES">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSourceTypes">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="SourceTypesResults" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="GET SOURCE TYPES (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- LOAD DISTRIBUTOR ALIAS *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getDistributorAliases()
+		@see com.Admin.Alias.models.AliasManager#AliasDistributorResults() 
+		** Handler: AliasManager.AliasDistributorResults -->   
+		<EventHandlers type="{AliasEvent.LOAD_DISTRIBUTOR_ALIAS}" id="eLOAD_DISTRIBUTOR_ALIAS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getDistributorAliases" arguments="{[event.iSourceType,event.sSourceID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="AliasDistributorResults" arguments="{[event.iSourceType,resultObject]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="LOAD DISTRIBUTOR ALIAS (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- LOAD ITEM ALIAS *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getItemAliases()
+		@see com.Admin.Alias.models.AliasManager#AliasItemResults() 
+		** Handler: AliasManager.AliasItemResults -->  
+		<EventHandlers type="{AliasEvent.LOAD_ITEM_ALIAS}" id="eLOAD_ITEM_ALIAS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getItemAliases" arguments="{[event.iSourceType,event.sSourceID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="AliasItemResults" arguments="{[event.iSourceType,resultObject]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="LOAD ITEM ALIAS (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- LOAD PROGRAM ALIAS *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getProgramAliases()
+		@see com.Admin.Alias.models.AliasManager#getProgramAliases() 
+		** Handler: AliasManager.getProgramAliases -->  		   
+		<EventHandlers type="{AliasEvent.LOAD_PROGRAM_ALIAS}" id="eLOAD_PROGRAM_ALIAS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getProgramAliases" arguments="{[event.iSourceType,event.sSourceID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="AliasProgramResults" arguments="{[event.iSourceType,resultObject]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="LOAD PROGRAM ALIAS (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- LOAD OPERATOR ALIAS *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getOperatorAliases()
+		@see com.Admin.Alias.models.AliasManager#getOperatorAliases() 
+		** Handler: AliasManager.getOperatorAliases -->  		   
+		<EventHandlers type="{AliasEvent.LOAD_OPERATOR_ALIAS}" id="eLOAD_OPERATOR_ALIAS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getOperatorAliases" arguments="{[event.iSourceType,event.sSourceID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="AliasOperatorResults" arguments="{[event.iSourceType,resultObject]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="LOAD OPERATOR ALIAS (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- SAVE ALIAS *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.saveAlias()
+		@see com.Admin.Alias.models.AliasManager#refreshAlias() 
+		** Handler: AliasManager.refreshAlias -->  		   
+		<EventHandlers type="{AliasEvent.SAVE_ALIAS}" id="eSAVE_ALIAS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="saveAlias" arguments="{[event.aliasDef,event.iEntityType,event.userId]}">
+				
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="showSaveMessage" arguments="{[event.iEntityType,resultObject,event]}" />
+				</resultHandlers>
+					
+				<!-- <resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="refreshAlias" arguments="{[event.iEntityType,resultObject]}" />
+				</resultHandlers> -->
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="SAVE ALIAS (save and get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- SAVE SELECTED ALIAS *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.saveSelectedAlias()
+		@see com.Admin.Alias.models.AliasManager#refreshSelectedAlias() 
+		** Handler: AliasManager.refreshSelectedAlias -->  		   
+		<EventHandlers type="{AliasEvent.SAVE_SELECTED_ALIAS}" id="eSAVE_SELECTED_ALIAS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="saveSelectedAlias" arguments="{[event.aliasRowsSelected,event.iEntityType,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="showSaveMessage" arguments="{[event.iEntityType,resultObject,event]}" />
+				</resultHandlers>
+				
+				<!-- <resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="refreshSelectedAlias" arguments="{[event.iEntityType,resultObject]}" />
+				</resultHandlers>-->
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="SAVE SELECTED ALIAS (save and get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>		
+		
+		<!-- GET SOURCE INFO *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getVendorInfo()
+		@see com.Admin.Alias.models.AliasManager#SourceInfoResults() 
+		** Handler: AliasManager.SourceInfoResults -->      
+		<EventHandlers type="{AliasEvent.GET_SOURCE_INFO}" id="eGET_SOURCE_INFO">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getVendorInfo" arguments="{[event.sSourceID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="SourceInfoResults" arguments="{resultObject}" />
+					<!--<EventAnnouncer type="{AliasEvent.ALIAS_LOAD_APP_SETTINGS}" generator="{AliasEvent}" >
+					<Property sSourceID= "{event.aliasDef.sourceID}" />
+					</EventAnnouncer>-->
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="GET SOURCE INFO (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- GET DISTRIBUTOR INFO *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getDistributorInfo()
+		@see com.Admin.Alias.models.AliasManager#DistributorInfoResults() 
+		** Handler: AliasManager.DistributorInfoResults -->  	   
+		<EventHandlers type="{AliasEvent.GET_DISTRIBUTOR_INFO}" id="eGET_DISTRIBUTOR_INFO">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getDistributorInfo" arguments="{[event.sDistributorID,event.bIsDistGUID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="DistributorInfoResults" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="GET DISTRIBUTOR INFO (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- GET ITEM INFO *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getItemInfo()
+		@see com.Admin.Alias.models.AliasManager#ItemInfoResults() 
+		** Handler: AliasManager.ItemInfoResults -->    
+		<EventHandlers type="{AliasEvent.GET_ITEM_INFO}" id="eGET_ITEM_INFO">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getItemInfo" arguments="{[event.sItemID,event.bIsItemGUID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="ItemInfoResults" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="GET ITEM INFO (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- GET PROGRAM INFO *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getProgramInfo()
+		@see com.Admin.Alias.models.AliasManager#ProgramInfoResults() 
+		** Handler: AliasManager.ProgramInfoResults -->   	   
+		<EventHandlers type="{AliasEvent.GET_PROGRAM_INFO}" id="eGET_PROGRAM_INFO">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getProgramInfo" arguments="{[event.sProgramID,event.bIsContractNumber]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="ProgramInfoResults" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="GET PROGRAM INFO (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>	
+		
+		<!-- GET OPERATOR INFO *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.getOperatorInfo()
+		@see com.Admin.Alias.models.AliasManager#OperatorInfoResults() 
+		** Handler: AliasManager.OperatorInfoResults -->   	   
+		<EventHandlers type="{AliasEvent.GET_OPERATOR_INFO}" id="eGET_OPERATOR_INFO">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getOperatorInfo" arguments="{[event.sOperatorID,event.bIsLegacyID]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="OperatorInfoResults" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="GET OPERATOR INFO (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- DELETE ALIAS *************************************************************************** -->
+		<!--- @see #MainService
+		** RemoteInvoke: MainService.deleteAlias()
+		@see com.Admin.Alias.models.AliasManager#deleteAliasResults() 
+		** Handler: AliasManager.deleteAliasResults -->  
+		<EventHandlers type="{MainEvent.DELETE_ROW}" id="eDELETE_ROW">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="deleteAlias" arguments="{[event.objRowData]}">
+				<resultHandlers>
+					<MethodInvoker generator="{AliasManager}" method="deleteAliasResults" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}" >
+						<Properties sBaError="DELETE ROW" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers> 
+		
+		<!-- SET THE SELECTED RECORD AS THE SELECTED ALIAS ********************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#AliasSelectedResults() 
+		** Handler: AliasManager.AliasSelectedResults -->	   
+		<EventHandlers type="{AliasEvent.SET_SELECTED_ALIAS}" id="eSET_SELECTED_ALIAS">
+			<MethodInvoker generator="{AliasManager}" method="AliasSelectedResults" arguments="{event.aliasDef}" />
+		</EventHandlers>
+		
+		<!-- SET THE SOURCE OF THE ALIAS SEARCH *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#AliasSource() 
+		** Handler: AliasManager.AliasSource -->	   
+		<EventHandlers type="{AliasEvent.SET_SOURCE}" id="eSET_SOURCE">
+			<MethodInvoker generator="{AliasManager}" method="AliasSource" arguments="{[event.iSourceType,event.sSourceID]}" />
+		</EventHandlers>
+		
+		<!-- RESET ALIAS SELECTED *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#ResetAliasSelectedDef() 
+		** Handler: AliasManager.ResetAliasSelectedDef -->	   
+		<EventHandlers type="{AliasEvent.RESET_ALIAS_SELECTED}" id="eRESET_ALIAS_SELECTED">
+			<MethodInvoker generator="{AliasManager}" method="ResetAliasSelectedDef" />
+		</EventHandlers>
+		
+		<!-- CALL THE VENDOR POPUP PAGE *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#showVendorSearch() 
+		** Handler: AliasManager.showVendorSearch -->	   
+		<EventHandlers type="{AliasEvent.LOAD_SOURCE_SEARCH}" id="eLOAD_SOURCE_SEARCH">
+			<MethodInvoker generator="{AliasManager}" method="showVendorSearch" />
+		</EventHandlers>
+		
+		<!-- CALL THE DISTRIBUTOR POPUP PAGE *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#showDistributorSearch() 
+		** Handler: AliasManager.showDistributorSearch -->
+		<EventHandlers type="{AliasEvent.LOAD_DISTRIBUTOR_SEARCH}" id="eLOAD_DISTRIBUTOR_SEARCH" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="showDistributorSearch" />
+		</EventHandlers>
+		
+		<!-- CALL THE ITEM POPUP PAGE *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#showItemSearch() 
+		** Handler: AliasManager.showItemSearch -->
+		<EventHandlers type="{AliasEvent.LOAD_ITEM_SEARCH}" id="eLOAD_ITEM_SEARCH" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="showItemSearch" />
+		</EventHandlers>
+		
+		<!-- CALL THE PROGRAM POPUP PAGE *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#showProgramSearch() 
+		** Handler: AliasManager.showProgramSearch -->
+		<EventHandlers type="{AliasEvent.LOAD_PROGRAM_SEARCH}" id="eLOAD_PROGRAM_SEARCH" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="showProgramSearch" />
+		</EventHandlers>
+		
+		<!-- CALL THE OPERATOR POPUP PAGE *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#showOperatorSearch() 
+		** Handler: AliasManager.showOperatorSearch -->
+		<EventHandlers type="{AliasEvent.LOAD_OPERATOR_SEARCH}" id="eLOAD_OPERATOR_SEARCH" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="showOperatorSearch" />
+		</EventHandlers>
+		
+		<!-- FILTER ALIASES TO SHOW UNASSIGNED ALIASES ************************************************************* -->
+		<!--- @see com.Admin.Alias.models.AliasManager#filter() 
+		** Handler: AliasManager.filter -->
+		<!--
+		<EventHandlers type="{AliasEvent.SHOW_UNASSIGNED_ALIASES}" id="eSHOW_UNASSIGNED_ALIASES" debug="false">
+		<MethodInvoker generator="{AliasManager}" method="filter" arguments="{event.bShowUnassigned}" />
+		</EventHandlers>
+		-->
+		
+		<!-- CHANGE THE DATA PROVIDER *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#changeDataProvider() 
+		** Handler: AliasManager.changeDataProvider -->
+		<EventHandlers type="{AliasEvent.CHANGE_DATA_PROVIDER}" debug="true" id="eCHANGE_DATA_PROVIDER" useWeakReference="true">
+			<MethodInvoker generator="{AliasManager}" method="changeDataProvider" arguments="{event.iDataProviderIndex}" />
+		</EventHandlers>
+		
+		<!-- CHANGE THE DATA GRID *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#changeDataGrid() 
+			  @see com.Admin.Alias.models.AliasGridManager#changeDataGrid() 
+		** Handler: AliasManager.changeDataGrid
+		** Handler: AliasGridManager.changeDataGrid -->
+		<EventHandlers type="{AliasEvent.CHANGE_DATA_GRID}" debug="true" id="eCHANGE_DATA_GRID" useWeakReference="true">
+			<MethodInvoker generator="{AliasManager}" method="changeDataGrid" arguments="{event.sDataGridType}" />
+			<MethodInvoker generator="{AliasGridManager}" method="changeDataGrid" arguments="{event.sDataGridType}" />
+		</EventHandlers>		
+		
+		<!-- Show Hide Address Fields *************************************************************************** -->
+		<!--- ** Handler: AliasManager.showHideAdressCols -->
+		<EventHandlers type="{AliasEvent.SHOW_HIDE_ADDRESS_COLS}" debug="true" id="eSHOW_HIDE_ADDRESS_COLS" useWeakReference="true">
+			<MethodInvoker generator="{AliasGridManager}" method="showHideAdressCols" arguments="{[event.bShowAddressCols,event.iSelectedTab,event.sSourceType]}" />
+		</EventHandlers>
+		
+		<!-- SET SHOW UNASSIGNED *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#setShowUnAssigned() 
+		** Handler: AliasManager.setShowUnAssigned -->
+		<EventHandlers type="{AliasEvent.SET_SHOW_UNASSIGNED_ALIASES}" debug="true" id="eSET_SHOW_UNASSIGNED_ALIASES" useWeakReference="true">
+			<MethodInvoker generator="{AliasManager}" method="setShowUnAssigned" arguments="{event.bShowUnassigned}" />
+		</EventHandlers>
+		
+		<!-- FILTER ALIASES TO SHOW UNASSIGNED DISTRIBUTOR ALIASES *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#filterUnassignedDistAliases() 
+		** Handler: AliasManager.filterUnassignedDistAliases -->		
+		<EventHandlers type="{AliasEvent.ASSIGN_ALL_UNASSIGNED_DISTRIBUTORS}" id="eASSIGN_ALL_UNASSIGNED_DISTRIBUTORS" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="assignAllUnassigned" arguments="{[event.iDataProviderIndex,event.sAssignDistributorID,event.sAssignDistributorDesc]}" />
+		</EventHandlers>
+		
+		<!-- SET SHOW IGNORE *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#setShowIgnore() 
+		** Handler: AliasManager.setShowUnAssigned -->
+		<EventHandlers type="{AliasEvent.SET_SHOW_IGNORE_ALIASES}" debug="true" id="eSET_SHOW_IGNORE_ALIASES" useWeakReference="true">
+			<MethodInvoker generator="{AliasManager}" method="setShowIgnore" arguments="{event.iShowIgnore}" />
+		</EventHandlers>
+		<!-- FILTER ALIASES TO SHOW IGNORE ALIASES *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#filterIgnoreDistAliases() 
+		** Handler: AliasManager.filterIgnoreDistAliases -->		
+		<EventHandlers type="{AliasEvent.IGNORE_ALL_UNIGNORED}" id="eIGNORE_ALL_UNIGNORED" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="assignAllIgnore" arguments="{[event.iDataProviderIndex,event.sAssignDistributorID,event.sAssignDistributorDesc]}" />
+		</EventHandlers>
+		
+						
+		<!-- FILTER ALIASES TO SHOW UNASSIGNED DISTRIBUTOR ALIASES *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#filterUnassignedDistAliases() 
+		** Handler: AliasManager.filterUnassignedDistAliases -->
+		<EventHandlers type="{AliasEvent.DISABLE_ENABLE_PAYEE}" id="eDISABLE_ENABLE_PAYEE" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="DisableEnablePayee" arguments="{event.sUseSearchTool}" />
+		</EventHandlers>
+		
+		<!-- UNCHECK SELECTED ***************************************************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#uncheckSelectedItems() 
+		** Handler : AliasManager#uncheckSelectedItems -->    
+		<EventHandlers type="{AliasEvent.UNCHECK_SELECTED}" id="eUNCHECK_SELECTED" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="uncheckSelectedItems" />
+		</EventHandlers>
+		
+		<!-- LABEL CHANGE ***************************************************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#setLabelChange() 
+		** Handler : AliasManager#setLabelChange -->    
+		<EventHandlers type="{AliasEvent.LABEL_CHANGE}" id="eLABEL_CHANGE" debug="false">
+			<MethodInvoker generator="{AliasManager}" method="setLabelChange" arguments="{[event.labelText1]}" />
+		</EventHandlers>
+
+		<!--LOAD APP SETTINGS *************************************************************************** -->  
+		<EventHandlers type="{AliasEvent.ALIAS_LOAD_APP_SETTINGS}" useWeakReference="true" debug="false" >
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" debug="false" >
+				
+				<resultHandlers>
+					<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}"  />
+				</resultHandlers>
+				
+				<faultHandlers>
+					
+					<EventAnnouncer type="{AliasEvent.BSA_ERROR}" generator="{AliasEvent}">
+						<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- Get the list of aliases to generate a xls file *************************************************************************** -->
+		<!--- @see com.Admin.Alias.models.AliasManager#fnExportxls(
+		** Invoke: AliasManager.fnExportxls -->
+		<EventHandlers type="{AliasEvent.EXPORT_XLS}" debug="false" id="AliasEvent_Export_XLS">
+			<MethodInvoker generator="{AliasManager}" method="fnExportXLS" />
+		</EventHandlers>
+		
+		<!---............... IMPORT_ALIAS_LIST ................ -->
+		<!--- @see com.Admin.Alias.models.AliasManager#loadData(
+		** Invoke: AliasManager.loadData -->
+		<EventHandlers type="{AliasEvent.IMPORT_ALIAS_LIST}" debug="true" id="eIIMPORT_ALIAS_LIST">
+			<MethodInvoker 	generator="{AliasManager}" method="loadData" arguments="{event.sAliasList}" />
+		</EventHandlers>
+		
+		<!--............... SET_APP_SETTINGS ............................................-->
+		<EventHandlers type="{MainEvent.SET_LOCAL_APP_SETTINGS}" debug="true" id="eSET_LOCAL_APP_SETTINGS" useWeakReference="true">
+			<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+		</EventHandlers>
+		
+		
+		
+		<!--	*****************************************************************************************
+		***		BSA CUSTOM ERROR HANDLER 		*************************************************
+		***************************************************************************************** -->
+		
+		<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.ContractProds.models.BAError#showBAError()
+		** Invoke : com.ContractProds.models.BAError.showBAError()		
+		*			@see #roErrorService
+		** RemoteInvoke : roErrorService.logError()
+		*		@see com.ContractProds.models.BAError#logError() 
+		** faultHandler : com.ContractProds.models.BAError.showBAError()   -->
+		<EventHandlers type="{AliasEvent.BSA_ERROR}" useWeakReference="true">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+				<Properties BAErrorString="{event.sBaError}" />
+			</MethodInvoker>
+			<!--log error on server-->	
+			<!--<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+			<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+			</MethodInvoker>
+			</faultHandlers>
+			</RemoteObjectInvoker>-->
+		</EventHandlers>
+		
+		<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+		<EventHandlers type="{UnhandledFaultEvent.FAULT}" useWeakReference="true">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+				<Properties BAErrorString="UNHANDLED" />
+			</MethodInvoker>
+			
+			<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+		</EventHandlers>
+		
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+		<!-- AliasPModel ....................................................... -->
+		<Injectors target="{AliasPModel}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="aliasSelectedDef" source="{AliasManager}" sourceKey="aliasSelectedDef"  softBinding="false" />
+			<PropertyInjector targetKey="aliasSelectedDef" source="{AliasManager}" sourceKey="aliasSelectedDef"  softBinding="false" />
+			<PropertyInjector targetKey="sourceInfo" source="{AliasManager}" sourceKey="sourceInfo"  softBinding="false" />
+			<PropertyInjector targetKey="sourceTypes" source="{AliasManager}" sourceKey="sourceTypes"  softBinding="false" />
+			<PropertyInjector targetKey="enablePayee" source="{AliasManager}" sourceKey="enablePayee"  softBinding="false" />
+			<PropertyInjector targetKey="showPayee" source="{AliasManager}" sourceKey="showPayee"  softBinding="false" />
+			<PropertyInjector targetKey="enableDownloadData" source="{AliasManager}" sourceKey="enableDownloadData"  softBinding="false" />
+		</Injectors>
+		
+		<!-- AliasItemsPModel ....................................................... -->
+		<Injectors target="{AliasItemsPModel}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="userId" source="{SettingsManager}" sourceKey="settings.userId"  softBinding="false" />
+			<PropertyInjector targetKey="aliasSourceType" source="{AliasManager}" sourceKey="aliasSourceType"  softBinding="false" />
+			<PropertyInjector targetKey="aliasSourceID" source="{AliasManager}" sourceKey="aliasSourceID"  softBinding="false" />
+			<PropertyInjector targetKey="aliasDistributorsDef" source="{AliasManager}" sourceKey="aliasDistributorsDef"  softBinding="false" />
+			<PropertyInjector targetKey="aliasItemsDef" source="{AliasManager}" sourceKey="aliasItemsDef"  softBinding="false" />
+			<PropertyInjector targetKey="aliasProgramsDef" source="{AliasManager}" sourceKey="aliasProgramsDef"  softBinding="false" />
+			<PropertyInjector targetKey="aliasOperatorsDef" source="{AliasManager}" sourceKey="aliasOperatorsDef"  softBinding="false" />
+			<PropertyInjector targetKey="aliasSelectedDef" source="{AliasManager}" sourceKey="aliasSelectedDef"  softBinding="false" />
+			<PropertyInjector targetKey="aliasCurrentSelectedDef" source="{AliasManager}" sourceKey="aliasCurrentSelectedDef"  softBinding="false" />
+			<PropertyInjector targetKey="arrAliasItemsDgCols" source="{AliasGridManager}" sourceKey="arrAliasItemsDgCols"  softBinding="false" />
+			<!--<PropertyInjector targetKey="arrAliasDgCols" source="{AliasGridManager}" sourceKey="arrAliasDgCols"  softBinding="false" />-->
+			<!--<PropertyInjector targetKey="arrAliasProgramsDgCols" source="{AliasProgramsGridManager}" sourceKey="arrAliasProgramsDgCols"  softBinding="false" />-->
+			<PropertyInjector targetKey="dataProviderType" source="{AliasManager}" sourceKey="dataProviderType"  softBinding="false" />
+			<PropertyInjector targetKey="showUnassigned" source="{AliasManager}" sourceKey="showUnassigned"  softBinding="false" />
+			<PropertyInjector targetKey="showIgnore" source="{AliasManager}" sourceKey="showIgnore"  softBinding="false" />
+			<PropertyInjector targetKey="gridType" source="{AliasManager}" sourceKey="gridType"  softBinding="false" />	
+			<PropertyInjector targetKey="labelText1" source="{AliasManager}" sourceKey="labelText1"  softBinding="false" />	
+		</Injectors>
+			
+		<!-- AliasManager ....................................................... -->
+		<Injectors target="{AliasManager}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+		</Injectors>
+		
+		<!-- AliasHeaderForm ....................................................... -->
+		<Injectors target="{AliasHeaderForm}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{AliasPModel}" softBinding="false"/>
+			<PropertyInjector targetKey="pModelItems" source="{AliasItemsPModel}" softBinding="false"/>
+			<!-- Using mate listener tag on "AliasheaderForm". "ListenerInjector" does not work when called from BillbackMain.mxml -->
+			<!--<ListenerInjector eventType="{AliasEvent.SET_INITIAL_FOCUS}" method="setInitialCursorFocus" />-->
+			<ListenerInjector eventType="{AliasEvent.RELOAD_CURRENT_DATA}" method="triggerGetAllAliases" />
+		</Injectors>
+		
+		<!-- AliasGrid ....................................................... -->
+		<Injectors target="{AliasGrid}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{AliasItemsPModel}" softBinding="false"/>
+			<ListenerInjector eventType="{AliasEvent.RESET_INITIAL_FILTER}" method="resetInitialFilter" />
+			<PropertyInjector targetKey="pModelUpload" source="{AliasUpload}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- Alias ....................................................... -->	
+		<Injectors target="{Alias}" debug="false">
+			<PropertyInjector targetKey="pModelItems" source="{AliasItemsPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<Injectors target="{AliasGridManager}" debug="false">
+			<PropertyInjector targetKey="labelSettings" source="{SettingsManager}" sourceKey="settings" softBinding="false"/>
+			<PropertyInjector targetKey="labelSettings.appSettings.Show_Holding_Pen" source="{SettingsManager}" sourceKey="settings.appSettings.Show_Holding_Pen" softBinding="false"/>
+			<!--<PropertyInjector targetKey="gridType" source="{AliasManager}" sourceKey="gridType"  softBinding="false" />-->
+		</Injectors>
+		
+		<!-- AliasItemsGrid ....................................................... 
+		<Injectors target="{AliasItemsGrid}" debug="false">
+		<PropertyInjector targetKey="pModel" source="{AliasItemsPModel}" softBinding="false"/>
+		</Injectors>-->
+		
+		<!-- AliasProgramsGrid ....................................................... 
+		<Injectors target="{AliasProgramsGrid}" debug="false">
+		<PropertyInjector targetKey="pModel" source="{AliasItemsPModel}" softBinding="false"/>
+		</Injectors>-->
+	</fx:Declarations>
+</LocalEventMap>

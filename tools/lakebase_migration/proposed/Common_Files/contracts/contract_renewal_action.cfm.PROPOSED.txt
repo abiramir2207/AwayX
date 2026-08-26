@@ -1,0 +1,24 @@
+===== QUERY: getActiveTemplateVersion =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetActiveTemplateVersion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetActiveTemplateVersion>
+	<cftry>
+		<cfset getActiveTemplateVersion = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#getProgramTemplateInfo.First_Parent_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"isdominant" = "eq.1",
+				"select" = "isdominant"
+			}), "isdominant"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetActiveTemplateVersion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetActiveTemplateVersion>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,21 @@
+===== QUERY: qGetLumpSumProgramID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetLumpSumProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqGetLumpSumProgramID>
+	<cftry>
+		<cfset qGetLumpSumProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_lump_sum_id" = "eq.#arguments.lumpsumId#",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLumpSumProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLumpSumProgramID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

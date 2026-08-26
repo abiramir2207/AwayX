@@ -1,0 +1,72 @@
+===== QUERY: GetSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.ProgramType_ID#",
+				"select" = "base_sales_equal_to_lowest_bracket,program_date_type"
+			}), "base_sales_equal_to_lowest_bracket,program_date_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getSecondComponent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetSecondComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForgetSecondComponent>
+	<cftry>
+		<cfset getSecondComponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#url.compid#",
+				"select" = "include_second_component,second_component_name_id"
+			}), "include_second_component,second_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSecondComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSecondComponent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BlendedDates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Pull_price_list_id =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPull_price_list_id = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("v_price_list_bracket")>
+<cfif useLakebaseForPull_price_list_id>
+	<cftry>
+		<cfset Pull_price_list_id = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("v_price_list_bracket", {
+				"bracket" = "eq.#Bracket#",
+				"order" = "price_list.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPull_price_list_id = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPull_price_list_id>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BlendedDates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetFiscalDatesforYear =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

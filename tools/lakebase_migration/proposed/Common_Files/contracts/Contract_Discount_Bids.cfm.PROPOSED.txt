@@ -1,0 +1,24 @@
+===== QUERY: GetProductVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GETUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGETUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForGETUOM>
+	<cftry>
+		<cfset GETUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGETUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGETUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetValidProductsWithVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

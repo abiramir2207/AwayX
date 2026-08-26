@@ -1,0 +1,123 @@
+===== QUERY: qGetComponents =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: Contract_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForContract_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForContract_Info>
+	<cftry>
+		<cfset Contract_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"select" = "rebate_recipient_customer_id,contract_number,contract_title,contract_start_date,contract_end_date,creating_user_position_id,revision_of_contract_main_id,creator_id"
+			}), "rebate_recipient_customer_id,contract_number,contract_title,contract_start_date,contract_end_date,creating_user_position_id,revision_of_contract_main_id,creator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForContract_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForContract_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPayeeIDs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPayeeIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGetPayeeIDs>
+	<cftry>
+		<cfset GetPayeeIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeIDs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPayeeIDs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPayeeIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGetPayeeIDs>
+	<cftry>
+		<cfset GetPayeeIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeIDs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPayeeIDs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPayeeIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGetPayeeIDs>
+	<cftry>
+		<cfset GetPayeeIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeIDs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertIntoBillback =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetBBID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBBID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetBBID>
+	<cftry>
+		<cfset GetBBID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_code" = "eq.#NewBBCode#",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertIntoBBProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertBBLSComp =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertBBLumpSum =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

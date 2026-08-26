@@ -1,0 +1,111 @@
+.Selected
+{
+	color: 				Black;
+	font-family:		Arial;
+	font-size :			11px; 
+	font-weight:		bold;
+	text-decoration:	none;
+}
+.title
+{
+	color: navy;
+	font-size:14;
+	font-weight:bold;
+}
+.error
+{
+	color: Red;
+	font-size:14;
+	font-weight:bold;
+}
+.label
+{
+	color: black;
+	font-size:12;
+	font-weight:bold;
+}
+.labelWithNoBold
+{
+	color: black;
+	font-size:12;
+}
+.header
+{
+	background-color:gray;
+	color: white;
+	font-size:12;
+	font-weight:bold;
+}
+TD.foreground
+{
+	border-left :		1px solid Gray;
+	border-right :		1px solid Gray;
+	border-top :		1px solid Gray;
+	color: 				Red;
+	cursor:				pointer;
+}
+TD.background
+{
+	border-left:		1px solid Gray;
+	border-right:		1px solid Gray;
+	border-top :		1px solid Gray;
+	border-bottom:		1px solid Gray;
+	color: 				Red;
+	cursor:				pointer;
+}
+TD.Filler
+{
+	border-left:		1px solid White;
+	border-bottom:		1px solid Gray;
+	color: 				White;
+}
+A.tablink_back, A:Hover.tablink_back
+{
+	color: 				Black;
+	font-family:		Arial;
+	font-size :			11px; 
+	font-weight:		bold;
+	text-decoration:	none;
+}
+A:visited.tablink_back
+{
+	color: 				Black;
+	font-family:		Arial;
+	font-size :			11px; 
+	font-weight:		bold;
+	text-decoration:	none;
+}
+A.tablink_fore
+{
+	color: 				Red;
+	font-family:		Arial;
+	font-size :			11px; 
+	font-weight:		bold;
+	text-decoration:	none;
+}
+A:visited.tablink_fore
+{
+	color: 				Red;
+	font-family:		Arial;
+	font-size :			11px; 
+	font-weight:		bold;
+	text-decoration:	none;
+}
+TR.claimHeader TD
+{
+	color: black;
+	font-size:11px;
+	font-weight:bold;
+	border-bottom:dashed #000000 1px; 
+}
+TR.claim TD
+{
+	color: black;
+	font-size:10px;
+}
+TR.claimTotal TD
+{
+	color: blue;
+	font-size:12px;
+}
+

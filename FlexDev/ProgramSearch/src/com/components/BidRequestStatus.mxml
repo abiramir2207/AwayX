@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This sets the status of the bid on the datagrid to either Won or Lost. -->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+<mx:Text text="[W]" id="WonStatus" click="{SetStatus('L')}" />
+<mx:Text text="[L]" id="LostStatus" visible="false" includeInLayout="false" click="{SetStatus('W')}" />
+
+    <mx:Script>
+        <![CDATA[     
+            import mx.controls.Alert;
+			import mx.utils.ObjectUtil;     
+            import mx.events.CollectionEvent;
+   
+         [Bindable]
+            public var varStatusSelected:int;  
+
+          [Bindable]
+          private function SetStatus(Status:String):void{        	
+          	if(Status == 'L'){
+          		WonStatus.visible=false;
+          		WonStatus.includeInLayout=false;
+          		LostStatus.visible=true;
+          		LostStatus.includeInLayout=true;
+          		varStatusSelected=4;
+          	}
+          	else if(Status == 'W'){   
+          		LostStatus.visible=false;
+          		LostStatus.includeInLayout=false;
+          		WonStatus.visible=true;
+          		WonStatus.includeInLayout=true;
+          		varStatusSelected=2;
+          	}        	
+          }        
+        ]]>
+    </mx:Script>
+ </mx:HBox>

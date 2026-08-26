@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:views="com.Admin.ui.views.*"
+	layout="absolute" 
+	horizontalAlign="center"
+	title="Admin">
+	
+	<!-- UI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<mx:TabNavigator >
+		<views:Settings  label="Settings" width="100%" height="100%" />
+	</mx:TabNavigator>
+	
+</mx:Panel>

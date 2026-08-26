@@ -1,0 +1,361 @@
+===== QUERY: InsertWorkRequest =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetUserInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.User_Created#",
+				"select" = "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+			}), "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetForgeRelease =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: SupportEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email,mappunchcompany,wrinsertbymail"
+			}), "ba_support_email,mappunchcompany,wrinsertbymail"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetAttachDocs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetAttachDocs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForGetAttachDocs>
+	<cftry>
+		<cfset GetAttachDocs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request_document", {
+				"matchattch" = "eq.#arguments.MatchAttch#",
+				"deleted" = "eq.0",
+				"select" = "wr_document_name,actual_file_name"
+			}), "wr_document_name,actual_file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAttachDocs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAttachDocs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdatePunchlist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdatePunchlist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForUpdatePunchlist>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"work_request_id" = "eq.#InsertWorkRequest.Work_Request_ID#"
+			},
+			{
+				"ba_ticket_number" = "#Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunchlist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunchlist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPriorityID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetFunctionID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetTypeID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetMapPunchCompany =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetMapPunchCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForGetMapPunchCompany>
+	<cftry>
+		<cfset GetMapPunchCompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "mappunchcompany"
+			}), "mappunchcompany"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMapPunchCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMapPunchCompany>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetCompanyID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetCompanyID2 =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetCompanyID3 =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetForgeVersionID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: BuildToID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: InsertWorkRequestToPunch =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertToPunchWorkRequest =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdatePunchlist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdatePunchlist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForUpdatePunchlist>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"work_request_id" = "eq.#InsertWorkRequest.Work_Request_ID#"
+			},
+			{
+				"ba_ticket_number" = "#Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunchlist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunchlist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: SupportEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email,mappunchcompany,wrinsertbymail"
+			}), "ba_support_email,mappunchcompany,wrinsertbymail"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_WR_Document =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_WR_Document = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForGet_WR_Document>
+	<cftry>
+		<cfset Get_WR_Document = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request_document", {
+				"matchattch" = "eq.#arguments.MatchAttch#",
+				"deleted" = "eq.0",
+				"select" = "wr_document_name"
+			}), "wr_document_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_WR_Document = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_WR_Document>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Save_WR_Document =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSave_WR_Document = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForSave_WR_Document>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request_document",
+			{
+				"matchattch" = "eq.#arguments.MatchAttch#"
+			},
+			{
+				"work_request_id" = "#InsertWorkRequest.Work_Request_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_WR_Document = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_WR_Document>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdatePunch_File =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdatePunch_File = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForUpdatePunch_File>
+	<cftry>
+		<cfset application.oLakebase.updateRows("punch_file",
+			{
+				"matchattch" = "eq.#arguments.MatchAttch#"
+			},
+			{
+				"punch_id" = "#InsertWorkRequestToPunch.Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunch_File = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunch_File>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetComp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#arguments.compId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeletedPunchInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: diffCreatedTime =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: UpdateWR =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UpdateWR =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: DeletedPunchInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: SupportEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email,mappunchcompany,wrinsertbymail"
+			}), "ba_support_email,mappunchcompany,wrinsertbymail"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetUserInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.User_Created#",
+				"select" = "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+			}), "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Punch_Resolution =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: AddDeletedInfoPunch =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: InsertToPunch_File =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdatePunch_File =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdatePunch_File = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForUpdatePunch_File>
+	<cftry>
+		<cfset application.oLakebase.updateRows("punch_file",
+			{
+				"matchattch" = "eq.#arguments.MatchAttch#"
+			},
+			{
+				"punch_id" = "#InsertWorkRequestToPunch.Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunch_File = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunch_File>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

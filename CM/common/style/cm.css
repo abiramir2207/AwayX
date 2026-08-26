@@ -1,0 +1,13 @@
+TABLE.SearchResult
+{
+	background-color: #DAA520;
+}
+TABLE.SearchResult TH
+{
+	background-color: #DAA520;
+	font-size: 		12px;
+}
+TABLE.SearchResult TR
+{
+	background-color: #FFFFFF;
+}

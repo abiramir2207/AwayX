@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.events.*;
+			import com.models.*;
+			import com.views.*;
+			//import com.vos.*;
+		]]>
+	</mx:Script>
+	<mate:Debugger level="{Debugger.ALL}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  _________________________________________________________________________ -->
+	<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.models.Reports.BudgetReport" />
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+
+	<!-- FlexEvent.PREINITIALIZE __________________________________________________________________ -->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}">
+		<ObjectBuilder generator="{MainManager}" id="oManager" cache="global" />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" cache="global" />
+		<ObjectBuilder generator="{BAError}" id="oBAError" cache="global" />
+		<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" cache="global" />
+		<!--<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" cache="global" />-->
+		<!--call db for other settings-->
+		<!-- <EventAnnouncer type="{MainEvent.LOAD_APP_SETTINGS}" generator="{MainEvent}" >
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer> -->
+		<EventAnnouncer type="{MainEvent.GET_BUDGETLABELS}" generator="{MainEvent}" />
+		
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE ___________________________________________________________ -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}">
+		<!--Get Data ********  modify the property tag to send to the get GET ************-->
+		
+		<EventAnnouncer type="{MainEvent.GET}" generator="{MainEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+		<EventAnnouncer type="{MainEvent.GET_CLASSES}" generator="{MainEvent}" >
+		</EventAnnouncer>
+		<EventAnnouncer type="{MainEvent.GET_SIMPLEBUDGET}" generator="{MainEvent}" >
+		</EventAnnouncer>
+		<EventAnnouncer type="{MainEvent.GET_BUDGETASSOCIATION}" generator="{MainEvent}" >
+		</EventAnnouncer>
+		<EventAnnouncer type="{MainEvent.GET_USERPOSITIONS}" generator="{MainEvent}" >
+		</EventAnnouncer>
+			
+	</EventHandlers>
+	
+	<!--GET DATA ******** modify this event to get data from CF ************ -->
+	<EventHandlers type="{MainEvent.GET}" debug="true">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBudgetSummaryReport" arguments="{event.userId}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{MainManager}" method="dataResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+ 
+ 	<!--BEGIN DROPDOWN QUERIES-->
+    <EventHandlers type="{MainEvent.GET_CLASSES}" debug="true">				
+		<!-- initialize all the drop downs on the page -->	
+
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getClasses">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{MainManager}" method="fnGetAllClass" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="CLASS DROPDOWN ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+				
+	</EventHandlers>
+
+	<EventHandlers type="{MainEvent.GET_SIMPLEBUDGET}" debug="true">				
+		<!-- initialize all the drop downs on the page -->	
+
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSimpleBudget">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{MainManager}" method="fnGetSimpleBudget" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="BUDGET DROPDOWN ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+	<EventHandlers type="{MainEvent.GET_BUDGETASSOCIATION}" debug="true">				
+		<!-- initialize all the drop downs on the page -->	
+
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBudgetAssociation">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{MainManager}" method="fnGetBudgetAssociation" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="BUDGET ASSOCIATION DROPDOWN ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<EventHandlers type="{MainEvent.GET_USERPOSITIONS}" debug="true">				
+		<!-- initialize all the drop downs on the page -->	
+
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getUserPositions">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{MainManager}" method="fnGetUserPositions" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="USER POSITION DROPDOWN ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	<!--END DROPDOWN QUERIES-->
+	
+	
+	<!-- BEGIN GET LABELS -->
+	<EventHandlers type="{MainEvent.GET_BUDGETLABELS}" debug="true">				
+		<!-- initialize all the drop downs on the page -->	
+
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBudgetLabels">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SettingsManager}" method="fnGetBudgetLabels" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="BUDGET LABEL ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!-- END GET LABELS -->
+	
+
+
+	<!-- Filter based on dropdown -->
+	<EventHandlers type="{MainEvent.BUDGETFILTER}">
+	  <!--<MethodInvoker generator="{MainEvent}" method="Alerter" arguments="inside FILTER_RESULTS"/>--> 
+		<MethodInvoker generator="{MainManager}" method = "fnBudgetFilter"
+		 arguments="{[	event.eClass,
+		 				event.eSimpleBudget,
+		 				event.eBudgetAssociation,
+						event.eUserPositions]}" />
+	</EventHandlers>
+
+
+    <!--LOAD APP SETTINGS ___________________________________________________________-->
+	<EventHandlers type="{MainEvent.LOAD_APP_SETTINGS}">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker cache="global" generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+	
+	<!--BSA CUSTOM ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{MainEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+	
+	<!--INJECTORS  ______________________________________________________________-->
+	<Injectors target="{MainPanel}">
+		<PropertyInjector source="{SettingsManager}" targetKey="sBudgetDollarLabel" 		 	sourceKey="oBudgetLabels._sBudgetDollarLabel" />
+		<PropertyInjector source="{SettingsManager}" targetKey="sCommittedDollarLabel" 	 		sourceKey="oBudgetLabels._sCommittedDollarLabel" />
+	    <PropertyInjector source="{SettingsManager}" targetKey="sBudgetBalanceLabel" 			sourceKey="oBudgetLabels._sBudgetBalanceLabel" />
+		<PropertyInjector source="{SettingsManager}" targetKey="sApprovedPaymentDollarLabel"	sourceKey="oBudgetLabels._sApprovedPaymentDollarLabel" />
+		<PropertyInjector source="{SettingsManager}" targetKey="sAvailableBudgetDollarLabel" 	sourceKey="oBudgetLabels._sAvailableBudgetDollarLabel" />
+		<PropertyInjector source="{SettingsManager}" targetKey="sBudgetClassAssociationLabel" 	sourceKey="oBudgetLabels._sBudgetClassAssociationLabel" />
+   	</Injectors>
+   	
+	<Injectors target="{MainManager}">
+		<PropertyInjector source="{SettingsManager}" targetKey="_sBudgetClassAssociationLabel" 	sourceKey="oBudgetLabels._sBudgetClassAssociationLabel" />
+	</Injectors>
+	
+</EventMap>

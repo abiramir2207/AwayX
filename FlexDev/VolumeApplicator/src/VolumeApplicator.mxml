@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--- 
+		Volume Applicator in the Program are handled in this Project Module 
+	-->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  
+	xmlns:views="com.views.*" 
+	xmlns:maps="com.maps.*" 
+	xmlns:vos="com.vos.*"
+	xmlns:MecGrid="com.mechan.MecGrid.*"
+	preinitialize="applyRuntimeStyleSheet();" 
+ 	horizontalScrollPolicy="auto" verticalScrollPolicy="auto"
+ 	 pageTitle="Volume Applicator"
+ 	>
+	
+ <mx:Script>
+    <![CDATA[
+			import mx.controls.dataGridClasses.DataGridColumn;
+    	import mx.controls.dataGridClasses.DataGridHeader;
+	    import flash.utils.getTimer;
+	    import mx.collections.ArrayCollection;
+	    import mx.utils.StringUtil;
+	    import mx.rpc.events.FaultEvent;
+	    import mx.rpc.events.ResultEvent;
+	    import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import mx.managers.CursorManager;
+			
+	 		/**
+	 		* This function sets the style for the entire application
+	 		* which is called in the &lt;Application&gt; preinitialize 
+			*/
+			public function applyRuntimeStyleSheet():void 
+			{
+	    	StyleManager.loadStyleDeclarations("/Flex/assets/styles/mainFx34.swf") 
+	    }
+    ]]>
+  </mx:Script>
+  
+<!-- <mx:Style source="/flex/assets/styles/mainFx.css" /> -->
+
+ 	<maps:MainEventMap />
+	<views:VolumeApplicatorPanel />
+
+</mx:Application>  

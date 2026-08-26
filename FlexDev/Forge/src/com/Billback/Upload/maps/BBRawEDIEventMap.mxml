@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Upload.BBRawEDI;
+			import com.Billback.Upload.events.*;
+			import com.Billback.Upload.models.*;
+			import com.Billback.Upload.views.*;
+			import com.Billback.Upload.views.pm.*;
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import com.shared.events.MainEvent;
+			import com.shared.models.*;
+			
+			import mx.events.*;
+			//import com.ContractProds.vos.*;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		
+	<!--<mate:Debugger level="{Debugger.ALL}" />-->
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  ***************************************************************************************** -->
+	<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.Models.Billback.BillbackUploadManager" />
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+
+	<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+	<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+			Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+		<ObjectBuilder generator="{BBUploadManager}" id="oBBUploadManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{BBCorrectionsGridManager}" id="oBBCorrectionsGridManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{BBRawEDIDetailGridManager}" id="oBBRawEDIDetailGridManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" />
+		<ObjectBuilder generator="{UploadManager}" id="oUploadManager" constructorArguments="{scope.dispatcher}"  />
+	<!--	<ObjectBuilder generator="{DownloadManager}" id="oDownloadManager" constructorArguments="{scope.dispatcher}"  />-->
+		<ObjectBuilder generator="{BBCorrectionsPModel}" id="oBBCorrectionsPModel" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{BBRawEDIPModel}" id="oBBRawEDIPModel" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{BBRawEDIItemsPModel}" id="oBBRawEDIItemsPModel" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{BAError}" id="oBAError"  />
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" useWeakReference="true" debug="false">
+		<!--call db for other settings  sourceCache="global"-->
+		<!--<EventAnnouncer type="{BBUploadEvent.BB_LOAD_APP_SETTINGS}" generator="{BBUploadEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+		</EventAnnouncer>-->
+		<!--Get Data ********  modify the property tag to send to the get GET ************-->
+		<!--<EventAnnouncer type="{BBUploadEvent.GET}" generator="{BBUploadEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+		</EventAnnouncer>-->
+	</EventHandlers>
+	
+		<EventHandlers type="{BBUploadEvent.LOAD_BB_RAW_EDI_DETAIL}" id="eLOAD_BB_RAW_EDI_DETAIL">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getRawEDIDetailData" arguments="{[event.bbRawEDIHeader]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBUploadManager}" method="getBBRawEDIDetailResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBUploadEvent.BSA_ERROR}" generator="{BBUploadEvent}" >
+						<Properties sBaError="BB Upload (LOAD_BB_RAW_EDI_DETAIL)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		
+		<!--GET DATA ******** modify this event to get data from CF ************ -->
+		
+<!--		<EventHandlers type="{BBUploadEvent.LOAD_BB_CORRECTIONS}" id="eLOAD_BB_CORRECTIONS" debug="true" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getErrorCorrectionSummary" arguments="{event}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBUploadManager}" method="getSummaryResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBUploadEvent.BSA_ERROR}" generator="{BBUploadEvent}" >
+						<Properties sBaError="BB Corrections (LOAD_BB_CORRECTIONS)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>-->
+		
+		<!--GET DATA ******** modify this event to get data from CF ************ -->
+		
+<!--		<EventHandlers type="{BBUploadEvent.LOAD_BB_UPLOAD_HISTORY}" id="eLOAD_BB_UPLOAD_HISTORY" debug="true" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBBUploadLogHistory" arguments="{[event.dtStart,event.dtEnd]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBUploadManager}" method="getUploadHistoryResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{BBUploadEvent}" dispatcherType="global">
+						<Properties sBaError="BB Corrections (LOAD_BB_UPLOAD_HISTORY)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>-->
+		
+		<!--....... getBBsForUploadID  ......-->
+<!--		<EventHandlers type="{BBUploadEvent.LOAD_CREATED_BILLBACKS}" id="eLOAD_CREATED_BILLBACKS" debug="true" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBBsForUploadID" arguments="{event}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBUploadManager}" method="getCreatedBillbackResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{BBUploadEvent}" dispatcherType="global">
+						<Properties sBaError="BB Corrections (LOAD_CREATED_BILLBACKS)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>-->
+	
+	<!--............... REMOVE_BB_UPLOAD ............................................-->
+<!--	<EventHandlers type="{BBUploadEvent.REMOVE_BB_UPLOAD}" debug="true" id="eREMOVE_BB_UPLOAD" useWeakReference="true">
+		<MethodInvoker generator="{BBUploadManager}" method="removeBBCorrection" arguments="{event}" />
+	</EventHandlers>-->
+		
+	<!--............... SELECT_BB_UPLOAD_LOG ............................................-->
+<!--	<EventHandlers type="{BBUploadEvent.ADD_BB_CORRECTIONS}" id="eADD_BB_CORRECTIONS" debug="true">
+		<MethodInvoker generator="{BBUploadManager}" method="addBBCorrections" arguments="{event}" />
+	</EventHandlers>-->
+		
+	<!--............... SELECT_BB_UPLOAD_LOG ............................................-->
+<!--	<EventHandlers type="{BBUploadEvent.SELECT_BB_UPLOAD_LOG}" id="eSELECT_BB_UPLOAD_LOG" debug="true">
+		<MethodInvoker generator="{BBUploadManager}" method="selectHistory" arguments="{event.bbUploadLog}" />
+	</EventHandlers>-->
+		
+	<!--............... UPLOAD_FILE ............................................-->
+<!--	<EventHandlers type="{MainEvent.UPLOAD_FILE}" debug="true" id="eUPLOAD_FILE" useWeakReference="true">
+		<MethodInvoker generator="{UploadManager}" method="browseAndUpload" arguments="{event}" />
+	</EventHandlers>-->
+		
+<!--	<EventHandlers type="{MainEvent.DELETE_CORRECTION_ROW}"  id="eDELETE_CORRECTION_ROW" useWeakReference="true">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="deleteCorrectionRecords" arguments="{event.uploadIDList}">
+			<faultHandlers>	
+				<EventAnnouncer type="{BBUploadEvent.BSA_ERROR}" generator="{BBUploadEvent}" >
+					<Properties sBaError="BB Upload (VALIDATE)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+	</EventHandlers>-->
+				
+		
+	<!--............... DOWNLOAD_FILE   MOVED TO BBMainEvent............................................-->
+	<!--<EventHandlers type="{MainEvent.DOWNLOAD_FILE}" debug="true" id="eDOWNLOAD_FILE" useWeakReference="true">
+		<MethodInvoker generator="{DownloadManager}" method="downloadFile" arguments="{event}" />
+	</EventHandlers>-->
+	<!--............... READ_FILE ............................................-->
+<!--	<EventHandlers type="{MainEvent.READ_FILE}" debug="true" id="eREAD_FILE" useWeakReference="true">
+		<MethodInvoker generator="{DownloadManager}" method="readFile" arguments="{event}" />
+	</EventHandlers>-->
+		
+	<!--............... DOWNLOAD_FILE_COMPLETE ............................................-->
+<!--	<EventHandlers type="{MainEvent.DOWNLOAD_FILE_COMPLETE}" debug="true" id="eDOWNLOAD_FILE_COMPLETE" useWeakReference="true">
+		<MethodInvoker generator="{BBUploadManager}" method="downloadFileComplete" arguments="{event}" />
+	</EventHandlers>-->
+ 
+	<!--............... SET_APP_SETTINGS ............................................-->
+	<EventHandlers type="{MainEvent.SET_LOCAL_APP_SETTINGS}" debug="true" id="eSET_LOCAL_APP_SETTINGS" useWeakReference="true">
+		<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+	</EventHandlers>
+ 
+    <!-- ************************************************
+    	 ADD NEW EventHandlers Here   *******************
+         ************************************************-->
+
+    <!--LOAD APP SETTINGS *************************************************************************** -->
+   
+<!--	<EventHandlers type="{BBUploadEvent.BB_LOAD_APP_SETTINGS}" useWeakReference="true" debug="false" >
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" debug="false" >
+			
+			<resultHandlers>
+				<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}"  />
+			</resultHandlers>
+			
+			<faultHandlers>
+				
+				<EventAnnouncer type="{BBUploadEvent.BSA_ERROR}" generator="{BBUploadEvent}">
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>-->
+	
+	<!--SET STATE FOR SEARCH ITEMS *************************************************************************** -->
+
+
+	
+	<!--	*****************************************************************************************
+			***		BSA CUSTOM ERROR HANDLER 		*************************************************
+			***************************************************************************************** -->
+
+<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.ContractProds.models.BAError#showBAError()
+		** Invoke : com.ContractProds.models.BAError.showBAError()		
+		*			@see #roErrorService
+	    ** RemoteInvoke : roErrorService.logError()
+	    *		@see com.ContractProds.models.BAError#logError() 
+	    ** faultHandler : com.ContractProds.models.BAError.showBAError()   -->
+	<EventHandlers type="{BBUploadEvent.BSA_ERROR}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<!--<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>-->
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+	
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+		<!-- BBCorrectionsPModel ....................................................... -->
+		<Injectors target="{BBCorrectionsPModel}" debug="true">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="arrBBCorrections" source="{BBUploadManager}" sourceKey="arrBBCorrections"  softBinding="false" />
+			<PropertyInjector targetKey="arrBBCorrectionsDgCols" source="{BBCorrectionsGridManager}" sourceKey="arrBBCorrectionsDgCols"  softBinding="false" />
+			<PropertyInjector targetKey="arrBBCreated" source="{BBUploadManager}" sourceKey="arrBBCreated"  softBinding="false" />
+			<PropertyInjector targetKey="bbUploadLog" source="{BBUploadManager}" sourceKey="bbUploadLog"  softBinding="false" />
+			<PropertyInjector targetKey="sFileData" source="{BBUploadManager}" sourceKey="sFileData"  softBinding="false" />
+			<PropertyInjector targetKey="bbCorrectionsDate" source="{BBUploadManager}" sourceKey="bbCorrectionsLastSavedDate"  softBinding="false" />
+			<PropertyInjector targetKey="bbUploadDate" source="{BBUploadManager}" sourceKey="bbUploadLastSavedDate"  softBinding="false" />
+			<PropertyInjector targetKey="bBtnRefreshEnabled" source="{BBUploadManager}" sourceKey="bBtnRefreshEnabled"  softBinding="false" />
+		</Injectors>
+		
+		<Injectors target="{BBRawEDIPModel}" debug="true">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="bbRawEDIHeader" source="{BBUploadManager}" sourceKey="bbRawEDIHeader"  softBinding="false" />
+			<PropertyInjector targetKey="acEDIDMenuData" source="{BBUploadManager}" sourceKey="acEDIDMenuData"  softBinding="false" />
+		</Injectors>
+		
+		<Injectors target="{BBRawEDIItemsPModel}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="bbRawEDIHeader" source="{BBUploadManager}" sourceKey="bbRawEDIHeader"  softBinding="false" />
+			<PropertyInjector targetKey="arrBBRawEDIItemsDgCols" source="{BBRawEDIDetailGridManager}" sourceKey="arrBBRawEDIItemsDgCols"  softBinding="false" />
+		</Injectors>
+ 
+		<Injectors target="{BBRawEDI}" debug="false">
+			<PropertyInjector targetKey="pModelRawEDI" source="{BBRawEDIPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- BBRawEdiGrid ....................................................... -->
+		<Injectors target="{BBRawEDIDetailsGrid}" debug="false">
+			<PropertyInjector targetKey="pModelRawEDI" source="{BBRawEDIPModel}" softBinding="false"/>
+			<PropertyInjector targetKey="pModelRawEDIItems" source="{BBRawEDIItemsPModel}" softBinding="false"/>
+			<PropertyInjector targetKey="pModelCorrections" source="{BBCorrectionsPModel}" softBinding="false"/>
+		</Injectors>
+		
+	</fx:Declarations>
+</LocalEventMap>

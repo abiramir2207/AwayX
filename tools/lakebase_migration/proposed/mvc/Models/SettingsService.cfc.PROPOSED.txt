@@ -1,0 +1,32 @@
+===== QUERY: Get =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetUserData =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qESTDiff =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qDefaultSortSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qBillbackSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqBillbackSettings>
+	<cftry>
+		<cfset qBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "enable_bb_dup_check,same_dollar_amount,same_reference_number,same_payee,same_start_end_dates,auto_approve_cm_off,auto_approve_on"
+			}), "enable_bb_dup_check,same_dollar_amount,same_reference_number,same_payee,same_start_end_dates,auto_approve_cm_off,auto_approve_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBillbackSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

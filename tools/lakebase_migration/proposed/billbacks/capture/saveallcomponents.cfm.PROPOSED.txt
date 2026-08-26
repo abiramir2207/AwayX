@@ -1,0 +1,177 @@
+===== QUERY: GetStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DoesBillbackProgramHaveValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDoesBillbackProgramHaveValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForDoesBillbackProgramHaveValue>
+	<cftry>
+		<cfset DoesBillbackProgramHaveValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id,discount_list"
+			}), "billback_program_id,discount_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDoesBillbackProgramHaveValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDoesBillbackProgramHaveValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertIntoBillbackProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetBillbackProgramID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBillbackProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetBillbackProgramID>
+	<cftry>
+		<cfset GetBillbackProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackProgramID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeletePriorRebateData =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertRebateData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsertBidRequestData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqInsertBidRequestData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_bidrequest_component")>
+<cfif useLakebaseForqInsertBidRequestData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_bidrequest_component",
+			{
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"billback_program_id" = "eq.#Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertBidRequestData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertBidRequestData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertBidRequestData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqInsertBidRequestData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_bidrequest_component")>
+<cfif useLakebaseForqInsertBidRequestData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_bidrequest_component",
+			{
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"billback_program_id" = "eq.#Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertBidRequestData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertBidRequestData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeletePriorLS =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeletePriorLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForDeletePriorLS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"billback_program_id" = "eq.#Billback_Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePriorLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePriorLS>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertLumpSum =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertGrowthLumpSum =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: AddDiscountList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAddDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForAddDiscountList>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program",
+			{
+				"billback_program_id" = "eq.#Billback_Program_ID#"
+			},
+			{
+				"discount_list" = "#DiscountList#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAddDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAddDiscountList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,23 @@
+===== QUERY: DeleteDistributor =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: GetDistributorExceptionList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDistributorExceptionList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_close_exception")>
+<cfif useLakebaseForGetDistributorExceptionList>
+	<cftry>
+		<cfset GetDistributorExceptionList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_auto_close_exception", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorExceptionList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorExceptionList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

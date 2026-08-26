@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  xmlns:view="com.Billback.Upload.views.*" 
+		  xmlns:maps="com.Billback.Upload.maps.*" 
+		  xmlns:vos="com.Billback.Upload.vos.*" 
+		  creationComplete="applyRuntimeStyleSheet();showHideTabs();" 
+		  implements="com.Billback.Main.models.IBBUpload"
+		  width="100%" height="100%">
+	
+	<s:layout>
+		<s:VerticalLayout paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:BBCorrectionsEventMap dispatcher="{this}" cache="local" />
+		
+		<s:Consumer id="cfMessageFromServer" destination="ColdFusionGateway" message="gotMessage( event )"  />
+	</fx:Declarations>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		s|Label#labelDisplay {
+			textAlign: left;
+		}
+		
+		s|FormItem {
+			textAlign: left;
+			skinClass: ClassReference("com.Billback.Upload.views.skins.FormValidatorItemSkin");
+		}
+		
+	</fx:Style>
+	<fx:Script><![CDATA[
+		import com.Billback.Main.models.IBBEdit;
+		import com.Billback.Main.models.vos.BBHeader;
+		import com.Billback.Upload.events.BBUploadEvent;
+		import com.Billback.Upload.models.vos.BBRawEDIDetail;
+		import com.Billback.Upload.models.vos.BBRawEDIHeader;
+		import com.Billback.Upload.models.vos.BBUploadDetail;
+		import com.Billback.Upload.models.vos.BBUploadDetailError;
+		import com.Billback.Upload.models.vos.BBUploadHeader;
+		import com.Billback.Upload.views.pm.BBCorrectionsPModel;
+		import com.Billback.Upload.views.pm.BBRawEDIPModel;
+		import com.shared.events.MainEvent;
+		import com.shared.models.SettingsManager;
+		import com.shared.vos.Settings;
+		
+		import mx.collections.ArrayCollection;
+		import mx.controls.Alert;
+		import mx.core.mx_internal;
+		
+		/* Presentation Model */
+		[Bindable]
+		public var pModel:BBCorrectionsPModel;
+		[Bindable]
+		private var bbRawEDIHeader:BBRawEDIHeader;
+		private var bbRawEDIDetail:BBRawEDIDetail = new BBRawEDIDetail();
+		
+		/* Presentation Model */
+		[Bindable]
+		public var pModelRawEDI:BBRawEDIPModel;
+		
+		[Bindable]
+		private var bbUploadHeader:BBUploadHeader;
+		private var bbUploaddetail:BBUploadDetail = new BBUploadDetail();;
+		private var bbUploaddetailError:BBUploadDetailError;
+		public static const millisecondsPerDay:int = 1000 * 60 * 60 * 24;
+		// sets the start date to today - 1.5 year
+		[Bindable]
+		public var startDate:Date = new Date(new Date().getTime() - (534 * millisecondsPerDay)); 
+		[Bindable]
+		public var endDate:Date = new Date();
+		
+		import mx.messaging.events.MessageEvent;
+		[Bindable] protected var messageList:ArrayCollection = new ArrayCollection();
+		[Bindable] protected var acParseResult:ArrayCollection = new ArrayCollection();
+		[Bindable] protected var sCurrentUploadMessage:String = '';
+		
+		protected function gotMessage(e:MessageEvent):void
+		{
+			var i:int = e.message.body.arrCorrections.length;
+			var obj:Object = new Object();
+			obj.message = '[' + e.message.body.user + ' @' + e.message.body.serial + '] ' + e.message.body.message;
+			obj.sFileName = e.message.body.sFileName;
+			obj.acParseResult = acParseResult = new ArrayCollection(e.message.body.arrParseResult);
+			messageList.addItemAt(obj,0);
+			// this.lMessage.selectedIndex = 0;
+			sCurrentUploadMessage = e.message.body.message;
+			//display Parse messages
+			/* if(e.message.body.arrParseResult.length){
+				acParseResult = new ArrayCollection(e.message.body.arrParseResult);
+			}
+			else{
+				acParseResult = new ArrayCollection();
+				sCurrentUploadMessage = '';
+			} */
+			//append new corrections records to grid
+			// Commented as we do not want to add the record to the grid when the file is uploaded			
+		/*	if(i){
+				//add to corrections list
+				var evt:BBUploadEvent = new BBUploadEvent ( BBUploadEvent.ADD_BB_CORRECTIONS );
+				evt.arrBBcorrrections = e.message.body.arrCorrections;
+				this.dispatchEvent( evt );
+			} */
+			//toNumber.text = e.message.body.fromNumber;
+		}
+		
+		public function clearLog():void{
+			this.messageList = new ArrayCollection();
+		}
+		
+		private function applyRuntimeStyleSheet():void {
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+			cfMessageFromServer.subscribe();
+		}
+		
+		public function setSettings(settings:Settings):void{
+			
+			var event:MainEvent = new MainEvent ( MainEvent.SET_LOCAL_APP_SETTINGS );
+			event.settings = settings;
+			this.dispatchEvent( event );
+		}
+		
+		public function setBB(bbh:BBUploadHeader):void{
+			if(bbh.bbHeaderID != 0){
+				var e:BBUploadEvent = new BBUploadEvent ( BBUploadEvent.REMOVE_BB_UPLOAD );
+				e.bbUploadHeader = bbh;
+				this.dispatchEvent( e );
+			}
+		}
+		public function getBB():BBUploadHeader{
+			return this.bbUploadHeader;
+		}
+		public function setBBRawEDI(bbREH:BBRawEDIHeader):void{
+			if(bbREH){
+				var event:BBUploadEvent = new BBUploadEvent ( BBUploadEvent.LOAD_BB_RAW_EDI_DETAIL );
+				event.bbRawEDIHeader = bbREH;
+				this.bbRawEDIHeader = bbREH
+				this.dispatchEvent( event );
+			}
+			
+		}
+		public function getBBRawEDI():BBRawEDIHeader{
+			return this.bbRawEDIHeader;
+		}
+		private function showHideTabs():void{
+			/* If this module is called from the settings panel's
+			"EDI Viewer" link, then remove the first 2 tabs. Just show
+			the "Raw EDI" link. 
+			Note: The reason why index 0 (zero) is used twice below is because
+			once the first tab is removed, the second tab becomes the first tab.
+			*/
+			if(pModel.oSettings.source == 'settings'){
+				tbNavList.removeChildAt(0);
+				tbNavList.removeChildAt(0);
+			}
+		}		
+	]]>
+	</fx:Script>
+	
+	<!-- Views _______________________________________________________ -->
+<!--	<s:Scroller horizontalScrollPolicy="on" 
+				verticalScrollPolicy="on"
+				width="1024" height="700" >-->
+		<s:VGroup width="100%" height="100%" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+				<s:ButtonBar skinClass="com.shared.views.skins.ButtonBarBa" dataProvider="{tbNavList}" requireSelection="true"/> 
+				<!--<mx:Text text="Connected to Server : {cfMessageFromServer.subscribed}" />-->
+<!--				<s:HGroup>
+					<s:Button label="upload file" 
+							  click="pModel.uploadFile()"
+							  toolTip="Upload an excel spreadsheet of billbacks." />
+					<s:Button label="clear log" 
+							  click="this.clearLog()"
+							  toolTip="clear results pane" />
+					<mx:LinkButton id="lnkFileDownload" 
+								   paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"
+								   label="{this.lMessage.selectedItem.sFileName}" 
+								   click="{pModel.downloadFile(this.lMessage.selectedItem.sFileName)}" 
+								   toolTip="Download file for selected upload: {this.lMessage.selectedItem.sFileName}" 
+								   visible="{this.lMessage.selectedItem.sFileName != null}"/>
+				</s:HGroup>-->
+				<!--<s:Label text="Upload Activity" toolTip="Upload activity since log-in.  Connected to Server : {cfMessageFromServer.subscribed}" />
+			includeInLayout="{this.lMessage.selectedItem.sFileName!= null}" -->
+				<!--<s:HGroup>
+					<s:List id="lMessage" left="0" right="0" selectedIndex="0" 
+							dataProvider="{messageList}" 
+							labelField="message" 
+							height="75"
+							width="500"
+							toolTip="Upload activity since log-in.  Connected to Server : {cfMessageFromServer.subscribed}" />
+					<s:List dataProvider="{this.lMessage.selectedItem.acParseResult}"
+							height="75" width="250" 
+							toolTip="{this.lMessage.selectedItem.sFileName} parse results" />
+				</s:HGroup>-->
+				
+				<mx:ViewStack id="tbNavList" width="100%" height="100%" 
+							  selectedIndex="0" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+					<s:NavigatorContent label="upload &amp; history" width="100%" height="100%">
+						<view:BBUploadHistoryForm height="100%" />
+					</s:NavigatorContent>
+					<s:NavigatorContent label="corrections" width="100%" height="100%">
+						<view:BBCorrectionsGrid height="100%" width="100%" />
+					</s:NavigatorContent>
+					<s:NavigatorContent label="Raw EDI" width="100%" height="100%">
+						<view:BBRawEDIGrid height="100%" width="100%" />
+					</s:NavigatorContent>
+				</mx:ViewStack>
+		</s:VGroup>
+	<!--</s:Scroller>-->
+</s:Module>
+

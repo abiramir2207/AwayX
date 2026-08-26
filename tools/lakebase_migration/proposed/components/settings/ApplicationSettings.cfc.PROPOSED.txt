@@ -1,0 +1,20 @@
+===== QUERY: get_status =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForget_status>
+	<cftry>
+		<cfset get_status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "margincostcolheader#"
+			}), "margincostcolheader#"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_status>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

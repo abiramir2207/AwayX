@@ -1,0 +1,90 @@
+===== QUERY: Update_Cust =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Cust = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForUpdate_Cust>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_analyst",
+			{
+				"dd_analyst_id" = "eq.#Item#",
+				"deleted" = "eq.0"
+			},
+			{
+				"ass_customer" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Cust = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Cust>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Decide_Location =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDecide_Location = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForDecide_Location>
+	<cftry>
+		<cfset Decide_Location = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"deleted" = "eq.0",
+				"supervisor_id" = "not.is.null",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDecide_Location = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDecide_Location>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Default_Ana =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDefault_Ana = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForDefault_Ana>
+	<cftry>
+		<cfset Default_Ana = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"default_analyst" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "dd_analyst_id"
+			}), "dd_analyst_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefault_Ana = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefault_Ana>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Assigned_with_Cust =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAssigned_with_Cust = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForAssigned_with_Cust>
+	<cftry>
+		<cfset Assigned_with_Cust = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"ass_customer" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "dd_analyst_id"
+			}), "dd_analyst_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAssigned_with_Cust = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAssigned_with_Cust>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,101 @@
+===== QUERY: qGetActivity =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetProductId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProductId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_product")>
+<cfif useLakebaseForqGetProductId>
+	<cftry>
+		<cfset qGetProductId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_product", {
+				"cm_activity_id" = "eq.#arguments.id#",
+				"deleted" = "eq.0",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDistributorId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDistributorId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_customer")>
+<cfif useLakebaseForqGetDistributorId>
+	<cftry>
+		<cfset qGetDistributorId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_customer", {
+				"cm_activity_id" = "eq.#arguments.id#",
+				"cm_customer_type_id" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistributorId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistributorId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetOperatorId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetOperatorId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_customer")>
+<cfif useLakebaseForqGetOperatorId>
+	<cftry>
+		<cfset qGetOperatorId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_customer", {
+				"cm_activity_id" = "eq.#arguments.id#",
+				"cm_customer_type_id" = "eq.2",
+				"deleted" = "eq.0",
+				"select" = "operator_id"
+			}), "operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOperatorId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOperatorId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetDistributors =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetOperators =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetAllActivity =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAllActivity = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity")>
+<cfif useLakebaseForqGetAllActivity>
+	<cftry>
+		<cfset qGetAllActivity = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity", {
+				"deleted" = "eq.0",
+				"select" = "cm_activity_id,activity_name,activity_notes"
+			}), "cm_activity_id,activity_name,activity_notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllActivity = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllActivity>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

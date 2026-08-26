@@ -1,0 +1,112 @@
+===== QUERY: check_DD_Non_Trade =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheck_DD_Non_Trade = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_non_trade_product")>
+<cfif useLakebaseForcheck_DD_Non_Trade>
+	<cftry>
+		<cfset check_DD_Non_Trade = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_non_trade_product", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Item_Master_ID#",
+				"deduction_id" = "eq.#arguments.DeductionID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck_DD_Non_Trade = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck_DD_Non_Trade>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: check_DD_Non_Trade =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheck_DD_Non_Trade = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_non_trade_product")>
+<cfif useLakebaseForcheck_DD_Non_Trade>
+	<cftry>
+		<cfset check_DD_Non_Trade = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_non_trade_product", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Item_Master_ID#",
+				"deduction_id" = "eq.#arguments.DeductionID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck_DD_Non_Trade = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck_DD_Non_Trade>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Closer_Type =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCloser_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure")>
+<cfif useLakebaseForCloser_Type>
+	<cftry>
+		<cfset Closer_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure", {
+				"dd_closure_desc" = "eq.Non Trade",
+				"select" = "dd_closure_type_id"
+			}), "dd_closure_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCloser_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCloser_Type>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_Deductions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Deductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdate_Deductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.DeductionID#"
+			},
+			{
+				"non_trade_updated_by" = "#arguments.User_ID#",
+				"dd_closure_id" = "#arguments.BSA_Item_Master_ID#",
+				"dd_closure_type" = "#Closer_Type.DD_Closure_Type_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Deductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Deductions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DDCloser_Type =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDDCloser_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure")>
+<cfif useLakebaseForDDCloser_Type>
+	<cftry>
+		<cfset DDCloser_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure", {
+				"dd_closure_desc" = "eq.Non Trade",
+				"select" = "dd_closure_type_id"
+			}), "dd_closure_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDDCloser_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDDCloser_Type>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ItemDetails =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

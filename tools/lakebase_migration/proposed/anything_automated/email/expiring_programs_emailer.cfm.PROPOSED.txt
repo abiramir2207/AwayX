@@ -1,0 +1,44 @@
+===== QUERY: getSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetSettings>
+	<cftry>
+		<cfset getSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "number_of_days_for_summarized_weekly_expiring_email,send_daily_expiring_email,use_discount_id"
+			}), "number_of_days_for_summarized_weekly_expiring_email,send_daily_expiring_email,use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: recordemailstatus =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getRSPEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRSPEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetRSPEmail>
+	<cftry>
+		<cfset getRSPEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#RSP_ID#",
+				"select" = "user_email,name_first"
+			}), "user_email,name_first"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRSPEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRSPEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

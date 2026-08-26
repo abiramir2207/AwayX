@@ -1,0 +1,21 @@
+===== QUERY: Get_Ded_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Ded_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGet_Ded_Details>
+	<cftry>
+		<cfset Get_Ded_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#URL.Deduction_ID#",
+				"select" = "dd_dedid,sp_number"
+			}), "dd_dedid,sp_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Ded_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Ded_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

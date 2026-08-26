@@ -1,0 +1,88 @@
+===== QUERY: qInsOCRUploadLog =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsOCRUploadTestLogDetailSummary =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsOCRUploadLog =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdOCRUploadAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdOCRUploadAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdOCRUploadAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#OCRUploadID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"db_input_filename" = "#strFileName#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdOCRUploadAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdOCRUploadAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsOCRUserInput =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdOCRUploadAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdOCRUploadAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdOCRUploadAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#OCRUploadID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"db_input_filename" = "#strFileName#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdOCRUploadAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdOCRUploadAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdOCRUploadLog =====
+STATUS: NEEDS_MANUAL_REVIEW - Could not parse SET assignment
+
+===== QUERY: qUpdOCRUploadLog2 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdOCRUploadLog2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdOCRUploadLog2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#OCRUploadID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"ocr_step" = "2",
+				"ocr_upload_status" = "Analyzing the file and contents"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdOCRUploadLog2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdOCRUploadLog2>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

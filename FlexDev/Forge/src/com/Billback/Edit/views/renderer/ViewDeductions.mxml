@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   implements="mx.controls.listClasses.IDropInListItemRenderer">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+		
+	<fx:Script>
+	
+		<![CDATA[
+			import com.asfusion.mate.events.Dispatcher;
+			import flash.display.DisplayObject;
+			import flash.events.Event;
+			import mx.controls.Alert;
+			import mx.controls.DataGrid;
+			import mx.controls.listClasses.BaseListData;
+
+			private var _listData:BaseListData;
+			
+			public function get listData():BaseListData
+			{
+				return _listData;
+			}
+			public function set listData(value:BaseListData):void
+			{
+				_listData = value;
+			
+			}
+			
+			/* Billback Preview */
+			private function openDeductionSummary() : void{  
+				var jsURL:String ="/deductions/inc_deduction_details.cfm?Deduction_ID="+this.listData.label+"&Display=Preview";
+				var jscommand:String = "window.open('"+jsURL+"','winPreview','height=640,width=815,toolbar=no,scrollbars=yes,resizable=yes');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self"); 
+			}
+		]]>
+		
+	</fx:Script>
+		
+	<mx:HBox verticalAlign="top" horizontalGap="0">
+		<mx:Text fontSize="9" text="[view]" click="openDeductionSummary()" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here for deduction preview"/>	
+	</mx:HBox>	
+		
+</mx:Canvas>

@@ -1,0 +1,29 @@
+===== QUERY: getFiscalYear =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetFiscalYear = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForgetFiscalYear>
+	<cftry>
+		<cfset getFiscalYear = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"fiscal_year" = "eq.#Fiscal_Year#",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFiscalYear = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFiscalYear>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: deletepriorcalendar =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: deletepriorcalendar =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

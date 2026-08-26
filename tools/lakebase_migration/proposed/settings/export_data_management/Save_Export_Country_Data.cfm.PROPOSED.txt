@@ -1,0 +1,30 @@
+===== QUERY: UpdCountryData =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: GetCountryCode =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCountryCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForGetCountryCode>
+	<cftry>
+		<cfset GetCountryCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {
+				"country_name" = "eq.#form.selAddLookupDestinationCountry#",
+				"select" = "country_code"
+			}), "country_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCountryCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCountryCode>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsCountryData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsPalletData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

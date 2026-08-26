@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.Admin.Redi.views.*"
+		 xmlns:comps="com.Admin.Redi.components.*"
+		 xmlns:filters="com.shared.components.filters.*"
+		 xmlns:z="com.shared.components.spark.*"
+		 width="100%" height="100%">
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{pModel.iPadding}" paddingLeft="{pModel.iPadding}" paddingRight="{pModel.iPadding}" paddingTop="{pModel.iPadding}" />
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.views.pm.RediPModel;
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:RediPModel;
+			
+		]]>
+	</fx:Script>
+	<s:Label text="Statistics for each Source"/>
+</s:Group>

@@ -1,0 +1,20 @@
+===== QUERY: getCustColNames =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCustColNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallcolnames")>
+<cfif useLakebaseForgetCustColNames>
+	<cftry>
+		<cfset getCustColNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallcolnames", {
+				"db_col_name" = "eq.#i#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCustColNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCustColNames>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

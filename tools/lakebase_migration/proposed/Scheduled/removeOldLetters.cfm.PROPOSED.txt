@@ -1,0 +1,24 @@
+===== QUERY: rsAppSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForrsAppSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForrsAppSettings>
+	<cftry>
+		<cfset rsAppSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"limit" = "1",
+				"select" = "letter_removal_min_age_in_days"
+			}), "letter_removal_min_age_in_days"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrsAppSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrsAppSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: rsLetters =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

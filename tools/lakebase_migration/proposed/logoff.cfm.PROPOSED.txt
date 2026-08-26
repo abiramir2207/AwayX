@@ -1,0 +1,35 @@
+===== QUERY: Reset_Login_Status =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Unlock_All =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Set_Login_Status =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetUserCode =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: AddUserTransLoginReset =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetSingleSignOnInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSingleSignOnInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetSingleSignOnInfo>
+	<cftry>
+		<cfset GetSingleSignOnInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "singlesign_on"
+			}), "singlesign_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSingleSignOnInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSingleSignOnInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

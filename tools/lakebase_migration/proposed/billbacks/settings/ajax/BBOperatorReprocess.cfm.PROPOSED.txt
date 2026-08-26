@@ -1,0 +1,23 @@
+===== QUERY: variables.qPlanningGroups =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvariables_qPlanningGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForvariables_qPlanningGroups>
+	<cftry>
+		<cfset variables.qPlanningGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "pg_operator_category_name.asc",
+				"select" = "pg_operator_category_id,pg_operator_category_code,pg_operator_category_name"
+			}), "pg_operator_category_id,pg_operator_category_code,pg_operator_category_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qPlanningGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qPlanningGroups>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

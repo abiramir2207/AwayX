@@ -1,0 +1,99 @@
+/*
+  * ==================================================================================================== 
+  *    @File: \billbacks\gm\search.css
+  *  @Author: Chris Nguyen
+  *    @Date: Feburary 2020
+  * 
+  * @Remarks: Search billbacks - search tab (under home tab)
+  *
+  * ==================================================================================================== 
+*/
+
+/* middle, search section */
+
+section#filter_elements label, 
+section#filter_elements input, 
+section#filter_elements button { 
+	margin-bottom: 5px;
+}
+
+section#filter_elements, section.middle {
+    border: 0px solid #9B9B9C;
+    height: 178px;
+    clear: both;
+    display: flex;
+    margin-top: 0px;
+    overflow: auto;
+}
+	section#filter_elements article,
+	section#tool_elements article {
+        width: 33%;
+        padding: 0px 15px;
+        display: block;
+        /* line-height: 22px; */
+        /* height: 22px; */
+	}
+	section#filter_elements label,
+	section#tool_elements label {
+        width: 16%;
+		display: inline-block;
+		padding-right: 5px;
+		text-align: right;
+	}
+	section#filter_elements article.mediumW label {
+		width: 20%;
+	}
+    input.text, select.filter, select.multi {
+        width: 54%;
+		width: 190px;
+    }
+    section#filter_elements input.text {
+		min-height: 15px;
+    }
+    section#filter_elements label.basic {
+        display: inline;
+    }
+    section#filter_elements article.longW label {
+        width: 80px;
+        width: 26%;
+    }
+
+
+/* bottom section */
+section#bb_grid {
+    /* border: 1px solid #dae1e7; */
+    background-color: #dae1e7;
+    width: 100%;
+    margin-top: 7px;
+}
+    a.button {
+        padding: 0 9px;
+    }
+    a.button:hover {
+        font-weight: 500;
+    }
+
+
+/* tools sub-tab */
+/* Can't do it this way, if we do then hide/show shows it as block instead of flex */
+/* Instead, display as flex but "hide" with javascript when page is loading */
+/* section[name=tools] { */
+    /* display: none; */
+/* } */
+
+
+/* misc styles */
+select.small, input.small {
+	width: 22%;
+}
+input.small {
+    width: 62px;
+}
+input.medium {
+    width: 173px;
+}
+
+#toolsList, #toolsFavs {
+	min-width: 200px;
+	margin: 2px 0 3px 5px;
+}

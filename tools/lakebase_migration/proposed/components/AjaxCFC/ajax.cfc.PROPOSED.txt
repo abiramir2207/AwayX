@@ -1,0 +1,21 @@
+===== QUERY: GetID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetID>
+	<cftry>
+		<cfset GetID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.parameterArray.programID#",
+				"select" = "contract_number as number"
+			}), "contract_number as number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

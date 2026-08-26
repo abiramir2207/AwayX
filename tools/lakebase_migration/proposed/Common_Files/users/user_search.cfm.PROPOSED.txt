@@ -1,0 +1,24 @@
+===== QUERY: GetNationalAffiliationCodes =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetAllCompanies =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetAllCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetAllCompanies>
+	<cftry>
+		<cfset GetAllCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"order" = "company_name.asc",
+				"select" = "company_main_id,company_name"
+			}), "company_main_id,company_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllCompanies>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

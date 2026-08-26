@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="-1" xmlns="*" width="100%" height="100%"
+	xmlns:mate="http://mate.asfusion.com/"
+	xmlns:ba="com.components.*"
+	backgroundColor="#FFFFFF"
+	>
+<!--
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	xmlns:ba="com.components.*" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"
+	resizeEffect="Resize" resize="true"  horizontalScrollPolicy="off" verticalScrollPolicy="off" 
+	width="100%" height="100%" fontSize="9" fontFamily="Times New Roman">
+	-->
+	<mx:Script>
+		<![CDATA[
+		
+			import com.vos.*;
+			
+			[Bindable] public var pageNumber:Number = 1;
+			public var _settings:NetPriceSettings = new NetPriceSettings();			
+			private var _iColumnWidthId:int;
+			private var _iColumnWidthDesc:int;
+			private var _iColumnWidthValues:int;
+			
+			private var _bShowBroker:Boolean;
+			private var _bShowRegion:Boolean;
+			private var _bShowFamily:Boolean;
+			private var _bShowBuyingGroup:Boolean;
+			private var _bShowTypeCode:Boolean;
+			
+			private var _bShowCase:Boolean;
+			private var _bShowPound:Boolean;
+			
+			private var _bOptionBNetSales:Boolean;
+			private var _bOptionBSpendingRate:Boolean;
+			private var _bOptionBPercentageDiscount:Boolean;
+			
+			[Bindable] private var _sSharedShipToLabel:String = "";
+			[Bindable] private var _sDistributorLabel:String = "";
+			[Bindable] private var _sFamilyLabel:String = "";
+			[Bindable] private var _sBuyingGroupLabel:String = "";
+			[Bindable] private var _sRegionLabel:String = "";
+			[Bindable] private var _sBrokerLabel:String = "";
+			[Bindable] private var _sItemLabel:String = "";
+			[Bindable] private var _sTypeCodeLabel:String = "";
+		
+			public function get settings():NetPriceSettings 
+			{
+				return _settings;
+			}
+			public function set settings(s:NetPriceSettings):void 
+			{
+				this._settings = s;
+				_sSharedShipToLabel = this._settings.appFlex.shardshiptolabel;
+				_sDistributorLabel = this._settings.appFlex.distributorlabel;
+				_sFamilyLabel = this._settings.appFlex.familylabel;
+				_sBuyingGroupLabel = this._settings.appFlex.buyinggrouplabel;
+				_sRegionLabel = this._settings.appFlex.regionlabel;
+				_sBrokerLabel = this._settings.appFlex.brokerlabel;
+				_sItemLabel = this._settings.appFlex.itemlabel;
+				_sTypeCodeLabel = this._settings.appFlex.typecodelabel;			 
+				 
+			}
+			[Bindable (event="ColumnWidthIdChanged")]
+			public function get ColumnWidthId():int
+			{
+					return _iColumnWidthId;
+			}
+			public function set ColumnWidthId(val:int):void
+			{
+					this._iColumnWidthId = val;
+					dispatchEvent(new Event('ColumnWidthIdChanged'));				
+			}
+			[Bindable (event="ColumnWidthDescChanged")]
+			public function get ColumnWidthDesc():int
+			{
+					return _iColumnWidthDesc;
+			}
+			public function set ColumnWidthDesc(val:int):void
+			{
+					this._iColumnWidthDesc = val;
+					dispatchEvent(new Event('ColumnWidthDescChanged'));				
+			}
+			[Bindable (event="ColumnWidthValuesChanged")]
+			public function get ColumnWidthValues():int
+			{
+					return _iColumnWidthValues;
+			}
+			public function set ColumnWidthValues(val:int):void
+			{
+					this._iColumnWidthValues = val;
+					dispatchEvent(new Event('ColumnWidthValuesChanged'));				
+			}
+			[Bindable (event="ShowBrokerChanged")]
+			public function get ShowBroker():Boolean
+			{
+					return _bShowBroker;
+			}
+			public function set ShowBroker(val:Boolean):void
+			{
+					this._bShowBroker = val;
+					dispatchEvent(new Event('ShowBrokerChanged'));				
+			}
+			[Bindable (event="ShowRegionChanged")]
+			public function get ShowRegion():Boolean
+			{
+					return _bShowRegion;
+			}
+			public function set ShowRegion(val:Boolean):void
+			{
+					this._bShowRegion = val;
+					dispatchEvent(new Event('ShowRegionChanged'));				
+			}
+			[Bindable (event="ShowFamilyChanged")]
+			public function get ShowFamily():Boolean
+			{
+					return _bShowFamily;
+			}
+			public function set ShowFamily(val:Boolean):void
+			{
+					this._bShowFamily = val;
+					dispatchEvent(new Event('ShowFamilyChanged'));				
+			}
+			[Bindable (event="ShowBuyingGroupChanged")]
+			public function get ShowBuyingGroup():Boolean
+			{
+					return _bShowBuyingGroup;
+			}
+			public function set ShowBuyingGroup(val:Boolean):void
+			{
+					this._bShowBuyingGroup = val;
+					dispatchEvent(new Event('ShowBuyingGroupChanged'));				
+			}
+			[Bindable (event="ShowTypeCodeChanged")]			
+			public function get ShowTypeCode():Boolean
+			{
+					return _bShowTypeCode;
+			}
+			public function set ShowTypeCode(val:Boolean):void
+			{
+					this._bShowTypeCode = val;
+					dispatchEvent(new Event('ShowTypeCodeChanged'));				
+			}
+			
+			[Bindable (event="ShowCaseChanged")]
+			public function get ShowCase():Boolean
+			{
+					return _bShowCase;
+			}
+			public function set ShowCase(val:Boolean):void
+			{
+					this._bShowCase = val;
+					dispatchEvent(new Event('ShowCaseChanged'));				
+			}
+			[Bindable (event="ShowPoundChanged")]
+			public function get ShowPound():Boolean
+			{
+					return _bShowPound;
+			}
+			public function set ShowPound(val:Boolean):void
+			{
+					this._bShowPound = val;
+					dispatchEvent(new Event('ShowPoundChanged'));				
+			}
+			
+			//Option B
+			[Bindable (event="OptionBNetSalesChanged")]
+			public function get OptionBNetSales():Boolean
+			{
+					return _bOptionBNetSales;
+			}
+			public function set OptionBNetSales(val:Boolean):void
+			{
+					this._bOptionBNetSales = val;
+					dispatchEvent(new Event('OptionBNetSalesChanged')); 				
+			}
+			[Bindable (event="OptionBSpendingRateChanged")]
+			public function get OptionBSpendingRate():Boolean
+			{
+					return _bOptionBSpendingRate;
+			}
+			public function set OptionBSpendingRate(val:Boolean):void
+			{
+					this._bOptionBSpendingRate = val;
+					dispatchEvent(new Event('OptionBSpendingRateChanged'));
+			}
+			[Bindable (event="OptionBPercentageDiscountChanged")]
+			public function get OptionBPercentageDiscount():Boolean
+			{
+					return _bOptionBPercentageDiscount;
+			}
+			public function set OptionBPercentageDiscount(val:Boolean):void
+			{
+					this._bOptionBPercentageDiscount = val;
+					dispatchEvent(new Event('OptionBPercentageDiscountChanged'));				
+			}
+			
+			//*********** Format Functions
+			public function fnFormatDollars(item:Object, column:DataGridColumn):String 
+		    {
+		      return dollarFormatter.format(item[column.dataField]);
+		    }
+			public function fnFormatPercent(item:Object, column:DataGridColumn):String 
+				{
+					return percentageFormatterOneDecimal.format(item[column.dataField]);
+				}
+			public function fnFormatCaseVolume(item:Object, column:DataGridColumn):String 
+				{
+					return numberFormatterZeroDecimal.format(item[column.dataField]);
+				}
+			public function fnFormatPoundVolume(item:Object, column:DataGridColumn):String 
+				{
+					return numberFormatterTwoDecimal.format(item[column.dataField]);
+				}
+			public function fnFormatCaseRate(item:Object, column:DataGridColumn):String 
+				{
+					return dollarFormatter.format(item[column.dataField]);
+				}
+			public function fnFormatPoundRate(item:Object, column:DataGridColumn):String 
+				{
+					return dollarFormatter.format(item[column.dataField]);    				
+				}
+			public function fnFormatIndex(item:Object, column:DataGridColumn):String 
+				{
+					return numberFormatterZeroDecimal.format(item[column.dataField]);    				
+				}
+			
+			// Control the page contents by selectively hiding the header and
+            // footer based on the page type.
+            public function showPage(pageType:String):void {
+            	/*
+                if(pageType == "first" || pageType == "middle") {
+                    // Hide the footer.
+                    footer.includeInLayout=false;
+                    footer.visible=false;
+                }
+                
+                if(pageType == "middle" || pageType == "last") {
+                    // The header won't be used again; hide it.
+                    header.includeInLayout=false;
+                    header.visible = false;
+                    //footer.includeInLayout=false;
+                    //footer.visible=false;
+                }
+                
+                if(pageType == "last") {
+                    //header.includeInLayout=false;
+                    //header.visible = false;
+                    footer.includeInLayout=true;
+                    footer.visible=true;
+                    
+                }
+                */
+                //Update the DataGrid layout to reflect the results.
+                validateNow();
+            }
+		]]>
+	</mx:Script>
+	
+	<!-- Formatters & Validators for the Currency and Number -->
+	<mx:CurrencyFormatter id="dollarFormatter" precision="2" />
+	<mx:NumberFormatter id="numberFormatterZeroDecimal" precision="0" />
+	<mx:NumberFormatter id="numberFormatterTwoDecimal" precision="2" />
+	<ba:PercentageFormatter id="percentageFormatterOneDecimal" precision="1" />
+	
+	<mx:VBox height="100%" width="100%" horizontalAlign="left">
+		
+		<mx:HBox width="100%" height="20" horizontalAlign="center" verticalAlign="bottom" id="header">
+			<mx:Label text="Effective Net Price Report" />
+		</mx:HBox>
+	
+		<mx:PrintDataGrid id="PrintGrid" borderColor="#FFFFFF" 
+			              verticalGridLines="false" 
+			              horizontalGridLines="false" 
+			              fontFamily="Arial"
+			              fontSize="8"
+			              fontSharpness="50"
+			              width="100%"
+			              height="100%"
+			              scaleX="0.75" scaleY="0.75"
+			              bottom="11"
+			              sizeToPage="true"
+			              variableRowHeight="true">
+			<mx:columns>
+				<!--
+				<mx:DataGridColumn width="{_iColumnWidthId}" dataField="Distributor_ID" headerText="{oSettings.appFlex.shardshiptolabel}" />
+				<mx:DataGridColumn width="{_iColumnWidthDesc}" dataField="Distributor_Name" headerText="{oSettings.appFlex.distributorlabel} Name" editable="false" />
+				
+				<mx:DataGridColumn width="{_iColumnWidthId}" dataField="Item" headerText="{oSettings.appFlex.itemlabel}" editable="false" />
+				<mx:DataGridColumn width="{_iColumnWidthDesc}" dataField="Item_Description" headerText="Description" editable="false" wordWrap="true" />
+				
+				<mx:DataGridColumn width="{_iColumnWidthDesc}" dataField="Broker_Name" headerText="{oSettings.appFlex.brokerlabel}" editable="false" visible="{ShowBroker}" wordWrap="true" />
+				<mx:DataGridColumn width="{_iColumnWidthDesc}" dataField="Region_Name" headerText="{oSettings.appFlex.regionlabel}" editable="false" visible="{ShowRegion}" wordWrap="true" />
+				<mx:DataGridColumn width="{_iColumnWidthDesc}" dataField="Family_Name" headerText="{oSettings.appFlex.familylabel}" editable="false" visible="{ShowFamily}" wordWrap="true" />
+				<mx:DataGridColumn width="{_iColumnWidthDesc}" dataField="Buying_Group_Name" headerText="{oSettings.appFlex.buyinggrouplabel}" editable="false" visible="{ShowBuyingGroup}" wordWrap="true" />
+				
+				<mx:DataGridColumn width="{_iColumnWidthDesc}" dataField="Type_Code_Desc" headerText="{oSettings.appFlex.typecodelabel}" editable="false" visible="{ShowTypeCode}" wordWrap="true" />
+										
+				<mx:DataGridColumn width="{_iColumnWidthValues}" id="dgColCasesInvoiced" dataField="Cases_Invoiced" headerText="INV CS" editable="false" visible="{ShowCase}" labelFunction="fnFormatCaseVolume" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Pounds_Invoiced" headerText="INV LB" editable="false" visible="{ShowPound}" labelFunction="fnFormatPoundVolume" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Sales_Dollar" headerText="INV $" editable="false" labelFunction="fnFormatDollars" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Base_Sales_CS" headerText="PRICE CS" editable="false" visible="{ShowCase &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Base_Sales_LB" headerText="PRICE LB" editable="false" visible="{ShowPound &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatPoundRate" />
+				
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Trade_Rate_CS" headerText="TRADE CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Trade_Rate_LB" headerText="TRADE LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Operator_Rate_CS" headerText="OPER CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Operator_Rate_LB" headerText="OPER LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_Rate_CS" headerText="TOTAL $ CS"  editable="false" visible="{ShowCase &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_Rate_LB" headerText="TOTAL $ LB"  editable="false" visible="{ShowPound &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatPoundRate" />
+				
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Trade_PERCENT_DISCOUNT" headerText="TRADE %"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Operator_PERCENT_DISCOUNT" headerText="OPER %"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_PERCENT_DISCOUNT" headerText="TOTAL % DISC"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_Net_Sales_CS" headerText="NET CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBNetSales}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_Net_Sales_LB" headerText="NET LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBNetSales}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_AVG_Net_Sales_CS" headerText="AVE NET CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBNetSales}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_AVG_Net_Sales_LB" headerText="AVE NET LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBNetSales}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_Net_Sales_Index" headerText="NET INDEX"  editable="false" visible="{OptionBNetSales}" labelFunction="fnFormatIndex" />
+				<mx:DataGridColumn width="{_iColumnWidthValues}" dataField="Total_Return_On_Sales" headerText="RETURN ON NET"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				-->
+				<mx:DataGridColumn dataField="Distributor_ID" headerText="{_sSharedShipToLabel}" />
+				<mx:DataGridColumn dataField="Distributor_Name" headerText="{_sDistributorLabel} Name" editable="false" wordWrap="true" />
+				
+				<mx:DataGridColumn dataField="Item" headerText="{_sItemLabel}" editable="false" />
+				<mx:DataGridColumn dataField="Item_Description" headerText="Description" editable="false" wordWrap="true" />
+				
+				<mx:DataGridColumn dataField="Family_Name" headerText="{_sFamilyLabel}" editable="false" visible="{ShowFamily}" wordWrap="true" />
+				<mx:DataGridColumn dataField="Buying_Group_Name" headerText="{_sBuyingGroupLabel}" editable="false" visible="{ShowBuyingGroup}" wordWrap="true" />
+				<mx:DataGridColumn dataField="Broker_Name" headerText="{_sBrokerLabel}" editable="false" visible="{ShowBroker}" wordWrap="true" />
+				<mx:DataGridColumn dataField="Region_Name" headerText="{_sRegionLabel}" editable="false" visible="{ShowRegion}" wordWrap="true" />
+				
+				<mx:DataGridColumn dataField="Type_Code_Desc" headerText="{_sTypeCodeLabel}" editable="false" visible="{ShowTypeCode}" wordWrap="true" />
+										
+				<mx:DataGridColumn id="dgColCasesInvoiced" dataField="Cases_Invoiced" headerText="INV CS" editable="false" visible="{ShowCase}" labelFunction="fnFormatCaseVolume" />
+				<mx:DataGridColumn dataField="Pounds_Invoiced" headerText="INV LB" editable="false" visible="{ShowPound}" labelFunction="fnFormatPoundVolume" />
+				<mx:DataGridColumn dataField="Sales_Dollar" headerText="INV $" editable="false" labelFunction="fnFormatDollars" />
+				<mx:DataGridColumn dataField="Base_Sales_CS" headerText="PRICE CS" editable="false" visible="{ShowCase &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn dataField="Base_Sales_LB" headerText="PRICE LB" editable="false" visible="{ShowPound &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatPoundRate" />
+				
+				<mx:DataGridColumn dataField="Trade_Rate_CS" headerText="TRADE CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn dataField="Trade_Rate_LB" headerText="TRADE LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn dataField="Operator_Rate_CS" headerText="OPER CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn dataField="Operator_Rate_LB" headerText="OPER LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBSpendingRate}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn dataField="Total_Rate_CS" headerText="TOTAL $ CS"  editable="false" visible="{ShowCase &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn dataField="Total_Rate_LB" headerText="TOTAL $ LB"  editable="false" visible="{ShowPound &amp;&amp; (OptionBSpendingRate || OptionBNetSales)}" labelFunction="fnFormatPoundRate" />
+				
+				<mx:DataGridColumn dataField="Trade_PERCENT_DISCOUNT" headerText="TRADE %"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				<mx:DataGridColumn dataField="Operator_PERCENT_DISCOUNT" headerText="OPER %"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				<mx:DataGridColumn dataField="Total_PERCENT_DISCOUNT" headerText="TOTAL % DISC"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				
+				<mx:DataGridColumn dataField="Total_Net_Sales_CS" headerText="NET CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBNetSales}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn dataField="Total_Net_Sales_LB" headerText="NET LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBNetSales}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn dataField="Total_AVG_Net_Sales_CS" headerText="AVE NET CS"  editable="false" visible="{ShowCase &amp;&amp; OptionBNetSales}" labelFunction="fnFormatCaseRate" />
+				<mx:DataGridColumn dataField="Total_AVG_Net_Sales_LB" headerText="AVE NET LB"  editable="false" visible="{ShowPound &amp;&amp; OptionBNetSales}" labelFunction="fnFormatPoundRate" />
+				<mx:DataGridColumn dataField="Total_Net_Sales_Index" headerText="NET INDEX"  editable="false" visible="{OptionBNetSales}" labelFunction="fnFormatIndex" />
+				<mx:DataGridColumn dataField="Total_Return_On_Sales" headerText="RETURN ON NET"  editable="false" visible="{OptionBPercentageDiscount}" labelFunction="fnFormatPercent" />
+				
+			</mx:columns>				
+		</mx:PrintDataGrid>
+		
+		<mx:HBox width="100%" height="20" horizontalAlign="center" verticalAlign="bottom" id="footer">
+			<mx:Label text="Page {pageNumber}" />
+		</mx:HBox>
+		
+	</mx:VBox>
+</mx:VBox>

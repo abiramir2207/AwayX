@@ -1,0 +1,85 @@
+===== QUERY: qGetVolPlanMasterIds =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetVolPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertVolPlanMaster =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdateVolPlanMaster =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCheckVolPlanMaster =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertVolPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdateVolPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSaveVolPlanCustomers =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qSaveVolPlanCustomers =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qSaveVolPlanPositions =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteVolPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteVolPlanPositions =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteVolPlanCustomers =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetVolPlanSource =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetVolPlanSource = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("volume_plan_source")>
+<cfif useLakebaseForqGetVolPlanSource>
+	<cftry>
+		<cfset qGetVolPlanSource = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("volume_plan_source", {
+				"select" = "volume_plan_source_id as idsource,description as descsource"
+			}), "volume_plan_source_id as idsource,description as descsource"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVolPlanSource = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVolPlanSource>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetVolPlanMasterTemplates =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetVolPlanMasterTemplates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetVolPlanMasterTemplates>
+	<cftry>
+		<cfset qGetVolPlanMasterTemplates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"pullback_template_type" = "eq.2",
+				"isdominant" = "eq.1",
+				"select" = "programcontrol_panel_options_id as id,generic_type as generictype,created_type as createdtype,first_parent_id as firstparentid"
+			}), "programcontrol_panel_options_id as id,generic_type as generictype,created_type as createdtype,first_parent_id as firstparentid"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVolPlanMasterTemplates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVolPlanMasterTemplates>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGet =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

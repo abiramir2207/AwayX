@@ -1,0 +1,47 @@
+===== QUERY: initDBRecord =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: setDeletedBitHigh =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForsetDeletedBitHigh = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("wddx_packet_to_file_map")>
+<cfif useLakebaseForsetDeletedBitHigh>
+	<cftry>
+		<cfset application.oLakebase.updateRows("wddx_packet_to_file_map",
+			{
+				"wddx_packet_to_file_map_id" = "eq.#Supplied_Wddx_Packet_To_File_Map_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetDeletedBitHigh = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetDeletedBitHigh>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPacketFilename =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPacketFilename = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("wddx_packet_to_file_map")>
+<cfif useLakebaseForgetPacketFilename>
+	<cftry>
+		<cfset getPacketFilename = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("wddx_packet_to_file_map", {
+				"wddx_packet_to_file_map_id" = "eq.#Supplied_Wddx_Packet_To_File_Map_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPacketFilename = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPacketFilename>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,55 @@
+===== QUERY: getDefaultForm =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetDefaultForm = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_list")>
+<cfif useLakebaseForgetDefaultForm>
+	<cftry>
+		<cfset getDefaultForm = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("settings_list", {
+				"setting_type" = "eq.Template",
+				"order" = "setting_name.asc",
+				"select" = "setting_name"
+			}), "setting_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDefaultForm = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDefaultForm>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: update_#getDefaultForm.Setting_Name# =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Update_Updated_By =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Updated_By = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_template_display")>
+<cfif useLakebaseForUpdate_Updated_By>
+	<cftry>
+		<cfset application.oLakebase.updateRows("settings_template_display",
+			{
+				"generic_type" = "eq.#Form.Generic_Type#",
+				"excluded_first_parent_id" = "is.null"
+			},
+			{
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Updated_By = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Updated_By>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetGenericTypeID =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: UpdateChangedBy =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

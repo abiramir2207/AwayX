@@ -1,0 +1,41 @@
+===== QUERY: qCheckGroupProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getitemnumbers")>
+<cfif useLakebaseForqCheckGroupProducts>
+	<cftry>
+		<cfset qCheckGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getitemnumbers", {
+				"product_group_level_id" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id,product_group_id,contract_products_id"
+			}), "bsa_foodservice_items_master_id,product_group_id,contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckGroupProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InvoicesforItems =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForInvoicesforItems = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoicesforfixedcomponents")>
+<cfif useLakebaseForInvoicesforItems>
+	<cftry>
+		<cfset InvoicesforItems = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoicesforfixedcomponents", {
+				"bsa_foodservice_items_master_id" = "eq.#InvoicesforFixedComponents.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForInvoicesforItems = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInvoicesforItems>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

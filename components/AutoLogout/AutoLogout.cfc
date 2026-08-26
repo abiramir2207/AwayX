@@ -1,0 +1,97 @@
+<cfcomponent hint="System Profile Management">
+
+	<cffunction name="init" output="false">
+
+		<cfreturn this />
+
+	</cffunction>
+
+	<cffunction name="initUserReasonArray" output="true">
+
+		<cfset aryReasonArray = ArrayNew(2)>
+		
+		<cfreturn aryReasonArray />
+
+	</cffunction>
+	
+	<cffunction name="queueUserLogout" output="false">
+	
+		<cfargument name="UserReasonArray" type="array" required="yes">
+		
+		<cfloop index="x" from="1" to="#arraylen(UserReasonArray)#">
+			<cfset userId = UserReasonArray[x][1]>
+			<cfset reasonTxt = UserReasonArray[x][2]>
+			
+			<cfif len(trim(userId)) GT 0 AND len(trim(reasonTxt)) GT 0>
+				
+				<cfquery name="isUserAlreadyQueued" datasource="#application.datasource#">
+					SELECT _Users_Auto_Logout_List_ID
+					FROM _Users_Auto_Logout_List
+					WHERE User_ID = '#userId#'
+				</cfquery>
+				<cfset this_Users_Auto_Logout_List_ID = isUserAlreadyQueued._Users_Auto_Logout_List_ID>
+				
+				<cfif isUserAlreadyQueued.recordcount EQ 0>
+					<cfquery name="insertUser" datasource="#application.datasource#">
+						SET NOCOUNT ON
+						INSERT INTO _Users_Auto_Logout_List
+						(User_ID)
+						VALUES
+						('#userId#')
+						SELECT _Users_Auto_Logout_List_ID = @@IDENTITY
+						SET NOCOUNT OFF
+					</cfquery>
+					<cfset this_Users_Auto_Logout_List_ID = insertUser._Users_Auto_Logout_List_ID>
+				</cfif>
+				
+				<cfquery name="checkForExistingReason" datasource="#application.datasource#">
+					SELECT Reason_Text
+					FROM _Users_Auto_Logout_Reason
+					WHERE _Users_Auto_Logout_List_ID = '#this_Users_Auto_Logout_List_ID#' AND Reason_Text = '#reasonTxt#'
+				</cfquery>
+				
+				<!--- insert reason if unique --->
+				<cfif checkForExistingReason.recordcount EQ 0>
+					<cfquery name="insertReason" datasource="#application.datasource#">
+						INSERT INTO _Users_Auto_Logout_Reason
+						(_Users_Auto_Logout_List_ID, Reason_Text)
+						VALUES
+						('#this_Users_Auto_Logout_List_ID#', '#reasonTxt#')
+					</cfquery>
+				</cfif>
+				
+			</cfif>
+		</cfloop>
+	
+	</cffunction>
+
+	<cffunction name="removeUserFromQueue" output="false">
+		
+		<cfargument name="userId" type="string" required="yes">
+					
+			<cfquery name="get_USERS_AUTO_LOGOUT_LIST_ID" datasource="#application.datasource#">
+				SELECT _USERS_AUTO_LOGOUT_LIST_ID
+				FROM _USERS_AUTO_LOGOUT_LIST
+				WHERE User_ID = '#userId#'
+			</cfquery>
+			
+			<cfset this_USERS_AUTO_LOGOUT_LIST_ID = get_USERS_AUTO_LOGOUT_LIST_ID._USERS_AUTO_LOGOUT_LIST_ID>
+			
+			<cfquery name="deleteUserFromAutoLogOut" datasource="#application.datasource#">
+				DELETE FROM _Users_Auto_Logout_List
+				WHERE _Users_Auto_Logout_List_ID = '#this_USERS_AUTO_LOGOUT_LIST_ID#'
+			</cfquery>
+			
+			<cfquery name="deleteUserFromAutoLogOutReason" datasource="#application.datasource#">
+				DELETE FROM _Users_Auto_Logout_Reason
+				WHERE _Users_Auto_Logout_List_ID = '#this_USERS_AUTO_LOGOUT_LIST_ID#'
+			</cfquery>					
+					
+	</cffunction>
+	
+	
+
+
+
+
+</cfcomponent>

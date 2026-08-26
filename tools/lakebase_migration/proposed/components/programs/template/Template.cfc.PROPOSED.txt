@@ -1,0 +1,33 @@
+===== QUERY: qGetTemplateFilters =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qInsertTemplateFilter =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdateTemplateFilter =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdateTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_filters")>
+<cfif useLakebaseForqUpdateTemplateFilter>
+	<cftry>
+		<cfset application.oLakebase.updateRows("template_filters",
+			{
+				"template_filters_id" = "eq.#arguments.TemplateFilter.Template_Filters_Id#"
+			},
+			{
+				"template_id" = "#arguments.TemplateFilter.Template_Id#",
+				"parent_template_id" = "#arguments.TemplateFilter.Parent_Template_Id#",
+				"name" = "#arguments.TemplateFilter.Name#",
+				"description" = "#arguments.TemplateFilter.Desc#",
+				"status" = "#arguments.TemplateFilter.Status#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateTemplateFilter>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

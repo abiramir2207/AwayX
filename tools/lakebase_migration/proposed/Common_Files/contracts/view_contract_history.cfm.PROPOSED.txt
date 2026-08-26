@@ -1,0 +1,21 @@
+===== QUERY: ContractHistory =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForContractHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("temp_history")>
+<cfif useLakebaseForContractHistory>
+	<cftry>
+		<cfset ContractHistory = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("temp_history", {
+				"temp_id" = "eq.#contract_main_id#",
+				"order" = "changed_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForContractHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForContractHistory>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

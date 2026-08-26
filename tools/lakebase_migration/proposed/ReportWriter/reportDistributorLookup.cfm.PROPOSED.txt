@@ -1,0 +1,18 @@
+===== QUERY: q_getFamilys =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getBuyingGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getDistributors =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getZones =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getRegions =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getBrokers =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

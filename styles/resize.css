@@ -1,0 +1,53 @@
+.flexContainer {
+  display: flex;
+  flex-direction: column;
+  /*border: 1px solid silver;*/
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.assign {
+  display: flex;
+  flex-direction: row;
+  /*border: 1px solid silver;*/
+  overflow: hidden;
+  /* avoid browser level touch actions 
+  xtouch-action: none;*/
+  height: 70vh;
+}
+
+.bbSection{
+  flex: 0 0 auto;
+  width: 50%;
+  padding-bottom: 10px;
+  white-space: nowrap;
+}
+
+.ddSection {
+  flex: 1 1 auto;
+  padding-bottom: 10px;
+  width: 50%;
+}
+
+.matchSection {
+  flex: 1 1 auto;
+  /* resizable */
+  padding-top: 5px;
+  min-height: 200px;
+}
+
+.splitter {
+  flex: 0 0 auto;
+  width: 5px;
+  background-color: #F5F5F5;
+  min-height: 200px;
+  cursor: col-resize;
+}
+
+.splitter-horizontal {
+  flex: 0 0 auto;
+  height: 5px;
+  width:100%;
+  background-color: #F5F5F5;
+  cursor: row-resize;
+}

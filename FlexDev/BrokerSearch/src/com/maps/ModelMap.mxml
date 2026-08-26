@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+<!--- The Model Map Holds All Of the Mate Injectors responsible for data binding between Classes (usually a manager and a view page)-->
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.events.*;
+			import com.maps.MainEventMap;
+			import mx.controls.Alert;
+		]]>
+	</mx:Script>
+	
+	
+	<!-- SearchPanel View __________________________________________________________________ -->
+	
+	<Injectors target="{SearchPanel}">
+		<PropertyInjector id="items" targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector id="dp1" targetKey="dp1" source="{SearchManager}" sourceKey="arr1" />
+		<PropertyInjector id="dp2" targetKey="dp2" source="{SearchManager}" sourceKey="arr2" />
+		<PropertyInjector id="dp3" targetKey="dp3" source="{SearchManager}" sourceKey="arr3" />
+		<PropertyInjector id="dp4" targetKey="dp4" source="{SearchManager}" sourceKey="arr4" />
+		<PropertyInjector id="dp5" targetKey="dp5" source="{SearchManager}" sourceKey="arr5" />
+		<PropertyInjector id="dp6" targetKey="dp6" source="{SearchManager}" sourceKey="arr6" />
+		<PropertyInjector id="lblCol1" targetKey="lblCol1" source="{SettingsManager}" sourceKey="settings.appFlex.col1" />
+		<PropertyInjector id="lblCol2" targetKey="lblCol2" source="{SettingsManager}" sourceKey="settings.appFlex.col2" />
+		<PropertyInjector id="lblCol3" targetKey="lblCol3" source="{SettingsManager}" sourceKey="settings.appFlex.col3" />
+		<PropertyInjector id="lblCol4" targetKey="lblCol4" source="{SettingsManager}" sourceKey="settings.appFlex.col4" />
+		<PropertyInjector id="lblCol5" targetKey="lblCol5" source="{SettingsManager}" sourceKey="settings.appFlex.col5" />
+		<PropertyInjector id="lblCol6" targetKey="lblCol6" source="{SettingsManager}" sourceKey="settings.appFlex.col6" />
+		<PropertyInjector id="brokerLabel" targetKey="brokerLabel" source="{SettingsManager}" sourceKey="settings.appFlex.brokerLabel" />
+		<PropertyInjector id="oSettings" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector id="arrUserList" targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" />
+		<PropertyInjector id="iButtonHeight" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight" />
+		<PropertyInjector id="iComboBoxHeight" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight" />
+		<PropertyInjector id="iTextInputHeight" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight" />
+		<ListenerInjector eventType="{SearchEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+	</Injectors>
+
+	<!-- ComboBox/Dropdown filter labels -->
+	<Injectors target="{SearchManager}">
+		<PropertyInjector targetKey="lblCbo1" source="{SettingsManager}" sourceKey="settings.appFlex.col1" />
+		<PropertyInjector targetKey="lblCbo2" source="{SettingsManager}" sourceKey="settings.appFlex.col2" />
+		<PropertyInjector targetKey="lblCbo3" source="{SettingsManager}" sourceKey="settings.appFlex.col3" />
+		<PropertyInjector targetKey="lblCbo4" source="{SettingsManager}" sourceKey="settings.appFlex.col4" />
+		<PropertyInjector targetKey="lblCbo5" source="{SettingsManager}" sourceKey="settings.appFlex.col5" />
+		<PropertyInjector targetKey="lblCbo6" source="{SettingsManager}" sourceKey="settings.appFlex.col6" />
+	</Injectors>
+	
+	
+<!--
+	<Injectors target="{MainEventMap}">
+		<PropertyInjector targetKey="oSettingsMap" source="{SettingsManager}" sourceKey="settings" />
+	</Injectors>
+-->
+	
+<!--
+	<Injectors target="{Settings}">
+   		<PropertyInjector targetKey="aUserId" source="{SettingsManager}" sourceKey="UserId" />
+   		<PropertyInjector targetKey="aProgramId" source="{SettingsManager}" sourceKey="ProgramId" />
+   		<PropertyInjector targetKey="aDiscountType" source="{SettingsManager}" sourceKey="DiscountType" />
+   		<PropertyInjector targetKey="aUserId" source="{SettingsManager}" sourceKey="UserId" />
+	</Injectors>
+-->
+
+</EventMap>

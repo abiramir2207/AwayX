@@ -1,0 +1,51 @@
+===== QUERY: deactivateCurrentPeriods =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordeactivateCurrentPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseFordeactivateCurrentPeriods>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_id" = "eq.#FORM.Program_ID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeactivateCurrentPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeactivateCurrentPeriods>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: activateNewPeriods =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForactivateNewPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForactivateNewPeriods>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_id" = "eq.#FORM.Program_ID#",
+				"active" = "eq.0",
+				"deleted" = "eq.0"
+			},
+			{
+				"active" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForactivateNewPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForactivateNewPeriods>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

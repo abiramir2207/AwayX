@@ -1,0 +1,11 @@
+/* CSS Document */
+thead { display: table-header-group;}
+div.page table
+{ 
+	margin-left:0.25in;
+	margin-right:0.44in;
+	margin-top:1.25in;
+	margin-bottom:0.1666in;
+	filter: progid:DXImageTransform.Microsoft.BasicImage(Rotation=3);
+}
+

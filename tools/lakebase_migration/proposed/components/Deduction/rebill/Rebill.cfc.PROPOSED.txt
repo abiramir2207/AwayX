@@ -1,0 +1,69 @@
+===== QUERY: qGetActiveComps =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetActiveRebillPackage =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qInsRebillPackage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsReasonCode =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsClassification =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckRebillPackageTitle =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qUpdPackage =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qDelDtls =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsReasonCode =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsClassification =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetRebillPackage =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetDDClassifications =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDDClassifications = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForqGetDDClassifications>
+	<cftry>
+		<cfset qGetDDClassifications = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_classification", {
+				"deleted" = "eq.0",
+				"select" = "dd_classification_id,dd_classification_desc"
+			}), "dd_classification_id,dd_classification_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDDClassifications = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDDClassifications>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDDReasonCode =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qUpdRebillVariables =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UpdateRebill =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: UpdateRebill =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetRebillSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

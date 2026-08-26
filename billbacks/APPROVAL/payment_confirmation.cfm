@@ -1,0 +1,1312 @@
+<cfparam name="form.Payment_Notes" default="">
+<cfparam name="LocationURL" default="">
+<cfparam name="BBTotalNotInRangeAgreeReason" default="">
+<cfparam name="BBDeviationNotInRangeAgreeReason" default="">
+<cfparam name="From_Quick_Pay" default="0"><!--- D25219: SOW - Enable mass paying of payables --->
+<cfparam name="should_continue" default ="1"><!--- D25219: SOW - Enable mass paying of payables --->
+<cfparam name="FORM.TotalTaxAmount" default="0" />
+	<cfif isDefined("Form.LocationAfterSaving")>
+		<cfset LocationURL = Form.LocationAfterSaving>
+	</cfif>
+	<cfif NOT isDefined("appSettings")>
+		<cfset appSettings = application.appSettingsGet>
+	</cfif>
+	<cfset billbackManager = CreateObject("component", "components.billback.BillbackManager") />
+	<cfset BBWorkFlowManager = createObject("component", "components.workflow.BillbackWorkFlowManager")>
+	<cfset BBReasonCodeIDList = "" />
+	<cfif isDefined("FORM.DD_Reason_Code_ID")>
+		<cfset BBReasonCodeIDList = FORM.DD_Reason_Code_ID />
+	</cfif>
+	<cfmodule template="/customTags/include.cfm" file_to_include="/Script/javascript/dhtml.js"/>
+	
+	<!---- 117446 :: Billback - sales tax code START--->
+	<cfif appSettings.getBillbacksSalesTax() EQ 2>
+		<cfset useLakebaseForTaxInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+
+		<cfif useLakebaseForTaxInfo>
+			<cftry>
+				<cfset Get_Tax_Info = application.oLakebase.toQuery(
+					application.oLakebase.selectRows("bb_tax_info", {
+						"billback_id" = "eq.#Billback_ID#",
+						"deleted"     = "eq.false"
+					})
+				)>
+				<cfif Get_Tax_Info.Recordcount>
+					<cfset application.oLakebase.updateRows("bb_tax_info",
+						{ "billback_id" = "eq.#Billback_ID#", "deleted" = "eq.false" },
+						{ "tax_code_1_id" = form.Billbacks_Sales_Tax }
+					)>
+				<cfelse>
+					<cfset application.oLakebase.insertRow("bb_tax_info",
+						<!--- unlike SQL Server, the Lakebase dbo.bb_tax_info.deleted column has no DEFAULT,
+					      so it must be set explicitly here to avoid leaving it NULL. --->
+					{ "billback_id" = Billback_ID, "tax_code_1_id" = form.Billbacks_Sales_Tax, "deleted" = false }
+					)>
+				</cfif>
+				<cfcatch type="any">
+					<!--- Lakebase is momentarily unavailable (e.g. serverless compute scaling) -- fall back to SQL Server for this request rather than surface an error. --->
+					<cfset useLakebaseForTaxInfo = false>
+				</cfcatch>
+			</cftry>
+		</cfif>
+
+		<cfif NOT useLakebaseForTaxInfo>
+			<cfquery name="Get_Tax_Info" datasource="#application.datasource#">
+				SELECT *
+				FROM BB_Tax_Info
+				where Billback_ID = '#Billback_ID#'
+				and deleted = 0
+			</cfquery>
+			<cfif Get_Tax_Info.Recordcount>
+				<cfquery name="Update_Tax_Info" datasource="#application.datasource#">
+				UPDATE BB_Tax_Info
+				SET Tax_Code_1_ID = #form.Billbacks_Sales_Tax#
+				WHERE Billback_ID = '#Billback_ID#'
+				AND deleted = 0
+				</cfquery>
+			<cfelse>
+				<cfquery name="Insert_Tax_Info" datasource="#application.datasource#">
+					INSERT INTO BB_Tax_Info (Billback_ID, Tax_Code_1_ID)
+					VALUES('#Billback_ID#', #form.Billbacks_Sales_Tax#)
+				</cfquery>
+			</cfif>
+		</cfif>
+	</cfif>
+	<!---- 117446 :: Billback - sales tax code END--->
+
+<cfif IsDefined("FORM.AgreeThisBB")>
+<!--- 21923: When the user update the already approved BB and if the user can only Agree then set the status = RFA --->
+  <cfquery name="UpdateAgreeBB" DATASOURCE="#Application.Datasource#">
+		UPDATE 	Billback
+		SET 			Billback_Status_ID = 2
+						,payment_notes = '#trim(form.Payment_Notes)#'
+						,TotalTaxAmount = #FORM.TotalTaxAmount#
+		WHERE  	Billback_Id = '#Billback_ID#'
+  </cfquery>
+  <!--- D31841: Payment notes not saving when user agrees to program... --->
+ <cfquery name="UpdateAgreeInfo" DATASOURCE="#Application.Datasource#">
+		INSERT INTO BB_Agreed_Info 	(
+							Billback_ID,
+							User_ID,
+							Profile_ID,
+							User_Position_ID,
+							Authority_Sequence_ID,
+							Is_Agreed,
+							<cfif IsDefined("FORM.Profile_Approval_Amt")>
+							Profile_Approval_Amount,
+							</cfif>
+							<cfif IsDefined("FORM.Profile_Devi_amt")>
+							Profile_Deviation_Amount,
+							</cfif>
+							Agreed_Amount
+							)
+		SELECT 			<cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">,
+							_Users.User_ID,
+							Profiles_ID,
+							User_Positions_ID,
+							ISNULL(Authority_Sequence_ID,0),
+							1,
+							<cfif IsDefined("FORM.Profile_Approval_Amt")>
+								<cfqueryparam value="#FORM.Profile_Approval_Amt#" cfsqltype="CF_SQL_VARCHAR">,
+							</cfif>
+							<cfif IsDefined("FORM.Profile_Devi_amt")>
+								<cfqueryparam value="#FORM.Profile_Devi_amt#" cfsqltype="CF_SQL_VARCHAR">,
+							</cfif>
+							<cfqueryparam value="#FORM.Payment_Amount#" cfsqltype="CF_SQL_FLOAT">
+		FROM 				_Users
+		INNER JOIN 		User_Position_Holders
+		ON 					User_Position_Holders.User_ID = _Users.User_ID
+		AND 				User_Position_Holders.User_Positions_ID <> 0
+		AND					User_Position_Holders.Deleted = 0
+		WHERE 				_Users.User_ID = <cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</CFQUERY>
+
+	<!--- save selected reason code --->
+	<cfset billbackManager.saveBillbackClosingMethod(billbackID = Billback_ID, BBReasonCodeIDList = BBReasonCodeIDList) />
+	<cfset CombinedAgreeReasons = "">
+	<!--- Create a pipe delimited list of the reasons why the billback was agreed to --->
+	<cfif BBTotalNotInRangeAgreeReason neq "" AND BBDeviationNotInRangeAgreeReason eq "">
+		<cfset CombinedAgreeReasons = BBTotalNotInRangeAgreeReason>
+	<cfelseif BBTotalNotInRangeAgreeReason eq "" AND BBDeviationNotInRangeAgreeReason neq "">
+		<cfset CombinedAgreeReasons = BBDeviationNotInRangeAgreeReason>
+	<cfelseif BBTotalNotInRangeAgreeReason neq "" AND BBDeviationNotInRangeAgreeReason neq "">
+		<cfset CombinedAgreeReasons = BBTotalNotInRangeAgreeReason>
+		<cfset CombinedAgreeReasons = ListAppend(CombinedAgreeReasons,BBDeviationNotInRangeAgreeReason,"|")>
+	</cfif>
+
+	<!--- Save the reasons for billback agree --->
+	<cfif CombinedAgreeReasons neq "">
+		<cfset BBWorkFlowManager.saveBillbackAgreeReason(Billback_ID,request.AccessStructure.User_ID, '#CombinedAgreeReasons#') />
+	</cfif>
+
+	<cfquery name="UpdateApprovablePositions" DATASOURCE="#Application.Datasource#">
+		EXEC Populate_Billback_Approvable_Positions '#Billback_ID#'
+	</CFQUERY>
+
+	<cfif appsettings.getBillbackModifyAgree() EQ 1>
+		<!--- Check If modify agree is 1 --->
+		<cfquery name="getBBInfo" datasource="#application.datasource#">
+			select BB_Modify_Agree
+			from billback
+			where Billback_Id = '#Billback_ID#'
+		</cfquery>
+
+		<cfif getBBInfo.BB_Modify_Agree EQ 1>
+			<cfinclude template="save_modifyagree_BBchanges.cfm">
+			<cfquery name="UpdateModifyAgreeInfo" DATASOURCE="#Application.Datasource#">
+				update Billback
+				set BB_modify_agree = 0
+				where Billback_Id = '#Billback_ID#'
+			</cfquery>
+		</cfif>
+	</cfif>
+	<!------ If BB Agree Email, send email ----->
+	<!--- D38427 : Billback email notifications START --->
+	<cfquery name="emailevent" datasource="#application.datasource#">
+			select billback_rfa_agree_email_event
+			from _application_Settings
+	</cfquery>
+	<cfif appSettings.getBBAgreeEmail() AND (emailevent.billback_rfa_agree_email_event EQ 2 OR emailevent.billback_rfa_agree_email_event EQ 3)>
+			<cfset AgreeEmailBillbackId = Billback_ID>
+			<cfset AgreeEmailUserId = request.AccessStructure.User_ID>
+			<cfinclude template="Send_Agree_Email.cfm" />
+	</cfif>
+	<!--- D38427 : Billback email notifications END --->
+	<cfif From_Quick_Pay EQ 0>	<!--- D25219: SOW - Enable mass paying of payables --->
+		<script>
+			window.parent.location.href = "/Billbacks/capture/index.cfm?BBID=<CFOUTPUT>#form.billback_ID#</CFOUTPUT>&modifyagree=1";
+		</script>
+		<!--- <CFLOCATION URL="/billbacks/Capture/Billback_Summary.cfm?BBID=#FORM.Billback_ID#" ADDTOKEN="No"> --->
+		<CFABORT>
+	</cfif><!--- D25219: SOW - Enable mass paying of payables --->
+<cfset should_continue = 0><!--- D25219: SOW - Enable mass paying of payables --->
+</cfif>
+
+<cfinclude template = "/billbacks/capture/save_tax_info.cfm">
+
+<cfif should_continue ><!--- D25219: SOW - Enable mass paying of payables --->
+<cfparam name="Payment_Notes" default="">
+
+<cfif len(Payment_Notes) GT 255>
+	<cfset Payment_Notes = left(Payment_Notes, 255)>
+</cfif>
+
+
+<cfset billbackSettingsManager = CreateObject("component", "components.billback.BillbackSettingsManager") />
+<cfset Adj_Default_settings = billbackSettingsManager.getAdjustment_Default()>
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxx
+Step 1. Update Applied, Hide bit for Adjustments and exclusions depending upon previous form values
+Step 1a. Claim Adjustment
+Step 2. Update / Insert values into BB_Approved tables
+Step 2a. Save selected reason code
+Step 3. Update Rate Paid / Volume Pad in Product and Product Detail Table
+Step 4. Get Payee and new status information
+Step 5. Update / Insert into BB_Adjustment table
+Step 6. Update growth and lumpsum paid tables
+Step 6a. Update lump sum cap allocation table
+Step 6b. Delete any worksheet tables for the billback
+Step 7. pullbacks
+Step 8. Allocate the dollar amount to the allowance code if the corresponding app switch is on.
+Step 9. (Was Step 4.) Chnage Status to 3, and create exclusions
+Step 10. Send Email
+Step 12. Save budget selection and change status to pending fund update if necessary
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ---->
+
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 1. Update Applied, Hide bit for Adjustments and exclusions depending upon previous form values
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+
+<!---Process code from previous page--->
+<CFOUTPUT>
+
+<cfif isDefined("FORM.DD_Reason_Code_ID")>
+	<cfset Reason_Code = ListFirst(FORM.DD_Reason_Code_ID) />
+</cfif>
+<cfset Payment_Amount = Form.Payment_Amount>
+
+<cfset E_Amount_Total = Form.E_Amount_Total>
+<cfset Billback_Amount_Total = Form.Billback_Amount_Total>
+<cfset ApprovedTotal = Form.ApprovedTotal>
+<cfset Billback_ID = Form.Billback_ID>
+<cfset Adjustment_Created = Form.Adjustment_Created>
+<!--- When "Add Sales Tax on Billbacks" app setting and template setting is ON, there could be an additional tax amount which needs to be paid.
+ "FORM.TotalTaxAmount" is for the taxes.
+ --->
+<cfset AdjustedPayment = Payment_Amount + FORM.TotalTaxAmount>
+<cfset TotalAdjustmentApplied = 0 />
+<cfset TotalExclusionApplied = 0 />
+
+	<cfloop collection = #Form# item = "FieldNames">
+
+		 <cfset FieldName = FieldNames>
+
+		<!---Apply any adjustments--->
+		<cfif left(FieldName, 3) IS "AD_">
+			<cfset FieldName = right(FieldName, 36)>
+			<cfset FieldName = replace(FieldName, "_", "-", "all")>
+			<cfset FieldValue = Evaluate("Form.#FieldNames#")>
+
+			 <!---Hiding the adjustment--->
+			<cfif FieldValue IS "Hide">
+				<cfquery name="HideAdjustment" datasource="#application.datasource#">
+				UPDATE BB_Adjustment
+				SET Hidden = 1,
+					Hidden_By = '#request.AccessStructure.User_ID#'
+				WHERE BB_Adjustment_ID = <cfqueryparam value="#FieldName#" cfsqltype="CF_SQL_VARCHAR">
+				</cfquery>
+			<cfelseif FieldValue IS "None">
+			&nbsp;
+			<cfelse>
+			<!---Applying the Adjustment--->
+			<cfset AdjustedPayment = AdjustedPayment - FieldValue>
+			<cfset TotalAdjustmentApplied = TotalAdjustmentApplied + FieldValue />
+				<cfquery name="ApplyAdjustment" datasource="#application.datasource#">
+				UPDATE BB_Adjustment
+				SET Applied = 1,
+					Date_Applied = GetDate(),
+					Adjustment_Deducted_From_BB_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+				WHERE BB_Adjustment_ID = <cfqueryparam value="#FieldName#" cfsqltype="CF_SQL_VARCHAR">
+				</cfquery>
+
+			</cfif>
+
+		<!---Apply any Exclusions on the Billback level--->
+		<cfelseif left(FieldName, 3) IS "EX_">
+
+			<cfset FieldName = right(FieldName, 36)>
+			<cfset FieldName = replace(FieldName, "_", "-", "all")>
+			<cfset FieldValue = Evaluate("Form.#FieldNames#")>
+
+			 <!---Hiding the exclusion--->
+			<cfif FieldValue IS "Hide">
+				<cfquery name="HideExclusion" datasource="#application.datasource#">
+				UPDATE BB_Program_Exclusion
+				SET Hidden = 1,
+					Hidden_By = <cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="CF_SQL_VARCHAR">
+				WHERE BB_Program_Exclusion_ID = <cfqueryparam value="#FieldName#" cfsqltype="CF_SQL_VARCHAR">
+				</cfquery>
+			<cfelseif FieldValue IS "None">
+			&nbsp;
+						<cfelse>
+			<!---Applying the exclusion--->
+			<cfset AdjustedPayment = AdjustedPayment - FieldValue>
+			<cfset TotalExclusionApplied = TotalExclusionApplied + FieldValue />
+				<cfquery name="ApplyExclusion" datasource="#application.datasource#">
+				UPDATE BB_Program_Exclusion
+				SET Applied = 1,
+					Date_Applied = GetDate(),
+					Exclusion_Deducted_From_BB_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+				WHERE BB_Program_Exclusion_ID = <cfqueryparam value="#FieldName#" cfsqltype="CF_SQL_VARCHAR">
+				</cfquery>
+
+			</cfif>
+
+		</cfif>
+	</cfloop>
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<!--- Step 1a. Claim Adjustment --->
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<CFSET InTwoClaimColValue = 0>
+<cfif FORM.Approved_Amount_Type NEQ 1>
+	<cfquery name="GetTotClaim" DATASOURCE="#Application.Datasource#">
+		SELECT 	SUM(CAST(BB_Rate AS float)) ClaimAd_Tot
+		FROM 	Billback_Product_Detail
+		WHERE 	Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR"> AND
+				BB_Product_Type_ID = 10 AND
+				(Billback_Product_Detail.BB_Rate IS NOT NULL)AND
+				(ISNUMERIC(Billback_Product_Detail.BB_Rate) = 1)AND
+				Deleted = 0
+	</cfquery>
+	<cfif GetTotClaim.ClaimAd_Tot EQ "">
+		<CFSET GetTotClaim.ClaimAd_Tot = 0>
+	</cfif>
+	<cfif GetTotClaim.ClaimAd_Tot NEQ 0>
+		<CFSET InTwoClaimColValue = 1>
+		<CFSET AdjustedPayment = AdjustedPayment + GetTotClaim.ClaimAd_Tot>
+		<CFSET AdjustedPayment = AdjustedPayment*1000>
+		<CFSET AdjustedPayment = Round(AdjustedPayment)>
+		<CFSET AdjustedPayment = AdjustedPayment / 1000>
+	</cfif>
+</cfif>
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<!--- END Step 1a. Claim Adjustment --->
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 2. Update / Insert values into BB_Approved tables
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+
+    <cfquery name="GetFormInfo" datasource="#application.datasource#">
+      SELECT Billback_Payee_Type_ID, Billback_Status_ID, BB_Amount, TotalTaxAmount, Scheduled_Auto_BB, BB_Amount
+      FROM Billback
+      WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+    </cfquery>
+
+    <!---
+    21923: Approval_Type values:
+      1 - Manual Approval (Default)
+      2  - Flex Approval
+      3 - Approved BB update in progress
+      4 - Approved BB update completed successfully
+    --->
+    <cfset iApprovalType = 1 />
+    <cfif ((isDefined("FORM.BBSource")) AND ((FORM.BBSource EQ "flexBB" OR FORM.BBSource EQ "AgGridBB") OR (FORM.BBSource EQ "BBFlexScoreCard" OR FORM.BBSource EQ "BBAgGridScoreCard")) AND (GetFormInfo.Billback_Status_ID EQ 2))>
+      <cfset iApprovalType = 2 />
+    <cfelseif  ((isDefined("FORM.BBSource")) AND ((FORM.BBSource EQ "flexBB" OR FORM.BBSource EQ "AgGridBB") OR (FORM.BBSource EQ "BBFlexScoreCard" OR FORM.BBSource EQ "BBAgGridScoreCard")) AND (GetFormInfo.Billback_Status_ID EQ 3))>
+      <cfset iApprovalType = 4 />
+    </cfif>
+
+<!---Update all the Approved stuff--->
+<cfquery name="UpdateOrInsert" datasource="#application.datasource#">
+SELECT BB_Approved_ID
+FROM BB_Approved
+WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+</cfquery>
+
+<cfif UpdateOrInsert.Recordcount IS 0>
+	<cfquery name="MarkApproved" datasource="#application.datasource#">
+	INSERT INTO BB_Approved
+		(
+		Billback_ID,
+		Paid_Amount,
+		BB_Amount_Before_Exclusions,
+		Total_Adjustment_Applied,
+		Total_Exclusion_Applied,
+		Approved_Amount,
+		BB_Amount,
+		Expected_Amount,
+		Authorized_Amount,
+		Date_Approved,
+		User_Approved,
+		<cfif FORM.Approved_Amount_Type NEQ 1>
+		Claim_Adjust_Tot,
+		</cfif>
+		<cfif InTwoClaimColValue EQ 1>
+		Updated_Paid_Amount_For_Claim_Adjust,
+		</cfif>
+		Adjustment_Created,
+		Approved_Amt_Type
+		<!---31268 skip BB_Reason_Code_ID update when reason code is not selected,
+		           FORM.DD_Reason_Code_ID has 'INVALID' value                 --->
+		<cfif isDefined("FORM.DD_Reason_Code_ID") and isnumeric(Reason_Code)>,BB_Reason_Code_ID</cfif><!--- D25219: SOW - Enable mass paying of payables --->
+		<!---Payment_Notes ---><!--- D25219: SOW - Enable mass paying of payables --->
+		)
+		VALUES
+		(
+		<cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">,
+		<cfqueryparam value="#AdjustedPayment#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#Form.Billback_Amount_Total#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#TotalAdjustmentApplied#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#TotalExclusionApplied#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#ApprovedTotal#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#Billback_Amount_Total#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#E_Amount_Total#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#Payment_Amount#" cfsqltype="CF_SQL_FLOAT">,
+		GetDate(),
+		<cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="CF_SQL_VARCHAR">,
+		<cfif FORM.Approved_Amount_Type NEQ 1>
+		<cfqueryparam value="#GetTotClaim.ClaimAd_Tot#" cfsqltype="CF_SQL_FLOAT">,
+		</cfif>
+		<cfif InTwoClaimColValue EQ 1>
+		1,
+		</cfif>
+		<cfqueryparam value="#Adjustment_Created#" cfsqltype="CF_SQL_FLOAT">,
+		<cfqueryparam value="#FORM.Approved_Amount_Type#" cfsqltype="CF_SQL_INTEGER"><!--- D25219: SOW - Enable mass paying of payables --->
+		<cfif isDefined("FORM.DD_Reason_Code_ID") and isnumeric(Reason_Code)>,<cfqueryparam value="#Reason_Code#" cfsqltype="CF_SQL_INTEGER"></cfif><!--- D25219: SOW - Enable mass paying of payables --->
+		<!---<cfqueryparam value="#Payment_Notes#" cfsqltype="CF_SQL_LONGVARCHAR"> ---><!--- D25219: SOW - Enable mass paying of payables --->
+		)
+	</cfquery>
+<cfelse>
+	<cfquery name="MarkApproved" datasource="#application.datasource#">
+	UPDATE BB_Approved
+	SET Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">,
+		Paid_Amount = <cfqueryparam value="#AdjustedPayment#" cfsqltype="CF_SQL_FLOAT">,
+		BB_Amount_Before_Exclusions = <cfqueryparam value="#Form.Billback_Amount_Total#" cfsqltype="CF_SQL_FLOAT">,
+		Approved_Amount = <cfqueryparam value="#ApprovedTotal#" cfsqltype="CF_SQL_FLOAT">,
+		BB_Amount = <cfqueryparam value="#Billback_Amount_Total#" cfsqltype="CF_SQL_FLOAT">,
+		Expected_Amount = <cfqueryparam value="#E_Amount_Total#" cfsqltype="CF_SQL_FLOAT">,
+		Authorized_Amount = <cfqueryparam value="#Payment_Amount#" cfsqltype="CF_SQL_FLOAT">,
+		Date_Approved = GetDate(),
+		User_Approved = <cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="CF_SQL_VARCHAR">,
+		Adjustment_Created = <cfqueryparam value="#Adjustment_Created#" cfsqltype="CF_SQL_FLOAT"><!--- D25219: SOW - Enable mass paying of payables --->
+  	<!---31268 reset BB_Reason_Code_ID when reason code is not selected,
+  	           FORM.DD_Reason_Code_ID has 'INVALID' value           --->
+		<cfif isDefined("FORM.DD_Reason_Code_ID")>
+		  <cfif isnumeric(Reason_Code)>
+		    ,BB_Reason_Code_ID = <cfqueryparam value="#Reason_Code#" cfsqltype="CF_SQL_INTEGER">
+		  <cfelse>
+		    ,BB_Reason_Code_ID = null
+		  </cfif>
+    </cfif>
+		<!---Payment_Notes = <cfqueryparam value="#Payment_Notes#" cfsqltype="CF_SQL_LONGVARCHAR"> ---><!--- D25219: SOW - Enable mass paying of payables --->
+	WHERE BB_Approved_ID = <cfqueryparam value="#UpdateOrInsert.BB_Approved_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+<!---Update instead of insert--->
+</cfif>
+
+<!--- D31087: CF BB - Invalid column name 'Payment_Notes'...  START--->
+<cfquery name="updatepaymentnotes" datasource="#application.datasource#" >
+	UPDATE Billback
+	SET Payment_Notes = <cfqueryparam value="#Payment_Notes#" cfsqltype="CF_SQL_LONGVARCHAR">,
+	TotalTaxAmount = #FORM.TotalTaxAmount#
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+</cfquery>
+<!--- D31087: CF BB - Invalid column name 'Payment_Notes'... END--->
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 2a. Save selected reason code
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfset billbackManager.saveBillbackClosingMethod(billbackID = Billback_ID, BBReasonCodeIDList = BBReasonCodeIDList) />
+
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 3. Update Rate Paid / Volume Pad in Product and Product Detail Table
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+
+<!---Updates amount paid for all items in item detail--->
+<cfquery name="GetAllItems" datasource="#application.datasource#">
+	SELECT BB_Item_Final.Billback_ID,
+			BB_Item_Final.Billback_Product_ID,
+			BB_Item_Final.Billback_Program_ID,
+			BB_Item_Final.BB_Item_Final_ID,
+			BB_Item_Final.Item_BB_Volume_CS,
+			BB_Item_Final.Item_E_Volume_CS,
+			BB_Item_Final.Item_Volume_Approved_CS,
+			BB_Item_Final.Item_BB_Volume_LB,
+			BB_Item_Final.Item_E_Volume_LB,
+			BB_Item_Final.Item_Volume_Approved_LB
+	FROM BB_Item_Final
+	WHERE BB_Item_Final.Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+<cfloop query="GetAllItems">
+
+	<cfset ItemTotalPaid = 0>
+	<!---If the rate being paid is the billback--->
+	<cfif Rate_Paid_Type IS "BB">
+
+		<cfquery name="UpdateItemDetails" datasource="#application.datasource#">
+		UPDATE BB_Item_Final_Detail
+		SET Paid_Rate_CS = Billback_Rate_CS,
+			Paid_Rate_LB = Billback_Rate_LB,
+			Rate_Paid_Type = 2
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfquery name="GetItemDetails" datasource="#application.datasource#">
+		SELECT Sum(Paid_Rate_LB) AS TotalRatePaid
+		FROM BB_Item_Final_Detail
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfset TotalItemPaid = GetItemDetails.TotalRatePaid * GetAllItems.Item_BB_Volume_LB>
+
+		<cfquery name="UpdateItem" datasource="#application.datasource#">
+		UPDATE BB_Item_Final
+		SET Item_Volume_Paid_CS = Item_BB_Volume_CS,
+			Item_Volume_Paid_LB = Item_BB_Volume_LB,
+			Item_Total_Paid = #TotalItemPaid#
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+	<!---Rate is Expected--->
+	<cfelseif Rate_Paid_Type IS "E">
+
+		<cfquery name="UpdateItemDetails" datasource="#application.datasource#">
+		UPDATE BB_Item_Final_Detail
+		SET Paid_Rate_CS = Expected_Rate_CS,
+			Paid_Rate_LB = Expected_Rate_LB,
+			Rate_Paid_Type = 1
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfquery name="GetItemDetails" datasource="#application.datasource#">
+		SELECT Sum(ISNull(Paid_Rate_LB, 0)) AS TotalRatePaid
+		FROM BB_Item_Final_Detail
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfif len(trim(GetAllItems.Item_E_Volume_LB)) IS 0>
+			<Cfset Item_E_Volume = 0>
+		<cfelse>
+			<cfset Item_E_Volume = GetAllItems.Item_E_Volume_LB>
+		</cfif>
+
+		<cfset TotalItemPaid = GetItemDetails.TotalRatePaid * Item_E_Volume>
+
+		<cfquery name="UpdateItem" datasource="#application.datasource#">
+		UPDATE BB_Item_Final
+		SET Item_Volume_Paid_CS = Item_E_Volume_CS,
+			Item_Volume_Paid_LB = Item_E_Volume_LB,
+			Item_Total_Paid = #TotalItemPaid#
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+	<cfelseif Rate_Paid_Type IS "A">
+
+		<cfquery name="UpdateItemDetails" datasource="#application.datasource#">
+		UPDATE BB_Item_Final_Detail
+		SET Paid_Rate_CS = Approved_Rate_CS,
+			Paid_Rate_LB = Approved_Rate_LB,
+			Rate_Paid_Type = 3
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfquery name="GetItemDetails" datasource="#application.datasource#">
+		SELECT Sum(ISNULL(Paid_Rate_LB, 0)) AS TotalRatePaid
+		FROM BB_Item_Final_Detail
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfif len(trim(GetAllItems.Item_Volume_Approved_LB)) IS 0>
+			<Cfset Item_Volume_Approved = 0>
+		<cfelse>
+			<cfset Item_Volume_Approved = GetAllItems.Item_Volume_Approved_LB>
+		</cfif>
+
+		<cfset TotalItemPaid = GetItemDetails.TotalRatePaid * Item_Volume_Approved>
+
+		<cfquery name="UpdateItem" datasource="#application.datasource#">
+		UPDATE BB_Item_Final
+		SET Item_Volume_Paid_CS = Item_Volume_Approved_CS,
+			Item_Volume_Paid_LB = Item_Volume_Approved_LB,
+			Item_Total_Paid = <cfqueryparam value="#TotalItemPaid#" cfsqltype="CF_SQL_FLOAT">
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+	<cfelseif Rate_Paid_Type IS "None">
+		<cfquery name="UpdateItemDetails" datasource="#application.datasource#">
+		UPDATE BB_Item_Final_Detail
+		SET Paid_Rate_CS = 0,
+			Paid_Rate_LB = 0,
+			Rate_Paid_Type = 0
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfset TotalItemPaid = 0>
+
+		<cfquery name="UpdateItem" datasource="#application.datasource#">
+		UPDATE BB_Item_Final
+		SET Item_Volume_Paid_CS = 0,
+			Item_Volume_Paid_LB =0,
+			Item_Total_Paid = <cfqueryparam value="#TotalItemPaid#" cfsqltype="CF_SQL_FLOAT">
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+	<cfelseif Rate_Paid_Type IS "D">
+
+		<cfquery name="UpdateItemDetails" datasource="#application.datasource#">
+		UPDATE BB_Item_Final_Detail
+		SET Paid_Rate_CS = Approved_Rate_CS,
+			Paid_Rate_LB = Approved_Rate_LB,
+			Rate_Paid_Type = 3
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfquery name="GetItemDetails" datasource="#application.datasource#">
+		SELECT Sum(ISNULL(Paid_Rate_LB, 0)) AS TotalRatePaid
+		FROM BB_Item_Final_Detail
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfif len(trim(GetAllItems.Item_Volume_Approved_LB)) IS 0>
+			<Cfset Item_Volume_Approved = 0>
+		<cfelse>
+			<cfset Item_Volume_Approved = GetAllItems.Item_Volume_Approved_LB>
+		</cfif>
+
+		<cfset TotalItemPaid = GetItemDetails.TotalRatePaid * Item_Volume_Approved>
+
+		<cfquery name="UpdateItem" datasource="#application.datasource#">
+		UPDATE BB_Item_Final
+		SET Item_Volume_Paid_CS = Item_Volume_Approved_CS,
+			Item_Volume_Paid_LB = Item_Volume_Approved_LB,
+			Item_Total_Paid = #TotalItemPaid#
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+	<cfelseif Rate_Paid_Type IS "None">
+		<cfquery name="UpdateItemDetails" datasource="#application.datasource#">
+		UPDATE BB_Item_Final_Detail
+		SET Paid_Rate_CS = 0,
+			Paid_Rate_LB = 0,
+			Rate_Paid_Type = 0
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+		<cfset TotalItemPaid = 0>
+
+		<cfquery name="UpdateItem" datasource="#application.datasource#">
+		UPDATE BB_Item_Final
+		SET Item_Volume_Paid_CS = 0,
+			Item_Volume_Paid_LB =0,
+			Item_Total_Paid = #TotalItemPaid#
+		WHERE BB_Item_Final_ID = <cfqueryparam value="#GetAllItems.BB_Item_Final_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+
+	<cfelse>
+	No payment choice was made
+	<cfabort>
+	</cfif>
+
+</cfloop>
+
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 4. Get Payee and new status information
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+	<cfquery name="GetPayeeType" datasource="#application.datasource#">
+	SELECT 	Billback.Billback_Payee_Type_ID,
+			Billback_Status_ID,
+			Billback.BB_Request_Approval_User_ID,
+			Billback.BB_Code,
+			Billback.BB_Title
+	FROM Billback
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+	<cfset Payee_Type = GetPayeeType.Billback_Payee_Type_ID>
+
+	<cfinclude template="Payee_ID_Finder.cfm">
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 5. Update / Insert into BB_Adjustment table
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+	<cfif Adjustment_Created GT 0>
+		<cfquery name="CreateOrUpdateAdjustment" datasource="#application.datasource#">
+		SELECT TOP 1 BB_Adjustment_ID
+		FROM BB_Adjustment
+		WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+		AND BB_Adjustment.Deleted = 0
+		</cfquery>
+
+		<CFSET Deviation_Type = 1>
+		<CFSET PullBackProgram = "">
+		<CFSET RegularProgram = "">
+		<CFSET PullBackBBProgram = "">
+		<CFSET RegularBBProgram = "">
+		<CFSET AmtToRemove = 0>
+		<CFSET AnyProgram_SameAdjAction = 0>
+
+		<cfquery name="BBProgram" datasource="#application.datasource#">
+			SELECT 	Program_ID,
+					Billback_Program_ID
+			FROM 	Billback_Program
+			WHERE 	Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR"> AND
+					Deleted = 0
+		</cfquery>
+
+		<cfif appSettings.getPullbacksOn()>
+			<cfquery name="checkifeligibleforpullbacklogentry" datasource="#application.datasource#">
+				SELECT 		DISTINCT Billback_Program.Program_ID,
+							Billback_Program.Billback_Program_ID,
+							Program_Control_Panel_Options.pullback_from_corporate,
+							Pullbacks_On,generic_type,is_pullback_corporate_deal
+				FROM 		Billback
+				INNER JOIN 	Billback_Program ON Billback_Program.Billback_ID = Billback.Billback_ID AND Billback_Program.Deleted = 0
+				INNER JOIN 	Contract_Main ON Contract_Main.Contract_Main_ID = Billback_Program.Program_ID
+				INNER JOIN 	Program_Control_Panel_Options ON Program_Control_Panel_Options.ProgramControl_Panel_Options_ID = Contract_Main.Programtype_ID
+				WHERE 		Billback.Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+			</cfquery>
+
+			<CFLOOP QUERY="checkifeligibleforpullbacklogentry">
+				<cfif (
+						(	checkifeligibleforpullbacklogentry.generic_type EQ "Distributor Trade/Shelter" AND
+							checkifeligibleforpullbacklogentry.is_pullback_corporate_deal EQ 0 AND
+				            checkifeligibleforpullbacklogentry.pullback_from_corporate EQ 1
+						) OR
+				        (	checkifeligibleforpullbacklogentry.generic_type EQ "Operator Direct or HQ Programs" OR
+							checkifeligibleforpullbacklogentry.generic_type EQ "Operator-Deviated Pricing"
+						)
+				      ) AND
+					  checkifeligibleforpullbacklogentry.Pullbacks_On EQ 1>
+						<CFSET Deviation_Type = 2>
+						<CFSET PullBackProgram = LISTAPPEND(PullBackProgram,Program_ID,",")>
+						<CFSET PullBackBBProgram = LISTAPPEND(PullBackBBProgram,Billback_Program_ID,",")>
+				<CFELSE>
+						<CFSET RegularProgram = LISTAPPEND(RegularProgram,Program_ID,",")>
+						<CFSET RegularBBProgram = LISTAPPEND(RegularBBProgram,Billback_Program_ID,",")>
+				</cfif>
+			</CFLOOP>
+		<CFELSE>
+			<CFSET RegularProgram = VALUELIST(BBProgram.Program_ID)>
+			<CFSET RegularBBProgram = VALUELIST(BBProgram.Billback_Program_ID)>
+		</cfif>
+
+ 		<cfquery name="AdjustmentSettings" datasource="#application.datasource#">
+			SELECT 	Adjustment_From_Program_WithOut_PullBack, Adjustment_From_Program_With_PullBack
+			FROM 	Billback_Settings
+		</cfquery>
+
+		<cfif AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack NEQ AdjustmentSettings.Adjustment_From_Program_With_PullBack AND
+		(
+			(RegularProgram NEQ "" AND BBProgram.RecordCount NEQ LISTLEN(RegularProgram,',') ) OR
+			(PullBackProgram NEQ "" AND BBProgram.RecordCount NEQ LISTLEN(PullBackProgram,',') )
+		)
+		>
+			<cfquery name="RemoveAdjAmount" datasource="#application.datasource#">
+				DECLARE
+					@Expected_Amt Decimal(18,2),
+					@LS_Expected_Amt Decimal(18,2),
+					@Paid_Amt Decimal(18,2),
+					@LS_Paid_Amt Decimal(18,2),
+					@Deviated_Amt DECIMAL(18,2)
+
+				IF OBJECT_ID('tempdb..##Temp_Expected_Amt') IS NOT NULL
+					DROP TABLE ##Temp_Expected_Amt
+
+				SELECT
+							CASE
+								WHEN Item_E_Volume_CS >= Item_BB_Volume_CS THEN
+									Item_BB_Volume_CS
+								ELSE
+									Item_E_Volume_CS
+							END Expected_CASE,
+
+							CASE
+								WHEN Expected_Rate_CS >= Billback_Rate_CS THEN
+									Billback_Rate_CS
+								ELSE
+									Expected_Rate_CS
+							END Expected_Rate,
+							Item_Volume_Paid_CS AS Paid_CS,
+							Paid_Rate_CS
+
+				INTO		##Temp_Expected_Amt
+				FROM		BB_Item_Final
+				INNER JOIN	BB_Item_Final_Detail ON BB_Item_Final.Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR"> AND
+							<cfif AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack EQ 2>
+							BB_Item_Final.Billback_Program_ID IN (#LISTQUALIFY(RegularBBProgram,"'",",","All")#) AND
+							<CFELSEIF AdjustmentSettings.Adjustment_From_Program_With_PullBack EQ 2>
+							BB_Item_Final.Billback_Program_ID IN (#LISTQUALIFY(PullBackBBProgram,"'",",","All")#) AND
+							</cfif>
+							BB_Item_Final_Detail.BB_Item_Final_ID = BB_Item_Final.BB_Item_Final_ID AND
+							BB_Item_Final_Detail.Deleted = 0 AND BB_Item_Final.Deleted = 0
+
+				SELECT @Expected_Amt = CAST((SUM(Expected_CASE * Expected_Rate)) AS Decimal(18,2)),
+						@Paid_Amt = CAST((SUM(Paid_CS * Paid_Rate_CS)) AS Decimal(18,2))
+				FROM ##Temp_Expected_Amt
+
+				IF @Expected_Amt IS NULL
+					SET @Expected_Amt = 0
+				IF @Paid_Amt IS NULL
+					SET @Paid_Amt = 0
+
+				SELECT 	@LS_Expected_Amt = SUM(ISNULL(LS_Expected_Amount,0)) ,
+						@LS_Paid_Amt = SUM(ISNULL(LS_Paid_Amount,0))
+				FROM 	BB_Lump_Sums WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR"> AND
+						<cfif AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack EQ 2>
+							Billback_Program_ID IN (#LISTQUALIFY(RegularBBProgram,"'",",","All")#) AND
+						<CFELSEIF AdjustmentSettings.Adjustment_From_Program_With_PullBack EQ 2>
+							Billback_Program_ID IN (#LISTQUALIFY(PullBackBBProgram,"'",",","All")#) AND
+						</cfif>
+						Deleted = 0
+
+				SET @Expected_Amt = @Expected_Amt + ISNULL(@LS_Expected_Amt,0)
+				SET @Paid_Amt = @Paid_Amt + ISNULL(@LS_Paid_Amt,0)
+				--SELECT @Deviated_Amt = ISNULL(@Paid_Amt,0) - ISNULL(@Expected_Amt,0)
+				SELECT ISNULL(@Paid_Amt,0) - ISNULL(@Expected_Amt,0) AmtToRemove
+			</cfquery>
+			<CFSET AmtToRemove = RemoveAdjAmount.AmtToRemove>
+		<CFELSE>
+			<CFSET AnyProgram_SameAdjAction = 1>
+		</cfif>
+	<CFSET New_Adjustment_Created = Adjustment_Created - AmtToRemove>
+
+	<CFSET Remove = 0>
+	<cfif (AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack EQ 2 AND AdjustmentSettings.Adjustment_From_Program_With_PullBack EQ 2)
+			OR
+			(AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack EQ 2 AND PullBackBBProgram EQ "")
+			OR
+			(AdjustmentSettings.Adjustment_From_Program_With_PullBack EQ 2 AND RegularBBProgram EQ "")
+			>
+		<CFSET Remove = 1>
+	</cfif>
+
+
+ 	<cfif CreateOrUpdateAdjustment.Recordcount IS 0>
+
+	 	<cfquery name="CreateAdjustment" datasource="#application.datasource#">
+			INSERT INTO BB_Adjustment(
+								Billback_ID,
+								Billback_Payee_Type_ID,
+								Payee_ID,
+								<cfif Remove EQ 1>
+									Hidden,
+								<CFELSE>
+									<cfif  Adj_Default_settings eq 2>Ignore,</cfif>
+									<cfif  Adj_Default_settings eq 3>Hidden,</cfif>
+								</cfif>
+								Adjustment_Amount,
+								Deviation_Type)
+			VALUES	(
+						<cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">,
+						<cfqueryparam value="#Payee_Type#" cfsqltype="CF_SQL_INTEGER">,
+						<cfqueryparam value="#Payee_ID#" cfsqltype="CF_SQL_VARCHAR">,
+						<cfif Remove EQ 1>
+							1,
+						<CFELSE>
+							<cfif Adj_Default_settings eq 2>1,</cfif>
+							<cfif Adj_Default_settings eq 3>1,</cfif>
+						</cfif>
+						<cfqueryparam value="#New_Adjustment_Created#" cfsqltype="CF_SQL_FLOAT">,
+						#Deviation_Type#
+						)
+		</cfquery>
+	<cfelse>
+		<cfquery name="UpdateAdjustment" datasource="#Application.datasource#">
+			UPDATE BB_Adjustment
+			SET  		Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">,
+						Billback_Payee_Type_ID = <cfqueryparam value="#Payee_Type#" cfsqltype="CF_SQL_INTEGER">,
+						Payee_ID = <cfqueryparam value="#Payee_ID#" cfsqltype="CF_SQL_VARCHAR">,
+						Adjustment_Amount = <cfqueryparam value="#New_Adjustment_Created#" cfsqltype="CF_SQL_FLOAT">,
+						<cfif Remove EQ 1>Hidden = 1,</cfif>
+						Deviation_Type = #Deviation_Type#
+			WHERE BB_Adjustment_ID = <cfqueryparam value="#CreateOrUpdateAdjustment.BB_Adjustment_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+	</cfif>
+	<cfquery name="DelAdjRemove" datasource="#Application.datasource#">
+		DELETE FROM BB_Adjustment_Removal
+		WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+	<cfif AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack EQ 2 OR AdjustmentSettings.Adjustment_From_Program_With_PullBack EQ 2>
+		<cfquery name="InsAdjremove" datasource="#Application.datasource#">
+			INSERT INTO BB_Adjustment_Removal(
+								Billback_ID,
+								Removed_Program_Type,
+								Removed_From_Program_IDS,
+								Removed_Amount)
+			VALUES	(
+					'#Billback_ID#',
+					<cfif AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack EQ 2 AND AdjustmentSettings.Adjustment_From_Program_With_PullBack EQ 2>
+					1,'#LISTAPPEND(RegularProgram,PullBackProgram)#',#Adjustment_Created#
+					<CFELSEIF AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack EQ 2>
+					2,'#RegularProgram#',#AmtToRemove#
+					<CFELSEIF AdjustmentSettings.Adjustment_From_Program_With_PullBack EQ 2>
+					3,'#PullBackProgram#',#AmtToRemove#
+					</cfif>)
+		</cfquery>
+	</cfif>
+</cfif>
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 6. Update growth and lumpsum paid tables
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfif Rate_Paid_Type IS "BB">
+
+	<cfquery name="UpdateGrowth" datasource="#application.datasource#">
+	UPDATE BB_Growth_Program
+	SET Paid_Amount = BB_Growth_Amount
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+	<cfquery name="UpdateLS" datasource="#application.datasource#">
+	UPDATE BB_Lump_Sums
+	SET LS_Paid_Amount = LS_Billback_Amount
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+<cfelseif Rate_Paid_Type IS "E">
+
+	<cfquery name="UpdateGrowth" datasource="#application.datasource#">
+	UPDATE BB_Growth_Program
+	SET Paid_Amount = Expected_Amount
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+	<cfquery name="UpdateLS" datasource="#application.datasource#">
+	UPDATE BB_Lump_Sums
+	SET LS_Paid_Amount = LS_Expected_Amount
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+<cfelseif Rate_Paid_Type IS "A">
+
+	<cfquery name="UpdateGrowth" datasource="#application.datasource#">
+	UPDATE BB_Growth_Program
+	SET Paid_Amount = Approved_Amount
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+	<cfquery name="UpdateLS" datasource="#application.datasource#">
+	UPDATE BB_Lump_Sums
+	SET LS_Paid_Amount = LS_Approved_Amount
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+	<cfquery name="UpdateLSWhenNULL" datasource="#application.datasource#">
+		UPDATE	ls
+		SET		LS_Paid_Amount =
+					case
+					when alli.Approval_Button = 'btnClaimedAmt' then ls.LS_Billback_Amount
+					when alli.Approval_Button = 'btnExpectedAmt' then ls.LS_Expected_Amount
+					end
+		from	Billback b
+		inner join BB_Approved a on a.Billback_ID = b.Billback_ID
+		inner join BB_Lump_Sums ls on ls.Billback_ID = b.Billback_ID and ls.Deleted = 0
+		inner join Billback_Allied alli on alli.Billback_ID = b.Billback_ID
+		where	b.Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+		and		ls.LS_Paid_Amount IS NULL
+		and		(alli.Approval_Button in ('btnExpectedAmt', 'btnClaimedAmt'))
+		and		(a.Paid_Amount = b.BB_Amount or a.Paid_Amount = b.BB_Expected_Amount)
+	</cfquery>
+
+<cfelseif Rate_Paid_Type IS "None">
+
+	<cfquery name="UpdateGrowth" datasource="#application.datasource#">
+	UPDATE BB_Growth_Program
+	SET Paid_Amount = 0
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+	<cfquery name="UpdateLS" datasource="#application.datasource#">
+	UPDATE BB_Lump_Sums
+	SET LS_Paid_Amount = 0
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+</cfif>
+
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 6a. Update lump sum cap allocation table
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+	<cfquery name="qUpdatePaidAmountInAllocTable" datasource="#application.datasource#">
+		UPDATE	BB_Program_Lump_Sum_Distributor
+		SET 	Paid_Amount = Selected_Amount
+		WHERE 	BB_Program_Lump_Sum_Distributor.Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+		AND 	BB_Program_Lump_Sum_Distributor.Deleted = 0
+	</cfquery>
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 6b. Delete any worksheet tables for the billback
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+	<cfquery name="DeleteWSVolume" datasource="#application.datasource#">
+		DELETE
+		FROM BB_Worksheet_Volume
+		WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+
+	<cfquery name="DeleteWSDollars" datasource="#application.datasource#">
+		DELETE
+		FROM BB_Worksheet_Dollars
+		WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 7. Check if pullbacks are On. If so find this billback program + Customer + products are eligible for pullback from Pullback_details table. and make entry in the Pullback Log tables. All this should be executed in a SP below.
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+
+<cfif appSettings.getPullbacksOn()>
+
+	<!--- PULLBACK LOG IS MAINTAINED AT THE TIME AUTO PAY RUNS D40634  --->
+<!---	<cfquery name="Call_Create_Pullback_Log" datasource="#application.datasource#">
+		/* Call Create_Pullback_Log.  UDF checks App setting and template settings for BB */
+			IF dbo.Call_Create_Pullback_Log('#Billback_ID#') = 1
+			BEGIN
+				EXEC Create_Pullback_Log '#Billback_ID#',0,0,NULL,0
+			END
+	</cfquery>--->
+<!--- <cfquery name="checkifeligibleforpullbacklogentry" datasource="#application.datasource#">
+		select distinct
+		Program_Control_Panel_Options.pullback_from_corporate,Pullbacks_On,
+		generic_type,is_pullback_corporate_deal
+		from
+		billback
+		inner join billback_program on
+		billback_program.billback_id = billback.billback_id
+		inner join contract_main on
+		contract_main.contract_main_id = billback_program.program_id
+		inner join Program_Control_Panel_Options on
+		Program_Control_Panel_Options.ProgramControl_Panel_Options_id
+		= contract_main.programtype_id
+		where billback.billback_id = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+</cfquery>
+
+<cfif (
+			(checkifeligibleforpullbacklogentry.generic_type EQ "Distributor Trade/Shelter"
+			and checkifeligibleforpullbacklogentry.is_pullback_corporate_deal EQ 0
+			and checkifeligibleforpullbacklogentry.pullback_from_corporate EQ 1)
+				OR
+			(checkifeligibleforpullbacklogentry.generic_type EQ "Operator Direct or HQ Programs"
+			OR checkifeligibleforpullbacklogentry.generic_type EQ "Operator-Deviated Pricing")
+
+		)
+				and checkifeligibleforpullbacklogentry.Pullbacks_On EQ 1>
+		<!---call SP to update program product volume --->
+<cfstoredproc procedure="Create_Pullback_Log" datasource="#application.datasource#">
+	<cfprocparam type="In" CFSQLType="CF_SQL_VARCHAR" dbVarName = "@@Billback_Id" value = "#Billback_ID#" null="no">
+	<cfprocparam type="In" CFSQLType="CF_SQL_BIT" dbVarName = "@@is_retrorevision" value = "0">
+	<cfprocparam type="In" CFSQLType="CF_SQL_Integer" dbVarName = "@revised_contract_id" value = "0">
+	<cfprocparam type="In" CFSQLType="CF_SQL_VARCHAR" dbVarName = "@@Dis_Corp_Number" value = "" null="yes">
+	<cfprocparam type="In" CFSQLType="cf_sql_bit" dbVarName = "@@from_Dis_Corp" value = "0">
+</cfstoredproc>
+</cfif>--->
+</cfif>
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 8. Update Modify Agree Details
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfif appsettings.getBillbackModifyAgree() EQ 1>
+	<!--- Check If modify agree is 1 --->
+	<cfquery name="getBBInfo" datasource="#application.datasource#">
+		select BB_Modify_Agree
+		from billback
+		where Billback_Id = '#Billback_ID#'
+	</cfquery>
+
+	<cfif getBBInfo.BB_Modify_Agree EQ 1>
+	<cfinclude template="save_modifyagree_BBchanges.cfm">
+	<cfquery name="UpdateModifyAgreeInfo" DATASOURCE="#Application.Datasource#">
+	update Billback
+	set BB_modify_agree = 0
+	where Billback_Id = '#Billback_ID#'
+	</cfquery>
+	</cfif>
+</cfif>
+
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 9. Chnage Status to 3, and create exclusions
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfquery name="DataValidation" DATASOURCE="#Application.Datasource#">
+	EXEC BB_Approve_Data_Validation '#Billback_ID#'
+</cfquery>
+
+<cfquery name="Sel_DataVal_Result" DATASOURCE="#Application.Datasource#">
+	SELECT BB_Approve_Data_Validation_Success FROM BIllback WHERE Billback_ID = '#Billback_ID#'
+</cfquery>
+
+<cfif Sel_DataVal_Result.BB_Approve_Data_Validation_Success EQ 1>
+	<cfquery name="CreateExclusion" datasource="#application.datasource#">
+	exec BB_Exclusion_Log <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+<CFELSE>
+<cfset local_bbid = Billback_ID>
+<cfinclude template="/billbacks/capture/bb_menu_stats.cfm">
+<script>
+	callfireEvent(window.parent.document,window.parent.summary_tab,'Click');
+</script>
+</cfif>
+
+<!--- update the BB_Approved table for 21923 --->
+  <cfquery name="SelBBApproved" datasource="#application.datasource#">
+	     SELECT Approval_Type, Approval_Updated_By, Approval_Updated_Date
+       FROM BB_Approved
+       WHERE
+       Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+  </cfquery>
+
+<!--- <cfif SelBBApproved.Approval_Type GT 1 AND iApprovalType EQ 1> --->
+	<cfquery name="updApproved" datasource="#application.datasource#">
+	UPDATE BB_Approved
+	SET
+    Approval_Type = <cfqueryparam value="#iApprovalType#" cfsqltype="CF_SQL_INTEGER">,
+   Approval_Updated_By = <cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="CF_SQL_VARCHAR">,
+    Approval_Updated_Date = GetDate()
+	WHERE Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+	</cfquery>
+  <cfquery name="insApprovalHistory" datasource="#application.datasource#">
+    INSERT INTO BB_Approval_History
+    (Billback_ID, Approved_By, Created_Date)
+    VALUES
+    (
+      <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">,
+      <cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="CF_SQL_VARCHAR">,
+      GetDate()
+    )
+
+  </cfquery>
+
+  <!--- Note: appSettings.getPrgWonLostOnBBApproval() EQ 1 means (On BB Approve)--->
+  <cfif appSettings.getPrgWonLostOnBBApproval() EQ 1>
+	<CFSTOREDPROC PROCEDURE="USP_Set_Program_Won_On_Billback_Approve" datasource="#application.datasource#">
+		<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_VARCHAR"	DBVARNAME="@@Billback_ID" VALUE="#Billback_ID#" null="no">
+	</CFSTOREDPROC>
+  </cfif>
+
+<!--- </cfif> --->
+
+<!---Also marks the billback as approved--->
+<!---Insert the adjustment created--->
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 10. Create Broker PullBacks. Function call checks appsetting
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfset oBrkPullbackUpd = CreateObject("component","components.Brk_Pullback.Brk_Pullback_Upd").init() />
+<cfset tmpApplyBrkPullback = oBrkPullbackUpd.UpdatePBLog(Billback_ID) />
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 10B. Create "Auto Pay Lite" Pullbacks. Log table is BB_Auto_Report_PB_Log
+Based on Discount identifier 28 and 29 used to flag ineligible volume
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfquery name="Create_Ineligible_Vol_PB" DATASOURCE="#application.datasource#">
+	EXEC BB_Auto_Upd_BB_Auto_Report_PB_Log <CFQUERYPARAM VALUE="#Billback_ID#" CFSQLTYPE="CF_SQL_VARCHAR">
+</cfquery>
+
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 11. Send Email
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<!--- 	Tim Ford - 04/29/2013: Label 37227 - Billback approval emails not being sent.
+		The Billback_Status_ID in the GetPayeeType query is 2 because the query
+		was run before the Billback was set to approved. So I'm adding another
+		query to grab the status id to determine if the Billback should go through
+		the approval email notification logic below and send emails accordingly.
+
+--->
+<cfquery name="qCheckBillbackStatus" DATASOURCE="#application.datasource#">
+	SELECT	Billback_Status_ID
+	FROM	Billback
+	WHERE 	Billback_ID = <CFQUERYPARAM VALUE="#Billback_ID#" CFSQLTYPE="CF_SQL_VARCHAR">
+</cfquery>
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Once the billback is approved, send mail to the user who requested approval
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfif qCheckBillbackStatus.Billback_Status_ID GTE 3><!---- Approved ------>
+
+	<!--- 76132 :: Enhancement: Set BB to Paid after Prepare Check Request --->
+	<cfif appSettings.get_Setting('Billback_Set_Paid_After_Approved') eq '1'>
+		<cfset SetBBStatus = CreateObject("component", "components.billback.BillbackSettingsManager").setBB2Paid('#Billback_ID#') />
+	</cfif>
+
+	<!--- 76379 Allocate Billback Lump sum dollars to item level into table Billback_LumpSum_Item_Allocation --->
+	<CFSTOREDPROC PROCEDURE="Billback_LumpSum_Item_Allocation_Update" datasource="#application.datasource#">
+		<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_VARCHAR"	DBVARNAME="@Billback_ID" VALUE="#Billback_ID#" null="no">
+	</CFSTOREDPROC>
+
+	<!--- Update budget actual dollar --->
+	<cfset CreateObject("component", "mvc.Models.AdvancedBudget.BudgetManager").addBillbackToBudget(billbackId=Billback_ID) />
+
+	<cfquery name="GetBillbackEmail" datasource="#application.datasource#">
+		SELECT BB_Approved_Email
+		FROM _application_settings
+	</cfquery>
+	<cfif Len(GetPayeeType.BB_Request_Approval_User_ID) GT 0 AND GetBillbackEmail.BB_Approved_Email EQ 1>
+		<CFINCLUDE TEMPLATE="/get_Contact_Admin_Email_Address.cfm">
+		<cfquery name="Get_Email_Addresses" DATASOURCE="#application.datasource#">
+			SELECT		RFA_User.User_Email RFA_User_Email
+			FROM		_Users RFA_User
+			WHERE    	RFA_User.User_ID = <cfqueryparam value="#GetPayeeType.BB_Request_Approval_User_ID#" cfsqltype="CF_SQL_VARCHAR">
+			AND 		RFA_User.Deleted = 0
+		</cfquery>
+		<cfquery name="Get_Approved_User_Info" DATASOURCE="#application.datasource#">
+			SELECT			Date_Approved,	_Users.Name_First + ' ' + _Users.Name_Last As Approved_user_Full_Name, User_Email AS Approving_User_Email
+			FROM			BB_Approved
+			INNER JOIN 	_Users
+			ON 				_Users.User_ID = BB_Approved.User_Approved
+			WHERE 			BB_Approved.Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+		<CFSET Approved_Date = Now()>
+		<CFSET Approved_User = "">
+	<cfif Get_Approved_User_Info.RecordCount GT 0>
+		<CFSET Approved_Date = Get_Approved_User_Info.Date_Approved>
+		<CFSET Approved_User = Get_Approved_User_Info.Approved_user_Full_Name>
+	</cfif>
+		<cfif Get_Email_Addresses.recordCount GT 0>
+			<cfif comparenocase(Get_Email_Addresses.RFA_User_Email,Get_Approved_User_Info.Approving_User_Email) IS NOT 0>
+				<CFSET Encrypt_Document_Type 	= "Billback">
+				<CFSET Encrypt_Document_ID 		= Billback_ID>
+				<CFINCLUDE TEMPLATE="/Common_Files/Encrypted_url.cfm">
+				<CFPARAM NAME="Encrypted_Url" 	DEFAULT="">
+					<CF_EMAILWRAPPER
+						TO			=	"#Get_Email_Addresses.RFA_User_Email#"
+				        FROM		=	"#Contact_Admin_Email_Address#"
+				        SUBJECT		=	"Billback #GetPayeeType.BB_Code# has been approved"
+						TYPE		=	"html"
+						MESSAGETYPE = 	"1"
+						generatedBy	=	"2"
+						appArea		=	"3">
+						<TABLE>
+						<TR>
+						<TD VALIGN="top">
+						Billback [#GetPayeeType.BB_Code#] "#GetPayeeType.BB_Title#" has been approved by #Approved_User# on #DateFormat(Approved_Date, "mm/dd/yyyy")#
+						</TD>
+						</TR>
+						</TABLE>
+				</CF_EMAILWRAPPER>
+				<!---Approver is not creator --->
+			</cfif>
+			<!---comparenocase(Get_Email_Addresses.RFA_User_Email,Get_Approved_User_Info.Approving_User_Email) IS 0 --->
+		</cfif>
+		<!---Get_Email_Addresses.recordCount GT 0 --->
+	</cfif>
+	<!---cfif Len(GetPayeeType.BB_Request_Approval_User_ID) GT 0 AND GetBillbackEmail.BB_Approved_Email EQ 1 --->
+
+</cfif>
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 12. Save budget selection and change status to pending fund update if necessary
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+	<cfif application.oApplicationAppSettingsManager.getApplicationAppSettings().getBudgetsFunctionalityOn()>
+		<!---- save into db ---->
+		<cfset BudgetBillbackManager = CreateObject("component", "components.budgets.BudgetBillbackManager").init() />
+		<cfset bSetToPendingFundUpdate = BudgetBillbackManager.saveBudgetBillback(
+					billbackId = Billback_ID,
+					oForm = form,
+					userID = request.AccessStructure.user_id) />
+		<cfif bSetToPendingFundUpdate>
+			<!----- go to summary page ------>
+		  	<cflocation url="/billbacks/capture/Billback_Summary.cfm?BBID=#form.Billback_ID#">
+		</cfif>
+	</cfif>
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+End Step 12. Save budget selection and change status to pending fund update if necessary
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+
+
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Step 13. Save gl account # for component
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+<cfstoredproc procedure="BB_Save_GL_Account" datasource="#application.datasource#">
+	<cfprocparam cfsqltype="CF_SQL_VARCHAR" dbvarname="@@BILL_ID" value="#form.Billback_ID#" />
+</cfstoredproc>
+<!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+End Step 13. Save gl account # for component
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
+
+	<!---D55703 :: Vendor required setting in closing method settings panel START--->
+		<cfquery name="GetBillbackInfo" datasource="#application.datasource#">
+			SELECT 		Billback.Billback_Payee_Type_ID, BCM.Vendor_Required, Billback.Billback_Status_ID
+			FROM 		Billback
+			LEFT JOIN Billback_Closing_Methods BCM
+			ON 			BCM.iBillback_Closing_Method_ID = Billback.BB_Closing_Method
+			WHERE 		Billback_ID = <cfqueryparam value="#Billback_ID#" cfsqltype="CF_SQL_VARCHAR">
+		</cfquery>
+		<cfset BillbackStatus = billbackManager.setBillbackPendingVendorID(Billback_ID,GetBillbackInfo.Billback_Payee_Type_ID,GetBillbackInfo.Vendor_Required)>
+	<!---D55703 :: Vendor required setting in closing method settings panel END--->
+<cfset local_bbid = Billback_ID>
+<cfinclude template="/billbacks/capture/bb_menu_stats.cfm">
+<CFIF appSettings.get_Setting('Billback_Set_Paid_After_Approved') eq '1'>
+	<script>
+		window.parent.location.href = "/Billbacks/capture/index.cfm?BBID=<CFOUTPUT>#form.billback_ID#</CFOUTPUT>";
+	</script>
+	<cfabort>
+<CFELSE>
+	<cfif len(trim(LocationURL)) GT 0>
+		<cfif LocationURL IS "home" AND BillbackStatus NEQ 7>
+			<script>
+				window.parent.location.href = "/Billbacks/capture/index.cfm?BBID=<CFOUTPUT>#form.billback_ID#</CFOUTPUT>&modifyagree=1";
+			</script>
+			<cfabort>
+		<cfelseif LocationURL IS "home" AND BillbackStatus EQ 7>
+			<script>
+				window.parent.tabClick('payment');
+			</script>
+			<cfabort>
+		</cfif>
+		<script language="JavaScript">
+			window.parent.payment_tab.className="activeMenuItem"
+			window.parent.current_menu_item = 'payment';
+			window.parent.buildMenu();
+		</script>
+		<cflocation url="#LocationURL#?Billback_ID=#Billback_ID#&new_bb_check=1&PayeeType=#GetBillbackInfo.Billback_Payee_Type_ID#">
+	<cfelse>
+		<script language="Javascript">
+			window.parent.tabClick('payment');
+		</script>
+	</cfif>
+</CFIF>
+</cfoutput>
+</cfif><!--- D25219: SOW - Enable mass paying of payables --->

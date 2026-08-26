@@ -1,0 +1,68 @@
+===== QUERY: local.query =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: EzTemplateExists =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForEzTemplateExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForEzTemplateExists>
+	<cftry>
+		<cfset EzTemplateExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"program_description" = "eq.EZ Button Rate Template",
+				"isdominant" = "eq.0",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEzTemplateExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEzTemplateExists>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: EzTemplateExists =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForEzTemplateExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForEzTemplateExists>
+	<cftry>
+		<cfset EzTemplateExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"program_description" = "eq.EZ Button Rate Template",
+				"isdominant" = "eq.0",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEzTemplateExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEzTemplateExists>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDiscountType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDiscountType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_type")>
+<cfif useLakebaseForqGetDiscountType>
+	<cftry>
+		<cfset qGetDiscountType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_type", {
+				"discount_type_id" = "eq.2",
+				"select" = "discount_type_id,discount_type_desc"
+			}), "discount_type_id,discount_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

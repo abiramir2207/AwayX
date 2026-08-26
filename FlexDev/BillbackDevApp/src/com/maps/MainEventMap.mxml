@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	All the events that are called in the application are placed in this class. 
+-->
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.events.*;
+			import com.models.*;
+			import com.vos.*;
+			import com.views.*;
+	]]>
+	</mx:Script>
+	<mate:Debugger level="{Debugger.ALL}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Added requestTimeout property --> 
+	<!-- Remote Services  _________________________________________________________________________ -->
+	<mx:RemoteObject id="roMainService" destination="ColdFusion" source="mvc.Models.Billback.BillbackDevAppManager"  requestTimeout="1800"  makeObjectsBindable="true"/>
+	<mx:RemoteObject id="roErrorService" destination="ColdFusion" source="mvc.models.ErrorService" requestTimeout="1800"/>
+	<!-- Remote Services  ***************************************************************************************** -->
+	<!--<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.models._ProjectTemplate._ProjectTemplateService" />-->
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" requestTimeout="1800" />
+
+	<!-- FlexEvent.PREINITIALIZE __________________________________________________________________ -->
+	<!---
+		FlexEvent Preinitialize initializes the various ObjectBuilders used 	
+	-->	
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE">
+		<ObjectBuilder generator="{BBMainManager}" id="oManager" cache="global" />
+		<ObjectBuilder generator="{BBSettingsManager}" id="oSettingsManager" cache="global" />
+	<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+	<!---@see com.models.SettingsManager#loadURLParameters()
+			Invoke : com.models.SettingsManager.loadURLParameters()-->
+	<!-- <EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE">
+		<ObjectBuilder generator="{MainManager}" id="oManager" cache="global" />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" cache="global" / -->
+		<ObjectBuilder generator="{BAError}" id="oBAError" cache="global" />
+		<MethodInvoker generator="{BBSettingsManager}" method="loadURLParameters" cache="global" />
+	<!-- 	<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" cache="global" /> -->
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+	<!-- EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" -->
+ 
+		<!--call db for other settings-->
+ 
+		<!--<EventAnnouncer type="{MainEvent.LOAD_APP_SETTINGS}" generator="{MainEvent}" >
+			<Property sourceCache="global" source="{BBSettingsManager}" sourceKey="settings.sBBID" targetKey="sBBID"/>
+		</EventAnnouncer>-->
+	<!-- /EventHandlers -->
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE ___________________________________________________________ -->
+<!--
+		FlexEvent Creation_Complete: It Announces the events and does the following:
+		GET_BILLBACK_HEADER: Gets the header details about the billback
+		GET_BILLBACK_DETAILS:  Gets the Details about the Billback and all the 
+		records that needs to be displayed in the Datagrid.
+	-->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE">
+		<EventAnnouncer type="{MainEvent.GET_BILLBACK_HEADER}" generator="{MainEvent}" >
+			<Property sourceCache="inherit" source="{BBSettingsManager}" sourceKey="settings.sBBID" targetKey="sBBID"/>
+			<Property sourceCache="inherit" source="{BBSettingsManager}" sourceKey="settings.sUserId" targetKey="sUserId"/>
+		</EventAnnouncer>		
+		<EventAnnouncer type="{MainEvent.GET_BILLBACK_DETAILS}" generator="{MainEvent}" >
+			<Property sourceCache="inherit" source="{BBSettingsManager}" sourceKey="settings.sBBID" targetKey="sBBID"/>
+		</EventAnnouncer>	
+	</EventHandlers>
+ 
+    <!-- ************************************************
+    	 ADD NEW EventHandlers Here   *******************
+         ************************************************-->
+
+  <!---
+  	This event hanlder gets 
+  -->
+    
+	<!--<EventHandlers type="{MainEvent.LOAD_APP_SETTINGS}" id="eLOAD_APP_SETTINGS">
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.sUserId}" >
+			<!- - result sequence gets executed when service returns with a result - - >
+			<resultHandlers>
+				<MethodInvoker cache="global" generator="{BBSettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<! - - server fault - - >
+			<faultHandlers>
+				<!- - announce error event - - >
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers> -->
+	
+ 
+	<!--- 
+		This event handler gets the details about the Billback which will get displayed 
+		at the top of the Billback Datagrid page. 
+	-->
+	<EventHandlers type="{MainEvent.GET_BILLBACK_HEADER}" id="eGET_BILLBACK_HEADER">
+	<!--	<MethodInvoker generator="{BBMainManager}" method="Alerter" arguments="{event.sBBID}" />-->
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="getBillbackHeader" arguments="{[event.sBBID,event.sUserId]}" requestTimeout="1800" makeObjectsBindable="true">
+				<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker cache="global" generator="{BBSettingsManager}" method="setBillbackHeader" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="BILLBACK HEADER SETTINGS SERVICE (load app settings event = GET_BILLBACK_HEADER)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!---
+		This event handler gets the different records associated with the Billback
+		that gets displayed in the datagrid. 
+		
+	-->
+		<EventHandlers type="{MainEvent.GET_BILLBACK_DETAILS}" id="eGET_BILLBACK_DETAILS">
+	<!--	<MethodInvoker generator="{BBMainManager}" method="Alerter" arguments="{event.sBBID}" />-->
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="getBillbackDetails" arguments="{event.sBBID}"  makeObjectsBindable="true">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!--<MethodInvoker cache="global" generator="{BBSettingsManager}" method="setBillbackDetails" arguments="{resultObject}" />-->
+				<MethodInvoker cache="global" generator="{BBMainManager}" method="onResult" arguments="{resultObject}" />
+					<EventAnnouncer type="{MainEvent.FILTER_RESULTS}" generator="{MainEvent}">
+					</EventAnnouncer>  				
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="BILLBACK DETAILS SETTINGS SERVICE (load app settings event = GET_BILLBACK_DETAILS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--- 
+		This event handler will filter the results on the initial load.
+	-->
+	<!-- <EventHandlers type="{MainEvent.FILTER_RESULTS}" id="eFILTER_RESULTS"> -->
+		<!-- MethodInvoker generator="{BBMainPanel}" method = "fnLoadDG"  / -->
+		<!-- <MethodInvoker cache="global" generator="{BBMainPanel}" method="fnFilterOnSetting" />
+	</EventHandlers> -->
+
+	<!---
+		This event hanlder will do a recalculation of the different values that gets
+		displayed at the top of the page, whenever some selection gets changed
+		in the datagrid.
+	-->
+	<EventHandlers type="{MainEvent.RECALCULATE}" id="eRECALCULATE"  debug="true">
+			<MethodInvoker  cache="global" generator="{BBMainManager}" method="fnRecalculate" arguments="{[event.evtObj,event.sCaller,event.sOptionalVal,event.sAllowValuesGTClaimed]}" />
+	</EventHandlers>
+ 
+ 	<!---
+ 		This event handler saves the changes made to the values in the grid
+ 		and this event gets called whenever the user clicks on any one of the
+ 		three Approval buttons, so that the changes gets saved, before it is 
+ 		approved.  
+ 	-->
+ 
+ 
+	<EventHandlers type="{MainEvent.SAVE_CHANGES}" id="eSAVE_CHANGES">
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="updateBBDeviations" arguments="{[event.Billback_ID,event.sUserId,event.dgEditedSet,event.doAction,event.ApprovalBtn]}" requestTimeout="1800">
+ 			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{BBSettingsManager}" method="saveAlerter" arguments="{[resultObject,'Save Status!',event.doAction]}" />
+				  <EventAnnouncer type="{MainEvent.APPROVE}" generator="{MainEvent}">
+					<Properties doAction="{event.doAction}" />
+				</EventAnnouncer>  		
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="Error In Save_changes" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+ 
+	<!---
+		This event gets called after the user clicks on the Approve button 
+		and when the variable doAction is set to "doSaveApprove".
+	-->		
+	<EventHandlers type="{MainEvent.APPROVE}" id="eAPPROVE">
+		<MethodInvoker generator="{BBMainPanel}" method = "fnApprovePageRedirector" arguments="{event.doAction}"  />
+	</EventHandlers>	
+		
+	<!--- 
+		This event gets called whenever there is an error in any one of event handlers.
+	-->
+
+	<EventHandlers type="{MainEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+ 
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}" requestTimeout="1800">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}" requestTimeout="1800" />
+	</EventHandlers>
+	
+</EventMap>
+
+

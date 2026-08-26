@@ -1,0 +1,108 @@
+/*
+	Name: locked-column.css        
+	Copyright (c) 2006 Blacksmith Applications, Inc.       
+             
+	Description:
+		This file contains the formatting logic for the revised user profile control panel
+	Usage:
+		Include in the top most window in the page execution.
+	Tip:
+		1) Each row that allows on-page modification of cell values should have the massUpdate cell.
+		2) A th object contained within a thead object should not require any specific code for scrolling behavior.
+		3) A td object in the tbody object requires a class of locked to lock the cell position on the rendered page.
+*/	
+
+table.tbl {
+table-layout: fixed;
+border-collapse: collapse;
+}
+
+
+/* Determines shape of table that contains the profile controls*/
+#tbl-container {
+OVERFLOW: auto; 
+WIDTH: 99.9%; 
+HEIGHT:580;
+}
+
+/* Determines shape of table header*/
+#lastUpdatedBy {
+WIDTH: 99.9%; 
+}
+
+input {	
+		font-size:11px;		
+}
+
+thead th, thead th.locked	{
+font-size: 11px;
+font-weight: bold;
+text-align: center;
+background-color: #DDDDDD;
+color: blue;
+border-right: 1px solid silver;
+position:relative;
+cursor: default;
+}
+
+.lockednobold	{
+font-size: 11px;
+font-weight: normal;
+text-align: left;
+background-color: #DDDDDD;
+color: blue;
+border-right: 1px solid silver;
+position:relative;
+cursor: default;
+}
+
+thead th {
+	/* Commented as a part of IE 10 fix */
+	/*top: expression(document.getElementById("tbl-container").scrollTop-1);
+	top: expression(parentNode.parentNode.parentNode.parentNode.scrollTop-1);*/
+	z-index: 30;}
+
+thead th.locked {z-index: 20;}
+
+thead th.endcolumn { background-color:#FFFFFF;}
+
+#subheader {
+			background-color: RGB(00,00,164);
+			border-color: RGB(0,0,164);
+			color:#FFFFFF;
+			padding-top:7px;
+			padding-bottom:7px;
+		   }
+		 
+td.locked 		{	z-index: 20;padding-left:7px;}
+
+
+td.locked,  th.locked	{
+							background-color: whitesmoke;
+							font-size: 11px;
+							font-weight: bold;
+							border-top: 0px;
+							border-right: 1px solid silver;
+							/* Determines the behavior of the locked table cells
+							left: expression(parentNode.parentNode.parentNode.parentNode.scrollLeft); 
+							*/
+							position: relative;
+							z-index: 10;
+						}
+
+tbody td { border-bottom: 1px solid #E7E7E7;vertical-align:middle;font-size: 11px;}
+
+.footerlinks {	padding:10px; border-bottom: 0px solid #FFFFFF; text-align:center;}
+
+/* Determines the style of MassUpdate cells - this can be used to lock the mass update cells.*/
+.massUpdate {
+			text-align:center;
+			vertical-align:middle;
+			/* Uncomment to MassUpdate Column
+			background-color: whitesmoke;
+			font-weight: bold;
+			border-right: 1px solid silver;
+			left: expression(parentNode.parentNode.parentNode.parentNode.scrollLeft);
+			position: relative;
+			z-index: 10;*/
+			}

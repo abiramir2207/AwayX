@@ -1,0 +1,15 @@
+===== QUERY: ColHeader_Dis =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: ColHeader_Deal =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: ColHeader_Comp =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: ColHeader_Prod =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: findDupes =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

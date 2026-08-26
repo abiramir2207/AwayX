@@ -1,0 +1,12 @@
+===== QUERY: q_diLogFields =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_diLogData =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_diDBData =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_diDBData =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

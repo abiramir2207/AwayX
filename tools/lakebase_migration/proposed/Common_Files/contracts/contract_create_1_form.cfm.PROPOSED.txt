@@ -1,0 +1,285 @@
+===== QUERY: getGeneralSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGeneralSettings>
+	<cftry>
+		<cfset getGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1",
+				"select" = "use_discount_id"
+			}), "use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGeneralSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Program_Auto_Renew =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForProgram_Auto_Renew = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForProgram_Auto_Renew>
+	<cftry>
+		<cfset Program_Auto_Renew = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_auto_renew", {
+				"program_id" = "eq.#GetContractInfo.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_auto_renew_id,ar_notification_date,ar_start_date,ar_end_date,ar_renewal_type,renewal_lead_time,renewed"
+			}), "program_auto_renew_id,ar_notification_date,ar_start_date,ar_end_date,ar_renewal_type,renewal_lead_time,renewed"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Auto_Renew = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Auto_Renew>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getExclusionInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetExclusionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetExclusionInfo>
+	<cftry>
+		<cfset getExclusionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"revision_program_id" = "eq.#GetContractInfo.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExclusionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExclusionInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFieldSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qryUsersSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryUsersSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqryUsersSettings>
+	<cftry>
+		<cfset qryUsersSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"select" = "max_program_title_length,pullback_modify_corporate_program_rates"
+			}), "max_program_title_length,pullback_modify_corporate_program_rates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUsersSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUsersSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDiscountIdentifier =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetDiscountIdentifier>
+	<cftry>
+		<cfset GetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#getFieldSettings.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountIdentifier>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ThisProgramsRequirements =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: NotProgramsRequirements =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForNotProgramsRequirements = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("one_program_perf_mapping")>
+<cfif useLakebaseForNotProgramsRequirements>
+	<cftry>
+		<cfset NotProgramsRequirements = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("one_program_perf_mapping", {
+				"contract_main_id" = "eq.#Contract_ID#",
+				"checked" = "eq.0",
+				"select" = "program_perf_req_id"
+			}), "program_perf_req_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForNotProgramsRequirements = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForNotProgramsRequirements>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: selectedPR =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForselectedPR = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("one_program_perf_mapping")>
+<cfif useLakebaseForselectedPR>
+	<cftry>
+		<cfset selectedPR = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("one_program_perf_mapping", {
+				"contract_main_id" = "eq.#Contract_ID#",
+				"program_perf_req_label" = "eq.#Perf_Req_Label#",
+				"checked" = "eq.1",
+				"select" = "program_perf_req_id"
+			}), "program_perf_req_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselectedPR = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselectedPR>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetPrgPerfType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPrgPerfType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetPrgPerfType>
+	<cftry>
+		<cfset qGetPrgPerfType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Contract_ID#",
+				"select" = "planner_perf_type_id,contract_status_type_idx"
+			}), "planner_perf_type_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPrgPerfType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPrgPerfType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: OptinalDates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: checkFormulaPeriod =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckFormulaPeriod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForcheckFormulaPeriod>
+	<cftry>
+		<cfset checkFormulaPeriod = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_id" = "eq.#contract_Id#",
+				"deleted" = "eq.0",
+				"select" = "program_formula_pricing_period_id"
+			}), "program_formula_pricing_period_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckFormulaPeriod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckFormulaPeriod>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryCurrency =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryCurrency = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForqryCurrency>
+	<cftry>
+		<cfset qryCurrency = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCurrency = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCurrency>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryCurrencyTemplate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryCurrencyTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryCurrencyTemplate>
+	<cftry>
+		<cfset qryCurrencyTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#FORM.ProgramType_ID#",
+				"select" = "currencydefaultoption,*"
+			}), "currencydefaultoption,*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCurrencyTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCurrencyTemplate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetStates =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetStates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_states")>
+<cfif useLakebaseForGetStates>
+	<cftry>
+		<cfset GetStates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_states", {
+				"order" = "state_code.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStates>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetTopOneCompRow =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetTopOneCompRow = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcompetitiveinfofixedpricetypecomponentlist")>
+<cfif useLakebaseForqgetTopOneCompRow>
+	<cftry>
+		<cfset qgetTopOneCompRow = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcompetitiveinfofixedpricetypecomponentlist", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetTopOneCompRow = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetTopOneCompRow>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: operatorinfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

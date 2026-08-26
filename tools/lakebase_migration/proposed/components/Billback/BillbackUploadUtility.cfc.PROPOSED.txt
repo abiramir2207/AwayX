@@ -1,0 +1,57 @@
+===== QUERY: tempQry =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qUniqueMonthDay =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetUploadDetailLog =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetUploadHeaderLog =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetUploadPath =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qIsValidating =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: setUploadError =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: qGetPurgedUploads =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qUniqueMonthDay =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qCheckBillbackUploadSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckBillbackUploadSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_settings")>
+<cfif useLakebaseForqCheckBillbackUploadSettings>
+	<cftry>
+		<cfset qCheckBillbackUploadSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_upload_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckBillbackUploadSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckBillbackUploadSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckBillbackSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateBillbackUploadSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertBillbackUploadSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUniqueMonthDay =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

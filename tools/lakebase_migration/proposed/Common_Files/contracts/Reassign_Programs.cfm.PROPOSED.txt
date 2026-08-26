@@ -1,0 +1,46 @@
+===== QUERY: Check_Program =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheck_Program = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCheck_Program>
+	<cftry>
+		<cfset Check_Program = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"creating_user_position_id" = "eq.#From_Position#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Program = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Program>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: isActive_Business_Segment_ID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForisActive_Business_Segment_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForisActive_Business_Segment_ID>
+	<cftry>
+		<cfset isActive_Business_Segment_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"business_segment_id" = "eq.#List_Program.Business_Segment_ID#",
+				"active" = "eq.1",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisActive_Business_Segment_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisActive_Business_Segment_ID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBudgetClassType =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+

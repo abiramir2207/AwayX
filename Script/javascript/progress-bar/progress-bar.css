@@ -1,0 +1,37 @@
+/* PROGRESS BAR WRAPPER */
+.container {
+  z-index: 3;
+  position: relative;
+  background: #ccc;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* SHARED */
+.progress, .indicator, .container {
+  box-sizing: border-box;
+  min-height: 20px;
+  border-radius: 2px;
+}
+.indicator, .progress {
+  position: absolute;
+  top: 0; left: 0;
+}
+
+/* PERCENTAGE INDICATOR */
+.indicator {
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+  line-height: 22px;
+  color: #FFF;
+  font-weight: bold;
+}
+
+/* PROGRESS BAR */
+.progress {
+  z-index: 1;
+  width: 0;
+  background: #0077C8;
+  transition: width 0.9s;
+}

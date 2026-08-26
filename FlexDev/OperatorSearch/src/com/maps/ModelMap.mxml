@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.events.*;
+			import com.maps.MainEventMap;
+			import mx.controls.Alert;
+		]]>
+	</mx:Script>
+	
+	
+	<!-- SearchPanel View __________________________________________________________________ -->
+	
+	<Injectors target="{SearchPanel}">
+		<PropertyInjector targetKey="_arrSelectedItems" source="{SearchManager}" 	sourceKey="arrSelectedItems" />
+		<PropertyInjector targetKey="operators" 		source="{SearchManager}" 	sourceKey="operatorList" />
+		<PropertyInjector targetKey="dpState" 			source="{SearchManager}" 	sourceKey="arrState" />
+		<PropertyInjector targetKey="dpOperatorType" 	source="{SearchManager}" 	sourceKey="arrOperatorType" />
+		<PropertyInjector targetKey="dpStatus" 			source="{SearchManager}" 	sourceKey="arrStatus" />
+		<!-- Datagrid column header labels -->
+		<PropertyInjector targetKey="lblOperatorID" 	source="{SettingsManager}" 	sourceKey="settings.operatorID" />
+		<PropertyInjector targetKey="lblOperator" 		source="{SettingsManager}" 	sourceKey="settings.operatorSingular" />
+		<PropertyInjector targetKey="lblCity" 			source="{SettingsManager}" 	sourceKey="settings.city" />
+		<PropertyInjector targetKey="lblState"			source="{SettingsManager}" 	sourceKey="settings.state" />
+		<PropertyInjector targetKey="lblOperatorType" 	source="{SettingsManager}" 	sourceKey="settings.operatorType" />
+		<PropertyInjector targetKey="lblStatus" 		source="{SettingsManager}" 	sourceKey="settings.status" />
+		<PropertyInjector targetKey="lblLegacyID" 		source="{SettingsManager}" 	sourceKey="settings.legacyID" />
+		<ListenerInjector eventType="{SearchEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+	
+		<!-- App Setting -->
+		<PropertyInjector targetKey="iShowBSAOperators" 	source="{SettingsManager}" 	sourceKey="settings.cfApp_showBSAOperators" />
+		
+		<PropertyInjector targetKey="oSettings" 		source="{SettingsManager}" 	sourceKey="settings" />
+		<PropertyInjector targetKey="arrUserList" 		source="{ListManager}" 		sourceKey="userOperatorList" />
+		
+		<!-- UI Attribute Properties -->
+		<PropertyInjector targetKey="iButtonHeight" 	source="{SettingsManager}" 	sourceKey="settings.appButtonHeight" />
+		<PropertyInjector targetKey="iComboBoxHeight" 	source="{SettingsManager}" 	sourceKey="settings.appComboBoxHeight" />
+		<PropertyInjector targetKey="iTextInputHeight" 	source="{SettingsManager}" 	sourceKey="settings.appTextInputHeight" />
+		
+	</Injectors>
+
+	<Injectors target="{SearchManager}">
+		<!-- ComboBox/Dropdown filter labels -->
+		<PropertyInjector targetKey="lblCbState" 		source="{SettingsManager}" 	sourceKey="settings.state" />
+		<PropertyInjector targetKey="lblCbOperatorType" source="{SettingsManager}" 	sourceKey="settings.operatorType" />
+		<PropertyInjector targetKey="lblCbStatus" 		source="{SettingsManager}" 	sourceKey="settings.status" />
+		<PropertyInjector targetKey="arrSelectedItems" 	source="{SettingsManager}" 	sourceKey="settings.preSelected" />
+	</Injectors>		
+				
+</EventMap>

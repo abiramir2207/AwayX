@@ -1,0 +1,54 @@
+===== QUERY: GetStates =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetCounties =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCounties = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getoperatormap")>
+<cfif useLakebaseForGetCounties>
+	<cftry>
+		<cfset GetCounties = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getoperatormap", {
+				"order" = "county.asc",
+				"select" = "county,countyfips"
+			}), "county,countyfips"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCounties = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCounties>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetOperators =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getoperatormap")>
+<cfif useLakebaseForGetOperators>
+	<cftry>
+		<cfset GetOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getoperatormap", {
+				"order" = "operator_name.asc",
+				"select" = "bsa_operator_id,operator_name"
+			}), "bsa_operator_id,operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperators>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDistributorName =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetBrokerName =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetOperatorName =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

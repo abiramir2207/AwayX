@@ -1,0 +1,51 @@
+===== QUERY: qGetMPPrograms =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: qGetEffectiveDate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetEffectiveDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mass_price_products")>
+<cfif useLakebaseForqGetEffectiveDate>
+	<cftry>
+		<cfset qGetEffectiveDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("mass_price_products", {
+				"limit" = "1",
+				"select" = "effective_date"
+			}), "effective_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetEffectiveDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetEffectiveDate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCurrentProgramUserIDs =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateNewProgramUserIDs =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetRevisionVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: UpdateRevisionVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertBizCon =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdateChangedFlag =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSetProcessed =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - Could not parse SET assignment
+
+===== QUERY: qCheckAllRevised =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

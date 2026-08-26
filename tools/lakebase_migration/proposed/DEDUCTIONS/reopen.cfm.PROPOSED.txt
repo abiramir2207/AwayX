@@ -1,0 +1,26 @@
+===== QUERY: ReopenBillbacks =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForReopenBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForReopenBillbacks>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#BBsClosedByDeduction.Billback_ID#"
+			},
+			{
+				"bb_payment_header_sent" = "0",
+				"bb_payment_detail_sent" = "0",
+				"bb_payment_user_sent" = "0",
+				"bb_reopened_multiplier" = "-1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForReopenBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForReopenBillbacks>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

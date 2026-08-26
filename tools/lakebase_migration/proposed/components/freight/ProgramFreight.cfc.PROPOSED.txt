@@ -1,0 +1,108 @@
+===== QUERY: qsetProgramDistributorFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qsetContractDistributors =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qsetNotesInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qApproveFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetRevisionContractNumber =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetRevisionContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetRevisionContractNumber>
+	<cftry>
+		<cfset qGetRevisionContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "is_a_revision,contract_number"
+			}), "is_a_revision,contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRevisionContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRevisionContractNumber>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRevisionVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: UpdateRevisionVersion =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateRevisionVersion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForUpdateRevisionVersion>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#arguments.programId#"
+			},
+			{
+				"revision_version" = "#GetRevisionVersion.revisionversion# + 1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateRevisionVersion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateRevisionVersion>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qApproveFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qApproveFreightHistory =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetProgramDistributorFreightCount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramDistributorFreightCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_distributor_freight")>
+<cfif useLakebaseForqGetProgramDistributorFreightCount>
+	<cftry>
+		<cfset qGetProgramDistributorFreightCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_distributor_freight", {
+				"program_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramDistributorFreightCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramDistributorFreightCount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDeleteDistributorFreightInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qResetFreightInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateProgramDistributorFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qVerifyFreightAdjustment =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qVerifyValidFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: PopulateProgramDistributorFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qSaveItemBracketFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

@@ -1,0 +1,141 @@
+<!-----------------------------------------------------------------------------
+
+FILE NAME:		_margin_exclusion_header.cfm
+DESCRIPTION:	This is the header file that is called in the Margin exclusion
+              settings page
+CREATED BY:		10-Aug-2010
+MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
+			
+      			Anand Rao	  10-Aug-2010	Created the file
+------------------------------------------------------------------------------> 
+
+<CFSET TR_BORDER_WIDTH = 2>
+<CFSET TD_FORE_COLOR = "FFE083">
+<CFOUTPUT>
+<STYLE TYPE="text/css">
+A.tablink_back, A:Hover.tablink_back
+	{
+		color: 				Black;
+		font-family:		Arial;
+		font-size :			11px; 
+		font-weight:		bold;
+		text-decoration:	none;
+	}
+A:visited.tablink_back
+	{
+		color: 				Black;
+		font-family:		Arial;
+		font-size :			11px; 
+		font-weight:		bold;
+		text-decoration:	none;
+	}
+A.tablink_fore
+	{
+		color: 				Red;
+		font-family:		Arial;
+		font-size :			11px; 
+		font-weight:		bold;
+		text-decoration:	none;
+	}
+A:visited.tablink_fore
+	{
+		color: 				Red;
+		font-family:		Arial;
+		font-size :			11px; 
+		font-weight:		bold;
+		text-decoration:	none;
+	}
+	
+ 
+	TD.headernotselected
+  {
+   background-color 	: dddddd;
+   border-bottom		: solid #TR_BORDER_WIDTH#px black;
+   cursor				: pointer;	
+  }
+  TD.headerselected
+  {
+   border-left			: solid #TR_BORDER_WIDTH#px black;
+   border-top			: solid #TR_BORDER_WIDTH#px black;
+   border-right			: solid #TR_BORDER_WIDTH#px black;
+   background-color 	: #TD_FORE_COLOR#;
+   cursor				: pointer;	
+   TEXT-TRANSFORM		: uppercase;
+  }
+
+  TD.headerspacer
+  {
+   border-bottom		: solid #TR_BORDER_WIDTH#px black;
+  }
+
+
+</STYLE>
+</CFOUTPUT>
+
+<CFPARAM NAME="COMPONENT_PAGE_NAME" 	DEFAULT=1>
+<CFSET COMPONENT_PAGE_TITLES = "">
+<CFSET COMPONENT_PAGE_ACTIONS = "">
+
+<CFSET COMPONENT_PAGE_TITLES = ListAppend(COMPONENT_PAGE_TITLES, "Active", ",")>
+<CFSET COMPONENT_PAGE_ACTIONS = ListAppend(COMPONENT_PAGE_ACTIONS, "active", ",")>
+
+<CFSET COMPONENT_PAGE_TITLES = ListAppend(COMPONENT_PAGE_TITLES, "Inactive", ",")>
+<CFSET COMPONENT_PAGE_ACTIONS = ListAppend(COMPONENT_PAGE_ACTIONS, "inActive", ",")>
+
+<CFSET COMPONENT_PAGE_TITLES = ListAppend(COMPONENT_PAGE_TITLES, "Add New", ",")>
+<CFSET COMPONENT_PAGE_ACTIONS = ListAppend(COMPONENT_PAGE_ACTIONS, "add", ",")>
+ 
+<!---display edit tab if in edit mode--->
+<cfif FORM.display eq "edit">
+
+	<CFSET COMPONENT_PAGE_TITLES = ListAppend(COMPONENT_PAGE_TITLES, "Edit Record", ",")>
+	<CFSET COMPONENT_PAGE_ACTIONS = ListAppend(COMPONENT_PAGE_ACTIONS, "update", ",")>
+
+</cfif>
+
+<!---highlight tabs according to action--->
+<cfif FORM.display eq "inActive">
+	<cfset COMPONENT_PAGE_NAME = 2 />
+<cfelseif FORM.display eq "add">
+	<cfset COMPONENT_PAGE_NAME = 3 />
+  <cfif isDefined("SESSION.FormData")>
+    <cfset StructDelete(Session, "FormData")>
+  </cfif>
+<cfelseif FORM.display eq "edit">
+	<cfset COMPONENT_PAGE_NAME = 4 />
+</cfif>
+<BR>
+<TABLE border="0" cellspacing="0" cellpadding="1" WIDTH="100%">
+	<TR>
+	 	<TD CLASS="headerspacer">&nbsp;</TD>
+		<CFSET C_Counter = 1>
+		<CFLOOP LIST="#COMPONENT_PAGE_TITLES#" INDEX="ThisMenuItem">
+
+			<CFIF C_Counter EQ COMPONENT_PAGE_NAME>
+				<CFSET CLASS_NAME= "headerselected">
+			<CFELSE>
+				<CFSET CLASS_NAME= "headernotselected">
+			</CFIF>
+			<!---- Start ------>
+			<CFOUTPUT>
+			<TD WIDTH="120" CLASS="#CLASS_NAME#" ALIGN="center" NOWRAP>
+			<B>
+			<!---remove link if its edit or bus rules--->
+			<cfif COMPONENT_PAGE_NAME eq 4 and C_Counter EQ COMPONENT_PAGE_NAME>
+				#ThisMenuItem#
+			<cfelse>
+				<A CLASS="tablink_back" HREF="" onClick="JavaScript: return submitDataForm('#ListGetAt(COMPONENT_PAGE_ACTIONS,C_Counter)#');">#ThisMenuItem#</A>
+			</cfif>				
+			</B>
+			</TD>
+			</B>
+			</TD>
+			<TD CLASS="headerspacer"><IMG SRC="/images/fill.gif" WIDTH="1" HEIGHT="1"></TD>
+			</CFOUTPUT>
+			<!---- End ------>
+			<CFSET C_Counter = C_Counter + 1>
+		</CFLOOP>
+		
+		<TD CLASS="headerspacer" WIDTH="100%"><IMG SRC="/images/fill.gif" WIDTH="1" HEIGHT="1"></TD>
+	</TR>
+</TABLE>

@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Popup that shows bilback sum by program, distributor, item. -->
+<s:TitleWindow
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:s="library://ns.adobe.com/flex/spark" 
+	xmlns:mx="library://ns.adobe.com/flex/mx" 
+	xmlns:local="com.shared.views.renderer.*"
+	backgroundColor="0xffffff"
+	close="PopUpManager.removePopUp(this)"
+	color="0x333333"
+	name="Billback Sum"
+	title="Billback Sum"
+	creationComplete="initWindow(event)"
+	initialize="initializeHandler(event)"
+	>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Main.models.vos.BBComponent;
+			import com.Billback.Main.models.vos.BBPrgDistItemRate;
+			import com.Billback.Main.models.vos.Billback;
+			import com.shared.components.StringUtils;
+			import com.shared.vos.Settings;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.utils.ObjectUtil;
+			
+			import spark.events.IndexChangeEvent;
+			
+			public var dDispatcher:IEventDispatcher;			
+			public var oSettings:Settings = new Settings();
+			public var aSumByList:ArrayList = new ArrayList(new Array("Program","Distributor","Item"));
+			public var oSumBy:Object;
+			
+			[Bindable] public var sHeaderText:String = "";
+			[Bindable] public var billback:Billback;
+			[Bindable] public var acSumBy:ArrayCollection = new ArrayCollection();
+			[Bindable] public var aSumBy:Array = new Array();
+
+			protected function drpSumByChange():void
+			{
+				
+				// for the total row
+				var totalDollars:Number 	= 0; 
+				var totalVolume:Number	 	= 0;
+				
+				// for Lumsum row on Distributor & item
+				var totalLSDollars:Number 	= 0;
+				var totalLSVolume:Number 	= 0;
+				
+				this.sHeaderText = drpSumBy.selectedItem;
+				// this.dgSumBy.invalidateDisplayList();
+				
+				// dataproviders for display in the grid.
+				this.acSumBy = new ArrayCollection();
+				this.aSumBy = new Array();
+				
+				//*********** Prg-Dist-Item CALCULATIONS *********************//
+				// loop over bbPrgDistItemRate and stuff the values into the acSumby for display
+				for each(var bbPDIR:BBPrgDistItemRate in this.billback.bbPrgDistItemRate){
+					if(bbPDIR.bbProdRate.itemNumber && bbPDIR.bbProdRate.volume)
+					{
+						var iPosition:Number; 
+						oSumBy 			= new Object();
+						oSumBy.name 	= new String();
+						oSumBy.id 		= new String();
+						oSumBy.amt		= new Number();
+						oSumBy.vol		= new Number();
+						
+						
+						if(drpSumBy.selectedItem == 'Program')
+						{
+							iPosition = aSumBy.lastIndexOf(bbPDIR.bbProgram.number);
+							if(iPosition != -1){ //exists
+								oSumBy = acSumBy.getItemAt(iPosition);
+							}
+							//add the amount
+							//oSumBy.amt += bbPDIR.bbProdRate.amount;
+							oSumBy.amt += setAmountToDecimal(bbPDIR.bbProdRate.amount);
+							
+							//add the volume cs/lbs 
+							if(bbPDIR.bbProdRate.uom.uomId == 1){oSumBy.vol += bbPDIR.bbProdRate.volume;}
+							else{oSumBy.vol += (bbPDIR.bbProdRate.volume/bbPDIR.bbProdRate.netWeight);}
+							
+							if(iPosition == -1){  //doesnt exist
+								oSumBy.name 	= bbPDIR.bbProgram.title;
+								oSumBy.id 		= bbPDIR.bbProgram.number;
+								aSumBy.push(bbPDIR.bbProgram.number);
+								acSumBy.addItem(oSumBy);								
+							}
+						}
+						else if(drpSumBy.selectedItem == 'Distributor')
+						{
+							iPosition = aSumBy.lastIndexOf(bbPDIR.bbDistributor.shipTo);
+							if(iPosition != -1){ //exists
+								oSumBy = acSumBy.getItemAt(iPosition);
+							}
+							//add the amount
+							//oSumBy.amt += bbPDIR.bbProdRate.amount;
+							oSumBy.amt += setAmountToDecimal(bbPDIR.bbProdRate.amount);
+							
+							//add the volume cs/lbs 
+							if(bbPDIR.bbProdRate.uom.uomId == 1){oSumBy.vol += bbPDIR.bbProdRate.volume;}
+							else{oSumBy.vol += (bbPDIR.bbProdRate.volume/bbPDIR.bbProdRate.netWeight);}
+							
+							if(iPosition == -1){  //doesnt exist
+								oSumBy.name 	= bbPDIR.bbDistributor.name;
+								oSumBy.id 		= bbPDIR.bbDistributor.shipTo;
+								aSumBy.push(bbPDIR.bbDistributor.shipTo);
+								acSumBy.addItem(oSumBy);								
+							}
+						}
+						else if(drpSumBy.selectedItem == 'Item')
+						{
+							iPosition = aSumBy.lastIndexOf(bbPDIR.bbProdRate.itemNumber);
+							if(iPosition != -1){ //exists
+								oSumBy = acSumBy.getItemAt(iPosition);
+							}
+							//add the amount
+							//oSumBy.amt += bbPDIR.bbProdRate.amount;
+							oSumBy.amt += setAmountToDecimal(bbPDIR.bbProdRate.amount);
+							//add the volume cs/lbs 
+							if(bbPDIR.bbProdRate.uom.uomId == 1){oSumBy.vol += bbPDIR.bbProdRate.volume;}
+							else{oSumBy.vol += (bbPDIR.bbProdRate.volume/bbPDIR.bbProdRate.netWeight);}
+							
+							if(iPosition == -1){  //doesnt exist
+								oSumBy.name 	= bbPDIR.bbProdRate.description;
+								oSumBy.id 		= bbPDIR.bbProdRate.itemNumber;
+								aSumBy.push(bbPDIR.bbProdRate.itemNumber);
+								acSumBy.addItem(oSumBy);								
+							}
+						}
+						
+						totalDollars 	+= setAmountToDecimal(bbPDIR.bbProdRate.amount); 
+						if(bbPDIR.bbProdRate.uom.uomId == 1){totalVolume += bbPDIR.bbProdRate.volume;}
+						else{totalVolume += (bbPDIR.bbProdRate.volume/bbPDIR.bbProdRate.netWeight);}
+					}//end if
+				} // end for each bbPDIR
+				
+				
+				//*********** LUMPSUM CALCULATIONS *********************//
+				// loop over lumpsums and sum the values
+				for each(var bbComp:BBComponent in this.billback.bbComponent){
+					if (bbComp.componentTypeId == 3 && !isNaN(parseFloat(bbComp.componentAmount)))
+					{
+						var iPos:Number = new Number();
+						oSumBy 			= new Object();
+						oSumBy.name 	= new String();
+						oSumBy.id 		= new String();
+						oSumBy.amt		= new Number();
+						oSumBy.vol		= new Number();
+
+						// program
+						if(drpSumBy.selectedItem == 'Program'){
+							iPos = aSumBy.indexOf(bbComp.programNumber);
+							if(iPos != -1){ //exists
+								oSumBy = acSumBy.getItemAt(iPos);
+							}
+							oSumBy.amt += parseFloat(bbComp.componentAmount);
+							oSumBy.vol += 0;
+							
+							if(iPos == -1){  //doesnt exist
+								oSumBy.name 	= bbComp.programTitle;
+								oSumBy.id 		= bbComp.programNumber;
+								aSumBy.push(bbComp.programNumber);
+								acSumBy.addItem(oSumBy);								
+							}
+						}
+						// Dist or Item
+						else{
+							totalLSDollars 	= totalLSDollars + parseFloat(bbComp.componentAmount);
+							totalLSVolume	= 0;
+						}
+						totalDollars 	+= parseFloat(bbComp.componentAmount);
+					}
+				}
+				
+				// Add the LS row and total row
+				if(drpSumBy.selectedItem != 'Program'){
+					oSumBy 			= new Object();
+					oSumBy.id 		= new String('**Lump Sum');
+					oSumBy.name 	= new String('');
+					oSumBy.amt		= new Number(totalLSDollars);
+					oSumBy.vol		= new Number(totalLSVolume);
+					acSumBy.addItem(oSumBy);
+				}
+				
+				oSumBy 			= new Object();
+				oSumBy.id 		= new String('TOTAL');
+				oSumBy.anem		= new String('');
+				//oSumBy.amt		= new Number(totalDollars);
+				oSumBy.amt		= new Number(this.billback.expectedAmount);
+				oSumBy.vol		= new Number(totalVolume);
+				acSumBy.addItem(oSumBy);
+			}
+			
+			protected function initWindow(event:FlexEvent):void
+			{
+				callLater(drpSumByChange);
+				
+			}
+			
+			protected function setAmountToDecimal(val:Number):Number{
+				
+				var str1:String;
+				var str2:String;
+				var results:Array = val.toString().split(".");
+				if (results.length > 1){
+					str1 = results[1];
+					if(str1.length == 1){str1 = str1 + "0";}
+				}else{
+					str1 = "00";
+				}
+				
+				str2 = results[0] + "." + str1.substr(0,2);
+				
+				return Number(str2);
+			}
+			
+			protected function initializeHandler(event:FlexEvent):void
+			{
+				event.target.isPopUp = false;
+				
+			}
+			
+		]]>
+	</fx:Script>
+
+	
+	
+	<s:VGroup width="100%">
+
+		<!-- dropdown to display sum-by ctiteria -->
+		<s:HGroup width="100%" verticalAlign="baseline" horizontalAlign="right" >	
+			<s:Label fontWeight="bold" text="Sum-by: "/>
+			<s:DropDownList id="drpSumBy" width="200" labelField="sum-by" styleName="ComboBox" enabled="true"
+							change="drpSumByChange()"
+							selectedItem="{this.aSumByList.getItemAt(0)}"
+							dataProvider="{this.aSumByList}"
+							/>
+		</s:HGroup>
+		
+		<!--datagrid to display the sum-by values -->
+		<s:HGroup width="100%">
+			<mx:DataGrid id="dgSumBy"
+						 textAlign="left"
+						 dataProvider="{acSumBy}"
+						 rowCount="{acSumBy.length &lt; 10 ? acSumBy.length : 10}"
+						 width="100%">
+				
+				<mx:columns>
+					<mx:DataGridColumn width="200" dataField="name"	headerText="{this.sHeaderText}" />
+			    	<mx:DataGridColumn width="120" dataField="id"	headerText="{this.sHeaderText} #" />
+			    	<mx:DataGridColumn width="120" dataField="vol"  headerText="Total Volume" labelFunction="StringUtils.dgFormatDecimal2"/>
+			    	<mx:DataGridColumn width="120" dataField="amt"  headerText="Total $" labelFunction="StringUtils.dgFormatDollarDec2" />
+			 	</mx:columns>
+			</mx:DataGrid>
+		</s:HGroup>
+		<s:HGroup width="100%" horizontalAlign="right" paddingRight="10">
+			<mx:Text paddingLeft="0" textAlign="right" click="PopUpManager.removePopUp(this);" useHandCursor="true" mouseChildren="false" buttonMode="true">
+				<mx:htmlText>					
+					<![CDATA[
+					<b><font color="#FF0000">[ </font><font color="#0000FF">close</font><font color="#FF0000"> ]</font></b>
+					]]>
+				</mx:htmlText>	
+			</mx:Text>
+			<!--<mx:Text text="[" paddingRight="0" />
+			<s:Label text="center window" paddingLeft="0" fontWeight="bold" color="blue" textAlign="right" click="PopUpManager.centerPopUp(this);" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+			<s:Label text="]" paddingLeft="0"/>-->
+		</s:HGroup>
+	</s:VGroup>
+	
+</s:TitleWindow>

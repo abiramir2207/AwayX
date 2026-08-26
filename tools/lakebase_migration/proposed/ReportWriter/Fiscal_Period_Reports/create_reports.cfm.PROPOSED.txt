@@ -1,0 +1,89 @@
+===== QUERY: GetDistinctTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDistinctTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_type")>
+<cfif useLakebaseForGetDistinctTypes>
+	<cftry>
+		<cfset GetDistinctTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistinctTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistinctTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DistributorSummary =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDistributorSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_distributor_summary")>
+<cfif useLakebaseForDistributorSummary>
+	<cftry>
+		<cfset DistributorSummary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_distributor_summary", {
+				"distributor_id" = "eq.#Distributor_ID#",
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistributorSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistributorSummary>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetBillbackSummary =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBillbackSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_summary")>
+<cfif useLakebaseForGetBillbackSummary>
+	<cftry>
+		<cfset GetBillbackSummary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_billback_summary", {
+				"distributor_id" = "eq.#Distributor_ID#",
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"bb_summary_type" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSummary>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetInvoiceSummaries =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetInvoiceSummaries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_summary")>
+<cfif useLakebaseForGetInvoiceSummaries>
+	<cftry>
+		<cfset GetInvoiceSummaries = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_invoice_summary", {
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"distributor_id" = "eq.#Distributor_ID#",
+				"order" = "invoice_date.desc",
+				"select" = "invoice_number,invoice_date,purchase_order,dist_sales,total_dist_dollars"
+			}), "invoice_number,invoice_date,purchase_order,dist_sales,total_dist_dollars"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetInvoiceSummaries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetInvoiceSummaries>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

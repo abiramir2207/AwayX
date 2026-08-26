@@ -1,0 +1,21 @@
+===== QUERY: getSavedRuleInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetSavedRuleInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForgetSavedRuleInfo>
+	<cftry>
+		<cfset getSavedRuleInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_formula_pricing_rule_id" = "eq.#RuleReturn.value#",
+				"select" = "rule_name,number_of_comms"
+			}), "rule_name,number_of_comms"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSavedRuleInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSavedRuleInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

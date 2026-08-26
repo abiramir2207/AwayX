@@ -1,0 +1,6 @@
+===== QUERY: Get_InActive_Schedules =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Get_Active_Schedules =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

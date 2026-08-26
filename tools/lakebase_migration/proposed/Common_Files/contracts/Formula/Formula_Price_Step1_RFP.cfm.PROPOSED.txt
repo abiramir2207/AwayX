@@ -1,0 +1,51 @@
+===== QUERY: Saved_Formula_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSaved_Formula_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForSaved_Formula_Info>
+	<cftry>
+		<cfset Saved_Formula_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_formula_pricing_rule_id" = "eq.#URL.RID#",
+				"deleted" = "eq.0",
+				"order" = "rule_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaved_Formula_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaved_Formula_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_All_Commodities =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: Get_All_Commodities =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: Program_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForProgram_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForProgram_Info>
+	<cftry>
+		<cfset Program_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#URL.Program_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Current_Commodity_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

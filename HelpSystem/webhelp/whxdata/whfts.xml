@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='windows-1252' ?>
+<fts>
+<chunkinfo url="whfwdata0.xml" first="0" last="belong"/>
+<chunkinfo url="whfwdata1.xml" first="below" last="count"/>
+<chunkinfo url="whfwdata2.xml" first="county" last="exec"/>
+<chunkinfo url="whfwdata3.xml" first="execut" last="indicator"/>
+<chunkinfo url="whfwdata4.xml" first="individual" last="on"/>
+<chunkinfo url="whfwdata5.xml" first="onc" last="recommend"/>
+<chunkinfo url="whfwdata6.xml" first="record" last="squar"/>
+<chunkinfo url="whfwdata7.xml" first="stag" last="wide"/>
+<chunkinfo url="whfwdata8.xml" first="will" last="zone_maintenanc"/>
+
+<tchunkinfo first="0" last="106" url="whftdata0.xml" />
+<tchunkinfo first="107" last="111" url="whftdata1.xml" />
+
+</fts>

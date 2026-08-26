@@ -1,0 +1,21 @@
+===== QUERY: Get_Aging =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Aging = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_aging")>
+<cfif useLakebaseForGet_Aging>
+	<cftry>
+		<cfset Get_Aging = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_aging", {
+				"deleted" = "eq.0",
+				"tier_number" = "eq.#FORM.DD_Aging#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Aging = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Aging>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

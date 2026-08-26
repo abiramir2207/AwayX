@@ -1,0 +1,434 @@
+===== QUERY: Retry_Releases =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPeriodInformation =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPeriodInformation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForgetPeriodInformation>
+	<cftry>
+		<cfset getPeriodInformation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_formula_pricing_period_id" = "eq.#thisProgram_Formula_Pricing_Period_ID#",
+				"select" = "start_date,end_date,release_date,is_current_period"
+			}), "start_date,end_date,release_date,is_current_period"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPeriodInformation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPeriodInformation>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updatePeriodStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdatePeriodStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForupdatePeriodStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_formula_pricing_period_id" = "eq.#thisProgram_Formula_Pricing_Period_ID#"
+			},
+			{
+				"process_by_system" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatePeriodStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatePeriodStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: savePacket =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updatePeriodStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdatePeriodStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForupdatePeriodStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_formula_pricing_period_id" = "eq.#thisProgram_Formula_Pricing_Period_ID#"
+			},
+			{
+				"process_by_system" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatePeriodStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatePeriodStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getThisProgramsStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetThisProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetThisProgramsStatus>
+	<cftry>
+		<cfset getThisProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#thisProgram_ID#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id"
+			}), "contract_status_type_idx,revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProgramsStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getReplicantProgramsStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetReplicantProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetReplicantProgramsStatus>
+	<cftry>
+		<cfset getReplicantProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Renewed_Program_ID#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id"
+			}), "contract_status_type_idx,revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetReplicantProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetReplicantProgramsStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: deleteParent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordeleteParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFordeleteParent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteParent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ForceTriggersToExecute =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForForceTriggersToExecute = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForForceTriggersToExecute>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#Renewed_Program_ID#"
+			},
+			{
+				"deleted" = "#Program_Packet.Basic_Information.DELETED#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForForceTriggersToExecute = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForForceTriggersToExecute>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetNewStatusAfterUpdate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetNewStatusAfterUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetNewStatusAfterUpdate>
+	<cftry>
+		<cfset GetNewStatusAfterUpdate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Renewed_Program_ID#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,parent_revised_contract_main_id"
+			}), "contract_status_type_idx,revision_of_contract_main_id,parent_revised_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNewStatusAfterUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNewStatusAfterUpdate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getExistingRFAForThisParent =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: removeExistingRFA =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: getExistingPREACTIVEForThisParent =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: removeExistingPREACTIVE =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: getExistingACTIVEForThisParent =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: removeExistingACTIVE =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: updateTheProgramProcessStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updatePeriodStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdatePeriodStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForupdatePeriodStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_formula_pricing_period_id" = "eq.#thisProgram_Formula_Pricing_Period_ID#"
+			},
+			{
+				"process_by_system" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatePeriodStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatePeriodStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateAllProgramStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: flagProgramAsRevised =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForflagProgramAsRevised = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForflagProgramAsRevised>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_exclusions",
+			{
+				"program_exclusion_id" = "eq.#getProgramsToRenew.Program_Exclusion_ID#"
+			},
+			{
+				"reviseoriginalprogram" = "0",
+				"programhasbeenrevised" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForflagProgramAsRevised = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForflagProgramAsRevised>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

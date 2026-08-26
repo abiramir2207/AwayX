@@ -1,0 +1,110 @@
+<!------
+/billbacks/deviation/Display_Deviation_Detail_Report.cfm
+---->
+
+<cfparam name="deviationReportFileName" default="Deviations.csv">
+
+
+<cfsilent>
+
+	<!--- file string --->
+	<cfset csvstr = createObject("java","java.lang.StringBuffer")>
+
+	<!--- report header --->
+	<cfset csvstr.append("BA PAYABLE ##" & ",")>
+	<cfset csvstr.append("BILLBACK REF ##" & ",")>
+	<cfset csvstr.append("PROGRAM NUMBER" & ",")>
+	<cfset csvstr.append("PROGRAM TITLE" & ",")>
+	<cfset csvstr.append("COMPONENT TYPE" & ",")>
+	<cfset csvstr.append("COMPONENT NAME" & ",")>
+	<cfset csvstr.append("ITEM NUMBER" & ",")>
+	<cfset csvstr.append("ITEM DESCRIPTION" & ",")>
+	<cfset csvstr.append("DISTRIBUTOR FOB PRICE PER CASE" & ",")>
+	<cfset csvstr.append("INBOUND FREIGHT PER CASE" & ",")>
+	<cfset csvstr.append("OUTBOUND FREIGHT PER CASE" & ",")>
+	<cfset csvstr.append("DISTRIBUTOR FINAL PRICE PER CASE" & ",")>
+	<cfset csvstr.append("OPERATOR CONTRACT PRICE PER CASE" & ",")>
+	<cfset csvstr.append("EXPECTED FIXED PRICE CLAIM RATE PER CASE" & ",")>
+	<cfset csvstr.append("EXPECTED DOLLAR REBATE RATE PER CASE" & ",")>
+	<cfset csvstr.append("CLAIM DOLLAR RATE PER CASE" & ",")>
+	<cfset csvstr.append("APPROVED DOLLAR RATE PER CASE" & ",")>
+	<cfset csvstr.append("CLAIMED CASES" & ",")>
+	<cfset csvstr.append("EXPECTED CASES" & ",")>
+	<cfset csvstr.append("APPROVED CASES" & ",")>
+	<cfset csvstr.append("CLAIMED EXTENDED DOLLAR AMOUNT" & ",")>
+	<cfset csvstr.append("EXPECTED EXTENDED DOLLAR AMOUNT" & ",")>
+	<cfset csvstr.append("APPROVED EXTENDED DOLLAR AMOUNT" & ",")>
+	<cfset csvstr.append("VARIATION - DOLLARS CLAIMED VS. EXPECTED [EXTENDED]" & ",")>
+	<cfset csvstr.append("VARIATION - DOLLARS CLAIMED VS. APPROVED [EXTENDED]" & ",")>
+	<cfset csvstr.append("DEVIATION - PROGRAM DATES" & ",")>
+	<cfset csvstr.append("DEVIATION - BILLBACK OVERLAP" & ",")>
+	<cfset csvstr.append("DEVIATION - AUTHORIZED PRODUCT" & ",")>
+	<cfset csvstr.append("DEVIATION - RATE" & ",")>
+	<cfset csvstr.append("DEVIATION - VOLUME" & ",")>
+	<cfset csvstr.append("OPERATOR ID" & ",")>
+	<cfset csvstr.append("OPERATOR NAME" & ",")>
+	<cfset csvstr.append("DISTRIBUTOR ID" & ",")>
+	<cfset csvstr.append("DISTRIBUTOR NAME" & ",")>
+	<cfset csvstr.append("BUYING GROUP ID" & ",")>
+	<cfset csvstr.append("BUYING GROUP NAME" & ",")>
+	<!---D42774 --->
+<cfoutput>	
+	<cfset csvstr.append("#Application.GLAccountLabel# CODE" & ",")>
+</cfoutput>
+<!---D42774 --->
+	<cfset csvstr.append("DEVIATION ACTION" & ",")>
+	<cfset csvstr.append("DEVIATION APPLIED AGAINST" & ",")>
+	<cfset csvstr.append(Chr(13) & Chr(10))>
+
+
+	<!--- report detail --->
+	<cfloop query="qDeviationDetailReport">
+		<cfset csvstr.append(BB_Code & ",")>
+		<cfset csvstr.append(BB_Reference & ",")>
+		<cfset csvstr.append(Contract_Number & ",")>
+		<cfset csvstr.append(Contract_Title & ",")>
+		<cfset csvstr.append(Component_Type & ",")>
+		<cfset csvstr.append(Component_Name & ",")>
+		<cfset csvstr.append(Item & ",")>
+		<cfset csvstr.append(Item_Description & ",")>
+		<cfset csvstr.append(Invoice_Price_Cs & ",")>
+		<cfset csvstr.append(Ibf_Rate_Cs & ",")>
+		<cfset csvstr.append(Obf_Rate_Cs & ",")>
+		<cfset csvstr.append(Final_Invoice_Price_Cs & ",")>
+		<cfset csvstr.append(Program_Product_Price_Cs & ",")>
+		<cfset csvstr.append(Fixed_E_Rate_Cs & ",")>
+		<cfset csvstr.append(Rebate_E_Rate_Cs & ",")>
+		<cfset csvstr.append(Claimed_Rate_Cs & ",")>
+		<cfset csvstr.append(Paid_Rate_Cs & ",")>
+		<cfset csvstr.append(Claimed_Volume_Cs & ",")>
+		<cfset csvstr.append(E_Volume_Cs & ",")>
+		<cfset csvstr.append(Item_Volume_Paid_Cs & ",")>
+		<cfset csvstr.append(Claimed_Amount & ",")>
+		<cfset csvstr.append(Expected_Amount & ",")>
+		<cfset csvstr.append(Paid_Amount & ",")>
+		<cfset csvstr.append(Variation_Claim_Expected & ",")>
+		<cfset csvstr.append(Variation_Claim_Paid & ",")>
+		<cfset csvstr.append(Deviation_Program_Dates & ",")>
+		<cfset csvstr.append(Deviation_Billback_Overlap & ",")>
+		<cfset csvstr.append(Deviation_Unauthorized_Product & ",")>
+		<cfset csvstr.append(Deviation_Rate & ",")>
+		<cfset csvstr.append(Deviation_Volume & ",")>
+		<cfset csvstr.append(Operator_Id & ",")>
+		<cfset csvstr.append(Operator_Name & ",")>
+		<cfset csvstr.append(Distributor_Number & ",")>
+		<cfset csvstr.append(Distributor_Name & ",")>
+		<cfset csvstr.append(Buying_Group_Number & ",")>
+		<cfset csvstr.append(Buying_Group_Name & ",")>
+		<cfset csvstr.append(Gl_Account & ",")>
+		<cfset csvstr.append(Deviation_Action & ",")>
+		<cfset csvstr.append(Adjustment_Deducted_From_BB & ",")>
+		<cfset csvstr.append(Chr(13) & Chr(10))>
+	</cfloop>
+
+</cfsilent>
+
+<!--- output report --->
+<cfoutput>#csvstr.ToString()#</cfoutput>
+
+
+

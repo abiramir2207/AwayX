@@ -1,0 +1,73 @@
+===== QUERY: GetTemplateInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qryGetLatestTemplate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryGetLatestTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryGetLatestTemplate>
+	<cftry>
+		<cfset qryGetLatestTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#GetSettings.First_Parent_ID#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1",
+				"select" = "ez_contract_id"
+			}), "ez_contract_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetLatestTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetLatestTemplate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: compcheck =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getSecondComponentID =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getSecondComponent =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getExistingComponent =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getSecondComponent =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: deletedateexclusions =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deletedateexclusions =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: qUpdateEZButtonUpdatedBy =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qGetEzButtonUpdateData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetEzButtonUpdateData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetEzButtonUpdateData>
+	<cftry>
+		<cfset qGetEzButtonUpdateData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetSettings.EZ_Button_Last_Updated_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetEzButtonUpdateData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetEzButtonUpdateData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

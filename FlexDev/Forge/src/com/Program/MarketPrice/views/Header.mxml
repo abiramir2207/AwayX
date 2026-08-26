@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="creationCompleteHandler(event)">
+	<s:layout>
+		<s:HorizontalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.Program.MarketPrice.views.pm.GridDataPModel;
+			
+			import mx.events.FlexEvent;
+			import mx.formatters.NumberFormatter;
+			
+			public var _decTwoFormat:NumberFormatter =  new NumberFormatter();
+			/* Presentation Model */
+			[Bindable] public var pModel:GridDataPModel;
+
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				_decTwoFormat.precision = 2;
+				_decTwoFormat.useNegativeSign = false;
+			}
+		]]>
+	</fx:Script>
+	<mx:Form color="0x323232" paddingTop="0" paddingBottom="0">
+		<s:HGroup paddingTop="0" paddingBottom="0">
+			<mx:FormItem label="Approval Threshold" toolTip="">
+				<s:TextInput id="tiApprovalPerc" width="75" editable="false" text="{pModel.sMarketPriceVariance}"/>
+			</mx:FormItem>
+			<mx:FormItem label="Max Variance" toolTip="">
+				<s:TextInput id="tiMaxVariance" width="75" editable="false" text="{this._decTwoFormat.format(pModel.maxVariancePercent)}%" />
+			</mx:FormItem>
+		</s:HGroup>
+	</mx:Form>
+</s:Group>

@@ -1,0 +1,71 @@
+===== QUERY: SavedClass =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getAllClass =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getDefaultClass =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetDefaultClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallclass")>
+<cfif useLakebaseForgetDefaultClass>
+	<cftry>
+		<cfset getDefaultClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallclass", {
+				"is_default" = "eq.1",
+				"select" = "dd_classification_id"
+			}), "dd_classification_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDefaultClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDefaultClass>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getMatchCentralDefaultClass =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetMatchCentralDefaultClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallclass")>
+<cfif useLakebaseForgetMatchCentralDefaultClass>
+	<cftry>
+		<cfset getMatchCentralDefaultClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallclass", {
+				"is_matchcentral_default" = "eq.1",
+				"select" = "dd_classification_id"
+			}), "dd_classification_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMatchCentralDefaultClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMatchCentralDefaultClass>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAllRebillPackages =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAllRebillPackages = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_hdr")>
+<cfif useLakebaseForgetAllRebillPackages>
+	<cftry>
+		<cfset getAllRebillPackages = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_rebill_package_hdr", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "rebill_package_title.asc",
+				"select" = "dd_rebill_package_hdr_id,rebill_package_title"
+			}), "dd_rebill_package_hdr_id,rebill_package_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllRebillPackages = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllRebillPackages>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

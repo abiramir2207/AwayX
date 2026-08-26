@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This is the page where we extract contract title with contract reference number. -->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalScrollPolicy="off">
+<mx:HBox>
+<mx:Text text="{ShowTitle(data.contract_title,data.contract_reference_number)}" />
+
+	<mx:Script>
+	<![CDATA[
+		import com.maps.*;
+		import com.views.*;
+		import com.models.*;
+		import com.events.*;
+		import mx.controls.Alert;
+		import mx.utils.ObjectUtil;
+		import mx.core.Application;
+		
+		/* This is the logic from the original program search result */
+		[Bindable]
+		private function ShowTitle(contract_title:String,contract_reference_number:String) : String{
+		 var contract_title_len:int = 60;
+		 var ref_num_len:int = 0;
+		 var display_title:String ='';
+		 
+		 /* contract_reference_number = 0 means there is no contract_reference_number */
+		 if(contract_reference_number != '0')
+		 {
+		 	ref_num_len = contract_reference_number.length + 5;
+		 }
+		 if(ref_num_len >= contract_title_len)
+		 {
+		 	contract_title_len = ref_num_len + 2;
+		 }
+		 
+		 display_title = contract_title.substr(0,contract_title_len - ref_num_len);
+
+		 if(display_title.length < contract_title.length)
+		 {
+		 	display_title = display_title + "...";
+		 }
+		 if(contract_reference_number != '0')
+		 {
+		 	display_title = display_title + ' ' + "(" + ' ' + contract_reference_number + ' ' + ")";
+		 }
+
+	return display_title;
+	}
+   ]]>    
+	</mx:Script>
+
+	</mx:HBox>
+</mx:VBox>

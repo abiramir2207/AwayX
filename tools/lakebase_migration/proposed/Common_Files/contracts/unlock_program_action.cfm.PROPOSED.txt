@@ -1,0 +1,23 @@
+===== QUERY: unlockProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForunlockProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForunlockProgram>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#cryp.value#"
+			},
+			{
+				"contract_is_locked" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlockProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlockProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

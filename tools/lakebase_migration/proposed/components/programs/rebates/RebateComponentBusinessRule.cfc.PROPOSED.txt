@@ -1,0 +1,45 @@
+===== QUERY: qGetBusinessRules =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBusinessRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_rule")>
+<cfif useLakebaseForqGetBusinessRules>
+	<cftry>
+		<cfset qGetBusinessRules = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_rule", {
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_rule_id,rebates_component_rule_desc,unit_of_measure_id,cost_impact,cost_impact_uom"
+			}), "program_rebates_component_rule_id,rebates_component_rule_desc,unit_of_measure_id,cost_impact,cost_impact_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBusinessRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBusinessRules>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDeleteBusRule =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqDeleteBusRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_rule")>
+<cfif useLakebaseForqDeleteBusRule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_rebates_component_rule",
+			{
+				"program_rebates_component_rule_id" = "eq.#arguments.ruleId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteBusRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteBusRule>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

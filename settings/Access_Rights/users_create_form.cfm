@@ -1,0 +1,1393 @@
+<!DOCTYPE HTML>
+<!---
+	Name: users_create_form.cfm
+	Copyright (c) 2006 Blacksmith Applications, Inc.
+
+	Description: user creation form
+	Usage: n/a
+	Modified By: Clarence Morse 3/24/2006
+	Purpose: enhancements to allow faxing of user information, default
+			 password and welcome letter.
+--->
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Manage Users</title>
+	<cfsavecontent variable="head_content">
+		<link rel="stylesheet" href="/styles/tTip.css" type="text/css" />         <!---D31324--->
+		<style>
+			body {
+				background-color: whitesmoke;
+			}
+			.c411 { margin-left:5px; }
+			div.segment {
+				margin:0 0 6px 3px;
+			}
+			div.segment a {
+				margin:10px 15px 10px 0px;
+			}
+			table.segment {
+				border-top: 1px solid #CCC;
+				border-bottom: 1px solid #CCC;
+			}
+			td.labelStyle {
+				padding-right: 3px;
+			}
+			td > input[type=text], td > select, td > textarea {
+				margin:0 0 3px 3px;
+			}
+		</style>
+	</cfsavecontent>
+	<!--- load all secondary .css files here :: the primary main_style.css is loaded by the 1st cfhtmlhead in Application_Common.cfm --->
+	<cfhtmlhead text="#application.util.string.compress( head_content )#">
+</head>
+<body>
+<cfset businessSegManager = CreateObject("component", "components.programs.business_segment.BusinessSegmentManager") />
+<CFIF  businessSegManager.isEnabled()>
+	<CFSET Business_Segment_On = 1>
+<!--- D35451: Event error opening User in IP stage--->
+<CFELSE>
+		<CFSET Business_Segment_On = 0>
+</CFIF>
+
+<CFSET PageTitle="USERS: ADD USER">
+<CFPARAM NAME="URL.User_ID"	 			DEFAULT="">
+<cfparam name="url.activateuser" default="0">
+<cfparam name="form.activateuser" default="0">
+<cfparam name="url.copyuser" default="0">
+<cfparam name="url.upateAccessRights" default="0">
+
+<cfif url.activateuser EQ 1>
+<cfset form.activateuser = 1>
+</cfif>
+
+<CFIF len(URL.User_ID) GT 0>
+	<CFSET PageTitle="USERS: EDIT USER">
+</CFIF>
+<!--- <CFPARAM name="Form.User_Positions_List" default=""> --->
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<!---
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<!--- Help file link here																			 --->
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<CFSET helpfilenumber=32>
+<CFINCLUDE TEMPLATE="/help_files/help_link.cfm">
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+ --->
+<cfparam name="FORM.User_Number" 			default="">
+<CFPARAM NAME="FORM.NAME_FIRST" 		DEFAULT="">
+<CFPARAM NAME="FORM.NAME_LAST" 			DEFAULT="">
+<CFPARAM NAME="FORM.COMPANY_MAIN_ID"	DEFAULT="#request.AccessStructure.Company_Main_ID#">
+<CFPARAM NAME="FORM.TITLE" 				DEFAULT="">
+<cfparam name="FORM.User_Authority_Sequence_ID" 	default="0">
+<CFPARAM NAME="FORM.WORK_ADDRESS_1" 	DEFAULT="">
+<CFPARAM NAME="FORM.WORK_ADDRESS_2" 	DEFAULT="">
+<CFPARAM NAME="FORM.WORK_CITY" 			DEFAULT="">
+<CFPARAM NAME="FORM.WORK_STATE" 		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_ZIP" 			DEFAULT="">
+<CFPARAM NAME="FORM.WORK_Country_Code" 	DEFAULT="">
+<CFPARAM NAME="FORM.WORK_PHONE_1" 		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_PHONE_2" 		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_PHONE_3" 		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_PHONE_Ext"		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_FAX_1" 		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_FAX_2" 		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_FAX_3" 		DEFAULT="">
+<CFPARAM NAME="FORM.WORK_EMAIL" 		DEFAULT="">
+<CFPARAM NAME="FORM.UPDATERECORD" 		DEFAULT="0">
+<CFPARAM NAME="FORM.User_Profile_ID" 	DEFAULT="0">
+<CFPARAM NAME="FORM.USER_POSITIONS_ID" 	DEFAULT="0">
+<CFPARAM NAME="FORM.USER_SEC_POSITIONS_ID"	DEFAULT="0">
+<CFPARAM NAME="FORM.BROKERAGE_ID"		DEFAULT="0">
+<CFPARAM NAME="FORM.IS_USDA_USER"		DEFAULT="0">
+<CFPARAM NAME="FORM.user_usda_state_id"	DEFAULT="0">
+<CFPARAM NAME="FORM.user_usda_county_id"	DEFAULT="0">
+<CFPARAM NAME="FORM.user_usda_operator_id"	DEFAULT="0">
+<CFPARAM NAME="FORM.Company_Name"			DEFAULT="">
+<CFPARAM NAME="FORM.IS_ELIGIBLE_RSP"		DEFAULT="1">
+<CFPARAM NAME="FORM.Is_On_Behalf_Of"		DEFAULT="0">
+<CFPARAM NAME="FORM.Crucible_File_Download"	DEFAULT="0">
+<CFPARAM NAME="FORM.user_usda_distributor_id_list"	DEFAULT="">
+<CFPARAM NAME="FORM.user_usda_broker_id_list"		DEFAULT="">
+<CFPARAM NAME="FORM.user_usda_operator_id_list"		DEFAULT="">
+<cfparam name="form.Broker_List" 		default="">
+<cfparam name="form.Operator_List" 		default="">
+<cfparam name="form.Distributor_List" 	default="">
+<cfparam name="form.state" 				default="0">
+<cfparam name="form.county" 			default="0">
+<cfparam name="form.operator" 			default="0">
+<cfparam name="form.Welcome_Letter" 	default="">
+<cfparam name="form.blacksmith_user"	default="0" />
+<cfparam name="form.user_language"	default="English" />
+<cfparam name="form.Unlock_Name_First"	default="" />
+<cfparam name="form.Unlock_Name_Last"	default="" />
+<cfparam name="form.Last_Unlock_Date"	default="" />
+<cfparam name="form.LDAP_User_Name"		default="" />
+<cfparam name="form.Analytics_SSO_User_Name"	default="" />
+<cfparam name="form.Remote_Approval_Option"	default="2">
+<cfparam name="form.BB_Remote_Approval_Option"	default="0">
+<cfparam name="form.RFA_Notification_Email"	default="1">
+<cfparam name="form.name_middle_initial" default="">	<!---27172--->
+<cfparam name="form.user_rights_id" default="1000">
+<cfparam name="form.Ember_Info"	default="" /><!--- 72497  --->
+<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
+<cfset appSettings = genSettingsManager.get()>
+
+<!--- Get the date last updated and the user that did the update									 --->
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<CFQUERY NAME="Get_Update_Data" datasource="#application.datasource#" MAXROWS="1">
+	Select		_Users.Updated_By,
+				_Users.Updated_Date,
+				_User1.Name_First,
+				_User1.Name_Last
+	From		_Users, _Users _User1
+	where 	_Users.Updated_by = _User1.user_id
+	and		_Users.User_ID = <cfqueryparam value="#User_ID#" cfsqltype="cf_sql_idstamp">
+	order by _Users.Updated_Date desc
+
+</CFQUERY>
+
+<!--- Dev Note: CPM 9254 - Welcome Letter Enhancements  --->
+<CFQUERY NAME="getWelcomeLetters" datasource="#application.datasource#">
+	Select		doc_title, doc_uni_name
+	From		document_details
+	Where 		Is_Welcome_Letter = 1
+	AND 		deleted = 0
+	Order By 	doc_title ASC
+</CFQUERY>
+
+
+<cfquery name="getLabelSets" datasource="#application.datasource#">
+	SELECT DISTINCT Label_Set_Name
+	FROM Program_Summary_Label_Sets
+--	WHERE Deleted = 0
+	ORDER BY Label_Set_Name
+</cfquery>
+
+
+
+<CFPARAM NAME="DistName" default="">
+
+<CFIF len(User_ID) GT 0>
+
+	<CFQUERY NAME="getUserInfo" datasource="#application.datasource#">
+		SELECT _Users.*, D.Name_First +' '+ D.Name_Last as DeletedBy
+		FROM _Users
+		LEFT JOIN _Users D on _Users.deleted_by = D.User_ID
+		WHERE _Users.User_ID = <cfqueryparam value="#User_ID#" cfsqltype="cf_sql_idstamp">
+	</CFQUERY>
+
+	<CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
+		SELECT *
+		FROM User_Positions
+		WHERE Position_Holder_User_ID = <cfqueryparam value="#User_ID#" cfsqltype="cf_sql_idstamp"> AND Deleted = 0
+	</CFQUERY>
+
+
+	<CFIF getUserInfo.Recordcount GT 0>
+
+		<!---Tim Ford: Gather data for unlocked user data --->
+		<CFQUERY NAME="Get_Unlock_Records_Data" datasource="#application.datasource#" MAXROWS="1">
+			SELECT	Name_First,
+					Name_Last
+			FROM	_Users
+			WHERE 	User_ID = <cfqueryparam value="#getUserInfo.Last_Unlock_By#" cfsqltype="cf_sql_idstamp">
+		</CFQUERY>
+
+		<CFSET FORM.Unlock_Name_First 			= Get_Unlock_Records_Data.Name_First />
+		<CFSET FORM.Unlock_Name_Last			= Get_Unlock_Records_Data.Name_Last />
+		<CFSET FORM.Last_Unlock_Date			= getUserInfo.Last_Unlock_Date />
+		<CFSET FORM.UPDATERECORD				= "1">
+		<CFSET FORM.User_Number					= getUserInfo.User_Number>
+		<CFSET FORM.NAME_FIRST 					= getUserInfo.NAME_FIRST>
+		<CFSET FORM.NAME_LAST 					= getUserInfo.NAME_LAST>
+		<CFSET FORM.COMPANY_MAIN_ID				= getUserInfo.COMPANY_MAIN_ID>
+		<CFSET FORM.TITLE 						= getUserInfo.TITLE>
+		<CFSET FORM.User_Authority_Sequence_ID	= getUserInfo.Authority_Sequence_ID>
+		<CFSET FORM.WORK_ADDRESS_1 				= getUserInfo.WORK_ADDRESS_1>
+		<CFSET FORM.WORK_ADDRESS_2 				= getUserInfo.WORK_ADDRESS_2>
+		<CFSET FORM.WORK_CITY 					= getUserInfo.WORK_CITY>
+		<CFSET FORM.WORK_STATE 					= getUserInfo.WORK_STATE>
+		<CFSET FORM.WORK_ZIP 					= getUserInfo.WORK_ZIP>
+		<CFSET FORM.WORK_Country_Code			= getUserInfo.WORK_Country_Code>
+		<CFSET FORM.WORK_PHONE_1 				= getUserInfo.WORK_PHONE_1>
+		<CFSET FORM.WORK_PHONE_2 				= getUserInfo.WORK_PHONE_2>
+		<CFSET FORM.WORK_PHONE_3 				= getUserInfo.WORK_PHONE_3>
+		<CFSET FORM.WORK_PHONE_Ext 				= getUserInfo.WORK_PHONE_Ext>
+		<CFSET FORM.WORK_FAX_1					= getUserInfo.WORK_FAX_1>
+		<CFSET FORM.WORK_FAX_2 					= getUserInfo.WORK_FAX_2>
+		<CFSET FORM.WORK_FAX_3 					= getUserInfo.WORK_FAX_3>
+		<cfif url.copyuser EQ 1>
+			<CFSET FORM.WORK_EMAIL 				= "">
+			<CFSET FORM.UPDATERECORD			= "0">
+		<cfelse>
+			<CFSET FORM.WORK_EMAIL 				= getUserInfo.USER_EMAIL>
+		</cfif>
+		<CFSET FORM.User_Profile_ID				= getUserInfo.Profiles_ID>
+		<CFSET FORM.BROKERAGE_ID				= getUserInfo.BSA_Foodservice_Customers_ID>
+		<CFSET FORM.COMPANY_NAME				= getUserInfo.Company_Name>
+		<CFSET FORM.IS_ELIGIBLE_RSP				= getUserInfo.Is_Eligible_RSP>
+		<CFSET FORM.Is_On_Behalf_Of				= getUserInfo.Is_On_Behalf_Of>
+		<CFSET FORM.Crucible_File_Download		= getUserInfo.Crucible_File_Download>
+		<CFSET FORM.blacksmith_user				= getUserInfo.blacksmith_user >
+		<cfset form.user_language 				=	getUserInfo.user_language >
+		<cfset form.name_middle_initial 		= getUserInfo.name_middle_initial>
+		<cfset form.user_rights_id				= getUserInfo.user_rights_id>
+
+
+		<cfif appSettings.getUSDANOIEnabled() IS 1 AND isDefined("getUserInfo.user_usda_distributor_id_list")>
+			<cfset FORM.IS_USDA_USER					= getUserInfo.IS_USDA_USER>
+			<cfset FORM.user_usda_state_id				= getUserInfo.user_usda_state_id>
+			<cfset FORM.user_usda_county_id				= getUserInfo.user_usda_county_id>
+			<cfset FORM.user_usda_operator_id			= getUserInfo.user_usda_operator_id>
+			<cfset FORM.user_usda_distributor_id_list	= getUserInfo.user_usda_distributor_id_list>
+			<cfset FORM.user_usda_broker_id_list		= getUserInfo.user_usda_broker_id_list>
+			<cfset FORM.user_usda_operator_id_list		= getUserInfo.user_usda_operator_id_list>
+			<cfset form.Operator_List 					= getUserInfo.user_usda_operator_id_list>
+			<cfset form.distributor_List 				= getUserInfo.user_usda_distributor_id_list>
+			<cfset form.broker_List						= getUserInfo.user_usda_broker_id_list>
+			<cfset form.state 							= getUserInfo.user_usda_state_id>
+			<cfset form.County 							= getUserInfo.user_usda_county_id>
+			<cfset form.operator 						= getUserInfo.user_usda_operator_id>
+		</cfif>
+
+		<cfif (url.copyuser NEQ 1) AND (appSettings.getLDAP_SSO_Enabled() or (appSettings.getSingleSign_on() eq 2) OR appSettings.getSingleSignOnOverrideUserId())>
+			<cfset form.LDAP_User_Name 					= getUserInfo.LDAP_User_Name />
+		</cfif>
+		<cfif url.copyuser NEQ 1 >
+			<cfset FORM.Analytics_SSO_User_Name 		= getUserInfo.Analytics_SSO_User_Name />
+			<cfset FORM.Ember_Info 						= 	getUserInfo.Ember_Info><!--- 72497 --->
+		</cfif>
+		<cfset FORM.Remote_Approval_Option				= getUserInfo.Remote_Approval_Option>
+		<cfset FORM.BB_Remote_Approval_Option			= getUserInfo.BB_Remote_Approval_Option>
+		<cfset FORM.RFA_Notification_Email				= getUserInfo.RFA_Notification_Email>
+	</CFIF>
+</CFIF>
+
+
+<cfif isdefined("url.User_ID") and url.User_ID NEQ "">
+	<cfset user_id = #User_ID#>
+<cfelseif isdefined("form.User_ID") and form.User_ID NEQ "">
+	<cfset user_id = #form.User_ID#>
+</cfif>
+
+<cfif Not isdefined("Form.User_Positions_List")>
+<CFIF len(User_ID) GT 0>
+<CFQUERY NAME="UserPositions" datasource="#application.datasource#">
+	select User_Positions_ID
+	from User_Position_Holders
+	where deleted =0
+	AND User_Position_Holders.User_Id = <cfqueryparam value="#User_ID#" cfsqltype="cf_sql_idstamp">
+</CFQUERY>
+<CFSET Form.User_Positions_List = ValueList(UserPositions.User_Positions_ID)>
+<CFELSE>
+	<CFSET Form.User_Positions_List = 0>
+</CFIF>
+<cfelseif isdefined("Form.User_Positions_List") AND len(Form.User_Positions_List) EQ 0>
+<cfset Form.User_Positions_List = 0>
+<cfelse>
+</cfif>
+
+
+<CFQUERY NAME="getUserPositions" datasource="#application.datasource#">
+	SELECT DISTINCT User_positions.position_label
+	                , User_positions.user_positions_id
+	                , User_positions.service_zone_id
+					, Position_Number = CASE
+                                          WHEN User_Positions.Service_Market_Id IS NOT NULL THEN Service_Markets.Market_Number
+                                          WHEN User_Positions.Service_Region_Id IS NOT NULL
+                                               AND User_Positions.Service_Market_Id IS NULL THEN Service_Regions.Region_Number
+                                          WHEN User_Positions.Service_Zone_Id IS NOT NULL
+                                               AND User_Positions.Service_Region_Id IS NULL
+                                               AND User_Positions.Service_Market_Id IS NULL THEN Service_Zones.Zone_Number
+                                          ELSE 'HQ'
+                                      END
+                  , Position_Level = CASE
+                                         WHEN User_Positions.Service_Market_Id IS NOT NULL THEN 3
+                                         WHEN User_Positions.Service_Region_Id IS NOT NULL
+                                              AND User_Positions.Service_Market_Id IS NULL THEN 2
+                                         WHEN User_Positions.Service_Zone_Id IS NOT NULL
+                                              AND User_Positions.Service_Region_Id IS NULL
+                                              AND User_Positions.Service_Market_Id IS NULL THEN 1
+                                         ELSE 0
+                                     END
+	  FROM User_positions
+	       LEFT OUTER JOIN Service_zones   ON User_positions.service_zone_id = Service_zones.service_zone_id
+	       LEFT OUTER JOIN Service_regions ON User_positions.service_region_id = Service_regions.service_region_id
+	       LEFT OUTER JOIN Service_markets ON User_positions.service_market_id = Service_markets.service_market_id
+	 WHERE ( Len( position_label ) <> 0 )
+	       AND ( User_positions.deleted = 0 )
+				 <cfif len(Form.User_Positions_List) GT 0>
+					 AND User_Positions.User_Positions_ID IN (#FORM.User_Positions_List#)
+				</CFIF>
+	 ORDER BY position_label
+</CFQUERY>
+
+<CFQUERY NAME="getThisUserPrimaryPosition" datasource="#application.datasource#">
+	SELECT *
+	FROM User_Position_Holders
+	WHERE User_ID = <cfqueryparam value="#User_ID#" cfsqltype="cf_sql_idstamp">
+	AND User_Position_Type = 'P'
+	and Deleted = 0
+</CFQUERY>
+<CFIF getThisUserPrimaryPosition.recordcount GT 0>
+	<CFSET FORM.USER_POSITIONS_ID = valuelist(getThisUserPrimaryPosition.User_Positions_ID)>
+<CFELSE>
+	<CFSET FORM.USER_POSITIONS_ID = "">
+</CFIF>
+
+<CFQUERY NAME="getThisUserSecondaryPosition" datasource="#application.datasource#">
+	SELECT *
+	FROM User_Position_Holders
+	WHERE User_ID = <cfqueryparam value="#User_ID#" cfsqltype="cf_sql_idstamp">
+	AND User_Position_Type = 'S'
+	and Deleted = 0
+</CFQUERY>
+
+<CFIF getThisUserSecondaryPosition.recordcount GT 0>
+	<CFSET FORM.USER_SEC_POSITIONS_ID = valuelist(getThisUserSecondaryPosition.User_Positions_ID)>
+</CFIF>
+
+
+<CFQUERY NAME="getStates" datasource="#application.datasource#">
+	Select s.*, c.Country_Sort_Order
+	from _states s
+	join _country c on s.Country_ID = c.Country_ID
+	ORDER BY  isnull(c.Country_Sort_Order, c.country_id) ASC
+</CFQUERY>
+
+<CFQUERY NAME="getCountry" datasource="#application.datasource#">
+	SELECT *
+	FROM _Country
+	where active = 1
+	ORDER BY Country_id ASC
+</CFQUERY>
+<!---Replaces query to get profiles--->
+<cfset UserSetting = CreateObject("component","components.user.Profile").getUserSettingsPanel(request.AccessStructure.Profiles_ID)>
+
+<CFSET getProfilesComp = CreateObject("component", "components.settings.profiles.profile").getAllProfiles(UserSettingPanel=UserSetting.Settings_Panel)>
+
+<!---Want to order by name--->
+ <cfquery name="getProfiles" dbtype="Query">
+ Select Profiles_ID, Profiles_Desc
+ FROM getProfilesComp
+ ORDER BY Profiles_Desc
+ </cfquery>
+
+
+<CFQUERY NAME="getCompanies" datasource="#application.datasource#">
+	SELECT *
+	FROM Company_Main
+	WHERE Deleted = 0
+	ORDER BY Company_Name
+</CFQUERY>
+
+<!---If Sales Org On, get all Lines of Business--->
+<cfif appSettings.getSalesOrgOn() IS 1>
+	<cfquery name="GetLOB" datasource="#application.datasource#">
+	SELECT * FROM Line_of_Business WHERE Deleted = 0 ORDER BY Line_of_Business_Name
+	</cfquery>
+</cfif>
+
+
+<!---If distribution channel on, get type codes--->
+<cfif appSettings.getDistributionChannelOn() IS 1>
+	<cfquery name="GetTypeCode" datasource="#application.datasource#">
+	SELECT * FROM Type_Code_Desc WHERE Deleted = 0 ORDER BY Type_Code_Desc
+	</cfquery>
+</cfif>
+
+<STYLE TYPE="text/css">
+.labelStyle {
+	text-align : right;
+}
+</STYLE>
+
+	<CFOUTPUT>
+
+<CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
+<cfif Get_Update_Data.recordCount>
+	<cfif url.copyuser NEQ 1>
+	<div id="Layer2" style="position:absolute; width:544px; z-index:2; top: 45px; left: 299px;">
+	<TABLE BGCOLOR="White" style="border-color:Orange;border-style:solid;" CELLPADDING="3" CELLSPACING="0"  width="530">
+	<TR>
+	<TD>
+		<FONT SIZE="2"><B>The user settings were last updated on #dateformat(Get_Update_Data.Updated_Date, 'm/d/yyy')# #timeformat(Get_Update_Data.Updated_Date, 'h:mm:ss TT')# by #Get_Update_Data.name_first# #Get_Update_Data.name_last#
+		<cfif getUserInfo.Deleted eq 1>
+			<br>The user was inactived on #dateformat(getUserInfo.deleted_date, 'm/d/yyy')# #timeformat(getUserInfo.Updated_Date, 'h:mm:ss TT')# by #getUserInfo.DeletedBy#
+		</cfif>
+		</B></FONT>
+ 	</TD>
+	</TR>
+	</TABLE>
+	</div>
+	</cfif>
+<p>&nbsp;</p>
+</cfif>
+	<FORM ACTION="users_create_form.cfm" METHOD="post" NAME="MyForm" ID="MyForm">
+	<TABLE cellpadding="1">
+    	<TR>
+			<TD CLASS="labelStyle"><span ID="error_Position"></span>&nbsp;User Positions</TD>
+			<TD ROWSPAN="101" BGCOLOR="Navy"><IMG SRC="/images/fill.gif" ALT="" WIDTH="1" BORDER="0"></TD>
+			<TD>
+			&nbsp; <A HREF="javascript: void(0);" onClick="javaScript: showUserPositionsSearchWindow();">#lcase(application.util.string.linkFormat("Select Primary and Secondary positions"))#</A>
+			<BR>
+			</td>
+		</TR>
+		<TR>
+        	<TD valign="top" CLASS="labelStyle">&nbsp;</TD>
+			<TD>
+				<div id="SpanParent">
+				<cfif len(FORM.User_Positions_List) GT 0 and getUserPositions.recordcount gt 0>
+				<TABLE cellspacing="3" cellpadding="3">
+						<cfset row = 0>
+            <TR>
+						<CFLOOP QUERY="getUserPositions">
+						<cfset row = row + 1>
+							<TD valign="top">
+								<input type="radio"
+										name="USER_POSITIONS_ID"
+										value="#getUserPositions.User_Positions_ID#"
+										onclick="setlabel();"
+										<CFIF getUserPositions.User_Positions_ID EQ FORM.User_Positions_ID>
+											CHECKED
+										<CFELSEIF getThisUserPrimaryPosition.recordcount EQ 0>
+											CHECKED
+										<CFELSEIF row EQ 1>
+											CHECKED
+										</CFIF>
+										>
+									<!---31324 - added tooltip for position--->
+									<span onmouseover="popUpTip(event,'ptip_#trim(getUserPositions.User_Positions_ID)#');"  onmouseout="popUpTip(event,'ptip_#trim(getUserPositions.User_Positions_ID)#');">#Trim(getUserPositions.Position_Label)#</span><br>
+									<div id="ptip_#Trim(getUserPositions.User_Positions_ID)#" class="tip"><p class="c411">#Trim(getUserPositions.Position_Label)# <b>[ #trim(getUserPositions.Position_Number)# ]</b> <cfif getUserPositions.Position_Level eq 3>#application.returned_customer_setting.market_label_singular#<cfelseif getUserPositions.Position_Level eq 2>#application.returned_customer_setting.region_label_singular#<cfelseif getUserPositions.Position_Level eq 1>#application.returned_customer_setting.zone_label_singular#<cfelse>Headquarters</cfif></p></div>
+									<span ID="display_#Trim(getUserPositions.User_Positions_ID)#" STYLE="display:'none';margin-left:23px;">(Primary Position)</span>
+							</TD>
+						<CFIF getUserPositions.currentrow mod 3>
+					<CFELSE>
+							</TR>
+							<cfif getUserPositions.currentrow lt getUserPositions.recordCount><TR></cfif>
+						</CFIF>
+						</CFLOOP>
+						<CFIF getUserPositions.recordCount mod 3></TR></cfif>
+				</TABLE>
+				</CFIF>
+				</div>
+			</TD>
+		</TR>
+<cfif appSettings.getAuthority_Sequence_For_HQ_Only()>
+	 <!------ Find position list has HQ ----->
+	<cfquery name="qIsHQ" dbtype="query">
+		SELECT	*
+		FROM	getUserPositions
+		WHERE	Service_Zone_ID IS NULL
+	</cfquery>
+	<cfset isHQ = qIsHQ.recordCount>
+	<cfelse>
+		<cfset isHQ = 0>
+	</cfif>
+	<cfif isHQ IS 1 OR  appSettings.getAuthority_Sequence_For_HQ_Only() IS 0>
+
+		<cfset authoritySequenceManager = CreateObject("component", "components.user.AuthoritySequenceManager").init() />
+		<cfset qAuthoritySequence = authoritySequenceManager.getAll()>
+		<cfif qAuthoritySequence.recordCount>
+		 <TR>
+	        <TD CLASS="labelStyle"><span ID="error_User_Authority_Sequence"></span>&nbsp;Authority Sequence
+			</TD>
+	        <TD><SELECT NAME="User_Authority_Sequence_ID" style="width:200px;">
+	            <OPTION VALUE="0">Select One...</OPTION>
+              <cfsetting enablecfoutputonly="true" >
+	            <CFLOOP QUERY="qAuthoritySequence">
+	              <cfoutput><OPTION VALUE="#Authority_Sequence_ID#" <CFIF Authority_Sequence_ID EQ FORM.User_Authority_Sequence_ID> SELECTED</CFIF>>#Authority_Sequence_Name#</OPTION></cfoutput>
+	            </CFLOOP>
+              <cfsetting enablecfoutputonly="false" >
+	          </SELECT></TD>
+	    </TR>
+		</cfif>
+</cfif>
+    <TR>
+        <TD CLASS="labelStyle"><span ID="error_Profile"></span>&nbsp;User Profile</TD>
+        <TD><SELECT NAME="User_Profile_ID" style="width:200px;">
+            <OPTION VALUE="0">Select One...</OPTION>
+            <cfsetting enablecfoutputonly="true" >
+            <CFLOOP QUERY="getProfiles">
+              <cfoutput><OPTION VALUE="#getProfiles.Profiles_ID#" <CFIF getProfiles.Profiles_ID EQ FORM.User_Profile_ID> SELECTED</CFIF>>#getProfiles.Profiles_Desc#</OPTION></cfoutput>
+            </CFLOOP>
+            <cfsetting enablecfoutputonly="false" >
+          </SELECT></TD>
+    </TR>
+	 <cfif Business_Segment_On>
+
+	<!---Class codes--->
+		<CFIF len(User_ID) GT 0>
+			<cfset qUserClassCodes = businessSegManager.getActiveClassCodes(User_ID) />
+		<CFELSE>
+			<cfset qUserClassCodes = businessSegManager.getActiveClassCodes() />
+		</CFIF>
+    <TR valign="top">
+      <cfset rowMax = 4>
+      <TD CLASS="labelStyle"><span ID="error_Business_Segment"></span>&nbsp;<cfif appSettings.getClassCodesOn()>Class Codes<CFELSE> #appSettings.getbusiness_segment_label()#</cfif></TD>
+      <TD>
+		<div class="segment">
+			<a id="select_all_segment" href="##">#application.util.string.linkFormat("select all #lcase(appSettings.getbusiness_segment_label())#")#</a>
+			<a id="unselect_all_segment" href="##">#application.util.string.linkFormat("unselect all #lcase(appSettings.getbusiness_segment_label())#")#</a>
+		</div>
+        <table cellpadding="0" cellspacing="0" width="100%" class="segment">
+          <tr>
+            <cfsetting enablecfoutputonly="true" >
+			      <cfloop query="qUserClassCodes">
+              <cfoutput><td><input type="Checkbox" class="segment" name="<cfif appSettings.getClassCodesOn()>User_Class_Code_ID<cfelse>User_Business_Segment_ID</cfif>" value="<cfif appSettings.getClassCodesOn()>#Class_Code_ID#<cfelse>#Business_Segment_ID#</cfif>"<cfif appSettings.getClassCodesOn()><cfif User_Class_Code_ID NEQ ""> checked</cfif><cfelse><cfif User_Business_Segment_ID NEQ "" AND User_ID  NEQ ""> checked</cfif></cfif>><cfif appSettings.getClassCodesOn()>#Class_Code_Desc#<cfelse>#Business_Unit_Desc#</cfif></td></cfoutput>
+              <cfoutput><cfif (qUserClassCodes.currentRow mod rowMax) eq 0> </tr> <cfif qUserClassCodes.currentRow lt qUserClassCodes.recordCount> <tr> </cfif> </cfif></cfoutput>
+            </cfloop>
+            <cfsetting enablecfoutputonly="false" >
+            <cfif (qUserClassCodes.recordCount mod rowMax) neq 0> </tr> </cfif>
+          </table>
+      </TD>
+    </TR>
+   </cfif>
+	  <!---End class codes--->
+
+	  <!----Type codes--->
+		<cfif appsettings.getDistributionChannelOn() IS 1>
+
+			<!---Get current Type codes for user--->
+			<cfquery name="GetTypeCodesforUser" datasource="#application.datasource#">
+			SELECT Type_Code_ID FROM User_Type_Code
+			WHERE User_ID = '#url.User_ID#'
+			AND Deleted = 0
+			</cfquery>
+
+	      <TR valign="top">
+        <cfset rowMax = 4>
+        <TD CLASS="labelStyle"><span ID="error_type_code_id"></span>&nbsp;
+		#application.returned_customer_setting.type_code_label_plural#</TD>
+		<TD>
+			<!--- <div class="type_code">
+				<a id="select_all_type_code" href="##">#application.util.string.linkFormat("select all #lcase(application.returned_customer_setting.type_code_label_plural)#")#</a>
+				<a id="unselect_all_type_code" href="##">#application.util.string.linkFormat("unselect all #lcase(application.returned_customer_setting.type_code_label_plural)#")#</a>
+			</div> --->
+			<table cellpadding="0" cellspacing="0" width="100%" class="type_code">
+            <tr>
+              <cfset cnt = 0>
+			  <cfloop query="getTypeCode">
+
+				  <cfquery name="ThisTypeCode" dbtype="query">
+				  SELECT Type_Code_ID FROM GetTypeCodesforUser WHERE Type_Code_ID = '#getTypeCode.Type_Code_Desc_ID#'
+				  </cfquery>
+
+              <td><input type="Checkbox" class="type_code" name="Type_Code_ID" value="#Type_Code_Desc_ID#" <cfif ThisTypeCode.Recordcount GT 0>checked</cfif>>
+               		#trim(Type_Code_Desc)#
+			   </td>
+              <cfset cnt = cnt + 1><cfif not (cnt mod rowMax) and cnt NEQ getTypeCode.recordCount>
+            </tr>
+            <tr> </tr></cfif></cfloop>
+          </table></TD>
+      </TR></cfif>
+
+	<!---End Type codes--->
+
+	<!---Lines of Business--->
+	<cfif appsettings.getSalesOrgOn() IS 1>
+
+		<!---Get current Type codes for user--->
+		<cfif NOT isDefined("FORM.Line_of_Business_ID")>
+			<cfquery name="GetLOBsforUser" datasource="#application.datasource#">
+				SELECT Line_of_Business_ID FROM User_LOB
+				WHERE User_ID = '#url.User_ID#'
+				AND Deleted = 0
+			</cfquery>
+			<cfset FORM.Line_of_Business_ID = ValueList(GetLOBsforUser.Line_of_Business_ID)>
+		</cfif>
+
+		<TR valign="top">
+		<cfset rowMax = 4>
+		<TD CLASS="labelStyle"><span ID="error_User_LOB"></span>&nbsp;
+		#appSettings.getlob_label()#</TD>
+		<TD>
+			<table cellpadding="0" cellspacing="0" width="100%">
+			<tr>
+			<cfset cnt = 1>
+			<cfloop query="getLOB">
+				<cfset lobSelected = 0>
+				<cfif listFindNoCase(FORM.Line_of_Business_ID, getLOB.Line_of_Business_ID, ",")>
+					<cfset lobSelected = 1>
+				</cfif>
+				<td><input type="Checkbox" name="Line_of_Business_ID" value="#Line_of_Business_ID#"
+				<cfif lobSelected>checked</cfif>>
+				#trim(Line_of_Business_Name)#
+				</td>
+				<cfset cnt = cnt + 1>
+				<cfif not (cnt mod rowMax) and cnt NEQ getLOB.recordCount>
+					</tr>
+					<tr>
+				</tr></cfif>
+			</cfloop>
+
+			</table>
+		</TD>
+		</TR>
+	</cfif>
+	  <!---End Lines of Business--->
+
+	  <TR>
+        <TD CLASS="labelStyle">User Number</TD>
+        <TD><INPUT NAME="User_Number" VALUE="#FORM.User_Number#" TYPE="text" SIZE="40" MAXLENGTH="50"></TD>
+      </TR>
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_FirstName"></span>&nbsp;First Name</TD>
+        <TD><INPUT NAME="Name_First" VALUE="#FORM.Name_First#" TYPE="text" SIZE="40" MAXLENGTH="50"></TD>
+      </TR>
+      <!---27172--->
+			<!--- Dev Note: drachala; D28871: Don't show Middle Initial field in user setup when app setting is OFF  START
+			Added/Changed: Added IF condition to SHOW/HIDE Middle Initial Field--->
+		<cfif appSettings.USER_ACCOUNT_MIDDLE_INITIAL>
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_Name_Middle_Initial"></span>&nbsp;Middle Initial</TD>
+        <TD><INPUT NAME="Name_Middle_Initial" VALUE="#FORM.Name_Middle_Initial#" TYPE="text" SIZE="1" MAXLENGTH="1"></TD>
+      </TR>
+		</cfif>
+<!--- End Dev Note: drachala; D28871: Don't show Middle Initial field in user setup when app setting is OFF  --->
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_LastName"></span>&nbsp;Last Name</TD>
+        <TD><INPUT TYPE="text" NAME="Name_Last" VALUE="#FORM.Name_Last#" SIZE="40" MAXLENGTH="50"></TD>
+      </TR>
+	<cfif appSettings.getLDAP_SSO_Enabled() or appSettings.getSingleSign_on() eq 2 OR appSettings.getSingleSignOnOverrideUserId()>
+	  <TR>
+	  	<TD CLASS="labelStyle">Single Sign On - User Name</TD>
+	  	<TD><INPUT NAME="LDAP_User_Name" VALUE="#FORM.LDAP_User_Name#" TYPE="text" SIZE="40" MAXLENGTH="50"></TD>
+	  </TR>
+	</cfif>
+	  <TR>
+	  	<TD CLASS="labelStyle"><span ID="error_Company_Name"></span>&nbsp;Enter Company Name</TD>
+		<TD><input type="text" Name="Company_Name" value="#Form.Company_Name#" size="40" MAXLENGTH="50">
+		</TD>
+	  </TR>
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_Title"></span>&nbsp;Title</TD>
+        <TD><INPUT TYPE="text" NAME="Title" VALUE="#FORM.Title#" SIZE="40" MAXLENGTH="50"></TD>
+      </TR>
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_Address1"></span>&nbsp;Address 1</TD>
+        <TD><TEXTAREA COLS="42" ROWS="2" NAME="Work_Address_1" onPaste="javaScript: return restrictLength(this,255);" onKeyPress="javaScript: return restrictLength(this,255);">#FORM.Work_Address_1#</TEXTAREA></TD>
+      </TR>
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_Address2"></span>&nbsp;Address 2</TD>
+        <TD><TEXTAREA COLS="42" ROWS="2" NAME="Work_Address_2" onPaste="javaScript: return restrictLength(this,50);" onKeyPress="javaScript: return restrictLength(this,50);">#FORM.Work_Address_2#</TEXTAREA></TD>
+      </TR>
+      <TR>
+        <TD CLASS="labelStyle"><SPAN ID="error_City"></SPAN>&nbsp;<SPAN ID="error_Zip"></SPAN>&nbsp;City/State/Postal</TD>
+        <TD><INPUT NAME="Work_City" VALUE="#FORM.Work_CITY#" TYPE="text" MAXLENGTH="50">
+          <SELECT NAME="Work_State">
+            <cfsetting enablecfoutputonly="true" >
+            <CFLOOP QUERY="getStates">
+              <cfoutput><OPTION VALUE="#getStates.State_ID#"<CFIF getStates.State_ID EQ FORM.WORK_STATE> SELECTED</CFIF>>#getStates.State_Code#</OPTION></cfoutput>
+            </CFLOOP>
+            <cfsetting enablecfoutputonly="false" >
+          </SELECT>
+          ,
+          <INPUT NAME="Work_Zip" VALUE="#FORM.Work_ZIP#" TYPE="text" SIZE="4" MAXLENGTH="10"></TD> <!--- onKeyUp="nextBox(this, 'NONE');" --->
+      </TR>
+
+	  <TR>
+        <TD CLASS="labelStyle"><span ID="error_Address2"></span>&nbsp;Country</TD>
+        <TD>
+		  <CFOUTPUT>
+				<SELECT NAME="Work_Country_Code"><OPTION VALUE="" SELECTED></OPTION><CFLOOP QUERY="getCountry"><OPTION VALUE="#getCountry.Country_Code#" <CFIF Work_Country_Code EQ getCountry.Country_Code> SELECTED</CFIF>>#getCountry.Country_Name#</OPTION></CFLOOP></SELECT>&nbsp;
+			</CFOUTPUT>
+		</TD>
+      </TR>
+
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_Phone"></span>&nbsp;Phone</TD>
+        <TD><INPUT NAME="Work_Phone_1" VALUE="#FORM.Work_PHONE_1#" TYPE="text" SIZE="1" MAXLENGTH="3" onKeyUp="nextBox(this, 'NONE');">
+          - <INPUT NAME="Work_Phone_2" VALUE="#FORM.Work_PHONE_2#" TYPE="text" SIZE="1" MAXLENGTH="3" onKeyUp="nextBox(this, 'NONE');">
+          - <INPUT NAME="Work_Phone_3" VALUE="#FORM.Work_PHONE_3#" TYPE="text" SIZE="2" MAXLENGTH="4" onKeyUp="nextBox(this, 'NONE');">
+          &nbsp;Ext. <INPUT NAME="Work_Phone_Ext" VALUE="#FORM.Work_PHONE_EXT#" TYPE="text" SIZE="2" onKeyUp="nextBox(this, 'NONE');" MAXLENGTH="50"></TD>
+      </TR>
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_Fax"></span>&nbsp;Fax</TD>
+        <TD><INPUT NAME="Work_Fax_1" VALUE="#FORM.Work_FAX_1#" TYPE="text" SIZE="1" MAXLENGTH="3" onKeyUp="nextBox(this, 'NONE');">
+          - <INPUT NAME="Work_Fax_2" VALUE="#FORM.Work_FAX_2#" TYPE="text" SIZE="1" MAXLENGTH="3" onKeyUp="nextBox(this, 'NONE');">
+          - <INPUT NAME="Work_Fax_3" VALUE="#FORM.Work_FAX_3#" TYPE="text" SIZE="2" MAXLENGTH="4" onKeyUp="nextBox(this, 'NONE');"></TD>
+      </TR>
+      <TR>
+        <TD CLASS="labelStyle"><span ID="error_Email"></span>&nbsp;Email</TD>
+        <TD><INPUT TYPE="text" NAME="Work_Email" VALUE="#FORM.WORK_EMAIL#" SIZE="40" MAXLENGTH="50"></TD>
+      </TR>
+      <CFIF len(URL.USER_ID) EQ 0 AND appSettings.getWelcomeLetterOn() >
+		  <TR>
+	        <TD CLASS="labelStyle"><span ID="error_WelcomeLetter"></span>&nbsp;Welcome Letter</TD>
+	        <TD>
+				<select name="Welcome_Letter">
+					<option value="">Please Make Selection...</option>
+					<cfif getWelcomeLetters.recordcount GT 0>
+						<cfloop query="getWelcomeLetters">
+							<option value="#getWelcomeLetters.Doc_Uni_Name#">#getWelcomeLetters.Doc_Title#</option>
+						</cfloop>
+					</cfif>
+				</select>
+			</TD>
+	      </TR>
+	 </CFIF>
+	<!--- Dev Note: KAL; 7/1/2010; D23915: Single Instance Remote Approval --->
+	<TR>
+		<TD CLASS="labelStyle" valign="top">RFA Notification Emails</TD>
+		<TD>
+			<INPUT type="radio" name="RFA_Notification_Email" value="0" <cfif FORM.RFA_Notification_Email EQ 0>CHECKED</cfif>>No&nbsp;
+			<INPUT type="radio" name="RFA_Notification_Email" value="1" <cfif FORM.RFA_Notification_Email EQ 1>CHECKED</cfif>>Yes
+		</TD>
+	</TR>
+	<cfif appSettings.getApprovalViaEmail()>
+	<TR>
+		<TD CLASS="labelStyle" valign="top">Program Remote Approval Option</TD>
+		<TD>
+			<INPUT type="radio" name="Remote_Approval_Option" value="0" <cfif Form.Remote_Approval_Option EQ 0>CHECKED</cfif>>No&nbsp;
+			<INPUT type="radio" name="Remote_Approval_Option" value="1" <cfif Form.Remote_Approval_Option EQ 1>CHECKED</cfif>>Single&nbsp;
+			<INPUT type="radio" name="Remote_Approval_Option" value="2" <cfif Form.Remote_Approval_Option EQ 2>CHECKED</cfif>>Batch
+		</TD>
+	</TR>
+	</cfif>
+
+	<cfif appSettings.get_Setting('BB_Approval_Via_Email') >
+	<TR>
+		<TD CLASS="labelStyle" valign="top">Billback Remote Approval Option</TD>
+		<TD>
+			<INPUT type="radio" name="BB_Remote_Approval_Option" value="0" <cfif Form.BB_Remote_Approval_Option EQ 0>CHECKED</cfif>>No&nbsp;
+			<INPUT type="radio" name="BB_Remote_Approval_Option" value="1" <cfif Form.BB_Remote_Approval_Option EQ 1>CHECKED</cfif>>Yes
+		</TD>
+	</TR>
+	</cfif>
+
+	  <!----
+		RSP means Is an Eligible Responsible Sales Person
+		OBO means Only On Behalf Of
+
+		Scenario A
+			RSP = Y, OBO = Y
+			In the rsp drop down list:  NO [due to OBO @ Y]
+			In the approval workflow:  YES [due to RSP @ Y]
+		Scenario B
+			RSP = Y, OBO = N
+			In the rsp drop down list:  YES
+			In the approval workflow:  YES
+		Scenario A
+			RSP = N, OBO = Y
+			In the rsp drop down list:  NO
+			In the approval workflow:  NO
+		Scenario B
+			RSP = N, OBO = N
+			In the rsp drop down list:  NO
+			In the approval workflow:  NO
+	  ---->
+	  <TR>
+        <TD CLASS="labelStyle" valign="top">&nbsp;Is an Eligible Responsible Sales Person</TD>
+        <TD><INPUT onClick="javascript: showHideOnBehalfOf()" type="Radio" name="Is_Eligible_RSP" value="0" <CFIF form.Is_Eligible_RSP EQ 0> CHECKED</CFIF>>No&nbsp;
+		<INPUT onClick="javascript: showHideOnBehalfOf()" type="Radio" name="Is_Eligible_RSP" value="1" <CFIF form.Is_Eligible_RSP EQ 1> CHECKED</CFIF>>Yes<BR>
+	  	</TD>
+	  </TR>
+	  <TR id="TR_Is_On_Behalf_Of" <CFIF form.Is_Eligible_RSP EQ 0>style="display:none"</cfif>>
+        <TD CLASS="labelStyle" valign="top">&nbsp;Only On Behalf Of</TD>
+        <TD><INPUT type="Radio" name="Is_On_Behalf_Of" value="0" <CFIF form.Is_On_Behalf_Of EQ 0> CHECKED</CFIF>>No&nbsp;
+		<INPUT type="Radio" name="Is_On_Behalf_Of" value="1" <CFIF form.Is_On_Behalf_Of EQ 1> CHECKED</CFIF>>Yes<BR>
+	  	</TD>
+	  </TR>
+	  <cfif appSettings.getCrucibleOn()>
+	  <TR>
+        <TD CLASS="labelStyle" valign="top">&nbsp; Enable GAUGE<SUP style="font-size:10px">SM</SUP></TD>
+        <TD><INPUT type="Radio" name="Crucible_File_Download" value="0" <CFIF form.Crucible_File_Download NEQ 1> CHECKED</CFIF>>No&nbsp;
+		<INPUT type="Radio" name="Crucible_File_Download" value="1" <CFIF form.Crucible_File_Download EQ 1> CHECKED</CFIF>>Yes<BR>
+	  	</TD>
+	  </TR>
+	  </cfif>
+	  <!---Only show this if USDANOI is turned on--->
+	  <cfif appSettings.getUSDANOIEnabled() IS 1>
+      <TR>
+        <TD CLASS="labelStyle" valign="top"><span ID="error_IsUSDAUser"></span>&nbspIs A USDA User</TD>
+        <TD>
+		<INPUT type="Radio" name="Is_USDA_User" value="0" onClick="document.all.usdaWindow.style.display = 'none';" <CFIF form.Is_USDA_User EQ 0> CHECKED</CFIF>>No&nbsp;
+		<INPUT type="Radio" name="Is_USDA_User" value="1" onClick="document.all.usdaWindow.style.display='';" <CFIF form.Is_USDA_User EQ 1> CHECKED</CFIF>>Yes
+		</TD>
+	 </TR>
+	<!------ DRK: moved the style=display:none from TR to TD because
+	style: display:none at TR level causing issues for the blue bar between the columns ----->
+	<TR>
+	 <TD CLASS="labelStyle" valign="top">&nbsp;</TD>
+	<td id="usdaWindow" style="display:<cfif Form.Is_USDA_User IS 1>''<cfelse> none</cfif>">
+		<cfoutput>
+				<cfset OPERATOR = form.operator_list>
+				<cfset Dist = form.Distributor_list>
+				<cfset Broker = form.broker_list>
+				<cfset DistName = DistName>
+				<cfinclude template="/settings/usdanoi/user_setting_report_restrictor.cfm">
+		</cfoutput>
+	</td>
+    </TR>
+	</cfif>
+	<!---Show USDANOI--->
+	<tr>
+		<td CLASS="labelStyle" valign="top">&nbsp; Is Blacksmith User?</td>
+		<td>
+			<input type="Radio" name="blacksmith_user" value="0" <CFIF form.blacksmith_user NEQ 1> checked</CFIF>>No&nbsp;
+			<input type="Radio" name="blacksmith_user" value="1" <CFIF form.blacksmith_user EQ 1> checked</CFIF>>Yes<BR>
+	  </td>
+	</tr>
+	<tr>
+		<td CLASS="labelStyle" valign="top">&nbsp; Language</td>
+		<td>
+			<select name="user_language" style="width:80px;">
+				<option value="0">Select</option>
+				<cfsetting enablecfoutputonly="true" >
+				<cfloop query="getLabelSets">
+					<cfoutput><option value="#getLabelSets.Label_Set_Name#" <CFIF getLabelSets.Label_Set_Name EQ FORM.user_language> SELECTED</CFIF>>#getLabelSets.Label_Set_Name#</OPTION></cfoutput>
+				</cfloop>
+				<cfsetting enablecfoutputonly="false" >
+			</select>
+		</td>
+	</tr>
+	<!--- (Only a person with "9999" access rights, can assign "9999" access rights to another user) --->
+	<cfif url.upateAccessRights eq "1" AND Request.AccessStructure.User_Rights_ID eq "9999">
+	<tr>
+		<td CLASS="labelStyle" valign="top">&nbsp; Assign access rights</td>
+		<td>
+			<select name="user_rights_id" style="width:80px;">
+				<option value="0">Select</option>
+					<option value="1000" <CFIF form.user_rights_id EQ 1000> SELECTED</CFIF>>Default</OPTION>
+					<option value="9999" <CFIF form.user_rights_id EQ 9999> SELECTED</CFIF>>9999</OPTION>
+			</select>
+		</td>
+	</tr>
+	<cfelse>
+	<input type="hidden" name="user_rights_id" value="#form.user_rights_id#">
+	</cfif>
+
+	<!--- 76021 :: Ember:  Open Document from FORGE Application START--->
+	<cfif LEN(TRIM(appSettings.get_Setting('Ember_OpenDocument_URL'))) GT '0'>
+		<TR>
+			<TD CLASS="labelStyle">
+                <span ID="error_Ember_Info"></span> Insights SSO - User Name
+            </TD>
+			<TD><INPUT NAME="Ember_Info" VALUE="#FORM.Ember_Info#" TYPE="text" SIZE="40"></TD>
+		</TR>
+	</cfif>
+	<!---end 76021 :: Ember:  Open Document from FORGE Application END--->
+	<!--- 83599 : FORGE Analytics:  SSO From FORGE Application --->
+	<cfif LEN(TRIM(appSettings.get_Setting('Analytics_OpenDocument_URL'))) GT '0'>
+	  <TR>
+	  	<TD CLASS="labelStyle">
+            <span ID="error_Analytics_SSO_User_Name"></span> Analytics SSO - User Name
+        </TD>
+	  	<TD><INPUT NAME="Analytics_SSO_User_Name" VALUE="#FORM.Analytics_SSO_User_Name#" TYPE="text" SIZE="40" MAXLENGTH="50"></TD>
+	  </TR>
+	</cfif>
+		<!--- 83599 : FORGE Analytics:  SSO From FORGE Application --->
+	  <!---Tim Ford - Label 17807: Only show unlock records for users that already exist. --->
+	  <CFIF len(trim(User_ID)) GT 0>
+	  <tr>
+        <td CLASS="labelStyle" valign="top">
+			&nbsp; Last Unlock Records</td>
+        <td>
+			<cfif len(trim(form.Unlock_Name_First))>
+				#form.Unlock_Name_First# #form.Unlock_Name_Last# on #DateFormat(form.Last_Unlock_Date, "mm/dd/yyyy")#
+			<cfelse>
+				None
+			</cfif>
+	  	</td>
+	  </tr>
+	  </CFIF>
+    </TABLE>
+
+	<input type="hidden" name="Company_Main_ID" value="<cfloop query="getCompanies" STARTROW="1" ENDROW="1">#FORM.Company_Main_ID#</cfloop>">
+	<cfoutput>
+	<input type="hidden" name="send_welcome_letter" value="1">
+	<input type="hidden" name="SelectSingleSearchResultOnly" value="0">
+	<input type="hidden" name="user_usda_state_id" value="#form.user_usda_state_id#">
+	<input type="hidden" name="user_usda_county_id" value="#form.user_usda_county_id#">
+	<input type="hidden" name="user_usda_operator_id" value="#form.user_usda_operator_id#">
+ 	<input type="hidden" name="user_usda_distributor_id_list" value="#form.user_usda_distributor_id_list#">
+	<input type="hidden" name="user_usda_broker_id_list" value="#form.user_usda_broker_id_list#">
+	<input type="hidden" name="user_usda_operator_id_list" value="#form.user_usda_operator_id_list#">
+	<input type="hidden" name="Unlock_Name_First" value="#form.Unlock_Name_First#">
+	<input type="hidden" name="Unlock_Name_Last" value="#form.Unlock_Name_Last#">
+	<input type="hidden" name="Last_Unlock_Date" value="#form.Last_Unlock_Date#">
+	<input type="hidden" name="upateAccessRights" value="#url.upateAccessRights#">
+	</cfoutput>
+
+	<input name="UPDATERECORD" type="Hidden" value="#FORM.UPDATERECORD#">
+	<input name="User_ID" type="Hidden" value="#User_ID#">
+	<input type="Hidden" id="User_Positions_List" name="User_Positions_List" value="<cfif isDefined("Form.User_Positions_List")>#Form.User_Positions_List#</cfif>">
+	<input type="hidden" name="activateuser" value="#form.activateuser#">
+	<input type="hidden" name="ClassCodesOn" value="#appSettings.getClassCodesOn()#">
+	<input type="hidden" name="LDAP_User_Name" value=""> <!--- passing a blank when LDAP is not on --->
+	<input type="hidden" name="Analytics_SSO_User_Name" value=""> <!--- passing a blank when Analytics SSO is not on --->
+	<BR>
+
+	<TABLE cellpadding="10">
+			<TR>
+				<TD>
+				<cfif url.activateuser EQ 1 or form.activateuser EQ 1>
+				<cfset buttoncap = "ActivateUser">
+				<cfelse>
+				<cfset buttoncap = "save settings">
+				</cfif>
+				<DIV ALIGN="center">
+					<a href="javascript: verifyData();" class="aLink">#application.util.string.actionLinkFormat2(buttoncap)#</a>
+					<span class ="dLink" style="display:none">#application.util.string.actionLinkFormat2(buttoncap)#</span>
+				</DIV>
+				</TD>
+				<CFIF FORM.UPDATERECORD EQ 1>
+					<!---
+							D21554: Kal; Disable reset password when the link LDAP is on.
+							D25717: Kal; Single Sign On - Disable reset password when its a SSO user.
+							D50618: Kal; SSO OverideUserID - Show reset password
+					 --->
+					<cfif appSettings.getSingleSignOnOverrideUserId() OR (NOT (appSettings.getLDAP_SSO_Enabled() or len(Form.LDAP_User_Name)))>
+					<TD>
+						<DIV ALIGN="center">
+							<a href="javascript: resetPassword();" class="aLink">#application.util.string.actionLinkFormat2('reset password')#</a>
+						</DIV>
+					</TD>
+					</cfif>
+					<TD>
+						<DIV ALIGN="center">
+							<cfif appSettings.getApprovalViaEmail() or appSettings.get_Setting('BB_Approval_Via_Email') >
+								<a href="javascript: resetPin();" class="aLink">#application.util.string.actionLinkFormat2('reset pin')#</a>
+							<cfelse>
+								&nbsp;
+							</cfif>
+						</DIV>
+					</TD>
+				</CFIF>
+				<TD>
+				</TD>
+			</TR>
+		</TABLE>
+	</FORM>
+	</CFOUTPUT>
+
+	<cf_include files="/Common_Files/scripts/wholeNumberValidation.js, /Common_Files/scripts/requiredFields.js, /Script/javascript/dom_common.js">
+		<CF_MessageWindow>
+	<SCRIPT>
+		<cfoutput>
+		function isDefined(item) {
+    		return (typeof item != 'undefined');
+		}
+
+		function restrictLength(thisobj,valueLength)
+		{
+			if(event.type == "keypress")
+			{
+				if(thisobj.value.length >= valueLength)
+				{
+					return false;
+				}
+			}
+			if(event.type == "paste")
+			{
+				var fullData = thisobj.value + window.clipboardData.getData("Text");
+				if(fullData.length >= valueLength)
+				{
+					thisobj.value = fullData.substr(0,valueLength);
+					return false;
+				}
+			}
+
+			return true;
+		}
+		function verifyData(){
+			ErrorCount = 0;
+
+				//alert(document.all.USER_POSITIONS_ID.value);
+			//Position
+
+			var radioSelected;
+			//alert(document.all.User_Positions_List.value)
+			if (document.all.User_Positions_List.length == undefined && document.all.User_Positions_List.value == 0)
+			{
+				ErrorCount++;
+				queueMessage("Select a primary position for this user", document.all.error_Position);
+			}
+			else
+			{
+				clearQueue(document.all.error_Position);
+
+				if(document.all.USER_POSITIONS_ID.length == undefined && document.all.USER_POSITIONS_ID.value != null)
+				{
+					if (!document.all.USER_POSITIONS_ID.checked){
+					ErrorCount++;
+					queueMessage("Select a primary position for this user", document.all.error_Position);
+				}
+				else {
+					clearQueue(document.all.error_Position);}
+				}
+
+				if(document.all.USER_POSITIONS_ID.length != undefined){
+
+				for(i=0; i < document.all.USER_POSITIONS_ID.length; i++)
+				{
+				if (document.all.USER_POSITIONS_ID[i].checked)
+				{radioSelected = document.all.USER_POSITIONS_ID[i].value }
+				}
+
+				if(!radioSelected)
+				{
+
+					ErrorCount++;
+					queueMessage("Select a primary position for this user", document.all.error_Position);
+				}
+				else {
+					clearQueue(document.all.error_Position);
+				}
+				}
+				if(document.all.USER_POSITIONS_ID.length == undefined && document.all.USER_POSITIONS_ID.value == null){
+
+					ErrorCount++;
+					queueMessage("Select a position for this user", document.all.error_Position);
+				}
+				else {
+					clearQueue(document.all.error_Position);
+				}
+			}
+
+			// Authority_Sequence
+			//check whether the select box is there
+			var oSelect = document.all.User_Authority_Sequence_ID;
+			if(oSelect)
+			{
+				if(oSelect.selectedIndex==0){
+					ErrorCount++;
+					queueMessage("Select an Authority Sequence for this user", document.all.error_User_Authority_Sequence);
+				}
+				else {
+					clearQueue(document.all.error_User_Authority_Sequence);
+				}
+			}
+
+			//Profile
+			if(document.all.User_Profile_ID.selectedIndex==0){
+				ErrorCount++;
+				queueMessage("Select a profile for this user", document.all.error_Profile);
+			}
+			else {
+				clearQueue(document.all.error_Profile);
+			}
+			<cfif Business_Segment_On>
+			//Business Segments
+			<cfif appSettings.getClassCodesOn()>
+			if(document.all.User_Class_Code_ID)
+			{
+			if(!Any_Object_Checked(document.all.User_Class_Code_ID)){
+				ErrorCount++;
+				queueMessage("Select a class code for this user", document.all.error_Business_Segment);
+			}
+			else {
+				clearQueue(document.all.error_Business_Segment);
+			}
+			}
+			<cfelse>
+			if(document.all.User_Business_Segment_ID)
+			{
+			if(!Any_Object_Checked(document.all.User_Business_Segment_ID)){
+				ErrorCount++;
+				queueMessage("Select a #appSettings.getbusiness_segment_label()# for this user", document.all.error_Business_Segment);
+			}
+			else {
+				clearQueue(document.all.error_Business_Segment);
+			}
+			}
+			</cfif>
+			</cfif>
+
+			 <!----Type codes--->
+			<cfif appsettings.getDistributionChannelOn() IS 1>
+
+			if(!Any_Object_Checked(document.all.Type_Code_ID)){
+				ErrorCount++;
+				queueMessage("Select a #application.returned_customer_setting.type_code_label_plural# for this user", document.all.error_User_Type_Code);
+			}
+			else {
+				clearQueue(document.all.error_User_Type_Code);
+			}
+
+			</cfif>
+			<!---End type code--->
+
+			<!----LOB--->
+			<cfif appsettings.getSalesOrgOn() IS 1>
+
+			if(!Any_Object_Checked(document.all.Line_of_Business_ID)){
+				ErrorCount++;
+				queueMessage("Select a #appSettings.getlob_label()# for this user", document.all.error_User_LOB);
+			}
+			else {
+				clearQueue(document.all.error_User_LOB);
+			}
+
+			</cfif>
+			<!---LOB--->
+
+			//First Name
+			if(document.all.Name_First.value.length==0){
+				ErrorCount++;
+				queueMessage("Enter the user's first name", document.all.error_FirstName);
+			}
+			else {
+				clearQueue(document.all.error_FirstName);
+			}
+
+			//Last Name
+			if(document.all.Name_Last.value.length==0){
+				ErrorCount++;
+				queueMessage("Enter the user's last name", document.all.error_LastName);
+			}
+			else {
+				clearQueue(document.all.error_LastName);
+			}
+		<!--- Please don't remove this CFIF condition, this is for a special client, they do not require validations on these feilds, since they upload users on nightly basis --->
+		<!--- If SSO is off(0) or SSO=ADFS(2) then do the following validation  --->
+		<cfif appsettings.getSingleSign_on() neq 1>
+
+			//Company
+			/* if(document.all.Company_Main_ID.selectedIndex==0){
+				ErrorCount++;
+				queueMessage("Select a company for this user", document.all.error_Company);
+			}
+			else {
+				clearQueue(document.all.error_Company);
+			}*/
+
+			//Title
+			if(document.all.Title.value.length==0){
+				ErrorCount++;
+				queueMessage("Enter the user's title", document.all.error_Title);
+			}
+			else {
+				clearQueue(document.all.error_Title);
+			}
+
+			//Address 1
+			if(document.all.Work_Address_1.value.length==0){
+				ErrorCount++;
+				queueMessage("Enter the first line of the user's address", document.all.error_Address1);
+			}
+			else {
+				clearQueue(document.all.error_Address1);
+			}
+
+			//City
+			if(document.all.Work_City.value.length==0){
+				ErrorCount++;
+				queueMessage("Enter the user's city", document.all.error_City);
+			}
+			else {
+				clearQueue(document.all.error_City);
+			}
+
+			//Zip Code
+			if(document.all.Work_Zip.value.length == 0){
+				ErrorCount++;
+				queueMessage("Enter a postal code", document.all.error_Zip);
+			}
+			else {
+				clearQueue(document.all.error_Zip);
+			}
+
+			//PHONE
+			if((document.all.Work_Phone_1.value.length + document.all.Work_Phone_2.value.length + document.all.Work_Phone_3.value.length) != 10){
+				ErrorCount++;
+				queueMessage("Enter a valid ten digit phone number", document.all.error_Phone);
+			}
+			else {
+				clearQueue(document.all.error_Phone);
+			}
+		</cfif>
+			//Email
+			if(!checkMail(document.all.Work_Email.value)){
+				ErrorCount++;
+				queueMessage("Enter a valid email address", document.all.error_Email);
+			}
+			else {
+				clearQueue(document.all.error_Email);
+			}
+
+            let sso_user_name = $("input[name=Ember_Info]");
+            // optional text input element exists, validate it
+            if (sso_user_name.length) {
+                sso_user_name = sso_user_name.val().toLowerCase();
+
+                // requested validation from saralee wr 110782
+                if (sso_user_name.indexOf("administrator") != -1) {
+                    ErrorCount++;
+                    queueMessage("Enter a valid insight SSO user name", document.all.error_Ember_Info);
+                }
+                else {
+                    clearQueue(document.all.error_Ember_Info);
+                }
+            }
+
+
+            sso_user_name = $("input[name=Analytics_SSO_User_Name]");
+            // optional text input element exists, validate it
+            if (sso_user_name.length) {
+                sso_user_name = sso_user_name.val().toLowerCase();
+
+                // requested validation from saralee wr 110782
+                if (sso_user_name.indexOf("administrator") != -1) {
+                    ErrorCount++;
+                    queueMessage("Enter a valid analytics SSO user name", document.all.error_Analytics_SSO_User_Name);
+                }
+                else {
+                    clearQueue(document.all.error_Analytics_SSO_User_Name);
+                }
+            }
+
+			if(ErrorCount == 0){
+
+				$(".aLink").hide();
+				$(".dLink").show()
+
+				//if(confirm("Are You Sure To Add This User")){
+				document.all.MyForm.User_ID.value = <cfoutput>'#User_Id#'</cfoutput>;
+				document.all.MyForm.action = "users_create_action.cfm";
+				document.all.MyForm.submit();
+				//}
+			}
+			else {
+				showMessageWindow()
+			}
+		}
+
+
+		function checkMail(emailAddressText)
+			{
+				var x = emailAddressText;
+				var filter  = /^([a-zA-Z0-9_\.\-\'])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9])+$/;
+				//var filter  = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9])+$/;
+				if (filter.test(x)) return true
+				else return false
+			}
+
+	function unchecksecondary(selectedvalue)
+	{
+	//if (selectedvalue != 0)
+	//{
+	for (i=0;i<document.all.USER_SEC_POSITIONS_ID.length;i++)
+		{ if(document.all.USER_SEC_POSITIONS_ID[i].value == selectedvalue)
+			{ document.all.USER_SEC_POSITIONS_ID[i].disabled = true;
+			if (document.all.USER_SEC_POSITIONS_ID[i].checked)
+			{document.all.USER_SEC_POSITIONS_ID[i].checked = false;}
+			}
+		if(document.all.USER_SEC_POSITIONS_ID[i].value != selectedvalue)
+		{
+		document.all.USER_SEC_POSITIONS_ID[i].disabled = false;
+			if (!document.all.USER_SEC_POSITIONS_ID[i].checked)
+			{ document.all.USER_SEC_POSITIONS_ID[i].checked = true;}
+		}
+
+		}
+	//}
+
+	}
+</cfoutput>
+		function showHideOnBehalfOf()
+		{
+			var trObj = document.all.TR_Is_On_Behalf_Of;
+			if(trObj)
+			{
+				if(document.all.Is_Eligible_RSP[0].checked) //Is_Eligible_RSP = no, hide
+				{
+					trObj.style.display = "none";
+				}
+				else
+				{
+					trObj.style.display = "";
+				}
+			}
+		}
+	</SCRIPT>
+
+
+
+	<SCRIPT LANGUAGE="JavaScript">
+		document.body.onload=new Function ("setlabel();");
+
+		function showUserPositionsSearchWindow() {
+			NewWindow("/Search_Screens/Select_User_Position.cfm?Formname=MyForm&FieldName=User_Positions_List&AllowImportAll=1&EnableListOfPositionsAboveMine=1", "qyouwindow", 800, 600, "yes", "yes")
+		}
+		<!--- Reset Password --->
+		function resetPassword()
+		{
+			var thisForm = document.all.MyForm;
+			var oldAction = thisForm.action;
+			thisForm.action = "send_password.cfm";
+			thisForm.submit();
+			thisForm.action = oldAction;
+		}
+		<!--- Reset Pin --->
+		function resetPin()
+		{
+			var thisForm = document.all.MyForm;
+			var oldAction = thisForm.action;
+			thisForm.action = "send_pin.cfm";
+			thisForm.submit();
+			thisForm.action = oldAction;
+		}
+
+		function setlabel()
+		{
+			var val;
+
+			//menu.children.tags("SPAN");
+			//var ad = document.getElementById('SpanParent');
+			//cnad = ad.childNodes;
+			//alert(cnad.length)
+			<cfif Listlen(FORM.User_Positions_List) EQ 2>
+				document.all.USER_POSITIONS_ID.checked = true
+			</cfif>
+			<cfif (len(FORM.User_Positions_List) GT 0 OR len(User_ID) GT 0) AND FORM.User_Positions_List NEQ 0>
+			if (document.all.USER_POSITIONS_ID)
+			for(i=0; i < document.all.USER_POSITIONS_ID.length; i++)
+			{
+
+				if (document.all.USER_POSITIONS_ID[i].checked)
+				{val = document.all.USER_POSITIONS_ID[i].value }
+
+				var selectedvalue = "display_" + document.all.USER_POSITIONS_ID[i].value;
+				removedisplay = document.all.item(selectedvalue);
+				removedisplay.style.display = "none";
+
+			}
+			</cfif>
+			if(val)
+			{
+				var spanid = "display_" + val
+				oSpan = document.all.item(spanid);
+				oSpan.style.display = "";
+				oSpan.style.color = 'red';
+			}
+			//document.all.displaytext.style.display = 'show';
+		}
+		<cfif appSettings.getUSDANOIEnabled() IS 1>
+			function setParentWindowVars(){
+				document.all.user_usda_operator_id_list.value = document.all.Operator_List.value;
+				document.all.user_usda_distributor_id_list.value = document.all.Distributor_List.value;
+				document.all.user_usda_broker_id_list.value = document.all.Broker_List.value;
+				document.all.user_usda_state_id.value = '<cfoutput>#form.state#</cfoutput>';
+				document.all.user_usda_county_id.value ='<cfoutput>#form.county#</cfoutput>';
+				document.all.user_usda_operator_id.value = '<cfoutput>#form.operator#</cfoutput>';
+			}
+			setParentWindowVars();
+		</cfif>
+	</SCRIPT>
+
+<cf_include files="/script/tTip.js, /common_files/jQuery.cfm">
+<script>
+$("#select_all_segment").click(function(){
+	$("input.segment").attr("checked", "checked");
+});
+$("#unselect_all_segment").click(function(){
+	$("input.segment").removeAttr("checked");
+});
+</script>
+</body>
+</html>

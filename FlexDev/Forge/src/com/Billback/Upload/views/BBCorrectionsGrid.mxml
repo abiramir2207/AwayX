@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*" width="100%" height="100%"
+		 xmlns:ba="com.shared.components.*">
+	<s:layout>
+		<s:VerticalLayout paddingLeft="0" paddingRight="0" 
+						  paddingTop="0" paddingBottom="0" />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Main.models.vos.BBHeader;
+			import com.Billback.Upload.models.vos.BBUploadHeader;
+			import com.Billback.Upload.views.pm.BBCorrectionsPModel;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.controls.Alert;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.core.ScrollPolicy;
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBCorrectionsPModel;
+			[Bindable]
+			private var iPad:int = 3;
+			
+			/*protected function dgBBCorrections_clearHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				var selUploadID:int;
+				var bIsSelected:Boolean;
+				selUploadID = this.dgBBCorrections.selectedItem.uploadID;
+				bIsSelected = this.dgBBCorrections.selectedItem.isSelected;
+				for(var i:uint = 0; i < this.pModel.arrBBCorrections.length;i++)
+				{
+					var obj:Object = Object(this.pModel.arrBBCorrections[i]);
+					if (obj.uploadID == selUploadID)
+					{
+						obj.isSelected = bIsSelected;
+					}	
+				}
+			}*/
+			
+		]]>
+	</fx:Script>
+	<s:VGroup height="100%" width="90%" minWidth="800" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+		<ba:MinMaxPanel id="header" width="100%" minWidth="800" height="68" borderStyle="none" panelTitle="BB Corrections Results: {pModel.arrBBCorrections.length} records" showMaximize="false" showMinimize="true">
+			<s:VGroup paddingTop="3">
+				<s:BorderContainer width="550" height="33" >
+					<s:layout>
+						<s:HorizontalLayout paddingLeft="{iPad}" paddingRight="{iPad}" verticalAlign="middle"
+											paddingTop="{iPad}" paddingBottom="{iPad}" gap="{iPad}"/>
+					</s:layout>	
+		
+					<s:HGroup verticalAlign="middle">			
+							<s:Button label="refresh data" 
+									  click="{pModel.refreshCorrectionsData()}" 
+									  toolTip="Refresh the list of corrections data." />
+							<s:Label id="dataAsOf" width= "200" text=" Data as of: {pModel.bbCorrectionsDate}" visible="{pModel.bbCorrectionsDate != ''}" color="red" fontWeight="bold" toolTip="The time stamp for the data in the current view."/>	
+							<s:Spacer width="3" />
+							<s:Button label="reset" click="{dgBBCorrections.resetFilters()}"
+									  toolTip="clear filters."/>
+							<s:CheckBox label="filter" id="chkFilter" change="{dgBBCorrections.displayHeaderOptions(chkFilter.selected,chkEdit.selected)}"
+										selected="true"
+										toolTip="Filter the list of corrections listed below."/> 
+							<!--grid is not editable....-->
+							<s:CheckBox label="Edit" id="chkEdit" change="{dgBBCorrections.displayHeaderOptions(chkFilter.selected,chkEdit.selected)}" includeInLayout="false" visible="false"/>
+							<s:Spacer width="25" />
+							<s:Button label="delete" 
+								  	click="{pModel.deleteSelected()}" 
+								  	toolTip="Delete the selected records" />
+					</s:HGroup>
+				</s:BorderContainer>
+			</s:VGroup>
+		</ba:MinMaxPanel>
+	
+		<filters:FilterDatagrid id="dgBBCorrections" editable="true"
+								columns="{pModel.arrBBCorrectionsDgCols}"
+								dataProvider="{this.pModel.arrBBCorrections}"
+								doubleClickEnabled="true"
+								doubleClick="{pModel.selectCorrection(this.dgBBCorrections.selectedItem as BBUploadHeader)}"
+								minWidth="800" width="100%" minHeight="175" height="100%"
+								horizontalScrollPolicy="{ScrollPolicy.AUTO}"
+								resize="true"
+								columnWidths="{['3%', '5%', '4%', '10%', '14%', '11%', '10%', '11%', '8%', '8%', '8%', '7%', '1%']}"
+								headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+								headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	
+								> <!-- click="dgBBCorrections_clearHandler(event)" pModel.bbHeader.BBProdRate-->
+			
+		</filters:FilterDatagrid>
+	</s:VGroup>
+</s:Group>

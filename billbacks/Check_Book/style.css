@@ -1,0 +1,30 @@
+a {
+	color: Blue;
+	text-decoration: none;	
+}
+
+a:hover {
+	color: Red;	
+	text-decoration: underline;	
+}
+
+td {
+	font: 12px Arial;
+}
+
+body {
+	font: 12px Arial;	
+}
+
+
+.maintableheader
+	{
+		border-bottom: Solid 1px Silver;
+		font-weight: bold;
+	}
+
+.maintable
+	{
+		border-bottom: Solid 1px Aqua;
+	}
+	

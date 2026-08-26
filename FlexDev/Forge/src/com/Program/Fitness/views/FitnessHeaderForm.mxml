@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:ba="com.shared.views.renderer.*" width="100%" >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<fx:Script>
+		<![CDATA[
+			import com.Program.Fitness.events.FitnessEvent;
+			import com.Program.Fitness.views.pm.FitnessPModel;
+			
+			import mx.collections.ArrayList;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+			import mx.utils.ObjectUtil;
+			
+			import spark.components.CheckBox;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:FitnessPModel;
+			
+			[Bindable]
+			private var iWidth:Number = 400;
+			[Bindable]
+			private var iPadding:Number = 3;
+			[Bindable]
+			private var rowCount:Number = 12;
+			
+			private function updSearchDef(cmbo:BaCombo,s:String):void{
+				pModel.updSearchDef(cmbo,s)
+				focusManager.setFocus(this.cboRegion2);
+			}
+			
+		]]>
+	</fx:Script>
+	<s:BorderContainer height="100%" width="100%">
+		<s:VGroup width="800" paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}" horizontalAlign="center">
+			<s:HGroup width="100%" horizontalAlign="center">
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay" gap="0" paddingTop="0" paddingBottom="0"   /><!--variableRowHeight="false" rowHeight="30"-->
+						</s:layout>
+						<!--<s:FormHeading fontSize="10"  label="Search"/>-->
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Business_Segment_Label}" width="{iWidth}" >
+							<ba:BaCombo id="cboBusinessSegment0" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.BusinessSegment0}"
+										enabled="{pModel.fitnessSearchDef.BusinessSegment0.length}"
+										change="pModel.updSearchDef(this.cboBusinessSegment0,'BusinessSegment0')"
+										selectedIndex="{pModel.fitnessSearchDef.BusinessSegment0Idx}"
+										labelField="LABEL" 
+										rowCount="{this.rowCount}">
+							</ba:BaCombo>
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Zone_Label}" width="{iWidth}" >
+							<ba:BaCombo id="cboArea1" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Area1}"
+										enabled="{pModel.fitnessSearchDef.Area1.length}"
+										change="pModel.updSearchDef(this.cboArea1,'Area1')"
+										selectedIndex="{pModel.fitnessSearchDef.Area1Idx}"
+										labelField="LABEL" 
+										rowCount="{this.rowCount}">
+							</ba:BaCombo>
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Region_Label}" width="{iWidth}" >
+							<ba:BaCombo id="cboRegion2" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Region2}" 
+										enabled="{pModel.fitnessSearchDef.Region2.length}"
+										change="pModel.updSearchDef(this.cboRegion2,'Region2')"
+										selectedIndex="{pModel.fitnessSearchDef.Region2Idx}"
+										labelField="LABEL" 
+										rowCount="{this.rowCount}">
+							</ba:BaCombo>
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Distributor_Label_Singular}" width="{iWidth}" >
+							<ba:BaCombo id="cboCustomer3" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Customer3}" 
+										enabled="{pModel.fitnessSearchDef.Customer3.length}"
+										change="pModel.updSearchDef(this.cboCustomer3,'Customer3')"
+										selectedIndex="{pModel.fitnessSearchDef.Customer3Idx}"
+										labelField="LABEL" 
+										rowCount="{this.rowCount}">
+							</ba:BaCombo>
+						</s:FormItem>
+						
+						<s:FormItem label="Year" >
+							<ba:BaCombo id="cboYear4" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Year4}" 
+										enabled="{pModel.fitnessSearchDef.Year4.length}"
+										change="pModel.updSearchDef(this.cboYear4,'Year4')"
+										selectedIndex="{pModel.fitnessSearchDef.Year4Idx}"
+										labelField="LABEL" 
+										rowCount="{this.rowCount}">
+							</ba:BaCombo>
+						</s:FormItem>
+						
+						<s:FormItem label="Program">
+							<!--<ba:BaCombo id="cboProgram5"
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Program5}" 
+										enabled="{pModel.fitnessSearchDef.Program5.length}"
+										change="pModel.updSearchDef(this.cboProgram5,'Program5')"
+										selectedIndex="{pModel.fitnessSearchDef.Program5Idx}"
+										labelField="LABEL" 
+										rowCount="{this.rowCount}">
+							</ba:BaCombo>-->
+							
+							<s:DropDownList id="cboProgram5" 
+											width="{iWidth}" height="15"
+											dataProvider="{new ArrayList(pModel.fitnessSearchDef.Program5)}" 
+											enabled="{pModel.fitnessSearchDef.Program5.length}"
+											change="pModel.updSearchDefSpark(this.cboProgram5,'Program5')"
+											selectedIndex="{pModel.fitnessSearchDef.Program5Idx}"
+											skinClass="com.shared.views.skins.baDropDownListSkin"
+											labelField="LABEL" requireSelection="true">
+							</s:DropDownList>
+						</s:FormItem>
+						
+						<s:FormItem label="Period">
+							<ba:BaCombo id="cboPeriod6" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Period6}" 
+										enabled="{pModel.fitnessSearchDef.Period6.length}"
+										change="pModel.updSearchDefFinal(this.cboPeriod6,'Period6')"
+										selectedIndex="{pModel.fitnessSearchDef.Period6Idx}"
+										labelField="LABEL" 
+										rowCount="{this.rowCount}">
+								
+							</ba:BaCombo>
+						</s:FormItem>
+						
+						<!--<s:FormItem label="Category" >
+							<ba:BaCombo id="cboCategory7" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Category7}" 
+										enabled="{pModel.fitnessSearchDef.Category7.length}">
+							</ba:BaCombo>
+						</s:FormItem>
+						
+						<s:FormItem label="Family">
+							<ba:BaCombo id="cboFamily8" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Family8}" 
+										enabled="{pModel.fitnessSearchDef.Family8.length}">
+						</s:FormItem>
+						
+						<s:FormItem label="Finance">
+							<ba:BaCombo id="cboFinance9" 
+										width="{iWidth}"
+										dataProvider="{pModel.fitnessSearchDef.Finance9}" 
+										enabled="{pModel.fitnessSearchDef.Finance9.length}">
+							</ba:BaCombo>
+						</s:FormItem>
+						qBrand
+						prodVarA
+						typeCodeDesc -->
+						
+						<!--<s:FormItem label="">
+							<s:Button id="btnSearch" label="Search" />
+						</s:FormItem>-->
+					</s:Form>
+				</s:VGroup>
+			</s:HGroup>
+		<!--	<s:Button id="btnSearch" label="Search" />-->
+		</s:VGroup>
+	</s:BorderContainer>
+</s:Group>

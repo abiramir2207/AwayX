@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This is the popup for program details. -->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="top" horizontalScrollPolicy="off">
+	<mx:Script>
+		<![CDATA[
+			import com.maps.*;
+			import com.views.*;
+			import com.models.*;
+			import com.events.*;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import mx.managers.PopUpManager;
+			import flash.display.DisplayObject;
+			import mx.core.Application;
+			import mx.core.IFlexDisplayObject;
+			import mx.formatters.NumberFormatter;
+			
+			[Bindable]
+			/* This is used to open the pop up for payment history */
+			private function openExternalURL(iContractMainID:String):void
+			{
+				var jsURL:String = "/common_files/contracts/view_contract_payment_history.cfm?ContractId=" + iContractMainID;
+				var jscommand:String = "window.open('"+ jsURL + "','winPaymentHistory','height=620,width=1150,toolbar=no,scrollbars=yes,resizable=yes');";			
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);"); 
+				navigateToURL(url, "_self"); 
+			}
+			
+			/* program_payment formatting */
+			private static var _numFormat:NumberFormatter =  new NumberFormatter();
+			private static function FormatNumber(s:String):String 
+			{
+				/* set formatter precision */
+				_numFormat.precision = 2;
+				return _numFormat.format(s);
+			}						
+		
+		]]>    
+	</mx:Script>
+	
+	<mx:HBox verticalAlign="top" horizontalGap="0">
+		<mx:Text fontSize="10"  color="green" text="{FormatNumber(data.program_payment)}" click="openExternalURL(data.contract_main_id.toString())" useHandCursor="true" buttonMode="true" mouseChildren="false" toolTip="Payment History for {data.contract_number}" />
+	</mx:HBox>	
+</mx:VBox>

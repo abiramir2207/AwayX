@@ -1,0 +1,172 @@
+===== QUERY: CheckCopiedBB =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckCopiedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckCopiedBB>
+	<cftry>
+		<cfset CheckCopiedBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#URL.BBID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckCopiedBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckCopiedBB>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPayeeInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetPayeeInfo>
+	<cftry>
+		<cfset getPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_payee_type_id,bb_amount,claim_cases,claim_pounds,negative_billback"
+			}), "billback_payee_type_id,bb_amount,claim_cases,claim_pounds,negative_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPayeeID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPayeeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForgetPayeeID>
+	<cftry>
+		<cfset getPayeeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id as payee_id"
+			}), "distributor_id as payee_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPayeeID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPayeeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForgetPayeeID>
+	<cftry>
+		<cfset getPayeeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id as payee_id"
+			}), "distributor_id as payee_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPayeeID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPayeeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForgetPayeeID>
+	<cftry>
+		<cfset getPayeeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id as payee_id"
+			}), "distributor_id as payee_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPayeeID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPayeeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForgetPayeeID>
+	<cftry>
+		<cfset getPayeeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id as payee_id"
+			}), "distributor_id as payee_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckSched =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckSched = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqCheckSched>
+	<cftry>
+		<cfset qCheckSched = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "scheduled_auto_bb"
+			}), "scheduled_auto_bb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckSched = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckSched>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: LookForExistingProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLookForExistingProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForLookForExistingProgram>
+	<cftry>
+		<cfset LookForExistingProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookForExistingProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookForExistingProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

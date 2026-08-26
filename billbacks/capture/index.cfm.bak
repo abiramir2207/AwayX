@@ -1,0 +1,2755 @@
+<cfsilent>
+<!---get application settings--->
+<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
+<cfset BBProgramManager = CreateObject("component", "components.Billback.Programs.BillbackProgramsManager") />
+<cfset appSettings = genSettingsManager.get()>
+
+<cfparam name="URL.BBID" default="">
+<cfparam name="URL.AUTOBB" default="">
+<cfparam name="url.modifyagree" default="0">
+<cfparam name="URL.source" default="">
+<cfparam name="bBillbackSalesTax" default="0">
+<CFSET LocalBBID = 0>
+<CFSET VarCopiedBB = 0>
+<cfset Split_Parent = 0 />
+
+<cfscript>
+  // 27047 - determine the statement template to run based on the bb statement type setting
+  vars = StructNew();
+  vars.bb_statement_type = appSettings.getBillBack_Statement_Type();
+  if ( vars.bb_statement_type eq "claim-summary" ) {
+    // claim auto print setting is on
+    vars.statementCFM = "summaryReport.cfm";
+  }
+  else if ( vars.bb_statement_type eq "pdf-v2" ) {
+    // Solo statement type
+    vars.statementCFM = "create_summary_statement.cfm";
+  }
+  else if ( vars.bb_statement_type eq "excel-v3" ) {
+    // GM excel statement
+    vars.statementCFM = "xls_statement.cfm";
+  }
+  else {
+    // Heinz claim summary statement
+    vars.statementCFM = "claimsummary_report.cfm";
+  }
+</cfscript>
+
+<cfparam name="IsSplitChild" default="0">
+<cfset iBBDevOverridePrice = appSettings.BB_DEVIATIONS_OVERRIDE_PRICE />
+<cfquery name="getBBSettings" datasource="#application.datasource#">
+	SELECT 	Enable_BB_Dup_Check
+	FROM 		Billback_Settings
+</cfquery>	
+<CFIF len(trim(URL.BBID)) GT 0>
+	<cfquery name="quickBBCheck" datasource="#Application.Datasource#">
+		SELECT 	Billback.Billback_ID, Billback_Status_ID, Auto_Billback, CopiedBB, VolumeRateSaved,
+				BB_Creator_ID, Created_Date, BB_Request_Approval_User_ID, BB_Request_Approval_Date,
+				BB_Approved.Date_Approved, BB_Approved.User_Approved,
+				BB_Reset_User_ID, BB_Reset_Date, BB_Is_Child, Scheduled_Auto_BB,
+				BB_Disagree, BB_Disagree_Date, BB_Disagree_By,Negative_Billback,
+				(SELECT COUNT(Billback_ID) FROM BB_Agreed_Info WHERE BB_Agreed_Info.Billback_ID =  '#URL.BBID#' AND BB_Agreed_Info.Deleted = 0)
+				AS Agreed_Count
+				,BB_Reversed
+				,BB_Reversed_By
+				,BB_Reversed_Date
+				,Billback.BB_Deviations_Override_Price as BB_Level_Deviations_Override_Price_Flag
+				,Billback.BB_Upload_Dup_Group_ID
+		FROM 	Billback
+				LEFT JOIN BB_Approved
+				ON
+				BB_Approved.Billback_ID = Billback.Billback_ID
+		WHERE 	Billback.Billback_ID = '#URL.BBID#'
+				AND Billback.Deleted = 0
+	</cfquery>
+	<cfif quickBBCheck.BB_Level_Deviations_Override_Price_Flag EQ 1>
+		<cfset iBBDevOverridePrice = 1 />
+	</cfif>
+
+	<!--- Get the Billback number --->
+<cfquery name="Get_Billback_Info" datasource="#application.datasource#">
+	SELECT	  	isnull(Billback_Program.Program_ID,'') AS ProgramID,
+				isNull(Billback.Claim_Cases, 0.00) as Claim_Cases,
+				isNull(Billback.Claim_Pounds, 0.00) as Claim_Pounds,
+				isNull(Billback.BB_Amount, 0.00) as BB_Amount,
+				Billback.*,
+				Billback_Allied.BB_Is_Locked,
+				Billback_Allied.BB_Locked_By_User_ID,
+				Billback_Status.BB_Status_Description,
+				_USERS.name_first + ' ' + _USERS.name_last as user_name,
+				DD_Closure_Sent_On
+	FROM		Billback
+				LEFT JOIN Billback_Allied ON
+				Billback_Allied.Billback_ID = Billback.Billback_ID
+				LEFT JOIN Billback_Program ON
+				Billback_Program.billback_id = 	Billback.billback_id
+				AND Billback_program.deleted = 0
+				LEFT JOIN   Billback_Status ON
+				Billback_Status.Billback_Status_ID = Billback.Billback_Status_ID
+				LEFT JOIN _USERS ON
+				_USERS.USER_ID = Billback.BB_modify_agree_user
+	WHERE		Billback.Deleted = 0
+	AND			Billback.Billback_ID = '#URL.BBID#'
+</cfquery>
+
+	<cfif len(trim(Get_Billback_Info.BB_parent_ID)) GT 0>
+		<cfset IsSplitChild = 1>
+	</cfif>
+
+	<CFQUERY NAME="CheckSplit" DATASOURCE="#Application.Datasource#">
+		SELECT Top 1 * FROM Billback WHERE BB_parent_ID = '#URL.BBID#' AND Deleted = 0
+	</CFQUERY>
+
+	<CFIF quickBBCheck.CopiedBB NEQ "" AND quickBBCheck.VolumeRateSaved NEQ 1>
+		<CFSET VarCopiedBB = quickBBCheck.CopiedBB>
+	</CFIF>
+	<CFIF quickBBCheck.recordcount GT 0>
+		<CFSET LocalBBID = URL.BBID>
+	</CFIF>
+
+	<!--- <cfif quickBBCheck.Billback_Status_ID GT 2>
+		<cfset quickBBCheck.Auto_Billback = 0>
+	</cfif> --->
+
+	<cfquery name="BB_Check_GL_Code_Alloc" datasource="#Application.Datasource#">
+		SELECT 	Top 1 *
+		FROM 	Gl_Code_Allocation
+		WHERE 	Billback_ID = '#URL.BBID#' AND
+				GL_Code_Allocation.Deleted = 0 AND
+				Allocation_Saved = 1
+	</cfquery>
+	<cfset GLCode_Allocation = BB_Check_GL_Code_Alloc.recordCount />
+	<cfset Split_Parent = CheckSplit.recordCount />
+	
+	<!---- BB Sales Tax (Start) --->
+	<cfset CheckTemplateApprovalRights = BBProgramManager.getTemplateApprovalRights(URL.BBID)>
+
+	<cfset bBillbackSalesTax = 0 />
+	<cfif (CheckTemplateApprovalRights.RecordCount GTE 2)>
+		<cfloop query = "CheckTemplateApprovalRights">
+			<cfif (CheckTemplateApprovalRights.Billback_Sales_Tax EQ 1)>
+				<cfset bBillbackSalesTax = 1 />
+			</cfif>
+		</cfloop>
+	<cfelseif (CheckTemplateApprovalRights.Billback_Sales_Tax EQ 1)>
+		<cfset bBillbackSalesTax = 1 />
+	</cfif>
+	<!---- BB Sales Tax (End) --->
+
+<cfelse>
+	<cfset quickBBCheck.Billback_Status_ID = 0>
+	<cfset quickBBCheck.Billback_ID = 0>
+	<cfset quickBBCheck.Scheduled_Auto_BB = 0>
+	<cfif URL.AUTOBB EQ "1">
+		<cfset quickBBCheck.Auto_Billback = 1>
+		<cfset quickBBCheck.Scheduled_Auto_BB = 1>
+	<cfelseif URL.AUTOBB EQ 2>
+		<cfset quickBBCheck.Auto_Billback = 2>
+		<cfset quickBBCheck.Scheduled_Auto_BB = 1>
+	<cfelse>
+		<cfset quickBBCheck.Auto_Billback = 0>
+	</cfif>
+	<cfset quickBBCheck.Negative_Billback = 0>
+	<cfset quickBBCheck.BB_Reversed = 0>
+	<cfset quickBBCheck.BB_UPLOAD_DUP_GROUP_ID = 0>
+</CFIF>
+
+<cfset enablePaymentTabAfterPaidStatus = 0 />
+<cfif UCase(left(application.returned_customer_setting.Customer_Keyword,1)) EQ "H" AND UCase(right(application.returned_customer_setting.Customer_Keyword,1)) EQ "Z">
+	<cfset enablePaymentTabAfterPaidStatus = 1 />
+</cfif>
+
+<cfset basicInfoPage = "/billbacks/capture/basic_information_form.cfm">
+<CFIF len(trim(LocalBBID)) GT 0 AND LocalBBID NEQ 0>
+<cfset iframeSourcePage = "Billback_Summary.cfm?BBID=#LocalBBID#" />
+<cfelse>
+	<cfset iframeSourcePage = basicInfoPage>
+</CFIF>
+<cfset paymentExtraURL = "">
+<!--- moved modify agree code to bb_menu_stats.cfm --->
+
+</cfsilent>
+
+
+<!--- <cfinclude template="bb_menu_stats.cfm">  --->
+
+<!------ If coming from deduction ----->
+<cfif isDefined("URL.DEDUCTION_ID") AND URL.DEDUCTION_ID NEQ "" AND LocalBBID NEQ 0>
+	<!------ If the billback is approved, lock the billback and take to payment tab ----->
+	<cfif quickBBCheck.Billback_Status_ID GTE 3>
+		<cfset iframeSourcePage = "Billback_Locker.cfm?BBID=#LocalBBID#&Billback_IsLocked=1&relocatePage=payment&DEDUCTION_ID=#URL.DEDUCTION_ID#&failureURLType=deduction">
+		<cfset paymentExtraURL = "&DEDUCTION_ID=#URL.DEDUCTION_ID#">
+	<cfelse>
+		<cfoutput>
+		<br><br><br>
+		<center><span style="color:red;font-weight:bold;font-size:14px;">
+		The billback is not yet approved.
+		<br><br><br>
+		<table cellpadding="0" cellspacing="0">
+		<tr><td align="left" style="font-weight:bold;font-size:12px;">
+		<li>
+		<a href="index.cfm?BBID=#LocalBBID#">Click here to edit the billback.</a><br>
+		</li>
+		<li>
+		<a href="/deductions/deduction.cfm?DEDUCTION_ID=#URL.DEDUCTION_ID#&Billback_ID=#LocalBBID#&NoAccess=1">Click here to go back to to the deduction.</a><br>
+		</li>
+		</ul>
+		</td></tr>
+		</table>
+		</span></center>
+		</cfoutput>
+		<cfabort>
+	</cfif>
+</cfif>
+
+<cfsilent>
+
+ <cfset bSource = 0/>
+<cfif (isDefined("URL.source") AND (URL.source EQ "BBFlexScoreCard"))>
+<cfset bSource = 1/>
+</cfif>
+
+<cfif (LocalBBID NEQ 0 AND VarCopiedBB EQ 0 and url.modifyagree EQ 0 AND (bSource EQ 0) )>
+	<cfquery name="unlockBB" datasource="#application.datasource#">
+		UPDATE Billback_Allied
+		SET BB_Is_Locked = 0
+		WHERE Billback_ID = '#LocalBBID#' AND BB_Is_Locked = 1 AND BB_Locked_By_User_ID = '#request.AccessStructure.user_id#'
+		AND BB_Locked_By_Match_Central = 0
+	</cfquery>
+</cfif>
+
+<!---BJF: Add payment history link, if payment history table exists and has data in it --->
+
+<cfset ShowPaymentHistory = 0>
+
+<!--- get the User Profile information --->
+<cfinclude template="/get_access_profile.cfm">
+
+<Cfif LocalBBID NEQ 0>
+<cfquery name="PaymentHistoryTableExists" datasource="#application.datasource#">
+SELECT * FROM   INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'BB_Payment_Confirmation'
+</cfquery>
+
+<cfif PaymentHistoryTableExists.Recordcount GT 0>
+	<cfquery name="PaymentHistoryforthisBB" datasource="#application.datasource#">
+	SELECT BB_Payment_Confirmation_ID FROM BB_Payment_Confirmation
+	INNER JOIN Contract_Main
+	ON Contract_Main.Contract_Number LIKE '%' + right(left(BB_Payment_Confirmation.Rebate_ID, 10), 7)
+	INNER JOIN Billback_Program
+	ON Billback_Program.Program_ID = Contract_Main.Contract_Main_ID
+	AND Billback_Program.Deleted = 0
+	AND Billback_Program.Billback_ID = '#LocalBBID#'
+	</cfquery>
+
+	<cfif PaymentHistoryforthisBB.Recordcount GT 0 AND quickBBCheck.Auto_Billback Neq 1>
+		<cfset ShowPaymentHistory = 1>
+	</cfif>
+
+<!---Only display if there's actually data --->
+</cfif>
+</CFIF>
+
+
+</cfsilent>
+<!---Payment history --->
+<!--- <cfdump var="#quickBBCheck#" /> --->
+<CFSET PAGE_TITLE="Create Billback">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<HTML>
+<HEAD>
+	<TITLE><CFOUTPUT>#PAGE_TITLE#</CFOUTPUT></TITLE>
+	<LINK REL="STYLESHEET" TYPE="text/css" HREF="/common_files/main_style.css">
+	<LINK REL="STYLESHEET" TYPE="text/css" HREF="/common_files/ViewModes.css">
+<script type="text/javascript">
+
+var iframeids=["contentIFrame"];
+var iframehide="yes";
+var getFFVersion=navigator.userAgent.substring(navigator.userAgent.indexOf("Firefox")).split("/")[1];
+var FFextraHeight=parseFloat(getFFVersion)>=0.1? 16 : 0;//extra height in px to add to iframe in FireFox 1.0+ browsers
+
+function dyniframesize() {
+	var iframeids=["contentIFrame"];
+	var iframehide="yes";
+	var dyniframe=new Array()
+	for (i=0; i<iframeids.length; i++){
+		if (document.getElementById){ //begin resizing iframe procedure
+			dyniframe[dyniframe.length] = document.getElementById(iframeids[i]);
+			if (dyniframe[i] && !window.opera){
+				dyniframe[i].style.display="block"
+				if (dyniframe[i].contentDocument && dyniframe[i].contentDocument.body.offsetHeight){ //ns6 syntax
+					dyniframe[i].height = dyniframe[i].contentDocument.body.offsetHeight+FFextraHeight;
+				}
+				else if (dyniframe[i].Document && dyniframe[i].Document.body.scrollHeight){ //ie5+ syntax
+					dyniframe[i].height = dyniframe[i].Document.body.scrollHeight;
+				}
+			}
+			}
+
+		//reveal iframe for lower end browsers? (see var above):
+		if ((document.all || document.getElementById) && iframehide=="no"){
+			var tempobj=document.all? document.all[iframeids[i]] : document.getElementById(iframeids[i])
+			tempobj.style.display="block"
+		}
+	}
+}
+/*
+if (window.addEventListener)
+window.addEventListener("load", dyniframesize, false)
+else if (window.attachEvent)
+window.attachEvent("onload", dyniframesize)
+else
+window.onload=dyniframesize
+*/
+</script>
+<script language="JavaScript">
+ var topMargin 	= 0
+ var slideTime	= 500
+ var ns6 = (!document.all && document.getElementById);
+ var ie4 = (document.all);
+ var ns4 = (document.layers);
+ var Layer_Width = 650;
+ var Layer_Height = 85;
+ var storeinparent = 1;
+ var allowScroll = true;
+
+function floatObject() {
+if (ns4 || ns6) {
+ findHt =	window.innerHeight;
+ } else if(ie4) {
+ findHt =	document.body.clientHeight;
+ }
+}
+
+function main() {
+
+if(allowScroll == true){
+if (ns4) {
+ this.currentY 	= document.infoBarLayer.top;
+ this.scrollTop	= window.pageYOffset;
+ mainTrigger();
+ } else if(ns6) {
+ this.currentY = parseInt(document.getElementById('infoBarLayer').style.top);
+ this.scrollTop = scrollY;
+  mainTrigger();
+ } else if(ie4) {
+ this.currentY 	= infoBarLayer.style.pixelTop;
+ this.scrollTop	= document.body.scrollTop;
+ mainTrigger();
+	}
+   }
+ function mainTrigger() {
+ var newTargetY	= this.scrollTop + this.topMargin
+ if ( this.currentY != newTargetY ) {
+ if ( newTargetY != this.targetY ) {
+ this.targetY = newTargetY
+  floatStart();
+  }
+  animator();
+  }
+  }
+  function floatStart() {
+  var now	= new Date()
+  this.A		= this.targetY - this.currentY
+  this.B		= Math.PI / ( 2 * this.slideTime )
+  this.C		= now.getTime()
+  if (Math.abs(this.A) > this.findHt) {
+  this.D = this.A > 0 ? this.targetY - this.findHt : this.targetY + this.findHt
+  this.A = this.A > 0 ? this.findHt : -this.findHt
+  } else {
+  this.D = this.currentY
+   }
+  }
+  function animator() {
+  var now	= new Date()
+  var newY	= this.A * Math.sin( this.B * ( now.getTime() - this.C ) ) + this.D
+  newY		= Math.round(newY)
+  if (( this.A > 0 && newY > this.currentY ) || ( this.A < 0 && newY < this.currentY )) {
+  if ( ie4 )infoBarLayer.style.pixelTop = newY
+  if ( ns4 )document.infoBarLayer.top = newY
+  if ( ns6 )document.getElementById('infoBarLayer').style.top = newY + "px"
+  }
+ }
+ }
+
+</script>
+
+</HEAD>
+
+  <cfif (isDefined("URL.source") AND (URL.source EQ "BBFlexScoreCard"))>
+<BODY style="margin:0" onLoad="dyniframesize();tabClick('deviations');">
+<cfelse>
+<BODY style="margin:0" onLoad="dyniframesize();">
+</cfif>
+
+<!--- <BODY style="margin:0" onLoad="dyniframesize();">   --->
+
+
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<CFINCLUDE TEMPLATE="/includes/header.cfm" />
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+
+<cfset runningBorderColor = "Silver">
+<cfoutput>
+<style type="text/css">
+		.inactiveMenuItem {
+			cursor : pointer;
+			color: blue;
+			font-family: Arial;
+			font-size : 11px;
+			padding:0;
+		}
+
+		.inactiveMenuItem_notclickable {
+			cursor : pointer;
+            color: gray;
+			font-family: Arial;
+			font-size :	 11px;
+			padding:0;
+		}
+
+		.activeMenuItem {
+			cursor : pointer;
+			color: red;
+			font-family: Arial;
+			font-size :	 11px;
+			padding:0;
+		}
+
+
+		.cellaroundIframe {
+			border-right:solid #runningBorderColor# 1px;
+			border-bottom:solid #runningBorderColor# 1px;
+		}
+
+		.statusBarStyle {
+			font-weight: bold;
+			font-size: 13px;
+			color: White;
+			background-color: ##FFFFFF;
+		}
+
+		.menuItem_idle {
+			font-family:		Arial;
+			font-size :			11px;
+			color: blue;
+		}
+
+		.titleMain
+		{
+			font-face 		: Arial;
+			font-weight 	: bold;
+			color			: ffffff;
+		}
+		.titleAmount
+		{
+			font-face 		: Arial;
+			font-weight 	: bold;
+			color			: ffffff;
+			font-size		: 19px;
+			background-color:33CC33;
+		}
+		.titleDevAmount
+		{
+			font-face 		: Arial;
+			font-weight 	: bold;
+			color			: ffffff;
+			font-size		: 19px;
+			background-color:FF0000;
+		}
+
+		.inactiveMenuLabelItem {
+			cursor : pointer;
+			color: gray;
+			font-family: Arial;
+			font-size :	 11px;
+
+		}
+
+		.activeMenuLabelItem {
+			cursor : pointer;
+			color: blue;
+			font-family: Arial;
+			font-size :	 11px;
+		}
+</style>
+</cfoutput>
+
+<cfsilent>
+<!---Permissions for left hand links --->
+
+<cfset Billback_ID = LocalBBID>
+<!---Billback has an ID assigned --->
+<cfif Billback_ID IS NOT 0>
+<cfquery name="GetLockStatus" datasource="#Application.Datasource#">
+		SELECT BB_Is_Locked,BB_Locked_By_User_ID
+		FROM
+			Billback_Allied
+		WHERE
+			Billback_ID = '#Billback_ID#'
+	</cfquery>
+
+	<cfparam name="DisAllowAccessBasedOnLockStatus" default="1">
+
+	<CFIF GetLockStatus.BB_Is_Locked EQ 1>
+		<CFSET DisAllowAccessBasedOnLockStatus 	= 0>
+	<CFELSE>
+		<CFSET DisAllowAccessBasedOnLockStatus 	= 1>
+	</CFIF>
+
+	<cfset APVL_Contract_Status = quickBBCheck.Billback_Status_ID>
+<!---Billback has an ID assigned --->
+<cfelse>
+	<cfset APVL_Contract_Status = 1>
+	<CFSET DisAllowAccessBasedOnLockStatus 	= 0>
+<!---Billback has an ID assigned --->
+</cfif>
+
+		<!------ Get the stored deduction id ----->
+
+	<cfif Billback_ID NEQ 0>
+	<cfquery name="getAssociatedDeductionID" datasource="#application.datasource#">
+		SELECT	Deduction_ID
+		FROM	DD_Closure_Detail
+		WHERE	DD_Closure_ID = '#Billback_ID#' AND Deleted = 0
+	</cfquery>
+	<cfelse>
+	<cfset getAssociatedDeductionID.recordcount = 0>
+	</cfif>
+
+<CFSET Delete_Button_Show		= 0>
+<CFSET Detail_Button_Show		= 0>
+<CFSET Copy_Button_Show			= 0>
+<CFSET Reset_Button_Show		= 0>
+<CFSET Reverse_Button_Show		= 0>
+
+<!---TSF: Label 21054 - Allow users to switch items on uploaded billbacks --->
+<CFSET Switch_Product_Button_Show	= 0>
+<CFIF len(trim(URL.BBID)) GT 0 and Get_Billback_Info.Uploaded_Billback eq 3 and (appSettings.getThirdPartyBBUpload() eq 3 or iBBDevOverridePrice eq 1)>
+	<CFSET Switch_Product_Button_Show	= 1>
+</CFIF>
+
+
+
+<!------------------- BB_Create is reused to Delete tooo -------------------------->
+<CFSET Profile_Delete			= Get_Profile_Settings.BB_Delete>
+
+<!------
+		locked
+and		deleted profile = 1
+and		not a split parent
+and
+(
+		(status <> payment request or paid or approved-void)
+OR		(status = payment request
+		and (only if not sent yet or if unsuccessful acknowledgement)
+OR		(status = approved void
+		and (reverse link app setting is off or reversal successfully acknowledged)
+)
+and		billback has not interfaced in the deduction (1510/900) interface
+------>
+<CFIF len(trim(URL.BBID)) EQ 0>
+	<cfset Get_Billback_Info.BB_Payment_Request_Sent = 0 />
+	<cfset Get_Billback_Info.BB_Received_Ack_Type = 0 />
+	<cfset Get_Billback_Info.BB_Approved_Void_Ack_Type = 0 />
+	<cfset Get_Billback_Info.DD_Closure_Sent_On = "" />
+</CFIF>
+<CFIF 		(Profile_Delete EQ 1)
+		AND	Split_Parent EQ 0
+		AND
+		(		(APVL_Contract_Status NEQ 4 AND APVL_Contract_Status NEQ 5 AND APVL_Contract_Status NEQ 8)
+			OR	(		APVL_Contract_Status EQ 4
+					AND	(Get_Billback_Info.BB_Payment_Request_Sent EQ 0 OR Get_Billback_Info.BB_Received_Ack_Type EQ 2)
+				)
+			OR	(		APVL_Contract_Status EQ 8
+					AND	(appSettings.getBBAllowReverse() EQ 0 OR Get_Billback_Info.BB_Approved_Void_Ack_Type EQ 1)
+				)
+		)
+		AND Get_Billback_Info.DD_Closure_Sent_On EQ ""
+		>
+	<CFSET Delete_Button_Show		= 1>
+</CFIF>
+
+<CFIF (Get_Profile_Settings.BB_Create EQ 1) and not quickBBCheck.Scheduled_Auto_BB and quickBBCheck.Auto_Billback NEQ 1>
+	<CFSET Copy_Button_Show		= 1>
+</CFIF>
+<CFIF APVL_Contract_Status GTE 3>
+	<CFSET Detail_Button_Show = 1>
+</CFIF>
+
+
+<!------
+		locked
+and		have profile access
+and		status = payment request
+and		app setting BB_Allow_Reverse = 1
+and		no deduction association
+and		if successfully acknowledged
+----->
+
+<CFIF 		Get_Profile_Settings.BB_Reverse EQ 1
+		AND ((APVL_Contract_Status eq 4 AND len(trim(Get_Billback_Info.BB_Payment_Request_Sent_On)) GT 0 AND (Get_Billback_Info.BB_Received_Ack_Type EQ 1 OR Get_Billback_Info.BB_Received_Ack_Type EQ 0))  OR (APVL_Contract_Status eq 5 AND Get_Billback_Info.BB_Received_Ack_Type EQ 1))
+		AND	appSettings.getBBAllowReverse() EQ 1
+		AND	getAssociatedDeductionID.RecordCount EQ 0
+		AND quickBBCheck.Auto_Billback NEQ 1
+		AND Get_Billback_Info.BB_Closing_method EQ 1
+		>
+	<CFSET Reverse_Button_Show = 1>
+</CFIF>
+
+<!------ If the following is true
+- Billback is locked
+- not a split parent
+- It is already approved
+- It is not paid
+- It is not yet sent to the Client or it is sent to the client and we got reply back as void
+- If the user is the creator or the approver
+ ----->
+
+<!---TSF: Label 10625 - Commented out DisAllowAccessBasedOnLockStatus variable because it doesn't need to be in the logic to display the Reset_Button_Show link --->
+<!---(NOT DisAllowAccessBasedOnLockStatus) --->
+<!------
+		locked
+and		not a split parent
+below conditions are not applied here as we want the link to display even thought it will be disabled by the javascript
+if the link does not show when status < 3, the problem is if the user approves the billback, the link will still not show
+instead it will be better if we always show the link but will be enabled/disabled based on the current values
+and
+(
+		status = approved
+or		(status = payment request
+		and the app switch "Billback: allow reset in payment request status before it has interfaced in payment interface" is ON
+		and	the billback has not interfaced
+		)
+)
+and
+(
+		the app switch "Allow reset after it has interfaced in deduction (1510/900) interface" is ON
+or		billback has not interfaced in the deduction (1510/900) interface
+)
+------>
+
+<CFIF	Split_Parent EQ 0 and Get_Profile_Settings.BB_Create eq 1>
+		<!---DRK: Removed to solve below issue
+		Issue: when a billback gets created from scratch the reset link will not show.
+		But it still will not show even after it is approved.
+		But will show if you go out of the billback and come back again
+		Solution: Let the reset link show all the time just as disabled until it is approved and the javascript will handle when it should be enabled
+		AND (APVL_Contract_Status EQ 3
+			OR (APVL_Contract_Status EQ 4 AND appSettings.getBBAllowResetBeforePMTInterfacePRStatus() EQ 1 AND Get_Billback_Info.BB_Payment_Request_Sent EQ 0)
+			)
+		AND (appSettings.getBBAllowResetAfterDEDInterface() EQ 1 OR Get_Billback_Info.DD_Closure_Sent_On EQ "")
+		--->
+		<!--- BJF: removed this per request D12003 --->
+		<!--- AND APVL_Contract_Status NEQ 5
+		AND (getBillbackInformation.BB_Payment_Request_Sent EQ 0 OR getBillbackInformation.BB_Check_Status_ID EQ 3)
+	 --->	<!---TSF: Label 11156 - Allow Reset button regardless of the creator or approver--->
+		<!--- AND (request.AccessStructure.User_ID EQ getBillbackInformation.BB_Creator_ID OR request.AccessStructure.User_ID EQ getBillbackInformation.User_Approved)> --->
+	<CFSET Reset_Button_Show		= 1>
+</CFIF>
+<CFIF getAssociatedDeductionID.RecordCount GT 0 OR quickBBCheck.Auto_Billback EQ 1>
+	<CFSET Reset_Button_Show		= 0>
+</CFIF>
+<!--- /Permissions for left hand links --->
+</cfsilent>
+<!--- <CFDUMP var="#Get_Profile_Settings#"> --->
+<script>
+	<!--- some of the below variables might be set from the file bb_menu_stats.cfm --->
+	var current_user_create_bb			= false;
+	var current_user_id 				= 0;
+	var current_user_approve 			= 0;
+	var current_user_approve_critical 	= 0;
+	var current_user_approve_amount 	= 0;
+	var current_user_view_deviations 	= 0;
+	var bb_adjustment_created			= 0;
+	var bb_id							= 0;
+	var bb_status_id 					= 0;
+	var auto_billback 					= 0;
+	var bb_approved_amount				= 0;
+
+	<cfif isDefined("URL.source") AND URL.source EQ "BBFlexScoreCard" AND DisAllowAccessBasedOnLockStatus EQ 0>
+		var bb_is_locked                = true;
+	<cfelse>
+		var bb_is_locked               	= false;
+	</cfif>
+
+
+	var bb_up							= 1; //unidentified payee
+	var bb_pnf							= 1; //program not found;
+	var bb_complete_basic_info 			= false;
+	var bb_complete_payee 				= false;
+	var bb_complete_programs 			= false;
+	var bb_complete_deviations 			= false;
+	var bb_complete_wip 			    = false;
+	var bb_complete_payment 			= false;
+	var bb_complete_document 			= false;
+	var bb_complete_deduction 			= false;
+	var bb_complete_split				= false;
+	var current_menu_item	 			= "";
+	var locked_by_other_user			= 0;
+	var Scheduled_Auto_BB				= 0;
+	var bb_is_split_parent				= 0;
+	var bb_complete_gl_code_alloc		= 0;
+	var bb_payee_type_id		= 0;
+	var BB_Negative 					= 0;
+	var bb_agreed_to 					= 0;
+	var modifyagreerelatedlinks_enable	= 1;
+	var modify_agree_enable				= 0;
+   <cfif isDefined("URL.source") AND URL.source EQ "BBFlexScoreCard">
+   var bb_force_deviation = 1;
+   <cfelse>
+   var bb_force_deviation = 0;
+  </cfif>
+	//var bb_force_deviation				= 1;
+	var bb_in_ded_interface				= 0;
+	var bb_in_pmt_interface				= 0;
+
+
+	function initVariables() {
+		current_user_create_bb			= false;
+		current_user_id 				= 0;
+		current_user_approve 			= 0;
+		current_user_approve_critical 	= 0;
+		current_user_approve_amount 	= 0;
+		current_user_view_deviations 	= 0;
+		bb_adjustment_created			= 0;
+		bb_id							= '<cfoutput>#URL.BBID#</cfoutput>';
+		bb_status_id 					= 0;
+		auto_billback 					= '<cfoutput>#quickBBCheck.Auto_Billback#</cfoutput>';
+		bb_approved_amount				= 0;
+		bb_is_locked					= false;
+		bb_up							= 1; //unidentified payee
+		bb_pnf							= 1; //program not found;
+		bb_complete_basic_info 			= false;
+		bb_complete_payee 				= false;
+		bb_complete_programs 			= false;
+		bb_complete_deviations 			= false;
+		bb_complete_wip 			    = false;
+		bb_complete_payment 			= false;
+		bb_complete_document 			= false;
+		bb_complete_deduction 			= false;
+		bb_complete_split					= false;
+		current_menu_item	 			= "";
+		locked_by_other_user			= 0;
+		Scheduled_Auto_BB				= '<cfoutput>#quickBBCheck.Scheduled_Auto_BB#</cfoutput>';
+		BB_Negative						= '<cfoutput>#quickBBCheck.Negative_billback#</cfoutput>';
+	}
+
+	function resetVariables() {
+		current_user_id 				= 0;
+		current_user_approve 			= 0;
+		current_user_approve_critical 	= 0;
+		current_user_approve_amount 	= 0;
+		current_user_view_deviations 	= 0;
+		bb_adjustment_created			= 0;
+		bb_id							= 0;
+		bb_status_id 					= 0;
+		bb_is_locked					= false;
+		bb_up							= 1; //unidentified payee
+		bb_pnf							= 1; //program not found;
+		bb_complete_basic_info 			= false;
+		bb_complete_payee 				= false;
+		bb_complete_programs 			= false;
+		bb_complete_deviations 			= false;
+		bb_complete_wip 			    = false;
+		bb_complete_payment 			= false;
+		bb_complete_document 			= false;
+		bb_complete_deduction 			= false;
+		bb_complete_split					= false;
+		current_menu_item	 			= "";
+		locked_by_other_user			= 0;
+		BB_Negative						= 0;
+	}
+
+	//returns the next unfinished tab to be completed
+	function nextTabToComplete(requested_action){
+		internalArray = new Array();
+		internalArray[0] = true;
+		internalArray[1] = "";
+
+		positionRefArray = new Array();
+		positionRefArray[0] = "basic_info";
+		positionRefArray[1] = "payee";
+		positionRefArray[2] = "programs";
+		positionRefArray[3] = "deviations";
+		positionRefArray[4] = "payment";
+
+		StopPosition = 0;
+		for(var x=0;x<positionRefArray.length;x++){
+			if(positionRefArray[x] == requested_action) StopPosition = x+1;
+		}
+
+		if(!bb_complete_basic_info) {
+			internalArray[0] = false;
+			internalArray[1] = internalArray[1] + "\n* Basic Informaition";
+		}
+		if(!bb_complete_payee  && StopPosition > 2) {
+			internalArray[0] = false;
+			internalArray[1] = internalArray[1] + "\n* Payee";
+		}
+		if(!bb_complete_programs && StopPosition > 3 && bb_status_id < 3) {
+			internalArray[0] = false;
+			internalArray[1] = internalArray[1] + "\n The billback amount on the basic info page does not equal the amount on the programs page.  \nAmounts must match before proceeding.";
+		}
+		if(!bb_complete_deviations && StopPosition > 4) {
+			internalArray[0] = false;
+			internalArray[1] = internalArray[1] + "\n* Deviations";
+		}
+		if(!bb_complete_payment && StopPosition > 5) {
+			internalArray[0] = false;
+			internalArray[1] = internalArray[1] + "\n* Payment";
+		}
+
+		if(!internalArray[0]){
+			internalArray[1] = "Please complete the following items first:\n" + internalArray[1]
+		}
+
+		return internalArray;
+	}
+
+	//messaging system: responsible for displaying all messages to user
+	function messageReporter(errorArray){
+	if (isDefined(errorArray[1]))
+		{
+		alert(errorArray[1])
+		}
+	}
+
+	function isDefined(item) {
+    return (typeof item != 'undefined'); }
+
+
+	//returns lock status
+	function isBBLocked(){
+		var argPassed = "";
+		if(arguments.length > 0)
+		{
+			argPassed = arguments[0];
+		}
+
+		internalArray = new Array();
+		internalArray[0] = false;
+		internalArray[1] = "The billback is currently locked by another user";
+
+		if(bb_status_id != 5<cfif enablePaymentTabAfterPaidStatus> || 1==1</cfif>) {
+			if(locked_by_other_user == 0)
+			{
+				internalArray[0] = false;
+				internalArray[1] = "Please lock the billback first.";
+
+				if(bb_id != 0)
+				{
+					if(bb_is_locked == 1)
+					{
+						internalArray[0] = true;
+						internalArray[1] = "ACCESS GRANTED";
+					}
+				}
+				else
+				{
+					internalArray[0] = false;
+					internalArray[1] = "Please create a billback first.";
+				}
+			}
+		}
+
+		else {
+			internalArray[0] = false;
+			internalArray[1] = "This billback can no longer be modified since it was paid";
+		}
+
+		if(internalArray[0] == true && bb_status_id >= 3) //if access granted and approved
+		{
+			//don't allow to access basic info, payee, program
+			switch(argPassed)
+			{
+				case "basic_info":
+				case "payee":
+				case "programs":
+				case "payee_program":
+				//TSF: Label 21054 - Allow users to switch items on uploaded billbacks
+				<cfif Switch_Product_Button_Show>
+				case "switchProducts":
+				</cfif>
+					internalArray[0] = false;
+					internalArray[1] = "This billback can no longer be modified since it is approved";
+					break;
+				default:
+					//do nothing
+			}
+		}
+
+		return internalArray;
+	}
+
+	function profileSettingsTabAccess(){
+		internalArray = new Array();
+		internalArray[0] = false;
+		internalArray[1] = "You profile settings restrict you from this section.";
+
+		if(current_user_create_bb == 1){
+			internalArray[0] = true;
+			internalArray[1] = "";
+		}
+
+		return internalArray
+	}
+
+	function modifyagreeaccess(){
+		internalArray = new Array();
+		internalArray[0] = false;
+
+		if(modifyagreerelatedlinks_enable == 1){
+			internalArray[0] = true;
+			internalArray[1] = "";
+		}
+
+		return internalArray
+	}
+
+	function autoBillbackAccess(){
+		internalArray = new Array();
+		internalArray[0] = false;
+		internalArray[1] = "This section is not accessible for auto billbacks.";
+
+		if(auto_billback != 1){
+			internalArray[0] = true;
+			internalArray[1] = "";
+		}
+
+		return internalArray
+	}
+
+	function paymentRight() {
+		internalArray = new Array();
+
+		if(bb_is_split_parent != 0)
+		{
+			internalArray[0] = false;
+			internalArray[1] = "You cannot pay a billback which has been split. You will need to pay the split versions separately.";
+		}
+		else if(bb_complete_deduction)
+		{
+			internalArray[0] = false;
+			internalArray[1] = "You cannot pay a billback which is already associated to a deduction.";
+		}
+		else
+		{
+			internalArray[0] = false;
+			internalArray[1] = "You need a higher approval level to approve this billback.";
+
+			if(current_user_approve_amount == "*") current_user_approve_amount = bb_adjustment_created;
+
+			bb_adjustment_created = parseFloat(bb_adjustment_created);
+			current_user_approve_amount = parseFloat(current_user_approve_amount);
+			if(bb_up == 0 && bb_pnf == 0 && current_user_approve == 1 && (bb_adjustment_created <= current_user_approve_amount || BB_Negative == 1)){
+				internalArray[0] = true;
+				internalArray[1] = "";
+			}
+			else {
+				if((bb_up == 1 || bb_pnf == 1) && current_user_approve_critical == 1  && (bb_adjustment_created <= current_user_approve_amount || BB_Negative == 1)){
+					internalArray[0] = true;
+					internalArray[1] = "";
+				}
+			}
+		}
+		return internalArray;
+	}
+
+	function deductionRight()
+	{
+		internalArray = new Array();
+		internalArray[0] = true;
+		internalArray[1] = "";
+		<cfoutput>
+		<cfparam name="GLCode_Allocation" 	default="0">
+		<cfparam name="Split_Parent" 		default="0">
+
+		if(bb_status_id != 3)
+		{
+			internalArray[0] = false;
+			internalArray[1] = "Billback need to be in approved status";
+		}
+		else if (bb_is_split_parent != 0)
+		{
+			internalArray[0] = false;
+			internalArray[1] = "Billback has been split";
+		}
+		<cfif LEFT(application.returned_customer_setting.Customer_Keyword,1) EQ "H">
+		else if(bb_complete_gl_code_alloc == 0)
+		{
+			internalArray[0] = false;
+			internalArray[1] = "Billback needs to have GL code allocation";
+		}
+		</cfif>
+		else if(bb_payee_type_id != 1)//if payee <> distributor
+		{
+			internalArray[0] = false;
+			internalArray[1] = "Payee should be a #LCase(application.returned_customer_setting.distributor_label_singular)#";
+		}
+		</cfoutput>
+		return internalArray;
+	}
+
+	function rand()
+  	{
+		now=new Date();
+   		num=(now.getSeconds())%10;
+   		num=num+Math.random();
+		return num;
+   	}
+
+	function getMenuTabPermission(tabID) {
+		AccessDataArray = new Array();
+		AccessDataArray[0] = false;
+		AccessDataArray[1] = "default access is: denied";
+		current_menu_item = tabID;
+		switch(tabID) {
+			//summary
+			case "summary":
+				if(bb_id != 0) {
+					AccessDataArray[0] = true;
+					tabNavigate("/billbacks/capture/billback_summary.cfm")
+				}
+				else {
+					AccessDataArray[0] = false;
+					AccessDataArray[1] = "Please create the billback first.";
+				}
+			break;
+			//basic info
+			case "basic_info":
+				AccessDataArray = isBBLocked(tabID);//make sure bb is locked
+				if(AccessDataArray[0] == true) {
+					AccessDataArray = profileSettingsTabAccess();
+					if(AccessDataArray[0] == true) {
+						AccessDataArray = modifyagreeaccess();	<!---- D13118: When the first user Agrees, both the Basic Information and Payee pages should be disabled. The only way to modify those two pages should be to select Modify Agree or to Disagree ---->
+						if(AccessDataArray[0] == true) {
+							document.all.basic_info_tab.className = "activeMenuItem"
+							tabNavigate("<cfoutput>#basicInfoPage#</cfoutput>");
+						}//modifyagreeaccess - end
+					}//profileSettingsTabAccess - end
+				}//make sure bb is locked - if end
+				else{
+					if(AccessDataArray[0] == false && bb_id == 0){//creating new billback
+						AccessDataArray[0] = true;
+						AccessDataArray = profileSettingsTabAccess();
+						if(AccessDataArray[0] == true) {
+							document.all.basic_info_tab.className = "activeMenuItem";
+							tabNavigate("<cfoutput>#basicInfoPage#</cfoutput>");
+						}//profileSettingsTabAccess - end
+					}//creating new billback - end
+				}//make sure bb is locked - end end
+			break;
+			//payee
+			case "payee":
+				AccessDataArray = isBBLocked(tabID); //make sure bb is locked
+				if(AccessDataArray[0] == true) {
+					AccessDataArray = autoBillbackAccess(); //make sure it is not auto billback
+					if(AccessDataArray[0] == true) {
+						AccessDataArray = profileSettingsTabAccess(); //make sure pre-reqs complete
+						if(AccessDataArray[0] == true) {
+							AccessDataArray = modifyagreeaccess(); <!---- D13118: When the first user Agrees, both the Basic Information and Payee pages should be disabled. The only way to modify those two pages should be to select Modify Agree or to Disagree ---->
+							if(AccessDataArray[0] == true) {
+								AccessDataArray = nextTabToComplete('payee');
+								if(AccessDataArray[0] == true) {
+									document.all.payee_tab.className="activeMenuItem";
+									tabNavigate("/billbacks/capture/payee_form.cfm")
+								}//nextTabToComplete - end
+							}//modifyagreeaccess - end
+						}//make sure pre-reqs complete - end
+					}//make sure pre-reqs complete - end
+				}//make sure bb is locked - end
+			break;
+			//programs
+			case "programs":
+				AccessDataArray = isBBLocked(tabID); //make sure bb is locked
+					if(AccessDataArray[0] == true) {
+						AccessDataArray = profileSettingsTabAccess(); //make sure pre-reqs complete
+						if(AccessDataArray[0] == true) {
+						    AccessDataArray = modifyagreeaccess();
+							if(AccessDataArray[0] == true) {
+								AccessDataArray = nextTabToComplete('programs');
+								if(AccessDataArray[0] == true) {
+								document.all.programs_tab.className="activeMenuItem";
+								tabNavigate("/billbacks/capture/program_form.cfm")
+								}// nextTabToComplete - end
+						  	}//modifyagreeaccess - end
+						}//make sure pre-reqs complete - end
+					}//make sure bb is locked - end
+			break;
+			//deviations
+			case "deviations":
+			    current_menu_item = "deviations";
+			    AccessDataArray = autoBillbackAccess(); //make sure it is not auto billback
+			if(AccessDataArray[0] == true) {
+				AccessDataArray = isBBLocked('deviations'); //make sure bb is locked
+				if(AccessDataArray[0] == false && bb_status_id == 5) AccessDataArray[0] = true;
+
+
+				if(AccessDataArray[0] == true) {
+					if(current_user_view_deviations == 1){
+						AccessDataArray = nextTabToComplete('deviations'); //make sure pre-reqs complete
+						if(AccessDataArray[0] == true){
+							if(bb_status_id > 2 || bb_force_deviation == 1) {
+									if(Scheduled_Auto_BB > 0) {
+										document.all.deviations_tab.className="activeMenuItem";
+										tabNavigate("/Billbacks/Approval/index.cfm")
+												}
+									else{
+										document.all.deviations_tab.className="activeMenuItem";
+										<cfif (isDefined("URL.source") AND (URL.source EQ "BBFlexScoreCard"))>
+                    tabNavigate("/Billbacks/Approval/payment.cfm", "source=BBFlexScoreCard");
+                    <cfelse>
+                    tabNavigate("/billbacks/Deviation/Deviation.CFM")
+                    </cfif>
+										}
+								}
+							else if(bb_status_id == 2){
+								AccessDataArray[0] = false;
+								AccessDataArray[1] = "Go to the summary page and select 'click here to begin approval process' button"
+							}
+							else{
+								AccessDataArray[0] = false;
+								AccessDataArray[1] = "You must flag this billback as 'Ready For Approval' before viewing its deviations"
+							}
+						}
+					}
+					else
+					{
+					if (BB_Negative == 1)
+					alert("This link is not usable for a negative billback")
+					else
+					alert("Your profile settings restrict you from this section")
+					}
+				}
+				}//make sure it is not auto billback - end
+			break;
+			//payment
+			case "payment":
+				AccessDataArray = isBBLocked(); //make sure bb is locked
+				if(AccessDataArray[0] == true) {
+					AccessDataArray[0] = false;
+					AccessDataArray[1] = "Your profile settings restrict you from this section";
+					if(current_user_approve == 1){
+						AccessDataArray = paymentRight();
+						if(AccessDataArray[0] == true) {
+							AccessDataArray = nextTabToComplete('payment'); //make sure pre-reqs complete
+							if(AccessDataArray[0] == true) {
+								if(bb_status_id > 2){
+									document.all.payment_tab.className="activeMenuItem"
+									<cfoutput>
+									tabNavigate("/Billbacks/Approval/payment_display.cfm", "#paymentExtraURL#");
+									</cfoutput>
+									current_menu_item = 'payment';
+								}
+								else{
+									AccessDataArray[0] = false;
+									AccessDataArray[1] = "The billback must be approved before issuing payment"
+								}
+							}
+						}
+					}
+				}
+			break;
+			//document
+			case "document":
+				AccessDataArray = isBBLocked();
+				if(AccessDataArray[0] == true) {
+					AccessDataArray = profileSettingsTabAccess(); //make sure pre-reqs complete
+					if(AccessDataArray[0] == true) {
+						if(AccessDataArray[0] == true) {
+							tabNavigate("/billbacks/capture/Attachments_Form.cfm")
+						}
+					}
+				}
+			break;
+			//deduction
+			case "deduction":
+				AccessDataArray = isBBLocked();
+				if(AccessDataArray[0] == true) {
+					AccessDataArray = profileSettingsTabAccess(); //make sure pre-reqs complete
+					if(AccessDataArray[0] == true) {
+						AccessDataArray = deductionRight();
+						if(AccessDataArray[0] == true) {
+							tabNavigate("/billbacks/capture/deductions.cfm")
+						}
+					}
+				}
+			break;
+			//route
+			case "route":
+				 AccessDataArray = autoBillbackAccess(); //make sure it is not auto billback
+			if(AccessDataArray[0] == true) {
+				AccessDataArray = isBBLocked();
+				if(AccessDataArray[0] == true) {
+					<!---BJF: Removed requirement that users have create permission  D10133--->
+					tabNavigate("/billbacks/common/bb_route.cfm")
+
+				}
+				}//make sure it is not auto billback - end
+			break;
+			//inbox
+			case "inbox":
+			 AccessDataArray = autoBillbackAccess(); //make sure it is not auto billback
+			if(AccessDataArray[0] == true) {
+				AccessDataArray = isBBLocked();
+				if(AccessDataArray[0] == true) {
+					<!---BJF: Removed requirement that users have create permission  D10133--->
+					tabNavigate("/billbacks/common/bb_route_inbox.cfm")
+
+				}
+				}//make sure it is not auto billback - end
+			break;
+			//excel
+			case "excel":
+				AccessDataArray = isBBLocked();
+				if(AccessDataArray[0] == true) {
+				<cfoutput>
+					NewWindow("program_form.cfm?bbid=#bbid#&xl=1");
+				</cfoutput>
+				}
+			break;
+			<cfif appSettings.getShow_BB_Route() IS 1>
+			//acknowledgments
+			case "acknowledgments":
+				AccessDataArray = isBBLocked();
+				if(AccessDataArray[0] == true)
+					{
+
+						NewWindow("/billbacks/common/bb_acknowledgments.cfm?Billback_ID=<cfoutput>#url.BBID#</cfoutput>", 'name', '800', '600', 'Yes', 'No', true);
+					}
+			break;
+			</cfif>
+
+			<!---Only if payment history should be visible --->
+			<cfif ShowPaymentHistory IS 1>
+			case "paymenthistory":
+				AccessDataArray = isBBLocked();
+				if(AccessDataArray[0] == true) {
+					tabNavigate("/billbacks/approval/payment_history.cfm")
+				}
+			break;
+			</cfif>
+
+			//search
+			case "search":
+				AccessDataArray[0] = true;
+				AccessDataArray[1] = "";
+				window.location.href="/billbacks/scorecard/billback_Search.cfm"
+			break;
+			//create
+			case "create":
+				AccessDataArray[0] = true;
+				AccessDataArray[1] = "";
+				AccessDataArray = profileSettingsTabAccess(); //make sure pre-reqs complete
+				if(AccessDataArray[0] == true) {
+
+						resetVariables();
+						document.all.basic_info_tab.fireEvent("onclick");
+
+				}
+			break;
+			//lock
+			case "lock":
+					AccessDataArray[0] = true;
+					current_menu_item = "summary";
+					this.document.contentIFrame.location = "Billback_Locker.cfm?BBID="+bb_id+"&Billback_IsLocked=1&rand=" + rand();
+			break;
+			//unlock
+			case "unlock":
+				if(bb_id == 0) {
+					AccessDataArray[0] = false;
+					AccessDataArray[1] = "An option for Read-Only will be available upon entering the basic billback information.";
+				}
+				else {
+				AccessDataArray[0] = true;
+				AccessDataArray[1] = "";
+				current_menu_item = "summary";
+				this.document.contentIFrame.location = "Billback_Locker.cfm?BBID="+bb_id+"&Billback_IsLocked=0&rand=" + rand();
+				}
+			break;
+			<cfif application.oApplicationAppSettingsManager.getApplicationAppSettings().getBudgetsFunctionalityOn()>
+			//budgets
+			case "budgets":
+				if(bb_status_id >= 2)
+				{
+						NewWindow("/billbacks/approval/budget_display_billback.cfm?Billback_ID=" + bb_id + "","bb_budget_display","800","600","Yes", "No");
+						AccessDataArray[0] = true;
+				}
+				else
+				{
+					AccessDataArray[0] = false;
+					AccessDataArray[1] = "Billback has to be RFA or above to view budgets";
+				}
+			break;
+			</cfif>
+			//TSF: Label 21054 - Allow users to switch items on uploaded billbacks
+			<cfif Switch_Product_Button_Show>
+			case "switchProducts":
+				AccessDataArray = isBBLocked(tabID);
+				if(AccessDataArray[0] == true)
+				{
+					tabNavigate("/billbacks/capture/switch_products.cfm");
+				}
+			break;
+			</cfif>
+		}
+
+		return AccessDataArray
+	}
+
+	function tabClick(tabID) {
+		AccessPermArray = getMenuTabPermission(tabID);
+		if(AccessPermArray[0] == false) {
+			messageReporter(AccessPermArray);
+			return false;
+		}
+		else{
+			buildMenu();
+			return true;
+		}
+
+	}
+
+	function tabNavigate(location, extraURL, isAutoBB) {
+		if(extraURL)
+		{
+			extraURL = "&" + extraURL;
+		}
+		else
+		{
+			extraURL = "";
+		}
+		if(isAutoBB == '1')
+		{
+			extraURL = extraURL + "&isAutoBB=" + isAutoBB;
+		}
+		else
+		{
+			extraURL = extraURL + "&isAutoBB=0";
+		}
+		buildMenu();
+		finalLocation = location +"?BBID=" + bb_id + extraURL;
+		this.document.contentIFrame.location.href = finalLocation;
+
+	}
+
+	function LoadInfobar(InfobarString, AmountDisplayString) {
+		if (current_menu_item == "summary")
+		 {
+		 	allowScroll = false;
+		 	this.document.all.infoBar.style.backgroundColor = "#FFFFFF";
+		 	this.document.all.infoBar.innerHTML = '';
+		 	this.document.all.infoBar_BB_Amount.style.backgroundColor = "#FFFFFF";
+		 	this.document.all.infoBar_BB_Amount.innerText = '';
+		 }
+		else
+		{
+		   allowScroll = true;
+		   window.setInterval("main()", 10);
+		   this.document.all.infoBar.style.backgroundColor = "#006600";
+		   this.document.all.infoBar.style.paddingLeft = "1em";
+		   this.document.all.infoBar.innerHTML = InfobarString;
+		   var amountObj = this.document.all.infoBar_BB_Amount;
+		   amountObj.style.paddingLeft = "1em";
+		   amountObj.style.paddingRight = "1em";
+		   amountObj.style.backgroundColor = "#33CC33";
+		   amountObj.innerText = AmountDisplayString;
+		}
+	}
+
+
+	function buildMenu() {
+		// BSD: Added to force scrollbar to top after an action
+		// Has been completed
+
+		if (document.body.scrollTop != 0)
+		{
+		    document.body.scrollTop = 0;
+		}
+
+
+
+		disabled_true = "inactiveMenuItem_notclickable";
+		disabled_false_inactive = "inactiveMenuItem";
+
+		document.all.summary_tab.className				=	disabled_true;
+		document.all.basic_info_tab.className			=	disabled_true;
+		document.all.payee_tab.className				=	disabled_true;
+		document.all.programs_tab.className				=	disabled_true;
+		document.all.deviations_tab.className			=	disabled_true;
+		document.all.payment_tab.className				=	disabled_true;
+		document.all.document_tab.className				=	disabled_true;
+		//document.all.deduction_tab.className			=	disabled_true;
+		document.all.print_tab.className				=	disabled_true;
+		document.all.email_tab.className				=	disabled_true;
+		// document.all.fax_tab.className					=	disabled_true;
+		document.all.BusiCon_tab.className				=	disabled_true;
+		document.all.route_tab.className				=	disabled_true;
+		document.all.inbox_tab.className				=	disabled_true;
+		<cfif appSettings.getShowBBExcelReport()>
+		document.all.excel_tab.className				=	disabled_true;
+		</cfif>
+		<cfif Detail_Button_Show EQ 1>
+			document.all.detail_tab.className			=	disabled_true;
+		</cfif>
+		<cfif Delete_Button_Show EQ 1>
+			document.all.delete_tab.className			=	disabled_true;
+		</cfif>
+		<cfif Copy_Button_Show EQ 1>
+			document.all.copy_tab.className				=	disabled_true;
+		</cfif>
+		<cfif appsettings.getBillbackModifyAgree() EQ 1  AND quickBBCheck.Auto_Billback NEQ 1>
+			document.all.ModifyAgree_tab.className		=	disabled_true;
+		</cfif>
+		<cfif Reset_Button_Show EQ 1>
+			document.all.wip_tab.className				=	disabled_true;
+		</cfif>
+		<cfif Reverse_Button_Show EQ 1>
+			document.all.reverse_tab.className			=	disabled_true;
+			document.all.settlement_tab.className		=	disabled_true;
+		</cfif>
+
+		<cfif appSettings.getShow_BB_Route() IS 1>
+		document.all.acknowledgments_tab.className		= 	disabled_true;
+		</cfif>
+		<cfif ShowPaymentHistory IS 1>
+		document.all.paymenthistory_tab.className		=	disabled_true;
+		</cfif>
+		<cfif appSettings.getSplitBillbacks()>
+			document.all.split_tab.className			=	disabled_true;
+		</cfif>
+		<cfif bBillbackSalesTax>
+			document.all.BBSalesTax_Tab.className		=	disabled_true;
+		</cfif>
+		<cfif application.oApplicationAppSettingsManager.getApplicationAppSettings().getBudgetsFunctionalityOn()>
+		document.all.budgets_tab.className			=	disabled_true;
+		</cfif>
+		//TSF: Label 21054 - Allow users to switch items on uploaded billbacks
+		<cfif Switch_Product_Button_Show>
+			document.all.switch_products_tab.className			=	disabled_true;
+		</cfif>
+		if(locked_by_other_user == 0){
+			if(bb_is_locked == 1 && bb_status_id != 0){
+				switch(bb_status_id) {
+					case 0 : //bb hasnt been created yet
+						document.all.basic_info_tab.className	=	"disabled_false_inactive";
+					break;
+
+					case "1" : //wip
+						document.all.summary_tab.className		=	disabled_false_inactive;
+						document.all.basic_info_tab.className	=	disabled_false_inactive;
+						<cfif Detail_Button_Show EQ 1>
+							document.all.detail_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Delete_Button_Show EQ 1>
+							document.all.delete_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Copy_Button_Show EQ 1>
+							document.all.copy_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reset_Button_Show EQ 1>
+							document.all.wip_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reverse_Button_Show EQ 1>
+							document.all.reverse_tab.className		=	disabled_false_inactive;
+							document.all.settlement_tab.className		=	disabled_false_inactive;
+						</cfif>
+
+						if(auto_billback != 1)
+						{
+							document.all.payee_tab.className		=	disabled_false_inactive;
+							document.all.programs_tab.className		=	disabled_false_inactive;
+						}
+						document.all.document_tab.className		=	disabled_false_inactive;
+						document.all.route_tab.className		=	disabled_false_inactive;
+						document.all.print_tab.className		=	disabled_false_inactive;
+						document.all.email_tab.className		=	disabled_false_inactive;
+						// document.all.fax_tab.className			=	disabled_false_inactive;
+						document.all.inbox_tab.className		=	disabled_false_inactive;
+						document.all.BusiCon_tab.className		=	disabled_false_inactive;
+						<cfif appSettings.getShowBBExcelReport()>
+						document.all.excel_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif appSettings.getShow_BB_Route() IS 1>
+						document.all.acknowledgments_tab.className	= 	disabled_false_inactive;
+						</cfif>
+						<cfif ShowPaymentHistory IS 1>
+						document.all.paymenthistory_tab.className		=	disabled_false_inactive;
+						</cfif>
+						//TSF: Label 21054 - Allow users to switch items on uploaded billbacks
+						<cfif Switch_Product_Button_Show>
+							document.all.switch_products_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif bBillbackSalesTax>
+							document.all.BBSalesTax_Tab.className		=	disabled_false_inactive;
+						</cfif>
+					break;
+
+					case "2" : //rfa
+						document.all.summary_tab.className		=	disabled_false_inactive;
+						<!---- D13118: When the first user Agrees, both the Basic Information and Payee pages should be disabled. The only way to modify those two pages should be to select Modify Agree or to Disagree ---->
+						if(modifyagreerelatedlinks_enable == 1) <!--- do not enable basic info, payee, program if agreed and not modify agreed --->
+						{
+							document.all.basic_info_tab.className	=	disabled_false_inactive;
+						}
+						if(auto_billback == 1)
+						{
+								document.all.basic_info_tab.className	=	disabled_true;
+								document.all.payee_tab.className			=	disabled_true;
+								document.all.deviations_tab.className	=	disabled_true;
+						}
+						else
+						{
+								document.all.payee_tab.className		=	disabled_false_inactive;
+						}
+						document.all.programs_tab.className		=	disabled_false_inactive;
+						//document.all.deviations_tab.className	=	disabled_false_inactive;
+						document.all.document_tab.className		=	disabled_false_inactive;
+						document.all.print_tab.className		=	disabled_false_inactive;
+						document.all.email_tab.className		=	disabled_false_inactive;
+						// document.all.fax_tab.className			=	disabled_false_inactive;
+						document.all.BusiCon_tab.className		=	disabled_false_inactive;
+						document.all.route_tab.className		=	disabled_false_inactive;
+						document.all.inbox_tab.className		=	disabled_false_inactive;
+						<cfif appSettings.getShowBBExcelReport()>
+						document.all.excel_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Delete_Button_Show EQ 1>
+							document.all.delete_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Copy_Button_Show EQ 1>
+							document.all.copy_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reset_Button_Show EQ 1>
+							document.all.wip_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif appSettings.getShow_BB_Route() IS 1>
+						document.all.acknowledgments_tab.className	= 	disabled_false_inactive;
+						</cfif>
+						<cfif ShowPaymentHistory IS 1>
+						document.all.paymenthistory_tab.className	=	disabled_false_inactive;
+						</cfif>
+						<!---- enable only if app settings for modify agree = on, billback status = 2, billback already agreed to --->
+						<cfif appsettings.getBillbackModifyAgree() EQ 1 AND quickBBCheck.Auto_Billback NEQ 1>
+						if(bb_status_id == 2 && bb_agreed_to == 1 && modify_agree_enable == 1)
+						{
+							document.all.ModifyAgree_tab.className	=	disabled_false_inactive;
+						}
+						</cfif>
+						//TSF: Label 21054 - Allow users to switch items on uploaded billbacks
+						<cfif Switch_Product_Button_Show>
+							document.all.switch_products_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif bBillbackSalesTax>
+							document.all.BBSalesTax_Tab.className		=	disabled_false_inactive;
+						</cfif>
+					break;
+
+					case "3" : //approved
+					case "6" : //Pending Vendor ID
+					case "7" : //Payment Request
+						document.all.summary_tab.className		=	disabled_false_inactive;
+						//document.all.basic_info_tab.className	=	disabled_false_inactive;
+						if(auto_billback == 1)
+						{
+							document.all.deviations_tab.className	=	disabled_true;
+						}
+						else
+						{
+						document.all.deviations_tab.className	=	disabled_false_inactive;
+						}
+						document.all.payment_tab.className		=	disabled_false_inactive;
+						document.all.document_tab.className		=	disabled_false_inactive;
+						//document.all.deduction_tab.className	=	disabled_false_inactive;
+						document.all.print_tab.className		=	disabled_false_inactive;
+						document.all.email_tab.className		=	disabled_false_inactive;
+						// document.all.fax_tab.className			=	disabled_false_inactive;
+						document.all.BusiCon_tab.className		=	disabled_false_inactive;
+						document.all.route_tab.className		=	disabled_false_inactive;
+						document.all.inbox_tab.className		=	disabled_false_inactive;
+						<cfif appSettings.getShowBBExcelReport()>
+						document.all.excel_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Detail_Button_Show EQ 1>
+							document.all.detail_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Delete_Button_Show EQ 1>
+							document.all.delete_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Copy_Button_Show EQ 1>
+							document.all.copy_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reset_Button_Show EQ 1>
+							document.all.wip_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reverse_Button_Show EQ 1>
+							document.all.reverse_tab.className		=	disabled_false_inactive;
+							document.all.settlement_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif appSettings.getShow_BB_Route() IS 1>
+						document.all.acknowledgments_tab.className	= 	disabled_false_inactive;
+						</cfif>
+						<cfif ShowPaymentHistory IS 1>
+						document.all.paymenthistory_tab.className	=	disabled_false_inactive;
+						</cfif>
+						<cfif appSettings.getSplitBillbacks()>
+						if(bb_complete_split == true){
+						document.all.split_tab.className			=	disabled_false_inactive;
+						}
+						</cfif>
+						<cfif bBillbackSalesTax>
+							document.all.BBSalesTax_Tab.className		=	disabled_false_inactive;
+						</cfif>
+					break;
+
+					<!--- BJF D9946  --->
+					case "8" : //Approved -- VOID
+						document.all.summary_tab.className		=	disabled_false_inactive;
+						//document.all.basic_info_tab.className	=	disabled_false_inactive;
+						if(auto_billback == 1)
+						{
+							document.all.deviations_tab.className	=	disabled_true;
+						}
+						else
+						{
+							document.all.deviations_tab.className	=	isabled_false_inactive;
+						}
+						document.all.payment_tab.className		=	disabled_false_inactive;
+						document.all.document_tab.className		=	disabled_false_inactive;
+						//document.all.deduction_tab.className	=	disabled_false_inactive;
+						document.all.print_tab.className		=	disabled_false_inactive;
+						document.all.email_tab.className		=	disabled_false_inactive;
+						// document.all.fax_tab.className			=	disabled_false_inactive;
+						document.all.BusiCon_tab.className		=	disabled_false_inactive;
+						document.all.route_tab.className		=	disabled_false_inactive;
+						document.all.inbox_tab.className		=	disabled_false_inactive;
+						<cfif appSettings.getShowBBExcelReport()>
+						document.all.excel_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Detail_Button_Show EQ 1>
+							document.all.detail_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Delete_Button_Show EQ 1>
+							document.all.delete_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Copy_Button_Show EQ 1>
+							document.all.copy_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reset_Button_Show EQ 1>
+							document.all.wip_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reverse_Button_Show EQ 1>
+							document.all.reverse_tab.className		=	disabled_false_inactive;
+							document.all.settlement_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif appSettings.getShow_BB_Route() IS 1>
+						document.all.acknowledgments_tab.className	= 	disabled_false_inactive;
+						</cfif>
+						<cfif ShowPaymentHistory IS 1>
+						document.all.paymenthistory_tab.className	=	disabled_false_inactive;
+						</cfif>
+						<cfif appSettings.getSplitBillbacks()>
+						if(bb_complete_split == true){
+						document.all.split_tab.className			=	disabled_false_inactive;
+						}
+						<cfif bBillbackSalesTax>
+							document.all.BBSalesTax_Tab.className		=	disabled_false_inactive;
+						</cfif>
+
+                        </cfif>
+					break;
+
+					<CFIF application.returned_customer_setting.Show_Billback_Payment_Tab EQ 1>
+					case "4" : //payment request
+						document.all.summary_tab.className		=	disabled_false_inactive;
+						<cfif appSettings.getSplitBillbacks()>
+						if(bb_complete_split == true){
+						document.all.split_tab.className		=	disabled_false_inactive;
+						}
+						</cfif>
+						if(bb_is_split_parent == 0)
+						{
+							document.all.payment_tab.className	=	disabled_false_inactive;
+						}
+						if(auto_billback == 1){
+							document.all.deviations_tab.className	=	disabled_true;
+						}
+						else
+						{
+							document.all.deviations_tab.className	=	disabled_false_inactive;
+						}
+
+					</CFIF>
+					case "5" : //paid
+						document.all.summary_tab.className		=	disabled_false_inactive;
+						if(auto_billback == 1){
+							document.all.deviations_tab.className	=	disabled_true;
+						}
+						else
+						{
+							document.all.deviations_tab.className	=	disabled_false_inactive;
+						}
+						document.all.print_tab.className		=	disabled_false_inactive;
+						document.all.email_tab.className		=	disabled_false_inactive;
+						// document.all.fax_tab.className			=	disabled_false_inactive;
+						document.all.BusiCon_tab.className		=	disabled_false_inactive;
+						document.all.route_tab.className		=	disabled_false_inactive;
+						document.all.inbox_tab.className		=	disabled_false_inactive;
+						<cfif appSettings.getShowBBExcelReport()>
+						document.all.excel_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Detail_Button_Show EQ 1>
+							document.all.detail_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Delete_Button_Show EQ 1>
+							document.all.delete_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif Copy_Button_Show EQ 1>
+							document.all.copy_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reset_Button_Show EQ 1>
+							document.all.wip_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif Reverse_Button_Show EQ 1>
+							document.all.reverse_tab.className		=	disabled_false_inactive;
+							document.all.settlement_tab.className		=	disabled_false_inactive;
+						</cfif>
+						<cfif enablePaymentTabAfterPaidStatus>
+						document.all.payment_tab.className			=	disabled_false_inactive;
+						</cfif>
+						<cfif appSettings.getSplitBillbacks()>
+						if(bb_complete_split == true){
+						document.all.split_tab.className			=	disabled_false_inactive;
+						}
+						</cfif>
+						<cfif bBillbackSalesTax>
+							document.all.BBSalesTax_Tab.className		=	disabled_false_inactive;
+						</cfif>
+					break;
+				}
+
+				if(	document.all.wip_tab &&
+					!(bb_status_id == 2 || bb_status_id == 3
+					<cfif appSettings.getBBAllowResetBeforePMTInterfacePRStatus()>
+					|| (bb_status_id == 4 && bb_in_pmt_interface == 0)
+					</cfif>
+					)
+					)
+				{
+					document.all.wip_tab.className			=	disabled_true;
+				}
+
+				if(bb_in_pmt_interface == 1)
+				{
+					<cfif Delete_Button_Show EQ 1>
+					document.all.delete_tab.className		=	disabled_true;
+					</cfif>
+				}
+
+				if(bb_in_ded_interface == 1)
+				{
+					<cfif Delete_Button_Show EQ 1>
+					document.all.delete_tab.className		=	disabled_true;
+					</cfif>
+					<cfif NOT appSettings.getBBAllowResetAfterDEDInterface()>
+					if(document.all.wip_tab)
+					 document.all.wip_tab.className		=	disabled_true;
+					</cfif>
+				}
+
+			}
+			else {
+				if(bb_status_id == 0){
+					current_menu_item = "basic_info";
+					document.all.basic_info_tab.className	=	"activeMenuItem";
+				}
+				else{
+					current_menu_item = "summary";
+					document.all.summary_tab.className	=	"activeMenuItem";
+				}
+
+			}
+
+			if(bb_status_id >= 2)//billback has to be RFA or above
+			{
+				<cfif application.oApplicationAppSettingsManager.getApplicationAppSettings().getBudgetsFunctionalityOn()>
+				document.all.budgets_tab.className	=	disabled_false_inactive;
+				</cfif>
+			}
+
+			if(current_user_view_deviations == 0) {
+				document.all.deviations_tab.className	=	disabled_true;
+			}
+			dAccessDataArray = deductionRight();
+
+			/*
+			if(dAccessDataArray[0] != true)
+			{
+				document.all.deduction_tab.className	=	disabled_true;
+			}
+			*/
+		}
+
+		if(current_user_create_bb == 0) {
+			document.all.basic_info_tab.className	=	disabled_true;
+			document.all.payee_tab.className		=	disabled_true;
+			document.all.programs_tab.className		=	disabled_true;
+			document.all.document_tab.className		=	disabled_true;
+			//document.all.deduction_tab.className	=	disabled_true;
+			document.all.BusiCon_tab.className		=	disabled_true;
+			//<!-- BJF: Even if you can't create, you should still be able to email print and fax, right? --->
+			document.all.print_tab.className		=	disabled_false_inactive;
+			document.all.email_tab.className		=	disabled_false_inactive;
+			// document.all.fax_tab.className			=	disabled_false_inactive;
+			document.all.route_tab.className		=	disabled_true;
+			document.all.inbox_tab.className		=	disabled_true;
+			<cfif appSettings.getShowBBExcelReport()>
+			document.all.excel_tab.className		=	disabled_false_inactive;
+			</cfif>
+					<cfif Detail_Button_Show EQ 1>
+						document.all.detail_tab.className		=	disabled_true;
+					</cfif>
+					<cfif Delete_Button_Show EQ 1>
+						document.all.delete_tab.className		=	disabled_true;
+					</cfif>
+					<cfif Copy_Button_Show EQ 1>
+						document.all.copy_tab.className			=	disabled_true;
+					</cfif>
+					<cfif Reset_Button_Show EQ 1>
+						document.all.wip_tab.className			=	disabled_true;
+					</cfif>
+					<cfif Reverse_Button_Show EQ 1>
+						document.all.reverse_tab.className		=	disabled_true;
+						document.all.settlement_tab.className		=	disabled_true;
+					</cfif>
+
+			<cfif appSettings.getShow_BB_Route() IS 1>
+			document.all.acknowledgments_tab.className	= 	disabled_true;
+			</cfif>
+			<cfif ShowPaymentHistory IS 1>
+				document.all.paymenthistory_tab.className	=	disabled_true;
+			</cfif>
+			<cfif appsettings.getBillbackModifyAgree() EQ 1 AND quickBBCheck.Auto_Billback NEQ 1>
+				document.all.ModifyAgree_tab.className			=	disabled_true;
+			</cfif>
+		}
+		else{
+			//current_menu_item = "summary";
+		}
+
+		if(bb_complete_deduction)
+		{
+			document.all.payment_tab.className		=	disabled_true;
+		}
+		assignStatusIcons();
+		assignActiveTab();
+	}
+
+	function assignStatusIcons() {
+	check_icon 	= "/images/programs/ball_green.gif";
+	ex_icon		= "/images/programs/ball_gray_filled.gif";
+
+	if(bb_complete_basic_info) document.all.basic_info_tab_icon.src = check_icon
+	else	document.all.basic_info_tab_icon.src = ex_icon
+
+	if(bb_complete_payee) document.all.payee_tab_icon.src = check_icon
+	else	document.all.payee_tab_icon.src = ex_icon
+
+	if(bb_complete_programs) document.all.programs_tab_icon.src = check_icon
+	else	document.all.programs_tab_icon.src = ex_icon
+
+	if(bb_complete_deviations && BB_Negative == 0) document.all.deviations_tab_icon.src = check_icon
+	else	document.all.deviations_tab_icon.src = ex_icon
+
+	<!--- if(bb_complete_wip) document.all.wip_tab_icon.src = check_icon
+    else	document.all.wip_tab_icon.src = ex_icon --->
+
+	if(bb_complete_payment) document.all.payment_tab_icon.src = check_icon
+	else	document.all.payment_tab_icon.src = ex_icon
+
+	if(bb_complete_document) document.all.document_tab_icon.src = check_icon
+	else	document.all.document_tab_icon.src = ex_icon
+
+	/*
+	if(bb_complete_deduction) document.all.deduction_tab_icon.src = check_icon
+	else	document.all.deduction_tab_icon.src = ex_icon
+	*/
+
+    <cfif appSettings.getSplitBillbacks()>
+	if(bb_complete_split) document.all.split_tab_icon.src = check_icon
+	else	document.all.split_tab_icon.src = ex_icon
+    </cfif>
+	}
+
+	function assignActiveTab(){
+		var windowtitle = "Billbacks";
+		switch(current_menu_item) {
+			case "summary":
+				document.all.summary_tab.className="activeMenuItem";
+				windowtitle = "Billback Summary";
+			break;
+
+			case "basic_info":
+				document.all.basic_info_tab.className="activeMenuItem";
+				windowtitle = "Billback Basic Info";
+			break;
+
+			case "payee":
+				document.all.payee_tab.className="activeMenuItem";
+				windowtitle = "Billback Payee";
+			break;
+
+			case "programs":
+				document.all.programs_tab.className="activeMenuItem";
+				windowtitle = "Billback Programs";
+			break;
+
+			case "deviations":
+				document.all.deviations_tab.className="activeMenuItem";
+				windowtitle = "Billback Deviations";
+			break;
+			case "payment":
+				document.all.payment_tab.className="activeMenuItem";
+				windowtitle = "Billback Payment";
+			break;
+			case "print":
+				document.all.print_tab.className="activeMenuItem";
+				windowtitle = "Billback Print";
+			break;
+			case "email":
+				document.all.email_tab.className="activeMenuItem";
+				windowtitle = "Billback Email";
+			break;
+<!--- 			case "fax":
+				document.all.fax_tab.className="activeMenuItem";
+				windowtitle = "Billback Fax";
+			break; --->
+			case "BusiCon":
+				document.all.BusiCon_tab.className="activeMenuItem";
+				windowtitle = "Business Considerations";
+			break;
+			case "route":
+				document.all.route_tab.className="activeMenuItem";
+				windowtitle = "Billback Route";
+			break;
+			case "inbox":
+				document.all.inbox_tab.className="activeMenuItem";
+				windowtitle = "Billback Route";
+			break;
+			case "excel":
+				document.all.excel_tab.className="activeMenuItem";
+				windowtitle = "Program Excel";
+			break;
+			<cfif appSettings.getShow_BB_Route() IS 1>
+			case "acknowledgments":
+				document.all.acknowledgments_tab.className="activeMenuItem";
+				windowtitle = "Billback Acknowledgments";
+			break;
+			</cfif>
+			<cfif ShowPaymentHistory IS 1>
+			case "paymenthistory":
+				document.all.paymenthistory_tab.className="activeMenuItem";
+				windowtitle = "Billback Paymenthistory";
+			break;
+			</cfif>
+			case "document":
+				document.all.document_tab.className="activeMenuItem";
+				windowtitle = "Billback Documents";
+			break;
+			//TSF: Label 21054 - Allow users to switch items on uploaded billbacks
+			<cfif Switch_Product_Button_Show>
+			case "switchProducts":
+				document.all.switch_products_tab.className="activeMenuItem";
+				windowtitle = "Switch Products";
+			break;
+			</cfif>
+			/*
+			case "deduction":
+				document.all.deduction_tab.className="activeMenuItem";
+				windowtitle = "Deductions";
+			break;
+			*/
+		}
+
+	window.parent.parent.header_new.show_title(windowtitle);
+     }
+
+function showDetail()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{
+
+	tabNavigate("/billbacks/common/Billback_Detail.cfm")
+
+	}
+	else
+	{
+		alert("Please lock the billback first.")
+
+	}
+}
+
+function confirmDeletion()
+{
+
+	if(bb_is_locked == 0 || locked_by_other_user == 1)
+	{
+		alert("Please lock the billback first.");
+		return;
+	}
+	if(bb_in_ded_interface == 1) // allow delete only if the billback has not interfaced in the deduction (1510/900) interface
+	{
+		alert("This billback has been interfaced to the accounting system, can't delete this.");
+		return;
+	}
+	if(bb_in_pmt_interface == 1) // allow delete only if the billback has not interfaced in the payment (700) interface
+	{
+		alert("This billback has been interfaced to the accounting system, can't delete this.");
+		return;
+	}
+
+	if( window.confirm("Do you really want to delete this billback?"))
+	tabNavigate("/billbacks/common/bb_delete.cfm","",'<cfoutput>#quickBBCheck.Auto_Billback#</cfoutput>');
+
+}
+
+function resetToWIP()
+{
+
+		if (!(bb_status_id == 2 || bb_status_id == 3
+			<cfif appSettings.getBBAllowResetBeforePMTInterfacePRStatus()>
+			|| (bb_status_id == 4 && bb_in_pmt_interface == 0)
+			</cfif>
+			)
+		)
+		{
+			msg = "Only RFA and Approved Billbacks can be reset.";
+			<cfif appSettings.getBBAllowResetBeforePMTInterfacePRStatus()>
+			if(bb_in_pmt_interface == 1)
+			{
+				msg = "This billback has been interfaced to the accounting system, can't reset this.";
+			}
+			</cfif>
+			alert(msg);
+			return;
+		}
+		<!--- Ana: D15168 - Dont let reset --->
+		if (bb_complete_deduction == "true")
+		{
+			alert("Billback associated to a deduction cannot be reset.")
+			return;
+		}
+		if(bb_is_locked == 0 || locked_by_other_user == 1)
+		{
+			alert("Please lock the billback first.");
+			return;
+		}
+		<cfif appSettings.getBBAllowResetAfterDEDInterface() EQ 0>
+		if(bb_in_ded_interface == 1) // allow delete only if the billback has not interfaced in the deduction (1510/900) interface
+		{
+			alert("This billback has been interfaced to the accounting system, can't reset this.");
+			return;
+		}
+		</cfif>
+
+	  	if (bb_complete_wip || bb_status_id == 2)
+	  	{
+		  	if
+			(
+				window.confirm("Do you really want to reset this billback to Work In Progress status?")
+			)
+			tabNavigate("/billbacks/common/bb_reset.cfm")
+	  	}
+
+}
+
+function ShowSplit()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{
+	  if (bb_complete_split)
+	  { tabNavigate("/billbacks/approval/Split_BB_History.cfm?billback_id=" + bb_id); }
+	}
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+}
+
+function reverseBillback()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{
+		if(window.confirm("Do you really want to void this billback?"))
+		tabNavigate("/billbacks/common/bb_reverse.cfm")
+	}
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+}
+
+function settlement()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{
+		tabNavigate("/billbacks/common/settlement.cfm")
+	}
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+}
+function printBillback()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{
+		NewWindow("/billbacks/common/bb_printer_friendly.cfm?BBID=" + bb_id + "","print","800","600","Yes", "No");
+		return false;
+	}
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+}
+function printSingleClaim()
+{
+	NewWindow("/billbacks/common/bb_single_claim_print.cfm?BBID=" + bb_id + "","print","800","600","Yes", "No");
+	return false;
+}
+
+function printStatement(){
+<cfoutput>var #toScript(vars.statementCFM, "js_statementcfm")#</cfoutput>
+ window.open("/billbacks/" + js_statementcfm + "?Billback_id=" + bb_id + "","statement","location=0,status=0,scrollbars=1,left=0,top=0,width=1030,height=600");
+ return false;
+}
+
+function summaryStatement()
+{
+	window.open("/billbacks/summaryReport.cfm?Billback_id=" + bb_id + "","summary","location=0,status=0,scrollbars=1,left=0,top=0,width=800,height=600");
+	return false;
+}
+
+function showEDIDuplicates()
+{
+	window.open("/billbacks/common/Billback_Dup_Checker.cfm?Billback_ID=" + bb_id + "","EDIDuplicates","location=0,status=0,scrollbars=1,left=0,top=0,width=900,height=640");
+	return false;
+}
+
+function showDeviationReport()
+{
+	tabNavigate("/billbacks/deviation/deviation_detail_report.cfm")
+	return false;
+}
+
+function emailBillback()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{ tabNavigate("/billbacks/common/bb_email_create.cfm"); }
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+}
+
+<!--- function faxBillback()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+		{ tabNavigate("/billbacks/common/bb_fax_create.cfm"); }
+	}
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+} --->
+
+function BusiConsideration()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{
+		NewWindow('/billbacks/common/BB_Business_Consideration.cfm?BBID='+bb_id+'&EDIT=1','BB_BusiConsi','800','400','Yes', 'Yes')
+
+	}
+	else
+	{
+		if(bb_id != ''){
+		NewWindow('/billbacks/common/BB_Business_Consideration.cfm?BBID='+bb_id+'&EDIT=0','BB_BusiConsi','800','400','Yes', 'Yes')
+		}
+	}
+}
+
+function historyBillback()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{ tabNavigate("/billbacks/common/bb_history.cfm"); }
+
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+}
+
+function showSalesTax()
+{
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{ tabNavigate("/billbacks/approval/bb_sales_tax.cfm","&AddTax=1"); }
+
+	else
+	{
+		alert("Please lock the billback first.")
+	}
+}
+
+<cfif appsettings.getBillbackModifyAgree() EQ 1 AND quickBBCheck.Auto_Billback NEQ 1>
+function ModifyAgree()
+{
+	if(bb_status_id == 2 && bb_agreed_to == 1) // rfa and billback agreed to
+	{
+		if(modify_agree_enable == 1)//link is enabled
+		{
+			if(bb_is_locked == 1)
+			{
+				var modifyagree_confirm = confirm("After you make changes, you will be required to agree/approve the billback");
+				if (modifyagree_confirm == true)
+				{
+					var newLocation = "/billbacks/capture/BB_modifyagree.cfm?BBID=" + bb_id
+					window.location.href=newLocation;
+				}
+			}
+			else
+			{
+				alert("Please lock the billback first.")
+			}
+		}//modify_agree_enable == 1 - if end
+		else
+		{
+			if(bb_agreed_to == 0)
+			{
+				alert("You are restricted from this section since this billback is not agreed by anyone yet.");
+			} // bb_agreed_to == 0 - end
+			else
+			{
+				<CFIF len(trim(URL.BBID)) GT 0>
+				<cfif Get_Billback_Info.BB_Modify_Agree EQ 1>
+				alert("Billback is being modified by <cfoutput>#Get_Billback_Info.user_name#</cfoutput>");
+				<cfelse>
+				alert("You do not have access to this section.");
+				</cfif>
+				</CFIF>
+			}
+		}//modify_agree_enable == 1 - else end
+	} // rfa and billback agreed to - if end
+	else
+	{
+		return false;
+	} // rfa and billback agreed to - else end
+}//function - end
+</cfif>
+
+function copyBillback()
+{
+	var IsSplitChild = '<cfoutput>#IsSplitChild#</cfoutput>';
+
+	if(bb_is_locked == 1 && locked_by_other_user == 0)
+	{
+
+		if (IsSplitChild == 0)
+		{
+			var newLocation = "/billbacks/capture/Copy_ThisBB.cfm?BBID=" + bb_id
+			window.location.href=newLocation;
+		}
+		else
+		{
+			alert("You cannot copy the child of a split billback. Please copy the parent of this billback.");
+		}
+
+	}
+	else
+	{
+		alert("Please lock the billback first.")
+
+	}
+}
+</script>
+
+<div align="left">
+<table border="0" cellspacing="0" cellpadding="0" align="left" width="120">
+
+<tr>
+	<td width="142" id="LockCell" align="center" <cfif URL.BBID eq "">class="inactiveMenuItem"</cfif> valign="top" nowrap><img src="/images/edit_mode.gif" style="cursor:pointer;" TITLE="Edit Mode" onClick="tabClick('unlock')"><br />
+		<span class="ViewModesBracketsm">[</span><span class="ViewModessm" style="cursor:pointer;"  onClick="tabClick('unlock')">Click for Read Only</span><span class="ViewModesBracketsm">]</span>
+</td>
+	 </tr>
+	<tr>
+	 <td id="summary_tab" class="inactiveMenuItem" onClick="tabClick('summary')" >
+	  <img src="/images/programs/ball_green.gif" id="basic_info_tab_icon" border="0" align="absmiddle" />Summary
+	 </td>
+	</tr>
+	<tr>
+	 <td id="basic_info_tab" class="inactiveMenuItem" onClick="tabClick('basic_info')"><img src="/images/programs/ball_green.gif" id="basic_info_tab_icon" border="0" align="absmiddle" />Basic Info.</td>
+	 <td>
+	</tr>
+	<tr>
+	 <td id="payee_tab" class="inactiveMenuItem" onClick="tabClick('payee')">
+	  <img src="/images/programs/ball_gray_filled.gif" border="0" id="payee_tab_icon" align="absmiddle" />Payee
+	 </td>
+	</tr>
+	<tr>
+	 <td id="programs_tab" class="inactiveMenuItem" onClick="tabClick('programs')" valign="top">
+	  <img src="/images/programs/ball_gray_filled.gif" id="programs_tab_icon" align="absmiddle" />Programs
+	 </td>
+	</tr>
+	<tr>
+	 <td id="document_tab" class="inactiveMenuItem" onClick="tabClick('document')">
+	  <img src="/images/programs/ball_gray_filled.gif" id="document_tab_icon" align="absmiddle" />Documents
+	 </td>
+	</tr>
+	<!---
+	<tr>
+	 <td id="deduction_tab" class="inactiveMenuItem" onClick="tabClick('deduction')">
+	  <img src="/images/programs/ball_gray_filled.gif" id="deduction_tab_icon" align="absmiddle" />Deduction
+	 </td>
+	</tr>
+	--->
+	<tr>
+	 <td id="deviations_tab" class="inactiveMenuItem" onClick="tabClick('deviations')">
+	  <img src="/images/programs/ball_gray_filled.gif" id="deviations_tab_icon" align="absmiddle" /><cfoutput>#appSettings.getDeviationLabel()#</cfoutput>
+	 </td>
+	</tr>
+	<tr>
+	 <td id="payment_tab" class="inactiveMenuItem" onClick="tabClick('payment')">
+	  <img src="/images/programs/ball_gray_filled.gif" id="payment_tab_icon" align="absmiddle" />Payment
+	 </td>
+	</tr>
+	<!---TSF: Label 21054 - Allow users to switch items on uploaded billbacks --->
+	<cfif Switch_Product_Button_Show>
+		<tr>
+			<td id="switch_products_tab" class="inactiveMenuItem" onClick="tabClick('switchProducts');">
+				<img src="/images/programs/ball_green.gif" id="switch_products_tab_icon" border="0" align="absmiddle" />Switch Products
+			</td>
+		</tr>
+	</cfif>
+  <cfif appSettings.getShow_BB_Route() IS 1>
+	<tr>
+	 <td id="acknowledgments_tab" class="inactiveMenuItem" onClick="tabClick('acknowledgments')">
+	  <img src="/images/programs/ball_gray_filled.gif" align="absmiddle" />Acknowledgments
+	 </td>
+	</tr>
+  </cfif>
+  <cfif ShowPaymentHistory IS 1>
+	<tr>
+	 <td id="paymenthistory_tab" class="inactiveMenuItem" onClick="tabClick('paymenthistory')">
+	  <img src="/images/programs/ball_gray_filled.gif" align="absmiddle" />Payment History
+	 </td>
+	</tr>
+  </cfif>
+	<tr>
+	 <td  class="inactiveMenuItem">
+	  <img border="0" src="/images/programs/ball_none.gif" align="absmiddle" />
+	 </td>
+	</tr>
+<!---	D43181 :: Route Summary--->
+<tr style="display:none;">
+	 <td id="route_tab" class="inactiveMenuItem" onClick="tabClick('route')">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Route
+	 </td>
+</tr>
+<!---	D43181 :: Route Summary--->
+<tr style="display:none;">
+	 <td id="inbox_tab" class="inactiveMenuItem" onClick="tabClick('inbox')">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Inbox
+	 </td>
+</tr>
+
+
+   <cfif 	Detail_Button_Show eq 1>
+	<!--- detail --->
+	<tr>
+	<td id="detail_tab" class="inactiveMenuItem" onClick="showDetail();return false;">
+	 <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Detail
+	</td>
+   </tr>
+	</cfif>
+
+  <cfif Delete_Button_Show EQ 1>
+	<!--- Delete --->
+	<tr>
+	 <td  id="delete_tab" class="inactiveMenuItem"  onclick="confirmDeletion();return false;">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Delete
+	 </td>
+	</tr>
+  </cfif>
+
+  <cfif Copy_Button_Show EQ 1>
+	<!--- Copy --->
+	<tr>
+	 <td id="copy_tab"  class="inactiveMenuItem" onClick="copyBillback();return false;">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Copy
+	 </td>
+	</tr>
+  </cfif>
+
+    <!--- reset to wip --->
+	<cfif Reset_Button_Show EQ 1>
+	<tr>
+	 <td id="wip_tab" class="inactiveMenuItem" onClick="resetToWIP();return false;">
+	  <img src="/images/programs/ball_blue.gif" id="wip_tab_icon" border="0" align="absmiddle" />Reset
+	 </td>
+	</tr>
+	</cfif>
+
+<!--- If the billback is in "Payment Request" OR "Paid" stage and the user has the appropriate permission --->
+  <cfif Reverse_Button_Show EQ 1>
+   <!--- reverse --->
+	<tr>
+	 <td id="reverse_tab" class="inactiveMenuItem" onClick="reverseBillback();return false;">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Manual Void
+	 </td>
+	</tr>
+	<tr>
+	 <td id="settlement_tab" class="inactiveMenuItem" onClick="settlement();">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Settlement
+	 </td>
+	</tr>
+  </cfif>
+
+  <!--- Print --->
+	<tr>
+	 <td id="print_tab" class="inactiveMenuItem" onClick="printBillback();return false;">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Print
+	 </td>
+	</tr>
+
+ <!--- Email --->
+	<tr>
+	 <td id="email_tab" class="inactiveMenuItem" onClick="emailBillback();return false;">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Email
+	 </td>
+	</tr>
+
+ <!--- Fax
+	<tr>
+	 <td id="fax_tab" class="inactiveMenuItem" onClick="faxBillback();return false;">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Fax
+	 </td>
+	</tr>
+--->
+<!--- D11049: Modify Agree --->
+<cfif appsettings.getBillbackModifyAgree() EQ 1 AND quickBBCheck.Auto_Billback NEQ 1>
+	<TR>
+		<TD id="ModifyAgree_tab" class="inactiveMenuItem" onClick="ModifyAgree();return false;">
+		 <IMG BORDER="0" SRC="/images/programs/ball_blue.gif" ALIGN="absmiddle">Modify&nbsp;Agree
+	 </TD>
+	</TR>
+</cfif>
+ <!--- D11047: Business Consideration --->
+	<TR>
+		<TD id="BusiCon_tab" class="inactiveMenuItem" onClick="BusiConsideration();return false;">
+		 <IMG BORDER="0" SRC="/images/programs/ball_blue.gif" ALIGN="absmiddle">Bus.Consid.
+	 </TD>
+	</TR>
+
+
+
+
+	<!---- History --->
+	<TR>
+		<TD id="history_tab" class="inactiveMenuItem" onClick="historyBillback();return false;">
+			<IMG BORDER="0" SRC="/images/programs/ball_blue.gif" ALIGN="absmiddle">History</TD>
+	</TR>
+
+
+  <cfif appSettings.getShowBBExcelReport()>
+   <tr>
+    <td id="excel_tab" class="inactiveMenuItem" onClick="tabClick('excel')">
+	 <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Programs Report
+	</td>
+   </tr>
+  </cfif>
+<cfif quickBBCheck.Billback_Status_ID gte 2>
+  <tr>
+  <td id="claimprint_tab" class="inactiveMenuItem" onClick="printStatement();return false;">
+  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Statement</td>
+  </tr>
+</cfif>
+<cfif quickBBCheck.Billback_Status_ID gte 2 AND quickBBCheck.Auto_Billback NEQ 1>
+   <tr>
+    <td id="deviation_report_tab" class="inactiveMenuItem" onClick="showDeviationReport();return false;">
+	 <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" /><cfoutput>#appSettings.getDeviationLabel()#</cfoutput> Report
+	</td>
+   </tr>
+</cfif>
+<cfif application.oApplicationAppSettingsManager.getApplicationAppSettings().getBudgetsFunctionalityOn()>
+	<tr>
+    <td id="budgets_tab" class="inactiveMenuItem" onClick="tabClick('budgets');return false;">
+	 <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Budgets
+	</td>
+   </tr>
+</cfif>
+
+<cfif bBillbackSalesTax>
+<tr>
+	<td id="BBSalesTax_Tab" class="inactiveMenuItem" onClick="showSalesTax();return false;">
+		 <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Sales Tax
+	</td>
+</tr>
+</cfif>
+
+<!--- 
+	D39812: Validate EDI files for potential billback duplicate/Anand Rao/13-Feb-2014
+	Added the below section for displaying EDI duplicate, if it is flagged as duplicate.
+--->
+	
+	<cfif quickBBCheck.BB_Upload_Dup_Group_ID EQ "">
+		<cfset BBUploadDupGroupID = 0 />
+	<cfelse>
+		<cfset BBUploadDupGroupID = quickBBCheck.BB_Upload_Dup_Group_ID />
+	</cfif>
+														
+<cfif getBBSettings.Enable_BB_Dup_Check EQ 1 AND BBUploadDupGroupID NEQ 0>
+	<tr>
+    <td id="EDIDupTab" class="inactiveMenuItem" onClick="showEDIDuplicates();return false;">
+	 <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />EDI Duplicate
+	</td>
+   </tr>
+</cfif>
+  <tr>
+    <td class="inactiveMenuItem">
+	 <img border="0" src="/images/programs/ball_none.gif" align="absmiddle" />
+	</td>
+   </tr>
+   <tr>
+    <td id="search_tab" class="inactiveMenuItem" onClick="tabClick('search')">
+	 <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Search
+	</td>
+   </tr>
+  <cfif application.appSettingsGet.getBillback_Module() EQ 1 AND Get_Profile_Settings.BB_Create EQ 1 AND appSettings.getShowManualBillback()>
+	<tr>
+	 <td class="inactiveMenuItem" nowrap>
+	  <a href="/billbacks/capture/index.cfm"><img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Create billback</a>
+	 </td>
+	</tr>
+   </cfif>
+   <cfif appSettings.getShowAutoBillback() EQ 1 AND Get_Profile_Settings.BB_Create EQ 1>
+	<tr>
+     <td class="inactiveMenuItem" nowrap>
+	  <a href="/billbacks/capture/INDEX.CFM?AUTOBB=<CFIF appSettings.getAutoBillBackType()>2<cfelse>1</cfif>"><img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />Create Auto billback</a>
+     </td>
+	</tr>
+   </cfif>
+	<tr>
+	 <td class="inactiveMenuItem">
+	  <img border="0" src="/images/programs/ball_none.gif" align="absmiddle" />
+	 </td>
+	</tr>
+	<cfif appSettings.getSplitBillbacks()>
+	<tr>
+	 <td id="split_tab" class="inactiveMenuItem" onClick="ShowSplit(); return false;">
+	  <img src="/images/programs/ball_gray_filled.gif" id="split_tab_icon" align="absmiddle" />Split Detail
+	 </td>
+	</tr>
+	</cfif>
+	<cfif LocalBBID NEQ 0>
+	<cfset userManager = CreateObject("component", "components.user.UserManager").init() />
+	<cfoutput>
+	<tr>
+		<td>
+			<a href="/workflow/Billback/BB_Workflow.cfm?Billback_ID=#bbid#" onClick="NewWindow(this.href,'BBWorkflow','1000','800','Yes', 'Yes');return false;"><IMG BORDER="0" SRC="/images/programs/ball_blue.gif" ALIGN="absmiddle"></A>
+			<a href="/workflow/Billback/BB_Workflow.cfm?Billback_ID=#bbid#" onClick="NewWindow(this.href,'BBWorkflow','1000','800','Yes', 'Yes');return false;">Workflow</A>
+		</td>
+	</tr>
+<!---
+	<tr>
+	 <td class="activeMenuLabelItem">
+	  <img src="/images/programs/ball_blue.gif" align="absmiddle" border="0" />
+		<cf_smallHelp
+			borderColor="black"
+			backgroundColor="WhiteSMoke"
+			showImage="0"
+			showText="Created By"
+			borderWidth="1">
+		#userManager.getUserName(quickBBCheck.BB_Creator_ID)#
+		#Dateformat(quickBBCheck.Created_Date, "mm/dd/yyyy")#
+		</cf_smallHelp>
+	 </td>
+	</tr>
+    <tr>
+	 <td class="<cfif quickBBCheck.Billback_Status_ID GTE 2>activeMenuLabelItem<cfelse>inactiveMenuLabelItem</cfif>">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />
+		<cfif quickBBCheck.Billback_Status_ID GTE 2>
+		<cf_smallHelp
+			borderColor="black"
+			backgroundColor="WhiteSMoke"
+			showImage="0"
+			showText="Req. Approval By"
+			borderWidth="1">
+		#userManager.getUserName(quickBBCheck.BB_Request_Approval_User_ID)#
+		#Dateformat(quickBBCheck.BB_Request_Approval_Date, "mm/dd/yyyy")#
+		</cf_smallHelp>
+		<cfelse>Req. Approval By</cfif>
+	 </td>
+	</tr>
+	<tr>
+	 <td class="<cfif quickBBCheck.Billback_Status_ID GTE 3>activeMenuLabelItem<cfelse>inactiveMenuLabelItem</cfif>">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />
+		<cfif quickBBCheck.Billback_Status_ID GTE 3>
+      <!--
+        Dev Notes:  21923/Anand Rao/19-Jan-2010
+        Created a new table BB_Approval_History and using it for maintaining the
+        BB Approval history, if a BB is Approved multiple times.
+      -->
+     <cfquery name="BillbackApprovalHistory" datasource="#application.datasource#">
+      SELECT BBAH.BB_Approval_History_Id, BBAH.Billback_ID, BBAH.Approved_By , BBAH.Created_Date,
+      u1.Name_First + ' ' +  u1.Name_Last AS Approved_By_Name
+      FROM BB_Approval_History BBAH
+      LEFT OUTER JOIN _Users u1
+    	ON BBAH.Approved_By = u1.User_ID
+      WHERE BBAH.Billback_ID = '#bbid#'
+      order by BBAH.Created_Date
+    </cfquery>
+
+		<cf_smallHelp
+			borderColor="black"
+			backgroundColor="WhiteSMoke"
+			showImage="0"
+			showText="Approved By"
+			borderWidth="1"
+      width="300">
+		<!--- #userManager.getUserName(quickBBCheck.User_Approved)#
+		#Dateformat(quickBBCheck.Date_Approved, "mm/dd/yyyy")# --->
+      <cfloop query="BillbackApprovalHistory"><li>#BillbackApprovalHistory.Approved_By_Name#&nbsp;(#Dateformat(BillbackApprovalHistory.Created_Date,"mm/dd/yy")# #Timeformat(BillbackApprovalHistory.Created_Date,"hh:mm tt")#)</li></cfloop>
+		</cf_smallHelp>
+		<cfelse>Approved By</cfif>
+	  </td>
+	 </tr>
+	 <tr>
+		<cfset isReset = 0>
+		<cfif quickBBCheck.BB_Reset_User_ID NEQ "">
+			<cfset isReset = 1>
+		</cfif>
+	 <td class="<cfif isReset>activeMenuLabelItem<cfelse>inactiveMenuLabelItem</cfif>">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />
+		<cfif isReset>
+		<cf_smallHelp
+			borderColor="black"
+			backgroundColor="WhiteSMoke"
+			showImage="0"
+			showText="Reset By"
+			borderWidth="1">
+		#userManager.getUserName(quickBBCheck.BB_Reset_User_ID)#
+		#Dateformat(quickBBCheck.BB_Reset_Date, "mm/dd/yyyy")#
+		</cf_smallHelp>
+		<cfelse>Reset By</cfif>
+	  </td>
+	 </tr>
+	 <tr>
+		<cfset isDisagree = 0>
+		<cfif quickBBCheck.BB_Disagree EQ 1>
+			<cfset isDisagree = 1>
+		</cfif>
+	  <td class="<cfif isDisagree>activeMenuLabelItem<cfelse>inactiveMenuLabelItem</cfif>">
+	   <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />
+		<cfif isDisagree>
+		<cf_smallHelp
+			borderColor="black"
+			backgroundColor="WhiteSMoke"
+			showImage="0"
+			showText="Disagree By"
+			borderWidth="1">
+		<cfif quickBBCheck.BB_Disagree_By NEQ "">#userManager.getUserName(quickBBCheck.BB_Disagree_By)#</cfif>
+		<cfif quickBBCheck.BB_Disagree_Date NEQ "">#Dateformat(quickBBCheck.BB_Disagree_Date, "mm/dd/yyyy")#</cfif>
+		</cf_smallHelp>
+		<cfelse>Disagree By</cfif>
+	  </td>
+	 </tr>
+	 <cfset isAgree = 0>
+		<cfif quickBBCheck.Agreed_Count GT 0>
+			<cfset isAgree = 1>
+		</cfif>
+	  <td class="<cfif isAgree>activeMenuLabelItem<cfelse>inactiveMenuLabelItem</cfif>">
+	   <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />
+		<cfif isAgree>
+
+		<cfquery name="AgreedUsers" datasource="#application.datasource#">
+		SELECT DISTINCT Name_First, Name_Last, BB_Agreed_Info.Created_Date
+		FROM _Users
+			INNER JOIN BB_Agreed_Info
+			ON BB_Agreed_Info.Billback_ID = '#url.BBID#'
+			AND BB_Agreed_Info.Deleted = 0
+			AND BB_Agreed_Info.User_ID = _Users.User_ID
+		</cfquery>
+
+		<cf_smallHelp
+			borderColor="black"
+			backgroundColor="WhiteSMoke"
+			showImage="0"
+			showText="Agreed To By"
+			borderWidth="1">
+
+		<cfloop query="AgreedUsers">
+			#Name_First# #Name_Last# #Dateformat(AgreedUsers.Created_Date, "mm/dd/yyyy")#<br>
+		</cfloop>
+
+		</cf_smallHelp>
+		<cfelse>Agreed To By</cfif>
+	  </td>
+	 </tr>
+ --->
+	</cfoutput>
+	</cfif>
+	<cfoutput>
+	 <!--- VOIDED BY :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	 <tr>
+	 <td class="<cfif quickBBCheck.BB_Reversed eq '1'>activeMenuLabelItem<cfelse>inactiveMenuLabelItem</cfif>">
+	  <img src="/images/programs/ball_blue.gif" border="0" align="absmiddle" />
+		<cfif quickBBCheck.BB_Reversed eq '1'>
+		<cf_smallHelp
+			borderColor="black"
+			backgroundColor="WhiteSMoke"
+			showImage="0"
+			showText="Voided By"
+			borderWidth="1">
+		#userManager.getUserName(quickBBCheck.BB_Reversed_By)#
+		#Dateformat(quickBBCheck.BB_Reversed_Date, "mm/dd/yyyy")#
+		</cf_smallHelp>
+		<cfelse>Voided By</cfif>
+	  </td>
+	 </tr>
+	</cfoutput>
+	<tr>
+	 <td nowrap>
+	  <img border="0" src="/images/programs/finial.gif" align="absmiddle" />
+	 </td>
+	</tr>
+   </table>
+
+<div style="overflow:auto;" align="left">
+<div id="infoBarLayer" style="position: relative; z-index: 100;">
+	<table border="0" cellpadding="0" id="AutoNumber2" cellspacing="0" bgcolor="#FFFFFF" width="84%">
+ 		     <tr>
+		      <td class="titleMain" id="infoBar" width="100%"></td>
+		      <td align="center" class="titleAmount" id="infoBar_BB_Amount"></td>
+		     </tr>
+	        </table>
+	</div>
+	<span class="cellaroundIframe"><iframe scrolling="no" src="<cfoutput>#iframeSourcePage#</cfoutput>" name="contentIFrame" id="contentIFrame" width="840" marginwidth="0" marginheight="0" align="left" frameborder="0" class="iframeStyle"></iframe></span>
+</div>
+</div>
+
+<script>
+	initVariables();
+	buildMenu();
+</script>
+
+<!--- load info bar --->
+<CFSET InfoBar_BBID = "">
+<cfinclude template="billback_load_infobar.cfm">
+<BLOCKQUOTE><BLOCKQUOTE>
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<CFINCLUDE TEMPLATE="/includes/footer.cfm">
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+</BLOCKQUOTE></BLOCKQUOTE>
+</BODY>
+</HTML>

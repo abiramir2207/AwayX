@@ -1,0 +1,15 @@
+===== QUERY: delete_tmp_tables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: var_qDeleteTempTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: local.qTemplates =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qrySearchBBs =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: checkkSearchResults =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

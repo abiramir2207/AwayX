@@ -1,0 +1,88 @@
+===== QUERY: delete_unpaid =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Get_Checkbook =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Checkbook = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForGet_Checkbook>
+	<cftry>
+		<cfset Get_Checkbook = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"order" = "date_time.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Checkbook = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Checkbook>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Billback =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: BB_Search =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBB_Search = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBB_Search>
+	<cftry>
+		<cfset BB_Search = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_reference" = "eq.#Form.BB_Reference#",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Search = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Search>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Checkbook =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Checkbook = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForGet_Checkbook>
+	<cftry>
+		<cfset Get_Checkbook = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"order" = "date_time.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Checkbook = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Checkbook>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Curr_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCurr_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_symbol")>
+<cfif useLakebaseForCurr_Name>
+	<cftry>
+		<cfset Curr_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_symbol", {
+				"symbol" = "eq.#curr_symbol#",
+				"select" = "symbol_description"
+			}), "symbol_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCurr_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCurr_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

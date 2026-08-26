@@ -1,0 +1,64 @@
+===== QUERY: qPermissions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqPermissions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_planner")>
+<cfif useLakebaseForqPermissions>
+	<cftry>
+		<cfset qPermissions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_planner", {
+				"planner_template_id" = "eq.#form.id#",
+				"deleted" = "eq.0",
+				"select" = "access_is_forbidden,profile_id,planner_template_id"
+			}), "access_is_forbidden,profile_id,planner_template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPermissions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPermissions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAccess =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qpermissions")>
+<cfif useLakebaseForqAccess>
+	<cftry>
+		<cfset qAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qpermissions", {
+				"profile_id" = "eq.#qProfiles.Profiles_ID#",
+				"planner_template_id" = "eq.#form.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAccess>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAccess =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qpermissions")>
+<cfif useLakebaseForqAccess>
+	<cftry>
+		<cfset qAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qpermissions", {
+				"profile_id" = "eq.#qProfiles.Profiles_ID#",
+				"planner_template_id" = "eq.#form.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAccess>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,1851 @@
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*" scriptTimeLimit="60"  
+				layout="absolute" creationComplete="initApp();" backgroundColor="#FFFFFF" styleName="plain" height="100%" width="100%">
+<mx:Style source="/assets/styles.css" />
+<mx:Script source="LabelActions.as" />
+<mx:DateFormatter id="StandardDateFormat" formatString="MM/DD/YY" />
+<mx:CurrencyFormatter id="basicCurrencyFormat" rounding="none" alignSymbol="left" precision="2" useThousandsSeparator="true" />
+<mx:CurrencyFormatter id="removeFormatting" currencySymbol="" rounding="nearest" precision="4" useThousandsSeparator="false" /> 
+<mx:CurrencyFormatter id="fourDecimalFormat" alignSymbol="left" precision="4" useThousandsSeparator="true" />
+<mx:NumberFormatter precision="2" useThousandsSeparator="false" rounding="nearest" id="numFormat" />
+
+<mx:StringValidator id="invValidator"
+                    required="true"
+                    property="text"
+                    source="{inv}"
+                    />
+                    
+<mx:StringValidator id="casesClaimedValidator"
+                    required="true"
+                    property="text"
+                    source="{claimed}"
+                    />
+
+                 
+<mx:DateValidator allowedFormatChars="/"  
+	              id="claimDateFromValidator"  
+	              source="{claimDateFromVis}" 
+	              inputFormat="MM/DD/YY" 
+	              property="text"
+	              required="true"
+	              invalidCharError="Your Date must be formatted like MM/DD/YY"
+	              requiredFieldError="This field can not be blank "
+	              />
+	              
+<mx:DateValidator allowedFormatChars="/"  
+	              id="claimDateToValidator" 
+	              source="{claimDateToVis}" 
+	              inputFormat="MM/DD/YY" 
+	              property="text" 
+	              required="true"
+	              invalidCharError="Your Date must be formatted like MM/DD/YY"
+	              requiredFieldError="This field can not be blank "
+	              />
+            
+<mx:DateValidator allowedFormatChars="/"  
+	              id="brkrRecDateValidator" 
+	              source="{brkrRecDateVis}" 
+	              inputFormat="MM/DD/YY" 
+	              property="text" 
+	              required="true"
+	              invalidCharError="Your Date must be formatted like MM/DD/YY"
+	              requiredFieldError="This field can not be blank "
+	              />
+	              
+<mx:DateValidator allowedFormatChars="/"  
+	              id="invDateValidator" 
+	              source="{invDateVis}" 
+	              inputFormat="MM/DD/YY" 
+	              property="text" 
+	              required="true"
+	              invalidCharError="Your Date must be formatted like MM/DD/YY"
+	              requiredFieldError="This field can not be blank "
+	              />
+
+<mx:CurrencyValidator id="currencyValidator" 
+	                  allowNegative="false" 
+	                  property="text" 
+	                  precision="2" 
+	                  required="true"
+	                  source="{amt}"
+	                   
+	                   />
+
+<mx:Script>
+	<![CDATA[
+		import components.ClaimPrintView;
+		import components.NumberUtils;
+		
+		import mx.collections.*;
+		import mx.containers.*;
+		import mx.containers.Grid;
+		import mx.containers.Panel;
+		import mx.controls.Alert;
+		import mx.controls.CheckBox;
+		import mx.controls.Text;
+		import mx.controls.dataGridClasses.DataGridColumn;
+		import mx.effects.Resize;
+		import mx.events.*;
+		import mx.events.CalendarLayoutChangeEvent;
+		import mx.events.DateChooserEvent;
+		import mx.formatters.Formatter;
+		import mx.managers.*;
+		import mx.printing.*;
+		import mx.rpc.events.*;
+		import mx.states.SetProperty;
+		import mx.utils.*;
+		import mx.validators.*;
+	    
+	    /* Public Vars */
+	    
+	    // We need to set this to a public var so that
+	    // we have an initial state to set the Checkbox to
+	    public var isKnown:Boolean = false;
+	    public var searchEnabled:Boolean = false;
+	    public var formState:String;
+	
+	    // Bindable
+	    [Bindable] public var claimsNew:Object = new Object();
+	      
+		[Bindable] public var claimDetail:Object = new Object();
+	      
+		[Bindable] public var claimsSaved:Object = new Object();
+		 
+		[Bindable] public var claimsPending:Object = new Object();
+		 
+		[Bindable] public var claimsSent:Object = new Object();
+		 
+		[Bindable] private var CheckBoxItemRenderer:ClassFactory;
+		 
+		[Bindable] private var isEnabled:Boolean = false;
+		 
+		[Bindable] public var userId:String;
+		 
+		[Bindable] private var emailURL:String;
+		
+		[Bindable] private var pdfURL:String;
+	
+		[Bindable] private var comments:String; //30374-One Page Claim Form - Add a Comment Field
+	     
+	    private function initApp():void 
+	    {
+			// var userId = Application.application.parameters.userid;
+   			newFormObject.getBrokerId();
+   			setLabels();
+   			deleteFormBtn.enabled = false;
+   			
+   			// Creates instance of ClassFactory Class and sets the 
+   			// properties to pass into the itemRenderer
+   			CheckBoxItemRenderer = new ClassFactory(checkBoxItemRenderer);
+        	CheckBoxItemRenderer.properties = {dataField: "isKnown"};
+            
+            // Call eventListener to catch Clicks on Checkboxes
+            addEventListener(SimpleItemClickEvent.CLICK, onItemClick);
+		}
+	    
+		/*   
+		private function moveToNextCell(event:):void
+		{
+			var item:Object = new Object();
+		 		
+		 	if (event.keyCode == 9)
+		 	{
+		 		var currentRow:int = claimFormGrid.selectedIndex;
+		 		
+		 		if (currentRow != 0)
+		 		{
+		 			item.columnIndex = currentRow + 1;
+		 			claimFormGrid.set= item;
+		 		}
+		
+		 	} 
+		}
+		*/
+	     
+	    private function enableButtons(pane:Number):void 
+		{
+			saveForm.enabled = true;
+			sendForm.enabled = true;
+			deleteFormBtn.enabled = false;
+		
+			switch (pane) 
+			{
+				case 1:
+				       saveForm.enabled = true;
+				       sendForm.enabled = true;
+				       saveForm.label = "Save Form";
+				       isEnabled = true;
+				       break;
+				case 2: 
+				       saveForm.enabled = true;
+				       sendForm.enabled = true;
+				       deleteFormBtn.enabled = true;
+				       saveForm.label = "Update Form";
+				       isEnabled = true;
+				       break; 
+			    case 3:
+			           saveForm.enabled = true;
+			           sendForm.enabled = true;
+			           saveForm.label = "Update Form";
+			           isEnabled = true;
+			           break;
+			    case 4:
+			           saveForm.enabled = false;
+			           sendForm.enabled = false;
+			           saveForm.label = "Save Form";
+			           isEnabled = false;
+			           break;
+			}
+		}
+	     
+		public function printClaim():void
+		{
+			var printJob:FlexPrintJob = new FlexPrintJob();
+			
+			if (printJob.start())
+			{
+			  
+				var printView:ClaimPrintView = new ClaimPrintView();
+				addChild(printView);
+				printView.width=printJob.pageWidth;
+				printView.height=printJob.pageHeight;
+				
+				printView.ProgramNum.text = lwProgramNum.text;
+				printView.desc.text = desc.text;
+				printView.effDate.text = progEffDate.text;
+				printView.endDate.text = progEndDate.text;
+				printView.invNum.text = "Inv/Ref No: " + inv.text;
+				printView.distributor.text = dist.text;
+				printView.shipNum.text = shipToNum.text;
+				printView.dest.text = destination.text;
+				printView.stateTxt.text = stateLbl.text;
+				// printView.claimDateFrom.text = 'From: ' + claimDateFrom.text;
+				// printView.claimDateTo.text = 'To: ' + claimDateTo.text;
+				printView.claimDateFromVis.text = 'From Date: ' + claimDateFromVis.text;
+				printView.claimDateToVis.text = 'To Date: ' + claimDateToVis.text;
+				printView.claimAmt.text = 'Amount: ' + amt.text;
+				// printView.invDate.text = 'Date: ' + invDate.text;
+				printView.payName.text = payName.text;
+				printView.payNum.text = payToNum.text;
+				printView.bsNum.text =  baProgramNum.text;
+				printView.broker.text = broker.text;
+				printView.brokerNum.text = brokerNum.text;
+				printView.corpPGM.text = corpPgm.text;
+				printView.deductAutosF.text = deductAutosF.text;
+				printView.deductAutos.text = deduct.text;
+				printView.pullback.text = pullback.text;
+				
+				printView.casesTotal.text = 'Total # Cases Claimed: ' + casesTotal.text;
+				printView.extAmtTotal.text = 'Extended Amount Total: ' + extAmtTotal.text;
+				
+			       printView.showPage("single");
+			       if(!printView.PrintGrid.validNextPage)
+	               {
+	                	printJob.addObject(printView,FlexPrintJobScaleType.MATCH_HEIGHT);
+	               }
+			       else
+	            	{
+	                	// Create the first page and add it to the print job.
+	                
+	               		printView.showPage("first");
+	                	printJob.addObject(printView,FlexPrintJobScaleType.MATCH_HEIGHT);
+	                	printView.pageNumber++;
+	                	// Loop through the following code until all pages are queued.
+	                	while(true)
+	                	{
+		                    // Move the next page of data to the top of the print grid.
+		                    printView.PrintGrid.nextPage();
+		                    printView.showPage("last");    
+		                    // If the page holds the remaining data, or if the last page 
+		                    // was completely filled by the last grid data, queue it for printing.
+		                    // Test if there is data for another PrintDataGrid page.
+		                    if(!printView.PrintGrid.validNextPage) 
+		                    {
+								// This is the last page; queue it and exit the print loop.
+		                        printJob.addObject(printView,FlexPrintJobScaleType.MATCH_HEIGHT);
+		                        break;
+		                    }
+	                    else
+	                    // This is not the last page. Queue a middle page. 
+	                    {
+	                        printView.showPage("middle");
+	                        printJob.addObject(printView,FlexPrintJobScaleType.MATCH_HEIGHT);
+	                        printView.pageNumber++;
+	                    }
+	                }
+	            }
+			      
+			       removeChild(printView);
+			       printJob.send();
+			}
+	
+		}
+	     
+	     private function totalCases():void
+	     {
+	     	      var total:Number = 0;
+	     	      var item:Object = new Object();
+	     	      var i:Number;
+	     	      
+	     	      for (i = 0; i < claimDetail.length; i++)
+	     	      {
+	     	      	item = claimDetail.getItemAt(i);
+	     	      	total += Number(item['Cases_Claimed']);
+	     	      }
+	     	      
+	     	      casesTotal.text = String(total);
+	     }
+	     
+	     private function totalAmts():void
+	     {   
+	     	      var adjTotal:String;
+	     	      var i:Number;
+	     	      var total:Number;
+	     	      
+	     	      for (i = 0; i < claimDetail.length; i++)
+	     	      {
+	     	      	
+	     	      	if (String(claimDetail[i].Cases_Claimed) != "")
+	     	      	{
+	     	      		adjTotal = numFormat.format(Number(adjTotal) + Number(removeFormatting.format(claimDetail[i].Adj_Extended_Amt)));
+	     	      	}	
+	     	      }
+	     	      extAmtTotal.text = numFormat.format(basicCurrencyFormat.format(adjTotal));
+	     }
+	     
+	     private function getForms(event:Event):void
+	     {
+	   		// When users select a claim and then click on another tab then we need to clear the claim detail so that they dont click save.  
+	   		resetForm();
+	   		setLabels();
+	   		claimDetail = null;
+	   		
+	     	if (tabs.selectedIndex == 0)
+	     	{
+	     		enableButtons(1);
+	     	}
+	     	
+	     	if (tabs.selectedIndex == 1 && searchEnabled == false)
+	     	{
+	     		newFormObject.getNewClaims();
+	     		enableButtons(1);
+	     	}
+	     	
+	     	if (tabs.selectedIndex == 2 && !searchEnabled)
+	     	{
+	     		newFormObject.getSavedClaims();
+	     		enableButtons(2);
+	     	}
+	     	if (tabs.selectedIndex == 3 && !searchEnabled)
+	     	{
+	     		newFormObject.getPendingClaims();
+	     		enableButtons(3);
+	     	}
+	     	if (tabs.selectedIndex == 4 && !searchEnabled)
+	     	{
+	     		newFormObject.getSentClaims();
+	     		enableButtons(4);
+	     	}
+	     }
+	     private function showTip(item:Object):String
+	     {
+	     	var info:String = "";
+	     		if (item['ClaimForm_ID'] != null)
+	     		{
+	     			info += "Claim ID: " + item['ClaimForm_ID'] + "\n";
+	     		}
+	     		info += "Revised Date: " + format_date_type(new Date(item['Sent_Date'])) + "\n";
+	     		info += "BlackSmith #: " + item['Ba_Id'] + "\n";
+	     		info +=	"LW Program #: " + item['Program_Number'] + "\n";
+	     	    info +=	"Program Name: " + item['Desc_Number'] + "\n";
+	     	    info += "Distributor: " + item['Cust_Name'] + "\n";
+	     	    info += "Ship To No: " + item['Ship_Num'] + "\n";
+	     	    info += "Program Eff Date: " + format_date_type(new Date(item['BeginDate'])) + "\n";
+	     	    info += "Program End Date: " + format_date_type(new Date(item['EndDate'])) + "\n";
+	     	    if (item['Saved_Date'] != null)
+	     	    {
+	     	    	info += "Date Saved: " + format_date_type(new Date(item['Saved_Date'])) + "\n";
+	     	    }
+	     	    
+	     	return info;
+	     }
+
+	
+	     private function formatNumber(event:Event):void
+	     {
+	      	var myText:TextInput = event.currentTarget as TextInput;
+	      	myText.text = numFormat.format(myText.text);
+	     
+	     }
+	     private function onItemClick(e:SimpleItemClickEvent):void
+	      {
+	            // create refs to the items we care about
+	            var ir:checkBoxItemRenderer = e.target as checkBoxItemRenderer;
+	            var cb:CheckBox = ir.deleteCheckBox as CheckBox;
+	            // update the appropriate data property based on the CheckBox's selected state
+	            e.vo[e.voPropertyName] = cb.selected;
+	        }
+	        
+	     // Calls the Dateutils Class to pass in 2 dates and compare them
+	     // -1 = First date is greater than the 2nd it displays an Alert
+	     // 0 = Both dates are equal. This will set the 2nd date to one day
+	     // ahead because the To date must not be equal to the From Date 
+	     /*
+	     private function dateComparer():Boolean
+	     	{
+	     		   if (claimDateTo.text != '')
+	     		   {
+	     		   	  var isValidDate:Boolean = true;
+	     		   	  var Date1:Date = new Date(DateUtils.displayDate(claimDateFrom.text));
+				      var Date2:Date = new Date(DateUtils.displayDate(claimDateTo.text));
+				      var result:int = DateUtils.compareDates(Date1,Date2);
+				     
+				  switch (result)
+				  {
+					case -1:
+					  isValidDate = false;
+					  break;
+					
+					case 0:
+					  var fixedDate:Date = DateUtils.dateAdd(0,1,Date2);
+					  claimDateTo.text = StandardDateFormat.format(fixedDate);
+					  break;
+				  } 
+	     		 }
+	     		 return isValidDate;
+	        }
+	
+	     private function dateComparer2():Boolean
+	     	{
+	     		   if (claimDateTo.text != '')
+	     		   {
+	     		   	  var isValidDate:Boolean = true;
+	     		   	  var Date1:Date = new Date();
+	     		   	  var fullDate:String = Date1.getMonth() + "/" + Date1.getDay() + "/" + Date1.getFullYear();
+				      var fullDate2:Date = new Date(DateUtils.displayDate(fullDate));
+				      var Date2:Date = new Date(DateUtils.displayDate(claimDateTo.text));
+				      var result:int = DateUtils.compareDates(Date2,fullDate2);
+	
+					  switch (result)
+					  {
+						case -1:
+						  isValidDate = false;
+						  break;
+					  } 
+	     		 }
+	     		 return isValidDate;
+	        }
+	
+	     	private function checkDateComparer():void
+	     	{
+	     		if (!dateComparer())
+	     		{
+	     			  var message:String = "The From Date is Greater than the To Date. Please Fix your Dates.";
+					  claimDateFrom.setFocus();
+					  Alert.show(message);
+	     		}
+	
+	     	}
+	     	*/
+	     	private function claimDatesInRange():Boolean
+	     	{
+	     		var claimDateFrom:Date = new Date(DateUtils.displayDate(claimDateFromVis.text));
+	     		var claimDateTo:Date = new Date(DateUtils.displayDate(claimDateToVis.text));
+	     		var programEffDate:Date = new Date(DateUtils.displayDate(progEffDate.text));
+	     		var programEndDate:Date = new Date(DateUtils.displayDate(progEndDate.text));
+	     		
+	     		if (claimDateFrom >= programEffDate && claimDateTo <= programEndDate)
+	     		{
+	     		   	return true;
+	     	    }
+	     		else
+	     		{
+	     			return false;
+	     		}
+	     	}
+	    
+	        private function claimFromToDatesValidate():Boolean
+	     	{
+	     		var claimDateFrom:Date = new Date(DateUtils.displayDate(claimDateFromVis.text));
+	     		var claimDateTo:Date = new Date(DateUtils.displayDate(claimDateToVis.text));         		
+	     		if (claimDateFrom >= claimDateTo)
+	     		{
+	     		   	return false;
+	     	    }
+	     		else
+	     		{
+	     			return true;
+	     		}
+	     	}
+	    /* Formatter Functions */
+	    
+	   private function formatDate(item:Object, column:DataGridColumn):String 
+	       {
+	            var str:String = StandardDateFormat.format(item[column.dataField]);
+	            return str;
+	       }
+	   
+	   public function formatCurrency(item:Object, column:DataGridColumn):String 
+	      {
+	   	       var myAmt:String = item[column.dataField];
+	   	       if (myAmt == '0')
+	   	       {
+	   	       	  myAmt = fourDecimalFormat.format('.0000');
+	   	       }
+	   	       else
+	   	       {
+	   	       	myAmt = fourDecimalFormat.format(item[column.dataField]);
+	   	       }
+	   	       
+	   	       return myAmt;
+	   	      
+	      }
+	   public function standardCurrencyFormatter(item:Object, column:DataGridColumn):String
+	      {
+	   	      var amt:String = basicCurrencyFormat.format(item[column.dataField]);
+	   	      return amt;
+	      }
+	   
+	  private function dateFormatter(event:Event):void
+	     {
+	      	var dateText:TextInput = event.currentTarget as TextInput;
+	      	var dateString:String = dateText.text;
+	      	if (dateString.indexOf("/",0) > -1)
+	      	{
+	      		dateText.text = StandardDateFormat.format(dateString);
+	      	}
+	      	else
+	      	{
+	      		var theDate:String = dateString.substring(0,2) + '/' + dateString.substr(2,2) + '/' + dateString.substr(4,4);
+	      		dateText.text = StandardDateFormat.format(theDate);
+	      	}
+	      	
+	     }
+	         
+		private function toggleRecent():void
+		{
+			switch(srch.selectedValue) {
+				case 0:
+					mostRecent.enabled = true;
+					mostRecent.selected = true;
+					break;
+				case 1:
+					mostRecent.selected = false;
+					mostRecent.enabled = false;
+					break;
+				case 2:
+					mostRecent.selected = false;
+					mostRecent.enabled = false;
+					break;
+				case 3:
+					mostRecent.selected = false;
+					mostRecent.enabled = false;
+					break;
+			}			
+			
+		}         
+	   private function search():void
+	     {
+	
+	       searchEnabled = true;
+	     	var searchArgs:Object = {};
+	   	  	searchArgs.broker_Id = brokeridnum.text;
+	   	  	searchArgs.user_id = userId;
+	      	searchArgs.searchType = srch.selectedValue;
+	      	searchArgs.mostRecent = false;
+	      
+			switch(srch.selectedValue) {
+				case 0:
+					if (mostRecent.selected){
+						searchArgs.mostRecent = true;
+					}
+					tabs.selectedIndex = 1;
+					break;
+				case 1:
+					tabs.selectedIndex = 2;
+					break;
+				case 2:
+					tabs.selectedIndex = 3;
+					break;
+				case 3:
+					tabs.selectedIndex = 4;
+					break;
+			}
+	           
+	  		 if (bsProgNum.text != ""){
+	            searchArgs.bsProgramNum = bsProgNum.text;
+	         }
+	  	    if (lwProgNum.text != ""){
+	            searchArgs.lwProgramNum = lwProgNum.text;
+	        }
+	        if (programName.text != ""){
+	        	searchArgs.program = programName.text;
+	        }
+	    	if (distributor.text != ""){
+	       		searchArgs.dist = distributor.text;
+	    	}
+	    	if (dateRange1.text != ""){
+	       		searchArgs.effDate = dateRange1.text;
+	    	}
+	    	if (dateRange2.text != ""){
+	       		searchArgs.endDate = dateRange2.text; 
+	    	}
+	    	if (shiptoNumTxt.text != ""){
+	    		searchArgs.shipToNum = shiptoNumTxt.text;
+	    	}
+			//D33806:Add Invoice search field to One Page Claim form
+			if (invoice.text != ""){
+				searchArgs.invoice = invoice.text;
+			}	    	
+	    	
+	       		//CursorManager.setBusyCursor();
+	  	   		newFormObject.searchClaims(searchArgs); 
+	     } 
+	   
+	   // loops through itemRenderer to find out which checkBoxes were
+	   // checked and deletes the records
+	   private function deleteFormItem():void 
+	   {
+	   	    var formArg:Object = new Object();
+	   	        formArg.user_id = userId;
+	        for (var i:Number = 0; i <  claimsSaved.length; i++) {
+	        	if (claimsSaved[i].isKnown) 
+	        	{
+	        	   formArg.formId = claimsSaved[i].Form_Id;
+	        	   formArg.ClaimFormId = claimsSaved[i].ClaimForm_ID;
+	        	   newFormObject.deleteForm(formArg);
+	        	   newFormObject.deleteItemInfo(formArg);
+	        	}
+	         }
+	    }
+	   
+	   // labelfunction used to calculate the net lbs
+	   // Updates the dataProvider with the amount
+	   private function calcPounds(item:Object, column:DataGridColumn):String
+	   {
+	      var emptyField:String = "";
+	
+	     if (!isNaN(item['Cases_Claimed']) && item['Cases_Claimed'] != null && StringUtil.trim(item['Cases_Claimed']) != "") {
+	     		var pounds:Number = item['Item_Case_Weight'] * item['Cases_Claimed'];
+	            item['Net_Lbs_Claimed'] = pounds;
+	          
+	          return pounds.toString();
+	        }
+	     else {
+	     	return emptyField
+	     }
+	   }
+	    
+	    // labelfunction used to calculate the Adjusted Amount
+	    // Updates dataProvider with the calculated amount
+	    // We may come up with a better way to handle this but it works
+	    private function calcAdjAmount(item:Object, column:DataGridColumn):String 
+	    {
+	    	 
+	    	 var adjustedAmt:String;
+	    	 var emptyField:String = "";
+	    	 var adjTotal:Number = 0;
+	    	 
+	    	 
+	    	  if (item['Cases_Claimed'] != null && StringUtil.trim(item['Cases_Claimed']) != ""  && !isNaN(item['Cases_Claimed'])) 
+	    	  {
+	    	  	adjustedAmt = numFormat.format(Number(item['Net_Lbs_Claimed']) * Number(removeFormatting.format(item['Net_Promo_Amt'])));
+	    	 	item['Adj_Extended_Amt'] = adjustedAmt;
+				
+				totalAmts();
+				totalCases();
+	    	 	//return basicCurrencyFormat.format(adjustedAmt.toPrecision(4).toString());
+	    	 	return basicCurrencyFormat.format(adjustedAmt.toString());
+	
+	    	 }
+	    	 else {
+		    	 	totalAmts();
+		    	 	totalCases();
+	    		 	return emptyField;
+	    	 }
+	    }
+	    
+	    private function saveItems(id:uint):void
+	    	{
+	    	    var itemArgs:Object = new Object();
+	    		var i:Number;
+	    		var item:Object;
+	    		var newId:uint = id;
+	    		itemArgs.id = newId;
+	    		
+	                itemArgs.formId = form_id.text;
+	                itemArgs.user_id = userId;
+	             
+	          //  if (id claimform_id.text != "0") 
+	           // {
+		         //   itemArgs.ClaimFormId = claimform_id.text;
+	           // }
+	            if(saveForm.label == "Save Form") 
+	      		{
+					itemArgs.saveType = "save";
+	            }
+	            if(saveForm.label == "Update Form")
+	      		{
+			        itemArgs.saveType = "update";
+	            }
+	            
+	            for (i = 0; i < claimDetail.length; i++) 
+	            {
+	              // item = claimDetail.getItemAt(i);
+	
+	              itemArgs.itemId = claimDetail[i].item_Id;
+	              itemArgs.program_ItemID = claimDetail[i].Program_ItemId;
+	              itemArgs.claimedCases = claimDetail[i].Cases_Claimed;
+	              itemArgs.poundsClaimed = Number(claimDetail[i].Net_Lbs_Claimed);
+	              itemArgs.adjustedAmt = Number(removeFormatting.format(claimDetail[i].Adj_Extended_Amt));
+	              itemArgs.promoAmt = Number(removeFormatting.format(claimDetail[i].Net_Promo_Amt));
+	              itemArgs.promo_Amt = Number(claimDetail[i].Promo_Amt);
+	              itemArgs.itemDesc = claimDetail[i].Item_Desc;
+	              itemArgs.STD = claimDetail[i].STD;
+	              itemArgs.promoRate = claimDetail[i].Promo_rate;
+	              itemArgs.invoice = claimDetail[i].Invoice_Price;
+	              itemArgs.corpAllow = claimDetail[i].Less_Corp_Allow;
+	              itemArgs.localAllow = claimDetail[i].Less_Local_Allow;
+	              itemArgs.priceList = claimDetail[i].Pricelist;
+	              itemArgs.caseWeight = claimDetail[i].Item_Case_Weight;
+	
+	              // Send Item Data to RemoteObject to Save
+	              newFormObject.saveItems(itemArgs);
+	           
+	         }
+	             
+	        }
+
+
+	   private function checkFormInfo(State:String):void
+	   {
+		   	var args:Object = new Object();
+		   	
+		   	var programNumStart:Number 	= lwProgramNum.text.indexOf(":");
+		   	var programNumLen:Number 	= lwProgramNum.text.length;
+		   	var shipToNumStart:Number  	= dist.text.indexOf(":");
+		   	var shipToNumLen:Number 	= dist.text.length;
+		
+			var programEffDate:Date = new Date(DateUtils.displayDate(progEffDate.text));
+		    var programEndDate:Date = new Date(DateUtils.displayDate(progEndDate.text));
+		    var checkFormErrorMessage:String = '';
+		   	
+			//this.saveForm.enabled = false;
+			if (State == 'send')
+			{
+				this.sendForm.enabled = false;
+			}
+	   		//args.broker_Id 	= brokeridnum.text;
+	   		//args.user_id 		= userId;
+	     	args.programNum 	= lwProgramNum.text.substring(programNumStart+2,programNumLen);
+	        args.shipToNum 		= shipToNum.text.substring(shipToNumStart+1,shipToNumLen);
+	        args.sentDate 		= StandardDateFormat.format(revisedDate.text);            
+	        //args.fromDate 		= StandardDateFormat.format(claimDateFrom.text);
+	        //args.toDate 		= StandardDateFormat.format(claimDateTo.text);
+	        args.fromDate 		= StandardDateFormat.format(claimDateFromVis.text);
+	        args.toDate 		= StandardDateFormat.format(claimDateToVis.text);
+
+	   		checkFormErrorMessage += collectValidations(claimDateFromValidator);
+			checkFormErrorMessage += collectValidations(claimDateToValidator);
+	      
+	      	if (checkFormErrorMessage) 
+			{
+				Alert.show(' Please correct the following errors, Note: These fields will have red boxes around them:\n' +checkFormErrorMessage, 'Errors Found');
+				//this.saveForm.enabled = true;
+				if (State == 'send')
+				{
+					this.sendForm.enabled = true;
+				}	
+				return;
+			}
+	        formState = State;
+	        newFormObject.claimExists(args);
+		}
+	   
+		private function saveFormInfo(state:String,canSave:String = 'noSave'):void 
+		{
+			var formArgs:Object = new Object();
+			var errormessage:String = '';
+			var formState:String = state;
+		 	var caseTotal:Number = 0;
+		 	var amtTotal:Number = Number(removeFormatting.format(extAmtTotal.text));
+		 	var numberCompare:NumberUtils = new NumberUtils();
+		 	var caseTotalTxt:Number = Number(claimed.text);
+		 	var amtTotalTxt:Number = Number(removeFormatting.format(amt.text));
+		 	var numResult:Boolean;
+		 	var promoAmtBlank:Boolean = false;
+		 	var difference:Number;
+		 	var amtDifference:Number;
+		 	var amtResult:Boolean;
+		 	var todaysDate:Date = new Date();
+	  		var item:Object = new Object();
+	  		var claimsInRange:Boolean = claimDatesInRange();
+	  		var claimFromToDate:Boolean = claimFromToDatesValidate();
+	  		Alert.okLabel = "OK";
+			Alert.cancelLabel = "Edit";
+	
+	 		formArgs.formId = form_id.text;
+			formArgs.user_id = userId;
+	
+	  		if (claimform_id.text != "0") 
+	  		{
+	 			formArgs.ClaimFormId = claimform_id.text;
+	 		}
+	 
+	 		formArgs.claimDateFrom = claimDateFromVis.text;
+			formArgs.claimDateTo = claimDateToVis.text;
+			formArgs.inv = inv.text;
+			formArgs.amt = removeFormatting.format(amt.text);
+			formArgs.brokerDate = brkrRecDateVis.text;
+			formArgs.invoiceDate = invDateVis.text;
+			formArgs.casesClaimed = claimed.text;
+	  
+	  		if (formState == "save")
+	  		{
+				formArgs.formState = 1;
+	  		}
+	  		
+	  		if(saveForm.label == "Save Form") 
+	  		{
+	 			formArgs.saveType = "save";
+	  		}
+	  
+	  		if (formState == "send")
+	  		{ 
+	 			formArgs.formState = 2;
+	  		}
+	  		
+	  		if(saveForm.label == "Update Form")
+	  		{
+				formArgs.saveType = "update"; 
+	  		}
+	
+			// Call validation method and store it in a string to display the error message
+	   		errormessage += collectValidations(claimDateFromValidator);
+			errormessage += collectValidations(currencyValidator);
+			errormessage += collectValidations(claimDateToValidator);
+			errormessage += collectValidations(invValidator);
+			errormessage += collectValidations(brkrRecDateValidator);
+			errormessage += collectValidations(invDateValidator);
+			errormessage += collectValidations(casesClaimedValidator);
+	  
+			if (errormessage) 
+			{
+				Alert.show(' Please correct the following errors, Note: These fields will have red boxes around them:\n' +errormessage, 'Errors Found');
+				this.sendForm.enabled = true;
+				return;
+			}
+	
+			// We do a check to make sure the number of cases claimed in the claimed TextInput
+			// Matches the total amount of cases claimed in the item detail
+			// We the data can not be submitted if these 2 values don't match 
+			for (var i:Number = 0; i < claimDetail.length; i++) 
+			{
+				item = claimDetail.getItemAt(i);
+			  	if (item['Cases_Claimed'] != null && StringUtil.trim(item['Cases_Claimed']) != ""  && !isNaN(item['Cases_Claimed']))
+			  	{
+			  		caseTotal = (caseTotal + Number(item['Cases_Claimed']));
+			  	 	if (Number(removeFormatting.format(item['Net_Promo_Amt'])) == .0000)
+			  	    {
+			  	    	promoAmtBlank = true;
+			  	    }
+			  	}
+			}
+	 		difference = (caseTotalTxt - caseTotal);
+	 		amtDifference = (amtTotalTxt - amtTotal);
+	 		numResult = numberCompare.numCompare(caseTotalTxt,caseTotal);
+	 		amtResult = numberCompare.totalsCompare(amtTotalTxt,amtTotal);
+	 
+			if (numResult) 
+			{
+				Alert.show('The amount of cases you claimed does not match the amount of cases claimed in the item section:\n Header Total: ' +caseTotalTxt + '\n Item Total: ' + caseTotal + '\n Difference: ' +difference);
+				return;
+			}
+	 
+			if (!claimsInRange)
+			{
+				Alert.show('The claim dates are not in the Programs Effective Dates. Please adjust the Claim Dates.');
+			    return;
+			}
+			if (!claimFromToDate)
+			{
+				Alert.show('The From Date is Greater than the To Date. Please adjust the Claim Dates.');
+			    return;
+			}
+	 
+			if (!amtResult && canSave != 'save')
+			{
+				Alert.show('The Adjusted total amount in the header is greater than or less than $5.00 the amount in the item detail. \n Click "OK" to continue or "Edit" to fix the Header amount', "Alert", 4|8, this, submitClaim);
+			    return;
+			}
+	 
+			/*
+			RBL D&G16302 [begin] 
+	 		if (!dateComparer())
+	 		{
+	   			var message:String = "The From Date is Greater than the To Date. Please Fix your Dates.";
+	  			claimDateFrom.setFocus();
+	 			Alert.show(message);
+	  			return;
+	 		}
+	 		if (!dateComparer2()) 
+	 		{
+	  			Alert.show("The to date must not be in the future");
+	   			return;
+	 		}
+	 		RBL D&G16302 [end]	
+			*/
+			   
+			if (promoAmtBlank)
+			{
+	   			Alert.show('The Promo Amount cannot be 0 if you entered in a case amount for that item.');
+			}
+			else
+			{
+	 			//CursorManager.setBusyCursor();
+	 			// Send Header Info to RemoteObject to Save
+	   			newFormObject.saveInfo(formArgs);
+			}    
+		} 
+	    
+	   // Check validators and return a message with the name
+	   // And the message to display to the user
+	   public function collectValidations(v:Validator):String 
+	   {
+		  var vResult:ValidationResultEvent = v.validate() ;
+		   
+		    if (vResult.type == ValidationResultEvent.INVALID) 
+		    {
+		       return v.source.id + ' ' + vResult.message + '\n';
+		    }
+			return '';
+	    }
+	  
+	  public function getClaimDetails(event:Event):void 
+	  	{
+	        var formId:Number = event.currentTarget.selectedItem.Form_Id;
+	        var args:Object = new Object();
+	        args.formId = formId;
+	        args.user_id = userId;
+	        form_id.text = formId.toString();
+	        
+	        	if (event.currentTarget == unclaimedFormsGrid)
+	        	{
+	        		newFormObject.getNewClaimDetail(args);
+	        		claimform_id.text = '0';
+	        	}
+	            else
+	            {
+	    			claimform_id.text = event.currentTarget.selectedItem.ClaimForm_ID;
+	    			args.claimFormId = event.currentTarget.selectedItem.ClaimForm_ID;
+	    			newFormObject.getClaimDetails(args);
+	            }
+			emailURL = '/billbacks/common/claim_form_email_create.cfm?emailFormId=' + formId + '&emailClaimFormId=' + claimform_id.text;
+			pdfURL = '/billbacks/common/claim_form_print.cfm?emailFormId=' + formId + '&emailClaimFormId=' + claimform_id.text;
+			//30374-One Page Claim Form - Add a Comment Field
+			comments = '/billbacks/ClaimForm/ClaimForm_Business_Consideration.cfm?FormId=' +formId;
+	      }
+	    
+	    /* Result Events */
+	    
+	    public function getNewClaimsResult(event:ResultEvent):void 
+	    {
+	        claimsNew = event.result;
+	        
+		}
+
+		public function getBrokerIdResult(event:ResultEvent):void 
+		{
+			//Alert.show(String(event.result['brokerIdValue']));
+			if (event.result['brokerIdValue'] != '') 
+			{
+			    brokeridnum.text = String(event.result['brokerIdValue']);
+			    userId = String(event.result['userid']);
+		    }
+			/*
+			else 
+			{
+				Alert.show("You must be a broker to access this form.", "0 Records Found");
+				tabs.enabled = false;
+				saveForm.enabled = false;
+				sendForm.enabled = false;
+				// sentBtnOpen.enabled = false;
+				// findClaimsBtn.enabled = false;
+			}
+			*/
+		}
+		
+		public function getNewClaimDetail_Result(event:ResultEvent):void 
+		{
+		   // Debug.show(event);
+		   claimDetail = event.result;
+		   
+		}
+		
+		public function getClaimDetails_Result(event:ResultEvent):void
+			{
+				claimDetail = event.result;
+		    }
+		
+		public function getPendingClaimsResult(event:ResultEvent):void 
+		{
+			claimsPending = event.result;
+		}
+		
+		public function getSavedClaimsResult(event:ResultEvent):void 
+		{
+			claimsSaved = event.result;
+		}
+		
+		public function getSentClaimsResult(event:ResultEvent):void 
+		{
+			claimsSent = event.result;
+		}
+		
+		public function searchResult(event:ResultEvent):void 
+		{
+			if (event.result.length > 0)
+	        {
+	         	enableButtons(srch.selectedValue.valueOf());
+	         	switch(srch.selectedValue) {
+	        	   case 0:
+	        	            // Alert.show(String(event.result.length));
+	        	            claimsNew = event.result;
+	        	            searchEnabled = false;
+	        	            enableButtons(1);
+	        	            break;
+	        	   case 1:
+	        	            claimsSaved = event.result;
+	        	            searchEnabled = false;
+	        	            enableButtons(2);
+	        	            break;
+	        	   case 2:
+	        	            claimsPending = event.result;
+	        	            searchEnabled = false;
+	        	            enableButtons(3);
+	        	            break;
+	        	   case 3:
+	        	            sentFormsGrid.dataProvider = event.result;
+	        	            searchEnabled = false;
+	        	            enableButtons(4);
+	        	            break;          
+	           } 
+	       }
+	       	else {
+	       	Alert.show("No results returned");
+	       	tabs.selectedIndex = 0;
+	       	searchEnabled = false;
+	       	}  
+	       	     CursorManager.removeBusyCursor();
+		}
+		
+		// saveResult receives the ClaimFormID to pass it into 
+		// the saveItems() method.
+		public function saveResult(event:ResultEvent):void 
+			{
+	            if (event.result['status']) 
+	            {
+	           		myid.text = event.result['id'];
+	           		saveItems(event.result['id']);
+	            }
+	    	}
+	    
+	    public function saveItemResult(event:ResultEvent):void
+	    {
+	    	if (event.result['status']) 
+	    	{
+	    		CursorManager.removeBusyCursor();
+				 setLabels();
+			     resetForm();
+				 claimDetail = new ArrayCollection();
+				 newFormObject.getSavedClaims();
+	    		 msgTxt.text = String(event.result['message']);
+	    		 tabs.selectedIndex = 2; 
+	    	}
+	    }
+	    
+	    public function deleteResult(event:ResultEvent):void 
+	    {
+	    	if (event.result['status']) {
+	    		Alert.show(event.result['message']);
+	    		// actionClose();
+	    		setLabels();
+				resetForm();
+				CursorManager.removeBusyCursor();
+				claimDetail = new ArrayCollection();
+				newFormObject.getSavedClaims();
+	    	}
+	    }
+	    
+	  private function submitClaim(event:CloseEvent):void
+	  {
+	  	if (event.detail == Alert.OK)
+	  	{
+	  		saveFormInfo(formState,'save');
+			this.sendForm.enabled = true;
+	  	}
+	  }
+	  
+	  private function showExistingClaimAlert(iClaimsCount:int, sInterfaceDate:String, sShipNum:String, sPgmNumber:String, sInvRefNumber:String):void
+	  {
+	  	Alert.okLabel = "OK";
+	  	Alert.cancelLabel = "Cancel";
+	  	
+	  	var sClaimExistsMsg:String = iClaimsCount + " matching claims found to the claim you are trying to submit.\n" 
+	  							+ "Latest matching claim, Reference Number: "+ sInvRefNumber + " was sent on " + sInterfaceDate + "\n" 
+	  							+ "To find matching claim search for Program#: "+ sPgmNumber + " and ShipTo#:" + sShipNum + "\n"
+	  							+ "If you would like to continue please click OK, otherwise click Cancel";
+	  	
+	  	Alert.show(sClaimExistsMsg, "Claim Exists", 4|8, this, submitClaim);
+		this.sendForm.enabled = true;
+	  }
+	  
+	  public function claimExistsResult(event:ResultEvent):void
+	  {
+		if (event.result['claimFormID'] != '')
+		{
+			var iClaimsCount:int 		= event.result['count'];
+			var sInterfaceDate:String 	= String(event.result['interfaceDate']);
+			var sShipNum:String 		= String(event.result['shipNum']);
+			var sPgmNumber:String 		= String(event.result['pgmNumber']);
+			var sInvRefNumber:String 	= String(event.result['InvRefNumber']);
+			
+			
+			showExistingClaimAlert(iClaimsCount, sInterfaceDate, sShipNum, sPgmNumber, sInvRefNumber);
+		}
+		else
+		{
+			saveFormInfo(formState);
+			this.sendForm.enabled = true;
+		}
+	  }
+	
+	   //RBL D16131 added [begin] /////////////////////////////////////////////
+	   ////////////////////////////////////////////////////////////////////////
+	   /*
+	   private function manageFromDate(eventObj:CalendarLayoutChangeEvent):void
+	    {
+	    	var hiddenFromDateString:String = new String;
+	    	
+	        // Make sure selectedDate is not null.
+	        
+	        if (eventObj.currentTarget.selectedDate == null) {
+	            return;
+	        }
+	        
+	       
+	        //Access the Date object from the event object.         
+			hiddenFromDateString = (eventObj.currentTarget.selectedDate.getMonth()+1) +
+	            "/" + eventObj.currentTarget.selectedDate.getDate() + "/" +
+	            eventObj.currentTarget.selectedDate.getFullYear(); 
+	        //claimDateFrom.text=hiddenFromDateString;
+	        claimDateFrom.text = StandardDateFormat.format(hiddenFromDateString);
+	        
+	    }
+	    
+	   private function manageToDate(eventObj:CalendarLayoutChangeEvent):void {
+	    	
+	    	var hiddenToDateString:String = new String;
+	    	
+	        // Make sure selectedDate is not null.
+	        if (eventObj.currentTarget.selectedDate == null) {
+	            return;
+	        }
+	
+	        //Access the Date object from the event object.         
+			hiddenToDateString = (eventObj.currentTarget.selectedDate.getMonth()+1) +
+	            "/" + eventObj.currentTarget.selectedDate.getDate() + "/" +
+	            eventObj.currentTarget.selectedDate.getFullYear(); 
+	        //claimDateTo.text=hiddenToDateString; 
+	        claimDateTo.text = StandardDateFormat.format(hiddenToDateString);
+	
+	    }
+	
+	    private function manageBrokerReceivedDate(eventObj:CalendarLayoutChangeEvent):void
+	    {
+	    	var hiddenBrokerReceivedDateString:String = new String;
+	    	
+	        // Make sure selectedDate is not null.
+	        if (eventObj.currentTarget.selectedDate == null) {
+	            return 
+	        }
+	
+	        //Access the Date object from the event object.         
+			hiddenBrokerReceivedDateString = (eventObj.currentTarget.selectedDate.getMonth()+1) +
+	            "/" + eventObj.currentTarget.selectedDate.getDate() + "/" +
+	            eventObj.currentTarget.selectedDate.getFullYear(); 
+	        //brkrRecDate.text=hiddenBrokerReceivedDateString;  
+	        brkrRecDate.text = StandardDateFormat.format(hiddenBrokerReceivedDateString);
+	        
+	    }
+	
+	    private function manageInvoiceDate(eventObj:CalendarLayoutChangeEvent):void
+	    {
+	    	var hiddenInvoiceDateString:String = new String;
+	    	
+	        // Make sure selectedDate is not null.
+	        if (eventObj.currentTarget.selectedDate == null) {
+	            return 
+	        }
+	
+	        //Access the Date object from the event object.         
+			hiddenInvoiceDateString = (eventObj.currentTarget.selectedDate.getMonth()+1) +
+	            "/" + eventObj.currentTarget.selectedDate.getDate() + "/" +
+	            eventObj.currentTarget.selectedDate.getFullYear(); 
+	        //invDate.text=hiddenBrokerReceivedDateString;  
+	        invDate.text = StandardDateFormat.format(hiddenInvoiceDateString);
+	        
+	    }
+		*/
+	    //3
+	    private function fromDateAlertActions(evt:CloseEvent):void
+	    {	
+	    	var nowDate:Date = new Date();
+	    	//claimDateFrom.text="";
+	    	//claimDateFromVis.selectedDate == null;
+	    	//claimDateFromVis.selectedDate == claimDateToVis.selectedDate;
+	    	claimDateFromVis.setStyle("color", 0x990000);
+	    	/*claimDateFromVis.selectableRange = {rangeStart: DateUtils.dateAdd(2,-1,claimDateToVis.selectedDate), 
+	                rangeEnd: claimDateToVis.selectedDate};
+	                */
+	    	//claimDateFromVis.selectableRange="{rangeStart: new Date(2008,5,15), rangeEnd: new Date(2008,5,20)};"      	
+			claimDateFromVis.open();
+			//claimDateFromVis.setFocus();
+			
+	    }
+	    
+	    //4
+	    private function toDateAlertActions(evt:CloseEvent):void
+	    {	
+	    	//claimDateTo.text="";
+	    	claimDateToVis.setStyle("color", 0x990000); 	
+			claimDateToVis.open();
+	    }
+	    
+	    //4B
+	    /*
+	    private function setSelectableRange():void
+	    {	
+	    	//let's set selectableRange to today minus 10 years for starters...
+	    	var nowDate:Date = new Date();
+	    	claimDateFromVis.selectableRange = {rangeStart: DateUtils.dateAdd(2,-10,nowDate), 
+	                rangeEnd: nowDate};
+	    	claimDateToVis.selectableRange = {rangeStart: DateUtils.dateAdd(2,-10,nowDate), 
+	                rangeEnd: nowDate};
+	    }
+	    */
+	    
+	    //5
+	    private function backToBlack():void
+	    {	
+	    	claimDateFromVis.setStyle("color", 0x000000);
+	    	claimDateToVis.setStyle("color", 0x000000);
+	    	brkrRecDateVis.setStyle("color", 0x000000);
+	    	invDateVis.setStyle("color", 0x000000);
+	    }
+	
+		//1
+	    private function manageFromToDateComparison():Boolean
+	    {	
+	     	var fromDate:Date = new Date(claimDateFromVis.text);
+	     	var toDate:Date = new Date(claimDateToVis.text);
+	     	var fromDateString:String = new String(claimDateFromVis.text);
+	     	var toDateString:String = new String(claimDateToVis.text);
+			if (fromDateString.length > 0 && toDateString.length > 0)
+			{
+	 		   	  var areValidDates:Boolean = true;
+			      var result:int = DateUtils.compareDates(fromDate,toDate);
+	
+				  switch (result)
+				  {
+					case -1:
+					  areValidDates = false;
+					  Alert.show("FromDate is greater than ToDate and MUST be less than ToDate","From Date Greater...",4.0,null,fromDateAlertActions);
+					  //compareFromToDates.text="-1";
+					  break;
+					
+					case 0:
+					  areValidDates = false;
+					  Alert.show("FromDate equals ToDate and MUST be less than ToDate","From Date Equal...",4.0,null,fromDateAlertActions);
+					  //compareFromToDates.text="0";
+					  break;
+					  
+					case 1:
+					  areValidDates = true;
+					  manageToNowDateComparison();
+					  //Alert.show("compareDates() FromDate is less than ToDate");
+					  //compareFromToDates.text="1";
+					  break;  
+				  } 
+	
+	     		}
+	     	return areValidDates;
+	    }
+	    
+	    //2
+	    private function manageToNowDateComparison():Boolean
+	    {	
+	     	var toDate:Date = new Date(claimDateToVis.selectedDate);
+	     	var nowDate:Date = new Date();
+	     		
+	 		   if (claimDateFromVis.selectedDate != null && claimDateToVis.selectedDate != null)
+	 		   {
+	 		   	  var areValidDates:Boolean = true;
+			      var result:int = DateUtils.compareDates(toDate,nowDate);
+	
+				  switch (result)
+				  {
+					case -1:
+					  areValidDates = false;
+					  Alert.show("ToDate is greater than Today and MUST be less than or equal to Today","To Date Greater...",4.0,null,toDateAlertActions);
+					  //compareToNowDates.text="-1";
+					  break;
+					
+					case 0:
+					  areValidDates = true;
+					  //compareToNowDates.text="1";
+					  break;
+					  
+					case 1:
+					  areValidDates = true;
+					  //compareToNowDates.text="1";
+					  break;  
+				  } 
+	
+	     		}
+	     	return areValidDates;
+	    }
+	    
+	    private function tomorrow():Date
+	    {	
+	     	var nowDate:Date = new Date();
+	     	var tomorrowDate:Date = DateUtils.dateAdd(0,1,nowDate);
+	
+	     	return tomorrowDate;
+	    }
+	    
+	    // Expand and collpase icons
+	    [Bindable] [Embed(source='assets/collapse.gif')] 
+	    private var iconCollapse:Class;
+	
+	    [Bindable] [Embed(source='assets/expand.gif')] 
+	    private var iconExpand:Class;
+		
+	    private function slideSearchSection():void
+	    {
+	    	if(searchSection.width <= 320){
+	    		searchSection.width = 540;
+	    		minButton.setStyle("icon", iconCollapse);
+	    	}
+	    	else if(searchSection.width > 320){
+	    		searchSection.width = 320;
+	    		minButton.setStyle("icon", iconExpand);
+	    	}        	
+	     
+	    }
+	    
+	    //RBL D16131 added [end] //////////////////////////////////////////////
+	    ///////////////////////////////////////////////////////////////////////
+	    
+	    public function emailClaim():void
+		{
+			navigateToURL(new URLRequest(emailURL));
+		}
+	    
+		// print
+		public function pdfClaim():void
+		{
+			
+			var printObj:Object = new Object();
+			
+			printObj.ProgramNum = lwProgramNum.text;
+			printObj.desc = desc.text;
+			printObj.effDate = progEffDate.text;
+			printObj.endDate = progEndDate.text;
+			printObj.invNum = "Inv/Ref No: " + inv.text;
+			printObj.distributor = dist.text;
+			printObj.shipNum = shipToNum.text;
+			printObj.dest = destination.text;
+			printObj.stateTxt = stateLbl.text;
+			printObj.claimDateFromVis = 'From Date: ' + claimDateFromVis.text;
+			printObj.claimDateToVis = 'To Date: ' + claimDateToVis.text;
+			printObj.claimAmt = 'Amount: ' + amt.text;
+			// printObj.invDate.text = 'Date: ' + invDate.text;
+			printObj.payName = payName.text;
+			printObj.payNum = payToNum.text;
+			printObj.bsNum =  baProgramNum.text;
+			printObj.broker = broker.text;
+			printObj.brokerNum = brokerNum.text;
+			printObj.corpPGM = corpPgm.text;
+			printObj.deductAutosF = deductAutosF.text;
+			printObj.deductAutos = deduct.text;
+			printObj.pullback = pullback.text;
+			
+			printObj.casesTotal = 'Total # Cases Claimed: ' + casesTotal.text;
+			printObj.extAmtTotal = 'Extended Amount Total: ' + extAmtTotal.text;
+			
+			printObj.items = claimDetail;
+			
+			newFormObject.Print(printObj);
+		}
+		public function printpdf(event:ResultEvent):void
+		{
+			navigateToURL(new URLRequest(pdfURL));
+		}
+		//30374-One Page Claim Form - Add a Comment Field START
+		private function commentsURL():void
+		{
+			navigateToURL(new URLRequest(comments));
+		}
+		//30374-One Page Claim Form - Add a Comment Field END
+	]]>
+</mx:Script>
+<mx:RemoteObject id="newFormObject" destination="ColdFusion" source="billbacks.ClaimForm.Services.ClaimService" showBusyCursor="true">
+    	<mx:method name="Print" result="printpdf(event)" fault="Alert.show(event.fault.message)" />
+    	<mx:method name="deleteForm" result="deleteResult(event)" fault="Alert.show(event.fault.message)" />
+    	<mx:method name="deleteItemInfo" fault="Alert.show(event.fault.message)" />
+    	<mx:method name="searchClaims" result="searchResult(event)" fault="Alert.show(event.fault.message)" />
+    	<mx:method name="saveInfo" result="saveResult(event)" fault="Alert.show(event.fault.message)" />
+    	<mx:method name="claimExists" result="claimExistsResult(event)" fault="Alert.show(event.fault.message)" />
+    	<mx:method name="saveItems" result="saveItemResult(event)" fault="Alert.show(event.fault.message)" />
+    	<mx:method name="getNewClaims" result="getNewClaimsResult(event)" fault="Alert.show(event.fault.message)">
+    		<mx:arguments>
+    			<broker_Id>{brokeridnum.text}</broker_Id>
+    			<user_id>{userId}</user_id>
+    		</mx:arguments>
+    	</mx:method>
+    	<mx:method name="getSavedClaims" result="getSavedClaimsResult(event)" fault="Alert.show(event.fault.message)">
+    		<mx:arguments>
+    			<broker_Id>{brokeridnum.text}</broker_Id>
+    			<user_id>{userId}</user_id>
+    		</mx:arguments>
+    	</mx:method>
+    	<mx:method name="getSentClaims" result="getSentClaimsResult(event)" fault="Alert.show(event.fault.message)">
+    		<mx:arguments>
+    			<broker_Id>{brokeridnum.text}</broker_Id>
+    			<user_id>{userId}</user_id>
+    		</mx:arguments>
+    	</mx:method>
+    	<mx:method name="getPendingClaims" result="getPendingClaimsResult(event)" fault="Alert.show(event.fault.message)">
+    		<mx:arguments>
+    			<broker_Id>{brokeridnum.text}</broker_Id>
+    			<user_id>{userId}</user_id>
+    		</mx:arguments>
+    	</mx:method>
+    	<mx:method name="getBrokerId" result="getBrokerIdResult(event)" fault="Alert.show(event.fault.message)"/>
+    	<mx:method name="getNewClaimDetail" result="getNewClaimDetail_Result(event)" fault="Alert.show(event.fault.message)"/>
+    	<mx:method name="getClaimDetails" result="getClaimDetails_Result(event)" fault="Alert.show(event.fault.message)"/>
+    </mx:RemoteObject>
+     <!-- mx:ArrayCollection id="savedItems" source="{ArrayUtil.toArray(newFormObject.getSavedClaims.lastResult.source)}" / -->
+	 <!-- mx:ArrayCollection id="pendingClaims" source="{ArrayUtil.toArray(newFormObject.getPendingClaims.lastResult.source)}" / -->
+	 <!-- mx:ArrayCollection id="sentClaims" source="{ArrayUtil.toArray(newFormObject.getSentClaims.lastResult.source)}" / -->
+	 <!-- mx:ArrayCollection id="newClaims" source="{ArrayUtil.toArray(newFormObject.getNewClaims.lastResult.source)}" / -->
+
+	<!-- Here starts the Display -->
+	<mx:VBox right="15" left="15" bottom="5" top="5" verticalGap="10" id="vBox">
+    <MinMaxPanel id="header" width="100%" height="260" borderStyle="none" panelTitle="Header" color="#FFFFFF" 
+    	         showMaximize="false" dropShadowEnabled="true" showMinimize="true"
+    	         maxWidth="{vBox.width}"
+    	         >
+      <mx:HDividedBox id="DividerBox" bottom="2" top="2" left="2" right="2" >
+      
+      <mx:Canvas id="searchSection" width="320" height="100%" borderStyle="none" borderColor="#cc0000" backgroundColor="#FFE57A"
+      	verticalScrollPolicy="off" horizontalScrollPolicy="off" >
+      
+      <mx:LinkButton id="minButton" click="slideSearchSection();" icon="{iconExpand}" toolTip="click to expand/collapse" x="1" y="1" width="12" height="20" />
+            
+      <mx:TabNavigator id="tabs" width="100%" height="100%"
+      	tabEnabled="false" x="15" bottom="2" top="0" color="#000000" 
+      	cornerRadius="0" fontSize="10" borderStyle="none" borderColor="#c00cc" fontFamily="Arial" 
+      	dropShadowEnabled="true" tabStyleName="tabStyle" change="getForms(event);">
+      	
+		<mx:Canvas label="Search" width="100%" height="100%" backgroundColor="#FFE57A" verticalScrollPolicy="off" horizontalScrollPolicy="off" >
+			<mx:VBox horizontalGap="-4" verticalGap="-4" right="5" left="5" fontFamily="Arial" fontSize="10" bottom="5" top="5">
+				<mx:HBox width="100%" height="40" verticalGap="-2">
+					<mx:VBox verticalGap="-2" width="107">
+				 <mx:Label text="Program Name:" fontSize="10" fontWeight="bold"/>
+						<mx:TextInput id="programName" height="20" width="100"/>
+					</mx:VBox>
+					<mx:VBox verticalGap="-2">
+				 <mx:Label text="LW Program #:" fontWeight="bold" fontSize="10"/>
+						<mx:TextInput height="20" id="lwProgNum" width="65"/>
+					</mx:VBox>
+					<mx:VBox verticalGap="-2">
+				  <mx:Label text="BSA Program #:" fontSize="10" fontWeight="bold"/>
+						<mx:TextInput height="20" id="bsProgNum" width="65"/>
+					</mx:VBox>
+				</mx:HBox>
+				<mx:HBox width="100%" height="40" verticalGap="-2">
+					<mx:VBox verticalGap="-2" width="107">
+						<mx:Label text="Distributor:" fontSize="10" fontWeight="bold"/>
+						<mx:TextInput id="distributor" height="20" width="100"/>
+					</mx:VBox>
+					<mx:VBox verticalGap="-2" width="77">
+				 		<mx:Label text="Ship To #:" fontWeight="bold" fontSize="10"/>
+						<mx:TextInput height="20" id="shiptoNumTxt" width="65"/>
+					</mx:VBox>
+					<!-- D33806:Add Invoice search field to One Page Claim form -->
+					<mx:VBox verticalGap="-2">
+						<mx:Label text="Inv/Ref No:" fontWeight="bold" fontSize="10"/>
+						<mx:TextInput height="20" id="invoice" width="65"/>
+					</mx:VBox>
+				</mx:HBox>	
+				<mx:HBox width="100%" height="40">
+					<mx:VBox height="40" width="101" verticalGap="-4">
+						<mx:Label text="Program Eff Date:" fontSize="10" fontWeight="bold"/>
+						<mx:DateField height="20" id="dateRange1" dateChooserStyleName="searchPanel"/>
+					</mx:VBox>
+					<mx:VBox height="100%" width="104" verticalGap="-4">
+						<mx:Label text="Program End Date:" fontSize="10" fontWeight="bold"/>
+						<mx:DateField height="20" id="dateRange2" dateChooserStyleName="searchPanel"/>
+					</mx:VBox>
+				</mx:HBox>
+				<mx:Label text="Search Type:" fontWeight="bold"/>
+				<mx:HBox>
+					<mx:RadioButtonGroup id="srch" change="toggleRecent();" />
+					<mx:RadioButton label="New" id="newBtn" value="0" fontSize="10" width="72" groupName="srch" selected="true" />
+					<mx:RadioButton label="Saved" id="saved" value="1" selected="false" fontSize="10" groupName="srch"/>
+					<mx:RadioButton label="Pending" id="pending" fontSize="10" width="72" value="2" groupName="srch" selected="false" />
+					<mx:RadioButton label="Sent" id="sent" value="3" groupName="srch" selected="false" fontSize="10" />
+			  	</mx:HBox>
+				<mx:HBox width="100%" horizontalGap="4" verticalAlign="middle" height="37" horizontalAlign="left">
+					<mx:Button label="Find Claims" id="findClaimsBtn" click="search();"/>
+					<mx:Button label="Clear Search" click="resetForm();" />
+					<mx:CheckBox id="mostRecent" selected="true" fontSize="10" label="Only Most Recent" />
+				</mx:HBox>
+			</mx:VBox>
+		</mx:Canvas>
+        <mx:Canvas label="New" tabEnabled="false" width="100%" height="100%">
+          <mx:DataGrid id="unclaimedFormsGrid" 
+          			  dataProvider="{claimsNew}" 
+          	          change="getClaimDetails(event);
+          	          fillLabels(unclaimedFormsGrid);"
+          	          dataTipFunction="showTip" 
+          	          editable="false" 
+          	          right="5" left="5" bottom="5" top="2"
+         			  color="#000000"
+         			  fontSize="8" fontFamily="Arial" 
+          	          headerStyleName="gridHeader" 
+          	          borderStyle="none"
+          	          resizableColumns="true">
+								<mx:columns>
+								 <mx:Array>
+								 	<mx:DataGridColumn headerText="BA Pgm #" dataField="Ba_Id" color="#000000" width="50" />
+									<mx:DataGridColumn headerText="LW Pgm #" dataField="Program_Number" width="50"/>
+									<mx:DataGridColumn headerText="Program Name" dataField="Desc_Number" width="150"/>
+									<mx:DataGridColumn headerText="Ship To" dataField="Ship_Num" visible="true" width="75" />
+			                		<mx:DataGridColumn headerText="Distributor" dataField="Cust_Name" visible="true" width="100" />
+									<mx:DataGridColumn dataField="PayTo_Num" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="PayTo_Name" headerText="Pay To" visible="true" width="100" id="PayToName" />
+									<mx:DataGridColumn headerText="Eff Date" dataField="BeginDate" visible="true" width="50" labelFunction="formatDate" />
+									<mx:DataGridColumn headerText="End Date" dataField="EndDate" visible="true" width="50" labelFunction="formatDate"/>
+									<mx:DataGridColumn dataField="Broker_Id" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="Broker_Name" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="Address" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="State" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="Form_Id" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="Autos_Fixed" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="Autos_Deduct" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="Autos_Pullback" visible="false" width="0" />
+			      					<mx:DataGridColumn dataField="Sent_Date" headerText="Revised Date" showDataTips="true" visible="true" width="50" labelFunction="formatDate" />
+			      					</mx:Array>
+								</mx:columns>
+							</mx:DataGrid>
+        </mx:Canvas>
+        <mx:Canvas label="Saved" tabEnabled="false" width="100%" height="100%">
+         <mx:DataGrid id="savedFormsGrid" 
+         	          dataProvider="{claimsSaved}" 
+         	          change="getClaimDetails(event);
+         	          fillLabels(savedFormsGrid);"
+         	          dataTipFunction="showTip" 
+          	          editable="false" 
+          	          right="5" left="5" bottom="5" top="2"
+         			  color="#000000"
+         			  fontSize="8" fontFamily="Arial" 
+          	          headerStyleName="gridHeader" 
+          	          borderStyle="none"
+          	          resizableColumns="true">
+						  <mx:columns>
+						   <mx:Array>
+						   	<mx:DataGridColumn headerText="Delete" dataField="isKnown" itemRenderer="{CheckBoxItemRenderer}" width="45" />
+						   	<mx:DataGridColumn dataField="Ba_Id" headerText="BA Pgm #" width="50"  />
+				            <mx:DataGridColumn dataField="Program_Number" headerText="LW Pgm #"  width="50"/>
+				            <mx:DataGridColumn dataField="Desc_Number" headerText="Program Name" width="150"  />
+				            <mx:DataGridColumn dataField="Ship_Num" headerText="Ship To" visible="true" width="75" />
+			                <mx:DataGridColumn dataField="Cust_Name" headerText="Distributor" visible="true" width="100" />
+				            <mx:DataGridColumn dataField="BeginDate" headerText="Eff Date" visible="true" width="50" labelFunction="formatDate"/>
+			                <mx:DataGridColumn dataField="EndDate" headerText="End Date" visible="true" width="50" labelFunction="formatDate"/>
+			                <mx:DataGridColumn dataField="PayTo_Num" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="PayTo_Name" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Broker_Id" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Broker_Name" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Address" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="State" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Form_Id" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="ClaimForm_ID" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Autos_Fixed" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Autos_Deduct" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Autos_Pullback" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Claim_Date_From" visible="false" width="0" labelFunction="formatDate" />
+			      		    <mx:DataGridColumn dataField="Claim_Date_To" visible="false" width="0" labelFunction="formatDate" />
+			                <mx:DataGridColumn dataField="Claim_Amt" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="casesClaimed" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Inv_Ref_Num" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Broker_Rcv_Date" visible="false" width="0" labelFunction="formatDate" />
+			                <mx:DataGridColumn dataField="Inv_Date" visible="false" width="0" labelFunction="formatDate" />
+			                <mx:DataGridColumn dataField="Saved_Date" headerText="Saved Date" showDataTips="true" visible="true" width="50" labelFunction="formatDate"  />
+					    </mx:Array>
+					   </mx:columns>
+					  </mx:DataGrid>
+        </mx:Canvas>
+        <mx:Canvas label="Pending" width="100%" height="100%" >
+         <mx:DataGrid id="pendingFormsGrid" 
+         			  change="getClaimDetails(event);
+         			  fillLabels(pendingFormsGrid);" 
+         			  dataProvider="{claimsPending}" 
+         			  dataTipFunction="showTip" 
+          	          editable="false" 
+          	          right="5" left="5" bottom="5" top="2"
+         			  color="#000000"
+         			  fontSize="8" fontFamily="Arial"  
+          	          headerStyleName="gridHeader" 
+          	          borderStyle="none"
+          	          resizableColumns="true">
+						  <mx:columns>
+						   <mx:Array>
+                            <mx:DataGridColumn dataField="Ba_Id" headerText="BA Pgm #" width="50" />
+				            <mx:DataGridColumn dataField="Program_Number" headerText="LW Pgm #" width="50"/>
+				            <mx:DataGridColumn dataField="Desc_Number" headerText="Program Name" width="150" />
+				            <mx:DataGridColumn dataField="Ship_Num" headerText="Ship To" visible="true" width="75" />
+			                <mx:DataGridColumn dataField="Cust_Name" headerText="Distributor" visible="true" width="100" />
+				            <mx:DataGridColumn dataField="BeginDate" headerText="Eff Date" visible="true" width="50" labelFunction="formatDate"/>
+			                <mx:DataGridColumn dataField="EndDate" headerText="End Date" visible="true" width="50" labelFunction="formatDate"/>
+			                <mx:DataGridColumn dataField="PayTo_Num" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="PayTo_Name" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Broker_Id" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Broker_Name" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Address" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="State" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Form_Id" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="ClaimForm_ID" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Autos_Fixed" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Autos_Deduct" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Autos_Pullback" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Claim_Date_From" visible="false" width="0" labelFunction="formatDate" />
+			      		    <mx:DataGridColumn dataField="Claim_Date_To" visible="false" width="0" labelFunction="formatDate" />
+			                <mx:DataGridColumn dataField="Claim_Amt" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="casesClaimed" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Inv_Ref_Num" visible="false" width="0" />
+			                <mx:DataGridColumn dataField="Broker_Rcv_Date" visible="false" width="0" labelFunction="formatDate" />
+			                <mx:DataGridColumn dataField="Inv_Date" visible="false" width="0" labelFunction="formatDate" />
+			                <mx:DataGridColumn dataField="Saved_Date" headerText="Saved Date" showDataTips="true" visible="true" width="50" labelFunction="formatDate"  />
+					    </mx:Array>
+					   </mx:columns>
+					  </mx:DataGrid>
+        </mx:Canvas>
+        <mx:Canvas label="Sent" width="100%" height="100%" >
+         <mx:DataGrid id="sentFormsGrid" 
+         			  change="getClaimDetails(event);
+         			  fillLabels(sentFormsGrid);" 
+         			  dataProvider="{claimsSent}" 
+         			  dataTipFunction="showTip" 
+          	          editable="false" 
+          	          right="5" left="5" bottom="5" top="2"
+         			  color="#000000"
+         			  fontSize="8" fontFamily="Arial" 
+          	          headerStyleName="gridHeader" 
+          	          borderStyle="none"
+          	          resizableColumns="true">
+						  <mx:columns>
+						   <mx:Array>
+                                  <mx:DataGridColumn dataField="Ba_Id" headerText="BA Pgm #" width="50" />
+				                  <mx:DataGridColumn dataField="Program_Number" headerText="LW Pgm #" width="50"/>
+				                  <mx:DataGridColumn dataField="Desc_Number" headerText="Program Name" width="150" />
+				                  <mx:DataGridColumn dataField="Ship_Num" headerText="Ship To" visible="true" width="75" />
+			                      <mx:DataGridColumn dataField="Cust_Name" headerText="Distributor" visible="true" width="100" />
+				                  <mx:DataGridColumn dataField="BeginDate" headerText="Eff Date" visible="true" width="50" labelFunction="formatDate"/>
+			                      <mx:DataGridColumn dataField="EndDate" headerText="End Date" visible="true" width="50" labelFunction="formatDate"/>
+			                      <mx:DataGridColumn dataField="CheckNum" headerText="Check #" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="CheckDate" headerText="Check Date" visible="false" width="0" labelFunction="formatDate" />
+			                      <mx:DataGridColumn dataField="PayTo_Num" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="PayTo_Name" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Broker_Id" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Broker_Name" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Address" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="State" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Form_Id" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Autos_Fixed" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Autos_Deduct" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Autos_Pullback" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Claim_Date_From" visible="false" width="0" labelFunction="formatDate" />
+			      				  <mx:DataGridColumn dataField="Claim_Date_To" visible="false" width="0" labelFunction="formatDate" />
+			                      <mx:DataGridColumn dataField="Claim_Amt" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Inv_Ref_Num" visible="false" width="0" />
+			                      <mx:DataGridColumn dataField="Broker_Rcv_Date" visible="false" width="0" labelFunction="formatDate" />
+			                      <mx:DataGridColumn dataField="Inv_Date" visible="false" width="0" labelFunction="formatDate" />
+			                      <mx:DataGridColumn dataField="InterfaceDate" headerText="Sent Date" showDataTips="true" visible="true" width="50" labelFunction="formatDate" />
+					    </mx:Array>
+					   </mx:columns>
+					  </mx:DataGrid>
+        </mx:Canvas>
+      </mx:TabNavigator>
+      </mx:Canvas>
+            
+      
+      <!-- HEADER INFO -->
+      <mx:VBox id="Headerinfo" paddingLeft="10" width="100%" height="100%" verticalScrollPolicy="off" >
+		<mx:HBox width="100%" horizontalGap="10" horizontalAlign="left">
+			<mx:VBox height="100%" verticalGap="-2">
+				<mx:Text id="lwProgramNum"/>
+				<mx:Text id="baProgramNum"/>
+				<mx:Text id="payToNum" />
+			</mx:VBox>
+			<mx:VBox height="100%" verticalGap="-2">
+				<mx:Text id="desc" selectable="true" condenseWhite="true"/>
+				<mx:Text styleName="boldTxt" id="payName" textAlign="left"/>
+				<mx:Spacer height="20"/>
+			</mx:VBox>
+			<mx:VBox height="100%" verticalGap="-2">
+				<mx:Text id="progEffDate"/>
+				<mx:Text id="progEndDate" />
+				<mx:Text id="revisedDate" />
+			</mx:VBox>
+		</mx:HBox>
+		<mx:HBox width="100%" horizontalGap="1" paddingLeft="0" horizontalAlign="left">
+			<mx:VBox height="76" paddingLeft="0" paddingTop="0" paddingRight="0" paddingBottom="0" verticalAlign="middle" verticalGap="1" width="188">
+				<mx:HBox>
+					  <!-- RBL D16131 added [begin]
+					  <mx:Text text="From: (mmddyy)" textAlign="right"/>
+					  <mx:TextInput id="claimDateFrom" width="80" height="20" focusOut="dateFormatter(event);claimDateFromValidator.validate()" maxChars="10" color="#000000" tabIndex="1"/>
+					  -->
+					<mx:Text text="From Date" width="80" />
+					<!--<mx:TextInput id="claimDateFrom" width="0" visible="false" editable="{isEnabled}" />-->
+					<mx:DateField id="claimDateFromVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="1" change="manageFromToDateComparison();backToBlack();" showToday="true" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" editable="true" />
+					<!--<mx:DateField id="claimDateFromVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="1" change="manageFromDate(event);manageFromToDateComparison();backToBlack();" showToday="true" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" editable="true" />-->
+					<!-- RBL D16131 added [end] -->
+				</mx:HBox>
+				<mx:HBox>
+					<!-- RBL D16131 added [begin]
+					<mx:Text text="To: (mmddyy)" textAlign="right" width="81"/>
+					<mx:TextInput id="claimDateTo" width="80" height="20" focusOut="dateFormatter(event);checkDateComparer();" maxChars="10" color="#000000" tabIndex="2"/>
+					-->
+					<mx:Text text="To Date" width="80" />
+					<!--<mx:TextInput id="claimDateTo" width="0" visible="false" editable="{isEnabled}" />-->
+					<mx:DateField id="claimDateToVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="2" change="manageFromToDateComparison();backToBlack();" showToday="true" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" editable="true" />
+					<!--<mx:DateField id="claimDateToVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="2" change="manageToDate(event);manageFromToDateComparison();backToBlack();" showToday="true" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" editable="true" />-->
+					<!-- RBL D16131 added [end] -->
+				</mx:HBox>
+			</mx:VBox>
+			<mx:VBox height="100%" verticalGap="1" verticalAlign="bottom" width="208">
+				<mx:HBox>
+					<mx:Text text="Amount:" width="77" textAlign="right"/>
+					<mx:TextInput id="amt" width="70" height="20" color="#000000" focusOut="formatNumber(event);" editable="{isEnabled}" tabIndex="3"/>				  
+				</mx:HBox>  
+				<mx:HBox>
+					<mx:Text text="Cases Claimed:"  />
+					<mx:TextInput id="claimed" width="70" height="20" color="#000000" editable="{isEnabled}" tabIndex="4" />
+				</mx:HBox>	  
+				<mx:HBox>
+					<mx:Text text="Inv/Ref No:" width="78" textAlign="right"/>
+					<mx:TextInput id="inv" width="120" height="20" color="#000000" editable="{isEnabled}" tabIndex="5"/>
+				</mx:HBox>	  
+			</mx:VBox>
+			<mx:VBox height="100%" width="229" verticalGap="1" verticalAlign="middle">
+				<mx:HBox> 
+					<mx:Text text="Bkr Rcvd Date" width="80" />
+					<!--<mx:TextInput id="brkrRecDate" width="0" visible="false" editable="{isEnabled}"/>-->
+					<!--<mx:DateField id="brkrRecDateVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="6" showToday="true" change="manageBrokerReceivedDate(event);backToBlack();" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" />-->
+					<mx:DateField id="brkrRecDateVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="6" showToday="true" change="backToBlack();" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" editable="true" />
+				</mx:HBox>
+				<mx:HBox>
+					<mx:Text text="Inv Date" width="80" />
+					<!--<mx:TextInput id="invDate" width="0" visible="false" editable="{isEnabled}"/>-->
+					<!--<mx:DateField id="invDateVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="7" showToday="true" change="manageInvoiceDate(event);backToBlack();" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" />-->
+					<mx:DateField id="invDateVis" dateChooserStyleName="searchPanel" formatString="MM/DD/YY" tabIndex="7" showToday="true" change="backToBlack();" disabledRanges="{[{rangeStart:tomorrow()}]}" enabled="{isEnabled}" textAlign="right" editable="true" />
+				</mx:HBox>
+			</mx:VBox>
+		</mx:HBox>
+		<mx:HBox width="100%">
+			<mx:VBox height="100%" verticalGap="-2">
+				<mx:Text styleName="boldTxt" id="dist" />
+				<mx:Text id="shipToNum" />
+				<mx:Text id="destination" />
+				<mx:Text id="stateLbl" />
+			</mx:VBox>
+			<mx:VBox height="100%" verticalGap="-2">
+				<mx:Text text="Purchasing Group:" fontWeight="bold"/>
+				<mx:Text id="corpPgm" />
+				<mx:Text id="deductAutosF" />
+				<mx:Text id="deduct" />
+			</mx:VBox>
+			<mx:VBox height="100%" verticalGap="-2">
+				<mx:Spacer height="15"/>
+				<mx:Text id="broker" />
+				<mx:Text id="brokerNum" />
+				<mx:Text id="pullback" />
+			</mx:VBox>
+		</mx:HBox>
+      </mx:VBox>
+      </mx:HDividedBox>
+    </MinMaxPanel>
+    
+    <!-- DETAILS SECTION -->
+    <MinMaxPanel width="100%" height="100%" maxHeight="{vBox.height-35}" borderStyle="none" id="details" panelTitle="Item Detail" color="#FFFFFF" maxWidth="{vBox.width}" showMaximize="false"
+				minimized="header.maximize(false)"
+				normalized="header.normalize(false)"
+				showMinimize="false">
+     <mx:VBox right="0" left="0" bottom="5" top="0" tabEnabled="false">
+		<mx:DataGrid id="claimFormGrid" liveScrolling="true" 
+			         dataProvider="{claimDetail}" width="100%" 
+			         height="100%" 
+			         color="#000000" editable="{isEnabled}" 
+			         fontFamily="Arial" 
+			         paddingBottom="0" paddingTop="0"
+			         tabEnabled="true" tabIndex="8"
+			         >
+			<mx:columns>
+				<mx:DataGridColumn headerText="CAT NO." dataField="Program_ItemId" headerStyleName="redDataGridHeader" width="48" editable="false" />
+				<mx:DataGridColumn headerText="Desc" dataField="Item_Desc" width="100" headerStyleName="redDataGridHeader" editable="false" />
+				<mx:DataGridColumn headerText="Net Wt" dataField="Item_Case_Weight" width="45" headerStyleName="redDataGridHeader" editable="false" />
+				<mx:DataGridColumn headerText="# Cases Claimed" dataField="Cases_Claimed" editable="{isEnabled}" width="95" headerStyleName="greenDataGridHeader"/>
+				<mx:DataGridColumn headerText="Net Lbs Claimed" dataField="Net_Lbs_Claimed" width="90" labelFunction="calcPounds" headerStyleName="redDataGridHeader" editable="false"/>
+				<mx:DataGridColumn headerText="STD" dataField="STD" editable="false" headerStyleName="redDataGridHeader" width="30"/>
+				<mx:DataGridColumn headerText="Rebate Rate" dataField="Promo_rate" headerStyleName="redDataGridHeader" labelFunction="formatCurrency" editable="false"/>
+				<mx:DataGridColumn headerText="Base Price" dataField="Invoice_Price" headerStyleName="redDataGridHeader" labelFunction="formatCurrency" editable="false"/>
+				<mx:DataGridColumn headerText="(If Fixed) Promo Amt" dataField="Promo_Amt" headerStyleName="redDataGridHeader" labelFunction="formatCurrency" editable="false"/>
+				<mx:DataGridColumn headerText="Pricelist" dataField="Price_List" headerStyleName="redDataGridHeader" editable="false"/>
+				<mx:DataGridColumn dataField="Less_Corp_Allow" id="Less_Corp_Allow" headerStyleName="redDataGridHeader" labelFunction="formatCurrency" editable="false"/>
+				<mx:DataGridColumn dataField="Less_Local_Allow" id="Less_Local_Allow" headerStyleName="redDataGridHeader" labelFunction="formatCurrency" editable="false"/>
+				<mx:DataGridColumn headerText="Promo Amt" dataField="Net_Promo_Amt" headerStyleName="greenDataGridHeader" editable="{isEnabled}" labelFunction="formatCurrency" />
+				<mx:DataGridColumn headerText="Adjusted Ext Amt Claimed" dataField="Adj_Extended_Amt" headerStyleName="redDataGridHeader" labelFunction="calcAdjAmount" editable="false"/> 
+			 	<mx:DataGridColumn headerText="itemid" dataField="item_Id" visible="false" editable="false" width="0" />
+			 	<mx:DataGridColumn headerText="claimformfk" dataField="ClaimFormFK" visible="false" editable="false" width="0"/>
+			</mx:columns>
+		</mx:DataGrid>
+
+		<mx:HBox width="100%">
+			<mx:Label text="Total # Cases Claimed:" color="#000000"/>		
+			<mx:Text text="0" width="116" id="casesTotal"/><mx:TextInput id="myid" visible="false" color="#000000"/>
+		</mx:HBox>
+		<mx:HBox width="100%">
+			<mx:Label text="Extended Amount Total:" color="#000000"/>		
+			<mx:Text text="0" width="116" id="extAmtTotal"/>
+		</mx:HBox>
+		<mx:HBox width="100%" horizontalAlign="center" horizontalGap="1" verticalAlign="bottom" height="22">
+			<mx:Button id="saveForm" visible="true" label="Save Form" click="checkFormInfo('save')" tabIndex="9"/>
+			<mx:Button id="sendForm" label="Send Form" click="checkFormInfo('send')"/>
+			<mx:Button id="deleteFormBtn" label="Delete" click="deleteFormItem();"/>
+			<!--<mx:Button id="printBtn" icon="@Embed('/assets/PrintImg.gif')" labelPlacement="left" label="Print" click="printClaim();"/>-->
+			<mx:Button id="pdfBtn" label="PDF" click="pdfClaim();"/>
+			<mx:Button id="emailFormBtn" label="Email" click="emailClaim();" />
+			<mx:Button id="Comments" visible="true" label="Comments" click="commentsURL()"/><!--30374-One Page Claim Form - Add a Comment Field-->
+		</mx:HBox>
+		<mx:HBox horizontalAlign="center" width="100%">
+			<mx:Text fontFamily="Arial" fontSize="12" color="#FF0000" id="msgTxt"/>
+		</mx:HBox>
+	 </mx:VBox>
+	    <mx:TextInput id="brokeridnum" height="0" width="0" visible="false" tabEnabled="false"/>
+		<mx:TextInput id="form_id" height="0" width="0" text="0" visible="false" tabEnabled="false"/>
+		<mx:TextInput id="claimform_id" height="0" text="0" color="#000000" visible="FALSE" tabEnabled="false"/>
+    </MinMaxPanel>
+  </mx:VBox>
+</mx:Application>

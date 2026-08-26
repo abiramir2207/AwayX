@@ -1,0 +1,533 @@
+===== QUERY: getProgramSettngs =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qryIsLumpsumProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryIsLumpsumProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqryIsLumpsumProgram>
+	<cftry>
+		<cfset qryIsLumpsumProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryIsLumpsumProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryIsLumpsumProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getApprovalMethod =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetApprovalMethod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetApprovalMethod>
+	<cftry>
+		<cfset getApprovalMethod = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_target_enabled"
+			}), "program_margin_target_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetApprovalMethod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetApprovalMethod>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getUserPosition =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getThisProgramsGenericProgramType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetThisProgramsGenericProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetThisProgramsGenericProgramType>
+	<cftry>
+		<cfset getThisProgramsGenericProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#getProgramInfo.PROGRAMTYPE_ID#",
+				"generic_type" = "eq.Distributor Trade/Shelter",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProgramsGenericProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProgramsGenericProgramType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getParentInformation =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getParentRERLB =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetParentRERLB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrebateproductsinformationforparentprogram")>
+<cfif useLakebaseForgetParentRERLB>
+	<cftry>
+		<cfset getParentRERLB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrebateproductsinformationforparentprogram", {
+				"bsa_foodservice_items_master_id" = "eq.#getRebateProductsInformationForThisProgram.BSA_Foodservice_Items_Master_ID#",
+				"select" = "rer_lb"
+			}), "rer_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentRERLB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentRERLB>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getParentGRRLB =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetParentGRRLB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getgrowthproductsinformationforparentprogram")>
+<cfif useLakebaseForgetParentGRRLB>
+	<cftry>
+		<cfset getParentGRRLB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getgrowthproductsinformationforparentprogram", {
+				"bsa_foodservice_items_master_id" = "eq.#getGrowthProductsInformationForThisProgram.BSA_Foodservice_Items_Master_ID#",
+				"select" = "grr_lb"
+			}), "grr_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentGRRLB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentGRRLB>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetMyPositionsListSameAsCreating_User_Position_ID =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Contract_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForContract_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForContract_Details>
+	<cftry>
+		<cfset Contract_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"select" = "contract_number,contract_title,contract_start_date,contract_end_date"
+			}), "contract_number,contract_title,contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForContract_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForContract_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetMarginView =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetMarginView = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_view")>
+<cfif useLakebaseForGetMarginView>
+	<cftry>
+		<cfset GetMarginView = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_view", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMarginView = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMarginView>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getOffInvoiceProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOffInvoiceProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetOffInvoiceProducts>
+	<cftry>
+		<cfset getOffInvoiceProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.8"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOffInvoiceProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOffInvoiceProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getOffInvoiceMargins =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOffInvoiceMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetOffInvoiceMargins>
+	<cftry>
+		<cfset getOffInvoiceMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getOffInvoiceProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOffInvoiceMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOffInvoiceMargins>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFixedPriceProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetFixedPriceProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetFixedPriceProducts>
+	<cftry>
+		<cfset getFixedPriceProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedPriceProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedPriceProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFixedPriceMargins =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetFixedPriceMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetFixedPriceMargins>
+	<cftry>
+		<cfset getFixedPriceMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getFixedPriceProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedPriceMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedPriceMargins>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getRebateProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRebateProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetRebateProducts>
+	<cftry>
+		<cfset getRebateProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRebateProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRebateProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getRebateMargins =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRebateMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetRebateMargins>
+	<cftry>
+		<cfset getRebateMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getRebateProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRebateMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRebateMargins>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getTPAadjstment =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetTPAadjstment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrebateproductsinformationforthisprogram")>
+<cfif useLakebaseForgetTPAadjstment>
+	<cftry>
+		<cfset getTPAadjstment = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrebateproductsinformationforthisprogram", {
+				"contract_products_id" = "eq.#ThisContractProductID#",
+				"select" = "parent_rer_lb"
+			}), "parent_rer_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTPAadjstment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTPAadjstment>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getGrowthProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGrowthProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetGrowthProducts>
+	<cftry>
+		<cfset getGrowthProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.4"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGrowthProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGrowthProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getGrowthMargins =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGrowthMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetGrowthMargins>
+	<cftry>
+		<cfset getGrowthMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getGrowthProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGrowthMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGrowthMargins>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getTPAadjstment =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetTPAadjstment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrebateproductsinformationforthisprogram")>
+<cfif useLakebaseForgetTPAadjstment>
+	<cftry>
+		<cfset getTPAadjstment = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrebateproductsinformationforthisprogram", {
+				"contract_products_id" = "eq.#ThisContractProductID#",
+				"select" = "parent_rer_lb"
+			}), "parent_rer_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTPAadjstment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTPAadjstment>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFPProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetFPProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetFPProducts>
+	<cftry>
+		<cfset getFPProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.5"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFPProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFPProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getRuleProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRuleProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_products")>
+<cfif useLakebaseForgetRuleProducts>
+	<cftry>
+		<cfset getRuleProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_products", {
+				"program_formula_pricing_rule_id" = "eq.#getRules.Program_Formula_Pricing_Rule_Mapped_ID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRuleProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRuleProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getBidRequestProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetBidRequestProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetBidRequestProducts>
+	<cftry>
+		<cfset getBidRequestProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.10"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBidRequestProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBidRequestProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getBidRequestMargins =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetBidRequestMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetBidRequestMargins>
+	<cftry>
+		<cfset getBidRequestMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getBidRequestProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBidRequestMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBidRequestMargins>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramMargins =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramMargins>
+	<cftry>
+		<cfset getProgramMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"select" = "ptrm,pttm,tls,pter"
+			}), "ptrm,pttm,tls,pter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramMargins>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProfileMargin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProfileMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetProfileMargin>
+	<cftry>
+		<cfset getProfileMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"profile_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"group_id" = "eq.#x#",
+				"approval_method" = "eq.#approval_method#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProfileMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProfileMargin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProfileMargin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProfileMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetProfileMargin>
+	<cftry>
+		<cfset getProfileMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"profile_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"group_id" = "eq.#x#",
+				"approval_method" = "eq.#approval_method#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProfileMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProfileMargin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

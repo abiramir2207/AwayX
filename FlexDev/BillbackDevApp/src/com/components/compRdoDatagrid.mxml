@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for displaying the Radio button withing the grid for the volume
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+<mx:Script>
+<![CDATA[
+
+public var myVerdana:Class;
+  import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+	import mx.managers.SystemManager;
+	
+	  
+	[Bindable] private var text:String;
+	[Bindable] private var src:String;
+	]]>
+	</mx:Script>
+		<mx:Label id="expVol" text="Expt.:" fontFamily="myVerdana"  />
+	
+		<mx:RadioButton id="rdoVol"/><mx:Text text="{data.E_Volume}" />
+		
+		
+		<mx:Label id="claVol" text="Claim:" fontFamily="myVerdana"  />
+	<!--	<mx:RadioButton id="rdoCla" /><mx:Text text="{data.Claimed_Volume}" />-->
+	</mx:HBox>  
+	
+	

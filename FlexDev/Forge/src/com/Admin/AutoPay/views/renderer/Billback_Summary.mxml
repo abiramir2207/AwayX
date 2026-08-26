@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   implements="mx.controls.listClasses.IDropInListItemRenderer">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.display.DisplayObject;
+			import mx.core.Application;
+			import mx.core.IFlexDisplayObject;
+			import mx.core.FlexGlobals;
+			import flash.events.Event;
+			
+			import mx.controls.DataGrid;
+			import mx.controls.listClasses.BaseListData;
+			
+			private var _listData:BaseListData;
+			[Bindable]
+			private var sText:String = '';
+			[Bindable]
+			private var sToolTip:String = '';
+			[Bindable]
+			private var bPdfVisible:Boolean = false;
+			
+			[Bindable("dataChange")]
+			public function get listData():BaseListData
+			{
+				return _listData;
+			}
+			
+			public function set listData(value:BaseListData):void
+			{
+				_listData = value;
+				
+			}
+			override public function get data():Object {
+				return super.data;
+			}
+			
+			override public function set data(value:Object):void {
+				super.data = value;
+				sText = '';
+				bPdfVisible = false;
+				if(value && value.bbCode != ''){
+					sText = '[' + value.bbCode + ']';
+					sToolTip = 'Click here for billback preview [ ' + value.bbTitle + ' ]';
+					bPdfVisible = true;
+				}
+				
+			} 
+
+			/* Billback Preview */
+			private function openBillbackSummary() : void{  
+				var jsURL:String ="/BillbackID_Wrapper.cfm?Billback_ID_Int="+this.data.Billback_id+"&Page_Relocate=/billbacks/capture/bb_preview.cfm";
+				
+				var jscommand:String = "window.open('"+jsURL+"','winPreview','height=640,width=815,toolbar=no,scrollbars=yes,resizable=yes');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self"); 
+			}
+			
+			/* createPdf */
+			private function createPdf() : void{  
+				var jsURL:String ='/billbacks/Auto_BB_Report/create_pdf_holder.cfm?Report_ID='+this.data.reportId+'&Contract_Main_ID='+this.data.contractId;
+				
+				var jscommand:String = "window.open('"+jsURL+"','AutoPay','height=640,width=815,toolbar=no,scrollbars=yes,resizable=yes');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self"); 
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:HBox verticalAlign="top" horizontalGap="0">
+		<mx:Text fontSize="9" text="{this.sText}" click="openBillbackSummary()" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="{this.sToolTip}"/>
+		<s:Image id="imgRun" source="/Images/PDF_Icon.gif" click="createPdf()" buttonMode="true" toolTip="Create a PDF Backup" height="15" width="12" visible="{this.bPdfVisible}" />	
+	</mx:HBox>	
+	
+</mx:Canvas>

@@ -1,0 +1,36 @@
+/* CSS Document */
+thead { display: table-header-group;}
+div.page table
+{ 
+	/*margin:auto;*/
+/*
+	margin-left:0.25in;
+	margin-right:0.25in;
+	margin-top:0in;
+	margin-bottom:-0.35in;
+	padding-bottom:0in; 
+	*/
+	/*	
+	border: dashed blue 0.5pt; 
+    clip:                 rect(0,7.9in,9.9in,0);     
+	font-size:1pt; */
+	  
+	/*width:8.5;
+	height:11in;*/
+	/*filter: progid:DXImageTransform.Microsoft.BasicImage(Rotation=3);*/
+}
+.page {overflow:visible;}
+#footerPage {display:none;}
+/*
+DIV.pageBreak
+{
+	page-break-before:always;
+	page-break-after:always;
+}
+*/
+thead.header2
+{
+	display:block;
+}
+
+

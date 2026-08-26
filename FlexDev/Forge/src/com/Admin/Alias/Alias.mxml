@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  xmlns:view="com.Admin.Alias.views.*" 
+		  xmlns:maps="com.Admin.Alias.maps.*" 
+		  xmlns:vos="com.Admin.Alias.vos.*" 
+		  creationComplete="applyRuntimeStyleSheet();" 
+		  implements="com.shared.models.IModuleBa" height="100%">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:AliasEventMap dispatcher="{this}" cache="local" />
+	</fx:Declarations>
+	<fx:Script><![CDATA[
+		import com.Admin.Alias.events.AliasEvent;
+		import com.Admin.Alias.views.pm.AliasItemsPModel;
+		import com.shared.events.MainEvent;
+		import com.shared.models.IModuleBa;
+		import com.shared.views.skins.FormItemSkinBa;
+		import com.shared.views.skins.FormSkinBa;
+		import com.shared.vos.Settings;
+		
+		import flashx.textLayout.formats.TextLayoutFormat;
+		
+		import mx.controls.Alert;
+		import mx.events.ItemClickEvent;
+		import mx.utils.ObjectUtil;
+
+
+	
+		[Bindable]
+		private var sBBId:String;
+		private var frmSkin:FormSkinBa;
+		private var frmItemSkin:FormItemSkinBa;
+		private var txt:TextLayoutFormat;
+		
+		/* Presentation Model */
+		[Bindable]
+		public var pModelItems:AliasItemsPModel;
+		
+		private function applyRuntimeStyleSheet():void {
+			styleManager.loadStyleDeclarations("/flex/mainFx410.swf") 
+		}
+		
+		public function setSettings(settings:Settings):void{
+			var event:MainEvent = new MainEvent ( MainEvent.SET_LOCAL_APP_SETTINGS );
+			event.settings = settings;
+			this.dispatchEvent( event );
+		}
+		
+		/* Change the "dataprovider" for the grid */
+		public function changeDataProvider():void{
+			var eventChangeDataProvider:AliasEvent = new AliasEvent(AliasEvent.CHANGE_DATA_PROVIDER);
+			eventChangeDataProvider.iDataProviderIndex = entityTypes.selectedIndex;
+			this.dispatchEvent(eventChangeDataProvider);
+		}
+
+	]]>
+	</fx:Script>
+	
+	
+	<!-- Views _______________________________________________________ -->
+	<s:VGroup width="100%" height="100%">
+		<view:AliasHeaderForm id="AliasHeaderForm" />
+		<!-- itemClick event to change the dataprovider -->
+	        <s:ButtonBar id="entityTypes" skinClass="com.shared.views.skins.ButtonBarBa" change="changeDataProvider();"           
+            	selectedIndex="0"
+            	tabFocusEnabled="false">     
+			
+				<s:dataProvider>
+		        	<s:ArrayCollection>
+		            	<fx:String>distributor</fx:String> 
+		            	<fx:String>product</fx:String> 
+		            	<fx:String>program</fx:String> 
+						<fx:String>operator</fx:String> 
+		     		</s:ArrayCollection>
+		    	</s:dataProvider>
+	    	</s:ButtonBar>
+	     <!-- Include the grid -->
+	     <view:AliasGrid height="100%" id="AliasGrid" />
+	</s:VGroup>
+</s:Module>

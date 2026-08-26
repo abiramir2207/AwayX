@@ -1,0 +1,36 @@
+===== QUERY: q_getStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: q_getGenericTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForq_getGenericTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_type")>
+<cfif useLakebaseForq_getGenericTypes>
+	<cftry>
+		<cfset q_getGenericTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_type", {
+				"order" = "generic_type.asc",
+				"select" = "generic_type_id,generic_type"
+			}), "generic_type_id,generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getGenericTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getGenericTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: q_getFamilys =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getBuyingGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getZones =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getRegions =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

@@ -1,0 +1,24 @@
+===== QUERY: Fax_Documents =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getuserfaxnumber =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetuserfaxnumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetuserfaxnumber>
+	<cftry>
+		<cfset getuserfaxnumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"select" = "work_fax_1 + ' ' + work_fax_2 + ' ' + work_fax_3 as fax_number"
+			}), "work_fax_1 + ' ' + work_fax_2 + ' ' + work_fax_3 as fax_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetuserfaxnumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetuserfaxnumber>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

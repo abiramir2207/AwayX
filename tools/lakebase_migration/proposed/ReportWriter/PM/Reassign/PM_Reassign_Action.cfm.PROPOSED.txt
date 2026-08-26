@@ -1,0 +1,152 @@
+===== QUERY: IsCurrentlyLocked =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForIsCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForIsCurrentlyLocked>
+	<cftry>
+		<cfset IsCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_item_master", {
+				"pm_item_master_id" = "eq.#Item#",
+				"select" = "pm_locked"
+			}), "pm_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsCurrentlyLocked>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Lock_Project =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLock_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForLock_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Item#"
+			},
+			{
+				"pm_locked" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLock_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLock_Project>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_Sponsor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Sponsor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForUpdate_Sponsor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Item#"
+			},
+			{
+				"pm_sponsor_id" = "#FORM.To_PM_Sponsor_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Sponsor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Sponsor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_FAR =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_FAR = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForUpdate_FAR>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Item#"
+			},
+			{
+				"pm_far_id" = "#FORM.To_PM_Far_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_FAR = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_FAR>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: IsExist_Already =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForIsExist_Already = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_owner_position")>
+<cfif useLakebaseForIsExist_Already>
+	<cftry>
+		<cfset IsExist_Already = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_owner_position", {
+				"pm_item_master_id" = "eq.#Item#",
+				"user_positions_id" = "eq.#FORM.To_Owner_Position_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsExist_Already = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsExist_Already>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_Owner =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Update_Owner =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Add_New_Owner =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Add_New_Owner =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Lock_Project =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLock_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForLock_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Item#"
+			},
+			{
+				"pm_locked" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLock_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLock_Project>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Unsuccess_Title =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: Unavailable_Title =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

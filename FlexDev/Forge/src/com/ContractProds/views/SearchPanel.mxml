@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Main View Page holds Search Options and Datagrid panel -->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:mate="http://mate.asfusion.com/" 
+	xmlns:view="com.ContractProds.views.*"
+	xmlns:ba="com.ContractProds.views.renderer.*"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	resizeEffect="Resize" resize="true"  
+	horizontalScrollPolicy="off" 
+	verticalScrollPolicy="off" width="100%" height="100%"
+	 ><!--title="Product Selection Utility" initialize="initTimer();" height="100%" width="100%"  
+	xmlns:ba="com.ContractProds.components.*"-->
+
+	<mx:Script>
+		<![CDATA[
+			import com.ContractProds.events.ComponentEvent;
+			import com.ContractProds.events.SearchEvent;
+			import com.ContractProds.models.ComponentManager;
+			import com.shared.models.entity.vos.Customer;
+			import com.shared.vos.Component;
+			import com.shared.vos.ProdRate;
+			import com.shared.vos.Program;
+			import com.shared.vos.Settings;
+			
+			import flash.external.ExternalInterface;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.events.CloseEvent;
+			/** dataprovider for dgItems dataGrid*/
+			[Bindable] public var items:ArrayCollection = null;
+			/** Holds a copy of Settings object from SetttingsManager. Contains Labels and userid used in view*/
+			/* [Bindable] public var oSettings:Settings = null; */
+			[Bindable] public var arrSavedItems:Array = new Array();
+			[Bindable] public var arrUserList:Array = new Array();
+			[Bindable] public var sRecordMessage:String = "";
+			[Bindable] public var iComboBoxHeight:int;
+			[Bindable] public var iTextInputHeight:int;
+			[Bindable] public var iButtonHeight:int;
+			[Bindable] public var acComponents:ArrayCollection;
+			[Bindable] public var program:Program = new Program();
+			[Bindable] private var sTitle:String = "";
+			/* Settings Object */
+			private var _oSettings:Settings = new Settings();
+			[Bindable (event="pmsettingsChanged")]
+			public function get oSettings():Settings
+			{
+				return _oSettings;
+			}
+			public function set oSettings(s:Settings):void
+			{
+				this._oSettings = s;
+				if(s.bMarketPrice){
+					this.sTitle = ':: Market Price Rates [';
+				}
+				else{
+					this.sTitle = ':: Product Rates [';
+				}
+				
+				dispatchEvent(new Event('pmsettingsChanged'));
+			}
+			[Embed(source="/assets/Images/plus.gif")]
+	        private var _imgPlus:Class;
+	        [Embed(source="/assets/Images/minus.gif")]
+	        private var _imgMinus:Class;
+		//	[Bindable] public var bLoadMiniItems:Boolean = false; 	
+			/* private var sm:SearchManager = new SearchManager(); */
+		//	private var searchStrLen:int = 0;
+			
+		 /* Clear the FilterSelected Check Box for use again */
+        public function chBoxReset():void {
+				/* Dispatch Event */
+				var event:SearchEvent = new SearchEvent(SearchEvent.CHK_FILTER_SEL_RESET);
+				this.dispatchEvent(event);
+            }
+ 
+		/* Handle the Import Items Button Click ****************************** */
+		private function callImportItems():void{
+			/* Dispatch Event */
+			var bShowAlert:Boolean = false;
+			var bShowAlertEz:Boolean = false;
+			var bShowAlertCustomPrint:Boolean = false;
+			var bShowAlertCustomPrintRate:Boolean = false;
+			var sMessage:String = '';
+			var sTitle:String = '';
+			var gValComp:Component;
+			var gValIx:int;
+			var bGVal:Boolean;
+			var i:int = 0;
+			var gValItemsError:Array = new Array();
+			var ezRateItemsError:Array = new Array();
+			var ezComp:Component;
+			var cr:String = String.fromCharCode(13, 10);
+			for each(var comp:Component in this.acComponents){
+				if(comp.payee && comp.payee.payeeTypeId > 0 && comp.payee.payeeId == "")
+				{
+					bShowAlert = true;
+					sMessage = sMessage + comp.name + ' has the Pay Single payee option without a selected payee.' + cr;
+					sTitle = sTitle + 'Payee Validation Error'  + cr;
+				}
+				//Custom Print (for Fixed)
+				if(comp.customPrint.bCustomPrint && !this.oSettings.bMarketPrice){
+					for each(var p:ProdRate in comp.prodRate){
+						if(p.rateMPCustom > 0 && p.rateMP != 0){
+							p.rateMP =  p.rateMPCustom;
+							p.rateMPCS = p.rateMPCustom;
+							p.rateMPLB = p.rateMPCustom;
+						}
+						if(p.customPrint.iColors == 0 && p.rate > 0 && p.customPrint.bCustomPrint){
+							bShowAlertCustomPrint = true;
+						}
+						/* NOT NEEDED -> MIN PRICE IS USED IN APPROVAL
+						if(p.customPrint.bCustomPrint && p.rateMP != 0 && p.rateMP > p.rate){
+							bShowAlertCustomPrintRate = true;
+						}*/
+					}
+					if(bShowAlertCustomPrint){
+						sMessage = comp.name + ' contains custom print items that do not have print options (colors, graphics or digital art) applied.' + cr;
+						sTitle = sTitle + 'Custom Print Options'  + cr;
+					}
+					/* NOT NEEDED -> MIN PRICE IS USED IN APPROVAL
+					if(bShowAlertCustomPrintRate){
+						sMessage = comp.name + ' contains custom print items that have rates lower than the Minimum Price.' + cr;
+						sTitle = sTitle + 'Custom Print Min Price'  + cr;
+					}*/
+				}
+				
+				if(comp.componentDef.bGreatestValue){
+					//gValComp = new Component(comp);
+					gValIx = i;//the index in acComponents of the gVal component
+					bGVal = true;//bool should we gVal?
+				}
+				i++;
+			}
+			// GREATEST PROGRAM VALUE LOGIC
+			if(bGVal){
+				gValComp = this.acComponents[gValIx];//Greatest Val Component "gVal"
+				for each(var pr:ProdRate in gValComp.prodRate){//Prodrates To check
+					for each(var comp2:Component in this.acComponents){//loop over Components
+						if(comp2.componentId != gValComp.componentId && comp2.type == ComponentManager.FIXED_TYPE_ID){//if it is Fixed component and it is NOT the gVal Component
+							for each(var pr3:ProdRate in comp2.prodRate){//loop over non gVal Component rates -> "FOB" rates in pratcice
+								if(pr3.itemGuid == pr.itemGuid){ //compare like items
+									//check gval component rate against non gVal rate
+									if(pr.rate <= pr3.rate && pr.rate != 0){
+										gValItemsError.push(pr.itemGuid);
+										continue;
+									}
+									//if customer level rates
+									if(gValComp.fixedType == ComponentManager.FIXED_CUST_RATE_TYPE_ID){
+										for each(var c:Customer in this.program.distributors){//loop over customers and validate their rates
+											if(pr['rateCust_'+ c.shipTo] <= pr3.rate  && pr['rateCust_'+ c.shipTo] != 0){
+												gValItemsError.push(pr.itemGuid);
+												break;
+											}
+										}//loop custs
+									}//if gValComp.fixedType gValItemsError
+								}//if 
+							}//for each pr3	
+						}//if comp2 != gValComp
+					}//for each comp2
+				}//for each pr	
+			}//if gValComp
+			
+			//CHECK EZ RATES
+			if(this.program.template.bEZButtonOn && this.program.template.bDiscountRebateMaxRateOn){
+				for each(var comp3:Component in this.acComponents){//loop over Components
+					if(comp3.type == 2){//REBATE ONLY HAS EZ
+						for each(var pr4:ProdRate in comp3.prodRate){
+							if(pr4.rate > pr4.rateEz){
+								ezRateItemsError.push(pr4.itemGuid);
+								ezComp = comp3;
+							}
+						}
+					}
+				}
+			}
+			
+			if(gValItemsError.length){
+				bShowAlert = true;
+				sMessage = sMessage + gValComp.name + ' has ' +  gValItemsError.length + ' rates that are not Greatest Program Value.' + cr;
+				sTitle = sTitle + 'Greatest Program Value Error';
+				/*  TODO:  DISPATCH EVENT TO SELECT ITEMS */
+				var e:ComponentEvent = new ComponentEvent(ComponentEvent.SELECT_FILTER_ITEMS);
+				e.arr1 = gValItemsError;
+				this.dispatchEvent(e); 
+			}
+			
+			if(ezRateItemsError.length){
+				bShowAlertEz = true;
+				sMessage = sMessage + ezComp.name + ' has ' +  ezRateItemsError.length + ' rates that are greater than the ez rate.' + cr;
+				sTitle = sTitle + 'EZ rates Betond Max Rate Error';
+				/*  TODO:  DISPATCH EVENT TO SELECT ITEMS */
+				var ez:ComponentEvent = new ComponentEvent(ComponentEvent.SELECT_FILTER_ITEMS);
+				ez.arr1 = ezRateItemsError;
+				this.dispatchEvent(ez); 
+			}
+
+			if(bShowAlert || bShowAlertCustomPrintRate || bShowAlertCustomPrint){
+				Alert.show(sMessage,sTitle)
+			}
+			else if(bShowAlertEz){
+				//if we can enter beyond max, give achoice
+				if(this.program.template.bEzButtonEnterBeyondMaxRates){
+					sMessage = sMessage + 'Would you like to continue with your save?' + cr;
+					Alert.show(sMessage,sTitle,Alert.YES|Alert.NO, this, alertClickHandler)
+				}
+				else{//STOP
+					Alert.show(sMessage,sTitle)
+				}
+			}
+			else{
+				var event:ComponentEvent = new ComponentEvent(ComponentEvent.SAVE_DATA);
+				event.programId = this.oSettings.programId;
+				event.acComponents = this.acComponents;
+				event.bMarketPrice = this.oSettings.bMarketPrice;
+				this.dispatchEvent(event);
+			}
+
+		}
+			
+		private function alertClickHandler(evt:CloseEvent):void {
+				if (evt.detail == Alert.YES) {
+					var event:ComponentEvent = new ComponentEvent(ComponentEvent.SAVE_DATA);
+					event.programId = this.oSettings.programId;
+					event.acComponents = this.acComponents;
+					event.bMarketPrice = this.oSettings.bMarketPrice;
+					this.dispatchEvent(event)
+				} 
+				else {
+					//DO NOTHING
+				}
+			}
+			/* When a user clicks cancel close the caller page */
+			public function clickCancelHandler():void {
+				var s:String;
+				if (ExternalInterface.available) {
+					var wrapperFunction:String = "closeCompProdRateEdit";
+					s = ExternalInterface.call(wrapperFunction);
+				} else {
+					s = "Wrapper not available";
+				}
+			}
+		private function vbLayoutClick(ui:*,img:Image,lbl:Label):void{
+   			/* toggle the ui container */
+   			ui.visible = !ui.visible; 
+   			ui.includeInLayout = !ui.includeInLayout;
+   			/* toggle the clickable label */
+   			lbl.visible = !lbl.visible; 
+   			lbl.includeInLayout = !lbl.includeInLayout;
+   			/* toggle the image icon */
+   			if(img){
+   				img.source = getimgPlusMinus(ui.visible);
+   				img.toolTip = ui.visible == false ? 'Expand' : 'Collapse';
+   			}
+   			
+   		}
+   		/* Toggle the Plus Minus Gif	............................................. */
+		public function getimgPlusMinus(i:int):Class
+			{
+				if (i==0){
+					return _imgPlus;
+				}
+				else{
+					return _imgMinus;
+				}
+				
+			}
+
+		]]>
+	</mx:Script>
+		<s:Panel id="pnlAll" backgroundColor="0xffffff"
+			width="100%" height="100%"
+			name="productSelectionUtility"
+			title="{this.program.number} :: {this.program.title} {this.sTitle} {this.items.length} {sRecordMessage} ]"> <!-- Program: {this.oSettings.ProgramId}-->
+			<s:layout>
+				<s:VerticalLayout/>
+			</s:layout>
+			<!--<mx:VBox height="100%" width="100%" horizontalAlign="left" paddingTop="5" >-->
+			<mx:VBox width="100%" height="100%">
+				<!-- <mx:TabNavigator id="tbNavList" width="100%" height="100%" creationComplete="this.tbNavList.selectedIndex = 0"> -->
+					<!--...............................   FILTER (SEARCH)   ...............................-->
+					<!--<mx:HBox width="100%">
+						<mx:Image id="imgFilter" 
+							source="{getimgPlusMinus(1)}"
+							click="this.vbLayoutClick(vFilter,imgFilter,lblFilter)" 
+							toolTip="Collapse"
+							buttonMode="true" 
+							useHandCursor="true" />
+						<mx:Label id="lblFilter"
+							text="Search Items"
+							click="this.vbLayoutClick(vFilter,imgFilter,lblFilter)" 
+							visible="false" 
+							includeInLayout="false" 
+							buttonMode="true" 
+							useHandCursor="true" 
+							mouseChildren="false" 
+							toolTip="use filters to select products for each program component" />
+						<view:Filter  id="vFilter" />
+					</mx:HBox>-->
+					<!--...............................   COMPONENT TAB   ...............................-->
+					<mx:HBox width="100%" paddingLeft="0" paddingTop="3">
+						<mx:Image id="imgComponent" 
+							source="{getimgPlusMinus(this.oSettings.appSettings.Template_Multiple_Product_Attr_Groups)}"
+							click="this.vbLayoutClick(vComponent,imgComponent,lblComponent)" 
+							toolTip="Collapse"
+							buttonMode="true" 
+							useHandCursor="true" />
+						<s:Label id="lblComponent" textDecoration="underline"
+							text="Manage Components"
+							fontWeight="bold" 
+							color="#4169E1"
+							click="this.vbLayoutClick(vComponent,imgComponent,lblComponent)" 
+							visible="{!this.oSettings.appSettings.Template_Multiple_Product_Attr_Groups}" 
+							includeInLayout="{!this.oSettings.appSettings.Template_Multiple_Product_Attr_Groups}"
+							buttonMode="true" 
+							useHandCursor="true" 
+							mouseChildren="false" 
+							toolTip="maintain products and rates for the program fixed and rebate components" />
+						<view:ComponentUI id="vComponent" width="100%" 
+										  visible="{this.oSettings.appSettings.Template_Multiple_Product_Attr_Groups}" 
+										  includeInLayout="{this.oSettings.appSettings.Template_Multiple_Product_Attr_Groups}"/>
+					</mx:HBox>
+
+					<!--...............................   FAVORITES   ...............................-->
+					<!--<mx:Canvas label="favorites" width="100%" height="100%">
+						<view:Favorite tabEnabled="false" />
+					</mx:Canvas>
+				</mx:TabNavigator>-->
+					<!--.......................................		DATA GRID .......................................	-->
+					<!--<mx:HBox width="100%" height="100%" >-->
+					<view:GridData width="100%" tabEnabled="false" height="100%" />
+					<!--</mx:HBox>-->
+					
+					<!--.......................................		DATA GRID .......................................	-->
+			</mx:VBox>
+			
+			
+		<!--</mx:VBox>-->
+		<!--- "import selected" Button : returns all checked items to wrapper javascript which then passes them to the calling page via a form submit-->
+		<mx:HBox>
+			<ba:BaButton label="save" click="callImportItems();"  tabEnabled="false"/>
+			<ba:BaButton label="cancel" click="clickCancelHandler();"  tabEnabled="false"/>
+		</mx:HBox>
+		
+			
+	</s:Panel>
+		<!--</mx:VBox>-->
+</mx:Canvas>

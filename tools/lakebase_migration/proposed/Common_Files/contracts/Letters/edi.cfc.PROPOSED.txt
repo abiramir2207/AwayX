@@ -1,0 +1,20 @@
+===== QUERY: qGetProgramLetterXML =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramLetterXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForqGetProgramLetterXML>
+	<cftry>
+		<cfset qGetProgramLetterXML = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#arguments.program_letters_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLetterXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLetterXML>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,46 @@
+===== QUERY: qGetInvoiceHeader =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetInvoiceHeader = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoice_header")>
+<cfif useLakebaseForqGetInvoiceHeader>
+	<cftry>
+		<cfset qGetInvoiceHeader = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoice_header", {
+				"order_number" = "eq.#url.order_Number#",
+				"invoice_date" = "eq.#url.invoice_date#",
+				"deleted" = "eq.0",
+				"select" = "invoice_header_id"
+			}), "invoice_header_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInvoiceHeader = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInvoiceHeader>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetInvoiceHeader =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetInvoiceHeader = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoice_header")>
+<cfif useLakebaseForqGetInvoiceHeader>
+	<cftry>
+		<cfset qGetInvoiceHeader = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoice_header", {
+				"order_number" = "eq.#url.order_Number#",
+				"invoice_date" = "eq.#url.invoice_date#",
+				"deleted" = "eq.0",
+				"select" = "invoice_header_id"
+			}), "invoice_header_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInvoiceHeader = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInvoiceHeader>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

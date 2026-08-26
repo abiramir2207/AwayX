@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:mate="http://mate.asfusion.com/"
+		 xmlns:util="com.shared.components.spark.*" 
+		 xmlns:spark="com.shared.components.spark.*"
+		 xmlns:ba="com.shared.components.*"
+		 creationComplete="labelChangeOnLoad()"
+>
+	<s:layout>
+		<s:HorizontalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<!-- Call "mate Listener" to set focus on the Payee textinput -->	
+		<mate:Listener type="{AliasEvent.SET_INITIAL_FOCUS}" method="setInitialCursorFocus"  />
+		<mate:Listener type="{AliasEvent.RELOAD_CURRENT_DATA}" method="triggerGetAllAliases"  />
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Alias.events.AliasEvent;
+			import com.Admin.Alias.views.pm.AliasItemsPModel;
+			import com.Admin.Alias.views.pm.AliasPModel;
+			import com.shared.components.spark.resize.ResizableTitledBorderBoxSkin;
+			import com.shared.components.spark.resize.ResizeManager;
+			
+			import mx.collections.ArrayList;
+			import mx.controls.Alert;
+			import mx.managers.IFocusManagerComponent;
+			import mx.managers.IFocusManagerContainer;
+			import mx.utils.ObjectUtil;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:AliasPModel;
+			
+			[Bindable]
+			public var pModelItems:AliasItemsPModel;
+			
+			[Bindable]
+			private var enableDownloadData:Boolean = false;
+			
+			private var aliasEvent:AliasEvent;
+			
+			/* Change the "dataprovider" for the grid */
+			public function resetDataProvider():void{
+				var eventResetDataProvider:AliasEvent = new AliasEvent(AliasEvent.CHANGE_DATA_PROVIDER);
+				/* To reset the grid: Select an arbitrary number. Do not select "-1" as when we click any grey tab to get 
+				the data for item,program etc,and then click on the tab again, the data gets cleared. The data gets returned 
+				and gets removed on alternate clicks as flex passes "-1" by itself on every alternate click.*/
+				eventResetDataProvider.iDataProviderIndex = -100;
+				this.dispatchEvent(eventResetDataProvider);
+			}	
+			
+			public function setInitialCursorFocus(event:AliasEvent):void
+			{
+				focusManager.setFocus(tipayee);
+			}
+			
+			/* Call this when the user hits the "Enter" key */
+			private function getAliasesEnterKey(event:KeyboardEvent):void 
+			{
+				/* If the "Enter" key was clicked and the focus through tab is on the button titled "search alias" */
+				if (event.keyCode == Keyboard.ENTER && Object(focusManager.getFocus()).id == 'btnSearch')
+				{	 
+					var aliasEvent:AliasEvent;
+					triggerGetAllAliases(aliasEvent);
+				}
+			}
+			
+			private function triggerGetAllAliases(event:AliasEvent):void
+			{
+				/* get Aliases */   
+				if (drpSourceType.selectedItem == null)
+				{
+					Alert.show("Please pick a Source Type!");
+				}
+				else
+				{
+					getAliases(
+						tipayee.text,
+						drpSourceType.selectedItem.sourceType,
+						drpSourceType.selectedItem.sourceCode,
+						drpSourceType.selectedItem.useSearchTool
+					);
+					
+					/* update source */
+					this.pModel.updateSource(
+						drpSourceType.selectedItem.sourceType,
+						tipayee.text,
+						drpSourceType.selectedItem.sourceCode,
+						drpSourceType.selectedItem.useSearchTool
+					);
+				}
+			}
+			
+			/* Call this when the user hits the "Enter" key */
+			private function resetAliasesEnterKey(event:KeyboardEvent):void 
+			{
+				/* If the "Enter" key was clicked and the focus through tab is on the button titled "reset" */
+				if (event.keyCode == Keyboard.ENTER && Object(focusManager.getFocus()).id == 'btnResetPayee')
+				{	 		
+					triggerResetPayee();			
+				}
+			}
+			
+			private function triggerResetPayee():void
+			{
+				clearPayee();
+				
+				drpSourceType.selectedIndex=0;
+				
+				this.pModel.getVendorDesc(
+					drpSourceType.selectedItem.sourceType,
+					tipayee.text,
+					drpSourceType.selectedItem.sourceCode,
+					drpSourceType.selectedItem.useSearchTool
+				);
+				
+				this.pModel.updateSource(
+					drpSourceType.selectedItem.sourceType
+					,tipayee.text,
+					drpSourceType.selectedItem.sourceCode,
+					drpSourceType.selectedItem.useSearchTool
+				);
+				
+				enablePayee();
+				
+				/* focus on the "Payee" textbox */
+				focusManager.setFocus(tipayee);
+				
+				/* When the payee or source is reset, clear the records from the grid. */
+				resetDataProvider();
+			}
+			
+			/* Clear the "payee" textbox */
+			private function clearPayee():void
+			{
+				tipayee.text = '';
+			}
+			
+			/* Enable the Payee textbox */
+			private function enablePayee():void
+			{
+				var eventDisableEnablePayee:AliasEvent = new AliasEvent(AliasEvent.DISABLE_ENABLE_PAYEE);
+				eventDisableEnablePayee.sUseSearchTool = '1';
+				this.dispatchEvent(eventDisableEnablePayee);
+			}	
+			
+			private function sourceTypeChange():void{
+				
+				clearPayee();
+				
+				this.pModel.getSourceTypeOption(
+					drpSourceType.selectedItem.useSearchTool
+				);
+				
+				this.pModel.getVendorDesc(
+					drpSourceType.selectedItem.sourceType,
+					tipayee.text,
+					drpSourceType.selectedItem.sourceCode,
+					drpSourceType.selectedItem.useSearchTool
+				);
+				
+				this.pModel.updateSource(
+					drpSourceType.selectedItem.sourceType,
+					tipayee.text,
+					drpSourceType.selectedItem.sourceCode,
+					drpSourceType.selectedItem.useSearchTool
+				);	
+				
+				/* Depending on source type, the datagrid columns may change. This event rebuilds the alias grid. */
+				var eventChangeDataGrid:AliasEvent = new AliasEvent(AliasEvent.CHANGE_DATA_GRID);
+				eventChangeDataGrid.sDataGridType = drpSourceType.selectedItem.sourceType.toString();
+				this.dispatchEvent(eventChangeDataGrid);
+				
+				/* Depending on source type, the label for certain editable fields may change. */
+				labelChange();
+				
+				/* When the source type changes, clear the records from the grid. */
+				resetDataProvider();
+			}
+			
+			private function payeeChange():void{
+				this.pModel.getVendorDesc(drpSourceType.selectedItem.sourceType,
+					tipayee.text,
+					drpSourceType.selectedItem.sourceCode,
+					drpSourceType.selectedItem.useSearchTool
+				);
+				
+				this.pModel.updateSource(
+					drpSourceType.selectedItem.sourceType,
+					tipayee.text,
+					drpSourceType.selectedItem.sourceCode,
+					drpSourceType.selectedItem.useSearchTool
+				);
+			}
+			
+			private function labelChange():void{			
+					var eventLabelChange:AliasEvent = new AliasEvent(AliasEvent.LABEL_CHANGE);
+					
+					if(drpSourceType.selectedItem.sourceType == 11){
+						eventLabelChange.labelText1 = 'DUN';
+					}
+					else{
+						eventLabelChange.labelText1 = 'Alias ID';
+					}
+					this.dispatchEvent(eventLabelChange);
+			}
+			
+			/* default labels on loading. */
+			private function labelChangeOnLoad():void{			
+				var eventLabelChange:AliasEvent = new AliasEvent(AliasEvent.LABEL_CHANGE);
+				
+				eventLabelChange.labelText1 = 'Alias ID';
+					
+				this.dispatchEvent(eventLabelChange);
+			}
+			
+			private function getAliases(sourceID:String,sourceType:int,sourceCode:String,useSearchTool:int):void
+			{					
+				/* blank payee, when "Payee Alias" option is selected. */
+				if(sourceID == '' && sourceType == 2)
+				{
+					Alert.show('Please enter a Payee number');
+				}
+				else
+				{	
+					
+					
+					/* useSearchTool is 0 when we do not use a vendor id from the "Payee" textbox as there are no individual vendors with unique id's. In this
+					case, we just use the EDI ID. For eg: SYSCO EDI or USFS EDI. sourceType = 100 means All Alias - In this case we do need vendor Id also.
+					*/
+					if(useSearchTool == 0 && sourceType != 100){
+						sourceID = sourceCode;
+					}
+					
+						  /* We need to call the queries for loading distributors, items, programs and operators */
+						  
+						  /* load distributor alias */
+						  var eventLoadDistributorAlias:AliasEvent = new AliasEvent(AliasEvent.LOAD_DISTRIBUTOR_ALIAS);
+						  eventLoadDistributorAlias.iSourceType = sourceType;
+						  eventLoadDistributorAlias.sSourceID = sourceID;
+						  this.dispatchEvent(eventLoadDistributorAlias);
+						  
+						  /* load item alias */
+						  var eventLoadItemAlias:AliasEvent = new AliasEvent(AliasEvent.LOAD_ITEM_ALIAS);
+						  eventLoadItemAlias.iSourceType = sourceType;
+						  eventLoadItemAlias.sSourceID = sourceID;					
+						  this.dispatchEvent(eventLoadItemAlias);
+						  
+						  /* load program alias */
+						  var eventLoadProgramAlias:AliasEvent = new AliasEvent(AliasEvent.LOAD_PROGRAM_ALIAS);
+						  eventLoadProgramAlias.iSourceType = sourceType;
+						  eventLoadProgramAlias.sSourceID = sourceID;
+						  this.dispatchEvent(eventLoadProgramAlias);
+						  
+						  /* load operator alias */
+						  var eventLoadOperatorAlias:AliasEvent = new AliasEvent(AliasEvent.LOAD_OPERATOR_ALIAS);
+						  eventLoadOperatorAlias.iSourceType = sourceType;
+						  eventLoadOperatorAlias.sSourceID = sourceID;
+						  this.dispatchEvent(eventLoadOperatorAlias);
+					  }	
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace resize "com.shared.components.spark.resize.*";
+		
+		/*  Optional - you can make all Scroller's use the resizable scroller skin. */
+		s|Scroller {
+			skin-class: ClassReference("com.shared.components.spark.resize.ResizableScrollerSkin");
+		}
+		
+		/* you can restrict the resize direction in CSS like this: */
+		.resizePanel {
+			resize-direction: vertical;
+		}
+	</fx:Style>
+	<ba:MinMaxPanel id="header" width="{this.pModel.nWidthContainer}" height="{this.pModel.nHeightContainer}" borderStyle="none" panelTitle="Alias Search Results: {this.pModelItems.aliasCurrentSelectedDef.length} records" showMaximize="false" showMinimize="true">
+		<!--<s:BorderContainer width="1000" height="65">-->
+		<s:VGroup id="vgHeader" paddingTop="5">
+			<util:TitledBorderBox height="65" cornerRadius="10" minHeight="45" minWidth="1195"
+								  backgroundColor="#ffffff" 
+								  borderColor="#c02025"
+								  width="1195"
+								  dropShadowVisible="false"
+								  skinClass="com.shared.components.spark.resize.ResizableTitledBorderBoxSkin"
+								  title="Load Alias Data"
+								  >
+				
+				<util:layout>
+					<s:HorizontalLayout 
+						paddingLeft="0" paddingRight="0" 
+						paddingTop="0" paddingBottom="0" gap="0"/>
+				</util:layout>
+				<s:Form width="450" color="0x323232">
+					<s:layout>
+						<s:FormLayout gap="0" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+					</s:layout>
+					
+					<s:FormItem label="Source Type">				
+						<s:ComboBox
+							id="drpSourceType"
+							toolTip="filter:Source Type"					
+							width="350"
+							requireSelection="true"		
+							dataProvider="{new ArrayList(this.pModel.sourceTypes)}"
+							labelField="sourceCodeDisplay"
+							change="sourceTypeChange()"
+							tabFocusEnabled="false" 
+						>
+					 		<s:layout>
+								<s:VerticalLayout paddingTop="0" paddingBottom="0" gap="0" requestedMinRowCount="5" requestedMaxRowCount="25" />
+							</s:layout>
+						</s:ComboBox>
+					</s:FormItem>
+				</s:Form>
+				
+				<s:Form width="255" color="0x323232">
+					<s:layout>
+						<s:FormLayout gap="5" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+					</s:layout>
+					<s:FormItem label="Payee" visible="{this.pModel.showPayee}" includeInLayout="{this.pModel.showPayee}">
+						<s:HGroup>
+							<!-- For some reason, "change" event only fires when a user manually changes the data in the textbox. If the usre uses the popup page
+							to change the vendor, then the change event does not fire. That is why to update the source, "updateSource" when the user clicks on 
+							the "search aliases" button".
+							-->
+							<s:TextInput 
+								tabEnabled="true"
+								id="tipayee" 					
+								width="175"
+								text="{this.pModel.sourceInfo.payeeId}"
+								change="payeeChange()"
+								enabled="{this.pModel.enablePayee}"	
+								tabIndex ="1"
+								/>					 
+							<!-- focusOut="" is not working for "tipayee" -->				
+							<s:Image 
+								id="imgPayeeSearch"
+								source="/flex/assets/Images/search.gif" 
+								tabEnabled="true"							 
+								verticalAlign="bottom"
+								horizontalAlign="left"
+								click="payeeChange();this.pModel.getSourceSearch()"
+								useHandCursor="true"
+								buttonMode="true"
+								enabled="{this.pModel.enablePayee}"						
+								/>
+						</s:HGroup>
+					</s:FormItem>
+					
+					<s:FormItem>
+						<s:Label text="{this.pModel.sourceInfo.name}" fontWeight="bold" />
+					</s:FormItem>
+				</s:Form>
+				
+				<s:Form width="110" color="0x323232">
+					<s:layout>
+						<s:FormLayout gap="0" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+					</s:layout>
+					
+					<s:FormItem>
+						<s:Button id="btnSearch" label="search alias" tabIndex="2" click="triggerGetAllAliases(aliasEvent)" keyDown="getAliasesEnterKey(event)"/>
+					</s:FormItem>
+				</s:Form>
+				
+				<s:Form color="0x323232">
+					<s:layout>
+						<s:FormLayout gap="0" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+					</s:layout>
+					
+					<s:FormItem>
+						<s:Button id="btnResetPayee" label="reset" tabIndex="3" click="triggerResetPayee()" keyDown="resetAliasesEnterKey(event)" />		 				   
+					</s:FormItem>
+				</s:Form>	
+				
+				<s:Form width="110" color="0x323232">
+					<s:layout>
+						<s:FormLayout gap="0" paddingLeft="100" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+					</s:layout>
+					
+					<s:FormItem><!--click="getAliases('','ALL')"-->
+						<s:Button	toolTip="Generate Excel file" id="btnExportXLS" label="download data" click="this.pModel.callExportXLS()" enabled="{this.pModel.enableDownloadData}" tabFocusEnabled="false"/>
+					</s:FormItem>
+				</s:Form>
+			</util:TitledBorderBox>
+			<!--</s:BorderContainer>-->
+		</s:VGroup>
+	</ba:MinMaxPanel>
+</s:Group>

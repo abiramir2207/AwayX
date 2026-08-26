@@ -1,0 +1,26 @@
+===== QUERY: getAppSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAppSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetAppSettings>
+	<cftry>
+		<cfset getAppSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "send_secondary_email,send_auto_attachments,send_approved_programs_emailadress,cancel_program_email,rfa_email_event,send_release_settlement_emailaddress,bb_agree_email,send_distributor_broker_email,send_create_auto_billback_email,email_auto_renewed_programs,bb_approved_email,ba_support_email,only_notify_rsp_of_approval,budgets_program_approve_email_address,budgets_billback_approve_email_address,send_program_error_ack_emailaddress,pgm_email_pricing_admin,third_party_bb_upload,program_without_budget_email_address,billback_rfa_agree_email_event,show_fixed_freight,send_summarized_weekly_notification_fuel_surcharge,billback_rfa_agree_email_event,notify_rsp_only_notallhquser,send_rfa_agree_emails_to_cra_users"
+			}), "send_secondary_email,send_auto_attachments,send_approved_programs_emailadress,cancel_program_email,rfa_email_event,send_release_settlement_emailaddress,bb_agree_email,send_distributor_broker_email,send_create_auto_billback_email,email_auto_renewed_programs,bb_approved_email,ba_support_email,only_notify_rsp_of_approval,budgets_program_approve_email_address,budgets_billback_approve_email_address,send_program_error_ack_emailaddress,pgm_email_pricing_admin,third_party_bb_upload,program_without_budget_email_address,billback_rfa_agree_email_event,show_fixed_freight,send_summarized_weekly_notification_fuel_surcharge,billback_rfa_agree_email_event,notify_rsp_only_notallhquser,send_rfa_agree_emails_to_cra_users"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAppSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAppSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: saveChanges =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: SaveAppSettingChanges =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

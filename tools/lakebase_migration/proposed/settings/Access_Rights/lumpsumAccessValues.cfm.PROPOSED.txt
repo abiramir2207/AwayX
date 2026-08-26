@@ -1,0 +1,22 @@
+===== QUERY: GetApprovalAmountforProfile =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetApprovalAmountforProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>
+<cfif useLakebaseForGetApprovalAmountforProfile>
+	<cftry>
+		<cfset GetApprovalAmountforProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_ls_approval", {
+				"profiles_id" = "eq.#url.profileId#",
+				"program_lump_sum_name_id" = "eq.#lsNameID#",
+				"select" = "approval_amount"
+			}), "approval_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetApprovalAmountforProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetApprovalAmountforProfile>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

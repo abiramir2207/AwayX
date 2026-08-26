@@ -1,0 +1,18 @@
+===== QUERY: Get_Date_Codes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Date_Codes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_datecode")>
+<cfif useLakebaseForGet_Date_Codes>
+	<cftry>
+		<cfset Get_Date_Codes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_datecode", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Date_Codes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Date_Codes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

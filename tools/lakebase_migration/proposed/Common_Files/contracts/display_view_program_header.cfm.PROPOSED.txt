@@ -1,0 +1,62 @@
+===== QUERY: PositionDescforCreating =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPositionDescforCreating = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforCreating>
+	<cftry>
+		<cfset PositionDescforCreating = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#CSLGetContractInfo.Creating_User_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforCreating = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforCreating>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PositionDescforManager =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPositionDescforManager = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforManager>
+	<cftry>
+		<cfset PositionDescforManager = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#getpositionabove#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforManager = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforManager>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRebateRecipient =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetRebateRecipient = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetRebateRecipient>
+	<cftry>
+		<cfset GetRebateRecipient = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#CSLGetContractInfo.Rebate_Recipient_Customer_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRebateRecipient = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRebateRecipient>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,80 @@
+===== QUERY: Lock_Project =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLock_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForLock_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#FORM.LOCK_RID#",
+				"pm_locked" = "eq.1",
+				"pm_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"pm_locked" = "0",
+				"pm_locked_by_user_id" = javaCast("null",""),
+				"pm_locked_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLock_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLock_Project>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: unlock_Other_Project =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForunlock_Other_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForunlock_Other_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_locked" = "eq.1",
+				"pm_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"pm_locked" = "0",
+				"pm_locked_by_user_id" = javaCast("null",""),
+				"pm_locked_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlock_Other_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlock_Other_Project>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Lock_Project =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLock_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForLock_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#FORM.LOCK_RID#",
+				"pm_locked" = "eq.1",
+				"pm_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"pm_locked" = "0",
+				"pm_locked_by_user_id" = javaCast("null",""),
+				"pm_locked_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLock_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLock_Project>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

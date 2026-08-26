@@ -1,0 +1,21 @@
+===== QUERY: Deduction_IsCredit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeduction_IsCredit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForDeduction_IsCredit>
+	<cftry>
+		<cfset Deduction_IsCredit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "is_credit,dd_closure_sent"
+			}), "is_credit,dd_closure_sent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeduction_IsCredit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeduction_IsCredit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

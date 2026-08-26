@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml:stylesheet type="text/xsl" href="Leftmenus/menus.xsl"?>
+
+<TOPICLIST TYPE="Main Nav Selections">
+
+<TOPICS TYPE="customers">
+	<TOPIC><TITLE>create new</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>search distributor</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>search operator</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>see all</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="contacts">
+	<TOPIC><TITLE>create new</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>search</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>see all</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="campaigns">
+	<TOPIC><TITLE>create new</TITLE><URL>/cm/handler.cfm?command=ceCampaign</URL></TOPIC>
+	<TOPIC><TITLE>search</TITLE><URL>/cm/handler.cfm?command=sCampaign</URL></TOPIC>
+	<TOPIC><TITLE>see all</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="activities">
+	<TOPIC><TITLE>create new</TITLE><URL>/cm/handler.cfm?command=ceActivity</URL></TOPIC>
+	<TOPIC><TITLE>search</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>see all</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="promotions">
+	<TOPIC><TITLE>create new</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>search</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>see all</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="tasks">
+	<TOPIC><TITLE>create new</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>search</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>see all</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="calendar">
+	<TOPIC><TITLE>day...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>week...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>month...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>year...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="sales library">
+	<TOPIC><TITLE>search</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>see all</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="reports">
+	<TOPIC><TITLE>report writer</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>saved reports</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="contracts">
+	<TOPIC><TITLE>search...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="settings">
+	<TOPIC><TITLE>settings</TITLE><URL>/cm/settings/settings.cfm</URL></TOPIC>
+</TOPICS>
+
+<TOPICS TYPE="help">
+	<TOPIC><TITLE>how to...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>how to...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>how to...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+	<TOPIC><TITLE>how to...</TITLE><URL>/cm/under_construction.cfm</URL></TOPIC>
+</TOPICS>
+
+</TOPICLIST>

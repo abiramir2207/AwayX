@@ -1,0 +1,108 @@
+<!------ budget_style.css ----->	
+.LONGINPUT
+{
+	width:300px;
+}
+INPUT
+{
+	/*border:1px solid black;*/
+}
+SELECT
+{
+	width:120px;	
+}
+
+.calcMethod 
+{
+	margin-left: 25px;
+}
+TABLE.TableGrid TD 
+{
+	font-size : 10px;
+}
+Table.TableGrid THEAD
+{
+	font-size:12px;
+	font-weight:bold;
+	border-bottom:none;
+	background-color:#ffce84
+}
+Table.TableGrid TR.tableheaders TD
+{
+	font-size:12px;
+	font-weight:bold;
+	border-bottom:none; 
+}
+Table.TableGrid TD.tableheaders
+{
+	font-size:12px;
+	font-weight:bold;
+	border-bottom:none; 
+}
+
+Table.BasicInfo TD
+{
+	margin-left:10px;
+	vertical-align: top;
+	font-size: 11px;
+}
+
+Table.BasicInfo TD.subheader
+{
+	font-weight:bold;
+	font-size: 11px;
+	border-bottom:1px solid black;
+}
+
+Table.BasicInfo TD.allocationtype
+{
+	font-weight:bold;
+}
+
+Table.BasicInfo select {
+	width:200px;
+
+}
+
+Table.BasicInfo caption
+{
+	font-size: 15px;
+	font-weight:bold;
+	color:RGB(255,0,0);
+}
+
+.allocator_main_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	text-align: center;
+	background-color: RGB(0,0,99);
+	color: RGB(255,255,255);
+}
+.allocator_control_level_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	background-color: #66FF99;
+}
+
+Table.Allocation td	{font-size: 10px;
+		  font-family: Arial, Helvetica, sans-serif;
+		  border-collapse:collapse;
+		  border: 1px solid gray;}
+
+.allocator_sub_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	text-align: left;
+	background-color: #FFCC66;
+}
+
+.allocator_manual_adj_sub_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	text-align: left;
+	background-color: #00FFFF;
+}

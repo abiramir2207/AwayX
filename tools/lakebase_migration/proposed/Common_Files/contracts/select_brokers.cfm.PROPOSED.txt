@@ -1,0 +1,116 @@
+===== QUERY: CheckForExistingBrokers =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: CheckForExistingBrokers =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: deletedCurrentBrokers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordeletedCurrentBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseFordeletedCurrentBrokers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_brokers",
+			{
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"auto_selection" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletedCurrentBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletedCurrentBrokers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: SaveBroker =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: CheckForExistingBrokers_reset =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getContractProgramID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetContractProgramID>
+	<cftry>
+		<cfset getContractProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractProgramID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetZones =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetRegions =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetLinesOfBiz =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetBrokerInfoMaster =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetBrokerName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBrokerName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getbrokerinfomaster")>
+<cfif useLakebaseForGetBrokerName>
+	<cftry>
+		<cfset GetBrokerName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getbrokerinfomaster", {
+				"select" = "broker_name"
+			}), "broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokerName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokerName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetBrokerInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBrokerInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getbrokerinfomaster")>
+<cfif useLakebaseForGetBrokerInfo>
+	<cftry>
+		<cfset GetBrokerInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getbrokerinfomaster", {
+				"broker_name" = "eq.#GetBrokerName.Broker_name#",
+				"select" = "bsa_foodservice_brokers_id,broker_name"
+			}), "bsa_foodservice_brokers_id,broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokerInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokerInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAllReturnedBrokers =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getTheseBrokers =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

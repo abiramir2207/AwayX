@@ -1,0 +1,29 @@
+===== QUERY: deleteRecords =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getMarketRecord =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetMarketRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_market_to_user")>
+<cfif useLakebaseForgetMarketRecord>
+	<cftry>
+		<cfset getMarketRecord = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_market_to_user", {
+				"deduction_market_to_user_id" = "eq.#record_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarketRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarketRecord>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: saveMarketAreaAssignments =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

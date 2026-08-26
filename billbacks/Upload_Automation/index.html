@@ -1,0 +1,849 @@
+<!doctype html>
+
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body>
+    
+<!------------------------- Action Menu Items start here ------------------------------------>
+
+<div class="dropdown">
+ <button class="dropbtn"><img src="/images/ocr/report_dd.png" height="22" width="32"/></button>
+	  <div class="dropdown-content">
+	  	<a href="/billbacks/Upload_Automation/index.cfm?doAction=generateHLV">
+		<img src="/images/ocr/generate24.png" height="16" width="16"> Generate HLV</a> 
+	  	<a href="##" onclick="javascript:PopupCenter('UA_DownloadFile.cfm?fileParam=DownloadHLV','Download','450','200');">
+		<img src="/images/ocr/download-24-c406be4.png" height="16" width="16"> Download HLV</a> 
+	  	<a href="##" onclick="javascript:PopupCenter('UA_UploadFile.cfm?UploadAutomationLogID=#UploadAutomationLogID#','Upload_HLV','600','180');"><img src="/images/ocr/upload-circle-24-c406be4.png" height="16" width="16"> Upload HLV</a>
+	  	<a href="/billbacks/Upload_Automation/index.cfm?doAction=startProcess"> 
+		<img src="/images/ocr/processBlue.png" height="16" width="16"> Process</a>
+<!--- 	  <cfif qGetAutoUploadStatus.Generate_BB_Report EQ 1>
+	  	<a href="#/billbacks/Upload_Automation/index.cfm?doAction=generateBBReport#">Generate BB Report</a>
+	  </cfif>  ---> 
+	  	<a href="##" onclick="javascript:PopupCenter('UA_DownloadFile.cfm?fileParam=DownloadBBReport','Download','450','200');"> 
+		<img src="/images/ocr/download-24-c406be4.png" height="16" width="16"> Download BB Report</a>
+	  	<a href="/billbacks/Upload_Automation/index.cfm?doAction=generateDRAFReport">
+		<img src="/images/ocr/generate24.png" height="16" width="16"> Generate DR_AF</a>
+	  	<a href="##" onclick="javascript:PopupCenter('UA_DownloadFile.cfm?fileParam=DownloadDRReport','Download','450','200');">
+		<img src="/images/ocr/download-24-c406be4.png" height="16" width="16"> Download DR Report</a>
+		<a href="##" onclick="javascript:PopupCenter('UA_DownloadFile.cfm?fileParam=DownloadAFReport','Download','450','200');">
+		<img src="/images/ocr/download-24-c406be4.png" height="16" width="16"> Download AF Report</a>		
+	  	<a href="/billbacks/Upload_Automation/index.cfm?doAction=cleanupHP" title="cleanup holding pen"> 
+		<img src="/images/ocr/cleanup24.png" height="16" width="16">  Cleaup HP</a>
+	  
+	    <!--- <a href=""><img src="/images/ocr/trashcan-24-c406be4.png"> Link 1</a>
+	    <a href=""><img src="/images/ocr/59099-200.png" width="20" height="20px"> Link 2</a>
+	    <a href=""><img src="/images/ocr/trashcan-24-c406be4.png"> Link 3</a> --->
+	  </div>
+	</div>
+<br><br><br><br>
+<br><br><br><br><br>
+<br><br>
+	
+<!-------------------------Upload Status/steps start here ----------------------------------->	
+<h1>UA Status/Steps</h1><br>
+<strong>UA_Step = "1_0":Upload - Start</strong><br>
+
+    <div style="display:flex;">
+      <div class="status-shape in-progress" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/icon_in_progress_lb.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+
+      <div class="status-shape" title="validating the file">
+          <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>
+	
+	<strong>UA_Step = "1_1":Upload - Complete</strong><br>
+	
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+
+      <div class="status-shape in-progress" title="validating the file">
+          <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>
+	
+	<strong>UA_Step = "1_2":Upload - Failed</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape failure" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/abort24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape" title="validating the file">
+          <img class="status-icon" 
+			src="/images/ocr/icon_tbd_lw.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	<strong>UA_Step = "2_0":Generate HLV report - Start</strong><br>
+	
+	    <div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+
+      <div class="status-shape in-progress" title="validating the file">
+          <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>
+	
+	
+	<strong>UA_Step = "2_1":Generate HLV report - Complete<br>- WAITING FOR USER TO UPLOAD THE CORRECTED FILE</strong><br>
+	
+    <div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon" width="24" height="24"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+
+      <div class="status-shape in-progress" title="validating the file">
+          <img class="status-icon"
+          	src="/images/ocr/clock24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape " title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	
+	<strong>UA_Step = "2_2": Generate HLV report - Failed</strong><br>
+	
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape failure" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/abort24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>
+	
+	<strong>UA_Step = "3_0":Update HLV report - Start</strong><br>
+
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape in-progress" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"            
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon "
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	<strong>UA_Step = "3_1":Update HLV report - Complete <br>- WAITING FOR USER TO PRESS BUTTON TO START NEXT STEP</strong><br>
+	  <div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon" width="24" height="24"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+
+      <div class="status-shape in-progress" title="validating the file">
+          <img class="status-icon"
+          	src="/images/ocr/clock24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape " title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+		
+	<strong>UA_Step = "3_2":Update HLV report - Failed </strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape failure" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/abort24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/icon_tbd_lw.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	<strong>UA_Step = "4_0":Process claims to create BB - Start</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape in-progress" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"            
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon "
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	<strong>UA_Step = "4_1":Process claims to create BB - Aborted - Key First Pass </strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape failure" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/abort24.png"            
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon "
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	<strong>UA_Step = "4_2":Process claims to create BB - Aborted - Key Second Pass </strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape failure" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/abort24.png"            
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon "
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	<strong>UA_Step = "4_3":Process claims to create BB - Aborted - Cleanup HP</strong><br>
+		<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape failure" title="process the file">
+        <img class="status-icon"
+            src="/images/ocr/abort24.png"            
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape" title="cleanup the file">
+        <img class="status-icon "
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+	<strong>UA_Step = "5_0":Cleanup HP - Start</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape in-progress" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/icon_in_progress_lb.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_tbd_lw.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+	
+	<strong>UA_Step = "5_1":Cleanup HP - Complete</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape in-progress" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+	
+	<strong>UA_Step = "6_0":Message - Queued for BB creation - Start</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape in-progress" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+	
+	<strong>UA_Step = "6_1":Message - Queued for BB creation - Complete</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape in-progress" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+	<strong>UA_Step = "6_2":Message - Queued for BB creation - Failed</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape failure" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/abort24.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+
+
+	<strong>UA_Step = "7_0":Generate Billback report - Start</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape in-progress" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+	
+
+	<strong>UA_Step = "7_1":Generate Billback report - Complete</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape in-progress" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+
+
+	<strong>UA_Step = "8_0":Generate Report - Start</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape in-progress" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/icon_in_progress_lb.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+
+	<strong>UA_Step = "8_1":Generate Report link - Complete</strong><br>
+	<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape done" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/checked24.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>		
+	
+	<strong>UA_Step = "8_2":Generate Report link - Failed</strong><br>
+	
+		<div style="display:flex;">
+      <div class="status-shape done" title="uploaded the file">
+        <img class="status-icon"
+          src="/images/ocr/checked24.png"
+          alt="upload"></img>
+        UPLOAD
+      </div>
+      <div class="status-shape done" title="validating the file">
+          <img class="status-icon" 
+            src="/images/ocr/checked24.png"
+            alt="validate"></img>
+          VALIDATE
+      </div>
+      <div class="status-shape done" title="process the file">
+        <img class="status-icon"
+			src="/images/ocr/checked24.png"
+            alt="process"></img>
+        PROCESS
+      </div>
+      <div class="status-shape done" title="cleanup the file">
+        <img class="status-icon "
+             src="/images/ocr/checked24.png"
+            alt="cleanup"></img>
+        CLEANUP
+      </div>
+      <div class="status-shape failure" title="report for the file">
+        <img class="status-icon"
+            src="/images/ocr/abort24.png"
+            alt="report"></img>
+        REPORT
+      </div>
+    </div>	
+
+	
+	
+  </body>
+</html>

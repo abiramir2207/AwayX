@@ -1,0 +1,89 @@
+===== QUERY: deletedateexclusions =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deletedateexclusions =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: PreviousTiers =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: UpdateComponent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForUpdateComponent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_components",
+			{
+				"program_growth_component_id" = "eq.#url.Child_ID#"
+			},
+			{
+				"component_name" = "#form.Component_Name#",
+				"component_uom" = "#Target_UOM#",
+				"comparison_type" = "#Comparison_Type#",
+				"sample_period" = "#Sample_Period#",
+				"program_growth_comparison_period_uom_id" = "#form.Program_Growth_Comparison_Period_UOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateComponent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateTiers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateTiers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_tiers")>
+<cfif useLakebaseForUpdateTiers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_tiers",
+			{
+				"program_growth_component_id" = "eq.#url.Child_ID#"
+			},
+			{
+				"range_end" = "#Target_Amount#",
+				"growth_amount" = "#Target_Bonus#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTiers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTiers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeletePriorProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeletePriorProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
+<cfif useLakebaseForDeletePriorProducts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_product_data",
+			{
+				"program_growth_component_id" = "eq.#Child_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePriorProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePriorProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: saveContractProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertNewProduct =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

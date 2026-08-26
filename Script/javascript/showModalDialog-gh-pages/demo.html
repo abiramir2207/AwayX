@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <title>showModalDialog polyfill demo</title>
+    </head>
+    <body>
+      <h1>showModalDialog polyfill demo</h1>
+      <form action="">
+	<p>
+	  <input id="button1" type="button" value="Show Modal Dialog using yield">
+	</p>
+	<p>
+	  <input id="button2" type="button" value="Show Modal Dialog using eval">
+	</p>
+      </form>
+      <iframe src="http://ghbtns.com/github-btn.html?user=niutech&repo=showModalDialog&type=watch&count=true" height="30" width="118" frameborder="0" allowTransparency="true"></iframe>
+      <script src="showModalDialog.js"></script>
+      <script>
+	document.getElementById('button1').addEventListener('click', function() {
+	  spawn(function*() {
+	    var ret = yield window.showModalDialog("demo-modal.html", "some argument", "dialogWidth:500px;dialogHeight:200px");
+	    alert("Returned from modal: " + ret);
+	  });
+	});
+      </script>
+      <script>
+	document.getElementById('button2').addEventListener('click', function() {
+	  var ret = window.showModalDialog("demo-modal.html", "some argument", "dialogWidth:500px;dialogHeight:200px");
+	  alert("Returned from modal: " + ret);
+	});
+      </script>
+    </body>
+</html>

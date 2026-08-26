@@ -1,0 +1,21 @@
+===== QUERY: Get_Profiles =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Profiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForGet_Profiles>
+	<cftry>
+		<cfset Get_Profiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"order" = "profiles_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Profiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Profiles>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

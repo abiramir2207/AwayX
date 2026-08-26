@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" height="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.AutoPay.events.AutoPayEvent;
+			import com.Admin.AutoPay.models.vos.SearchParms;
+			import com.Admin.AutoPay.views.pm.AutoPayPModel;
+			
+			import mx.events.CalendarLayoutChangeEvent;
+			import mx.utils.ObjectUtil;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:AutoPayPModel;
+			
+			[Bindable]
+			private var _dtStart:Date = new Date('2011','00','01');
+			[Bindable]
+			private var iWidth:Number = 175;
+			[Bindable]
+			private var iHeight:Number = 17;
+			[Bindable]
+			private var iPadding:Number = 3;
+			private var searchParms:SearchParms = new SearchParms();
+			
+			private function formEnterKey(event:KeyboardEvent):void 
+			{
+				/* If"Enter" key */
+				if (event.keyCode == Keyboard.ENTER)
+				{	 	
+					//run search
+					this.btnSearch.dispatchEvent(new MouseEvent(MouseEvent.CLICK));	
+				}
+			}
+			
+			private function dateChange(event:CalendarLayoutChangeEvent):void 
+			{
+				//run search
+				this.btnSearch.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+			}
+			
+			private function resetForm():void 
+			{
+				var sp:SearchParms = new SearchParms();
+				this.searchParms = sp;
+				
+				var ape:AutoPayEvent = new AutoPayEvent(AutoPayEvent.SET_SEARCH_PARMS);
+				ape.searchParms = sp;
+				this.dispatchEvent(ape);
+				/* this.dtStart.selectedDate = sp.dStart;
+				this.dtEnd.selectedDate = sp.dEnd;
+				this.reportId.text = sp.reportId.toString(); */
+
+				//run search
+				this.btnSearch.dispatchEvent(new MouseEvent(MouseEvent.CLICK));	
+			}
+		]]>
+	</fx:Script>
+	<mx:MenuBar id="mb" width="100%" height="26"						
+				click="pModel.menuHandler(event)" dataProvider="{pModel.acMenuData}"
+				itemClick="pModel.menuItemHandler(event)"
+				menuBarItemRenderer="com.Billback.Edit.views.renderer.MenuBarItemRendererBA"
+				mouseOver="pModel.menuOverHandler(event)"
+				backgroundSkin="com.shared.views.skins.GenericHeaderBackgroundSkinBa">
+	</mx:MenuBar>
+	<s:BorderContainer height="100%">
+		<s:VGroup paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}">
+			<s:HGroup width="100%">
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+						</s:layout>
+						<!--<s:FormHeading fontSize="10"  label="Search"/>-->
+						
+						<s:FormItem label="Report Id" >
+							<s:TextInput id="reportId" width="{iWidth}" height="{iHeight}" keyDown="this.formEnterKey(event)" text="{this.pModel.reportId}" />
+						</s:FormItem>
+						
+						<s:FormItem label="Inv. Number" >
+							<s:TextInput id="invoiceNumber" width="{iWidth}" height="{iHeight}" keyDown="this.formEnterKey(event)" text="{this.pModel.searchParms.invoiceNumber}" />
+						</s:FormItem>
+						
+						<!--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+						<s:FormItem label="Title">
+							<s:TextInput id="bbHeader"  width="{iWidth}" height="{iHeight}"  />
+						</s:FormItem>
+						
+						<s:FormItem label="Payee">
+							<s:TextInput id="Payee" width="{iWidth}" height="{iHeight}"/>
+						</s:FormItem> -->
+						
+						<!--<s:FormItem label="">
+							<s:Button id="btnSearch" label="Search" />
+						</s:FormItem>-->
+	
+					</s:Form>
+				</s:VGroup>
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay2" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+						</s:layout>
+						<!--<s:FormHeading fontSize="10"  label=""/>-->
+						
+						<s:FormItem label="Start" height="{iHeight}">
+							<mx:DateField id="dtStart" width="{iWidth}" height="{iHeight}" fontSize="10"
+									editable="true"
+									selectedDate="{this.pModel.searchParms.dStart}" 
+									toolTip="Report Start Date &#0062;= Start" 
+									change="dateChange(event)"/>
+							<!--<s:TextInput id="Start" width="{iWidth}" height="{iHeight}"/>-->
+						</s:FormItem>
+						
+						<s:FormItem label="End" height="{iHeight}">
+							<mx:DateField id="dtEnd" width="{iWidth}" height="{iHeight}" fontSize="10" 
+										  editable="true"
+										  toolTip="Report End Date &#0060;= End"
+										  selectedDate="{this.pModel.searchParms.dEnd}"
+										  change="dateChange(event)"/>
+						</s:FormItem>
+						
+						<!--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+						<s:FormItem label="End">
+							<mx:DateField id="End" width="{iWidth}" height="{iHeight}" fontSize="10"/>
+						</s:FormItem>
+						
+						<s:FormItem label="Status">
+							<s:TextInput id="Status" width="{iWidth}" height="{iHeight}"/>
+						</s:FormItem> -->
+			
+					</s:Form>
+				</s:VGroup>
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay3" gap="0" paddingTop="0" paddingBottom="0" /><!--variableRowHeight="false" rowHeight="30"-->
+						</s:layout>
+						<!--<s:FormHeading fontSize="10"  label=""/>-->
+					
+						
+						<!--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+						<s:FormItem label="Program">
+							<s:TextInput id="Program" width="{iWidth}" height="{iHeight}"/>
+						</s:FormItem>
+						
+						<s:FormItem label="Billback">
+							<s:TextInput id="Billback" width="{iWidth}" height="{iHeight}"/>
+						</s:FormItem>
+						
+						<s:FormItem label="User">
+							<s:TextInput id="User" width="{iWidth}" height="{iHeight}"/>
+						</s:FormItem>-->
+						
+						<!--<s:FormItem label="Status">
+							<s:TextInput id="Status" width="{iWidth}" height="{iHeight}"/>
+						</s:FormItem>
+						
+						<s:FormItem label="Closing Method">
+							<s:TextInput id="Closing_Method" width="{iWidth}" height="{iHeight}"/>
+						</s:FormItem>-->
+					</s:Form>
+				</s:VGroup>
+				<s:HGroup height="100%" verticalAlign="bottom" paddingBottom="7">
+					<s:Button id="btnSearch" label="Search" toolTip="Get Auto pay data based on criteria" 
+							  click="this.pModel.search(Number(this.reportId.text),this.dtStart.selectedDate,this.dtEnd.selectedDate,this.invoiceNumber.text)"/>
+					<s:Button id="btnReset" label="Reset" toolTip="Reset Search Form" click="this.resetForm()"/>
+					<s:CheckBox id="chkFilterEmptyPayPeriod" label="Hide Empty Pay Periods" toolTip="Hide pay periods that did not generate a billback (since no invoice data was found)." 
+								click="pModel.filterEmptyPayPeriodt(this.chkFilterEmptyPayPeriod.selected)" />
+				</s:HGroup>
+			</s:HGroup>
+			
+		</s:VGroup>
+	</s:BorderContainer>
+</s:Group>

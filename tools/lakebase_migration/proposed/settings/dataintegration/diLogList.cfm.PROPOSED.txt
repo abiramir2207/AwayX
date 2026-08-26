@@ -1,0 +1,6 @@
+===== QUERY: q_diLogData =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_diLogErrors =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

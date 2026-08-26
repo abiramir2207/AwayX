@@ -1,0 +1,44 @@
+===== QUERY: updateRateType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateRateType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdateRateType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#form.Program_ID#"
+			},
+			{
+				"bid_price_rebate_type" = "#form.Bid_Price_Rebate_Type#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateRateType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateRateType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramType>
+	<cftry>
+		<cfset getProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

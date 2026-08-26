@@ -1,0 +1,26 @@
+===== QUERY: IsAlreadyThere =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForIsAlreadyThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_user_preferences")>
+<cfif useLakebaseForIsAlreadyThere>
+	<cftry>
+		<cfset IsAlreadyThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_user_preferences", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsAlreadyThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsAlreadyThere>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateRecord =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: InsertRecord =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

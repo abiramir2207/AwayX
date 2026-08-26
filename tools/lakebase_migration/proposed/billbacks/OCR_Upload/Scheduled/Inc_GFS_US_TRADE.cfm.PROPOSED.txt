@@ -1,0 +1,18 @@
+===== QUERY: qCreateTableGFS =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsertTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateOCRUploadLogStatus5 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qSelGFSFileDataCheck =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogUpdateTries =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

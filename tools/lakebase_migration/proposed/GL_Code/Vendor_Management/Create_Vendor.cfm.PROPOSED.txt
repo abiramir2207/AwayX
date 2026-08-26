@@ -1,0 +1,85 @@
+===== QUERY: deActivateVendors =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: ActivateVendors =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetVendorInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetVenNumber =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: InsertNewVendor =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateVendorInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateVendorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForupdateVendorInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("vendor_master",
+			{
+				"vendor_master_id" = "eq.#form.vmi#"
+			},
+			{
+				"vendor_name" = "#form.vendor_name#",
+				"address_1" = "#form.address#",
+				"address_2" = "#form.address2#",
+				"city" = "#form.vendor_city#",
+				"state" = "#form.vendor_state#",
+				"zipcode" = "#form.zip_code#",
+				"country_code" = "#form.vendor_country#",
+				"active_code" = "A",
+				"user_updated" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateVendorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateVendorInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetStates =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetStates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_states")>
+<cfif useLakebaseForGetStates>
+	<cftry>
+		<cfset GetStates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_states", {
+				"order" = "state_name.asc",
+				"select" = "state_code as state,state_name"
+			}), "state_code as state,state_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStates>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getCountry =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCountry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForgetCountry>
+	<cftry>
+		<cfset getCountry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCountry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCountry>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,45 @@
+===== QUERY: thisTag.qGetGrowthPaymentFrequency =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetGrowthClaimMechanism =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForthisTag_qGetGrowthClaimMechanism = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForthisTag_qGetGrowthClaimMechanism>
+	<cftry>
+		<cfset thisTag.qGetGrowthClaimMechanism = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#thisTag.qProgramGrowth.claim_mechanics#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetGrowthClaimMechanism = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetGrowthClaimMechanism>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: thisTag.qGetGrowthClaimMechanism =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForthisTag_qGetGrowthClaimMechanism = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForthisTag_qGetGrowthClaimMechanism>
+	<cftry>
+		<cfset thisTag.qGetGrowthClaimMechanism = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#thisTag.qProgramGrowth.claim_mechanics#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetGrowthClaimMechanism = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetGrowthClaimMechanism>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

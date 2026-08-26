@@ -1,0 +1,65 @@
+===== QUERY: checkForSettingColumnExistance =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: isUSDANOI_enabled =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForisUSDANOI_enabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForisUSDANOI_enabled>
+	<cftry>
+		<cfset isUSDANOI_enabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "usdanoi_enabled"
+			}), "usdanoi_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisUSDANOI_enabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisUSDANOI_enabled>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getusdanoicomponentid =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetusdanoicomponentid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForgetusdanoicomponentid>
+	<cftry>
+		<cfset getusdanoicomponentid = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"is_usda_noi_comp" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_name_id"
+			}), "program_rebates_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetusdanoicomponentid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetusdanoicomponentid>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: WhoRebills =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForWhoRebills = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForWhoRebills>
+	<cftry>
+		<cfset WhoRebills = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {
+				"select" = "rebill"
+			}), "rebill"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForWhoRebills = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForWhoRebills>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

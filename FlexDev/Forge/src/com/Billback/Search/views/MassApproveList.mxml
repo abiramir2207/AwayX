@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Popup that shows approved/agreed billbacks -->
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				close="PopUpManager.removePopUp(this)"
+				xmlns:local="com.shared.views.renderer.*"
+				backgroundColor="0xffffff"				
+				color="0x333333"
+				name="Approved Billbacks"
+				title="Approved Billbacks">
+	
+				<!-- headerColors="['0xffce84','0xffffff']" 
+					close="PopUpManager.removePopUp(this)"
+				-->	
+	<fx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import com.shared.components.StringUtils;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import com.Billback.Main.models.vos.BBHeader;
+			
+			[Bindable]
+			public var arrObjHeader:Array = new Array();
+		
+			/* Approved or Agreed */
+			private function ApprovedStatus(item:Object, col:DataGridColumn):String
+			{
+				var strStatus:String = "";
+				if(item.status.id >= 3){
+					strStatus = "Approved";
+				}
+				else if(item.status.subStatus == 3){
+					strStatus = "Agreed";
+				}
+				else{
+					strStatus = "Not Approved";
+				}
+				return strStatus;
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:VBox width="100%">
+		<mx:HBox horizontalAlign="right" width="100%">		
+			<mx:Label text="[close]" fontWeight="bold" fontSize="9" click="PopUpManager.removePopUp(this)" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+		</mx:HBox>
+	</mx:VBox>
+	<s:VGroup width="100%">
+		<s:HGroup width="100%">
+			<mx:DataGrid textAlign="left" 
+						 dataProvider="{arrObjHeader}" 
+						 width="100%">
+				<mx:columns>
+					<mx:DataGridColumn dataField="BBCode"  width="110" headerText="Billback" />
+					<mx:DataGridColumn dataField="startDate"  width="80" headerText="Start Date" labelFunction="StringUtils.FormatDtDg"/>
+					<mx:DataGridColumn dataField="endDate"  width="80" headerText="End Date" labelFunction="StringUtils.FormatDtDg"/>
+					<mx:DataGridColumn dataField="status.id"  width="110" headerText="Approved/Agreed" labelFunction="ApprovedStatus" />
+				</mx:columns>
+			</mx:DataGrid>
+		</s:HGroup>
+	</s:VGroup>
+</s:TitleWindow>

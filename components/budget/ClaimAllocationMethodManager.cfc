@@ -1,0 +1,23 @@
+<!---
+Name: 			ClaimAllocationMethodManager.cfc
+Copyright:		(c) 2006 Blacksmith Applications, Inc.
+Description: 	Claim Allocation Method Manager
+Date Created:	05/16/2006
+--->
+
+<cfcomponent displayname="ClaimAllocationMethodManager" hint="Claim Allocation Method Manager">
+
+	<cffunction name="init" access="public" returntype="components.budget.ClaimAllocationMethodManager">
+		<cfreturn this />
+	</cffunction>
+	
+	<!---//////////////////////////////////////////////////////BOOLEAN///////////////////////////////////////////--->
+	
+	<!---//////////////////////////////////////////////////////DELETE////////////////////////////////////////////--->
+	
+	<!---//////////////////////////////////////////////////////GET///////////////////////////////////////////////--->
+	<cfinclude template="ClaimAllocationMethodManager/getClaimAllocationMethods.cfm" />
+	
+	<!---/////////////////////////////////////////////////////SAVE///////////////////////////////////////////////--->
+	
+</cfcomponent>

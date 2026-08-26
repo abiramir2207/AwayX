@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for displaying the image based on the field DEVIATION_UNAUTHORIZED_PRODUCT 
+ 	from the query result 
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.external.ExternalInterface
+			import com.asfusion.mate.events.Dispatcher;
+			import mx.events.CloseEvent;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			private var columnIndex:Number;
+			public var URLgeneratedDUP:String = "/billbacks/Deviation/Authorized_Product_List.cfm?Billback_Product_Detail_ID=";
+		]]>
+</mx:Script>
+<!--
+			useHandCursor="{(data.Dummy_Program=='0')&amp;&amp;(data.UnKnown_Item=='0')}" 
+			buttonMode="{(data.Dummy_Program=='0')&amp;&amp;(data.UnKnown_Item=='0')}"  
+-->
+  <mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+				id="imgDUP"	
+				width="12"
+				height="12"
+				source="{getSource(data.DEVIATION_UNAUTHORIZED_PRODUCT)}" 
+				useHandCursor="{((data.Third_Party_BB_Upload == '3' &amp;&amp; ((data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3') &amp;&amp; (data.UnKnown_Item=='0')))}" 
+				buttonMode="{((data.Third_Party_BB_Upload == '3' &amp;&amp; ((data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3') &amp;&amp; (data.UnKnown_Item=='0')))}" 
+				mouseChildren="false"
+				click="fnDUPClick()"
+				toolTip="{data.DEVIATION_UNAUTHORIZED_PRODUCT_PERCENT}%">
+				<mx:Script>
+				<![CDATA[
+				/** 
+				 * This holds the image to be displayed basesd on the DEVIATION_UNAUTHORIZED_PRODUCT 
+				 * field from the query result
+				 */
+				 private var imgDUPHolder:Class;
+					/** 
+				 	* This function determines which image has to be displayed for the 
+				 	* Authorization Validation column in the grid.
+				 	*/						 
+				  private function getSource(recType:String):Object
+					{
+						/* 
+							21398:
+							These images were shown on scrolling breaking through the 
+							if condition, so this was removed, so that the images would
+							be shown for dummy program and unknown item rows also.
+						*/ 						
+						/* if((data.Dummy_Program=='0')&&(data.UnKnown_Item=='0'))
+						{ */
+							if ((data.BB_Product_Type_ID=='1'||data.BB_Product_Type_ID=='2') && data.DEVIATION_UNAUTHORIZED_PRODUCT == 1)   
+							{
+								//imgDUPHolder = "/flex/assets/Images/no.gif";
+								[Embed(source="/assets/Images/no.gif")]
+							 	var imgNo:Class;
+								imgDUPHolder = imgNo; 
+							}
+							else if ((data.BB_Product_Type_ID=='1'||data.BB_Product_Type_ID=='2') && data.DEVIATION_UNAUTHORIZED_PRODUCT == 0)
+							{
+								// imgDUPHolder = "/flex/assets/Images/yes.gif";
+								[Embed(source="/assets/Images/yes.gif")]
+							 	var imgYes:Class;
+								imgDUPHolder = imgYes; 
+							}
+							else
+							{
+								imgDUPHolder:Class;
+							}
+						/* }	
+						else
+						{
+							imgDUPHolder:Class;
+						} */
+						return imgDUPHolder;
+					}  
+					/**
+					* This function will open a popup window with the link given above.
+					*	The data.* would not work in the initialization above as the data.* 
+					*	is not created and is available only later
+					*/					
+					private function fnDUPClick():void
+					{
+						/* 
+							This will disable the click for the highlighted rows for the 
+							Unknown_Item and Dummy_Program 
+						*/
+						// if ((data.Dummy_Program=='0')&&(data.UnKnown_Item=='0'))
+						if ((data.Third_Party_BB_Upload == '3' && ((data.Dummy_Program=='0') && (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3')&&(data.UnKnown_Item=='0')))
+						{	
+							var strRequestURL:String = URLgeneratedDUP + data.Billback_Product_Detail_ID;
+							ExternalInterface.call("f = function() { window.open('"+strRequestURL+"','win','toolbar=no,scrollbars=yes,resizable=1,width=780,height=650'); }");
+						}							
+					}								
+				]]>
+			</mx:Script>
+	</mx:Image>
+</mx:HBox> 			
+ 

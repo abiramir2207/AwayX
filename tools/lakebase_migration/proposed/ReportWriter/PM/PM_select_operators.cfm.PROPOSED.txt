@@ -1,0 +1,69 @@
+===== QUERY: GetContractInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Operator_Location_Type =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Operator_Location_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Location_Type>
+	<cftry>
+		<cfset Get_Operator_Location_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"deleted" = "eq.0",
+				"select" = "operator_location_type"
+			}), "operator_location_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Location_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Location_Type>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Operator_Type =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Operator_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("awayx_operator_type")>
+<cfif useLakebaseForGet_Operator_Type>
+	<cftry>
+		<cfset Get_Operator_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("awayx_operator_type", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "operator_type"
+			}), "operator_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Type>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetOperatorInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: TheQuery =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

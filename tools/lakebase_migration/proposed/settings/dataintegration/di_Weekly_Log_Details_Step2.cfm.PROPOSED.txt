@@ -1,0 +1,6 @@
+===== QUERY: Q_Weekly_log_Entry_Detail =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Table_Schema_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	This holds all the PropertyInjectors that injects the value from the settings.* objects into the 
+	corresponding variable in the display page.
+-->
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.maps.MainEventMap;
+		]]>
+	</mx:Script>
+	
+	
+	<!-- Different property injectors are set here -->
+	
+	<Injectors target="{BBMainPanel}">
+		<PropertyInjector targetKey="sBBID" 			   		source="{BBSettingsManager}" sourceKey="settings.sBBID" />
+		<PropertyInjector targetKey="sBBTitle" 		   			source="{BBSettingsManager}" sourceKey="settings.sBBTitle" />
+		<PropertyInjector targetKey="sBBStartDate"   			source="{BBSettingsManager}" sourceKey="settings.sBBStartDate" />
+		<PropertyInjector targetKey="sBBEndDate" 	   			source="{BBSettingsManager}" sourceKey="settings.sBBEndDate" />
+		<PropertyInjector targetKey="sBBAmount" 	   			source="{BBSettingsManager}" sourceKey="settings.sBBAmount" />
+		<PropertyInjector targetKey="sBBCode" 		   			source="{BBSettingsManager}" sourceKey="settings.sBBCode" />
+		<PropertyInjector targetKey="sBBDate" 		   			source="{BBSettingsManager}" sourceKey="settings.sBBDate" />
+		<PropertyInjector targetKey="sPayeeName" 	   			source="{BBSettingsManager}" sourceKey="settings.sPayeeName" />	
+		<PropertyInjector targetKey="sBBDevOvPrice"  			source="{BBSettingsManager}" sourceKey="settings.sBBDevOvPrice" />
+		<PropertyInjector targetKey="sBBUpdApproveAmt"  		source="{BBSettingsManager}" sourceKey="settings.sBBUpdApproveAmt" />		
+		<PropertyInjector targetKey="sBBApproveExpRateLessTol"  source="{BBSettingsManager}" sourceKey="settings.sBBApproveExpRateLessTol" />
+		<PropertyInjector targetKey="sBBApproveDisAgree"  		source="{BBSettingsManager}" sourceKey="settings.sBBApproveDisAgree" />
+		<PropertyInjector targetKey="sBBManualRateCheck"		source="{BBSettingsManager}" sourceKey="settings.sBBManualRateCheck" />
+		<PropertyInjector targetKey="sBBVolumeOverride"  		source="{BBSettingsManager}" sourceKey="settings.sBBVolumeOverride" />
+		<PropertyInjector targetKey="sBBRateOverride"  			source="{BBSettingsManager}" sourceKey="settings.sBBRateOverride" />
+		<PropertyInjector targetKey="sBBStatusID"		 		source="{BBSettingsManager}" sourceKey="settings.sBBStatusID" />
+		<PropertyInjector targetKey="sBBEditable"		 		source="{BBSettingsManager}" sourceKey="settings.sBBEditable" />
+		<PropertyInjector targetKey="sExpBtnBgColor"		 	source="{BBSettingsManager}" sourceKey="settings.sExpBtnBgColor" />
+		<PropertyInjector targetKey="sExpBtnFontColor"		 	source="{BBSettingsManager}" sourceKey="settings.sExpBtnFontColor" />
+		<PropertyInjector targetKey="sEltBtnBgColor"		 	source="{BBSettingsManager}" sourceKey="settings.sEltBtnBgColor" />
+		<PropertyInjector targetKey="sEltBtnFontColor"		 	source="{BBSettingsManager}" sourceKey="settings.sEltBtnFontColor" />
+		<PropertyInjector targetKey="sClmBtnBgColor"		 	source="{BBSettingsManager}" sourceKey="settings.sClmBtnBgColor" />
+		<PropertyInjector targetKey="sClmBtnFontColor"		 	source="{BBSettingsManager}" sourceKey="settings.sClmBtnFontColor" />
+		<PropertyInjector targetKey="sSelBtnBgColor"		 	source="{BBSettingsManager}" sourceKey="settings.sSelBtnBgColor" />
+		<PropertyInjector targetKey="sSelBtnFontColor"		 	source="{BBSettingsManager}" sourceKey="settings.sSelBtnFontColor" />
+		<PropertyInjector targetKey="sBBFractionalVolume"		source="{BBSettingsManager}" 		 sourceKey="settings.sBBFractionalVolume" />		
+		<PropertyInjector targetKey="sViewOperatorinBillbackDeviation"		source="{BBSettingsManager}" sourceKey="settings.sViewOperatorinBillbackDeviation" />
+		<PropertyInjector targetKey="sBBOverlapDeviationBasedOnOperator" 	source="{BBSettingsManager}" sourceKey="settings.sBBOverlapDeviationBasedOnOperator" />
+		<PropertyInjector targetKey="sDeviationGridAllowManualValuesGTClaimed" 	source="{BBSettingsManager}" sourceKey="settings.sDeviationGridAllowManualValuesGTClaimed" />
+		<PropertyInjector targetKey="sBBAllDupGroupID" source="{BBSettingsManager}" sourceKey="settings.sBBAllDupGroupID" />
+		<PropertyInjector targetKey="sBBOperLocationLevelDupChecker" source="{BBSettingsManager}" sourceKey="settings.sBBOperLocationLevelDupChecker" />
+		<PropertyInjector targetKey="sProfileViewDeviatedItemsOnlyOnLoad" source="{BBSettingsManager}" sourceKey="settings.sProfileViewDeviatedItemsOnlyOnLoad" />
+		<PropertyInjector targetKey="sProfileViewCountColumnInDeviationGrid" source="{BBSettingsManager}" sourceKey="settings.sProfileViewCountColumnInDeviationGrid" />
+		
+		<PropertyInjector targetKey="dpBBData" 		   			source="{BBMainManager}" 		 sourceKey="acBBData" />
+		<!--<PropertyInjector targetKey="var1" 			 		source="{BBSettingsManager}" sourceKey="settings.appFlex.var1" />
+		<PropertyInjector targetKey="var2" 						source="{BBSettingsManager}" sourceKey="settings.appFlex.var2" />-->
+		<PropertyInjector targetKey="oSettings" 		 		source="{BBSettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="oUser" 				 	source="{BBSettingsManager}" sourceKey="settings.user" />
+		<PropertyInjector targetKey="sUserID" 			 		source="{BBSettingsManager}" sourceKey="settings.sUserId" />
+		<PropertyInjector targetKey="sCallerSource" 			source="{BBSettingsManager}" sourceKey="settings.sCallerSource" />
+		<PropertyInjector targetKey="nTotalExpected" 			source="{BBMainManager}" 		 sourceKey="nTotExpected" />
+		<PropertyInjector targetKey="nTotalExpectedLT" 			source="{BBMainManager}" 		 sourceKey="nTotExpectedLT" />		
+		<PropertyInjector targetKey="nTotalClaimed"  			source="{BBMainManager}" 		 sourceKey="nTotClaimed" />
+		<PropertyInjector targetKey="nTotalApproved" 			source="{BBMainManager}" 		 sourceKey="nTotApproved" />
+		<PropertyInjector targetKey="nTotalDeviation"			source="{BBMainManager}" 		 sourceKey="nTotalDeviation" />
+		
+		<PropertyInjector targetKey="nTotalAccepted"			source="{BBMainManager}" 		 sourceKey="nTotAccepted" />
+		<PropertyInjector targetKey="nTotalDenied"				source="{BBMainManager}" 		 sourceKey="nTotDenied" />
+		<PropertyInjector targetKey="bCbDeviationChecked"		source="{BBMainManager}" 		 sourceKey="bCbDeviationChecked" />
+		
+	<!--<Injectors target="{MainPanel}">
+		<PropertyInjector targetKey="acData" source="{MainManager}" sourceKey="acData" />
+		<PropertyInjector targetKey="var1" source="{SettingsManager}" sourceKey="settings.appFlex.var1" />
+		<PropertyInjector targetKey="var2" source="{SettingsManager}" sourceKey="settings.appFlex.var2" />
+		<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="oUser" source="{SettingsManager}" sourceKey="settings.user" />-->
+	</Injectors>
+	
+	<Injectors target="{BBMainManager}">
+		<PropertyInjector targetKey="sProfileViewDeviatedItemsOnlyOnLoad" source="{BBSettingsManager}" sourceKey="settings.sProfileViewDeviatedItemsOnlyOnLoad" />
+	</Injectors>
+		
+</EventMap>

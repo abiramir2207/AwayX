@@ -1,0 +1,1 @@
+This file is not being used anymore. The code is now a part of "\Script\javascript\jquery.dataTables-api.js".

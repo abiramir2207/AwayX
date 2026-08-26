@@ -1,0 +1,15 @@
+===== QUERY: thisTag.qProgramRebateItems =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: thisTag.qGetPricing =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: thisTag.qGetRebateClaimMechanism =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetRebatePaymentFrequency =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetRebateExternalID =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

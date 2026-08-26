@@ -1,0 +1,190 @@
+===== QUERY: getUserPosition =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithDistributorsInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithdistributorsinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithDistributorsInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithdistributorsinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithBrokersInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithbrokersinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithBrokersInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithbrokersinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithDistributorsInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithdistributorsinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithDistributorsInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithdistributorsinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithBrokersInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithbrokersinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithBrokersInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithbrokersinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithDistributorsInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithdistributorsinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithDistributorsInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithdistributorsinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithBrokersInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithbrokersinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithBrokersInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithbrokersinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithDistributorsInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithdistributorsinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithDistributorsInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithdistributorsinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramsWithBrokersInMyPositionBranch =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithbrokersinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithBrokersInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithbrokersinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,24 @@
+===== QUERY: getUOMLabel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUOMLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUOMLabel>
+	<cftry>
+		<cfset getUOMLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#bidrule.basic.Bid_Rule_UOM#",
+				"select" = "unit_of_measure_desc"
+			}), "unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUOMLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUOMLabel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getTypes =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

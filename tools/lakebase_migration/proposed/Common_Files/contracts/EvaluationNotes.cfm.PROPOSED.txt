@@ -1,0 +1,52 @@
+===== QUERY: qContractNumber =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqContractNumber>
+	<cftry>
+		<cfset qContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "contract_number,is_a_revision,programtype_id,reset_user_id"
+			}), "contract_number,is_a_revision,programtype_id,reset_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqContractNumber>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: editSaveEvaluationNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: postEvaluationNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qEvaluationNotesEdit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqEvaluationNotesEdit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_evaluation_notes")>
+<cfif useLakebaseForqEvaluationNotesEdit>
+	<cftry>
+		<cfset qEvaluationNotesEdit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_evaluation_notes", {
+				"contract_number" = "eq.#qContractNumber.Contract_Number#",
+				"contract_evaluation_notes_id" = "eq.#editRecord#",
+				"select" = "contract_evaluation_notes_id,notes"
+			}), "contract_evaluation_notes_id,notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqEvaluationNotesEdit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqEvaluationNotesEdit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qEvaluationNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

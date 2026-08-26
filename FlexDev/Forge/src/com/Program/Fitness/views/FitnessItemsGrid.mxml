@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*"
+		 initialize="init();" width="100%" height="100%">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Main.models.vos.BBHeader;
+			import com.Program.Fitness.views.pm.FitnessItemsPModel;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+			import mx.events.CollectionEvent;
+
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:FitnessItemsPModel;
+			
+			private function init():void {
+				this.dgFitnessItem.addEventListener(CollectionEvent.COLLECTION_CHANGE, this.wrapper);
+
+				//this.dgFitnessTotal.setStyle('color',0xFFFFFF);
+				this.dgFitnessTotal.setStyle('rollOverColor',0xFFFFFF);
+				this.dgFitnessTotal.setStyle('selectionColor',0xFFFFFF);
+				
+				this.dgFitnessTotal.setStyle('alternatingItemColors',0xFFFFFF);
+				
+				this.dgFitnessTotal.setStyle('font-weight','bold');
+				/*this.dgFitnessTotal.setStyle('textRollOverColor',0xFFFFFF);
+				this.dgFitnessTotal.setStyle('textColor',0xFFFFFF);*/
+				
+			}
+			private function wrapper(e:Event):void {
+				//call the pmodel
+				this.pModel.getSumresult();
+			}
+			
+			
+			public function showHide(event:Event):void
+			{
+				var sCol:String;
+				//show hide dynamic prod attr cols
+				for each(var col:AdvancedDataGridColumn in this.dgFitnessItem.columns){
+					
+					if("chShow" + col.dataField == event.currentTarget.id){
+						col.visible = !col.visible;
+						break;
+					}
+				}
+				for each(var col:AdvancedDataGridColumn in this.dgFitnessTotal.columns){
+					
+					if("chShow" + col.dataField == event.currentTarget.id){
+						col.visible = !col.visible;
+						break;
+					}
+				}
+				//AFTER SHOW HIDE, LAST COL GETS EXTRA SPACE...THIS DID NOT HELP???
+				/*for each(var col:AdvancedDataGridColumn in this.dgFitnessItem.columns){
+					
+					if(col.dataField == 'xSpace'){
+						col.width = .99;
+						break;
+					}
+				}
+				for each(var col:AdvancedDataGridColumn in this.dgFitnessTotal.columns){
+					
+					if(col.dataField == 'xSpace'){
+						col.width = .99;
+						break;
+					}
+				}
+				this.dgFitnessTotal.validateNow();
+				this.dgFitnessItem.validateNow();*/
+			}
+			
+			private function callGridResize():void{
+				
+				callLater(this.gridResize);;
+			}
+			
+			private function gridResize():void{
+				for each(var colItem:AdvancedDataGridColumn in this.dgFitnessItem.columns){
+					
+					for each(var colTot:AdvancedDataGridColumn in this.dgFitnessTotal.columns){
+						
+						if(colTot.dataField == colItem.dataField){
+							colTot.width = colItem.width;
+							//trace(colTot.dataField + ' :: ' + colTot.width.toString() + ' :: ' + colItem.dataField  + ' :: ' +  colItem.width.toString());
+							break;
+						}
+					}
+				}
+				/*trace(' :::::::::::::::::::::::::::::::::::::::::::::::::::: ');
+				if(this.dgFitnessItem.columns.length && this.dgFitnessTotal.columns[ix].width != this.dgFitnessItem.columns[ix].width){
+					this.dgFitnessTotal.columns[ix].width = this.dgFitnessItem.columns[ix].width;
+					trace(this.dgFitnessTotal.columns[ix].dataField + ' :: ' + this.dgFitnessTotal.columns[ix].width.toString() + ' :: ' + this.dgFitnessItem.columns[ix].dataField  + ' :: ' +  this.dgFitnessItem.columns[ix].width.toString());
+				}*/
+				/* IF WE DONT RUN TWICE< THE FIRST COLUMN ITEM HAS WRONG WIDTH ???  JUST FIXING THE ITEM COL THEN MESSES UP OTHER COL WIDTHS*/
+				for each(var colItem:AdvancedDataGridColumn in this.dgFitnessItem.columns){
+					
+					for each(var colTot:AdvancedDataGridColumn in this.dgFitnessTotal.columns){
+						
+						if(colTot.dataField == colItem.dataField){
+							colTot.width = colItem.width;
+							//trace(colTot.dataField + ' :: ' + colTot.width.toString() + ' :: ' + colItem.dataField  + ' :: ' +  colItem.width.toString());
+							break;
+						}
+					}
+				}
+				//trace(' :::::::::::::::::::::xxxxxxxxxxxxxxx::::::::::::::::::: ');
+			}
+			
+			private function reset():void{
+				
+				dgFitnessItem.resetFilters();
+			}
+			
+		]]>
+	</fx:Script>
+	<!--<s:Label text="Look at all of this Grid Data" />-->
+	
+	<!--<mx:AdvancedDataGrid id="dgFitnessItem" editable="true" 
+						 selectionMode="singleRow" 
+						 columns="{pModel.arrFitnessItemsDgCols}"
+						 dataProvider="{new ArrayCollection(pModel.acItemData)}"
+						 width="100%" height="100%" >-->
+		<s:HGroup paddingLeft="25">
+			<s:CheckBox id="chShowqBrand"
+						label="{this.pModel.oSettings.qBrand}"
+						selected="false" 
+						change="this.showHide(event)">
+				
+			</s:CheckBox>
+			
+			<s:CheckBox id="chShowprodVarA"
+						label="{this.pModel.oSettings.appSettings.Prod_Var_A}"
+						selected="false" 
+						change="this.showHide(event)">
+				
+			</s:CheckBox>
+			
+			<s:CheckBox id="chShowtypeCodeDesc"
+						label="{this.pModel.oSettings.typeCode}"
+						selected="false" 
+						change="this.showHide(event)">
+				
+			</s:CheckBox>
+			<s:HGroup paddingLeft="25">
+				<s:Button label="Reset Filters"
+						  	click="this.reset()"/>
+			</s:HGroup>
+			<s:CheckBox id="chFilterVol"
+						label="Filter 0 Vol"
+						selected="false" 
+						change="this.pModel.filterVolume(this.chFilterVol.selected)">
+				
+			</s:CheckBox>
+			
+			<s:HGroup paddingLeft="75">
+				<s:Button label="Export" toolTip="Export to Excel (.csv format)"
+						  click="this.pModel.onSaveClick(this.dgFitnessItem.columns)"/>
+			</s:HGroup>
+			
+		</s:HGroup>
+		<filters:FilterAdvancedDatagrid id="dgFitnessTotal" editable="false" x="10"
+										rowCount="1" rowHeight="20"
+										groupedColumns="{pModel.arrFitnessTotalsDgCols}"
+										dataProvider="{this.pModel.acFitnessTotals}"
+										width="{this.dgFitnessItem.width}" 
+										height="20" 
+										showHeaders="false" fontWeight="bold">
+		</filters:FilterAdvancedDatagrid>
+	<!--  rowCount="18"   -->
+		<filters:FilterAdvancedDatagrid id="dgFitnessItem" editable="false" x="10"
+								filterInsert="{pModel.funcFilterInsert}"
+								oFilterParms="{pModel.oFilterParms}" 
+								rowHeight="20" resizableColumns="true"
+								groupedColumns="{pModel.arrFitnessItemsDgCols}"
+								dataProvider="{this.pModel.acFitnessItems}"
+								width="100%" 
+								height="100%"
+								verticalScrollPolicy="on" 
+								resize="this.callGridResize()" 
+								columnStretch="this.callGridResize()" 
+								creationComplete="this.callGridResize()" 
+								sortExpertMode="true">
+		</filters:FilterAdvancedDatagrid>
+		
+
+	<!--</mx:AdvancedDataGrid>-->
+</s:Group>

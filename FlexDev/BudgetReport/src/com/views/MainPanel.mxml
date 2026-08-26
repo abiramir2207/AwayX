@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	 xmlns:ba="com.components.*" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"
+	resizeEffect="Resize" resize="true"  horizontalScrollPolicy="off" verticalScrollPolicy="off" 
+	width="100%" height="100%">
+
+	<mx:Script>
+		<![CDATA[
+			import com.events.*;
+			import com.models.*;
+			import com.vos.*;
+			import mx.collections.ArrayCollection;
+			import flash.events.*;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;	
+			import com.asfusion.mate.events.Dispatcher;
+		
+			//Data results
+			[Bindable] public var dpData:ArrayCollection 	= new ArrayCollection();
+			
+			//Dropdowns
+			[Bindable] public var dpClasses:Array 			= new Array();
+			[Bindable] public var dpSimpleBudget:Array		= new Array();
+			[Bindable] public var dpBudgetAssociation:Array	= new Array();
+			[Bindable] public var dpUserPositions:Array		= new Array();
+			
+			//General settings			
+			[Bindable] public var oSettings:Settings 	= new Settings();
+			[Bindable] public var oUser:Object 			= new Object();
+			
+			//Labels
+			[Bindable] public var sBudgetDollarLabel:String 			= "";
+			[Bindable] public var sCommittedDollarLabel:String 			= "";
+			[Bindable] public var sBudgetBalanceLabel:String 			= "";
+			[Bindable] public var sApprovedPaymentDollarLabel:String 	= "";
+			[Bindable] public var sAvailableBudgetDollarLabel:String 	= "";
+			[Bindable] public var sBudgetClassAssociationLabel:String 	= "";
+			
+			//Begin functions		
+			private function filterByAttribute():void{
+			
+			if(	Class.selectedIndex != 0 ||	
+				SimpleBudget.selectedIndex != 0 || 
+				BudgetAssociation.selectedIndex != 0 || 
+				UserPositions.selectedIndex != 0 
+				 )
+				{	
+					setFilter();
+					/* var event:MainEvent = new MainEvent(MainEvent.BUDGETFILTER);
+					this.dispatchEvent(event); */
+				}
+				else
+					{
+					ResetFilters();
+					}
+				// showReportLink(Report_List.selectedIndex);
+	 	   	}
+			
+			 	
+		   	private function setFilter():void{
+		   		
+   		   		var event:MainEvent = new MainEvent(MainEvent.BUDGETFILTER);//LOCAL FILTER
+   		   		event.eClass 			= Class.selectedLabel;
+				event.eSimpleBudget 	= SimpleBudget.selectedLabel;
+				event.eBudgetAssociation= BudgetAssociation.selectedLabel;
+				event.eUserPositions	= UserPositions.selectedLabel;
+				/* Alert.show(event.eClass.toString());
+				Alert.show(event.eSimpleBudget.toString());
+				Alert.show(event.eBudgetAssociation.toString());
+				Alert.show(event.eUserPositions.toString()); */
+				this.dispatchEvent(event);	
+		   		
+		   	}
+		   	private function dispatchBudgetReportEventGet():void{
+				//Alert.show('Dispatch');	
+				var e_Dispatcher:Dispatcher = new Dispatcher();
+	    		var e:MainEvent = new MainEvent(MainEvent.CALL_GET);
+       			e_Dispatcher.dispatchEvent(e);
+			}
+			
+			//resets the results and calls the control reset
+			public function ResetFilters():void
+			{		
+				Class.selectedIndex = 0;
+				SimpleBudget.selectedIndex = 0;
+				BudgetAssociation.selectedIndex = 0;
+				UserPositions.selectedIndex = 0;
+				
+				setFilter();
+			}
+			
+			//this resets the dropdowns and should be called from the function that resets the results
+			private function ResetControls():void
+			{
+				Class.selectedIndex = 0;
+				SimpleBudget.selectedIndex = 0;
+				BudgetAssociation.selectedIndex = 0;
+				UserPositions.selectedIndex = 0;		
+			}
+			
+			public function standardCurrencyFormatter(item:Object, column:DataGridColumn):String
+			{
+				var amt:String = usdFormatter.format(item[column.dataField]);
+				return amt;
+			}
+
+		]]>
+	</mx:Script>
+	
+
+<mx:CurrencyFormatter 
+		id="usdFormatter" precision="2" 
+        currencySymbol="$" decimalSeparatorFrom="."
+        decimalSeparatorTo="." useNegativeSign="true" 
+        useThousandsSeparator="true" alignSymbol="left"
+      />
+	
+	<!-- Views _______________________________________________________ -->
+<mx:HDividedBox id="fullBox" height="100%" width="100%" paddingTop="10" paddingRight="0" paddingBottom="0" paddingLeft="0" top="2" right="2" bottom="2" left="2">
+
+	<!--******************************* (LEFT NAV)	*********************************************-->
+	<mx:Panel id="pnlSelected" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333" minWidth="185" height="95%"
+			 name="Left Panel" title="Options" top="2" right="col1:2" bottom="row1:2" left="2">
+		
+	
+		<mx:VBox height="150" width="100%">
+		<!--*******************************	Some UI Stuff	***************************************************************-->
+			
+			<mx:ComboBox 
+				toolTip="filter:Class" 
+				id="Class" 
+				labelField="Simple_Budget_Class_Desc"
+				width="189"
+				dataProvider="{dpClasses}"
+				change="filterByAttribute()"
+				>
+			</mx:ComboBox>	
+			
+			<mx:ComboBox 
+				toolTip="filter:Budget" 
+				id="SimpleBudget" 
+				labelField="SimpleBudget"
+				width="189"
+				dataProvider="{dpSimpleBudget}"
+				change="filterByAttribute()"
+				>
+			</mx:ComboBox>	
+			
+			<mx:ComboBox 
+				toolTip="filter:Budget Association" 
+				id="BudgetAssociation" 
+				labelField="Simple_Budget_Class_Association_Number"
+				width="189"
+				dataProvider="{dpBudgetAssociation}"
+				change="filterByAttribute()"
+				>
+			</mx:ComboBox>
+			
+			<mx:ComboBox 
+				toolTip="filter:User Positions" 
+				id="UserPositions" 
+				labelField="Position_Label"
+				width="189"
+				dataProvider="{dpUserPositions}"
+				change="filterByAttribute()"
+				>
+			</mx:ComboBox>
+
+			<mx:Button 
+				click="ResetFilters()"
+				label="reset">
+			</mx:Button>
+
+		</mx:VBox>
+	</mx:Panel>
+
+	
+	<!-- Center Panel -->
+	<mx:Panel id="pnlAll" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333"
+			bottom="row2:2" height="95%" left="col2:2" right="2" top="2"
+			name="Main Panel" title="Budgets: {this.dgData.dataProvider.length} records">
+		<mx:VBox height="100%" width="100%" horizontalAlign="left" creationPolicy="queued" creationIndex="4">
+		
+			<mx:DataGrid allowMultipleSelection="true" id="dgData" dataProvider="{dpData}" editable="true" height="580" width="100%">
+					<mx:columns>
+						
+						<mx:DataGridColumn id="dgCol01" dataField="sSimpleBudgetClass" headerText="Class" width="150" editable="false" />
+						<mx:DataGridColumn id="dgCol02" dataField="sBudget" headerText="Budget" width="150" editable="false" />
+						<mx:DataGridColumn id="dgCol03" dataField="sSimpleBudgetClassAssociationNumber" headerText="{sBudgetClassAssociationLabel}" width="200" editable="false" />
+						<mx:DataGridColumn id="dgCol04" dataField="sPositionLabel" headerText="Position" width="200" editable="false" />
+						<mx:DataGridColumn id="dgCol05" dataField="nSumBudgetDollar" headerText="{sBudgetDollarLabel}"  width="120" editable="false" labelFunction="{standardCurrencyFormatter}"/>
+						<mx:DataGridColumn id="dgCol06" dataField="nSumCommittedDollar" headerText="{sCommittedDollarLabel}" width="120" editable="false" labelFunction="{standardCurrencyFormatter}" />
+						<mx:DataGridColumn id="dgCol07" dataField="nBudgetBalance"  headerText="{sBudgetBalanceLabel}" width="120" editable="false" labelFunction="{standardCurrencyFormatter}" />
+						<mx:DataGridColumn id="dgCol08" dataField="nSumActualDollar" headerText="{sApprovedPaymentDollarLabel}" width="120" editable="false" labelFunction="{standardCurrencyFormatter}"  />
+						<mx:DataGridColumn id="dgCol09" dataField="nAvailableBudget"  headerText="{sAvailableBudgetDollarLabel}" width="120" editable="false" labelFunction="{standardCurrencyFormatter}" />
+
+					</mx:columns>
+				</mx:DataGrid>
+		
+		</mx:VBox>
+
+	</mx:Panel>
+		
+</mx:HDividedBox>
+
+	<!--*********************************	BOTTOM PANEL (Import Button) ************************************************************-->
+	
+
+</mx:Canvas>

@@ -1,0 +1,22 @@
+===== QUERY: Get_Operators =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Operators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operators>
+	<cftry>
+		<cfset Get_Operators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"deleted" = "eq.0",
+				"order" = "operator_name.asc",
+				"select" = "bsa_operator_id,operator_name"
+			}), "bsa_operator_id,operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operators>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

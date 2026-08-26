@@ -1,0 +1,199 @@
+<cfprocessingdirective pageencoding="utf-8">
+<!---
+  * ====================================================================================================
+  *    @File: \developer\v2\procedures.cfm
+  *  @Author: Chris Nguyen
+  *    @Date: April 2020
+  *
+  * @Remarks: Display database stored procedures
+  *
+  * ====================================================================================================
+--->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stored Procedures in <cfoutput>#cgi.SERVER_NAME#</cfoutput></title>
+    <cfmodule template="/customTags/include.cfm" files="default.css">
+</head>
+<body>
+    <cfmodule template="/customTags/include.cfm" files="default.css">
+
+    <style>
+        body {
+            display: flex;
+        }
+        section#sidebar {
+            width: 370px;
+            height: 100vh;
+            min-height: 100vh;
+        }
+        iframe.report {
+            background-color: #F9F9F9;
+            height: 100vh;
+            flex-grow: 1;
+        }
+        .hamburger {
+            width: 30px;
+            height: 100vh;
+            min-height: 100vh;
+            background-color: white;
+            border-right: 1px solid #ccc;
+        }
+        span.vertical {
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            padding: 10px 7px;
+            letter-spacing: 1px;
+            writing-mode: vertical-lr;
+            user-select: none;
+            transform: rotate(180deg);
+        }
+    </style>
+
+    <section class="hamburger">
+        <button id="toggle">☰</button>
+        <span class="vertical toggle">Toggle &nbsp; List</span>
+    </section>
+
+    <section id="sidebar">
+        <cfset list_tables()>
+    </section>
+
+    <iframe name="report" class="report" frameborder="0"></iframe>
+    <script src="<cfoutput>#request.forge_cdn#</cfoutput>/script/javascript/ajax_js/jquery-1.12.4.min.js"></script>
+
+    <script>
+        var rowNode = gridOptions.api.getDisplayedRowAtIndex(0);
+        $("iframe.report").attr("src", "view_procedure.cfm?name=" + rowNode.data[0] + "&date=" + rowNode.data[1]);
+
+        $("#toggle, span.toggle").click(function(){
+            $("#sidebar").toggle();
+        });
+    </script>
+</body>
+</html>
+
+
+<!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+<!---  display tables on left side bar ~ --->
+<!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+<cffunction name="list_tables">
+    <cfquery name="qProcedure" datasource="#application.datasource#">
+        SELECT name,
+                CONVERT(VARCHAR(12), modify_date, 102) as modify_date
+         FROM sys.procedures
+                ORDER BY modify_date DESC, name
+    </cfquery>
+
+    <cfset all_caps = [
+                         "bb"
+                        ,"bsa"
+                        ,"cp"
+                        ,"cs"
+                        ,"dd"
+                        ,"forge"
+                        ,"id"
+                        ,"idx"
+                        ,"lb"
+                        ,"lbs"
+                        ,"ldap"
+                        ,"rfa"
+                        ,"os"
+                        ,"sp"
+                        ,"upc"
+                        ,"usda"
+                        ,"wip"
+                        ]>
+
+    <cfloop from="1" to="#qProcedure.recordCount#" index="counter">
+        <cfscript>
+            column = qProcedure.name[counter];
+            // parse elements in the name separated by underscore character into an array
+            elements = listToArray(column, '_');
+            for (i=1; i lte arrayLen(elements); i++) {
+                if (arrayFindNoCase(all_caps, elements[i]))
+                    elements[i] = ucase(elements[i]);
+                else
+                    // capitalize the first letter and lowercase the rest
+                    elements[i] = ucase(left(elements[i],1)) & lcase(Mid(elements[i], 2, len(elements[i])-1));
+            }
+            // combine all elements back
+            qProcedure.name[counter] = arrayToList(elements, "_");
+            if (left(column, 1) eq "_")
+                qProcedure.name[counter] = '_' & qProcedure.name[counter];
+        </cfscript>
+    </cfloop>
+
+    <!--- <cfdump var="#qTables#" abort="true"> --->
+
+    <cfset request.ag_grid_theme = "ag-theme-balham">
+
+    <section id="ag-grid" class="ag-theme-balham">
+    </section>
+
+    <cfinclude template="ag-grid.cfm">
+    <cfinclude template="/common_files/jQuery.cfm">
+
+    <script>
+        let procedures = <cfoutput>#serializeJSON(qProcedure)#</cfoutput>;
+
+        let gridOptions = {
+            defaultColDef: {     editable:        false
+                                ,suppressMenu:    true
+                                ,suppressMovable: true
+                                ,unSortIcon:      false
+                                ,sortable:        true
+                                ,resizable:       true
+                                ,filter:          true
+                            }
+            ,columnDefs: [
+                            { headerName:'Name'
+                                , field: 'Name'
+                                , filter: 'agTextColumnFilter'
+                                ,valueGetter:function(p){ return p.data[0] }
+                            }
+                            ,{ headerName:'Last Modified'
+                                ,filter: 'agTextColumnFilter'
+                                ,width: 100
+                                ,valueGetter:function(p){ return p.data[1] }
+                            }
+            ]
+            ,rowData: procedures.DATA
+            ,rowModelType: "clientSide"
+            ,floatingFilter: true
+            ,onCellClicked: function(event) {
+                $("iframe.report").attr("src", "about:blank");
+                $("iframe.report").attr("src", "view_procedure.cfm?name=" + event.node.data[0] + "&date=" + event.node.data[1]);
+                // stuff the SP name into the clipboard
+                // copyToClipboard( event.node.data[0] );
+             }
+        };
+
+        ag_grid_default( gridOptions );
+        init_ag_grid( gridOptions, "#ag-grid" );
+        gridOptions.api.sizeColumnsToFit();
+
+        function copyToClipboard( text ) {
+            var $temp = $( "<input>" );
+            $( "body" ).append( $temp );
+            $temp.val( text ).select();
+            document.execCommand( "copy" );
+            $temp.remove();
+        }
+
+		$( "#ag-grid" ).dblclick( function( e ) {
+			let clipboard = $( e.target ).text();
+			console.log( { clipboard } );
+			copyToClipboard( clipboard );
+		});
+
+        const storage_name = "procedures.cfm";
+        window.addEventListener('beforeunload', function (e) {
+            localStorage.setItem( storage_name, $( "input.ag-floating-filter-input" ).val() );
+        });
+
+        gridOptions.api.setFilterModel( { Name: { filterType: 'text', type: 'startsWith', filter:localStorage.getItem( storage_name ) } } );
+    </script>
+</cffunction>

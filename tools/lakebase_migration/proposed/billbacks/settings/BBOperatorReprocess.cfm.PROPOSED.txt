@@ -1,0 +1,121 @@
+===== QUERY: variables.checkOperatorExists =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvariables_checkOperatorExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForvariables_checkOperatorExists>
+	<cftry>
+		<cfset variables.checkOperatorExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category_definition", {
+				"pg_operator_category_id" = "eq.#variables.PGCatID#",
+				"operator_group_id" = "eq.#variables.OperatorID#",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_checkOperatorExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_checkOperatorExists>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdOperPG =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdOperPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForUpdOperPG>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pg_operator_category_definition",
+			{
+				"pg_operator_category_id" = "eq.#variables.PGCatID#",
+				"operator_group_id" = "eq.#variables.OperatorID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"inclusion_exclusion" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdOperPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdOperPG>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: variables.selPGTypeID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvariables_selPGTypeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForvariables_selPGTypeID>
+	<cftry>
+		<cfset variables.selPGTypeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"pg_operator_category_id" = "eq.#variables.PGCatID#",
+				"select" = "pg_type_id"
+			}), "pg_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_selPGTypeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_selPGTypeID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: variables.qInsPGOperatorCategoryDefinition =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qryCaptureGroup =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryCaptureGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForqryCaptureGroup>
+	<cftry>
+		<cfset qryCaptureGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_operators", {
+				"is_group" = "eq.1",
+				"deleted" = "eq.0",
+				"operator_group_id" = "eq.#variables.PGCatID#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCaptureGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCaptureGroup>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: unlockBBs =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: variables.qPlanningGroups =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvariables_qPlanningGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForvariables_qPlanningGroups>
+	<cftry>
+		<cfset variables.qPlanningGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "pg_operator_category_name.asc",
+				"select" = "pg_operator_category_id,pg_operator_category_code,pg_operator_category_name"
+			}), "pg_operator_category_id,pg_operator_category_code,pg_operator_category_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qPlanningGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qPlanningGroups>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

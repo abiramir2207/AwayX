@@ -1,0 +1,49 @@
+===== QUERY: GetContractData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetContractData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractData>
+	<cftry>
+		<cfset GetContractData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#ListItem#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetContractProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetContractProducts>
+	<cftry>
+		<cfset GetContractProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#ListItem#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: InsertProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

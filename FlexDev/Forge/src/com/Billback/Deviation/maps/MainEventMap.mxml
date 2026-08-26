@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	All the events that are called in the application are placed in this class. 
+-->
+<LocalEventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.Billback.Deviation.events.*;
+			import com.Billback.Deviation.models.*;
+			import com.Billback.Deviation.vos.*;
+			import com.Billback.Deviation.views.*;
+			import com.shared.models.SettingsManager;
+			import com.shared.events.MainEvent;
+
+	]]>
+	</mx:Script>
+	<!--<mate:Debugger level="{Debugger.ALL}" />-->
+	<!-- load up an instance of the remote objects -->
+	<!-- Added requestTimeout property --> 
+	<!-- Remote Services  _________________________________________________________________________ -->
+	<mx:RemoteObject id="roMainService" destination="ColdFusion" source="mvc.Models.Billback.BillbackDevAppManager" />
+	<mx:RemoteObject id="roErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+	<!-- Remote Services  ***************************************************************************************** -->
+	<!--<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.models._ProjectTemplate._ProjectTemplateService" />-->
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+
+	<!-- FlexEvent.PREINITIALIZE __________________________________________________________________ -->
+	<!---
+		FlexEvent Preinitialize initializes the various ObjectBuilders used 	
+	-->	
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE">
+		<ObjectBuilder generator="{BBMainManager}" id="oManager"  constructorArguments="{scope.dispatcher}"/>
+		<ObjectBuilder generator="{BBSettingsManager}" id="oBBSettingsManager"  constructorArguments="{scope.dispatcher}"/>
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager"  />
+	<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+	<!---@see com.Billback.Deviation.models.SettingsManager#loadURLParameters()
+			Invoke : com.Billback.Deviation.models.SettingsManager.loadURLParameters()-->
+	<!-- <EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE">
+		<ObjectBuilder generator="{MainManager}" id="oManager" />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" / -->
+		<ObjectBuilder generator="{BAError}" id="oBAError" />
+		<!--<MethodInvoker generator="{BBSettingsManager}" method="loadURLParameters" />-->
+	<!-- 	<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" /> -->
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+	<!-- EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" -->
+ 
+		<!--call db for other settings-->
+ 
+		<!--<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.LOAD_APP_SETTINGS}" generator="{com.Billback.Deviation.events.MainEvent}" >
+			<Property sourceCache="global" source="{BBSettingsManager}" sourceKey="settings.sBBID" targetKey="sBBID"/>
+		</EventAnnouncer>-->
+	<!-- /EventHandlers -->
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE ___________________________________________________________ -->
+<!--
+		FlexEvent Creation_Complete: It Announces the events and does the following:
+		GET_BILLBACK_HEADER: Gets the header details about the billback
+		GET_BILLBACK_DETAILS:  Gets the Details about the Billback and all the 
+		records that needs to be displayed in the Datagrid.
+	-->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE">
+		<!--<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.GET_BILLBACK_HEADER}" generator="{com.Billback.Deviation.events.MainEvent}" >
+			<Property sourceCache="inherit" source="{BBSettingsManager}" sourceKey="settings.sBBID" targetKey="sBBID"/>
+			<Property sourceCache="inherit" source="{BBSettingsManager}" sourceKey="settings.sUserId" targetKey="sUserId"/>
+		</EventAnnouncer>		
+		<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.GET_BILLBACK_DETAILS}" generator="{com.Billback.Deviation.events.MainEvent}" >
+			<Property sourceCache="inherit" source="{BBSettingsManager}" sourceKey="settings.sBBID" targetKey="sBBID"/>
+		</EventAnnouncer>	-->
+	</EventHandlers>
+ 
+    <!-- ************************************************
+    	 ADD NEW EventHandlers Here   *******************
+         ************************************************-->
+
+  <!---
+  	This event hanlder gets 
+  -->
+    
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.LOAD_APP_SETTINGS}" id="eLOAD_APP_SETTINGS">
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.sUserId}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{BBSettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.BSA_ERROR}" generator="{com.Billback.Deviation.events.MainEvent}" >
+					<Properties sBaError="BB DEVIATIONS (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<EventHandlers type="{com.shared.events.MainEvent.SET_LOCAL_APP_SETTINGS}" debug="true" id="eSET_LOCAL_APP_SETTINGS" useWeakReference="true">
+		<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+	</EventHandlers>
+	
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.SET_USER_ID}" debug="true" id="eSET_USER_ID" useWeakReference="true">
+		<ObjectBuilder generator="{BBSettingsManager}" id="oBBSettingsManager2"  constructorArguments="{scope.dispatcher}"/>
+		<MethodInvoker generator="{BBSettingsManager}" method="setLocalParameters" arguments="{event}" />
+	</EventHandlers>
+	<!--- 
+		This event handler gets the details about the Billback which will get displayed 
+		at the top of the Billback Datagrid page. 
+	-->
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.GET_BILLBACK_HEADER}" id="eGET_BILLBACK_HEADER" debug="true">
+	<!--	<MethodInvoker generator="{BBMainManager}" method="Alerter" arguments="{event.sBBID}" />-->
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="getBillbackHeader" arguments="{[event.sBBID,event.sUserId]}" >
+				<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{BBSettingsManager}" method="setBillbackHeader" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.BSA_ERROR}" generator="{com.Billback.Deviation.events.MainEvent}" >
+					<Properties sBaError="BILLBACK HEADER SETTINGS SERVICE (load app settings event = GET_BILLBACK_HEADER)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!---
+		This event handler gets the different records associated with the Billback
+		that gets displayed in the datagrid. 
+		
+	-->
+		<EventHandlers type="{com.Billback.Deviation.events.MainEvent.GET_BILLBACK_DETAILS}" id="eGET_BILLBACK_DETAILS">
+	<!--	<MethodInvoker generator="{BBMainManager}" method="Alerter" arguments="{event.sBBID}" />-->
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="getBillbackDetails" arguments="{event.sBBID}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!--<MethodInvoker generator="{BBSettingsManager}" method="setBillbackDetails" arguments="{resultObject}" />-->
+				<MethodInvoker generator="{BBMainManager}" method="onResult" arguments="{resultObject}" />
+					<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.FILTER_RESULTS}" generator="{com.Billback.Deviation.events.MainEvent}">
+					</EventAnnouncer>  				
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.BSA_ERROR}" generator="{com.Billback.Deviation.events.MainEvent}" >
+					<Properties sBaError="BILLBACK DETAILS SETTINGS SERVICE (load app settings event = GET_BILLBACK_DETAILS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--- 
+		This event handler will filter the results on the initial load.
+	-->
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.FILTER_RESULTS}" id="eFILTER_RESULTS">
+		<MethodInvoker generator="{BBMainPanel}" method = "fnLoadDG"  />
+	</EventHandlers>
+	
+	
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.SET_BB_HEADER}" id="eSET_BB_HEADER">
+		<ObjectBuilder generator="{BBMainManager}" id="oManager2"  constructorArguments="{scope.dispatcher}"/>
+		<MethodInvoker generator="{BBMainManager}" method = "setBBHeader" arguments="{event}"/>
+	</EventHandlers>
+	
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.CLOSE_DEVIATION}" id="eCLOSE_DEVIATION">
+		<MethodInvoker generator="{BBMainManager}" method = "closeBBDeviations" arguments="{event}"  />
+	</EventHandlers>
+
+	<!---
+		This event hanlder will do a recalculation of the different values that gets
+		displayed at the top of the page, whenever some selection gets changed
+		in the datagrid.
+	-->
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.RECALCULATE}" id="eRECALCULATE"  debug="true">
+			<MethodInvoker  generator="{BBMainManager}" method="fnRecalculate" arguments="{[event.evtObj,event.sCaller,event.sOptionalVal]}" />
+	</EventHandlers>
+ 
+ 	<!---
+ 		This event handler saves the changes made to the values in the grid
+ 		and this event gets called whenever the user clicks on any one of the
+ 		three Approval buttons, so that the changes gets saved, before it is 
+ 		approved.  
+ 	-->
+ 
+ 
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.SAVE_CHANGES}" id="eSAVE_CHANGES">
+		<RemoteObjectInvoker instance="{roMainService}" showBusyCursor="true" method="updateBBDeviations" arguments="{[event.Billback_ID,event.sUserId,event.dgEditedSet,event.doAction,event.ApprovalBtn]}">
+ 			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{BBSettingsManager}" method="saveAlerter" arguments="{[resultObject,'Save Status!',event.doAction]}" />
+				<!--  <EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.APPROVE}" generator="{com.Billback.Deviation.events.MainEvent}">
+					<Properties doAction="{event.doAction}" />
+				</EventAnnouncer> --> 		
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{com.Billback.Deviation.events.MainEvent.BSA_ERROR}" generator="{com.Billback.Deviation.events.MainEvent}" >
+					<Properties sBaError="Error In Save_changes" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+ 
+	<!---
+		This event gets called after the user clicks on the Approve button 
+		and when the variable doAction is set to "doSaveApprove".
+	-->		
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.APPROVE}" id="eAPPROVE">
+		<MethodInvoker generator="{BBMainPanel}" method = "fnApprovePageRedirector" arguments="{event.doAction}"  />
+	</EventHandlers>	
+	
+	<!---
+	This event handler sorts the data when the deviation data gets loaded or recalculated (refreshed).
+	-->	
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.DATA_GRID_SORT}" id="eDATA_GRID_SORT">
+		<MethodInvoker generator="{BBMainPanel}" method="SortGridData" />
+	</EventHandlers>
+		
+	<!--- 
+		This event gets called whenever there is an error in any one of event handlers.
+	-->
+
+	<EventHandlers type="{com.Billback.Deviation.events.MainEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+ 
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}" requestTimeout="1800" />
+	</EventHandlers>
+	
+	
+	<Injectors target="{BBMainPanel}">
+		<PropertyInjector targetKey="sBBID" 			   				source="{BBSettingsManager}" sourceKey="settings.sBBID" />
+		<PropertyInjector targetKey="sBBTitle" 		   					source="{BBSettingsManager}" sourceKey="settings.sBBTitle" />
+		<PropertyInjector targetKey="sBBStartDate"   					source="{BBSettingsManager}" sourceKey="settings.sBBStartDate" />
+		<PropertyInjector targetKey="sBBEndDate" 	   					source="{BBSettingsManager}" sourceKey="settings.sBBEndDate" />
+		<PropertyInjector targetKey="sBBAmount" 	   					source="{BBSettingsManager}" sourceKey="settings.sBBAmount" />
+		<PropertyInjector targetKey="sBBCode" 		   					source="{BBSettingsManager}" sourceKey="settings.sBBCode" />
+		<PropertyInjector targetKey="sBBDate" 		   					source="{BBSettingsManager}" sourceKey="settings.sBBDate" />
+		<PropertyInjector targetKey="sPayeeName" 	   					source="{BBSettingsManager}" sourceKey="settings.sPayeeName" />	
+		<PropertyInjector targetKey="sBBDevOvPrice"  					source="{BBSettingsManager}" sourceKey="settings.sBBDevOvPrice" />
+		<PropertyInjector targetKey="sBBUpdApproveAmt"  				source="{BBSettingsManager}" sourceKey="settings.sBBUpdApproveAmt" />		
+		<PropertyInjector targetKey="sBBApproveExpRateLessTol"  		source="{BBSettingsManager}" sourceKey="settings.sBBApproveExpRateLessTol" />
+		<PropertyInjector targetKey="sBBApproveDisAgree"  				source="{BBSettingsManager}" sourceKey="settings.sBBApproveDisAgree" />
+		<PropertyInjector targetKey="sBBManualRateCheck"				source="{BBSettingsManager}" sourceKey="settings.sBBManualRateCheck" />
+		<PropertyInjector targetKey="sBBVolumeOverride"  				source="{BBSettingsManager}" sourceKey="settings.sBBVolumeOverride" />
+		<PropertyInjector targetKey="sBBRateOverride"  					source="{BBSettingsManager}" sourceKey="settings.sBBRateOverride" />
+		<PropertyInjector targetKey="sBBStatusID"		 				source="{BBSettingsManager}" sourceKey="settings.sBBStatusID" />
+		<PropertyInjector targetKey="sBBEditable"		 				source="{BBSettingsManager}" sourceKey="settings.sBBEditable" />
+		<PropertyInjector targetKey="sExpBtnBgColor"		 			source="{BBSettingsManager}" sourceKey="settings.sExpBtnBgColor" />
+		<PropertyInjector targetKey="sExpBtnFontColor"		 			source="{BBSettingsManager}" sourceKey="settings.sExpBtnFontColor" />
+		<PropertyInjector targetKey="sEltBtnBgColor"		 			source="{BBSettingsManager}" sourceKey="settings.sEltBtnBgColor" />
+		<PropertyInjector targetKey="sEltBtnFontColor"		 			source="{BBSettingsManager}" sourceKey="settings.sEltBtnFontColor" />
+		<PropertyInjector targetKey="sClmBtnBgColor"		 			source="{BBSettingsManager}" sourceKey="settings.sClmBtnBgColor" />
+		<PropertyInjector targetKey="sClmBtnFontColor"		 			source="{BBSettingsManager}" sourceKey="settings.sClmBtnFontColor" />
+		<PropertyInjector targetKey="sSelBtnBgColor"		 			source="{BBSettingsManager}" sourceKey="settings.sSelBtnBgColor" />
+		<PropertyInjector targetKey="sSelBtnFontColor"		 			source="{BBSettingsManager}" sourceKey="settings.sSelBtnFontColor" />
+		<PropertyInjector targetKey="sProfileBBExpected"		 		source="{BBSettingsManager}" sourceKey="settings.sProfileBBExpected" />
+		<PropertyInjector targetKey="sProfileBBELT"		 				source="{BBSettingsManager}" sourceKey="settings.sProfileBBELT" />
+		<PropertyInjector targetKey="sProfileBBClaimed"		 			source="{BBSettingsManager}" sourceKey="settings.sProfileBBClaimed" />
+		<PropertyInjector targetKey="sProfileBBSelected"		 		source="{BBSettingsManager}" sourceKey="settings.sProfileBBSelected" />
+		<PropertyInjector targetKey="sBBFractionalVolume"				source="{BBSettingsManager}" sourceKey="settings.sBBFractionalVolume" />
+		<PropertyInjector targetKey="sBBLSClaimedRebateExpected"		source="{BBSettingsManager}" sourceKey="settings.sBBLSClaimedRebateExpected" />
+		
+		<PropertyInjector targetKey="dpBBData" 		   					source="{BBMainManager}" 	sourceKey="acBBData" />
+		<!--<PropertyInjector targetKey="var1" 			 				source="{BBSettingsManager}" sourceKey="settings.appFlex.var1" />
+		<PropertyInjector targetKey="var2" 								source="{BBSettingsManager}" sourceKey="settings.appFlex.var2" />-->
+		<PropertyInjector targetKey="oSettings" 		 				source="{BBSettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="sharedSettings" 		 			source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="oUser" 				 			source="{BBSettingsManager}" sourceKey="settings.user" />
+		<PropertyInjector targetKey="sUserID" 			 				source="{BBSettingsManager}" sourceKey="settings.sUserId" />
+		<PropertyInjector targetKey="sCallerSource" 			 		source="{BBSettingsManager}" sourceKey="settings.sCallerSource" />
+		<PropertyInjector targetKey="nTotalExpected" 					source="{BBMainManager}" 	sourceKey="nTotExpected" />
+		<PropertyInjector targetKey="nTotalExpectedLT" 					source="{BBMainManager}" 	sourceKey="nTotExpectedLT" />		
+		<PropertyInjector targetKey="nTotalClaimed"  					source="{BBMainManager}" 	sourceKey="nTotClaimed" />
+		<PropertyInjector targetKey="nTotalApproved" 					source="{BBMainManager}" 	sourceKey="nTotApproved" />
+		<PropertyInjector targetKey="nTotalDeviation"					source="{BBMainManager}" 	sourceKey="nTotalDeviation" />
+		<PropertyInjector targetKey="bbHeader"							source="{BBMainManager}" 	sourceKey="bbHeader" />
+		<!-- PropertyInjector targetKey="reDirector" 						source="{BBMainManager}" 	sourceKey="reDirector" / -->		
+		<!--<Injectors target="{MainPanel}">
+		<PropertyInjector targetKey="acData" source="{MainManager}" sourceKey="acData" />
+		<PropertyInjector targetKey="var1" source="{SettingsManager}" sourceKey="settings.appFlex.var1" />
+		<PropertyInjector targetKey="var2" source="{SettingsManager}" sourceKey="settings.appFlex.var2" />
+		<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="oUser" source="{SettingsManager}" sourceKey="settings.user" />-->
+		<ListenerInjector eventType="{com.Billback.Deviation.events.MainEvent.ENABLE_BUTTONS}" method="enableButtons" />
+		
+	</Injectors>
+	
+	<Injectors target="{BBMainManager}">
+		<PropertyInjector targetKey="sharedSettings" source="{SettingsManager}" sourceKey="settings" />
+	</Injectors>
+	
+</LocalEventMap>
+
+

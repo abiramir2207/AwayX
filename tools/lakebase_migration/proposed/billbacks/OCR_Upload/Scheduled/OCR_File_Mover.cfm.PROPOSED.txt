@@ -1,0 +1,206 @@
+===== QUERY: qryIsSTProcessing =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryIsSTProcessing = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cia_scheduled_task_log")>
+<cfif useLakebaseForqryIsSTProcessing>
+	<cftry>
+		<cfset qryIsSTProcessing = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cia_scheduled_task_log", {
+				"isprocessing" = "eq.1",
+				"select" = "cia_scheduled_task_log_id,start_datetime,end_datetime,errored,isprocessing"
+			}), "cia_scheduled_task_log_id,start_datetime,end_datetime,errored,isprocessing"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryIsSTProcessing = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryIsSTProcessing>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryINSSTLog =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDBName =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetOCRUploadSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetOCRUploadSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_template_settings")>
+<cfif useLakebaseForqGetOCRUploadSettings>
+	<cftry>
+		<cfset qGetOCRUploadSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_template_settings", {
+				"deleted" = "eq.0",
+				"order" = "search_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOCRUploadSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOCRUploadSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateOCRUploadLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadRecords.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2",
+				"ocr_upload_status" = "Analyzing the file for Picking Template"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateOCRUploadLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadRecords.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2",
+				"ocr_upload_status" = "Analyzing the file for Picking Template"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateOCRUploadLogStatusError1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadRecords.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2",
+				"ocr_upload_status" = "Analyzing the file for Picking Template"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateOCRUploadLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadRecords.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2",
+				"ocr_upload_status" = "Analyzing the file for Picking Template"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateOCRUploadLogStatusError1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatusError1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatusError2 =====
+STATUS: NEEDS_MANUAL_REVIEW - Could not parse SET assignment
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: q =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForq = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetocruploadextracted")>
+<cfif useLakebaseForq>
+	<cftry>
+		<cfset q = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetocruploadextracted", {
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus_x2 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus_x3 =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: updateOCRUploadLogStatus_x3 =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: updateOCRUploadLogStatus_x1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus_x1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qryUpdSTLogEnd =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qryUpdSTLogEndError =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

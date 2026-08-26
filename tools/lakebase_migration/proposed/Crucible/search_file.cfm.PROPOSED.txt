@@ -1,0 +1,23 @@
+===== QUERY: qGetDates =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: qGetFileNames =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFileNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qsearch")>
+<cfif useLakebaseForqGetFileNames>
+	<cftry>
+		<cfset qGetFileNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qsearch", {
+				"crucible_weekly_report_id" = "eq.#Crucible_Weekly_Report_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFileNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFileNames>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

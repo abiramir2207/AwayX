@@ -1,0 +1,29 @@
+===== QUERY: Save_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateSave_Data =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_main")>
+<cfif useLakebaseForUpdateSave_Data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_tax_main",
+			{
+				"bb_tax_main_id" = "eq.#BB_TaxMainID#"
+			},
+			{
+				"taxcode_id" = "#BB_TaxMainID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateSave_Data>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Save_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

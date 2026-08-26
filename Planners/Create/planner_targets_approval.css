@@ -1,0 +1,282 @@
+/* 
+  * ==================================================================================================== 
+  *    @File: \planners\create\planner_targets_approval.css
+  *  @Author: Chris Nguyen
+  *    @Date: July 2020
+  * 
+  * @Remarks: Planner Targets Approval
+  *
+  * ====================================================================================================  
+*/
+* { 
+    box-sizing: border-box; 
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    height: 100%;
+}
+html {
+    font-size: 62.5%;
+}
+body {
+    overflow: hidden;
+}
+
+
+div.headers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    height: 250px;
+}
+    div.header {
+        height: 40px;
+        background-color: #C6E79C;
+        display: flex;
+        position: relative;
+    }
+    div.rfa {
+        width: 375px;
+        border: 3px solid #32AB60;
+        background-color: white;
+        height: 100%;
+        min-height: 100%;
+    }
+        span.rfa {
+            padding: 7px 20px 7px 10px;
+            display: inline-block;
+            font-size: 1.5rem;
+            height: 100%;
+            min-height: 100%;
+            color: #009739;
+            font-weight: 535;
+        }
+        span.actions {
+            display: inline-block;
+        }
+        a.rfa {
+            margin-right: 10px;
+        }
+    div.planner {
+        width: 70%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+        div.planner > div.blk {
+            /* width: 30%; */
+            text-align: center;
+            opacity: 0.75;
+        }
+
+
+div.summaries {
+    padding-top: 5px;
+    height: 190px;
+    display: flex;
+    border-bottom: 1px solid;
+}
+    div.summary {
+        padding: 5px 10px;
+        height: 100%;
+        min-height: 100%;
+        position: relative;
+    }
+    div.summary.trade {
+        width: 50%;
+        /* background-color: red; */
+        border-right: 1px solid black;
+    }
+    div.summary.demo {
+        width: 30%;
+        border-right: 1px solid black;
+    }
+    div.summary.slotting {
+        width: 20%;
+    }
+    div.summary.toggle {
+        position: absolute;
+        bottom: 3px;
+        background-color: #EDEEF2;
+        margin: 5px;
+        height: 22px;
+        max-height: 22px !important;
+        min-height: 22px !important;
+        padding: 4px 10px;
+        /* width: 90%; */
+    }
+    img.toggle {
+        position: relative;
+        top: 2px;
+        cursor: pointer;
+    }
+    h3 {
+        font-size: 1.7rem;
+        font-weight: 500;
+    }
+    div.trade_status {
+        position: absolute;
+        right: 15px;
+        bottom: 10px;
+    }
+    div.demo_status {
+        position: absolute;
+        right: 15px;
+        bottom: 10px;
+    }
+    div.slotting_status {
+        position: absolute;
+        right: 15px;
+        bottom: 10px;
+    }
+
+div.summary_container {
+    display: flex;
+    font-size: 1.2rem;
+    position: relative;
+}
+    div.summary_container > div {
+        width: 25%;
+        text-align: right;
+    }
+    div.summary_container div {
+        height: 30px;
+        min-height: 30px;
+        padding-top: 7px;
+    }
+    div.summary_header {
+        text-align: right;
+        background-color: #9BC2E6;
+    }
+    div.summary_footer {
+        border-top: 1px solid;
+        border-bottom: 1px solid;
+    }
+    div.summary_container > div.column_1 {
+        text-align: left;
+        /* width: 16%; */
+    }
+    div.summary_container > div.column_1 div {
+        padding-left: 7px;
+        padding-right: 7px;
+        /* background-color: yellow; */
+    }
+
+    div.summary_container4 > div {
+        width: 28%;
+    }
+    div.summary_container4 > div.column_1 {
+        text-align: left;
+        width: 16%;
+    }
+
+div.details {
+    position: absolute;
+    top: 0;
+    padding-top: 230px;
+    padding-bottom: 25px;
+    height: 100% !important;
+    min-height: 100% !important;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    opacity: 0;
+}
+    div.details > div {
+        height: 100%;
+        min-height: 100%;
+        padding: 5px 10px;
+    }
+    div.detail.trade {
+        width: 50%;
+    }
+    div.detail.demo {
+        width: 30%;
+    }
+    div.detail.slotting {
+        width: 20%;
+    }
+
+div.actions {
+    margin: 0 auto;
+    position: absolute;
+    bottom: 0;
+    height: 25px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.border-right {
+    border-right: 1px solid black;
+    padding-right: 7px;
+}
+
+.border_bottom {
+    border-bottom: 1px solid black;
+}
+
+div.invisible {
+    opacity: 0;
+}
+
+.pr5 {
+    padding-right: 7px;
+}
+
+.pr25 {
+    padding-right: 37px;
+}
+
+.pl5 {
+    padding-left: 7px;
+}
+
+div.detail_container {
+    display: flex;
+    font-size: 1.3rem;
+    position: relative;
+}
+    div.detail_container div {
+        flex-grow: 1;
+        height: 30px;
+        min-height: 30px;
+        padding-top: 7px;
+    }
+
+    div.detail_container.column_1 {
+        text-align: left;
+    }
+
+    div.detail_header {
+        width:100%;
+        text-align:right;
+        padding-right:5px;
+        height: 30px;
+        min-height: 30px;
+        padding-top: 9px;
+        margin-top: 7px;
+        font-size: 1.2rem;
+    }
+
+div.messages {
+    /* text-align: center; */
+    position: absolute;
+    top: 280px;
+    z-index: 800;
+    font-size: 1.8rem;
+    font-weight: bold;
+    width: 80%;
+    left: 10%;
+}
+
+span.trade_msg {
+    font-size: 10px;
+    position: relative;
+    top: -1px;
+}

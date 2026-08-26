@@ -1,0 +1,96 @@
+===== QUERY: getNewRule =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetNewRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForgetNewRule>
+	<cftry>
+		<cfset getNewRule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0",
+				"active" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetNewRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetNewRule>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getNewRule =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetNewRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForgetNewRule>
+	<cftry>
+		<cfset getNewRule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0",
+				"active" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetNewRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetNewRule>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getCommData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCommData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_comm_data")>
+<cfif useLakebaseForgetCommData>
+	<cftry>
+		<cfset getCommData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_comm_data", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "comm_count.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCommData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCommData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getOverageData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
+<cfif useLakebaseForgetOverageData>
+	<cftry>
+		<cfset getOverageData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_overage", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOverageData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_data =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getPreviousExchange =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

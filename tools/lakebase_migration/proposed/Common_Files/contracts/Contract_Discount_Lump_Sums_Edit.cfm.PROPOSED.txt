@@ -1,0 +1,47 @@
+===== QUERY: GetContractInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CSL_Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetFiscalDatesforYear =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCurrentPaymentCycle =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCurrentPaymentCycle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForGetCurrentPaymentCycle>
+	<cftry>
+		<cfset GetCurrentPaymentCycle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_payment_cycle", {
+				"program_id" = "eq.#form.Contract_Main_ID#",
+				"discount_type_id" = "eq.3",
+				"component_id" = "eq.#getAllLumpSums.Program_Lumps_Sum_Ext_ID#",
+				"deleted" = "eq.0",
+				"select" = "payment_cycle_id"
+			}), "payment_cycle_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentPaymentCycle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentPaymentCycle>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

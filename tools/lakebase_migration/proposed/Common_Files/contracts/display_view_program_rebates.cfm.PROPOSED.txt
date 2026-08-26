@@ -1,0 +1,28 @@
+===== QUERY: AlternateRateSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAlternateRateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForAlternateRateSettings>
+	<cftry>
+		<cfset AlternateRateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#qCompName.Program_Rebates_Component_Name_ID#",
+				"status" = "eq.0",
+				"select" = "alternate_recapture_rate_label"
+			}), "alternate_recapture_rate_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlternateRateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlternateRateSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AR_Index =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Pull_Alternate_Rate_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

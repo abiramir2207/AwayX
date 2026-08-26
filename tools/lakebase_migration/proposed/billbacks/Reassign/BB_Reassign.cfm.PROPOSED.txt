@@ -1,0 +1,48 @@
+===== QUERY: Dist_Search_Result =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: Oper_Search_Result =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetVendorID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGetVendorID>
+	<cftry>
+		<cfset GetVendorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#Vendor_ID#",
+				"select" = "vendor_id,vendor_name"
+			}), "vendor_id,vendor_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetBBStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBBStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_status")>
+<cfif useLakebaseForGetBBStatus>
+	<cftry>
+		<cfset GetBBStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_status", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetBillbackInts =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:s="library://ns.adobe.com/flex/spark" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:view="com.shared.views.*" 
+	xmlns:viewComp="com.shared.components.*"
+	xmlns:maps="com.shared.maps.*" 
+	xmlns:vos="com.shared.vos.*" height="100%" width="100%"
+	preinitialize="applyRuntimeStyleSheet();" >
+	
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:MainEventMap />
+		<!--<maps:ModelMap />-->
+	</fx:Declarations>
+	
+	<fx:Script><![CDATA[
+		import com.shared.views.MainUIPM;
+		
+		import mx.controls.Alert;
+		import mx.controls.DataGrid;
+		import mx.controls.ProgressBar;
+		import mx.managers.DragManager;
+		import mx.managers.HistoryManager;
+		import mx.styles.StyleManager;
+		import mx.utils.ObjectUtil;
+		import com.shared.models.SettingsManager;
+		[Bindable]
+		public var model:MainUIPM;
+		
+		private var _historyManager:HistoryManager;
+		private var _dragManager:DragManager;
+		private var _progBar:ProgressBar;
+		private var _dg:DataGrid = new DataGrid();
+		
+		protected function applyRuntimeStyleSheet():void
+		{	
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+		}
+		
+	]]>
+	</fx:Script>
+	
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox id="vMain" height="100%" width="100%"><!--width="1000" height="680" -->
+		<view:MainPanel id="MainPanel" height="100%" width="100%"/>
+	</mx:HBox>
+	<!-- States ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!--<mx:states>
+	<mx:State name="{ MainUIPM.ADMIN_STATE }"/>
+	<mx:State name="{ MainUIPM.ITEM_SEARCH_STATE }" basedOn="{ MainUIPM.ADMIN_STATE }">
+	<mx:AddChild id = "vItemSearch" 
+	relativeTo="{vMain}" creationPolicy="auto" >
+	<viewComp:ItemSearchComp />
+	</mx:AddChild>
+	<mx:RemoveChild target="{ MainPanel }"/>
+	</mx:State>
+	</mx:states>-->
+	
+</s:Application>

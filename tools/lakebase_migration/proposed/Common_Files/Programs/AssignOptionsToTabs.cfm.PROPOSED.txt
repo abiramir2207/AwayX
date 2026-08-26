@@ -1,0 +1,21 @@
+===== QUERY: getTabs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetTabs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("menu_tabs")>
+<cfif useLakebaseForgetTabs>
+	<cftry>
+		<cfset getTabs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("menu_tabs", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTabs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTabs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getOptions =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

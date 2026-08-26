@@ -1,0 +1,175 @@
+===== QUERY: Get_BB_Tolerance_Settings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_BB_Tolerance_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForGet_BB_Tolerance_Settings>
+	<cftry>
+		<cfset Get_BB_Tolerance_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "auto_deviation_family_level"
+			}), "auto_deviation_family_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_BB_Tolerance_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_BB_Tolerance_Settings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_BB_Tolerance_Settings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_BB_Tolerance_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForGet_BB_Tolerance_Settings>
+	<cftry>
+		<cfset Get_BB_Tolerance_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "auto_deviation_family_level"
+			}), "auto_deviation_family_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_BB_Tolerance_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_BB_Tolerance_Settings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetSpecialPrice =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetBillbackPayeeType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBillbackPayeeType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqGetBillbackPayeeType>
+	<cftry>
+		<cfset qGetBillbackPayeeType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#arguments.billbackId#",
+				"select" = "billback_payee_type_id"
+			}), "billback_payee_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbackPayeeType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbackPayeeType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBillbackPayee =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBillbackPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForqGetBillbackPayee>
+	<cftry>
+		<cfset qGetBillbackPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#arguments.billbackId#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbackPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbackPayee>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBillbackPayee =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBillbackPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForqGetBillbackPayee>
+	<cftry>
+		<cfset qGetBillbackPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#arguments.billbackId#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbackPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbackPayee>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBillbackPayee =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBillbackPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForqGetBillbackPayee>
+	<cftry>
+		<cfset qGetBillbackPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#arguments.billbackId#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbackPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbackPayee>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetPayee =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetBBProdDistId =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetProgramAvailBalance =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetLumpInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getDistList =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetDistInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetCustData =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetItemReplacement =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetInvoiceOnlyOBF =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetInvoiceOnlyOBF = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqGetInvoiceOnlyOBF>
+	<cftry>
+		<cfset qGetInvoiceOnlyOBF = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "add_obf_rate_to_invoice_only"
+			}), "add_obf_rate_to_invoice_only"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInvoiceOnlyOBF = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInvoiceOnlyOBF>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

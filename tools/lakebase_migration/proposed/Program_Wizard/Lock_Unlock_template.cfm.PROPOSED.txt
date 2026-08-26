@@ -1,0 +1,43 @@
+===== QUERY: getCurrentID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCurrentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetCurrentID>
+	<cftry>
+		<cfset getCurrentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.ID#",
+				"select" = "first_parent_id,isdominant"
+			}), "first_parent_id,isdominant"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getParentID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetParentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetParentID>
+	<cftry>
+		<cfset getParentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#getCurrentID.First_Parent_ID#",
+				"isdominant" = "eq.1",
+				"select" = "programcontrol_panel_options_id"
+			}), "programcontrol_panel_options_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

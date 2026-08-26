@@ -1,0 +1,261 @@
+<!doctype HTML public "-//W3C//DTD HTML 4.0 Frameset//EN">
+
+<html>
+
+<head>
+<title>Billback Deviation Tolerance settings from Payables Settings</title>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+<meta name="generator" content="RoboHELP by eHelp Corporation - www.ehelp.com">
+<link rel="stylesheet" href="Generic_ns.css"><script type="text/javascript" language="JavaScript" title="WebHelpSplitCss">
+<!--
+if (navigator.appName !="Netscape")
+{   document.write("<link rel='stylesheet' href='Generic.css'>");}
+//-->
+</script>
+<script LANGUAGE="JavaScript" TITLE="BSSC Special Effects" src="./ehlpdhtm.js" name="EHELP_DHTM"></script>
+
+<script type="text/javascript" language="JavaScript" title="WebHelpInlineScript">
+<!--
+function reDo() {
+  if (innerWidth != origWidth || innerHeight != origHeight)
+     location.reload();
+}
+if ((parseInt(navigator.appVersion) == 4) && (navigator.appName == "Netscape")) {
+	origWidth = innerWidth;
+	origHeight = innerHeight;
+	onresize = reDo;
+}
+onerror = null; 
+//-->
+</script>
+<style type="text/css">
+<!--
+div.WebHelpPopupMenu { position:absolute; left:0px; top:0px; z-index:4; visibility:hidden; }
+-->
+</style><script type="text/javascript" language="javascript1.2" src="whmsg.js"></script>
+<script type="text/javascript" language="javascript" src="whver.js"></script>
+<script type="text/javascript" language="javascript1.2" src="whproxy.js"></script>
+<script type="text/javascript" language="javascript1.2" src="whutils.js"></script>
+<script type="text/javascript" language="javascript1.2" src="whtopic.js"></script>
+</head>
+<body><script type="text/javascript" language="javascript1.2">
+<!--
+if (window.gbWhTopic)
+{
+	if (window.addTocInfo)
+	{
+	addTocInfo("Settings Control Panel\nPayables from Settings page\nBillback Deviation Tolerance settings from Payables Settings");
+addButton("show",BTN_TEXT,"Show Help Contents/Index/Search","","","","",0,0,"","","");
+
+	}
+	if (window.writeBtnStyle)
+		writeBtnStyle();
+
+	if (window.writeIntopicBar)
+		writeIntopicBar(1);
+
+	if (window.setRelStartPage)
+	{
+	setRelStartPage("Blacksmith.htm");
+
+		autoSync(1);
+		sendSyncInfo();
+		sendAveInfoOut();
+	}
+}
+else
+	if (window.gbIE4)
+		document.location.reload();
+//-->
+</script>
+<h1>Billback Deviation Tolerance settings from Payables</h1>
+
+<p class=License-Info>&nbsp;Blacksmith 
+ Applications, www.blacksmithapps.com </p>
+
+<h2>Where can I find this in FORGE<sup>SM</sup>?</h2>
+
+<p class=Navigation-Path>Settings &gt; Payables &gt; &nbsp;Deviation 
+ Tolerance</p>
+
+<p class=url>URL Properties: &nbsp;billbacks/settings/expectations.cfm</p>
+
+<p class=url>&nbsp;</p>
+
+<p class=Body-Text>Use this page to set up your billback deviation tolerance 
+ settings.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<h2>Columns</h2>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Distributor Purchase Period 
+ Ratio: The purchase period and claim period may be different. &nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Enter the number that represents 
+ the distributor purchase period ratio (note that the number you enter 
+ is set &quot;to 1&quot;, i.e., if you enter 1, the ratio will be 1:1, 
+ if you enter 2, the ratio will be 2:1, and so on).</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">A 1:1 ratio means the distributor 
+ can billback for the same period of time that the program runs.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">A 2:1 ratio means the distributor 
+ can billback for twice the period of time that the program runs. &nbsp;For 
+ example, if the program is a one year program, a distributor can billback 
+ for 2 years in this scenario.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Distributor Purchase Period 
+ Offset: Enter the number of days that represents the difference between 
+ the start day of the program and the start day of the distributor's participation 
+ in the program. (In days)</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">For example, a program begins 
+ on July 1, but the distributor does not begin participating until August 
+ 15th. &nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">In this scenario, you might 
+ enter 45 as the number of offset days. &nbsp;The 
+ distributor will be billing back only for the purchase period defined 
+ by the offset number of days rather than for the entire program period. 
+ The offset is how far back to verify that shipments actually were made 
+ to the distributor.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Tip-Note-Example>Usage Example: &nbsp;A 
+ distributor is claiming for the month of July (7/1-7/31).</p>
+
+<p class=Tip-Note-Example>The program end date is 7/15. &nbsp;Thus, 
+ the distributor should be paid for half of the volume they are claiming. 
+ &nbsp;You could 
+ set the system to go back 15 days from the start date (offset) and 7 days 
+ from the end date for volume verification; the system would check invoices 
+ for 6/15 – 7/8 to verify the that the distributor actually purchased the 
+ product.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Billback Aggregation Period 
+ Ratio: This works like the Distributor Purchase fields above. &nbsp;Enter 
+ the number of days during which the billbacks can be aggregated (rather 
+ than submitted individually) relative to the duration of the program. 
+ &nbsp;The number 
+ you enter is set &quot;to 1&quot;.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">For example, if you enter 
+ 1, that means the billbacks can be aggregated for the same period of time 
+ that the program runs.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Billback Aggregation Period 
+ Offset: Like the Distributor Purchase fields, use this field to enter 
+ the number of days that represents the offset from the program start date 
+ after which you will allow billbacks from the distributor to be aggregated.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">(In days)</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">The claim period and the program 
+ period may be different that is the ratio. &nbsp;The 
+ offset is how far we go back to verify that shipments actually were made 
+ to the distributor.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">So if a distributor is claiming 
+ for the month of July (7/1-7/31) and the program end dated on 7/15 then 
+ they should only get paid for half of the volume they are claiming for. 
+ &nbsp;The system 
+ may be set to go back 15 days from the start date (off-set) and 7 days 
+ from the end date for volume verification so we would look at invoices 
+ for the dates of (I think) 6/15 – 7/8 to verify the distributor actually 
+ purchased the product.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Distributor Volume Tolerance: 
+ Enter the whole percent of volume tolerance that you will permit the distributor 
+ to vary from the program volume.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;"><span style="margin-top: 0; margin-bottom: 0;">For 
+ example, if the program is for 1000 pounds, and you enter 10 percent as 
+ the volume tolerance, it means you're allowing the distributor to submit 
+ for 1100 pounds and that this is acceptable (because it is within a 10 
+ percent variance of the program volume).</span></p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">(Whole percent difference)</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Rate Tolerance: Enter the 
+ whole percent that you will permit the distributor to deviate regarding 
+ the rate. &nbsp;For 
+ example, if the program rate is 1.00, and you enter 10 percent as the 
+ percent for rate tolerance, the distributor can submit claims for anywhere 
+ from $0.90 to $1.10.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">If you enter zero, it means 
+ you will accept billbacks for only the exact rate.</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">(Whole percent)</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">&nbsp;</p>
+
+<p class=Body-Text
+	style="margin-top: 0; margin-bottom: 0;">Click [Save Preferences] to 
+ save your entries or changes.</p>
+
+<p class=body-text>&nbsp;</p>
+
+<h2>
+
+<a href="javascript:void(0);" onClick="var e; if (parseInt(navigator.appVersion)>=4){e=event;}  if (parseInt(navigator.appVersion) >=2 && typeof(PickupDialog_Invoke) == 'function') PickupDialog_Invoke(e,'','Administration from Settings page','Administration_from_Settings_page.htm','Geography from Settings page','Geography_from_Settings_page.htm','Payables from Settings page','Payables_from_Settings_page.htm','Programs from Settings page','Programs_from_Settings_page.htm','Projects from Settings page','Projects_from_Settings_page.htm');return false;" title=" See Also"><span style="font-family:Verdana;font-size:10pt;font-weight:bold;font-style:normal;text-decoration:none"><nobr>  See Also </nobr></span></a>
+
+
+ </h2>
+
+<script type="text/javascript" language="JavaScript" title="WebHelpRelatedTopics"><!--
+if (parseInt(navigator.appVersion) >= 3 && typeof (WritePopupMenuLayer) == "function")
+  WritePopupMenuLayer();
+//--></script><script type="text/javascript" language="javascript1.2">
+<!--
+if (window.writeIntopicBar)
+	writeIntopicBar(0);
+//-->
+</script>
+</body>
+</html>

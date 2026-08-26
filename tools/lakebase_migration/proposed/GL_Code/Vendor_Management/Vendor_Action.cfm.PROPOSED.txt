@@ -1,0 +1,160 @@
+===== QUERY: Dist_Search_Result =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Distributor#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "name.asc",
+				"select" = "bsa_foodservice_customers_id,name,shr_ship_to"
+			}), "bsa_foodservice_customers_id,name,shr_ship_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Oper_Search_Result =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForOper_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForOper_Search_Result>
+	<cftry>
+		<cfset Oper_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_List#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOper_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOper_Search_Result>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CheckMaster =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckMaster = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForCheckMaster>
+	<cftry>
+		<cfset CheckMaster = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#FORM.Vendor_ID#",
+				"active_code" = "eq.A",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckMaster = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckMaster>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CheckVendorID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_dist_oper")>
+<cfif useLakebaseForCheckVendorID>
+	<cftry>
+		<cfset CheckVendorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_dist_oper", {
+				"vendor_id" = "eq.#FORM.Vendor_ID#",
+				"vendor_dist_oper_id" = "neq.#FORM.RID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckVendorID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ValidShipTO =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: ValidOpID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForValidOpID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForValidOpID>
+	<cftry>
+		<cfset ValidOpID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"legacy_id" = "eq.#FORM.Operator_ID_Number#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForValidOpID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForValidOpID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ValidOpID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForValidOpID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForValidOpID>
+	<cftry>
+		<cfset ValidOpID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"legacy_id" = "eq.#FORM.Operator_ID_Number#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForValidOpID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForValidOpID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: DeleteThis =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeleteThis = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_dist_oper")>
+<cfif useLakebaseForDeleteThis>
+	<cftry>
+		<cfset application.oLakebase.updateRows("vendor_dist_oper",
+			{
+				"vendor_dist_oper_id" = "eq.#FORM.RID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteThis = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteThis>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

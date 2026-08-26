@@ -1,0 +1,44 @@
+===== QUERY: UpdateSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
+
+===== QUERY: GetCurrentSetting =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCurrentSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGetCurrentSetting>
+	<cftry>
+		<cfset GetCurrentSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "login_attempts,la_changed_date,la_changed_by"
+			}), "login_attempts,la_changed_date,la_changed_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentSetting>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserName>
+	<cftry>
+		<cfset GetUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetCurrentSetting.LA_Changed_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

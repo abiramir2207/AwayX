@@ -1,0 +1,22 @@
+===== QUERY: BI_Tab_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBI_Tab_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBI_Tab_Info>
+	<cftry>
+		<cfset BI_Tab_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#thisbbid#",
+				"deleted" = "eq.0",
+				"select" = "billback_id,billback_payee_type_id,billback_status_id"
+			}), "billback_id,billback_payee_type_id,billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBI_Tab_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBI_Tab_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

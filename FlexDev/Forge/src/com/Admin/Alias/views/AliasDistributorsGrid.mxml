@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*" xmlns:views="com.Admin.Alias.views.*">		 
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Alias.views.pm.AliasItemsPModel;
+			//import com.Admin.Alias.views.*;
+			import com.Billback.Main.models.vos.BBHeader;
+			
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:AliasItemsPModel;
+			
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer cornerRadius="10" width="1198"
+		borderStyle="inset" borderWeight="1" borderColor="#c02025" dropShadowVisible="true" >	
+		
+	 <s:VGroup left="20" top="20">
+	   <s:HGroup height="30">
+	 	<s:HGroup verticalAlign="middle">
+	 	    <s:Label text="Distributor Alias ID" width="117" />
+			<s:TextInput text="" width="175" />			
+		</s:HGroup>
+		<s:HGroup width="100">
+		</s:HGroup>
+		 <s:HGroup verticalAlign="middle">
+		 	<s:Label text="Distributor ID" />
+			<s:TextInput text="" width="175" />			
+			<s:Image id="imgDistributorSearch"
+			 source="assets/Images/search.gif" 
+			 tabEnabled="true"							 
+			 verticalAlign="bottom"
+			 horizontalAlign="left"/>
+		 </s:HGroup>
+	   </s:HGroup>
+	   
+	   <s:HGroup>
+	 	<s:HGroup verticalAlign="middle">
+	 	    <s:Label text="Distributor Alias Desc" />
+			<s:TextInput text="" width="175" />			
+		</s:HGroup>
+		<s:HGroup width="100">
+		</s:HGroup>
+		 <s:HGroup verticalAlign="middle">
+		 	<s:Label text="Distributor Desc" />
+			<s:TextInput text="" width="175" />			
+		 </s:HGroup>
+	   </s:HGroup>
+	 </s:VGroup>
+
+		<!--
+		 <s:FormItem>
+		  <s:HGroup>
+			<s:TextInput text="" width="175" />
+			<s:Image id="imgDistributorSearch"
+			 source="assets/Images/search.gif" 
+			 tabEnabled="true"							 
+			 verticalAlign="bottom"
+			 horizontalAlign="left"/>
+		  </s:HGroup>
+		</s:FormItem>
+		-->				
+	<!--	<s:FormItem label="Distributor Alias Desc">
+			<s:TextInput text="" width="175" />			
+		</s:FormItem>
+		
+		<s:FormItem label="Distributor Desc">
+			<s:TextInput text="" width="175" />			
+		</s:FormItem>
+			
+		<s:FormItem>
+		 <s:Button id="btnAdd" label="add/edit alias" click=""/>
+		</s:FormItem>
+	 </s:HGroup>
+	</s:Form>-->
+	
+	<!--
+
+	<s:Form width="100%" color="0x323232">
+		<s:layout>	
+			<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+		</s:layout>
+		
+		<s:FormItem label="Distributor Alias Desc" direction="rtl">
+			<s:TextInput text="" width="175" />			
+		</s:FormItem>
+		
+		<s:FormItem label="Distributor Desc" direction="rtl">
+			<s:TextInput text="" width="175" />			
+		</s:FormItem>
+		
+		<s:FormItem>
+		 <s:Button id="btnAdd" label="add/edit alias" click=""/>
+		</s:FormItem>
+	</s:Form>
+
+
+	<s:Form width="100%" color="0x323232">
+		<s:layout>	
+			<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+		</s:layout>
+		<s:FormItem direction="ltr">
+		<filters:FilterDatagrid id="dgAliasDistributor" x="10" y="100"
+							rowCount="30"
+							columns="{pModel.arrAliasDistributorsDgCols}"
+							dataProvider="{this.pModel.acItemData}"
+							width="100%" height="100%" >
+		</filters:FilterDatagrid>
+		</s:FormItem>
+	</s:Form>
+	-->
+	<!--
+	<filters:FilterDatagrid id="dgAliasDistributor" x="10" y="100"
+							rowCount="30"
+							columns="{pModel.arrAliasDistributorsDgCols}"
+							dataProvider="{this.pModel.acItemData}"
+							width="100%" height="100%" >
+		</filters:FilterDatagrid>	-->
+</s:BorderContainer>
+</s:Group>

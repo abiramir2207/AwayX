@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	tabEnabled="true"  width="100%" height="100%"
+	xmlns:ba="com.ContractProds.views.renderer.*">
+	<mx:Script>
+        <![CDATA[
+			import com.ContractProds.models.ComponentManager;
+			import com.ContractProds.views.pm.ComponentPM;
+			import com.ContractProds.views.pm.GridDataPM;
+			import com.ContractProds.vos.Component;
+			
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumnGroup;
+			import mx.controls.listClasses.ListBase;
+			import mx.utils.ObjectUtil;
+        	
+        	/* Presentation Model */
+            [Bindable] public var pModel:GridDataPM;
+			
+			[Bindable] public var pModelComp:ComponentPM;
+           
+           
+           public function showHide(sCol:String):void
+				{
+					//this[sCol].visible = !this[sCol].visible
+					for each(var col:AdvancedDataGridColumn in this.dgItems.columns){
+						if(col.dataField == sCol){
+							col.visible = !col.visible;
+							break;
+						}
+					}
+					for each(var colGroup:* in this.dgItems.groupedColumns){
+						if(colGroup is AdvancedDataGridColumnGroup){
+							if(colGroup.headerText == sCol){
+								colGroup.visible = !colGroup.visible;
+								break;	
+							}
+						}
+					}
+					
+				}
+			/* Reset scrollbar to the top */   
+	        public function resetScrollbarPosition(e:Event):void{
+				dgItems.scrollToIndex(0);
+				}
+
+        ]]>
+    </mx:Script>
+    <mx:VBox width="100%" height="100%">
+    	<mx:HBox width="100%">
+		    <!--<mx:Spacer width="20" />-->
+		    <!--<ba:BaLabel text="Products: {this.pModel.items.length} {this.pModel.sRecordMessage}"/>-->
+		    <!--- view rates check box: when checked, only items with rates are displayed-->
+			<mx:HBox borderStyle="solid" styleName="bxBorder">
+				<mx:CheckBox id="chFilterRates" 
+							 label="view rates" 
+							 selected="{pModel.oFilterParms.bfilterRates}"
+							 click="pModel.updateBfilterRates(chFilterRates.selected);" 
+							 toolTip="show only the items with rates"/>
+				
+				<mx:CheckBox id="chFilterVarianceMP" 
+							 visible="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}" 
+							 includeInLayout="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}"
+							 label="view MP variance" 
+							 selected="{pModel.oFilterParms.bfilterVarianceMP}"
+							 click="pModel.updateBfilterVarianceMP(chFilterVarianceMP.selected);" 
+							 toolTip="show only the items with a market price variance"/>
+				
+				<mx:CheckBox id="chFilterMP" 
+							 visible="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}" 
+							 includeInLayout="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}"
+							 label="view MP" 
+							 selected="{pModel.oFilterParms.bfilterMP}"
+							 click="pModel.updateBfilterMP(chFilterMP.selected);" 
+							 toolTip="show only the items with a market price"/>
+			</mx:HBox>
+			
+			<mx:HBox borderStyle="solid" styleName="bxBorder">
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowFix"
+							 selected="{pModel.bShowFixed}"
+							 label="{ComponentManager.FIXED_NAME}" 
+							 click="showHide(ComponentManager.FIXED_NAME);" 
+							 toolTip="show or hide {ComponentManager.FIXED_NAME}"/>
+				
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowRebate" 
+							 selected="{pModel.bShowRebate}"
+							 label="{ComponentManager.REBATE_NAME}" 
+							 click="showHide(ComponentManager.REBATE_NAME);" 
+							 toolTip="show or hide {ComponentManager.REBATE_NAME}" />	
+				
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowBrand" 
+							 label="{pModel.oSettings.brand}" 
+							 click="showHide('Brand_Name');" 
+							 toolTip="show or hide {pModel.oSettings.brand}"/>
+				
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowQBrand" 
+							 label="{pModel.oSettings.qBrand}" 
+							 click="showHide('Q_Brand');" 
+							 toolTip="show or hide {pModel.oSettings.qBrand}" />
+				<!--- Check Box to Show Hide datagrid Column-->
+				
+				<mx:CheckBox id="chShowTypeCode" 
+							 label="{pModel.oSettings.typeCode}" 
+							 click="showHide('Type_Code_Desc');" 
+							 toolTip="show or hide {pModel.oSettings.typeCode}" />
+				
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowTypeGroup" 
+							 label="{pModel.oSettings.typeGroup}" 
+							 click="showHide('Type_Group_Desc');" 
+							 toolTip="show or hide {pModel.oSettings.typeGroup}" />
+				
+				<!--- Check Box to Show Hide datagrid Column for the Status -->
+				<mx:CheckBox id="chShowStatus" 
+							 label="{pModel.oSettings.lblStatus}" 
+							 click="showHide('Item_Status');" 
+							 toolTip="show or hide {pModel.oSettings.lblStatus}" 
+							 visible="{pModel.statusFilterOn==1}"/>
+			</mx:HBox>
+				
+			</mx:HBox>
+	    <!--- Main datagrid that holds all of the items to be filtered-->
+		<mx:AdvancedDataGrid dragEnabled="false"
+				itemEditEnd="pModel.itemEditEnd(event);"
+				allowMultipleSelection="true"
+				liveScrolling="true" 
+				lockedColumnCount="4"
+				horizontalScrollPolicy="on"
+				id="dgItems"
+				dataProvider="{pModel.items}"
+				editable="true"
+				width="100%" height="100%" minHeight="200"
+				top="0" left="0" right="0" bottom="0"
+				doubleClickEnabled="true"
+				itemDoubleClick="pModel.selectRow(event);"
+				keyDown="pModel.enterRow(event);"
+				tabEnabled="true" tabChildren="true"
+				toolTip="Select a row by:&#13;clicking the check box or&#13;double clicking a Row or &#13;highlighting the row(s) and pressing ENTER"
+				headerRelease="pModel.Call_Sort_Data(event);"
+				groupedColumns="{pModel.arrDgItemsCols}" >
+			<!--<mx:columns>  minHeight="400" maxHeight="1000"
+				<mx:DataGridColumn width="20" dataField="isSelected" rendererIsEditor="true"
+					headerRenderer="com.ContractProds.components.chBoxSelectAll"
+					itemRenderer="com.ContractProds.components.chBoxIsSelected" 
+	        		editorDataField="varCbSelected"/>
+				<mx:DataGridColumn dataField="baItem" headerText="Item" width="100" editable="false" />
+				<mx:DataGridColumn dataField="Description" headerText="Description" width="300" editable="false" />
+				<mx:DataGridColumn id="colBrand" dataField="Brand_Name" headerText="{pModel.oSettings.brand}" width="100" editable="false" visible="false" />
+				<mx:DataGridColumn id="colQBrand" dataField="Q_Brand" headerText="{pModel.oSettings.qBrand}" width="100" editable="false" visible="false" />
+				<mx:DataGridColumn id="colTypeGroup" dataField="Type_Code_Desc" headerText="{pModel.oSettings.typeCode}" width="100" editable="false" visible="false" />
+				<mx:DataGridColumn id="colTypeCode" dataField="Type_Group_Desc" headerText="{pModel.oSettings.typeGroup}" width="100" editable="false" visible="false" />
+				<mx:DataGridColumn id="colStatus" dataField="Item_Status" headerText="{pModel.oSettings.lblStatus}" width="100" editable="false" visible="false" />
+			</mx:columns>-->
+		</mx:AdvancedDataGrid>
+	</mx:VBox>	
+</mx:Canvas>

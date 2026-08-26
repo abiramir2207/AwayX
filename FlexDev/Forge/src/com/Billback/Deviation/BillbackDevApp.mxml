@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  xmlns:view="com.Billback.Deviation.views.*" 
+		  xmlns:maps="com.Billback.Deviation.maps.*" 
+		  xmlns:vos="com.Billback.Deviation.vos.*" 
+		  width="100%" height="100%"
+		  preinitialize="applyRuntimeStyleSheet();" 
+		  preloader="com.Billback.Deviation.components.baProgressBar" 
+		  implements="com.Billback.Main.models.IBBEdit" >
+	
+	<s:layout>
+		<s:HorizontalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		
+		<maps:MainEventMap  dispatcher="{this}" cache="local" />
+		
+	</fx:Declarations>
+	<fx:Script><![CDATA[
+		import com.Billback.Deviation.events.MainEvent;
+		import com.Billback.Edit.events.BBEditEvent;
+		import com.Billback.Main.events.BBMainEvent;
+		import com.Billback.Main.models.IBBEdit;
+		import com.Billback.Main.models.vos.BBHeader;
+		import com.shared.events.MainEvent;
+		import com.shared.models.SettingsManager;
+		import com.shared.vos.Settings;
+		
+		import mx.controls.Alert;
+		import mx.core.mx_internal;
+		import mx.styles.StyleManager;
+		import mx.utils.ObjectUtil;
+		
+		private var _bbHeader:BBHeader = new BBHeader();
+		private var _sUserId:String;
+		//[Bindable] private var reDirector:String= 'EDIT';
+		
+		public function applyRuntimeStyleSheet():void 
+		{
+			//styleManager.loadStyleDeclarations("/flex/mainFx410.swf")
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+		}
+		
+		public function setSettings(settings:Settings):void{
+			var evt:com.shared.events.MainEvent = new com.shared.events.MainEvent ( com.shared.events.MainEvent.SET_LOCAL_APP_SETTINGS );
+			evt.settings = settings;
+			this.dispatchEvent( evt );
+			
+			this._sUserId = settings.userId;
+			/* var event:BBEditEvent = new BBEditEvent ( BBEditEvent.BB_LOAD_APP_SETTINGS );
+			event.userId = settings.userId;
+			this.dispatchEvent( event ); */
+		}
+		
+		public function setBB(bbHeader:BBHeader):void{
+			if(bbHeader){
+				
+				var eSet:com.Billback.Deviation.events.MainEvent = new com.Billback.Deviation.events.MainEvent ( com.Billback.Deviation.events.MainEvent.SET_USER_ID );
+				eSet.Billback_ID = bbHeader.billbackIDInt.toString();
+				eSet.sBBID  = bbHeader.billbackIDInt.toString();
+				eSet.sUserId = this._sUserId;
+				eSet.sCallerSource = 'flexBB';
+				this.dispatchEvent( eSet );
+				
+				this._bbHeader = bbHeader;
+				var e:com.Billback.Deviation.events.MainEvent = new com.Billback.Deviation.events.MainEvent ( com.Billback.Deviation.events.MainEvent.SET_BB_HEADER );
+				e.bbHeader = bbHeader;
+				this.dispatchEvent( e );
+				
+				var event:com.Billback.Deviation.events.MainEvent = new com.Billback.Deviation.events.MainEvent ( com.Billback.Deviation.events.MainEvent.GET_BILLBACK_HEADER );
+				event.Billback_ID = bbHeader.billbackIDInt.toString();
+				event.sBBID  = bbHeader.billbackIDInt.toString();
+				event.sUserId = this._sUserId;
+				this.dispatchEvent( event );
+				
+				var eventDet:com.Billback.Deviation.events.MainEvent = new com.Billback.Deviation.events.MainEvent ( com.Billback.Deviation.events.MainEvent.GET_BILLBACK_DETAILS );
+				eventDet.Billback_ID = bbHeader.billbackIDInt.toString();
+				eventDet.sBBID  = bbHeader.billbackIDInt.toString();
+				eventDet.sUserId = this._sUserId;
+				this.dispatchEvent( eventDet );
+			}
+		}
+		
+		public function getBB():BBHeader{
+			return this._bbHeader;
+		}
+		
+		public function setSelectedTab(idx:int):void{
+			//this._iTabNavIdx = idx;
+		}
+		
+		public function setClosingMethods(closingMethodList:Array):void{
+			//placeholder for interface requirement
+		}
+		
+		public function setBBAnalysts(bbAnalysts:Array):void{
+			//placeholder for interface requirement
+		}	
+
+		public function setPayeeList(payeeList:Array):void{
+			//placeholder for interface requirement
+		}
+		
+		/* public function setReDirector(reDirector:String):void{
+			this.reDirector = reDirector;
+		} */
+		
+	]]>
+	</fx:Script>
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox width="100%" height="100%">
+		<view:BBMainPanel />
+	</mx:HBox>
+</s:Module>

@@ -1,0 +1,31 @@
+===== QUERY: qGPV =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qFailure =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: gpvDetail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgpvDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("allfixedprice")>
+<cfif useLakebaseForgpvDetail>
+	<cftry>
+		<cfset gpvDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("allfixedprice", {
+				"item" = "eq.#qGPV.Item#",
+				"greatest_program_value" = "eq.1",
+				"case_value" = "eq.#qGPV.Case_Value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgpvDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgpvDetail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: otherDetail =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

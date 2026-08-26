@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/"
+	xmlns:services="com.asfusion.intranet.admin.services.*">
+	<mx:Script>
+		<![CDATA[
+			import com.Admin.model.AdminManager;
+			import com.Admin.ui.views.*;
+			import com.Admin.events.AdminEvent;
+			import mx.events.FlexEvent;
+			import com.Admin.ui.presenters.AdminPM;
+			
+			import com.shared.models.*;
+		]]>
+	</mx:Script>
+	
+	 <!-- Services ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	 
+	<mx:RemoteObject id="AdminService" destination="ColdFusion" source="mvc.models.Program.MassContractPrdUpd.MassContractPrdUpd" />
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+	
+	 <!-- Event Handlers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<EventHandlers type="{ FlexEvent.PREINITIALIZE }">
+		<ObjectBuilder generator="{ AdminPM }" constructorArguments="{ scope.dispatcher }"/>
+	</EventHandlers>
+	
+	<EventHandlers type="{ AdminEvent.GET_ALL }">
+		<RemoteObjectInvoker instance="{AdminService}" showBusyCursor="true" method="getMyData" arguments="8000">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ AdminManager }" method="storeData" arguments="{ resultObject }"/>
+			</resultHandlers>
+			<!-- server fault -->
+			<!--<faultHandlers>
+				announce error event
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{AdminEvent}" >
+					<Properties sBaError="Admin Module (get data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>-->
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+
+	
+	
+	 <!-- Injectors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<Injectors target="{ Settings }">
+		<EventAnnouncer generator="{ AdminEvent }" type="{ AdminEvent.GET_ALL }"/>
+		<PropertyInjector targetKey="model" source="{ AdminPM }"/>
+	</Injectors>
+	
+	<Injectors target="{ AdminPM }">
+		<PropertyInjector targetKey="users" source="{ AdminManager }" sourceKey="users"/>
+		<PropertyInjector targetKey="selectedUser" source="{ AdminManager }" sourceKey="selectedUser"/>
+	</Injectors>
+	
+</LocalEventMap>

@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	tabEnabled="true"  width="100%" height="100%"
+	xmlns:ba="com.ContractProds.views.renderer.*"
+	xmlns:filters="com.shared.components.filters.*" 
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:z="com.shared.components.spark.*">
+	<mx:Script>
+        <![CDATA[
+			import com.ContractProds.events.ComponentEvent;
+			import com.ContractProds.events.SearchEvent;
+			import com.ContractProds.models.ComponentManager;
+			import com.ContractProds.views.pm.ComponentPM;
+			import com.ContractProds.views.pm.GridDataPM;
+			import com.ContractProds.views.renderer.BaAdvancedDataGridColumnGroup;
+			import com.shared.components.filters.AdvancedDataGridFilterColumn;
+			import com.shared.models.entity.vos.Customer;
+			import com.shared.vos.Component;
+			import com.shared.vos.ProductAttr;
+			import com.shared.vos.Uom;
+			
+			import mx.binding.utils.BindingUtils;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumnGroup;
+			import mx.controls.listClasses.ListBase;
+			import mx.utils.ObjectUtil;
+			
+			import spark.components.CheckBox;
+			import spark.components.Label;
+			import spark.components.RadioButtonGroup;
+        	
+        	/* Presentation Model */
+            [Bindable] public var pModel:GridDataPM;
+			
+			[Bindable] public var pModelComp:ComponentPM;
+			//[Bindable] public var iBorderBoxHeight:int = 40;
+			public	var chkGrp:spark.components.CheckBox = new spark.components.CheckBox();
+			
+			public	var chkItem:spark.components.CheckBox = new spark.components.CheckBox();
+			
+			public	var chkNone:spark.components.CheckBox = new spark.components.CheckBox();
+			public	var chkCC:spark.components.CheckBox = new spark.components.CheckBox();
+           public function showHide(event:Event):void
+			{
+		   		var sCol:String;
+				//show hide dynamic prod attr cols
+				for each(var col:AdvancedDataGridColumn in this.dgItems.columns){
+					
+					if("chShow" + col.dataField == event.currentTarget.id){
+						col.visible = !col.visible;
+						break;
+					}
+				}
+				//show hide static cad (canadien conversion
+				if(event.currentTarget.id == 'chShowCAD' || event.currentTarget.id == 'chShowrateConverted'){
+					for each(var colGroup:* in this.dgItems.groupedColumns){
+						if(colGroup is AdvancedDataGridColumnGroup){
+							for each(var colGroupChild:* in colGroup.children){
+								for each (var colGroupChildren:* in colGroupChild.children){
+									if(colGroupChildren is AdvancedDataGridColumn && colGroupChildren.headerText == 'cad'){
+										colGroupChildren.visible = chkCC.selected;
+										if(colGroupChildren is AdvancedDataGridFilterColumn && chkCC.selected){ //cust rate and cad IS Visible
+											colGroupChildren.visible = false;//set false and turn on if it is in arr
+											for each(var cust:Customer in this.pModelComp.arrSelectedCustomer){
+												if(colGroupChildren.dataFieldComplex == cust.shipTo){
+													colGroupChildren.visible = true;
+												}
+											} //for each cust
+										}
+										//break;
+									}	
+								}
+							}
+						}
+					}
+				}
+				
+			}
+			
+			public function showHideCustRates(event:ComponentEvent):void
+			{
+				var sCol:String;
+				for each(var colGroup:* in this.dgItems.groupedColumns){
+					if(colGroup is AdvancedDataGridColumnGroup){
+						for each ( var outerChild:BaAdvancedDataGridColumnGroup in colGroup.children){
+							if(outerChild is BaAdvancedDataGridColumnGroup && outerChild.component.fixedType == ComponentManager.FIXED_CUST_RATE_TYPE_ID){
+								for each (var colGroupChild:* in outerChild.children){
+									if(colGroupChild is AdvancedDataGridFilterColumn && (colGroupChild.dataFieldComplex == colGroupChild.headerText || colGroupChild.headerText == 'cad')  ){ //&& colGroupChild.dataFieldComplex == 'cad'
+										//setvisible = false then loopover selected custs (arr1 = selected customers) and set vis=true if selected
+										colGroupChild.visible = false;
+										for each(var cust:Customer in event.arr1){
+											if(colGroupChild.dataFieldComplex == cust.shipTo){
+												colGroupChild.visible = true;
+												if(colGroupChild.headerText == 'cad'){
+													colGroupChild.visible = chkCC.selected;
+												}
+											}
+										} //for each cust
+									}	
+								} //for each colGroupChild
+							}
+						} //for each outerChild	
+					}
+				}
+			}
+			
+			/*
+			/* Reset scrollbar to the top */   
+	        public function resetScrollbarPosition(e:Event):void{
+				//dgItems.scrollToIndex(0);
+			}
+			
+			public function buildShowHideChkBoxes(e:SearchEvent):void{
+				this.hbShowHideCol.removeAllChildren();
+				//this.gFilterGroupItem.removeChildren();
+				this.gFilterGroupItem.removeAllElements();
+				//<s:Label text="Show/Hide:" fontWeight="bold"/>
+			/* 	var	l:spark.components.Label =  new spark.components.Label();
+					l.text= 'Show/Hide Columns';
+					l.setStyle("fontWeight","bold");
+					this.hbShowHideCol.addChild(l); */
+				var bGroup:Boolean = false;
+				var chk:spark.components.CheckBox = new spark.components.CheckBox();
+					chk.id="chShowbaItemDisplay"
+					chk.selected = true;
+					chk.label= "item"; 
+					chk.addEventListener(Event.CHANGE,showHide,false,0,true); 
+					chk.toolTip="show or hide Item column";
+					this.hbShowHideCol.addChild(chk);
+				var chkDesc:spark.components.CheckBox = new spark.components.CheckBox();
+					chkDesc.id="chShowDescription"
+					chkDesc.selected = true;
+					chkDesc.label= "description"; 
+					chkDesc.addEventListener(Event.CHANGE,showHide,false,0,true); 
+					chkDesc.toolTip="show or hide description column";
+					this.hbShowHideCol.addChild(chkDesc);
+				if(this.pModel.program.bHasConversionFactor){
+					//var chkCC:spark.components.CheckBox = new spark.components.CheckBox();
+					chkCC.id="chShowrateConverted"
+					chkCC.selected = false;
+					chkCC.label= "cad"; 
+					chkCC.addEventListener(Event.CHANGE,showHide,false,0,true); 
+					chkCC.toolTip="show or hide cad column";
+					chkCC.visible = this.pModel.program.bHasConversionFactor;
+					this.hbShowHideCol.addChild(chkCC);
+				}
+				
+				//IF Fixed and Fixed Groups ON OR Rebate AND Rebate Groups ON
+			/*	if(		(this.pModelComp.component.type == ComponentManager.FIXED_TYPE_ID && this.pModel.program.template.bFixedGroupDeal) || 
+						(this.pModelComp.component.type == ComponentManager.REBATE_TYPE_ID  && this.pModel.program.template.bRebateGroupDeal)
+				  ){*/
+					for each(var prdAttr:ProductAttr in this.pModelComp.program.arrPrdAttr){
+						if(prdAttr.allowInGroupSearch){
+							bGroup = true;
+							break;
+					//	}
+					}
+				}
+				
+				//FOR NON GROUP DEALS Display Show/hide check boxes for "allowInSearch" attrs
+				//KRAFT TODO: It might be nice to still show these for multi attr group deals  ADD: && oSettings.appSettings.Template_Multiple_Product_Attr_Groups
+				if(!this.pModel.program.template.bGroupDeal || !this.pModel.oSettings.appSettings.Template_Multiple_Product_Attr_Groups){
+					for each(var pa:ProductAttr in this.pModelComp.program.arrPrdAttr){
+						if(pa.allowInSearch){
+							/*	xxxxxxxxxxxxx      NON GROUPS ONLY     xxxxxxxxxxxxxxxxxx*/
+							var chkAttr:spark.components.CheckBox = new spark.components.CheckBox();
+							chkAttr.id="chShow" + pa.productGroupAttributeNameField;
+							chkAttr.selected = !this.pModel.oSettings.appSettings.Template_Multiple_Product_Attr_Groups;
+							/* TODO: Hide some attrs by default -> user setting?
+							if(pa.groupLevelDesc.toLowerCase() =='level 1'){
+								chkAttr.selected = true;
+							} */
+							chkAttr.label= pa.groupLevelDesc; 
+							chkAttr.addEventListener(Event.CHANGE,showHide,false,0,true); 
+							chkAttr.toolTip="show or hide " + pa.groupLevelDesc + " column" ;
+							this.hbShowHideCol.addChild(chkAttr);
+						}
+						
+					}
+			//KRAFT	
+				}
+			
+				if(bGroup && this.pModel.program.template.bGroupDeal && this.pModel.oSettings.appSettings.Template_Multiple_Product_Attr_Groups){
+				//	pModel.setBfilterGroups(true);
+				//	pModel.setBfilterItems(false);
+				//public	var chkGrp:spark.components.CheckBox = new spark.components.CheckBox();
+						chkGrp.id="chFilterGroup";
+						//chkGrp.selected = true;
+						chkGrp.label= "groups"; 
+						chkGrp.addEventListener(Event.CHANGE,pModel.updateBfilterGroups,false,0,true); 
+						chkGrp.toolTip="show group records in the datagrid";
+						this.gFilterGroupItem.addElement(chkGrp);
+						BindingUtils.bindProperty(chkGrp, "selected", pModel, ["oFilterParms","bfilterB"]);
+				//public	var chkItem:spark.components.CheckBox = new spark.components.CheckBox();
+						chkItem.id="chFilterItem";
+						chkItem.selected = this.pModel.oFilterParms.bfilterA;// false;
+						chkItem.label= "items"; 
+						chkItem.addEventListener(Event.CHANGE,pModel.updateBfilterItems,false,0,true); 
+						chkItem.toolTip="show item records in the datagrid";
+						this.gFilterGroupItem.addElement(chkItem);
+						
+						
+						//hgFilterMP chkNone
+						if(this.pModel.program.template.bCustomPrint &&
+							//this.component.fixedType != com.ContractProds.models.ComponentManager.FIXED_CUST_RATE_TYPE_ID &&
+							this.pModel.oSettings.appSettings.Template_Multiple_Product_Attr_Groups  && 
+							//this.component.type == 1   && 
+							!this.pModel.oSettings.bMarketPrice){
+							//SearchManager.loadProdrates() sets this property.
+							//this.pModel.oFilterParms.bfilterC = true;//generic Bool to hold setting for Filter 'NONE'
+							chkNone.id="chFilterNone";
+							BindingUtils.bindProperty(chkNone, "selected", pModel, ["oFilterParms","bfilterC"]);
+							chkNone.label= "none prt grp"; 
+							chkNone.addEventListener(Event.CHANGE,pModel.updateBfilterNone,false,0,true); 
+							chkNone.toolTip="show items with Print Group 'None'";
+							this.hgFilterMP.addElement(chkNone);
+						}
+					
+				} 
+			/*	else{
+					pModel.setBfilterGroups(false);
+					pModel.setBfilterItems(true);
+				}
+				dgItems.resetFilters();*/
+				this.hbShowHideBrd.visible = true;
+				this.hbShowHideCol.visible = true;
+			}
+			
+			private function reset():void{
+			
+				//select Rates
+				this.chFilterRates.selected = false;
+				pModel.setBfilterRates(false);
+				
+				//reset selected filter
+				this.chFilterSelected.selected = false;
+				pModel.setBfilterSelected(false);
+				
+				this.chFilterVarianceMP.selected = false;
+				pModel.setBfilterVarianceMP(false);
+				
+				this.chFilterMP.selected = false;
+				pModel.setBfilterMP(false);
+				
+				this.cboProductStatus.selectedIndex = 0;
+				var o:Object = new Object();
+				o = pModel.arrProductStatus[0];
+				pModel.updateFilterProductStatus(o);
+			/* 	var x:* = this.gFilterGroupItem.getAutomationChildren();
+				for each(var chk:spark.components.CheckBox in this.gFilterGroupItem.getAutomationChildren() ){
+					chk.selected = false;
+				} */
+				for (var x : int = 0; x < this.gFilterGroupItem.numChildren ; x++){
+					var chk:spark.components.CheckBox = this.gFilterGroupItem.getChildAt(x) as spark.components.CheckBox;
+					chk.selected = false;
+				}
+				pModel.setBfilterGroups(false);
+				pModel.setBfilterItems(false);
+				pModel.setBfilterNone(false);
+				//var _funcFilterInsert:Function = function(inObject:Object):Boolean{return true;};
+				dgItems.resetFilters();
+				//send to pModel for dispatch
+				//pModel.reset();
+			}
+
+        ]]>
+    </mx:Script>
+	
+    <mx:VBox width="100%" height="100%">
+    	<mx:HBox width="100%" verticalAlign="bottom" paddingLeft="15">
+		    <!--<mx:Spacer width="20" />-->
+		    <!--<ba:BaLabel text="Products: {this.pModel.items.length} {this.pModel.sRecordMessage}"/>-->
+		    <!--- view rates check box: when checked, only items with rates are displayed-->
+			<mx:VBox borderStyle="solid"
+					 styleName="bxBorder" 
+					 id="vbxFilter" 
+					 horizontalAlign="right" height="100%" verticalAlign="top"
+					 paddingTop="0"
+					 paddingRight="0"
+					 paddingLeft="0"
+					 paddingBottom="0">
+				<z:BorderContainerLabel sText="Filter Items" iWidth="240"/>
+					<!--<s:BorderContainer id="brdr" borderWeight="0" width="100%"
+							backgroundColor="{this.pModelComp.sLbaleColor}" 
+							backgroundAlpha="{this.pModelComp.nBgAlpha}"
+							borderVisible="false"
+							cornerRadius="7"
+							height="{lFilter.height + 1}"> 
+						<s:Label id="lFilter" textAlign="center"
+							 text="Filter Items" 
+							 minWidth="240" 
+							 width="100%" 
+							 fontWeight="bold"
+							 paddingTop="2"
+							 paddingRight="2"
+							 paddingLeft="2"
+							 paddingBottom="2" />
+	
+					</s:BorderContainer>-->
+				<s:VGroup>
+					<s:HGroup paddingLeft="2" paddingRight="2" horizontalAlign="center">
+						<s:CheckBox id="chFilterRates" 
+									label="rates" 
+									selected="{pModel.oFilterParms.bfilterRates}"
+									click="pModel.updateBfilterRates(chFilterRates.selected);" 
+									toolTip="Show only the items with rates.  These are the items that get added to the program."/>
+						
+						<s:CheckBox id="chFilterSelected" 
+									label="selected" 
+									selected="{pModel.oFilterParms.bfilterSelected}"
+									click="pModel.updateBfilterSelected(chFilterSelected.selected);" 
+									toolTip="Show only the selected items (checked)"/>
+						
+						<s:HGroup id="gFilterGroupItem" >
+							
+						</s:HGroup>
+						<!-- Check Box to Show Hide datagrid Column for the CAD -->	
+					<!--	<mx:CheckBox id="chShowCAD" 
+									 label="view CAD"
+									 toolTip="show or hide CAD"
+									 visible="{this.pModelComp.program.bHasConversionFactor}"
+									 includeInLayout="{this.pModelComp.program.bHasConversionFactor}"
+									 click="showHide(event)"/>-->
+						
+						
+						<ba:BaButton id="btnReset"
+									 label="clear filters" 
+									 click="this.reset()"
+									 toolTip="Clear all filters including column header filters in the grid.  All available items will be displayed." />
+					</s:HGroup>
+					<s:HGroup id="hgFilterMP" paddingLeft="2" paddingRight="2" horizontalAlign="center">
+						<s:CheckBox id="chFilterVarianceMP" 
+								
+									label="price variance" 
+									selected="{pModel.oFilterParms.bfilterVarianceMP}"
+									click="pModel.updateBfilterVarianceMP(chFilterVarianceMP.selected);" 
+									toolTip="show only the items with a market price variance"/>
+						<!--visible="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}" 
+						includeInLayout="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}"-->
+						<s:CheckBox id="chFilterMP" 
+								
+									label="price" 
+									selected="{pModel.oFilterParms.bfilterMP}"
+									click="pModel.updateBfilterMP(chFilterMP.selected);" 
+									toolTip="show only the items with a market price"/>
+						<!--visible="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}" 
+						includeInLayout="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}"-->
+						<s:CheckBox id="chFilterEz" 
+									includeInLayout="{this.pModelComp.program.template.bEZButtonOn &amp;&amp; pModelComp.component.type == ComponentManager.REBATE_TYPE_ID}" 
+									visible="{this.pModelComp.program.template.bEZButtonOn  &amp;&amp; pModelComp.component.type == ComponentManager.REBATE_TYPE_ID}"
+									label="ez rate" 
+									selected="{pModel.oFilterParms.bfilterEz}"
+									click="pModel.updateBfilterEz(chFilterEz.selected);" 
+									toolTip="show only the items with an EZ Button rate"/>
+						
+						<ba:BaCombo id="cboProductStatus" toolTip="filter based on item status" 
+									selectedItem="{pModel.oFilterParms.sfilterProductStatus}"
+									dataProvider="{pModel.arrProductStatus}"
+									change="pModel.updateFilterProductStatus(cboProductStatus.selectedItem)">
+						</ba:BaCombo>
+					</s:HGroup>
+				</s:VGroup>
+				
+			</mx:VBox>
+			
+			<!--...............................................................................................................-->
+			<mx:VBox height="100%" styleName="bxBorder" id="vbxMassApply" paddingTop="0">
+				<z:BorderContainerLabel sText="Mass Apply Rates" 
+										 sToolTip='Mass apply rates to items in the grid by selecting them (using the row level check boxes) and clicking "apply rate".  A row may be selected by clicking anywhere in the row to Highlight the row and then hitting the "Enter" key.  Multiple rows may be Highlighted by using the "Ctrl" and the "Shift" keys.  The "Enter" key will then Select or Deselect the checkboxes associtaed with the Highlighted rows.' 
+										 iWidth="240"/>
+				<!--<s:BorderContainer id="bdrMassApply" borderWeight="0" width="100%"
+								   backgroundColor="{this.pModelComp.sLbaleColor}"
+								   backgroundAlpha="{this.pModelComp.nBgAlpha}"
+								   borderVisible="false"
+								   borderColor="white"
+								   cornerRadius="4"
+								   height="{lMassApply.height + 1}">
+				<s:Label id="lMassApply" width="240"
+					text="Mass Apply Rates" textAlign="center"
+					fontWeight="bold" 
+					toolTip='Mass apply rates to items in the grid by selecting them (using the row level check boxes) and clicking "apply rate".  A row may be selected by clicking anywhere in the row to Highlight the row and then hitting the "Enter" key.  Multiple rows may be Highlighted by using the "Ctrl" and the "Shift" keys.  The "Enter" key will then Select or Deselect the checkboxes associtaed with the Highlighted rows.'
+					paddingTop="2"
+					paddingRight="2"
+					paddingLeft="2"
+					paddingBottom="2" />
+				</s:BorderContainer>-->
+				
+				<mx:HBox>
+					<!--<mx:TextInput id="tiRate" width="75" maxHeight="18"/>-->
+					<s:TextInput  id="tiRate" width="75" maxHeight="18"/>
+					
+					
+			<!--	</mx:HBox>-->
+				<s:RadioButtonGroup enabled="{pModelComp.state==ComponentPM.SELECTED}"  
+									 id="rdoUomActionGrp" 
+									 selectedValue="0"/>
+				<!--<mx:HBox>-->
+					<ba:BaRadio id="rdoUomAbs" 
+								label="abs" 
+								value="0" 
+								groupName="rdoUomActionGrp"
+								toolTip="mass apply an absolute rate to all selected (checked) items"/>
+					<ba:BaRadio id="rdoUomInc" 
+								label="inc" 
+								value="2" 
+								groupName="rdoUomActionGrp"
+								toolTip="mass apply an incremental of existing rate change to all selected (checked) items"/>
+					<ba:BaRadio id="rdoUomPerc" 
+								label="% chg" 
+								value="1" 
+								groupName="rdoUomActionGrp"
+								toolTip="mass apply a % of existing rate change to all selected (checked) items"/>
+				</mx:HBox>
+				<mx:HBox>
+				<!--<mx:HBox includeInLayout="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}" 
+							visible="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}">-->
+					<ba:BaRadio id="rdoUomPercMp"
+								label="% price chg" 
+								value="3" 
+								groupName="rdoUomActionGrp"
+								toolTip="mass apply a % of price rate change to all selected (checked) items"/>
+					<ba:BaRadio id="rdoUomIncMp" 
+								label="inc price chg" 
+								value="4" 
+								groupName="rdoUomActionGrp"
+								toolTip="mass apply an incremental of price rate change to all selected (checked) items"/>
+					<ba:BaRadio id="rdoUomEqMp"
+								label="eq price rate" 
+								value="5" 
+								groupName="rdoUomActionGrp"
+								toolTip="mass apply price rate to all selected items"
+								includeInLayout="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}" 
+								visible="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}"/>
+					<ba:BaRadio id="rdoUomEqEZ"
+								label="eq ez rate" 
+								value="6" 
+								groupName="rdoUomActionGrp"
+								toolTip="mass apply ez rebate rate to all selected items"
+								includeInLayout="{this.pModelComp.program.template.bEzButtonDefaultShowItemRates &amp;&amp; this.pModelComp.program.template.bEZButtonOn &amp;&amp; pModelComp.component.type == ComponentManager.REBATE_TYPE_ID}" 
+								visible="{this.pModelComp.program.template.bEzButtonDefaultShowItemRates &amp;&amp; this.pModelComp.program.template.bEZButtonOn  &amp;&amp; pModelComp.component.type == ComponentManager.REBATE_TYPE_ID}"/>
+				</mx:HBox> 
+			<!--	<mx:HBox includeInLayout="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}" 
+						 visible="{this.pModelComp.program.bMarketPriceTemplate &amp;&amp; pModelComp.component.type == ComponentManager.FIXED_TYPE_ID}">
+					
+					
+				</mx:HBox>-->
+				<s:HGroup width="100%" horizontalAlign="right">
+				<ba:BaCombo id="cboUom" width="75" 
+							enabled="{this.rdoUomActionGrp.selectedValue.valueOf()==0}" 
+							dataProvider="{pModelComp.componentDef.uom}"
+							labelField="abbreviation"
+							change="pModelComp.updateUom(cboUom.selectedItem)" 
+							selectedIndex="{this.pModelComp.selectedUomIdx}">
+				</ba:BaCombo>
+				<s:Spacer width="75"/>
+				<ba:BaButton label="apply rate" 
+							 enabled="{pModelComp.state==ComponentPM.SELECTED &amp;&amp; (Number(this.tiRate.text) || this.tiRate.text == '0' || this.tiRate.text == '' || this.rdoUomActionGrp.selectedValue.valueOf() == 5)}"
+							 click="pModelComp.setRateUom(this.tiRate.text,this.cboUom.selectedItem as Uom,this.rdoUomActionGrp.selectedValue.valueOf(),this.dgItems);" 
+							 toolTip="Mass apply an absolute, incremental, or % change rate to the currently selected (checked) products."/>
+				</s:HGroup>
+			</mx:VBox>
+			<!--................................................................................................................................-->
+			
+			<mx:VBox borderStyle="solid" 
+					 styleName="bxBorder" 
+					 id="hbShowHideBrd" 
+					 verticalAlign="top" 
+					 visible="false" 
+					 height="100%" 
+					 paddingTop="0">
+				<!--- Check Box to Show Hide datagrid Column-->
+				
+			<z:BorderContainerLabel sText="Show/Hide Columns" 
+									sToolTip="Show/Hide product attribute columns in the grid." 
+									iWidth="240"/>
+			<!--	<s:BorderContainer id="bdrShowHide" borderWeight="0" width="100%"
+								   backgroundColor="{this.pModelComp.sLbaleColor}"
+								   backgroundAlpha="{this.pModelComp.nBgAlpha}"
+								   borderVisible="false"
+								   borderColor="white"
+								   cornerRadius="4"
+								   height="{lShowHide.height + 1}">
+					<s:Label id="lShowHide" minWidth="240" width="100%"
+							 text="Show/Hide Columns" textAlign="center"
+							 fontWeight="bold" 
+							 toolTip='Show/Hide product attribute columns in the grid.'
+							 paddingTop="2"
+							 paddingRight="2"
+							 paddingLeft="2"
+							 paddingBottom="2" />
+				</s:BorderContainer>-->
+				
+				<mx:HBox id="hbShowHideCol" visible="false">
+				
+				</mx:HBox>
+				
+			</mx:VBox>
+		</mx:HBox>
+	    <!--- Main datagrid that holds all of the items to be filtered-->
+	<!--	lockedColumnCount="4" -->
+		<filters:FilterAdvancedDatagrid dragEnabled="false" 
+				filterInsert="{pModel.funcFilterInsert}" 
+				oFilterParms="{pModel.oFilterParms}" 
+				oSettings="{pModel.oSettings}"
+				itemEditEnd="pModel.itemEditEnd(event);"
+				allowMultipleSelection="true"
+				liveScrolling="true" 
+				sortExpertMode="true"
+				horizontalScrollPolicy="on"
+				id="dgItems" dispatcher="{this}"
+				dataProvider="{pModel.items}"
+				editable="true"
+				width="100%" height="100%" minHeight="200"
+				top="0" left="0" right="0" bottom="0"
+				doubleClickEnabled="true"
+				itemDoubleClick="pModel.selectRow(event);"
+				keyDown="pModel.enterRow(event);"
+				tabEnabled="true" tabChildren="true"
+				headerRelease="pModel.Call_Sort_Data(event);"
+				groupedColumns="{pModel.arrDgItemsCols}"
+				sortableColumns="true">
+		</filters:FilterAdvancedDatagrid>
+		<!--toolTip="Select a row by:&#13;clicking the check box or&#13;double clicking a Row or &#13;highlighting the row(s) and pressing ENTER"-->
+	</mx:VBox>	
+	<mx:NumberValidator
+		precision="4" precisionError="The max precision is 4 deciamls."
+		source="{tiRate}" 
+		property="text" 
+		required="false" 
+		invalidCharError="Please enter a valid number."
+		domain="real" 
+		invalid="tiRate.text=pModelComp.formatDecimal(tiRate.text)" 
+		allowNegative="false" 
+		negativeError="Please enter a positive number."/>
+</mx:Canvas>

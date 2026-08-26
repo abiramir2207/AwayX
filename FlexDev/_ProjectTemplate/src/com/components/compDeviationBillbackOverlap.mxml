@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for displaying the image based on the field DEVIATION_BILLBACK_OVERLAP 
+ 	from the query result 
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" 
+		horizontalAlign="center" verticalAlign="middle">
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.external.ExternalInterface
+			import com.asfusion.mate.events.Dispatcher;
+			import mx.events.CloseEvent;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			private var columnIndex:Number;
+			public var URLgeneratedDBO:String = "/billbacks/Deviation/Deviation_Product_Date_Overlap.cfm?Billback_Product_Detail_ID=";
+		]]>
+</mx:Script>
+  <mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+				id="imgDBO"	
+				width="12"
+				height="12"
+				source="{getSource(data.DEVIATION_BILLBACK_OVERLAP)}" 
+				useHandCursor="true" 
+				buttonMode="true" 
+				mouseChildren="false"
+				click="fnDBOClick();">
+				<!-- 	toolTip="Deviation Date Mismatch" -->
+		<mx:Script>
+			<![CDATA[
+				/** 
+				 * This holds the image to be displayed basesd on the DEVIATION_BILLBACK_OVERLAP 
+				 * field from the query result
+				 */
+				private  var imgDBOHolder:Class;
+			
+				/** 
+				 * This function determines which image has to be displayed for the 
+				 * Deviation Overlap Validation column in the grid.
+				 */				
+				private function getSource(recType:String):Object
+				{
+					// Do not display the Tick or "X" image incase of
+					// Dummy program or unknow Item 
+					if((data.Dummy_Program=='0')&&(data.UnKnown_Item=='0'))
+					{
+						if (data.DEVIATION_BILLBACK_OVERLAP == 1)   
+						{
+							[Embed(source='/assets/Images/no.gif')]
+							var imgNo:Class;
+							imgDBOHolder = imgNo;
+						}
+						else if (data.DEVIATION_BILLBACK_OVERLAP == 0)
+						{
+							[Embed(source="/assets/Images/yes.gif")]
+							var imgYes:Class;
+							imgDBOHolder = imgYes; 
+						}
+						else
+						{
+							imgDBOHolder:Class;
+						}
+					}
+					else
+					{
+						imgDBOHolder:Class;
+					} 			
+					return imgDBOHolder;
+				}  
+
+					/* ******************************************************************
+					The data.* would not work in the initialization above as the data.* 
+						is not created and is available only later
+					********************************************************************/
+								
+					/** 
+					* This function will open a popup window with the link 
+					* "/billbacks/Deviation/Deviation_Product_Date_Overlap.cfm" 
+					*  passing Billback_Product_Detail_ID to it.
+					*/
+					private function fnDBOClick():void
+					{
+						var strRequestURL:String = URLgeneratedDBO + data.Billback_Product_Detail_ID;
+						// This will open the URL in a a new window
+						//navigateToURL(new URLRequest(strRequestURL),"_blank")
+						ExternalInterface.call("f = function() { window.open('"+strRequestURL+"','win','toolbar=no,scrollbars=yes,resizable=1,width=780,height=650'); }");
+					}
+										
+				]]>
+			</mx:Script>
+	</mx:Image>
+</mx:HBox> 			
+
+ 

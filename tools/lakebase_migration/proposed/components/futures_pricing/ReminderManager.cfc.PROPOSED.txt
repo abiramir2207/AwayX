@@ -1,0 +1,32 @@
+===== QUERY: qGetReminders =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateReminder =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertReminder =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qSetReminderSent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSetReminderSent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_reminder")>
+<cfif useLakebaseForqSetReminderSent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fp_reminder",
+			{
+				"fp_reminder_id" = "eq.#FP_Reminder_ID#"
+			},
+			{
+				"reminder_sent" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetReminderSent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetReminderSent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

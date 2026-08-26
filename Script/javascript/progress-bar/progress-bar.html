@@ -1,0 +1,54 @@
+<!-- 
+	Example use of progress-bar function
+ -->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Progress Bar Test</title>
+		<!-- Include these two files -->
+		<link rel="stylesheet" href="progress-bar.css"/>
+		<script src="progress-bar.js"></script>
+
+		<!-- Optional styling overrides for progress bars -->
+		<style>
+			p { font: 15px Arial, sans-serif;}
+			
+			.dollars {
+				background-color: #228b22;
+			}
+			.days {
+				background-color: #3498db;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Demo of progress bars</p>
+		<!-- Progress bar without percentage indicator -->
+		<div id="demoA" style="width:200px;"></div><br>
+		<!-- Progress bars WITH percentage indicator and styling -->
+		<div id="demoB"></div><br>
+		<div id="demoC"></div>
+
+		<!-- Setup on page load -->
+		<script>
+			var paramsA = {id: "demoA", bDemo: true};
+			var paramsB = {id: "demoB", barStyle: "dollars", bIndicate: true, bDemo: true};
+			var paramsC = {id: "demoC", barStyle: "days", bIndicate: true, bDemo: true};
+			var demoA, demoB, demoC;
+
+			window.addEventListener("DOMContentLoaded", function(){
+				// Setup sample progress bars
+				demoA = progressBar(paramsA);
+				demoB = progressBar(paramsB);
+				demoC = progressBar(paramsC);
+				
+				// Set percentage value to show
+				demoA.set(40);
+				demoB.set(60);
+				demoC.set(78);
+
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,41 @@
+===== QUERY: getCommodities =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCommodities = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrules")>
+<cfif useLakebaseForgetCommodities>
+	<cftry>
+		<cfset getCommodities = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrules", {
+				"select" = "rule_name,formula_pricing_rule_id"
+			}), "rule_name,formula_pricing_rule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCommodities = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCommodities>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Show_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Show_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrules")>
+<cfif useLakebaseForGet_Show_Details>
+	<cftry>
+		<cfset Get_Show_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrules", {
+				"formula_pricing_rule_id" = "eq.#getCommodities.Formula_Pricing_Rule_ID#",
+				"select" = "show_details"
+			}), "show_details"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Show_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Show_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

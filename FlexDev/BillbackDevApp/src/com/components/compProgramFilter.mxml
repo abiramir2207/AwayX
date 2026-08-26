@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	 	This is a ItemRenderer for displaying Datagrid Header labels vertically
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="0" paddingTop="0" paddingRight="0" paddingBottom="0" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+	
+	<!--<mx:Script>
+		<![CDATA[
+			protected function filterProgramTxt_keyDownHandler(event:KeyboardEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (event.keyCode == Keyboard.ENTER)
+				{
+					parentDocument.filterProgram(this.filterProgramTxt.text);
+				}
+			}
+		]]>
+	</mx:Script>-->
+	
+	<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="0" paddingTop="0" paddingRight="0" paddingBottom="0" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+		<mx:Script>
+			<![CDATA[
+			//[Embed(systemFont='Verdana', fontName='myVerdana', mimeType='application/x-font', unicodeRange='U+0020-U+007E')] 
+		
+			public var myVerdana:Class;
+		  	import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+			import mx.managers.SystemManager;
+			import flash.events.Event;
+			import flash.events.EventDispatcher;
+			import flash.events.IEventDispatcher;
+			import mx.controls.TextInput;
+			import flash.events.KeyboardEvent;
+			import flash.events.MouseEvent;
+			import flash.ui.Keyboard;
+			]]>
+		</mx:Script>
+		<mx:Label id="lblProgram" text="Program" />
+	</mx:HBox>
+	<!--<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="0" paddingTop="0" paddingRight="0" paddingBottom="0" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+		<mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+					id="imgDUP"	
+					width="13"
+					height="13"
+					source="/flex/assets/Images/filter-icon_15_trans.gif" 
+					useHandCursor="false" 
+					buttonMode="true" 
+					mouseChildren="false"
+					/>
+		<mx:TextInput id="filterProgramTxt" keyDown="filterProgramTxt_keyDownHandler(event)"  width="50" height="20" paddingLeft="0" paddingTop="0" fontSize="10" toolTip="Type search text and press &lt;enter&gt; to filter" />
+	</mx:HBox>-->
+</mx:VBox>	

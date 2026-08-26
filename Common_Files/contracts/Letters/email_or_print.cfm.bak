@@ -1,0 +1,329 @@
+<cfsilent>
+	<!--- 
+	FILE:         
+	FILENAME:     Common_Files/contracts/Letters/email_or_print.cfm
+	CREATED:     12/19/2007 - RBL
+	EDITED:        12/01/2008 - RBL [D17619]
+	
+	FUNCTIONALITY:
+	- This action page facilitates requests from user to either email, print, add to calendar - 1 or 
+	multiple selected letters from same list of one (1) program...
+	--->
+</cfsilent>
+
+<!--- These parameters are required for this template to process correctly --->
+<cfparam name="form.letter_id" type="string" default="">
+<cfparam name="form.contract_main_id" type="string" default="">
+<cfparam name="variables.msg" default="">
+<cfparam name="requestType" default="">
+
+<cfscript>
+	application.oController.getObject("mvc.Models.LetterManager");
+</cfscript>
+
+<!--- be polite, let 'em know was up... --->
+<cfif NOT len(trim(form.letter_id))>
+	<cfif form.requestType eq  "print_letters">
+		<cfset variables.msg = "please select letter(s) to print">
+		<cflocation url="view_letters.cfm?msg=#variables.msg#&CID=#form.contract_main_id#">
+		<cfabort>
+	<cfelseif form.requestType eq "email_letters" OR form.requestType eq "email_external_contacts_letters">
+		<cfset variables.msg = "please select letter(s) to email">
+		<cflocation url="view_letters.cfm?msg=#variables.msg#&CID=#form.contract_main_id#">
+		<cfabort>
+	<cfelseif form.requestType eq "calendar_letters">
+		<cfset variables.msg = "please select letter(s) for calendar">
+		<cflocation url="view_letters.cfm?msg=#variables.msg#&CID=#form.contract_main_id#">
+		<cfabort>
+	</cfif>
+</cfif>
+<!--- be polite, let 'em know was up... --->
+
+<!--- Dev Note(78294): Generate the "product group members" Excel file.
+Note: The logic to figure out whether to generate the Excel file or not is on the same file (\Common_Files\contracts\Letters\generate_group_members_excel.cfm).
+--->
+<cfif application.appSettingsget.getlettersavailable() eq 4> 
+	<cfif (form.requestType eq "email_letters" OR form.requestType eq "email_external_contacts_letters") and len(trim(form.letter_id))>
+	<!---If the "Excel file for product group members" template setting is ON for distributor and at least one distributor letter has been selected for emailing 
+		OR 
+		"Excel file for product group members" template setting is ON for operator and at least one operator letter has been selected for emailing 
+	--->
+		<cfset variables.bLetterGenerate = application.oLetterManager.getProgramLetterSettings(form.letter_id)>
+		<cfif variables.bLetterGenerate>
+			<cfinclude template="\Common_Files\contracts\Letters\generate_group_members_excel.cfm">
+		</cfif>
+	</cfif>
+</cfif>
+<!------------------------------------------------------------------------------------------------------>
+<!------------------------------------------- EMAIL or PRINT ------------------------------------------->
+<!------------------------------------------------------------------------------------------------------>
+
+
+	<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init()/>
+	<cfset appSettings = genSettingsManager.get()>
+
+	<!--- IF we have a request.accessstructure AND it has a user_id key AND it has something in it... --->
+	<cfif isDefined("request.accessstructure") 
+        AND structKeyExists(request.accessstructure, "user_id") 
+	      AND len(trim(request.accessstructure.user_id))>
+		<cfset variables.user_id = request.accessstructure.user_id>
+		<!--- OR if we have a url.user_id and it has something in it... --->
+	<cfelseif isdefined("url.user_id") AND len(trim(url.user_id))>
+		<cfset variables.user_id = url.user_id>
+	<cfelse>
+		<cfset variables.user_id = variables.qProgramInfo.responsible_user_id[1]>
+	</cfif>
+
+	<!--- Moved this two statements out of above CFIF --->
+	<cfset variables.oProgramData = createObject("component", "components.programs.program")/>
+	<cfset variables.qProgramInfo = variables.oProgramData.getProgramInfo(form.contract_main_id)>
+
+	<!--- RSP email should be returned here only when the RSP is not a deleted user.--->
+	<cfquery name="getRSPEmail" datasource="#application.datasource#">
+	SELECT u.User_Email As RSP_Email
+		FROM Contract_Main cm
+			INNER JOIN _Users u
+			ON cm.responsible_user_id = u.user_id
+			AND u.deleted = 0
+	WHERE Contract_Main_ID = <cfqueryparam cfsqltype="cf_sql_int" value="#form.contract_main_id#">
+	</cfquery>
+
+	<cfquery name="getProgramDetails" datasource="#application.datasource#">
+	SELECT Product_Group_Members_File_Path
+	FROM Contract_Main_Aux_Data
+	WHERE Contract_Main_ID = <cfqueryparam cfsqltype="cf_sql_int" value="#form.contract_main_id#">
+	</cfquery>
+	
+	<!--- Dev Note:74085 --->
+	<cfif appSettings.get_Setting('Use_this_email_for_Program_Letters') eq '1'>
+		<cfset fromemail = appSettings.getDifferent_From_Address()>
+	<cfelse>
+		<cfset fromemail = getRSPEmail.RSP_Email>
+	</cfif>
+
+	<cfset subject = appSettings.getletterssubject()>
+
+
+<cfif form.requestType eq "print_letters" OR form.requestType eq "email_letters">
+
+	<cfoutput>
+	
+		<!--- Let's identify our comma-delimited list of url's to the pdf's we wish to merge prior to 
+		printing... --->
+		<cfset variables.lsCompletePathsToPDFs = "">
+			
+		<!------------------------------------------------------------------------------------------------------>
+		<!---------------- Let's loop over the list of letter_id's that the user has checked off --------------->		
+		<!-----------------------------------------[begin]------------------------------------------------------>
+		<cfloop list="#form.letter_id#" index="id">
+		
+			<cfset variables.qGetLetterInfo = application.oLetterManager.getAllLetterInfo(id)>
+			
+			<cfif form.requestType eq "print_letters">
+			
+				<cfset variables.lsCompletePathsToPDFs = listAppend(variables.lsCompletePathsToPDFs, replace(variables.qGetLetterInfo.letter_path, 'htm', 'pdf', 'all'), ",")>
+			
+			<cfelseif form.requestType eq "email_letters">
+
+			<!-------------------------- EMAILING [begin] ------------------------>			
+				<cfif NOT len(trim(evaluate('form.email_address_#id#')))>
+					<cfset variables.msg = "please enter email address(es)">
+					<cflocation url="view_letters.cfm?msg=#variables.msg#&CID=#form.contract_main_id#">
+					<cfabort>
+				</cfif>
+				<cfset variables.pdf_attachment_file_path = replace(variables.qGetLetterInfo.letter_path[1], '.htm','.pdf', 'all')>
+				<cfset variables.pdf_attachment_file_name = uCase(replace(variables.qGetLetterInfo.letter_name[1], '_', ' ', 'all'))>
+			
+				<!--- If custom letter (Custom 1) app setting is ON --->
+				<cfif appSettings.getlettersavailable() eq 2>
+				
+					<cfquery name="getProgramInfo" datasource="#application.datasource#">
+						SELECT Right(Contract_Number, 7) as Partial_Contract_Number, Right('000' + 
+						CAST(Revision_Version as varchar(3)), 3) as Revision_Version, Contract_Title
+						FROM Contract_Main
+						WHERE Contract_Main_ID = <cfqueryparam cfsqltype="cf_sql_int" value="#form.contract_main_id#">
+					</cfquery>
+				
+					<!--- If it is an operator letter --->
+					<cfif variables.qGetLetterInfo.Letter_Type eq 1>
+					
+						<!--- If the letter is not for "All Operators" --->
+						<cfif FindNoCase("All ", variables.qGetLetterInfo.Operator_Name) eq 0>
+							<cfset OperatorName = " " & "#variables.qGetLetterInfo.Operator_Name#">
+						<cfelse>
+							<cfset OperatorName = "">
+						</cfif>
+					
+						<cfset subject = "General Mills" & " " & getProgramInfo.Partial_Contract_Number & " " & getProgramInfo.Revision_Version 
+						                 & "  " & getProgramInfo.Contract_Title & OperatorName & "  " & dateformat(variables.qGetLetterInfo.Created_Date, "mm_dd_yyyy") 
+						                 & "_" & timeformat(variables.qGetLetterInfo.Created_Date, "hh_mm_sstt")/>
+					
+						<!--- If it is an distributor letter --->
+					<cfelseif variables.qGetLetterInfo.Letter_Type eq 2>
+					
+						<!--- If the letter is not for "All distributors" --->
+						<cfif FindNoCase("All ", variables.qGetLetterInfo.Distributor_Name) eq 0>
+							<cfset DistributorName = " " & "#variables.qGetLetterInfo.Distributor_Name#">
+						<cfelse>
+							<cfset DistributorName = "">
+						</cfif>
+					
+						<cfset subject = "General Mills" & " " & getProgramInfo.Partial_Contract_Number & " " & getProgramInfo.Revision_Version 
+						                 & "  " & getProgramInfo.Contract_Title & DistributorName & "  " & dateformat(variables.qGetLetterInfo.Created_Date, "mm_dd_yyyy") 
+						                 & "_" & timeformat(variables.qGetLetterInfo.Created_Date, "hh_mm_sstt")/>
+					</cfif>
+				
+				<cfelse>
+					<cfset subject = "#lcase(replace(variables.pdf_attachment_file_name, '_', ' ','ALL'))# program letter">
+				</cfif>
+				<!--- By using "programLettersEmail=1", the logic for "from" and "replyTo" is populated on "EmailWrapper.cfm"  --->
+				<cf_emailwrapper to="#Replace(evaluate('form.email_address_#id#'), ' ', ',', 'ALL')#" 
+								from="#fromemail#" subject="#subject#" type="HTML" messagetype="1"
+								generatedby="3" apparea = "15" app_area_identifier="#form.contract_main_id#" 
+								app_area_sub_identifier="#id#" userId="#request.accessStructure.User_ID#" programlettersemail="1">
+							   
+					<!--- If custom letter (Custom 1) app setting is ON --->
+					<cfif appSettings.getlettersavailable() eq 2>
+						#subject#
+						<b>
+							PROGRAM LETTER
+						</b>
+						is attached...
+					<cfelse>
+						#variables.pdf_attachment_file_name#
+						<b>
+							PROGRAM LETTER
+						</b>
+						is attached...
+					</cfif>
+					<!--- If it is an operator letter and "Excel file for product group members" template setting is ON for operators
+					OR
+					If it is a distributor letter and "Excel file for product group members" template setting is ON for distributors --->
+					<cfif
+					((variables.qGetLetterInfo.Letter_Type eq 1 AND qTemplate.Operator_Generate_Excel_File_Product_Group_Members eq 1)
+					OR
+					(variables.qGetLetterInfo.Letter_Type eq 2 AND qTemplate.Distributor_Generate_Excel_File_Product_Group_Members eq 1)
+					)>
+					<br />
+						<cfif IsDefined("variables.ExcelFilePath") AND variables.ExcelFilePath neq "" AND FileExists("#variables.ExcelFilePath#")>
+						#variables.ExcelFileName#
+						is attached...
+						</cfif>
+					</cfif>
+
+					<cf_emailwrapperparam file="#variables.pdf_attachment_file_path#" />
+					<!--- Attach the "product group members" Excel file. --->
+					<!--- If it is an operator letter and "Excel file for product group members" template setting is ON for operators
+					OR
+					If it is a distributor letter and "Excel file for product group members" template setting is ON for distributors --->
+					<cfif
+					((variables.qGetLetterInfo.Letter_Type eq 1 AND qTemplate.Operator_Generate_Excel_File_Product_Group_Members eq 1)
+					OR
+					(variables.qGetLetterInfo.Letter_Type eq 2 AND qTemplate.Distributor_Generate_Excel_File_Product_Group_Members eq 1)
+					)>
+						<cfif getProgramDetails.Product_Group_Members_File_Path neq "" AND FileExists("#getProgramDetails.Product_Group_Members_File_Path#")>
+							<cf_emailwrapperparam file="#getProgramDetails.Product_Group_Members_File_Path#" />
+						</cfif>
+					</cfif>
+				</cf_emailwrapper>
+
+
+			
+				<!--- D17619 [begin] RBL 12/01/08 --->
+				<cfif listLen(form.letter_id, ',') GT 1>
+					<cfset variables.msg = "#listLen(form.letter_id,',')# letters emailed">
+				<cfelse>
+					<cfset variables.msg = "#listLen(form.letter_id,',')# letter emailed">
+				</cfif>
+				<!--- D17619 [end] RBL 12/01/08 --->		
+				<!-------------------------- EMAILING [end] -------------------------->
+				
+			</cfif>
+		
+		</cfloop>
+	
+		
+		<!------------------------------------------------------------------------------------------------------>
+		<!---------------- Let's loop over the list of letter_id's that the user has checked off> -------------->
+		<!-------------------------------------------- [end] --------------------------------------------------->
+
+		
+		<!-------------------------- PRINTING [begin] ------------------------>
+		
+		<cfif form.requestType eq "print_letters">
+		
+			<!--- Let's Merge PDF documents into an output PDF file --->
+			<cfpdf action="merge" destination="combined#form.contract_main_id#PDFPrint.pdf" 
+			       keepbookmark="yes" overwrite="yes">
+				<cfloop list="#variables.lsCompletePathsToPDFs#" index="currentPDFCompletePath">
+					<cfif fileExists(currentPDFCompletePath)>
+						<cfpdfparam source="#currentPDFCompletePath#">
+					</cfif>
+				</cfloop>
+			</cfpdf>
+		
+			<cfif isPDFFile("combined#form.contract_main_id#PDFPrint.pdf")>
+			
+				<cfpdf action="thumbnail" source="combined#form.contract_main_id#PDFPrint.pdf" format="png" 
+				       imageprefix="tn" overwrite="yes" pages="1" password="#trim(form.contract_main_id)#"
+				       resolution="high" scale="30" transparent="yes">
+
+				<cfpdf action="protect" source="combined#form.contract_main_id#PDFPrint.pdf" 
+				       newownerpassword="#trim(form.contract_main_id)#" password="#trim(form.contract_main_id)#" 
+				       permissions="AllowAssembly,AllowDegradedPrinting,AllowPrinting,AllowScreenreaders,AllowSecure" 
+				       destination="combined#form.contract_main_id#PDFPrint.pdf" encrypt="RC4_40" 
+				       overwrite="yes">
+			
+				<!--- D17619 [begin] RBL 12/01/08 --->
+				<cfset variables.msg = "PDF print">
+				<cflocation url="view_letters.cfm?msg=#variables.msg#&CID=#form.contract_main_id#&print=1" addtoken="yes">
+				<cfabort>
+				<!--- D17619 [end] RBL 12/01/08 --->
+			<cfelse>
+				<cfset variables.msg = "No PDFs to print">
+			</cfif>
+		</cfif> 
+		<!-------------------------- PRINTING [end] -------------------------->
+
+		<!--- D17619 [begin] RBL 12/01/08 --->
+		<cflocation url="view_letters.cfm?msg=#variables.msg#&CID=#form.contract_main_id#" addtoken="yes">
+		<cfabort>
+		<!--- D17619 [end] RBL 12/01/08 --->
+	</cfoutput>
+
+<!------------------------------------------- EMAILING TO EXTERNAL COINTACTS (PROGRAM LETTERS)[begin] ------------------------------------------->
+<cfelseif form.requestType eq "email_external_contacts_letters">
+
+<script>
+	<cfoutput>
+	NewWindow('/common_files/contracts/email_contacts.cfm?ContractId=#form.contract_main_id#&mode=edit&letter_ID=#form.letter_id#&reportType=ProgramLetters','contacts','870','720','Yes','No');
+	window.location= "view_letters.cfm?msg=#variables.msg#&CID=#form.contract_main_id#";
+	</cfoutput>
+</script>
+<!------------------------------------------- EMAILING TO EXTERNAL COINTACTS [end] ------------------------------------------->
+
+
+<!------------------------------------------- EMAILING TO EXTERNAL COINTACTS (PROGRAM CLAIM RATES REPORT AND PROGRAM LETTERS) ( [begin] ------------------------------------------->
+<cfelseif form.requestType eq "email_external_contacts_letters_and_claim_reports">
+<cfoutput>
+	<form name="emailReportAndLetter" action="/common_files/contracts/email_contacts.cfm?ContractId=#form.contract_main_id#&mode=edit&letter_ID=#form.letter_id#&reportType=#form.reportType#" method="post">
+		<input type="hidden" name="attachments" value="#form.attachments#">
+		<input type="hidden" name="clause" value="#form.clause#">
+		<input type="hidden" name="paidToList" value="#form.paidToList#">
+		<input type="hidden" name="paid_To" value="#form.paid_To#">
+		<input type="hidden" name="program_id_List" value="#form.program_id_List#">
+		<input type="hidden" name="requestType" value="#form.requestType#">
+		<input type="hidden" name="skipLock" value="#form.skipLock#">
+		<!--- <input type="hidden" name="subject" value="#form.subject#"> --->
+	</form>
+	<script>
+	NewWindow('about:blank','cont_Win','870','720','Yes','No');
+	emailReportAndLetter.target = 'cont_Win';
+	emailReportAndLetter.submit();
+	/* Note: This file was opened in a new window and needs to be closed,as we are opening another new window (code above) */
+	window.close();
+	
+	</script>
+</cfoutput>
+<!------------------------------------------- EMAILING TO EXTERNAL COINTACTS (PROGRAM CLAIM RATES REPORT AND PROGRAM LETTERS) [end] ------------------------------------------->
+</cfif>

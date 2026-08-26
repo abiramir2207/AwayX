@@ -1,0 +1,99 @@
+===== QUERY: var_qProgramLetters =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: var_qDeleteLetters =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvar_qDeleteLetters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvar_qDeleteLetters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_letters",
+			{
+				"program_id" = "eq.#arguments.program_id#",
+				"letter_type" = "eq.#arguments.letter_type#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_qDeleteLetters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_qDeleteLetters>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: var_qDeleteLetter =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: var_qDeleteLetter =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: rsLetters =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: var_qAllLetterInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: var_qGetBasePrice =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: var_qGetLastLetterID =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: var_qLetterPath =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: var_qLetterXML =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: temp_Table_Drop =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: temp_Table_Drop =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: temp_Table_Drop =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: var_qGetRebateProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: temp_Table_Drop =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: temp_Table_Drop =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: var_qDeleteLetterSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: var_qInsertLetterSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: var_qUpdateLetterXML =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetLetterEmailLogExist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetLetterEmailLogExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("message_log")>
+<cfif useLakebaseForqgetLetterEmailLogExist>
+	<cftry>
+		<cfset qgetLetterEmailLogExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("message_log", {
+				"app_area_sub_identifier" = "eq.#arguments.program_letter_id#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetLetterEmailLogExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetLetterEmailLogExist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

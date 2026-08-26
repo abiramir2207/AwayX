@@ -1,0 +1,389 @@
+<!--- QUERIES TO GET DATA --->
+<CFPARAM NAME="Program_ID_To_Replicate" DEFAULT="0">
+
+	<!--- Basic Information - Contract_Main --->
+	<CFQUERY NAME="getContractInfo" datasource="#application.datasource#">
+		SELECT *
+		FROM Contract_Main
+		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#'
+	</CFQUERY>
+	
+	<!--- contract_operators --->
+	<CFQUERY NAME="getContractOperators" datasource="#application.datasource#">
+		SELECT *
+		FROM Contract_Operators
+		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
+	</CFQUERY>
+
+	<!--- contract_brokers --->
+	<CFQUERY NAME="getContractBrokers" datasource="#application.datasource#">
+		SELECT *
+		FROM Contract_Brokers
+		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
+	</CFQUERY>
+	
+	<!--- contract_Distributors --->
+	<CFQUERY NAME="getContractDistributors" datasource="#application.datasource#">
+		SELECT *
+		FROM Contract_Distributors
+		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
+	</CFQUERY>	
+
+	<!--- contract_products --->
+	<CFQUERY NAME="getContract_Products" datasource="#application.datasource#">
+		SELECT *
+		FROM Contract_Products
+		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
+	</CFQUERY>
+	<CFSET ListOfProductIDs = valuelist(getContract_Products.Contract_Products_ID)>
+	<CFIF Listlen(ListOfProductIDs) EQ 0><CFSET ListOfProductIDs = 0></CFIF>
+	
+	<!--- FIXED PRICE PRODUCTS --->
+	<CFQUERY NAME="get_Fixed_Price_Products" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Fixed_Price_Product_Data
+		WHERE Contract_products_ID IN(#ListOfProductIDs#) AND Deleted = 0
+	</CFQUERY>
+
+	<!--- REBATE PRODUCTS --->
+	<CFQUERY NAME="get_Rebate_Products" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Rebates_Product_Data
+		WHERE Contract_products_ID IN(#ListOfProductIDs#) AND Deleted = 0
+	</CFQUERY>	
+
+	<!--- lumpsum components --->
+	<CFQUERY NAME="get_Lump_Sum_Components" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Lump_Sums
+		WHERE Program_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
+	</CFQUERY>
+
+	<!--- lumpsum component Products --->
+	<CFQUERY NAME="get_Lump_Sum_Component_Products" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Lump_Sum_Product_Data
+		WHERE Contract_Products_ID IN(#ListOfProductIDs#) AND Deleted = 0
+	</CFQUERY>	
+	
+	<!--- Growth Components --->
+	<CFQUERY NAME="get_Growth_Components" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Growth_Components
+		WHERE Program_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
+	</CFQUERY>
+
+	<!--- Growth Components Tiers--->
+	<CFQUERY NAME="get_Growth_Component_Tiers" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Growth_Component_Tiers
+		WHERE Program_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
+	</CFQUERY>
+	
+	<!--- Growth Components Tier Products--->
+	<CFQUERY NAME="get_Growth_Component_Tier_Products" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Growth_Component_Product_Data
+		WHERE Contract_Products_ID IN(#ListOfProductIDs#) AND Deleted = 0
+	</CFQUERY>
+	<CFSET ListOfProductDataIDS = valuelist(get_Growth_Component_Tier_Products.Program_Growth_Component_Product_Data_ID)>
+	<CFIF Listlen(ListOfProductDataIDS) EQ 0><CFSET ListOfProductDataIDS = 0></CFIF>
+	<!--- Growth Components Tier Product Data--->
+	<CFQUERY NAME="get_Growth_Component_Tier_Product_Tier_Data" datasource="#application.datasource#">
+		SELECT *
+		FROM Program_Growth_Component_Product_Tier_Data
+		WHERE Program_Growth_Component_Product_Data_ID IN(#ListOfProductDataIDS#) AND Deleted = 0
+	</CFQUERY>	
+	
+<!--- BuildStruct --->
+	<CFSET Program = StructNew()>
+
+	<!--- Contract_Main --->
+	<CFSET Program.Basic_Information = StructNew()>
+	
+	<CFOUTPUT QUERY="getContractInfo">
+		<CFLOOP INDEX="Contract_Main_Column_List" LIST="#getContractInfo.ColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("getContractInfo.#Contract_Main_Column_List#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "Program.Basic_Information.#Contract_Main_Column_List#" = ThisRowAndColumnData>
+		</CFLOOP>
+	</CFOUTPUT>
+
+	<!--- contract_operators --->
+	<CFSET NewStructLevelName = "Program.Operators">
+	<CFSET MasterQuery = "getContractOperators">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>
+	<CFSET ThisStructure.Master_Table = "Contract_Operators">
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>
+
+	<!--- contract_brokers --->
+	<CFSET NewStructLevelName = "Program.Brokers">
+	<CFSET MasterQuery = "getContractBrokers">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Contract_Brokers">	
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>	
+	
+	<!--- contract_Distributors--->
+	<CFSET NewStructLevelName = "Program.Distributors">
+	<CFSET MasterQuery = "getContractDistributors">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Contract_Distributors">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>		
+
+	<!--- Contract_Products --->
+	<CFSET NewStructLevelName = "Program.Products">
+	<CFSET MasterQuery = "getContract_Products">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Contract_Products">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>		
+
+	<!--- Fixed price products --->
+	<CFSET NewStructLevelName = "Program.Products.Fixed_Price_Products">
+	<CFSET MasterQuery = "get_Fixed_Price_Products">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Fixed_Price_Product_Data">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>	
+
+	<!--- REBATE products --->
+	<CFSET NewStructLevelName = "Program.Products.Rebate_Products">
+	<CFSET MasterQuery = "get_Rebate_Products">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Rebates_Product_Data">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>		
+
+	<!--- lump sum component --->
+	<CFSET NewStructLevelName = "Program.Lump_Sum_Components">
+	<CFSET MasterQuery = "get_Lump_SUm_Components">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Lump_Sums">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>
+	
+	<!--- lump sum component products --->
+	<CFSET NewStructLevelName = "Program.Lump_Sum_Components.Products">
+	<CFSET MasterQuery = "get_Lump_Sum_Component_Products">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Lump_Sum_Product_Data">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>			
+
+	<!--- growth components --->
+	<CFSET NewStructLevelName = "Program.Growth_Components">
+	<CFSET MasterQuery = "get_Growth_Components">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Growth_Components">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>	
+
+	<!--- growth component tiers --->
+	<CFSET NewStructLevelName = "Program.Growth_Components.Tiers">
+	<CFSET MasterQuery = "get_Growth_Component_Tiers">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Growth_Component_Tiers">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>		
+	
+	<!--- growth component tier products --->
+	<CFSET NewStructLevelName = "Program.Growth_Components.Tiers.Tier_Products">
+	<CFSET MasterQuery = "get_Growth_Component_Tier_Products">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Growth_Component_Product_Data">		
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>
+
+	<!--- growth component tier product tier data --->
+	<CFSET NewStructLevelName = "Program.Growth_Components.Tiers.Tier_Products.Product_Tier_Data">
+	<CFSET MasterQuery = "get_Growth_Component_Tier_Product_Tier_Data">
+
+	<CFSET "#NewStructLevelName#" = StructNew()>
+	<CFSET ThisStructure = evaluate(NewStructLevelName)>
+	<CFSET theColumnList = evaluate("#MasterQuery#.columnlist")>
+	
+	<CFSET ThisStructure.Recordcount = evaluate("#MasterQuery#.recordcount")>
+	<CFSET ThisStructure.ColumnList = theColumnList>	
+	<CFSET ThisStructure.Master_Table = "Program_Growth_Component_Product_Tier_Data">
+	<CFSET IndexCounter = 1>
+	<CFOUTPUT QUERY="#MasterQuery#">
+		<CFLOOP INDEX="Master_Query_Column" LIST="#theColumnList#">
+			<CFSET ThisRowAndColumnData = evaluate("#MasterQuery#.#Master_Query_Column#")>
+			<CFIF len(trim(ThisRowAndColumnData)) EQ 0>
+				<CFSET ThisRowAndColumnData = "NULL">
+			</CFIF>
+			<CFSET "ThisStructure.#Master_Query_Column#_#IndexCounter#" = ThisRowAndColumnData>
+		</CFLOOP>
+	<CFSET IndexCounter = IndexCounter + 1>
+	</CFOUTPUT>	
+

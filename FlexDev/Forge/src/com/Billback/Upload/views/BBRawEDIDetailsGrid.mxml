@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*" width="100%" height="100%"
+		 xmlns:ba="com.shared.components.*">
+	<s:layout>
+		<s:VerticalLayout paddingLeft="0" paddingRight="0" 
+						  paddingTop="0" paddingBottom="0" />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:DateFormatter id="dateFormat1" formatString="MM/DD/YYYY" />
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Upload.views.pm.BBRawEDIPModel;
+			import com.Billback.Upload.views.pm.BBRawEDIItemsPModel;
+			import com.Billback.Upload.views.pm.BBCorrectionsPModel;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			import com.shared.vos.Settings;
+			import com.Billback.Upload.models.vos.BBRawEDIFilterParams;
+			import com.Billback.Upload.events.BBUploadEvent;
+			
+			import mx.collections.ArrayList;
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.controls.Alert;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.core.ScrollPolicy;
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+			import mx.controls.DateField;
+			import mx.formatters.DateFormatter;
+			
+			import spark.formatters.DateTimeFormatter;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModelRawEDI:BBRawEDIPModel;
+			[Bindable]
+			public var pModelCorrections:BBCorrectionsPModel;
+			[Bindable]
+			public var pModelRawEDIItems:BBRawEDIItemsPModel;
+			
+			[Bindable]
+			private var iPad:int = 3;
+			
+		]]>
+	</fx:Script>
+
+	<s:VGroup height="100%" width="80%" minWidth="800" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+		<ba:MinMaxPanel id="header" width="100%" minWidth="800" height="150"  borderStyle="none" panelTitle="Raw EDI Results: {this.pModelRawEDIItems.bbRawEDIHeader.bbRawEDIDetail.length} records" showMaximize="false" showMinimize="true"><!-- {pModel.arrBBCorrections.length} -->
+				
+			<s:VGroup paddingTop="3">
+				<s:HGroup gap="0" paddingLeft="0">
+					<mx:ApplicationControlBar id="acb" width="1000" color="#ffbf5f"  
+											  contentBackgroundColor="#ffbf5f">
+						 <mx:MenuBar id="mbEDI" width="100%" click="pModelRawEDI.menuHandler(event)"
+							dataProvider="{pModelRawEDI.acEDIDMenuData}" itemClick="pModelRawEDI.menuItemHandler(event)"
+						backgroundSkin="com.shared.views.skins.GenericHeaderBackgroundSkinBa">
+						</mx:MenuBar> 
+					</mx:ApplicationControlBar>		
+				</s:HGroup>		
+				<s:BorderContainer width="1000" height="65" borderVisible="true">
+					<s:VGroup top="10" left="10" bottom="5" height="550">
+						<!--<s:HGroup width="100%">
+							<s:Button click="pModelRawEDI.closeRawEDIDetail();"  label="close"/>
+						</s:HGroup>	-->
+						<!-- 1st ROW --> 
+						<s:HGroup width="100%">
+							<s:HGroup verticalAlign="middle" width="330">
+								<!--*****************************  INV # / Billback # *********************************-->
+								<s:Label text="{this.pModelRawEDIItems.oSettings.appFlex.bbLabels.Billback} # :" width="110" fontWeight="bold"/>
+								<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.BBNumber}" width="155" />
+	 
+							</s:HGroup> 
+							<s:HGroup verticalAlign="middle" width="330">
+								<!--***************************** INV DATE / BILLBACK DATE *********************************-->
+								<s:Label text="{this.pModelRawEDIItems.oSettings.appFlex.bbLabels.Billback} Date :" width="110" fontWeight="bold"/>
+								<s:Label text="{dateFormat1.format(this.pModelRawEDIItems.bbRawEDIHeader.BBDate)}" /> 
+							</s:HGroup>	
+							<s:HGroup verticalAlign="middle" width="330">
+								<!--***************************** PAYEE NUMBER *********************************-->
+								<s:Label text="{this.pModelRawEDIItems.oSettings.appFlex.bbLabels.Vendor} Number :" width="110" fontWeight="bold" />
+								<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.vendorNumber}" />
+							</s:HGroup>
+						</s:HGroup>
+						<!-- END: 1ST ROW -->
+						<!-- START: 2ND ROW -->
+						<s:HGroup width="100%">
+							<s:HGroup verticalAlign="middle" width="330">
+								<!--***************************** PAYEE NAME *********************************-->
+									<s:Label text="{this.pModelRawEDIItems.oSettings.appFlex.bbLabels.Vendor} Name :" width="110" fontWeight="bold"/>
+									<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.vendorName}" />
+							</s:HGroup>
+							
+							<s:HGroup verticalAlign="middle" width="330">
+								<!--***************************** ACCOUNT NUMBER *********************************-->
+								<s:Label text="{this.pModelRawEDIItems.oSettings.appSettings.Shard_Ship_To_Label} Number :" width="110" fontWeight="bold"/>
+								<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.payeeNumber}" />
+							</s:HGroup>
+							
+							<s:HGroup verticalAlign="middle" width="330">
+								<!--***************************** ACCOUNT NAME *********************************-->
+								<s:Label text="{this.pModelRawEDIItems.oSettings.appSettings.Shard_Ship_To_Label} Name :" width="110" fontWeight="bold"/>
+								<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.payeeName}" />
+							</s:HGroup>
+						</s:HGroup>
+						<!-- END: 2ND ROW -->
+						<!-- START: 3RD ROW -->
+						<s:HGroup width="100%">
+							<!-- <s:HGroup verticalAlign="middle" width="330">
+								 ***************************** CUST PROMO CODE ******************************
+								<s:Label text="Cust Promo Code :" width="110"  fontWeight="bold"/>
+								<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.agreementNumber}" />
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="330">
+								***************************** CUST PROMO Desc ******************************
+								<s:Label text="Cust Promo Desc :" width="110" fontWeight="bold"/>
+								<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.agreementName}" />
+							</s:HGroup>-->
+						
+						<s:HGroup verticalAlign="middle" width="330">
+							<!--***************************** DELETED BY ******************************-->
+							<s:Label text="Total Amount :" width="110"  fontWeight="bold"/>
+							<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.ETotalClaimedAmt}" />
+						</s:HGroup>
+						<s:HGroup verticalAlign="middle" width="330">
+							<!--***************************** DELETED DATE ******************************-->
+							<s:Label text="Volume :" width="110" fontWeight="bold"/>
+							<s:Label text="{this.pModelRawEDIItems.bbRawEDIHeader.TotVolume}" />
+						</s:HGroup>
+						
+						</s:HGroup>
+					</s:VGroup>	
+				</s:BorderContainer>
+			</s:VGroup>
+		</ba:MinMaxPanel>
+		<filters:FilterDatagrid id="dgBBRawEDIDetail" editable="false"
+								columns="{this.pModelRawEDIItems.arrBBRawEDIItemsDgCols}"
+								dataProvider="{this.pModelRawEDIItems.bbRawEDIHeader.bbRawEDIDetail}"
+								dispatcher="{this.parentDocument as IEventDispatcher}"
+								doubleClickEnabled="true"
+								minWidth="1300" width="100%" minHeight="175" height="80%"
+								horizontalScrollPolicy="{ScrollPolicy.AUTO}"
+								resize="true" variableRowHeight="true"
+								columnWidths="{['4%', '4%', '4%', '4%', '4%',
+												'4%', '5%', '5%', '5%', '5%', 
+												'5%', '5%', '5%', '4%', '5%', 
+												'5%', '5%', '6%', '5%', '5%', 
+												'5%', '4%', '4%', '1%']}"
+								headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+								headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	
+								>  
+ 
+		</filters:FilterDatagrid>
+	</s:VGroup>
+</s:Group>

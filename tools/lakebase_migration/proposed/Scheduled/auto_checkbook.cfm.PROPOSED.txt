@@ -1,0 +1,89 @@
+===== QUERY: GetNewContractMain =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetNewContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetNewContractMain>
+	<cftry>
+		<cfset GetNewContractMain = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#CheckforRevisions.Contract_Number#",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNewContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNewContractMain>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateAutoCheckbook =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateAutoCheckbook = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForUpdateAutoCheckbook>
+	<cftry>
+		<cfset application.oLakebase.updateRows("auto_checkbook",
+			{
+				"program_id" = "eq.#CheckforRevisions.Contract_Main_ID#"
+			},
+			{
+				"program_id" = "#GetNewContractMain.Contract_Main_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAutoCheckbook = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAutoCheckbook>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetEligibleAutoCheckbooks =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetEligibleAutoCheckbooks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForGetEligibleAutoCheckbooks>
+	<cftry>
+		<cfset GetEligibleAutoCheckbooks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_checkbook", {
+				"deleted" = "eq.0",
+				"select" = "program_id,distributor_id,send_to"
+			}), "program_id,distributor_id,send_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetEligibleAutoCheckbooks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetEligibleAutoCheckbooks>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: RetirePrograms =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForRetirePrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForRetirePrograms>
+	<cftry>
+		<cfset application.oLakebase.updateRows("auto_checkbook",
+			{
+				"auto_checkbook_id" = "eq.#GetProgramstoRetire.Auto_Checkbook_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRetirePrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRetirePrograms>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

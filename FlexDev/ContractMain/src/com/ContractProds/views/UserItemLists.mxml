@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Pop Up that displays list of valid and invalid items for create List -->
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	backgroundColor="0xffffff"
+	close="PopUpManager.removePopUp(this)"
+	color="0x333333"
+	layout="vertical"
+	name="validAndInvalidItemIDs"
+	showCloseButton="true"
+	title="Item IDs">
+
+	<mx:Script>
+		<![CDATA[
+			import com.ContractProds.events.ComponentEvent;
+			import com.ContractProds.views.pm.ProdUploadPM;
+			
+			import flash.events.Event;
+			
+			import mx.events.*;
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			public var aInvalidItems:Array = new Array();
+			[Bindable]
+			public var aValidItems:Array = new Array();
+			[Bindable]
+			public var dispatcher:IEventDispatcher;
+			[Bindable] 
+			public var pModelPrdUpld:ProdUploadPM;
+			
+			private function saveInvalidItems():void
+			{
+				/* Build the string */
+				var s:String = new String();
+				var cr:String = String.fromCharCode(13, 10);
+				//s = 'Item,Rate,UOM' + cr;
+				for each(var i:Object in this.aInvalidItems){
+					//var sId:String = ComponentManager.getSelectedCompId(this.component);
+					//var prodRate:ProdRate = i[sId]['prodRate'];
+					//s = s + "'" + prodRate.itemNumber + "'"  + ',';
+					//s = s + '="' + prodRate.itemNumber + '"' + ',';
+					s = s + i.item + ',';
+					s = s + i.rate + ',';
+					s = s + i.uom + ',';	
+					s = s + i.volume + cr;
+				}
+				var event:ComponentEvent = new ComponentEvent(ComponentEvent.IMPORT_PROD_RATE_LIST);
+				event.prodRateList = s;
+				this.dispatcher.dispatchEvent(event);
+				
+				this.closeWin();
+			}
+			private function closeWin():void{
+				PopUpManager.removePopUp(this);
+			}
+
+		]]>
+	</mx:Script>	
+
+	<mx:VBox horizontalAlign="center">
+		<!--styleName="blacksmithHeader"
+		styleName="blacksmithNormal"-->
+		
+		<mx:Label text="Invalid Item IDs" fontWeight="bold"/>
+		<mx:DataGrid id="lsInvalidItemIDs" 
+				dataProvider="{aInvalidItems}" 
+				name="lsInvalidItemIDs" 
+				width="100%" 
+				toolTip="These are Invalid item IDs [{aInvalidItems.length}]" 
+				enabled="true" editable="true"
+				allowMultipleSelection="true">
+		<mx:columns>
+			<mx:DataGridColumn 
+				dataField="item" 
+				headerText="Item" 
+				editable="true"/>
+			<mx:DataGridColumn 
+				dataField="rate" 
+				headerText="Rate"
+				editable="true" />
+			<mx:DataGridColumn 
+				dataField="uom" 
+				headerText="UOM"
+				editable="true" />
+			<mx:DataGridColumn 
+				dataField="volume" 
+				headerText="Volume"
+				editable="true" />
+			<mx:DataGridColumn 
+				dataField="sError"  
+				headerText="Error"
+				editable="false"/>
+		</mx:columns>
+		</mx:DataGrid>
+		<mx:HBox>
+			<mx:Button label="Save" click="this.saveInvalidItems();"/>
+			<mx:Button label="Cancel" click="this.closeWin();"/>
+			<!--............  Download  ............-->
+			<!--<mx:Button label="download Invalid rates"
+				click="pModelPrdUpld.downloadInvalidItems(this.aInvalidItems);" 
+				toolTip="export products and rates to the currently selected Component"/>-->
+		</mx:HBox>
+
+		<mx:Label text="Valid Item IDs" fontWeight="bold"/>
+		<mx:List id="lsValidItemIDs" 
+				dataProvider="{aValidItems}" 
+				name="lsValidItemIDs" 
+				width="100%" 
+				toolTip="These are Valid item IDs" 
+				enabled="true" 
+				allowMultipleSelection="true"/>		
+	</mx:VBox>		
+
+</mx:TitleWindow>

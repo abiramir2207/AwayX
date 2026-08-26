@@ -1,0 +1,50 @@
+===== QUERY: updateWeeklyVolume =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateWeeklyVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
+<cfif useLakebaseForupdateWeeklyVolume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_product_data",
+			{
+				"program_growth_component_product_data_id" = "eq.#getProdDataID.Program_Growth_Component_Product_Data_ID#"
+			},
+			{
+				"weekly_volume" = "#thisProduct_WeeklyVolume#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateWeeklyVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateWeeklyVolume>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertTierProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateTierData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateTierData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_tier_data")>
+<cfif useLakebaseForupdateTierData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_product_tier_data",
+			{
+				"program_growth_component_product_tier_data_id" = "eq.#checkForExistingTierInfo.Program_Growth_Component_Product_Tier_Data_ID#"
+			},
+			{
+				"rate" = "#Rate#",
+				"unit_of_measure_id" = "#Unit_Of_Measure_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTierData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTierData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

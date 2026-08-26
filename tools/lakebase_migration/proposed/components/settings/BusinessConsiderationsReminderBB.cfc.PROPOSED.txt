@@ -1,0 +1,23 @@
+===== QUERY: qGetBizConReminders =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBizConReminders = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_business_considerations_reminders")>
+<cfif useLakebaseForqGetBizConReminders>
+	<cftry>
+		<cfset qGetBizConReminders = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_business_considerations_reminders", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBizConReminders = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBizConReminders>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: setReminders =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

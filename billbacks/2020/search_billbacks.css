@@ -1,0 +1,96 @@
+/*
+  * ==================================================================================================== 
+  *    @File: \billbacks\gm\search_billbacks.css
+  *  @Author: Chris Nguyen
+  *    @Date: Feburary 2020
+  * 
+  * @Remarks: Search billbacks 2020 
+  *
+  * ==================================================================================================== 
+*/
+* { 
+    box-sizing: border-box; 
+    margin: 0;
+    padding: 0;
+}
+
+body { 
+    box-sizing: border-box; 
+    /* border:3px dotted red;  */
+    /* background-color: yellow; */
+}
+nav {
+    /* line-height: 1.15; */
+    color: Black;
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: #dae1e7;
+    border-bottom-width: 1px;
+    display: flex;
+    justify-content: space-between;
+    margin: 0 0 4px 0;
+    padding: 0;
+    /* border: 2px solid; */
+}
+nav ul {
+    border-color: #dae1e7;
+    border-style: solid;
+    border-width: 0;
+    box-sizing: inherit;
+    color: Black;
+    display: flex;
+    /* line-height: 1.15; */
+    list-style: none;
+    margin: 0;
+    margin-bottom: -1px;
+    margin-left: 0.5rem;
+    padding: 0;
+    width: 100%;
+}
+li.nav {
+    background: #c4c5c7;
+    border-color: #dae1e7;
+    border-style: solid;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    border-width: 1px;
+    box-sizing: inherit;
+    color: #343540;
+    cursor: pointer;
+    font-weight: bold;
+    height: 20px;
+    line-height: 20px;
+    list-style: none;
+    margin: 0px 4px 0 0;
+    text-align: center;
+    /* width: 11%; */
+    padding: 0 10px;
+}
+li.nav:hover {
+    background: #D8D9DD;
+    color: #406be4;
+}
+li.hidden {
+    display: none;
+}
+li.active {
+    background: #FFF;
+    display: block;
+    border-bottom: 0;
+}
+
+iframe {
+    /* background-color: gray; */
+    border: 0;
+    width: 100%;
+    /* display: none; */
+}
+
+i.close {
+    color: green;
+    font-style: normal;
+    float: right;
+    padding-left: 5px;
+    padding-right: 5px;
+}

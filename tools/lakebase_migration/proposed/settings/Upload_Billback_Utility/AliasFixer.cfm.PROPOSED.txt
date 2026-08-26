@@ -1,0 +1,122 @@
+===== QUERY: Create_Data_Table =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: chkUnmappedAliasList =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: BBClaimSourceXREFDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBBClaimSourceXREFDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_claim_source_xref")>
+<cfif useLakebaseForBBClaimSourceXREFDetails>
+	<cftry>
+		<cfset BBClaimSourceXREFDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_claim_source_xref", {
+				"bb_claim_source_xref_id" = "eq.#chkUnmappedAliasList.BB_Claim_Source_XREF_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBClaimSourceXREFDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBClaimSourceXREFDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: blkinsert2 =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: delDataFromTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: chkBBUploadLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForchkBBUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_log")>
+<cfif useLakebaseForchkBBUploadLog>
+	<cftry>
+		<cfset chkBBUploadLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_log", {
+				"upload_id" = "eq.#Upload_ID#",
+				"select" = "upload_status"
+			}), "upload_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForchkBBUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForchkBBUploadLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: chkOCRUploadLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForchkOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForchkOCRUploadLog>
+	<cftry>
+		<cfset chkOCRUploadLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"bb_upload_id" = "eq.#Upload_ID#",
+				"deleted" = "eq.0",
+				"select" = "ocr_step,ocr_upload_id,ocr_upload_status"
+			}), "ocr_step,ocr_upload_id,ocr_upload_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForchkOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForchkOCRUploadLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: chkUnmappedAliasList =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Opr_Search_Result =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForOpr_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForOpr_Search_Result>
+	<cftry>
+		<cfset Opr_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_List#",
+				"select" = "bsa_operator_id,operator_name,operator_location_type,operator_city,operator_state,operator_number_of_locations,operator_dba,legacy_id"
+			}), "bsa_operator_id,operator_name,operator_location_type,operator_city,operator_state,operator_number_of_locations,operator_dba,legacy_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOpr_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOpr_Search_Result>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Item_Search_Result =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForItem_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForItem_Search_Result>
+	<cftry>
+		<cfset Item_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#FORM.Product_List#",
+				"active_code" = "eq.A",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_items_master_id,item,description"
+			}), "bsa_foodservice_items_master_id,item,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForItem_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForItem_Search_Result>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

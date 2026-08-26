@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="320" height="140">
+	<mx:Label x="3" y="-1" text="Your Total:" /><mx:Label x="70" y="-1" id="totalTxt"/>
+	<mx:Label x="168" y="-1" text="Item Total:" /><mx:Label x="237" y="-1" id="itemTotalTxt"/>
+	<mx:HRule x="4" y="15" width="100%"/>
+	<mx:Label x="148" y="20" id="itemGap" />
+	<mx:Label x="3" y="50" text="Cases Claimed:"/>
+	<mx:Label x="142" y="51" text="Item Claimed:"/>
+	<mx:HRule x="6" y="65" width="100%"/>
+	<mx:Label x="148" y="68" text="Gap +/-:"/>
+	
+</mx:TitleWindow>

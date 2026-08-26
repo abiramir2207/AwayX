@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Main View Page holds Search Options and Datagrid panel -->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:mate="http://mate.asfusion.com/" 
+	xmlns:view="com.ContractProds.views.*"
+	xmlns:ba="com.ContractProds.views.renderer.*"
+	resizeEffect="Resize" resize="true"  
+	horizontalScrollPolicy="off" 
+	verticalScrollPolicy="off" width="100%" height="100%"
+	 ><!--title="Product Selection Utility" initialize="initTimer();" height="100%" width="100%"  
+	xmlns:ba="com.ContractProds.components.*"-->
+
+	<mx:Script>
+		<![CDATA[
+			import com.ContractProds.events.*;
+			import com.ContractProds.vos.Component;
+			import com.ContractProds.vos.Program;
+			import com.shared.vos.Settings;
+			
+			import flash.external.ExternalInterface;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.utils.ObjectUtil;
+			/** dataprovider for dgItems dataGrid*/
+			[Bindable] public var items:ArrayCollection = null;
+			/** Holds a copy of Settings object from SetttingsManager. Contains Labels and userid used in view*/
+			/* [Bindable] public var oSettings:Settings = null; */
+			[Bindable] public var arrSavedItems:Array = new Array();
+			[Bindable] public var arrUserList:Array = new Array();
+			[Bindable] public var sRecordMessage:String = "";
+			[Bindable] public var iComboBoxHeight:int;
+			[Bindable] public var iTextInputHeight:int;
+			[Bindable] public var iButtonHeight:int;
+			[Bindable] public var acComponents:ArrayCollection;
+			[Bindable] public var program:Program;
+			[Bindable] private var sTitle:String = "";
+			/* Settings Object */
+			private var _oSettings:Settings = new Settings();
+			[Bindable (event="pmsettingsChanged")]
+			public function get oSettings():Settings
+			{
+				return _oSettings;
+			}
+			public function set oSettings(s:Settings):void
+			{
+				this._oSettings = s;
+				if(s.bMarketPrice){
+					this.sTitle = ':: Market Price Rates [';
+				}
+				else{
+					this.sTitle = ':: Product Rates [';
+				}
+				
+				dispatchEvent(new Event('pmsettingsChanged'));
+			}
+			[Embed(source="/assets/Images/plus.gif")]
+	        private var _imgPlus:Class;
+	        [Embed(source="/assets/Images/minus.gif")]
+	        private var _imgMinus:Class;
+		//	[Bindable] public var bLoadMiniItems:Boolean = false; 	
+			/* private var sm:SearchManager = new SearchManager(); */
+		//	private var searchStrLen:int = 0;
+			
+		 /* Clear the FilterSelected Check Box for use again */
+        public function chBoxReset():void {
+				/* Dispatch Event */
+				var event:SearchEvent = new SearchEvent(SearchEvent.CHK_FILTER_SEL_RESET);
+				this.dispatchEvent(event);
+            }
+ 
+		/* Handle the Import Items Button Click ****************************** */
+		private function callImportItems():void{
+			/* Dispatch Event */
+			var bShowAlert:Boolean = false;
+			var sMessage:String = '';
+			var cr:String = String.fromCharCode(13, 10);
+			for each(var comp:Component in this.acComponents){
+				if(comp.payee && comp.payee.payeeTypeId > 0 && comp.payee.payeeId == "")
+				{
+					bShowAlert = true;
+					sMessage = sMessage + comp.name + ' has the Pay Single payee option without a selected payee.' + cr;
+				}
+			}
+			if(bShowAlert){
+				Alert.show(sMessage,'Payee Validation Error')
+			}
+			else{
+				var event:ComponentEvent = new ComponentEvent(ComponentEvent.SAVE_DATA);
+				event.programId = this.oSettings.programId;
+				event.acComponents = this.acComponents;
+				event.bMarketPrice = this.oSettings.bMarketPrice;
+				this.dispatchEvent(event);
+			}
+
+		}
+
+			/* When a user clicks cancel close the caller page */
+			public function clickCancelHandler():void {
+				var s:String;
+				if (ExternalInterface.available) {
+					var wrapperFunction:String = "closeCompProdRateEdit";
+					s = ExternalInterface.call(wrapperFunction);
+				} else {
+					s = "Wrapper not available";
+				}
+			}
+		private function vbLayoutClick(ui:*,img:Image,lbl:Label):void{
+   			/* toggle the ui container */
+   			ui.visible = !ui.visible; 
+   			ui.includeInLayout = !ui.includeInLayout;
+   			/* toggle the clickable label */
+   			lbl.visible = !lbl.visible; 
+   			lbl.includeInLayout = !lbl.includeInLayout;
+   			/* toggle the image icon */
+   			if(img){
+   				img.source = getimgPlusMinus(ui.visible);
+   				img.toolTip = ui.visible == false ? 'Expand' : 'Collapse';
+   			}
+   			
+   		}
+   		/* Toggle the Plus Minus Gif	............................................. */
+		public function getimgPlusMinus(i:int):Class
+			{
+				if (i==0){
+					return _imgPlus;
+				}
+				else{
+					return _imgMinus;
+				}
+				
+			}
+
+		]]>
+	</mx:Script>
+		<mx:Panel id="pnlAll" backgroundColor="0xffffff"
+			width="100%" height="100%"
+			name="productSelectionUtility"
+			title="{this.program.number} :: {this.program.title} {this.sTitle} {this.items.length} {sRecordMessage} ]"> <!-- Program: {this.oSettings.ProgramId}-->
+		
+			<!--<mx:VBox height="100%" width="100%" horizontalAlign="left" paddingTop="5" >-->
+			<mx:VBox width="100%" height="100%">
+				<!-- <mx:TabNavigator id="tbNavList" width="100%" height="100%" creationComplete="this.tbNavList.selectedIndex = 0"> -->
+					<!--...............................   FILTER (SEARCH)   ...............................-->
+					<mx:HBox width="100%">
+						<mx:Image id="imgFilter" 
+							source="{getimgPlusMinus(1)}"
+							click="this.vbLayoutClick(vFilter,imgFilter,lblFilter)" 
+							toolTip="Collapse"
+							buttonMode="true" 
+							useHandCursor="true" />
+						<mx:Label id="lblFilter"
+							text="Search Items"
+							click="this.vbLayoutClick(vFilter,imgFilter,lblFilter)" 
+							visible="false" 
+							includeInLayout="false" 
+							buttonMode="true" 
+							useHandCursor="true" 
+							mouseChildren="false" 
+							toolTip="use filters to select products for each program component" />
+						<view:Filter  id="vFilter" />
+					</mx:HBox>
+					<!--...............................   COMPONENT TAB   ...............................-->
+					<mx:HBox width="100%">
+						<mx:Image id="imgComponent" 
+							source="{getimgPlusMinus(1)}"
+							click="this.vbLayoutClick(vComponent,imgComponent,lblComponent)" 
+							toolTip="Collapse"
+							buttonMode="true" 
+							useHandCursor="true" />
+						<mx:Label id="lblComponent" 
+							text="Maintain Component(s)"
+							click="this.vbLayoutClick(vComponent,imgComponent,lblComponent)" 
+							visible="false" 
+							includeInLayout="false"
+							buttonMode="true" 
+							useHandCursor="true" 
+							mouseChildren="false" 
+							toolTip="maintain products and rates for the program fixed and rebate components" />
+						<view:ComponentUI id="vComponent" width="100%" />
+					</mx:HBox>
+
+					<!--...............................   FAVORITES   ...............................-->
+					<!--<mx:Canvas label="favorites" width="100%" height="100%">
+						<view:Favorite tabEnabled="false" />
+					</mx:Canvas>
+				</mx:TabNavigator>-->
+					<!--.......................................		DATA GRID .......................................	-->
+					<!--<mx:HBox width="100%" height="100%" >-->
+					<view:GridData width="100%" tabEnabled="false" height="100%" />
+					<!--</mx:HBox>-->
+					
+					<!--.......................................		DATA GRID .......................................	-->
+			</mx:VBox>
+			
+			
+		<!--</mx:VBox>-->
+		<!--- "import selected" Button : returns all checked items to wrapper javascript which then passes them to the calling page via a form submit-->
+		<mx:HBox>
+			<ba:BaButton label="save" click="callImportItems();"  tabEnabled="false"/>
+			<ba:BaButton label="cancel" click="clickCancelHandler();"  tabEnabled="false"/>
+		</mx:HBox>
+		
+			
+	</mx:Panel>
+		<!--</mx:VBox>-->
+</mx:Canvas>

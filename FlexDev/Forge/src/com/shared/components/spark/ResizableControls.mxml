@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:resize="com.shared.components.spark.resize.*"
+	xmlns:util="com.shared.components.spark.*"
+	pageTitle="Resizable Spark Controls"
+	viewSourceURL="srcview/index.html">
+	<!--
+		 Blog Entry: http://flexdevtips.blogspot.com/2010/06/flex-4-spark-resizable-controls.html
+	-->
+	<fx:Script>
+		<![CDATA[
+			import com.shared.components.spark.resize.ResizableDraggableTitleWindowSkin;
+			import com.shared.components.spark.resize.ResizablePanelSkin;
+			import com.shared.components.spark.resize.ResizableTextAreaSkin;
+			import com.shared.components.spark.resize.ResizableTitleWindowSkin;
+			import com.shared.components.spark.resize.ResizableTitledBorderBoxSkin;
+			import com.shared.components.spark.resize.ResizeManager;
+
+			/** Restriction which directions can be resized. */
+			private function restrictResizeDirection(event:Event):void {
+				ResizeManager.setResizeDirection(resizableTitleWindow, resizeGroup.selectedValue as String);
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<s:ArrayList id="testArray">
+			<fx:String>This is a very long string that goes on and on to show horizontal scrollbars</fx:String>
+			<fx:String>Test1</fx:String>
+			<fx:String>Test2</fx:String>
+			<fx:String>Test3</fx:String>
+			<fx:String>Test4</fx:String>
+			<fx:String>Test5</fx:String>
+			<fx:String>Test6</fx:String>
+			<fx:String>Test7</fx:String>
+			<fx:String>Test8</fx:String>
+			<fx:String>Test9</fx:String>
+			<fx:String>Test10</fx:String>
+			<fx:String>Test11</fx:String>
+			<fx:String>Test12</fx:String>
+			<fx:String>Test13</fx:String>
+			<fx:String>Test14</fx:String>
+			<fx:String>Test15</fx:String>
+			<fx:String>Test16</fx:String>
+			<fx:String>Test17</fx:String>
+			<fx:String>Test18</fx:String>
+			<fx:String>Test19</fx:String>
+			<fx:String>Test20</fx:String>
+		</s:ArrayList>
+		<s:RadioButtonGroup id="resizeGroup"
+			change="restrictResizeDirection(event)"/>
+	</fx:Declarations>
+
+	<fx:Style>
+	@namespace s "library://ns.adobe.com/flex/spark";
+	@namespace mx "library://ns.adobe.com/flex/mx";
+	@namespace util "com.shared.components.spark.*";
+	@namespace resize "com.shared.components.spark.resize.*";
+	
+	/*  Optional - you can make all Scroller's use the resizable scroller skin. */
+	s|Scroller {
+		skin-class: ClassReference("com.shared.components.spark.resize.ResizableScrollerSkin");
+	}
+	
+	/* you can restrict the resize direction in CSS like this: */
+	.resizePanel {
+		resize-direction: vertical;
+	}
+</fx:Style>
+
+	<mx:Form id="form"
+		x="0"
+		y="0"
+		horizontalGap="5"
+		verticalGap="10"
+		indicatorGap="5">
+
+		<mx:FormHeading label="Resizable Controls"
+			color="#336699"
+			fontSize="16"
+			textDecoration="underline"/>
+
+		<mx:FormItem label="Label">
+			<!-- Uses a little bit of padding for the resize handle -->
+			<resize:ResizableLabel id="resizeLabel"
+				text="This is a ResizableLabel"
+				backgroundColor="#f6f6f6"
+				paddingBottom="7"
+				paddingRight="8">
+				<!-- Optional - make the resizeHandle slightly transparent -->
+				<resize:creationComplete>
+					<![CDATA[
+						resizeLabel.resizeHandle.alpha = 0.5;
+					]]>
+				</resize:creationComplete>
+			</resize:ResizableLabel>
+		</mx:FormItem>
+		<mx:FormItem label="TextArea">
+			<s:TextArea height="100"
+				maxHeight="200"
+				maxWidth="400"
+				minHeight="40"
+				minWidth="50"
+				width="220"
+				skinClass="com.shared.components.spark.resize.ResizableTextAreaSkin">
+				<s:text>This is a ResizableTextAreaSkin used on a TextArea.
+				You can resize it by dragging the resize handle in the bottom right corner of the control.  
+				You can also optionally specify the minWidth, minHeight, maxWidth, and maxHeight values to constrain the resize.</s:text>
+			</s:TextArea>
+		</mx:FormItem>
+		<mx:FormItem label="DropDownList">
+			<s:DropDownList dataProvider="{testArray}"
+				skinClass="com.shared.components.spark.resize.ResizableDropDownListSkin"/>
+		</mx:FormItem>
+		<mx:FormItem label="ComboBox">
+			<s:ComboBox dataProvider="{testArray}"
+				skinClass="com.shared.components.spark.resize.ResizableComboBoxSkin"/>
+		</mx:FormItem>
+		<mx:FormItem label="TitledBorderBox">
+			<util:TitledBorderBox height="80"
+				width="220"
+				dropShadowVisible="true"
+				skinClass="com.shared.components.spark.resize.ResizableTitledBorderBoxSkin"
+				title="ResizableTitledBorderBoxSkin">
+				<s:TextArea text="jhfkfkjfkjfk lijhlj oijuoijpoi poupopoj poipoipoi poipoi fdgdgfd uffhgf iuhrsdtdt" skinClass="spark.skins.spark.TextAreaSkin"/>
+				
+				</util:TitledBorderBox>
+		</mx:FormItem>
+		<mx:FormItem label="Panel">
+			<s:Panel height="100"
+				minHeight="80"
+				minWidth="200"
+				styleName="resizePanel"
+				width="220"
+				skinClass="com.shared.components.spark.resize.ResizablePanelSkin"
+				title="ResizablePanelSkin">
+				<s:Label text="Vertical resize only (set in CSS)"
+					x="10"
+					y="8"/>
+				<s:controlBarContent>
+					<s:Button label="ControlBar Button"/>
+				</s:controlBarContent>
+			</s:Panel>
+		</mx:FormItem>
+		<mx:FormItem label="TitleWindow">
+			<s:TitleWindow id="resizableTitleWindow"
+				height="120"
+				width="220"
+				skinClass="com.shared.components.spark.resize.ResizableTitleWindowSkin"
+				title="ResizableTitleWindowSkin">
+				<s:layout>
+					<s:VerticalLayout paddingLeft="5"
+						paddingTop="5"
+						gap="2"/>
+				</s:layout>
+				<s:RadioButton id="rbResizeVertical"
+					label="Resize in vertical direction"
+					value="{ResizeManager.DIRECTION_VERTICAL}"
+					groupName="resizeGroup"/>
+				<s:RadioButton id="rbResizeHorizontal"
+					label="Resize in horizontal direction"
+					value="{ResizeManager.DIRECTION_HORIZONTAL}"
+					groupName="resizeGroup"/>
+				<s:RadioButton label="Resize in both directions"
+					selected="true"
+					value="{ResizeManager.DIRECTION_BOTH}"
+					groupName="resizeGroup"/>
+			</s:TitleWindow>
+		</mx:FormItem>
+		<mx:FormItem label="List (no skin)">
+			<!--
+				 Notice - there is no skinClass style set on this list.  Instead there is a
+				 style set above that makes ALL Scroller's use the ResizableScrollerSkin,
+				 so any control that uses a Scroller will automatically be resizable.
+			-->
+			<s:List dataProvider="{testArray}"
+				height="100"
+				width="220"/>
+		</mx:FormItem>
+
+	</mx:Form>
+	
+	<!--backgroundAlpha="0.3"
+	backgroundColor="0xDDDDDD"-->
+
+	<s:BorderContainer id="constraint"
+		height="500"
+		width="350"
+		borderColor="0xCC0000"
+		left="{form.width}"
+		top="20"
+		borderAlpha="0.5"
+		borderVisible="true"
+		borderWeight="1">
+		<s:Label text="parent"
+			color="#BBBBBB"/>
+
+		<s:TitleWindow id="resizableDraggableTitleWindow"
+			height="150"
+			width="250"
+			left="10"
+			top="80"
+			skinClass="com.shared.components.spark.resize.ResizableDraggableTitleWindowSkin"
+			title="Resizable &amp; Draggable">
+			<s:Label text="Drag the titlebar to move this window."
+				x="10"
+				y="10"/>
+			<s:Label text="Location: {resizableDraggableTitleWindow.x},{resizableDraggableTitleWindow.y}"
+				x="10"
+				y="32"/>
+			<s:Label text="Size: {resizableDraggableTitleWindow.width}x{resizableDraggableTitleWindow.height}"
+				x="10"
+				y="54"/>
+			<s:CheckBox id="constrainCB"
+				label="Constrain to parent bounds?"
+				x="10"
+				y="76">
+				<s:change>
+					<![CDATA[
+						var skin:ResizableDraggableTitleWindowSkin = (resizableDraggableTitleWindow.skin as ResizableDraggableTitleWindowSkin);
+						skin.moveManager.constrainToParentBounds = constrainCB.selected;
+						skin.resizeManager.constrainToParentBounds = constrainCB.selected;
+					]]>
+				</s:change>
+			</s:CheckBox>
+		</s:TitleWindow>
+
+	</s:BorderContainer>
+
+</s:Application>

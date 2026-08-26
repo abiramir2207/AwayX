@@ -1,0 +1,43 @@
+===== QUERY: qGetFiscalYears =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFiscalYears = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForqGetFiscalYears>
+	<cftry>
+		<cfset qGetFiscalYears = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"deleted" = "eq.0",
+				"order" = "fiscal_year.asc",
+				"select" = "fiscal_year"
+			}), "fiscal_year"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFiscalYears = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFiscalYears>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetFiscalDatesforYear =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetFiscalPeriodsforYear =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetFiscalPeriodforDate =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetFiscalPeriodforDateRange =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetFiscalYearforDate =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetFiscalDateforPeriod =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetNextFiscalYear =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

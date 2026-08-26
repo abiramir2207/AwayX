@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.Program.MarketPrice.views.*">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.Program.MarketPrice.views.pm.GridDataPModel;
+			/* Presentation Model */
+			[Bindable] public var pModel:GridDataPModel;
+		]]>
+	</fx:Script>
+	<s:HGroup>
+		<s:CheckBox id="chbxFilter" 
+					selected="true"
+					label="View Approvals" 
+					click="pModel.filter(chbxFilter.selected)" 
+					toolTip="Filter the items to display only the items that require approval"/>
+		<!--...............................   Header   ...............................-->
+		<view:Header id="vHeader" width="100%" />
+	</s:HGroup>
+
+	<s:HGroup width="100%">
+		<mx:AdvancedDataGrid id="adgMarketPrice" 
+							 designViewDataType="flat" 
+							 width="100%" 
+							 rowCount="18" 
+							 columns="{pModel.arrDgItemsCols}" 
+							 dataProvider="{pModel.acItems}">
+		</mx:AdvancedDataGrid>
+	</s:HGroup>
+</s:Group>

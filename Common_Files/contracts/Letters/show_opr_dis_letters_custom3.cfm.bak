@@ -1,0 +1,627 @@
+<cfsilent>
+	<!--- These parameters are required for this template to process correctly --->
+	<cfparam name="url.bAll" type="boolean" default="0">
+	<cfparam name="form.letter_id" type="numeric" default="0">
+	<cfparam name="url.msg" type="string" default="">
+	<cfparam name="url.CID" default="">
+	<cfparam name="emailaddresslist" type="string" default="">
+	<cfparam name="variables.bLettersAvailable" type="boolean" default="0">
+	<cfparam name="url.print" type="boolean" default="0">
+	<cfparam name="url.delete" type="boolean" default="0">
+	<cfparam name="url.LID" type="numeric" default="0">
+	<cfparam name="url.Contract_Main_ID"  default="#url.CID#">
+	<cfparam name="url.generate" type="numeric" default="0">
+	
+	<cfif url.delete>  
+		<cfif url.bAll>    
+			<cfwindow center="true" closable="false" draggable="true" height=70 initshow="true" modal="true" name="pdfDeletion"
+								resizable="false" source="delete_letter.cfm?CID=#url.CID#&bAll=1" title="ALL PDF Letters for Program:#url.CID# Are NOW Deleted!" width=340/>    
+		<cfelse>    
+			<cfwindow center="true" closable="false" draggable="true" height=70 initshow="true" modal="true" name="pdfDeletion"
+								resizable="false" source="delete_letter.cfm?LID=#url.LID#&CID=#url.CID#&bAll=0" title="PDF Letter #url.LID# Is NOW Deleted!" width=340/>
+		</cfif>  
+		<cfabort>
+	</cfif>
+
+	<!--- MVC V11 Edit [begin] --->
+	<cfscript>
+		application.oController.getObject("mvc.Models.LetterManager");
+	</cfscript>
+	<!--- MVC V11 Edit [end] --->
+
+</cfsilent>
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>
+			Letters
+		</title>
+	</head>
+	<body bgcolor="White" text="Black" link="Blue" vlink="Blue" alink="Red" leftmargin="0" topmargin="0" onload="popupInit()">
+		<script language="JavaScript" src="/script/javascript/string_functions.js"></script>
+		<script language="JavaScript" src="/script/javascript/string_validations.js"></script>
+		<script src="/Script/javascript/dhtml.js"></script>
+		<style>
+			TABLE.Maintable TD {
+				border-bottom: solid #93BEE2 1px;
+				font-size: 11px;
+			}
+			#header {
+				font-size: 12px;
+			}
+		</style>
+		<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+		<cfinclude template="/includes/top_header.cfm">
+	
+		<cf_messagewindow>
+		<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+		<cfif len(trim(URL.CID))>
+			<cfset CSL_Contract_Main_ID = URL.CID>
+		</cfif>
+		<cfset CSL_CallingPageCode = "letters">
+	
+		<!--- IF we got nuttin... [begin] (1 of 2) --->
+		<cfquery name="variables.qAllLtr" datasource="#application.datasource#">
+			SELECT  COUNT(Program_Letters_ID) as netCount
+			FROM    Program_Letters
+			WHERE program_id = '#URL.CID#'
+		</cfquery>
+		<!--- nada... --->
+		<cfif NOT variables.qAllLtr.netCount>
+			<cf_cryp type="en" string="#URL.CID#" key="#request.key#" return="abstr">
+			<cfset EncryptedCID = abstr.value>
+			<!--- redirect --->
+			<cflocation url="/Common_Files/contracts/contract_letters.cfm?CID=#EncryptedCID#" addtoken="yes">
+			<cfabort>
+		</cfif>
+		<!--- IF we got nuttin... [end] --->
+
+		<!--- <div id="Layer2" style="position:absolute; width: 180px; height: 400px; z-index:5; left: 10px; top: 10px"> --->
+		<div id="Layer1" style="position:relative; z-index:1; padding:5px; margin:5px;">
+		<!--- <div id="Layer1" style="margin:10px 0; padding:5px;"> --->
+
+	
+		<cfset FORM.Contract_Main_ID = CSL_Contract_Main_ID>
+	
+		<!--- create some temporary objects... RBL --->
+		<cfset variables.oProgramData = createObject("component", "components.programs.program")/>
+		<cfset variables.oUserData = createObject("component", "components.user.usermanager")/>
+		<!--- retreive the query data... RBL --->
+		<cfset variables.qProgramInfo = variables.oProgramData.getProgramInfo(CSL_Contract_Main_ID)>
+	
+		<cfset variables.qUserInfo = variables.oUserData.getUser(variables.qProgramInfo.responsible_user_id[1])>
+	
+		<cfset variables.authorRSPFirstName = trim(variables.qUserInfo.name_first[1])>
+		<cfset variables.authorRSPLastName = trim(variables.qUserInfo.name_last[1])>
+		<cfset variables.authorRSPEmail = trim(variables.qUserInfo.user_email[1])>
+		<cfquery name="variables.qGetAuthorID" datasource="#application.datasource#">
+			SELECT User_ID
+			FROM dbo._Users
+			WHERE Name_First = '#variables.authorRSPFirstName#'
+			AND Name_Last = '#variables.authorRSPLastName#'
+		</cfquery>
+		<cfset variables.authorRSPID = variables.qGetAuthorID.User_ID/>
+
+		<cfoutput>
+		
+			<form action="email_or_print.cfm" method="post" name="LetterForm">
+			
+				<!--- ==========================================================
+				===================== Operator [begin] =========================
+				=========================================================== --->
+				<cfinvoke component="#application.oLetterManager#" 
+									method="getLetters" 
+									program_id="#CSL_Contract_Main_ID#" 
+									letter_type="1" 
+									order_by_clause="program_letters.operator_name,created_date DESC" 
+									returnvariable="variables.qGetOprLetters">
+			
+				<cfif variables.qGetOprLetters.recordCount>
+				
+					<!--- D17619 [begin] RBL 12/01/08 style="margin-left:30px;" --->
+					<font color="##ff0000">
+						<i>
+							#url.msg#
+						</i>
+					</font>
+					<!--- D17619 [end] RBL 12/01/08 --->
+					<!--- width="800" --->
+					<table width="750" class="maintable" border="0" cellpadding="0" cellspacing="0" style="margin-left:0px;">
+						<tr>
+							<td colspan="6" style="font-size:14px;" bgcolor="##C6FFC6">
+								<b>
+									#application.returned_customer_setting.operator_label_singular# 
+									Section
+								</b>
+							</td>
+						</tr>
+						<tr>
+							<td width="50" style="font-size: 12px;">
+								<input name="opr_check_all" type="checkbox" onclick="selectall('O');">
+								<span id="checkopr">
+								</span>
+							</td>
+							<td width="80" wrap style="font-size: 12px; font-weight:bold">
+								Letters
+							</td>
+							<td width="120" style="font-size: 12px; font-weight:bold" wrap>
+								#application.returned_customer_setting.operator_label_singular# 
+								Name
+							</td>
+							<td width="80" style="font-size: 12px; font-weight:bold">
+								Date
+							</td>
+							<td width="100" nowrap style="font-size: 12px; font-weight:bold">
+								Created By
+							</td>
+							<td width="120" style="font-size: 12px; font-weight:bold" nowrap>
+								Email Addresses
+							</td>
+						</tr>
+						
+						<cfset variables.bLettersAvailable = 1>
+						<cfset variables.bNoDistributors = 0>
+						<cfloop query="variables.qGetOprLetters">
+						
+							<!--- [begin] VERIFY we have 3 pieces of current letter puzzle we MUST have to display,edit,print,email,etc... [begin] --->
+							<cfif application.oLetterManager.letterExistsInDBwithXMLandAsFile(variables.qGetOprLetters.program_letters_id)>
+								<cfset current_opr_letter_name_pdf = trim(variables.qGetOprLetters.letter_name) & '.pdf'>
+								<cfset current_opr_letter_name_pdf_tip = lCase(replace(current_opr_letter_name_pdf, '_', ' ', 'all'))>
+								<cfset current_opr_absolute_path_pdf = "#Application.Doc_Mapping#/data_files/created/contracts/letters/output/operators/#CSL_Contract_Main_ID#/#current_opr_letter_name_pdf#">
+								
+								<cfset current_opr_absolute_path = application.doc_path & '\data_files\created\contracts\letters\output\operators\' & CSL_Contract_Main_ID & '\' & current_opr_letter_name_pdf>
+							
+								<cfif fileExists(current_opr_absolute_path)>
+									<cfpdf action="getinfo" name="stPDFInfo" source="#current_opr_absolute_path#" password="#CSL_Contract_Main_ID#">
+									<tr>
+										<td width="50">
+											<span id="error_oprcheckbox">
+											</span>
+											<span id="checkAllOprLetters">
+												<input name="letter_id" type="checkbox" value="#program_letters_id#">
+											</span>
+										</td>
+										<td width="80">
+											<!--- <a href="#current_opr_absolute_path_htm#" target="htm" style="cursor:pointer;" onMouseOver="initTheTooltip('#current_opr_letter_name_htm_tip#')" onMouseOut="popOut()"><img src="images/icon_TXT.gif" border="0"></a>   --->
+												<a href="/GetDocument.cfm?FilePath=data_files/created/contracts/letters/output/operators/#CSL_Contract_Main_ID#/#current_opr_letter_name_pdf#" style="cursor:pointer;" onMouseOver="initTheTooltip('VIEW and/or PRINT Letter #variables.qGetOprLetters.program_letters_id# #current_opr_letter_name_pdf_tip# [#stPDFInfo.TotalPages# Pages]')" onMouseOut="popOut()">
+													<img src="images/icon_PDF.gif" border="0">
+												</a>
+											<!---  <a href="#current_opr_absolute_path_xml#" target="xml" style="cursor:pointer;" onMouseOver="initTheTooltip('#current_opr_letter_name_xml_tip#')" onMouseOut="popOut()"><img src="images/icon_XML.gif" border="0"></a> --->
+										</td>
+										<td width="120">
+											#operator_name#
+										</td>
+										<td width="80">
+											#dateformat(variables.qGetOprLetters.created_date, "mm/dd/yyyy")#
+										</td>
+										<td width="100" nowrap>
+											#user_name#
+										</td>
+										<td width="120">
+											<span id="checkAllOprEmail">
+												<input type="text" name="email_address_#program_letters_id#" size="30" value="#variables.authorRSPEmail#">
+											</span>
+											<span id="error_oprAddress">
+											</span>
+										</td>
+									</tr>
+								</cfif>
+							
+								<input type="hidden" name="letter_path_#program_letters_id#" value="#variables.qGetOprLetters.letter_path#">
+								<input type="hidden" name="Include_File_path" value="/data_files/created/contracts/letters/output/operators/#CSL_Contract_Main_ID#/#current_opr_letter_name_pdf#">
+							
+							<cfelse>
+							
+								<cfscript>
+									application.oLetterManager.deletePDFLetterInDBandFile(variables.qGetOprLetters.program_letters_id);
+								</cfscript>
+
+							</cfif>
+							<!--- [end] VERIFY we have 3 pieces of current letter puzzle we MUST have to display,edit,print,email,etc... [end] --->
+						</cfloop>
+					</table>
+				</cfif>
+				<!--- ==========================================================
+				===================== Operator [end] ===========================
+				=========================================================== --->
+				<br/>
+				
+				<!--- ==========================================================
+				===================== Distributor [begin] ======================
+				=========================================================== --->
+				<cfinvoke component="#application.oLetterManager#" 
+									method="getLetters" 
+									program_id="#CSL_Contract_Main_ID#" 
+									letter_type="2" 
+									order_by_clause="program_letters.Distributor_Name,created_date DESC" 
+									returnvariable="variables.qGetDisLetters">
+
+				<!--- D16774 8/14/08 [end] --->
+				<cfif variables.qGetDisLetters.recordCount>
+				
+					<!---   When there are only distributor letters and not operator letters, then we still need to show message: 'x letters successfully emailed' when the user emails the letters.
+									When there are both (distributor and operators), then this message at the top of the page (before the operator section) is valid for both on emailing.
+					--->
+					<cfif variables.qGetOprLetters.recordCount eq 0>
+						<font color="##ff0000">
+							<i>
+								#url.msg#
+							</i>
+						</font>
+					</cfif>
+				
+					<cfset getdistributoremail = application.oLetterManager.getdistributoremail(CSL_Contract_Main_ID)>
+					<!--- D16774 8/14/08 [end] --->
+					<table width="750" class="maintable" border="0" cellpadding="0" cellspacing="0" style="margin-left:0px;">
+						<tr>
+							<td colspan="6" style="font-size: 14px;" bgcolor="##C6FFC6">
+								<b>
+									#application.returned_customer_setting.distributor_label_singular# 
+									Section
+								</b>
+							</td>
+						</tr>
+						<tr>
+							<td width="50" style="font-size: 12px;">
+								<input name="dis_check_all" type="checkbox" onclick="selectall('D');">
+								<span id="checkdis">
+								</span>
+							</td>
+							<td width="80" style="font-size: 12px; font-weight:bold">
+								Letters
+							</td>
+							<td width="120" style="font-size: 12px; font-weight:bold" wrap>
+								#application.returned_customer_setting.distributor_label_singular# 
+								Name
+							</td>
+							<td width="80" style="font-size: 12px; font-weight:bold">
+								Date
+							</td>
+							<td width="100" nowrap style="font-size: 12px; font-weight:bold">
+								Created By
+							</td>
+							<td width="120" style="font-size: 12px; font-weight:bold" nowrap>
+								Email Addresses
+							</td>
+						</tr>
+						<cfset variables.bLettersAvailable = 1>
+					
+						<cfloop query="variables.qGetDisLetters">
+						
+							<!--- [begin] VERIFY we have 3 pieces of current letter puzzle we MUST have to display,edit,print,email,etc... [begin] --->
+							<cfif application.oLetterManager.letterExistsInDBwithXMLandAsFile(variables.qGetDisLetters.program_letters_id)>
+								<cfset current_dis_letter_name_pdf = trim(variables.qGetDisLetters.letter_name) & '.pdf'>
+								<cfset current_dis_letter_name_pdf_tip = lCase(replace(current_dis_letter_name_pdf, '_', ' ', 'all'))>
+								<cfset current_dis_absolute_path_pdf = "#Application.Doc_Mapping#/data_files/created/contracts/letters/output/distributors/#CSL_Contract_Main_ID#/#current_dis_letter_name_pdf#">
+								<cfset current_dis_absolute_path = application.doc_path & '\data_files\created\contracts\letters\output\distributors\' & CSL_Contract_Main_ID & '\' & current_dis_letter_name_pdf>
+							
+								<cfif fileExists(current_dis_absolute_path)>
+								
+									<cfpdf action="getinfo" name="stPDFInfo" source="#current_dis_absolute_path#" password="#CSL_Contract_Main_ID#">
+								
+									<cfif len(trim(variables.qGetDisLetters.distributor_id))>
+										<cfquery name="getdisemailaddress" dbtype="query">
+											select distinct user_email from
+											getdistributoremail
+											where bsa_foodservice_customers_id = '#variables.qGetDisLetters.distributor_id#'
+										</cfquery>
+										<cfset emailaddresslist = ValueList(getdisemailaddress.user_email)>
+									<cfelse>
+										<cfset emailaddresslist = "">
+									</cfif>
+									<tr id="TR_Dis_Letters">
+										<td width="50">
+											<span id="error_discheckbox">
+											</span>
+											<span id="checkAllDisLetters">
+												<input name="letter_id" type="checkbox" value="#program_letters_id#">
+											</span>
+										</td>
+										<td width="80">
+											<!--- <a href="#current_dis_absolute_path_htm#" target="htm" style="cursor:pointer;" onMouseOver="initTheTooltip('#current_dis_letter_name_htm_tip#')" onMouseOut="popOut()"><img src="images/icon_TXT.gif" border="0"></a>  --->
+												<a href="/GetDocument.cfm?FilePath=data_files/created/contracts/letters/output/distributors/#CSL_Contract_Main_ID#/#current_dis_letter_name_pdf#" style="cursor:pointer;" onMouseOver="initTheTooltip('VIEW and/or PRINT Letter #variables.qGetDisLetters.program_letters_id# #current_dis_letter_name_pdf_tip#  [#stPDFInfo.TotalPages#] Pages')" onMouseOut="popOut()">
+													<img src="images/icon_PDF.gif" border="0">
+												</a>
+											<!---  <a href="#current_dis_absolute_path_xml#" target="xml" style="cursor:pointer;" onMouseOver="initTheTooltip('#current_dis_letter_name_xml_tip#')" onMouseOut="popOut()"><img src="images/icon_XML.gif" border="0"></a>  --->
+										</td>
+										<td width="120">
+											#Distributor_name#
+										</td>
+										<td width="80">
+											#dateformat(variables.qGetDisLetters.created_date, "mm/dd/yyyy")#
+										</td>
+										<td width="100" nowrap>
+											#user_name#
+										</td>
+										<td width="120">
+											<span id="checkAllDisEmail">
+												<!--- <input type="text" name="email_address_#program_letters_id#" size="30" value="#emailaddresslist#"> --->
+												<input type="text" name="email_address_#program_letters_id#" size="30" value="#variables.authorRSPEmail#">
+											</span>
+											<span id="error_disAddress">
+											</span>
+										</td>
+									</tr>
+								</cfif>
+							
+								<input type="hidden" name="letter_path_#program_letters_id#" value="#variables.qGetDisLetters.letter_path#">
+								<input type="hidden" name="Include_File_path" value="/data_files/created/contracts/letters/output/distributors/#CSL_Contract_Main_ID#/#current_dis_letter_name_pdf#">
+							
+							<cfelse>
+							
+								<cfscript>
+									application.oLetterManager.deletePDFLetterInDBandFile(variables.qGetDisLetters.program_letters_id);
+								</cfscript>
+								
+							</cfif>
+							<!--- [end] VERIFY we have 3 pieces of current letter puzzle we MUST have to display,edit,print,email,etc... [end] --->
+						</cfloop>
+					</table>
+				</cfif>
+				<!--- ==========================================================
+				===================== Distributor [end] ========================
+				=========================================================== --->
+
+				<cfif url.print>
+				
+					<cfwindow center="true" closable="false" draggable="true" height=400 initshow="true" modal="true" name="pdfSmallWin"
+										resizable="false" title="Combined PDF Print Instructions" width=400>
+						<ol>
+							<li>
+								Click PDF thumbnail below to open All requested PDFs in window.
+							</li>
+							<li>
+								Once PDFs are open, click printer icon to print All requested PDFs as one document to selected printer in selected quality.
+							</li>
+							<li>
+								This small window will close upon opening the larger window containing All requested and combined PDFs.
+							</li>
+						</ol>
+
+						<div align="center" onclick="javascript:ColdFusion.Window.hide('pdfSmallWin')">
+							<a href="combined#CSL_Contract_Main_ID#PDFPrint.pdf" target="pdfLargeWin">
+								<img src="thumbnails/tn_page_1.png" border="0" align="absmiddle" title="Click to Print All Selected PDF Letters"/>
+							</a>
+						</div>
+						<div align="right" onclick="javascript:ColdFusion.Window.hide('pdfSmallWin')">
+							<font size="1" color="Red">[</font>&nbsp;
+							<font size="1" color="Blue"><a href="javascript:history.back()">back</a></font>&nbsp;
+							<font size="1" color="Red">]</font>
+						</div>
+					</cfwindow>
+				</cfif>
+			
+				<cfif variables.bLettersAvailable>
+					<table style="margin-left:30px;">
+						<tr>
+							<td height="20" align="left" valign="middle">
+								<!--- Let's email 'em... --->
+								<input type="image" name="email_letters" src="images/btn_email_icon.gif" height="16" width="120" border="0" title="EMAIL selected letter(s) to listed email addresses"
+											 style="cursor:pointer;">
+							</td>
+
+							<td height="20" align="left" valign="middle">&nbsp
+							</td>
+
+							<td height="20" align="left" valign="middle">
+								<!--- Let's print 'em... --->
+								<input type="image" name="print_letters" src="images/btn_print_icon.gif" height="16" width="120" border="0" title="PRINT selected letter(s)"
+											 style="cursor:pointer;">
+							</td>
+						</tr>
+					</table>
+					<!--- WHY do we have so many aliases for this one value? RBL --->
+					<input type="hidden" name="contract_main_id" value="#CSL_Contract_Main_ID#">
+				</cfif>
+			</form>
+		</cfoutput>
+	
+		<!--- Tech Note: Much of the following js may no longer be needed. Have not thoroughly investigated... 2/14/2008 --->
+		<script>
+			var ErrorCount = 0;
+			function submitForm(thisForm){
+				var oprbox, opremailbox, errorspan;
+				var oprcheckcomplete = 0;
+				var ErrorCount = 0
+				var discheckcomplete = 0;
+				var oprcheckemail = 0;
+				var discheckemail = 0;
+				
+			if (document.getElementById("checkAllOprLetters") != null) {
+					
+			if (window.checkAllOprLetters.length) {
+						for (var x = 0; x < window.checkAllOprLetters.length; x++) {
+							oprbox = getFirstChild(window.checkAllOprLetters[x]);
+							opremailbox = getFirstChild(window.checkAllOprEmail[x]);
+							oprerrorspan = window.error_oprAddress[x];
+							
+			if (oprbox.checked == true) {
+								oprcheckcomplete = 1;
+								clearQueue(document.all.checkopr);
+								
+								//var ValidEmail1 = true;
+								if (opremailbox.value != "" && opremailbox.value != "NULL") {
+									var ValidEmail1 = replaceInvalidEmailAndValidate(opremailbox.value);
+									
+			if (ValidEmail1 != true) {
+										ErrorCount++;
+										queueMessage("Invalid email Address", oprerrorspan);
+									}
+									else {
+										oprcheckemail = 1;
+										clearQueue(oprerrorspan);
+									}
+								}
+								else {
+									ErrorCount++;
+									queueMessage("You must enter an email address", oprerrorspan);
+								}
+							}
+						}
+					}
+					else {
+						oprbox = getFirstChild(window.checkAllOprLetters);
+						opremailbox = getFirstChild(window.checkAllOprEmail);
+						oprerrorspan = window.error_oprAddress;
+						
+			if (oprbox.checked == true) {
+							oprcheckcomplete = 1;
+							clearQueue(document.all.checkopr);
+							
+			if (opremailbox.value != "" && opremailbox.value != "NULL") {
+								var ValidEmail1 = replaceInvalidEmailAndValidate(opremailbox.value);
+								
+			if (ValidEmail1 != true) {
+									ErrorCount++;
+									queueMessage("Invalid email Address", oprerrorspan);
+								}
+								else {
+									oprcheckemail = 1;
+									clearQueue(oprerrorspan);
+								}
+							}
+							else {
+								ErrorCount++;
+								queueMessage("You must enter an email address", oprerrorspan);
+							}
+						}
+					}
+				}
+				
+			if (document.getElementById("checkAllDisLetters") != null) {
+					
+			if (window.checkAllDisLetters.length) {
+						for (var x = 0; x < window.checkAllDisLetters.length; x++) {
+							disbox = getFirstChild(window.checkAllDisLetters[x]);
+							disemailbox = getFirstChild(window.checkAllDisEmail[x]);
+							diserrorspan = window.error_disAddress[x];
+							diserrorcheck = window.error_discheckbox[x];
+							
+			if (disbox.checked == true) {
+								discheckcomplete = 1;
+								clearQueue(document.all.checkdis);
+								
+								//var ValidEmail1 = true;
+								if (disemailbox.value != "" && disemailbox.value != "NULL") {
+									var ValidEmail1 = replaceInvalidEmailAndValidate(disemailbox.value);
+									
+			if (ValidEmail1 != true) {
+										ErrorCount++;
+										queueMessage("Invalid email Address", diserrorspan);
+									}
+									else {
+										discheckemail = 1;
+										clearQueue(diserrorspan);
+									}
+								}
+								else {
+									ErrorCount++;
+									queueMessage("You must enter an email address", diserrorspan);
+								}
+							}
+						}
+					}
+					else {
+						disbox = getFirstChild(window.checkAllDisLetters);
+						disemailbox = getFirstChild(window.checkAllDisEmail);
+						diserrorspan = window.error_disAddress;
+						diserrorcheck = window.error_discheckbox;
+						
+			if (disbox.checked == true) {
+							discheckcomplete = 1;
+							clearQueue(document.all.checkdis);
+							
+			if (disemailbox.value != "" && disemailbox.value != "NULL") {
+								var ValidEmail1 = replaceInvalidEmailAndValidate(disemailbox.value);
+								
+			if (ValidEmail1 != true) {
+									ErrorCount++;
+									queueMessage("Invalid email Address", diserrorspan);
+								}
+								else {
+									discheckemail = 1;
+									clearQueue(diserrorspan);
+								}
+							}
+							else {
+								ErrorCount++;
+								queueMessage("You must enter an email address", diserrorspan);
+							}
+						}
+					}
+				}
+				
+			if ((oprcheckcomplete == 0) && (discheckcomplete == 0)) {
+					
+			if (document.getElementById("checkAllOprLetters") != null) {
+						ErrorCount++;
+						queueMessage("You must select a letter to send", document.all.checkopr);
+					}
+					
+			if (document.getElementById("checkAllDisLetters") != null) {
+						ErrorCount++;
+						queueMessage("You must select a letter to send", document.all.checkdis);
+					}
+				}
+				
+			if (ErrorCount == 0) {
+					thisForm.submit();
+					
+					return false;
+				}
+				else {
+					showMessageWindow();
+				}
+			}
+			function selectall(type){
+				
+			if (type == 'D') {
+					var obj = window.checkAllDisLetters;
+				}
+				else 
+					
+			if (type == 'O') {
+						var obj = window.checkAllOprLetters;
+					}
+				
+			if (obj != null) {
+					
+			if (obj.length) {
+						for (var x = 0; x < obj.length; x++) {
+							box = getFirstChild(obj[x])
+							
+			if (box.disabled == false) {
+								
+			if (type == 'O') {
+									box.checked = document.all.opr_check_all.checked
+								}
+								else 
+									
+			if (type == 'D') {
+										box.checked = document.all.dis_check_all.checked
+									}
+							}
+							else {
+								box.disabled = true
+							}
+						}
+					}
+					else {
+						box = getFirstChild(obj)
+						
+			if (type == 'O') {
+							box.checked = document.all.opr_check_all.checked
+						}
+						else 
+							
+			if (type == 'D') {
+								box.checked = document.all.dis_check_all.checked
+							}
+					}
+				}
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,27 @@
+===== QUERY: getOtherWonBy =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOtherWonBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForgetOtherWonBy>
+	<cftry>
+		<cfset getOtherWonBy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_description" = "eq.#CompetitorSourceOther#",
+				"select" = "program_bid_won_by_description,program_bid_won_by_id"
+			}), "program_bid_won_by_description,program_bid_won_by_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOtherWonBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOtherWonBy>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertOther_Won_By =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdFixedProduct =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

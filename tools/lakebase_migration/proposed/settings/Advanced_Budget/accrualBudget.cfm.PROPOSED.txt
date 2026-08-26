@@ -1,0 +1,34 @@
+===== QUERY: vars.qPosition =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyAccrualAdjustment =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSelectedMarketInvoice =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetPriceList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPriceList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForqGetPriceList>
+	<cftry>
+		<cfset qGetPriceList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_description.asc",
+				"select" = "price_list_id,price_list_description"
+			}), "price_list_id,price_list_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: vars.qBudget =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

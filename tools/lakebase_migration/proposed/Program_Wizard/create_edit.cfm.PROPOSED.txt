@@ -1,0 +1,314 @@
+===== QUERY: getGeneralSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGeneralSettings>
+	<cftry>
+		<cfset getGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGeneralSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetUserSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCheckOptions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqCheckOptions>
+	<cftry>
+		<cfset qCheckOptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckOptions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: SelectBasic =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetsDiscountIDTypes =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: DiscountIdentifierDesc =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: ActiveFiscalYear =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: GetAR =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: CheckSaved =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: claimRatesInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: currentOptinalDate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcurrentOptinalDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_optional_dates")>
+<cfif useLakebaseForcurrentOptinalDate>
+	<cftry>
+		<cfset currentOptinalDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_optional_dates", {
+				"first_parent_id" = "eq.#SelectBasic.First_Parent_ID#",
+				"deleted" = "eq.0",
+				"select" = "start_date,end_date,description"
+			}), "start_date,end_date,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcurrentOptinalDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcurrentOptinalDate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: currentOptinalDate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcurrentOptinalDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_optional_dates")>
+<cfif useLakebaseForcurrentOptinalDate>
+	<cftry>
+		<cfset currentOptinalDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_optional_dates", {
+				"first_parent_id" = "eq.#SelectBasic.First_Parent_ID#",
+				"deleted" = "eq.0",
+				"select" = "start_date,end_date,description"
+			}), "start_date,end_date,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcurrentOptinalDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcurrentOptinalDate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPriceList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPriceList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForGetPriceList>
+	<cftry>
+		<cfset GetPriceList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_description.asc",
+				"select" = "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+			}), "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPriceList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPriceList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PLDescription =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPLDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpricelist")>
+<cfif useLakebaseForPLDescription>
+	<cftry>
+		<cfset PLDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpricelist", {
+				"price_list_header_id" = "eq.#form.Margin_Price_List_Header_ID#",
+				"select" = "price_list_diplay_desc"
+			}), "price_list_diplay_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPLDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPLDescription>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBillbackStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: BBS_Description =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBBS_Description = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbillbackstatus")>
+<cfif useLakebaseForBBS_Description>
+	<cftry>
+		<cfset BBS_Description = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbillbackstatus", {
+				"billback_status_id" = "eq.#qGetClosingMethods.Auto_Dev_BB_Status_Below#",
+				"select" = "bb_status_description"
+			}), "bb_status_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBS_Description = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBS_Description>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BBS_Description =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBBS_Description = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbillbackstatus")>
+<cfif useLakebaseForBBS_Description>
+	<cftry>
+		<cfset BBS_Description = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbillbackstatus", {
+				"billback_status_id" = "eq.#qGetClosingMethods.Auto_Dev_BB_Status_Below#",
+				"select" = "bb_status_description"
+			}), "bb_status_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBS_Description = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBS_Description>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BBS_Description =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBBS_Description = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbillbackstatus")>
+<cfif useLakebaseForBBS_Description>
+	<cftry>
+		<cfset BBS_Description = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbillbackstatus", {
+				"billback_status_id" = "eq.#qGetClosingMethods.Auto_Dev_BB_Status_Below#",
+				"select" = "bb_status_description"
+			}), "bb_status_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBS_Description = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBS_Description>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApprovalConsiderations =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApprovalConsiderations = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetapprovalconsiderations")>
+<cfif useLakebaseForApprovalConsiderations>
+	<cftry>
+		<cfset ApprovalConsiderations = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetapprovalconsiderations", {
+				"approval_considerations_id" = "eq.#form.Approval_Considerations_ID#",
+				"select" = "approval_considerations_name"
+			}), "approval_considerations_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovalConsiderations = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovalConsiderations>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPriceList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPriceList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForgetPriceList>
+	<cftry>
+		<cfset getPriceList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_description.asc",
+				"select" = "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+			}), "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPriceList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPriceList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PLID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPLID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpricelist")>
+<cfif useLakebaseForPLID>
+	<cftry>
+		<cfset PLID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpricelist", {
+				"price_list_id" = "eq.#form.Price_List_ID#",
+				"select" = "price_list_description"
+			}), "price_list_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPLID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPLID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetAPTsforthisTemplate =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: ShouldBeChecked =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCategoriesforthisTemplate =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCategories =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_category")>
+<cfif useLakebaseForGetCategories>
+	<cftry>
+		<cfset GetCategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_category", {
+				"deleted" = "eq.0",
+				"select" = "program_category_id,program_category"
+			}), "program_category_id,program_category"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCategories>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ShouldBeChecked =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

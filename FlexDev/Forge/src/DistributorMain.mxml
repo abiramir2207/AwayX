@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:maps="com.shared.maps.*"
+			   preinitialize="applyRuntimeStyleSheet();"
+			   height="100%" width="100%"
+			   creationComplete="createModule(distributorMod, _modUrl);">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<maps:MainEventMap />
+	</fx:Declarations>
+	
+	
+	<fx:Script><![CDATA[
+		import mx.core.FlexGlobals;
+		import com.shared.models.IModuleInterface;
+		import com.shared.events.*;
+		import com.shared.models.*;
+		import com.shared.vos.*;
+		
+		public var iMod:IModuleInterface;
+		
+		protected function applyRuntimeStyleSheet():void
+		{
+			styleManager.loadStyleDeclarations("/flex/mainFx10.swf");
+		}
+		
+		private var _modUrl:String = 'com/DistributorSearch/DistributorSearch.swf';// /flex/Program/
+		public function createModule(m:ModuleLoader, s:String):void {
+			//we need relative path to debug and dev however release version needs absolute path
+			for (var i:String in FlexGlobals.topLevelApplication.parameters) {	
+				var sVal:String = FlexGlobals.topLevelApplication.parameters[i];
+				switch (i) 
+				{
+					case "userID" : 
+						s =	'/flex/com/DistributorSearch/DistributorSearch.swf';
+						break; 
+				}
+			}
+			if (!m.url) {
+				m.url = s;
+				return;
+			}
+			//m.applicationDomain = ApplicationDomain.currentDomain;
+			m.loadModule();
+		}
+		
+		
+	]]>
+	</fx:Script>
+	
+	<s:Group>
+		<mx:ModuleLoader id="distributorMod" height="1000" width="100%" />
+	</s:Group>
+	
+</s:Application>

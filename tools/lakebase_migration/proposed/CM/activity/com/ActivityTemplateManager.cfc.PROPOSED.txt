@@ -1,0 +1,137 @@
+===== QUERY: qGetActivityTemplate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActivityTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_template")>
+<cfif useLakebaseForqGetActivityTemplate>
+	<cftry>
+		<cfset qGetActivityTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_template", {
+				"deleted" = "eq.0",
+				"cm_activity_template_id" = "eq.#arguments.id#",
+				"select" = "cm_activity_template_id,activity_template_name,activity_template_notes,created_by_user_id,updated_by_user_id"
+			}), "cm_activity_template_id,activity_template_name,activity_template_notes,created_by_user_id,updated_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityTemplate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActivityQuestions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActivityQuestions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_question")>
+<cfif useLakebaseForqGetActivityQuestions>
+	<cftry>
+		<cfset qGetActivityQuestions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_question", {
+				"deleted" = "eq.0",
+				"cm_activity_template_id" = "eq.#qGetActivityTemplate.CM_Activity_Template_ID#",
+				"select" = "cm_activity_question_id,activity_question,cm_activity_qa_type_id"
+			}), "cm_activity_question_id,activity_question,cm_activity_qa_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQuestions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQuestions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActivityQAOption =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActivityQAOption = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_option")>
+<cfif useLakebaseForqGetActivityQAOption>
+	<cftry>
+		<cfset qGetActivityQAOption = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_option", {
+				"deleted" = "eq.0",
+				"cm_activity_question_id" = "eq.#CM_Activity_Question_ID#",
+				"select" = "activity_qa_option"
+			}), "activity_qa_option"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQAOption = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQAOption>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActivityQAQty =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActivityQAQty = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_qty")>
+<cfif useLakebaseForqGetActivityQAQty>
+	<cftry>
+		<cfset qGetActivityQAQty = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_qty", {
+				"deleted" = "eq.0",
+				"cm_activity_question_id" = "eq.#CM_Activity_Question_ID#",
+				"select" = "cm_qa_uom_id"
+			}), "cm_qa_uom_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQAQty = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQAQty>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActivityQATime =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActivityQATime = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_time")>
+<cfif useLakebaseForqGetActivityQATime>
+	<cftry>
+		<cfset qGetActivityQATime = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_time", {
+				"deleted" = "eq.0",
+				"cm_activity_question_id" = "eq.#CM_Activity_Question_ID#",
+				"select" = "cm_qa_uot_id"
+			}), "cm_qa_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQATime = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQATime>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActQuestType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActQuestType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_type")>
+<cfif useLakebaseForqGetActQuestType>
+	<cftry>
+		<cfset qGetActQuestType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_type", {
+				"deleted" = "eq.0",
+				"select" = "cm_activity_qa_type_id,activity_qa_type_name"
+			}), "cm_activity_qa_type_id,activity_qa_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActQuestType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActQuestType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetUom =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetUot =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

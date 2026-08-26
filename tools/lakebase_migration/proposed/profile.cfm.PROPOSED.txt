@@ -1,0 +1,3 @@
+===== QUERY: Get_Profile_Settings =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

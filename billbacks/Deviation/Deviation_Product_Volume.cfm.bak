@@ -1,0 +1,1876 @@
+<CFIF NOT IsDefined("INC_Deviation_Constants")>
+	<CFINCLUDE TEMPLATE="/Billbacks/Deviation/Deviation_Constants.CFM">
+</CFIF>
+
+<cfif not isDefined("genSettingsManager")>
+	<!---get application settings--->
+	<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
+	<cfset appSettings = genSettingsManager.get()>
+</cfif>
+<cfset bbDeviationManager = CreateObject("component", "components.billback.BillbackDeviationManager").init() />
+
+<CFIF NOT IsDefined("INC_Date_Graph_Settings")>
+	<CFINCLUDE TEMPLATE="/Billbacks/Deviation/Date_Graph_Settings.cfm">
+</CFIF>
+<CFPARAM NAME="SHOW_DEVIATION_DETAIL_HEADER" 	DEFAULT=True>
+<CFPARAM NAME="SHOW_DEVIATION_DETAIL_FOOTER" 	DEFAULT=True>
+
+<cfset applyDateDevAgaunstClaimedVolume = appSettings.getBBDateDevInExpectedVol() />
+
+<CFSET Table_Width = 700>
+
+<CFPARAM NAME="URL.Billback_Product_Detail_ID"								DEFAULT="">
+<CFSET Billback_Product_Detail_ID=URL.Billback_Product_Detail_ID>
+
+<CFPARAM NAME="URL.BB_Product_Type_ID"										DEFAULT=1>
+<CFSET BB_Product_Type_ID=URL.BB_Product_Type_ID>
+
+<CFIF SHOW_DEVIATION_DETAIL_HEADER>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+	<title>Billback <cfoutput>#appSettings.getDeviationLabel()#</cfoutput> - Product Volume</title>
+</head>
+
+<BODY BGCOLOR="White" TEXT="Black" LINK="Blue" VLINK="Blue" ALINK="Red" LEFTMARGIN="5" TOPMARGIN="5">
+<BLOCKQUOTE>
+
+<STYLE>
+TR.MaintableTHEAD TD
+{
+	font-size : 11px;
+	border-bottom:solid 93BEE2 0px;
+	font-weight : bold;
+}
+</STYLE>
+<!------------------------------show spinner ---------------------------->
+
+<CFSET PW_Type="1">
+<SPAN CLASS="title2" ID="PleaseWaitMessage" ALIGN="CENTER">
+ <br><br><br>
+ <center><CFINCLUDE TEMPLATE="/includes/please_wait.cfm"></center>
+ <br><br><br>
+</SPAN>
+
+<SCRIPT>
+document.all.PleaseWaitMessage.style.display='none';
+</SCRIPT>
+
+<CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
+	<BR>
+<CFELSE>
+	<BLOCKQUOTE>
+</CFIF>
+<CFIF ADDSCRIPT EQ "Yes">
+	<SCRIPT LANGUAGE="JavaScript" SRC="common_js.js"></SCRIPT>
+</CFIF>
+
+<!--------------------------------------------------------------------------------------
+Get Program , Product Info for display and fo rbeing used in other queries
+--------------------------------------------------------------------------------------->
+
+<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Product_Program">
+SELECT	Billback.Billback_ID,
+		Billback.BB_Start_Date,
+		Billback.BB_End_Date,
+		Billback.BB_Code,
+		Billback.BB_Title,
+		Billback.Billback_Payee_Type_ID,
+		BB_Approved.Date_Approved,
+		Contract_Main.Contract_Number,
+		Contract_Main.Contract_Title,
+		Program_Control_Panel_Options.Generic_Type,
+		Program_Control_Panel_Options.BB_D_Template_Overrides_Deviation_Tolerances,
+		Program_Control_Panel_Options.BB_D_Purchase_Period_OverRide,
+		Program_Control_Panel_Options.BB_D_Aggregation_Period_OverRide,
+		Program_Control_Panel_Options.Ignore_Billback_Volume_Deviation,
+		Billback_Product.Billback_Program_ID,
+		Billback_Product.BB_Product_Quantity,
+		Billback_Product.BB_Product_UOM,
+		BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID,
+		BSA_Foodservice_Items_Master.Description,
+		BSA_Foodservice_Items_Master.Item,
+		BSA_Foodservice_Items_Master.UPC,
+		Billback_Program.Program_ID,
+		ISNULL(BSA_Foodservice_Items_Master.Net_Weight, 1) AS Net_Weight
+		, (
+			SELECT 	MIN(Approval_Start_Date)
+			FROM 	BB_Program_Info
+			WHERE
+				BB_Program_Info.Contract_Number = Contract_Main.Contract_Number
+				AND
+				BB_Program_Info.Deleted = 0
+			) AS Program_Start_Date
+		, (
+			SELECT 	MAX(Approval_End_Date)
+			FROM 	BB_Program_Info
+			WHERE
+				BB_Program_Info.Contract_Number = Contract_Main.Contract_Number
+				AND
+				BB_Program_Info.Deleted = 0
+			) AS Program_End_Date
+			, 0 AS BB_Type
+			,Billback_Product.Distributor_ID as dist_id
+			<!--- The billback may have an associated distributor when the payee is an operator OR broker. --->
+			,CASE billback.Billback_Payee_Type_ID
+				WHEN 2
+					THEN 
+						Billback_Operator.Associated_Ship_to
+				WHEN 3
+					THEN				
+						Billback_Broker.Associated_Ship_to				
+				ELSE
+					NULL
+				END
+
+			As Associated_Ship_to
+			,Distributor_id_earned
+
+		FROM	Billback_Product_Detail
+		INNER JOIN	Billback_Product
+		ON
+		(
+			(Billback_Product.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(Billback_Product.Deleted = 0)
+		)
+		INNER JOIN	Billback_Program
+		ON
+		(
+			(Billback_Program.Billback_Program_ID = Billback_Product.Billback_Program_ID)
+			AND
+			(Billback_Program.Deleted = 0)
+		)
+		INNER JOIN	Billback
+		ON
+		(
+			(Billback.Billback_ID = Billback_Program.Billback_ID)
+			AND
+			(Billback.Deleted = 0)
+		)
+		LEFT JOIN BB_Approved
+		ON
+		(
+			(BB_Approved.Billback_ID = Billback.Billback_ID)
+			AND
+			(Billback.Billback_Status_ID >= 3)
+		)
+		INNER JOIN	Contract_Main
+		ON
+		(
+				(Contract_Main.Contract_Main_ID = Billback_Program.Program_ID)
+		)
+		INNER JOIN	Program_Control_Panel_Options
+		ON
+		(
+			(Program_Control_Panel_Options.ProgramControl_Panel_Options_ID  = Contract_Main.ProgramType_ID)
+			--AND
+			--(Program_Control_Panel_Options.Deleted = 0)
+		)
+		LEFT JOIN	BSA_Foodservice_Items_Master
+		ON
+		(
+			(BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = Billback_Product.Product_ID)
+			AND
+			(BSA_Foodservice_Items_Master.Deleted = 0)
+		)
+		LEFT JOIN Billback_Operator
+		ON
+		(
+		Billback.Billback_ID = Billback_Operator.Billback_ID
+		AND Billback_Operator.Deleted = 0
+		)
+		LEFT JOIN Billback_Broker
+		ON
+		(
+		Billback.Billback_ID = Billback_Broker.Billback_ID
+		AND Billback_Broker.Deleted = 0
+		)
+	WHERE
+		Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+		AND
+		Billback_Product_Detail.Deleted = 0
+</CFQUERY>
+
+<CFSET BB_D_Template_Overrides_Deviation_Tolerances = 0>
+<cfif Billback_Product_Program.BB_D_Template_Overrides_Deviation_Tolerances EQ 1>
+	<CFSET BB_D_Template_Overrides_Deviation_Tolerances = 1>
+	<CFSET BB_D_Purchase_Period_OverRide = Billback_Product_Program.BB_D_Purchase_Period_OverRide />
+	<CFSET BB_D_Aggregation_Period_OverRide = Billback_Product_Program.BB_D_Aggregation_Period_OverRide />
+<cfelse>
+	<CFSET BB_D_Purchase_Period_OverRide = 0 />
+	<CFSET BB_D_Aggregation_Period_OverRide = 0 />
+</cfif>
+<CFSET Ignore_Billback_Volume_Deviation			= Billback_Product_Program.Ignore_Billback_Volume_Deviation />
+<CFSET Date_Approved							= Billback_Product_Program.Date_Approved>
+<CFSET BSA_Foodservice_Items_Master_ID 		= Billback_Product_Program.BSA_Foodservice_Items_Master_ID>
+<CFSET Billback_End_Date 						= Billback_Product_Program.BB_End_Date>
+<CFSET Billback_Start_Date 					= Billback_Product_Program.BB_Start_Date>
+<CFSET Program_Number 							= Billback_Product_Program.Contract_Number>
+<CFSET Contract_Title							= Billback_Product_Program.Contract_Title>
+<CFSET Billback_Total_Days 						= DateDiff("d", Billback_Start_Date, Billback_End_Date) + 1>
+<CFSET Billback_ID 								= Billback_Product_Program.Billback_ID>
+<CFSET Generic_Type 							= Billback_Product_Program.Generic_Type>
+
+<CFSET Net_Weight 								= Billback_Product_Program.Net_Weight>
+<CFSET Net_Weight 								= ReReplace(Net_Weight, "^0*", "", "All")>
+
+<CFSET Payable_Number 							= Billback_Product_Program.BB_Code>
+<CFSET Billback_Title 							= Billback_Product_Program.BB_Title>
+
+<CFSET Program_Start_Date						= Billback_Product_Program.Program_Start_Date>
+<CFSET Program_End_Date							= Billback_Product_Program.Program_End_Date>
+
+<CFSET Billback_Program_ID						= Billback_Product_Program.Billback_Program_ID>
+<CFSET Program_ID								= Billback_Product_Program.Program_ID>
+<CFSET BB_Product_Quantity						= Billback_Product_Program.BB_Product_Quantity>
+<CFSET BB_Product_UOM							= Billback_Product_Program.BB_Product_UOM>
+
+<CFSET BB_Payee_Type_ID							= Billback_Product_Program.Billback_Payee_Type_ID>
+
+<CFSET BSA_Foodservice_Customers_ID				 = Billback_Product_Program.dist_id>
+
+<CFSET Associated_Ship_To									= Billback_Product_Program.Associated_Ship_To>
+<CFSET Distributor_id_earned									= Billback_Product_Program.Distributor_id_earned>
+
+<cfset Other_Overlapped_Billbacks_ID 			= "">
+<cfset Payee_ID = bbDeviationManager.getBillbackPayee(Billback_ID, BB_Payee_Type_ID) />
+<cfset ProductReplacementID = "" />
+<cfif appSettings.getProductReplacementEnabled()>
+	<cfset BillbackDeviationManager = CreateObject("component", "components.billback.BillbackDeviationManager").init() />
+	<cfset ProductReplacementID = BillbackDeviationManager.getProductReplacementID(productId=BSA_Foodservice_Items_Master_ID)>
+</cfif>
+
+<CFOUTPUT>
+<TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0" WIDTH="#Table_Width#" ALIGN="CENTER">
+	<TR CLASS="MaintableTHEAD" VALIGN="TOP">
+		<TD>Billback</TD>
+		<TD>&nbsp;:&nbsp;</TD>
+		<TD>[#Payable_Number#]</TD>
+		<TD>#Billback_Title#</TD>
+		<TD><B>(#DateFormat(Billback_Start_Date, "mm/dd/yyyy")# - #DateFormat(Billback_End_Date, "mm/dd/yyyy")#) (#Billback_Total_Days# days)</B>
+		</TD>
+	</TR>
+	<TR CLASS="MaintableTHEAD" VALIGN="TOP">
+		<TD>Program</TD>
+		<TD>&nbsp;:&nbsp;</TD>
+		<TD>[#Program_Number#]</TD>
+		<TD>#Contract_Title#
+		<BR>(#ReReplaceNoCase(Generic_Type, "trade", application.returned_customer_setting.Trade_Label)#)
+		</TD>
+		<TD> (#DateFormat(Program_Start_Date, "mm/dd/yyyy")# - #DateFormat(Program_End_Date, "mm/dd/yyyy")#)</B>
+		</TD>
+	</TR>
+	<TR CLASS="MaintableTHEAD" VALIGN="TOP">
+		<TD>Product</TD>
+		<TD>&nbsp;:&nbsp;</TD>
+		<TD COLSPAN="3">
+		#Billback_Product_Program.Item#&nbsp;&nbsp;
+		#Billback_Product_Program.UPC# &nbsp;&nbsp;
+		#Billback_Product_Program.Description#
+		 (#ListGetAt(Discount_Type_List, BB_Product_Type_ID, ",")#)
+		</TD>
+	</TR>
+	<TR CLASS="MaintableTHEAD" VALIGN="TOP">
+		<TD><cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput></TD>
+		<TD>&nbsp;:&nbsp;</TD>
+		<TD COLSPAN="3">
+		<cfif trim(Distributor_id_earned) neq "" and trim(Distributor_id_earned) neq '00000000-0000-0000-0000-000000000000'>
+			<cfset Get_Dist_Info = bbDeviationManager.getDistributorInfo(Distributor_id_earned) />
+			#Get_Dist_Info.name#&nbsp;(#Get_Dist_Info.Ship_To#)&nbsp;::&nbsp;#Get_Dist_Info.city#, #Get_Dist_Info.state#
+		 <cfelse>
+		 	No <cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput>
+		 </cfif>
+		</TD>
+	</TR>
+</TABLE>
+</CFOUTPUT>
+
+<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Volume_Tolerance">
+SELECT
+		BB_DPPR AS Distributor_Sample_Size_Ratio,
+		BB_DPPO AS Distributor_Offset_Days,
+		<CFIF ListFindNOCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0  OR Associated_Ship_TO NEQ "">
+		BB_BAPR AS Aggregation_Sample_Size_Ratio,
+		BB_BAPO AS Aggregation_Offset_Days,
+		</CFIF>
+		BB_TET AS BB_Tolerance_TET,
+		BB_EVT AS BB_Tolerance_DVT
+FROM	BB_Basic_Setting_Detail
+WHERE
+		Billback_ID = '#Billback_ID#' AND
+		Contract_Main_Id = #Program_ID#
+</CFQUERY>
+
+<cfif Billback_Volume_Tolerance.RecordCount eq 0>
+	<!---
+	D32309 : Event error value "" cannot be converted to a number on bbk deviations grid
+	It is possible that deviation ran agianst this billback before label D31930 was in place, handle for it
+	Get any value available at billback level
+	--->
+	<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Volume_Tolerance">
+	SELECT
+			BB_DPPR AS Distributor_Sample_Size_Ratio,
+			BB_DPPO AS Distributor_Offset_Days,
+			<CFIF ListFindNOCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0  OR Associated_Ship_TO NEQ "">
+			BB_BAPR AS Aggregation_Sample_Size_Ratio,
+			BB_BAPO AS Aggregation_Offset_Days,
+			</CFIF>
+			BB_TET AS BB_Tolerance_TET,
+			BB_EVT AS BB_Tolerance_DVT
+	FROM	BB_Basic_Setting_Detail
+	WHERE
+			Billback_ID = '#Billback_ID#'
+	</CFQUERY>
+</cfif>
+
+<CFIF Ignore_Billback_Volume_Deviation EQ 0>
+
+<BR>
+<SPAN CLASS="Title2">Expected Volume Calculation</SPAN>
+<HR COLOR="Orange">
+
+
+<cfset Volume_Deviation_Applicable = 0>
+
+	<cfif BB_Payee_Type_ID EQ 1><!------ payee = distributor ----->
+			<cfset Get_Dist_Info = bbDeviationManager.getBBProdDistId(Billback_ID, Billback_Product_Detail_ID) />
+		<cfset Volume_Deviation_Applicable = 1>
+	</cfif>
+	<cfif BB_Payee_Type_ID EQ 2 OR BB_Payee_Type_ID EQ 4><!------ payee = operator, other ----->
+		<!------ see if there is a distributor associated with thie operator ----->
+		<cfset Get_Dist_Info = bbDeviationManager.getBBProdDistId(Billback_ID, Billback_Product_Detail_ID) />
+		<cfif Get_Dist_Info.recordCount>
+			<cfset Volume_Deviation_Applicable = 1>
+		</cfif>
+	</cfif>
+
+
+<CFIF Volume_Deviation_Applicable>
+	<CFSET Total_Pounds_In_Overlapped_Billbacks = 0>
+	<CFSET Total_Cases_In_Overlapped_Billbacks = 0>
+
+	<CFSET Total_Other_Billback_Volume_LB = 0>
+	<CFSET Total_Other_Billback_Volume_CS = 0>
+
+
+	<CFSET Total_Pounds_Invoiced = 0>
+	<CFSET Total_Cases_Invoiced = 0>
+	<CFSET Total_Volume_In_Operator_Deviated_Billbacks = 0>
+	<CFSET Total_Pounds_In_Operator_Deviated_Billbacks = 0>
+	<CFSET Total_Cases_In_Operator_Deviated_Billbacks = 0>
+
+	<CFIF Get_Dist_Info.recordCount GT 0>
+			<cfif trim(BSA_Foodservice_Customers_ID) eq "">
+				<CFSET BSA_Foodservice_Customers_ID = Get_Dist_Info.BSA_Foodservice_Customers_ID>
+			</cfif>
+
+		<CFIF Generic_Type EQ DEVIATION_CONSTANTS_Trade_Shelter>
+			<!------------------------ Get Program Billback Overlap dates --------------->
+			<CFQUERY DBTYPE="QUERY" NAME="All_Unordered_Dates">
+				SELECT
+					Program_Start_Date AS Start_Date,
+					Program_End_Date AS End_Date,
+					Contract_Number AS Code,
+					(BB_Type + 0) AS THIS_BILLBACK
+				FROM	Billback_Product_Program
+			UNION
+				SELECT
+					BB_Start_Date AS Start_Date,
+					BB_End_Date AS End_Date,
+					BB_Code AS Code,
+					(BB_Type + 1) AS THIS_BILLBACK
+				FROM	Billback_Product_Program
+			</CFQUERY>
+
+			<CFQUERY DBTYPE="QUERY" NAME="All_Dates">
+				SELECT	*
+				FROM	All_Unordered_Dates
+				ORDER BY Start_Date
+			</CFQUERY>
+
+			<CFQUERY DBTYPE="QUERY" NAME="Last_Date">
+				SELECT	End_Date AS This_Date
+				FROM	All_Dates
+				ORDER BY End_Date DESC
+			</CFQUERY>
+
+			<CFQUERY DBTYPE="QUERY" NAME="First_Date">
+				SELECT	Start_Date AS This_Date
+				FROM	All_Dates
+				ORDER BY Start_Date ASC
+			</CFQUERY>
+			<CFSET first_Date = First_Date.This_Date>
+			<CFSET last_Date = Last_Date.This_Date>
+
+			<CFSET Total_date_Span=DateDiff("d", first_Date, last_Date) + 1>
+
+			<CFQUERY DBTYPE="QUERY" NAME="Get_All_Dates">
+				SELECT	Start_Date AS This_Date, THIS_BILLBACK + 0 AS Date_Type
+				FROM	All_Unordered_Dates
+				UNION
+				SELECT	End_Date AS This_Date, THIS_BILLBACK + 2 AS Date_Type
+				FROM	All_Unordered_Dates
+			</CFQUERY>
+
+			<CFQUERY DBTYPE="QUERY" NAME="Get_All_Dates_Ordered">
+				SELECT	This_Date, Date_Type
+				FROM	Get_All_Dates
+				ORDER BY 	This_Date, DATE_TYPE
+			</CFQUERY>
+
+			<CFSET This_Billback_Intervals="">
+			<CFSET Other_Billbacks_Started 	= 0>
+			<CFSET This_Billback_Started 	= false>
+			<CFSET Start_Counting			= false>
+			<CFSET Total_Overlap			= 0>
+			<CFSET D_First_Date				= "">
+			<CFSET D_Last_Date				= "">
+			<CFSET Stop_Loop				= false>
+			<CFSET last_Mile_Stone			= "">
+
+			<CFLOOP QUERY="Get_All_Dates_Ordered">
+				<CFIF Get_All_Dates_Ordered.Date_Type EQ 0>
+					<!----- Other Billback STart ---->
+					<CFIF This_Billback_Started EQ true>
+						<CFSET Start_Counting = true>
+						<CFIF Other_Billbacks_Started LTE 0>
+							<CFSET D_First_Date	= Get_All_Dates_Ordered.This_Date>
+							<CFIF DATEDIFF("d", last_Mile_Stone, Get_All_Dates_Ordered.This_Date) GTE 0>
+								<CFSET This_Billback_Intervals = ListAppend(This_Billback_Intervals, "#last_Mile_Stone#~#DateAdd("d", -1, Get_All_Dates_Ordered.This_Date)#~A", ",")>
+							</CFIF>
+						</CFIF>
+					</CFIF>
+					<CFSET Other_Billbacks_Started 	= Other_Billbacks_Started + 1>
+				<CFELSEIF Get_All_Dates_Ordered.Date_Type EQ 1>
+					<!---- This Billback Start ---->
+					<CFSET This_Billback_Started 	= true>
+					<CFIF Other_Billbacks_Started GT 0>
+						<CFSET Start_Counting = true>
+						<CFSET D_First_Date	= Get_All_Dates_Ordered.This_Date>
+					</CFIF>
+					<CFSET last_Mile_Stone			= Get_All_Dates_Ordered.This_Date>
+				<CFELSEIF Get_All_Dates_Ordered.Date_Type EQ 2>
+					<!---- Other billback End ---->
+					<CFSET Other_Billbacks_Started 	= Other_Billbacks_Started - 1>
+					<CFIF Other_Billbacks_Started LTE 0>
+						<CFIF Start_Counting>
+							<CFSET D_Last_Date	= Get_All_Dates_Ordered.This_Date>
+							<CFIF IsDate(D_First_Date) AND IsDate(D_Last_Date)>
+								<CFSET Total_Overlap = Total_Overlap + DateDiff("d", D_First_Date, D_Last_Date) + 1>
+								<CFIF DATEDIFF("d", D_First_Date, D_Last_Date) GTE 0>
+									<CFSET This_Billback_Intervals = ListAppend(This_Billback_Intervals, "#D_First_Date#~#D_Last_Date#~B", ",")>
+								</CFIF>
+								<CFSET last_Mile_Stone			= DateAdd("d", 1, Get_All_Dates_Ordered.This_Date)>
+							</CFIF>
+						</CFIF>
+						<CFSET Start_Counting = false>
+					</CFIF>
+				<CFELSEIF Get_All_Dates_Ordered.Date_Type EQ 3>
+					<!----- This Billback End ---->
+					<CFIF Start_Counting>
+						<CFSET D_Last_Date	= Get_All_Dates_Ordered.This_Date>
+						<CFIF IsDate(D_First_Date) AND IsDate(D_Last_Date)>
+							<CFSET Total_Overlap = Total_Overlap + DateDiff("d", D_First_Date, D_Last_Date) + 1>
+							<CFIF DATEDIFF("d", D_First_Date, D_Last_Date) GTE 0>
+								<CFSET This_Billback_Intervals = ListAppend(This_Billback_Intervals, "#D_First_Date#~#D_Last_Date#~B", ",")>
+							</CFIF>
+						</CFIF>
+					<CFELSE>
+						<CFIF DATEDIFF("d", last_Mile_Stone, Get_All_Dates_Ordered.This_Date) GTE 0>
+							<CFSET This_Billback_Intervals = ListAppend(This_Billback_Intervals, "#last_Mile_Stone#~#Get_All_Dates_Ordered.This_Date#~A", ",")>
+						</CFIF>
+					</CFIF>
+					<CFSET This_Billback_Started 	= false>
+					<CFSET Stop_Loop				= true>
+					<CFSET Start_Counting			= false>
+				</CFIF>
+				<CFIF Stop_Loop>
+					<CFBREAK>
+				</CFIF>
+			</CFLOOP>
+			<CFSET Proper_Date_Span = "">
+			<CFSET Proper_Date_Span_Index = ListContains(This_Billback_Intervals, "~B", ",")>
+			<CFIF Proper_Date_Span_Index GT 0>
+				<CFSET consider_This_Date_Span = ListGetAt(This_Billback_Intervals, Proper_Date_Span_Index, ",")>
+				<CFSET Proper_Date_Span = ListAppend(Proper_Date_Span, ListFirst(consider_This_Date_Span, "~"), ",")>
+				<CFSET Proper_Date_Span = ListAppend(Proper_Date_Span, ListGetAT(consider_This_Date_Span, 2, "~"), ",")>
+			</CFIF>
+
+
+			<!-------------------------- Display Program Billback Date Match info ----------------------->
+
+			<CFSET Open_Layer_Caption = "Date Match Details">
+			<CF_openLayer
+				Border="#Border#"
+				BorderSize="#BorderSize#"
+				BorderColor="#BorderColor#"
+				Image="#Image#"
+				ImageOpen="#ImageOpen#"
+				Title="#Open_Layer_Caption#"
+				TitleClosed="#Open_Layer_Caption#"
+				TitleTooltip="#Open_Layer_Caption#"
+				TitleColor="#TitleColor#"
+				TitleFont="#TitleFont#"
+				TitleSize="#TitleSize#"
+				IsClosed="No"
+				Width="#width#"
+				AddScript="#AddScript#">
+			<CFOUTPUT>
+			<TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0" CLASS="Date_Dev_Table" ALIGN="CENTER" ID="Date_Overlap_Table" BACKGROUND="/Images/Grid_Blue.gif" WIDTH="#Max_Length#">
+			</CFOUTPUT>
+				<CFSETTING ENABLECFOUTPUTONLY="Yes" SHOWDEBUGOUTPUT="No">
+
+				<CFLOOP QUERY="All_Dates">
+					<CFSET Graph_Legend1 = "">
+					<CFSET Graph_Legend2 = "">
+					<CFSET Graph_Legend3 = "">
+					<CFSET Graph_Legend_Script = "">
+
+					<CFSILENT>
+					<CFSET thisItem = All_Dates.CurrentRow & Replace(CreateUUID(), "-", "_", "all")>
+					<CFSET Start_Date=Start_Date>
+					<CFSET End_Date=End_Date>
+					<CFIF THIS_BILLBACK EQ 1>
+						<CFSET Image_Name="blue.gif">
+						<CFSET GRAPH_SPAN_CLASS="GRAPHSPAN_BLUE">
+					<CFELSE>
+						<CFSET Image_Name="black.gif">
+						<CFSET GRAPH_SPAN_CLASS="GRAPHSPAN_BLACK">
+					</CFIF>
+					<CFIF THIS_BILLBACK EQ 0>
+						<CFSET sDesc="Program ## #Code#">
+					<CFELSE>
+						<CFSET sDesc="Billback ## #Code#">
+					</CFIF>
+
+					<CFSET This_Item_Empty_Span=DateDiff("d", first_Date, Start_Date)>
+					<CFSET Empty_Image_len=(This_Item_Empty_Span * Max_Length)/Total_date_Span>
+					</CFSILENT>
+					<CFOUTPUT><TR><TD>&nbsp;</TD></TR></CFOUTPUT>
+					<CF_Graph_Full
+							THIS_BILLBACK = "#THIS_BILLBACK#"
+							This_Billback_Intervals = "#This_Billback_Intervals#"
+							A_IMG="red.gif"
+							B_IMG="blue.gif"
+							A_CLASS="GRAPHSPAN_RED"
+							B_CLASS="GRAPHSPAN_BLUE"
+							Empty_Image_len="#Empty_Image_len#"
+							Max_Length="#Max_Length#"
+							Total_date_Span="#Total_date_Span#"
+							thisItem="#thisItem#"
+							START_DATE="#START_DATE#"
+							END_DATE="#END_DATE#"
+							GRAPH_SPAN_CLASS="#GRAPH_SPAN_CLASS#"
+							sDesc="#sDesc#">
+					<CFOUTPUT><TR><TD>&nbsp;</TD></TR></CFOUTPUT>
+				</CFLOOP>
+				<cfsetting enableCFoutputOnly = "No" SHOWDEBUGOUTPUT="Yes">
+			<CFOUTPUT>
+				<TR>
+					<TD>&nbsp;
+					</TD>
+				</TR>
+				<TFOOT>
+					<TR COLSPAN="100%" ALIGN="RIGHT" BGCOLOR="White">
+						<TD>&nbsp;
+						</TD>
+					</TR>
+					<TR>
+						<!--- STYLE="border-top:solid cccccc 1px;"---->
+						<TD COLSPAN="100%" ALIGN="RIGHT" BGCOLOR="White">
+						<CFIF USEIMGGRAPH>
+						<CFSET scale=(Total_date_Span/Max_Length) * 20>
+						<IMG SRC="/Images/Grid_Scale_Square.gif" BORDER="0" WIDTH="20" HEIGHT="20" ALIGN="absmiddle">&nbsp;=&nbsp;#scale# days</TD>
+						</CFIF>
+					</TR>
+				</TFOOT>
+			</TABLE>
+			</CFOUTPUT>
+			</CF_openLayer>
+			<CFSET Calulation_Start_Date = ListFirst(Proper_Date_Span, ",")>
+			<CFSET Calulation_End_Date = ListLast(Proper_Date_Span, ",")>
+		<CFELSE>
+			<CFSET Calulation_Start_Date = Billback_Start_Date>
+			<CFSET Calulation_End_Date = Billback_End_Date>
+		</CFIF>
+
+		<!--- BJF: 21666 you can now get to this for bbs without distributors. When there is no distributor, subsequent queries will throw event errors, so show alert here. --->
+		<cfif len(trim(BSA_Foodservice_Customers_ID)) IS 0>
+		No volume validation - this billback does not contain a distributor
+		<cfabort>
+		</cfif>
+
+		<!-----------------------------------------------------------------------------------
+		Other overlapped Billbacks
+		------------------------------------------------------------------------------------>
+		<CFIF IsDate(Calulation_Start_Date) AND IsDate(Calulation_End_Date) AND BSA_Foodservice_Items_Master_ID NEQ "">
+			<CFQUERY  dataSource="#application.datasource#" NAME="Other_Overlapped_Billbacks">
+
+			IF OBJECT_ID('tempdb..##Billback_Rebate') IS NOT NULL
+			DROP TABLE ##Billback_Rebate
+
+			select distinct Contract_Main.Contract_Main_ID, Contract_Main.Contract_Number, Program_Rebates_Component_Name
+			into	##Billback_Rebate
+			from 	Billback_Program_Rebate_Component
+			inner join Contract_Main
+			on		Contract_Main.Contract_Main_ID = Billback_Program_Rebate_Component.Billback_Program_ID
+			where 	Billback_ID = '#Billback_ID#'
+			and 	Billback_Program_Rebate_Component.deleted = 0
+			and 	Billback_Program_Rebate_Component.checked = 'true'
+
+			SELECT	Billback.BB_Start_Date, Billback.BB_End_Date,
+					CASE
+					WHEN DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Calulation_Start_Date)#) >= 0 THEN
+						DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Calulation_Start_Date)#)
+					ELSE
+						0
+					END AS X_Lag
+					,CASE
+					WHEN DATEDIFF(d, #CreateODBCDate(Calulation_End_Date)#, Billback.BB_End_Date) >= 0 THEN
+						DATEDIFF(d, #CreateODBCDate(Calulation_End_Date)#, Billback.BB_End_Date)
+					ELSE
+					0
+					END AS Y_Lag
+					,Billback.Billback_ID, Billback.BB_Code, Billback.BB_Title, Billback.BB_Date,
+					Contract_Main.Contract_Main_ID, Contract_Main.Contract_Number, Contract_Main.Contract_Title,
+					SUM(ISNULL(
+					<CFIF BB_Product_UOM EQ 1>
+					BB_Item_Final.Item_Volume_Paid_CS
+					<CFELSE>
+					BB_Item_Final.Item_Volume_Paid_LB
+					</CFIF>
+					, 0)) AS Billback_Volume
+			FROM	Billback
+					<CFIF Date_Approved NEQ "">
+						<CFIF IsDate(Date_Approved)>
+							INNER JOIN BB_Approved
+							ON
+							(
+								(BB_Approved.Billback_ID = Billback.Billback_ID)
+								AND
+								--(DATEDIFF(ms, BB_Approved.Date_Approved, #CreateODBCDateTime(Date_Approved)#) > 0)
+								(dbo.D_DATEDIFF('ms', BB_Approved.Date_Approved, #CreateODBCDateTime(Date_Approved)#) > 0)
+							)
+						</CFIF>
+					</CFIF>
+					<CFIF Val(BB_Payee_Type_ID) neq 0 AND Payee_ID NEQ "">
+					<CFSWITCH expression="#BB_Payee_Type_ID#">
+						<CFCASE value="1"><!--- distributor --->
+						INNER JOIN Billback_Distributor
+						ON		Billback_Distributor.Billback_ID = Billback.Billback_ID
+						AND		Billback_Distributor.Deleted = 0
+						AND		Billback_Distributor.Distributor_ID = '#Payee_ID#'
+						</CFCASE>
+						<CFCASE value="2"><!--- operator --->
+						INNER JOIN Billback_Operator
+						ON		Billback_Operator.Billback_ID = Billback.Billback_ID
+						AND		Billback_Operator.Deleted = 0
+						AND		Billback_Operator.Operator_ID = '#Payee_ID#'
+						</CFCASE>
+						<CFCASE value="3"><!--- broker --->
+						INNER JOIN Billback_Broker
+						ON		Billback_Broker.Billback_ID = Billback.Billback_ID
+						AND		Billback_Broker.Deleted = 0
+						AND		Billback_Broker.Broker_ID = '#Payee_ID#'
+						</CFCASE>
+					</CFSWITCH>
+					</CFIF>
+					INNER JOIN	Billback_Program
+					ON
+					(
+						(Billback_Program.Billback_ID = Billback.Billback_ID)
+						AND
+						(Billback_Program.Deleted = 0)
+					)
+					INNER JOIN	Contract_Main
+					ON
+					(
+						(Contract_Main.Contract_Number = '#Program_Number#')
+						AND
+						(Contract_Main.Contract_Main_ID = Billback_Program.Program_ID)
+					)
+					<cfif appSettings.Claims_at_Comp_Level>
+						left JOIN  Billback_Program_Rebate_Component
+							on Billback_Program_Rebate_Component.billback_program_id = Contract_Main.contract_main_id
+							and Billback_Program_Rebate_Component.billback_id = billback.billback_id
+							<cfif BB_Product_Type_ID neq 2>and 1=2</cfif>
+					</cfif>
+					INNER JOIN	Billback_Product
+							ON
+								(
+									(Billback_Product.Billback_Program_ID = Billback_Program.Billback_Program_ID)
+									AND
+									(Billback_Product.Deleted = 0)
+									AND
+									(cast(Billback_Product.Product_ID as nvarchar(50)) IN ('#BSA_Foodservice_Items_Master_ID#'<cfif ProductReplacementID neq "">,'#ProductReplacementID#'</cfif>))
+								)
+					INNER JOIN	Billback_Product_Detail
+							on 	Billback_Product_Detail.Billback_ID = billback.billback_id
+							and Billback_Product_Detail.Billback_Product_ID = Billback_Product.Billback_Product_ID
+							and billback_Product_Detail.Distributor_id_Earned = '#BSA_Foodservice_Customers_ID#'
+							and Billback_Product_Detail.deleted = 0
+							and	Billback_Product_Detail.BB_Product_Type_ID = #BB_Product_Type_ID#
+					INNER JOIN	BB_Item_Final
+							ON
+							(
+								(BB_Item_Final.Billback_Program_ID = Billback_Program.Billback_Program_ID)
+								AND
+								(BB_Item_Final.Billback_Product_ID = Billback_Product.Billback_Product_ID)
+								AND
+								(BB_Item_Final.Deleted = 0)
+							)
+					INNER JOIN 	BB_Item_Final_Detail ON BB_Item_Final_Detail.BB_Item_Final_ID = BB_Item_Final.BB_Item_Final_ID AND
+								BB_Item_Final_Detail.BB_Product_Type = #BB_Product_Type_ID# AND
+								BB_Item_Final_Detail.Deleted = 0
+			WHERE
+				Billback.Deleted = 0
+				AND
+				Billback.Billback_Status_ID >= #DEVIATION_OVERLAPPED_BB_STATUS#
+				AND 	Billback.Billback_Status_ID <> 8
+				AND BILLBACK.Billback_Payee_Type_ID = #Val(BB_Payee_Type_ID)#
+				AND
+				Billback.Billback_ID <> '#Billback_ID#'
+				AND Billback.BB_Amount > 0
+				<cfif appSettings.Claims_at_Comp_Level>
+				AND (
+						(	Billback_Product_Detail.BB_Product_Type_ID = 2
+							AND Billback_Program_Rebate_Component.deleted = 0
+							and Billback_Program_Rebate_Component.checked = 'true'
+							and Billback_Program_Rebate_Component.Program_Rebates_Component_Name
+								in ( 	select distinct Program_Rebates_Component_Name
+										from ##Billback_Rebate as Billback_Rebate
+										where Billback_Rebate.contract_number = contract_Main.contract_number
+									)
+							)
+							or Billback_Product_Detail.BB_Product_Type_ID != 2
+						)
+				</cfif>
+				/*AND --mws coment out for multi dists. Get Distributor at the product level billback_Product_Detail.Distributor_id_Earned
+				EXISTS
+				(
+					SELECT Billback_Distributor.Billback_Distributor_ID
+					FROM	Billback_Distributor
+					WHERE
+							Billback_Distributor.Billback_ID = Billback.Billback_ID
+							AND
+							Billback_Distributor.Distributor_ID = '#BSA_Foodservice_Customers_ID#'
+							AND
+							Billback_Distributor.Deleted = 0
+							AND
+							Billback.Billback_Payee_Type_ID = 1
+				)*/
+				AND
+				(
+					(
+						(DATEDIFF(d, #CreateODBCDate(Calulation_Start_Date)#, Billback.BB_Start_Date) >= 0)
+						AND
+						(DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Calulation_End_Date)#) >= 0)
+					)
+					OR
+					(
+						(DATEDIFF(d, #CreateODBCDate(Calulation_Start_Date)#, Billback.BB_End_Date) >= 0)
+						AND
+						(DATEDIFF(d, Billback.BB_End_Date, #CreateODBCDate(Calulation_End_Date)#) >= 0)
+					)
+					OR
+					(
+						(DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Calulation_Start_Date)#) >= 0)
+						AND
+						(DATEDIFF(d, #CreateODBCDate(Calulation_Start_Date)#, Billback.BB_End_Date) >= 0)
+					)
+					OR
+					(
+						(DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Calulation_End_Date)#) >= 0)
+						AND
+						(DATEDIFF(d, #CreateODBCDate(Calulation_End_Date)#, Billback.BB_End_Date) >= 0)
+					)
+				)
+				Group By Billback.BB_Start_Date, Billback.BB_End_Date,
+						Billback.Billback_ID, Billback.BB_Code, Billback.BB_Title, Billback.BB_Date,
+						Contract_Main.Contract_Main_ID, Contract_Main.Contract_Number, Contract_Main.Contract_Title
+				</CFQUERY>
+
+				<cfset Other_Overlapped_Billbacks_ID = ValueList(Other_Overlapped_Billbacks.Billback_ID) />
+
+			<CFELSE>
+				<CFSET Other_Overlapped_Billbacks = QueryNew("")>
+			</CFIF>
+
+			<CFSET Open_Layer_Caption = "Other Billback Overlap Details from #DateFormat(Calulation_Start_Date, "mm/dd/yyyy")# to #DateFormat(Calulation_End_Date, "mm/dd/yyyy")#">
+			<CF_openLayer
+				Border="#Border#"
+				BorderSize="#BorderSize#"
+				BorderColor="#BorderColor#"
+				Image="#Image#"
+				ImageOpen="#ImageOpen#"
+				Title="#Open_Layer_Caption#"
+				TitleClosed="#Open_Layer_Caption#"
+				TitleTooltip="#Open_Layer_Caption#"
+				TitleColor="#TitleColor#"
+				TitleFont="#TitleFont#"
+				TitleSize="#TitleSize#"
+				IsClosed="No"
+				Width="#width#"
+				AddScript="#AddScript#">
+			<CFINCLUDE TEMPLATE="Date_Overlap_With_Other_Billbacks.cfm">
+
+			<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="<CFOUTPUT>#Table_Width#</CFOUTPUT>">
+			<CFSET Total_Volume_In_Overlapped_Billbacks = 0>
+			<CFIF Other_Overlapped_Billbacks.recordCount GT 0>
+					<CFOUTPUT>
+					<TR BGCOLOR="FFCE84" CLASS="MaintableTHEAD" STYLE="border-bottom:solid 93BEE2 1px;">
+						<TD>&nbsp;</TD>
+						<TD>Billback</TD>
+						<TD>Interval</TD>
+						<TD>Overlap</TD>
+						<TD>&nbsp;</TD>
+						<TD>Interval</TD>
+						<TD>&nbsp;</TD>
+						<TD>%</TD>
+						<TD>&nbsp;</TD>
+						<TD>Volume (#ListGetAt(DEVIATION_QUANTITY_UOM, BB_Product_UOM, ",")#)</TD>
+						<TD>&nbsp;</TD>
+						<TD>Weighted Volume</TD>
+						<TD>&nbsp;</TD>
+					</TR>
+					</CFOUTPUT>
+					<CFSET sample_Lag = DateDiff("d", Calulation_Start_Date, Calulation_End_Date) + 1>
+					<CFOUTPUT QUERY="Other_Overlapped_Billbacks" GROUP="Billback_ID">
+					<CFSET BB_Span = DateDiff("d", BB_Start_Date, BB_End_Date) + 1>
+					<CFSET Dates_Overlapped = BB_Span - X_Lag - Y_Lag>
+					<!----
+					<CFSET Weighted_Overlap = (Dates_Overlapped/sample_Lag) * 100>
+					--->
+					<CFSET Weighted_Overlap = (Dates_Overlapped/BB_Span) * 100>
+					<CFSET Weighted_OP_Dev_Volume = (Weighted_Overlap * Billback_Volume)/100>
+					<CFSET Total_Volume_In_Overlapped_Billbacks = Total_Volume_In_Overlapped_Billbacks + Weighted_OP_Dev_Volume>
+					<TR>
+						<TD>&nbsp;</TD>
+						<TD>[#BB_Code#]</TD>
+						<TD>#DateFormat(BB_Start_Date, "mm/dd/yyyy")# - #DateFormat(BB_End_Date, "mm/dd/yyyy")# </TD>
+						<TD>#Dates_Overlapped#</TD>
+						<TD ALIGN="CENTER">/</TD>
+						<TD>#BB_Span#</TD>
+						<TD ALIGN="CENTER">=</TD>
+						<TD>#NumberFormat(Weighted_Overlap, DEVIATION_PERCENT_FORMAT)#%</TD>
+						<TD ALIGN="CENTER">*</TD>
+						<TD>#NumberFormat(Billback_Volume, DEVIATION_VOLUME_FORMAT)#</TD>
+						<TD ALIGN="CENTER">=</TD>
+						<TD>#NumberFormat(Weighted_OP_Dev_Volume, DEVIATION_VOLUME_FORMAT)#</TD>
+						<TD>&nbsp;</TD>
+					</CFOUTPUT>
+				<CFELSE>
+					<TR CLASS="MaintableTHEAD">
+						<TD COLSPAN="100%"><B><FONT COLOR="Red">No Overlapped Billbacks found</FONT></B></TD>
+					</TR>
+				</CFIF>
+				<CFIF BB_Product_UOM EQ 1>
+					<CFSET Total_Cases_In_Overlapped_Billbacks = Total_Volume_In_Overlapped_Billbacks>
+					<CFSET Total_Pounds_In_Overlapped_Billbacks = Total_Cases_In_Overlapped_Billbacks * Net_Weight>
+
+					<CFOUTPUT>
+					<TR CLASS="MaintableTHEAD">
+						<TD COLSPAN="10" ALIGN="RIGHT">
+						Total Volume from overlapped Billbacks (#Application.UOMCaseAbrSingular#) (&##931; Volume (#Application.UOMCaseAbrSingular#))
+						</TD>
+						<TD ALIGN="CENTER">=</TD>
+						<TD>#NumberFormat(Total_Cases_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+						<TD>&nbsp;</TD>
+					</TR>
+					<TR CLASS="MaintableTHEAD" TITLE="#NumberFormat(Total_Cases_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)# = #NumberFormat(Total_Pounds_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)# / #Net_Weight#">
+						<TD COLSPAN="10" ALIGN="RIGHT">
+						Total Volume from overlapped Billbacks (#Application.UOMPoundAbrSingular#) (Total Volume (#Application.UOMCaseAbrSingular#) * Net Weight)
+						</TD>
+						<TD ALIGN="CENTER">=</TD>
+						<TD>#NumberFormat(Total_Pounds_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+						<TD>&nbsp;</TD>
+					</TR>
+					</CFOUTPUT>
+				<CFELSE>
+					<CFSET Total_Pounds_In_Overlapped_Billbacks = Total_Volume_In_Overlapped_Billbacks>
+					<CFSET Total_Cases_In_Overlapped_Billbacks = Total_Pounds_In_Overlapped_Billbacks / Net_Weight>
+					<CFOUTPUT>
+					<TR CLASS="MaintableTHEAD">
+						<TD COLSPAN="10" ALIGN="RIGHT">
+						Total Volume from overlapped Billbacks (#Application.UOMPoundAbrSingular#) (&##931; Volume (#Application.UOMPoundAbrSingular#))
+						</TD>
+						<TD ALIGN="CENTER">=</TD>
+						<TD>#NumberFormat(Total_Pounds_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+						<TD>&nbsp;</TD>
+					</TR>
+					<TR CLASS="MaintableTHEAD" TITLE="#NumberFormat(Total_Cases_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)# = #NumberFormat(Total_Pounds_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)# / #Net_Weight#">
+						<TD COLSPAN="10" ALIGN="RIGHT">
+						Total Volume from overlapped Billbacks (#Application.UOMCaseAbrSingular#) (Total Volume (#Application.UOMPoundAbrSingular#) / Net Weight)
+						</TD>
+						<TD ALIGN="CENTER">=</TD>
+						<TD>#NumberFormat(Total_Cases_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+						<TD>&nbsp;</TD>
+					</TR>
+					</CFOUTPUT>
+				</CFIF>
+
+			</TABLE>
+		</CF_openLayer>
+
+
+		<CFIF Billback_Volume_Tolerance.BB_Tolerance_TET EQ 1>
+			<CFSET check_Date="Invoice_Header.Invoice_Date">
+		<CFELSE>
+			<CFSET check_Date="Invoice_Header.Ship_Date">
+		</CFIF>
+
+		<CFIF Generic_Type EQ DEVIATION_CONSTANTS_Trade_Shelter>
+			<CFSET 	Sample_Size_Start_Date = Calulation_Start_Date>
+			<CFSET 	Sample_Size_End_Date = Calulation_End_Date>
+		<CFELSE>
+			<CFOUTPUT>
+			<HR COLOR="Orange" STYLE="HEIGHT:1px;margin-left:10px;">
+			<!--------------------- Show how we arrived at the sample size --------------->
+			<CF_openLayer
+				Border="#Border#"
+				BorderSize="#BorderSize#"
+				BorderColor="#BorderColor#"
+				Image="#Image#"
+				ImageOpen="#ImageOpen#"
+				Title="Invoice Sample Size Details"
+				TitleClosed="Invoice Sample Size Details"
+				TitleTooltip="Invoice Sample Size Details"
+				TitleColor="#TitleColor#"
+				TitleFont="#TitleFont#"
+				TitleSize="#TitleSize#"
+				IsClosed="Yes"
+				Width="#width#"
+				AddScript="#AddScript#">
+				<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="#Table_Width#" CLASS="Maintable">
+					<TR>
+						<TD>Billback Delivery Interval</TD>
+						<TD>&nbsp;</TD>
+						<TD>#DateFormat(Billback_Start_Date, "mm/dd/yyy")#  -  #DateFormat(Billback_End_Date, "mm/dd/yyyy")#</TD>
+					</TR>
+					<TR>
+						<TD>Billback No of Days</TD>
+						<TD>&nbsp;</TD>
+						<TD>#Billback_Total_Days#</TD>
+					</TR>
+					<CFIF BB_D_Template_Overrides_Deviation_Tolerances EQ 1> <!--- BB_D_Purchase_Period_OverRide --->
+						<CFSET Sample_Size =  BB_D_Purchase_Period_OverRide>
+						<CFSET 	Sample_Size_End_Date = Billback_End_Date>
+						<CFSET 	Sample_Size_Start_Date=DateAdd("d", (BB_D_Purchase_Period_OverRide * -1) + 1, Sample_Size_End_Date)>
+						<TR>
+							<TD>Template Purchase Period Over Ride</TD>
+							<TD>&nbsp;</TD>
+							<TD>#BB_D_Purchase_Period_OverRide#</TD>
+						</TR>
+
+					<CFELSE>
+						<TR>
+							<TD>#application.returned_customer_setting.distributor_label_singular# Purchase Period Ratio</TD>
+							<TD>&nbsp;</TD>
+							<TD>#Billback_Volume_Tolerance.Distributor_Sample_Size_Ratio#</TD>
+						</TR>
+						<CFSET Sample_Size = Billback_Total_Days * Billback_Volume_Tolerance.Distributor_Sample_Size_Ratio>
+						<TR>
+							<TD>Sample Size</TD>
+							<TD>#Billback_Total_Days# * #Billback_Volume_Tolerance.Distributor_Sample_Size_Ratio# = </TD>
+							<TD>#Sample_Size#</TD>
+						</TR>
+						<TR>
+							<TD>#application.returned_customer_setting.distributor_label_singular# Purchase Period Offset</TD>
+							<TD>&nbsp;</TD>
+							<TD>#Billback_Volume_Tolerance.Distributor_Offset_Days# days</TD>
+						</TR>
+						<CFSET 	Purchase_Period_Buffer=DateAdd("d", (Billback_Volume_Tolerance.Distributor_Offset_Days * -1) + 1, Billback_End_Date)>
+						<TR>
+							<TD>#application.returned_customer_setting.distributor_label_singular# Purchase Period Buffer</TD>
+							<TD>&nbsp;</TD>
+							<TD>
+							<CFIF DATEDIFF("d", Purchase_Period_Buffer, Billback_End_Date) GTE 0>
+							#DateFormat(Purchase_Period_Buffer, "mm/dd/yyyy")# - #DateFormat(Billback_End_Date, "mm/dd/yyyy")#
+							<CFELSE>
+							No Buffer
+							</CFIF>
+							</TD>
+						</TR>
+						<CFSET 	Sample_Size_End_Date=DateAdd("d", -1, Purchase_Period_Buffer)>
+						<CFSET 	Sample_Size_Start_Date=DateAdd("d", (Sample_Size * -1) + 1, Sample_Size_End_Date)>
+					</CFIF>
+					<TR>
+						<TD>Invoice Sample</TD>
+						<TD>&nbsp;</TD>
+						<TD>#DateFormat(Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(Sample_Size_End_Date, "mm/dd/yyyy")#</TD>
+					</TR>
+					<TR>
+						<TD>Eligibility Trigger</TD>
+						<TD>&nbsp;</TD>
+						<TD>
+						#ListGetAt(DEVIATION_CONSTANTS_Trade_Eligibility_Triggers, Billback_Volume_Tolerance.BB_Tolerance_TET, ",")#
+						</TD>
+					</TR>
+				</TABLE>
+			</CF_openLayer>
+			</CFOUTPUT>
+		</CFIF>
+
+
+		<CFIF IsDate(Calulation_Start_Date) AND IsDate(Calulation_End_Date) AND BSA_Foodservice_Items_Master_ID NEQ "">
+			<!------------------- Get invoice info for the sample size ----------------->
+			<CFQUERY  dataSource="#application.datasource#" NAME="Invoice_Info">
+			<cfif BB_Payee_Type_ID eq 2>
+				<!--- When payee is operator, include records with FOB PRICE IND=X if the Operator ID on the invoice is present on the program --->
+				IF OBJECT_ID('tempdb..##tmp_program_operators') IS NOT NULL
+				DROP TABLE ##tmp_program_operators
+
+				SELECT	Contract_Operators.BSA_Operator_ID
+				INTO	##tmp_program_operators
+				FROM	Contract_Operators
+				WHERE	Contract_Operators.Contract_Main_ID = <cfqueryparam cfsqltype="cf_sql_integer" value="#Program_ID#" />
+				AND		Contract_Operators.Deleted = 0
+			</cfif>
+			SELECT	Pounds_Invoiced, Cases_Invoiced, LB_Unit_Price, #check_Date# AS This_Date, Invoice_Header.Shared_Invoice_Number
+			FROM
+				Invoice_Header
+				INNER JOIN	Invoice_Detail
+				ON
+				(
+					(Invoice_Detail.Invoice_Header_ID = Invoice_Header.Invoice_Header_ID)
+					AND
+					(Invoice_Detail.BSA_Foodservice_Items_Master_ID IN ('#BSA_Foodservice_Items_Master_ID#'<cfif ProductReplacementID neq "">,'#ProductReplacementID#'</cfif>))
+					AND
+					(Invoice_Detail.Deleted = 0)
+					<cfif appSettings.getCheckOrderClass()>
+					AND Invoice_Detail.Order_Class IN (#ListQualify(appSettings.getOrderClassValue(), "'", ",")#)
+					</cfif>
+					<!--- D14033 Do not consider items with FOB type of X --->
+					AND ISNULL(Invoice_Detail.FOB_Price_Ind, '') NOT IN ('C', 'B', 'K')
+					--- D21756 -- Commentting based on the discussion with Paul
+					--- D22024 -- Uncommenting the Operator and commenting the Negative CS check -- We should do 21756 only in fixed rate
+					<!--- Include records with FOB PRICE IND=X if the Operator ID on the invoice is present on the program --->
+					AND	((ISNULL(Invoice_Detail.FOB_PRICE_IND, 'N') NOT IN ('X')
+						AND ISNULL(Invoice_Detail.BSA_Operator_ID, 0) = 0)
+					<cfif BB_Payee_Type_ID eq 2>
+					OR	Invoice_Detail.BSA_Operator_ID IN (SELECT BSA_Operator_ID FROM ##tmp_program_operators)
+					</cfif>
+					)
+					--AND ISNULL(Cast(Invoice_Detail.Cases_Invoiced as float), 0) > 0
+				)
+			WHERE
+				Invoice_Header.BSA_Foodservice_Customers_ID = '#BSA_Foodservice_Customers_ID#'
+				AND
+				DATEDIFF(d, #CreateODBCDate(Sample_Size_Start_Date)#, #check_Date#) >= 0
+				AND
+				DATEDIFF(d, #check_Date#, #CreateODBCDate(Sample_Size_End_Date)#) >= 0
+				AND
+				Invoice_Header.Deleted = 0
+			ORDER BY Invoice_Header.Shared_Invoice_Number, Invoice_Header.Invoice_Date
+			</CFQUERY>
+		<CFELSE>
+			<CFSET Invoice_Info = QueryNew("")>
+		</CFIF>
+
+		<CFOUTPUT>
+		<CFIF isDate(Sample_Size_Start_Date)>
+			<CFSET Open_Layer_Caption = "Invoices from #DateFormat(Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(Sample_Size_End_Date, "mm/dd/yyyy")#">
+		<CFELSE>
+			<CFSET Open_Layer_Caption = "No Valid date span">
+		</CFIF>
+		<CF_openLayer
+				Border="#Border#"
+				BorderSize="#BorderSize#"
+				BorderColor="#BorderColor#"
+				Image="#Image#"
+				ImageOpen="#ImageOpen#"
+				Title="#Open_Layer_Caption#"
+				TitleClosed="#Open_Layer_Caption#"
+				TitleTooltip="#Open_Layer_Caption#"
+				TitleColor="#TitleColor#"
+				TitleFont="#TitleFont#"
+				TitleSize="#TitleSize#"
+				IsClosed="Yes"
+				Width="#width#"
+				AddScript="#AddScript#">
+		<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="#Table_Width#" CLASS="Maintable">
+		<!----<CAPTION ALIGN="Left" STYLE="font-size:11px;font-weight:bold;">Invoices from #DateFormat(Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(Sample_Size_End_Date, "mm/dd/yyyy")#</CAPTION>---->
+			<CFIF Invoice_Info.recordCount GT 0>
+				<TR BGCOLOR="FFCE84" CLASS="MaintableTHEAD" STYLE="border-bottom:solid 93BEE2 1px;">
+					<TD WIDTH="30">&nbsp;</TD>
+					<TD>invoice ##</TD>
+					<TD>#ListGetAt(DEVIATION_CONSTANTS_Trade_Eligibility_Triggers, Billback_Volume_Tolerance.BB_Tolerance_TET, ",")#</TD>
+					<TD ALIGN="RIGHT">Volume (#Application.UOMPoundAbrSingular#)</TD>
+					<TD ALIGN="RIGHT">Volume (#Application.UOMCaseSingular#)</TD>
+					<TD WIDTH="30">&nbsp;</TD>
+				</TR>
+				<CFLOOP QUERY="Invoice_Info">
+				<CFSET Total_Pounds_Invoiced = Total_Pounds_Invoiced + Invoice_Info.Pounds_Invoiced>
+				<CFSET Total_Cases_Invoiced = Total_Cases_Invoiced + Invoice_Info.Cases_Invoiced>
+				<TR>
+					<TD>&nbsp;</TD>
+					<TD>#Shared_Invoice_Number#</TD>
+					<TD>#DateFormat(Invoice_Info.This_Date, "mm/dd/yyyy")#</TD>
+					<TD ALIGN="RIGHT">#NumberFormat(Invoice_Info.Pounds_Invoiced, DEVIATION_VOLUME_FORMAT)#</TD>
+					<TD ALIGN="RIGHT">#NumberFormat(Invoice_Info.Cases_Invoiced, DEVIATION_VOLUME_FORMAT)#</TD>
+					<TD>&nbsp;</TD>
+				</TR>
+				</CFLOOP>
+			<CFELSE>
+				<TR CLASS="MaintableTHEAD">
+					<TD COLSPAN="100%"><B><FONT COLOR="Red">No Invoice found</FONT></B></TD>
+				</TR>
+			</CFIF>
+			<TR CLASS="MaintableTHEAD">
+				<TD COLSPAN="5" ALIGN="RIGHT"><B>Total Volume &nbsp;&nbsp; (&##931; Volume (#Application.UOMPoundAbrSingular#) =</B>#NumberFormat(Total_Pounds_Invoiced, DEVIATION_VOLUME_FORMAT)#
+				</TD>
+			</TR>
+			<TR CLASS="MaintableTHEAD">
+				<TD COLSPAN="5" ALIGN="RIGHT"><B>Total Volume &nbsp;&nbsp; (&##931; Volume (#Application.UOMCaseAbrSingular#) =</B>#NumberFormat(Total_Cases_Invoiced, DEVIATION_VOLUME_FORMAT)#
+				</TD>
+			</TR>
+		</TABLE>
+		</CF_openLayer>
+		</CFOUTPUT>
+
+
+		<CFIF (ListFindNoCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0  OR Associated_Ship_TO NEQ "") AND BSA_Foodservice_Items_Master_ID NEQ "">
+			<HR COLOR="Orange" STYLE="HEIGHT:1px;margin-left:10px;">
+			<CFOUTPUT>
+				<!--------------------- Show how we arrived at the sample size for getting Operator Deviated Billbacks --------------->
+			<CF_openLayer
+				Border="#Border#"
+				BorderSize="#BorderSize#"
+				BorderColor="#BorderColor#"
+				Image="#Image#"
+				ImageOpen="#ImageOpen#"
+				Title="#application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Billback Sample Size Details"
+				TitleClosed="#application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Billback Sample Size Details"
+				TitleTooltip="#application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Billback Sample Size Details"
+				TitleColor="#TitleColor#"
+				TitleFont="#TitleFont#"
+				TitleSize="#TitleSize#"
+				IsClosed="Yes"
+				Width="#width#"
+				AddScript="#AddScript#">
+				<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="#Table_Width#" CLASS="Maintable">
+					<TR>
+						<TD>Billback Delivery Interval</TD>
+						<TD>&nbsp;</TD>
+						<TD>#DateFormat(Billback_Start_Date, "mm/dd/yyy")#  -  #DateFormat(Billback_End_Date, "mm/dd/yyyy")#</TD>
+					</TR>
+					<TR>
+						<TD>Billback No of Days</TD>
+						<TD>&nbsp;</TD>
+						<TD>#Billback_Total_Days#</TD>
+					</TR>
+				<CFIF BB_D_Template_Overrides_Deviation_Tolerances EQ 1><!--- BB_D_Aggregation_Period_OverRide --->
+						<CFSET Sample_Size =  BB_D_Aggregation_Period_OverRide>
+						<CFSET 	Sample_Size_End_Date = Billback_End_Date>
+						<CFSET 	Sample_Size_Start_Date=DateAdd("d", (BB_D_Aggregation_Period_OverRide * -1) + 1, Sample_Size_End_Date)>
+					<TR>
+						<TD>Template Aggregation Period Over Ride</TD>
+						<TD>&nbsp;</TD>
+						<TD>#BB_D_Aggregation_Period_OverRide#</TD>
+					</TR>
+
+				<CFELSE>
+					<TR>
+						<TD>Billback Aggregation Period Ratio</TD>
+						<TD>&nbsp;</TD>
+						<TD>#Billback_Volume_Tolerance.Aggregation_Sample_Size_Ratio#</TD>
+					</TR>
+					<CFSET Sample_Size = Billback_Total_Days * Billback_Volume_Tolerance.Aggregation_Sample_Size_Ratio>
+					<TR>
+						<TD>Sample Size</TD>
+						<TD>&nbsp;</TD>
+						<TD>#Sample_Size#</TD>
+					</TR>
+					<TR>
+						<TD>Billback Aggregation Period Offset</TD>
+						<TD>&nbsp;</TD>
+						<TD>#Billback_Volume_Tolerance.Aggregation_Offset_Days# days</TD>
+					</TR>
+					<CFSET 	Purchase_Period_Buffer=DateAdd("d", (Billback_Volume_Tolerance.Aggregation_Offset_Days * -1) + 1, Billback_End_Date)>
+					<TR>
+						<TD>Aggregation Period Buffer</TD>
+						<TD>&nbsp;</TD>
+						<TD>
+						<CFIF DateDiff("d", Purchase_Period_Buffer,Billback_End_Date) GTE 0>
+						#DateFormat(Purchase_Period_Buffer, "mm/dd/yyyy")# - #DateFormat(Billback_End_Date, "mm/dd/yyyy")# (#Evaluate("#DateDiff("d", Purchase_Period_Buffer, Billback_End_Date)#+1")# days)</TD>
+						<CFELSE>
+						No Buffer
+						</CFIF>
+					</TR>
+					<CFSET 	Sample_Size_End_Date=DateAdd("d", -1, Purchase_Period_Buffer)>
+					<CFSET 	Sample_Size_Start_Date=DateAdd("d", (Sample_Size * -1) + 1, Sample_Size_End_Date)>
+
+				</CFIF>
+
+					<TR>
+						<TD>Invoice Sample</TD>
+						<TD>&nbsp;</TD>
+						<TD>#DateFormat(Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(Sample_Size_End_Date, "mm/dd/yyyy")# (#DateDiff("d", Sample_Size_Start_Date, Sample_Size_End_Date + 1)# Days)</TD>
+					</TR>
+				</TABLE>
+			</CF_openLayer>
+
+			<!------------------- Get Operator Deviated BBs for the sample size ----------------->
+      <!---
+            D22023: Anand Rao/14-Jan-10
+            Solo - BB volume calculation windows displays billbacks
+       --->
+      <cfif (DateCompare(Sample_Size_End_Date,Sample_Size_Start_Date) GTE 0)>
+
+			<CFQUERY  dataSource="#application.datasource#" NAME="Operator_Deviated_Billbacks">
+				SELECT	Billback.BB_Start_Date, Billback.BB_End_Date,
+						CASE
+						WHEN DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Sample_Size_Start_Date)#) >= 0 THEN
+							DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Sample_Size_Start_Date)#)
+						ELSE
+							0
+						END AS X_Lag
+						,CASE
+						WHEN DATEDIFF(d, #CreateODBCDate(Sample_Size_End_Date)#, Billback.BB_End_Date) >= 0 THEN
+							DATEDIFF(d, #CreateODBCDate(Sample_Size_End_Date)#, Billback.BB_End_Date)
+						ELSE
+						0
+						END AS Y_Lag
+						,Billback.Billback_ID, Billback.BB_Code, Billback.BB_Title, Billback.BB_Date,
+						Contract_Main.Contract_Main_ID, Contract_Main.Contract_Number, Contract_Main.Contract_Title,
+						ISNULL(
+						<cfif BB_Product_UOM EQ 1>
+						BB_Item_Final.Item_Volume_Paid_CS
+						<cfelse>
+						BB_Item_Final.Item_Volume_Paid_LB
+						</cfif>
+						, 0) AS Billback_Volume
+						<!--- The billback may have an associated distributor when the payee is an operator OR broker. --->
+						,CASE billback.Billback_Payee_Type_ID
+							WHEN 2
+								THEN 
+									Billback_Operator.Associated_Ship_to
+							WHEN 3
+								THEN				
+									Billback_Broker.Associated_Ship_to
+							ELSE
+								NULL							
+							END
+
+						As Associated_Ship_to
+				FROM	Billback
+						<CFIF Date_Approved NEQ "">
+							<CFIF IsDate(Date_Approved)>
+								INNER JOIN BB_Approved
+								ON
+								(
+									(BB_Approved.Billback_ID = Billback.Billback_ID)
+									AND
+									--(DATEDIFF(s, BB_Approved.Date_Approved, #CreateODBCDateTime(Date_Approved)#) > 0)
+									(dbo.D_DATEDIFF('ms', BB_Approved.Date_Approved, #CreateODBCDateTime(Date_Approved)#) > 0)
+								)
+							</CFIF>
+						</CFIF>
+						INNER JOIN	Billback_Program
+						ON
+						(
+							(Billback_Program.Billback_ID = Billback.Billback_ID)
+							AND
+							(Billback_Program.Deleted = 0)
+						)
+						INNER JOIN	Contract_Main
+						ON
+						(
+						<!--- BJF: D14360	(Contract_Main.Contract_Number <> '#Program_Number#')
+							AND --->
+							(Contract_Main.Contract_Main_ID = Billback_Program.Program_ID)
+						)
+						INNER JOIN	Billback_Product
+						ON
+						(
+							(Billback_Product.Billback_Program_ID = Billback_Program.Billback_Program_ID)
+							AND
+							(Billback_Product.Deleted = 0)
+							AND
+							(Billback_Product.Product_ID IN ('#BSA_Foodservice_Items_Master_ID#'<cfif ProductReplacementID neq "">,'#ProductReplacementID#'</cfif>))
+							AND
+							(Billback_Product.Distributor_Id = '#BSA_Foodservice_Customers_ID#')
+						)
+						INNER JOIN	BB_Item_Final
+						ON
+						(
+							(BB_Item_Final.Billback_Program_ID = Billback_Program.Billback_Program_ID)
+							AND
+							(BB_Item_Final.Billback_Product_ID = Billback_Product.Billback_Product_ID)
+							AND
+							(BB_Item_Final.Deleted = 0)
+						)
+						INNER JOIN 	BB_Item_Final_Detail ON BB_Item_Final_Detail.BB_Item_Final_ID = BB_Item_Final.BB_Item_Final_ID AND
+									BB_Item_Final_Detail.BB_Product_Type = #BB_Product_Type_ID# AND
+									BB_Item_Final_Detail.Deleted = 0
+						LEFT JOIN Billback_Operator
+						ON Billback.Billback_ID = Billback_Operator.Billback_ID
+						AND Billback_Operator.Deleted = 0
+
+						LEFT JOIN Billback_Broker
+						ON Billback.Billback_ID = Billback_Broker.Billback_ID
+						AND Billback_Broker.Deleted = 0
+				WHERE
+					Billback.Deleted = 0
+					AND
+					Billback.Billback_Status_ID >= #DEVIATION_OVERLAPPED_BB_STATUS#
+					AND 	Billback.Billback_Status_ID <> 8
+					AND
+					Billback.Billback_ID <> '#Billback_ID#'
+					AND Billback.BB_Amount > 0
+					AND BILLBACK.Billback_Payee_Type_ID = #Val(BB_Payee_Type_ID)#
+					AND
+					EXISTS
+					(
+						SELECT	Program_Control_Panel_Options.ProgramControl_Panel_Options_ID
+						FROM	Program_Control_Panel_Options
+						WHERE
+						(
+								(
+									Program_Control_Panel_Options.Generic_Type IN (#ListQualify(DEVIATION_CONSTANTS_Operator_Deviated, "'")#)
+									OR 
+									(CAST(Billback_Operator.Associated_Ship_To As varchar(50)) != '' AND Billback_Operator.Associated_Ship_to IS NOT NULL)
+									OR 
+									(CAST(Billback_Broker.Associated_Ship_To As varchar(50)) != '' AND Billback_Broker.Associated_Ship_to IS NOT NULL)
+								)
+								AND
+								(Program_Control_Panel_Options.ProgramControl_Panel_Options_ID  = Contract_Main.ProgramType_ID)
+						)
+					)
+					/*AND  mws coment out for multi dists. Get Distributor at the product level: billback_Product_Detail.Distributor_id_Earned
+					EXISTS
+					(
+						SELECT Billback_Distributor.Billback_Distributor_ID
+						FROM	Billback_Distributor
+						WHERE
+								Billback_Distributor.Billback_ID = Billback.Billback_ID
+								AND
+								Billback_Distributor.Distributor_ID = '#BSA_Foodservice_Customers_ID#'
+								AND
+								Billback_Distributor.Deleted = 0
+								AND
+								Billback.Billback_Payee_Type_ID = 1
+					)*/
+					AND
+					(
+						(
+							(DATEDIFF(d, #CreateODBCDate(Sample_Size_Start_Date)#, Billback.BB_Start_Date) >= 0)
+							AND
+							(DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Sample_Size_End_Date)#) >= 0)
+						)
+						OR
+						(
+							(DATEDIFF(d, #CreateODBCDate(Sample_Size_Start_Date)#, Billback.BB_End_Date) >= 0)
+							AND
+							(DATEDIFF(d, Billback.BB_End_Date, #CreateODBCDate(Sample_Size_End_Date)#) >= 0)
+						)
+						OR
+						(
+							(DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Sample_Size_Start_Date)#) >= 0)
+							AND
+							(DATEDIFF(d, #CreateODBCDate(Sample_Size_Start_Date)#, Billback.BB_End_Date) >= 0)
+						)
+						OR
+						(
+							(DATEDIFF(d, Billback.BB_Start_Date, #CreateODBCDate(Sample_Size_End_Date)#) >= 0)
+							AND
+							(DATEDIFF(d, #CreateODBCDate(Sample_Size_End_Date)#, Billback.BB_End_Date) >= 0)
+						)
+					)
+					<!---- DRK: D14783 ---->
+					<cfif Other_Overlapped_Billbacks_ID neq "">
+					AND	Billback.Billback_ID NOT IN (#ListQualify(Other_Overlapped_Billbacks_ID, "'")#)
+					</cfif>
+				ORDER BY Billback.BB_Code, Billback.Billback_ID, Contract_Main.Contract_Number
+			</CFQUERY>
+      <cfelse>
+          <cfset Operator_Deviated_Billbacks = QueryNew("BB_Start_Date, BB_End_Date,X_Lag, Y_Lag, Billback_ID, BB_Code, BB_Title, BB_Date, Contract_Main_ID, Contract_Number, Contract_Title, Item_Volume_Paid_CS, Item_Volume_Paid_LB, Billback_Volume, Associated_Ship_To") />
+      </cfif>
+
+			</CFOUTPUT>
+
+
+			<CFSET Open_Layer_Caption = "#application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Billbacks from #DateFormat(Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(Sample_Size_End_Date, "mm/dd/yyyy")#">
+			<CF_openLayer
+				Border="#Border#"
+				BorderSize="#BorderSize#"
+				BorderColor="#BorderColor#"
+				Image="#Image#"
+				ImageOpen="#ImageOpen#"
+				Title="#Open_Layer_Caption#"
+				TitleClosed="#Open_Layer_Caption#"
+				TitleTooltip="#Open_Layer_Caption#"
+				TitleColor="#TitleColor#"
+				TitleFont="#TitleFont#"
+				TitleSize="#TitleSize#"
+				IsClosed="Yes"
+				Width="#width#"
+				AddScript="#AddScript#">
+				<CFOUTPUT>
+			<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="<CFOUTPUT>#Table_Width#</CFOUTPUT>">
+			<!----<CAPTION ALIGN="Left" STYLE="font-size:11px;font-weight:bold;">Operator Deviated Billbacks from #DateFormat(Sample_Size_Start_Date, "mm/dd/yyyy")# - #DateFormat(Sample_Size_End_Date, "mm/dd/yyyy")#</CAPTION>--->
+			</CFOUTPUT>
+
+				<CFIF Operator_Deviated_Billbacks.recordCount GT 0>
+					<TR BGCOLOR="FFCE84" CLASS="MaintableTHEAD" STYLE="border-bottom:solid 93BEE2 1px;">
+						<TD WIDTH="150">Billback</TD>
+						<TD>Program</TD>
+						<TD><cfoutput>Volume (#ListGetAt(DEVIATION_QUANTITY_UOM, BB_Product_UOM, ",")#)</cfoutput></TD>
+						<TD>&nbsp;</TD>
+						<TD>%</TD>
+						<TD>&nbsp;</TD>
+						<TD>Weighted Volume</TD>
+					</TR>
+					<CFSET sample_Lag = DateDiff("d", Sample_Size_Start_Date, Sample_Size_End_Date) + 1>
+					<CFOUTPUT QUERY="Operator_Deviated_Billbacks" GROUP="Billback_ID">
+					<CFSET BB_Span = DateDiff("d", BB_Start_Date, BB_End_Date) + 1>
+					<CFSET Dates_Overlapped = BB_Span - X_Lag - Y_Lag>
+					<!----
+					<CFSET Weighted_Overlap = (Dates_Overlapped/sample_Lag) * 100>
+					--->
+					<CFSET Weighted_Overlap = (Dates_Overlapped/BB_Span) * 100>
+					<TR BGCOLOR="ccffcc" CLASS="MaintableTHEAD">
+						<TD COLSPAN="100%">
+						<TABLE WIDTH="100%" BORDER="0">
+							<TR>
+								<TD>Billback</TD>
+								<TD WIDTH="100">[#BB_Code#]</TD>
+								<TD>#BB_Title#</TD>
+								<TD>(#DateFormat(BB_Start_Date, "mm/dd/yyyy")# - #DateFormat(BB_End_Date, "mm/dd/yyyy")#) (#BB_Span# days)</TD>
+							</TR>
+							<TR>
+								<TD COLSPAN="100%">Weight = (#Dates_Overlapped# / #BB_Span#) = #NumberFormat(Weighted_Overlap, DEVIATION_PERCENT_FORMAT)#%</TD>
+							</TR>
+						</TABLE>
+						</TD>
+					</TR>
+						<CFOUTPUT>
+							<CFSET Weighted_OP_Dev_Volume = (Weighted_Overlap * Billback_Volume)/100>
+							<TR>
+								<TD></TD>
+								<TD>[#Contract_Number#] #Left(Contract_Title, 50)#...</TD>
+								<TD>#NumberFormat(Billback_Volume, DEVIATION_VOLUME_FORMAT)#</TD>
+								<TD ALIGN="CENTER">*</TD>
+								<TD TITLE="#Weighted_Overlap# = #Dates_Overlapped# / #BB_Span#">#NumberFormat(Weighted_Overlap, DEVIATION_PERCENT_FORMAT)#%</TD>
+								<TD ALIGN="CENTER">=</TD>
+								<TD>#NumberFormat(Weighted_OP_Dev_Volume, DEVIATION_VOLUME_FORMAT)#</TD>
+								<CFSET Total_Volume_In_Operator_Deviated_Billbacks = Total_Volume_In_Operator_Deviated_Billbacks + Weighted_OP_Dev_Volume>
+							</TR>
+						</CFOUTPUT>
+					</CFOUTPUT>
+				<CFELSE>
+					<TR CLASS="MaintableTHEAD">
+						<TD COLSPAN="100%"><B><FONT COLOR="Red">No <cfoutput>#application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()#</cfoutput> Billbacks found</FONT></B></TD>
+					</TR>
+				</CFIF>
+				<CFOUTPUT>
+				<cfif BB_Product_UOM EQ 1>
+					<CFSET Total_Pounds_In_Operator_Deviated_Billbacks = Total_Volume_In_Operator_Deviated_Billbacks * Net_Weight />
+					<CFSET Total_Cases_In_Operator_Deviated_Billbacks = Total_Volume_In_Operator_Deviated_Billbacks />
+				<cfelse>
+					<CFSET Total_Pounds_In_Operator_Deviated_Billbacks = Total_Volume_In_Operator_Deviated_Billbacks />
+					<CFSET Total_Cases_In_Operator_Deviated_Billbacks = Total_Volume_In_Operator_Deviated_Billbacks / Net_Weight>
+				</cfif>
+				<TR CLASS="MaintableTHEAD">
+					<TD COLSPAN="100%" ALIGN="RIGHT" STYLE="border-top:solid Orange 1px;"><B>Total #application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Volume  =</B>#NumberFormat(Total_Volume_In_Operator_Deviated_Billbacks, DEVIATION_VOLUME_FORMAT)#
+					</TD>
+				</TR>
+				<TR CLASS="MaintableTHEAD">
+					<TD COLSPAN="100%" ALIGN="RIGHT" STYLE="border-top:solid Orange 1px;"><B>Total #application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Volume (#Application.UOMPoundAbrSingular#) =</B>#NumberFormat(Total_Pounds_In_Operator_Deviated_Billbacks, DEVIATION_VOLUME_FORMAT)#
+					</TD>
+				</TR>
+				<TR CLASS="MaintableTHEAD" TITLE="#NumberFormat(Total_Volume_In_Operator_Deviated_Billbacks, DEVIATION_VOLUME_FORMAT)# / #Net_Weight#">
+					<TD COLSPAN="100%" ALIGN="RIGHT" STYLE="border-top:solid Orange 1px;"><B>Total #application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Volume (#Application.UOMCaseAbrSingular#) =</B>#NumberFormat(Total_Cases_In_Operator_Deviated_Billbacks, DEVIATION_VOLUME_FORMAT)#
+					</TD>
+				</TR>
+
+				</CFOUTPUT>
+			</TABLE>
+			</CF_openLayer>
+		</CFIF>
+	<CFELSE>
+		<BR><FONT COLOR="Red"><B>Did not retrieve invoice information. Payee not found in the <cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput> database</B></FONT><BR>
+	</CFIF>
+
+
+
+		<CFOUTPUT>
+		<BR>
+		<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" ALIGN="CENTER" WIDTH="#Table_Width#" CLASS="Maintable">
+		<TR>
+			<TD>Delivery Period</TD>
+			<TD>&nbsp;</TD>
+			<TD>#DateFormat(Billback_Start_Date, "mm/dd/yyyy")# - #DateFormat(Billback_End_Date, "mm/dd/yyyy")#</TD>
+		</TR>
+		<TR>
+			<TD>Total #Application.UOMPoundPlural# Invoiced</TD>
+			<TD>V#Application.UOMPoundAbrSingular#</TD>
+			<TD>#NumberFormat(Total_Pounds_Invoiced, DEVIATION_VOLUME_FORMAT)#</TD>
+		</TR>
+		<TR>
+			<TD>Total #Application.UOMCasePlural# Invoiced</TD>
+			<TD>V#Application.UOMCaseAbrSingular#</TD>
+			<TD>#NumberFormat(Total_Cases_Invoiced, DEVIATION_VOLUME_FORMAT)#</TD>
+		</TR>
+		<TR>
+			<TD>Net Weight</TD>
+			<TD>NWT</TD>
+			<TD>
+			<CFIF BSA_Foodservice_Items_Master_ID NEQ "">
+			#Net_Weight#
+			<CFELSE>
+			#DEVIATION_SHOW_NA#
+			</CFIF>
+			</TD>
+		</TR>
+		<CFIF ListFindNoCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0 OR Associated_Ship_TO NEQ "">
+		<TR>
+			<TD>Total #Application.UOMPoundPlural# In Previous #application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Billbacks</TD>
+			<TD>V2#Application.UOMPoundAbrSingular#</TD>
+			<TD>#NumberFormat(Total_Pounds_In_Operator_Deviated_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+		</TR>
+		<TR>
+			<TD>Total #Application.UOMCasePlural# In Previous #application.returned_customer_setting.operator_label_singular# #appSettings.getDeviationLabel()# Billbacks</TD>
+			<TD>V2#Application.UOMCaseAbrSingular# = V2#Application.UOMPoundAbrSingular# / NWT</TD>
+			<TD>#NumberFormat(Total_Cases_In_Operator_Deviated_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+		</TR>
+		</CFIF>
+		<TR>
+			<TD>Total #Application.UOMPoundPlural# In Previous Billbacks</TD>
+			<TD>V3#Application.UOMPoundAbrSingular#</TD>
+			<TD>#NumberFormat(Total_Pounds_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+		</TR>
+		<TR>
+			<TD>Total #Application.UOMCasePlural# In Previous Billbacks</TD>
+			<TD>V3#Application.UOMCaseAbrSingular#</TD>
+			<TD>#NumberFormat(Total_Cases_In_Overlapped_Billbacks, DEVIATION_VOLUME_FORMAT)#</TD>
+		</TR>
+		<TR CLASS="MaintableTHEAD">
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">Purchased Volume (#Application.UOMPoundPlural#)</TD>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">V3#Application.UOMPoundAbrSingular# = V#Application.UOMPoundAbrSingular# - V3#Application.UOMPoundAbrSingular#<CFIF ListFindNoCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0  OR Associated_Ship_TO NEQ ""> - V2#Application.UOMPoundAbrSingular#</CFIF></TD>
+			<CFSET Expected_Volume = (Total_Pounds_Invoiced - Total_Pounds_In_Overlapped_Billbacks)>
+			<CFIF ListFindNoCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0  OR Associated_Ship_TO NEQ "">
+				<CFSET Expected_Volume = Expected_Volume - Total_Pounds_In_Operator_Deviated_Billbacks>
+			</CFIF>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">#NumberFormat(Expected_Volume, DEVIATION_VOLUME_FORMAT)# #Application.UOMPoundAbrSingular#</TD>
+		</TR>
+		<TR CLASS="MaintableTHEAD">
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">Purchased Volume (#Application.UOMCasePlural#)</TD>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">V3#Application.UOMCaseAbrSingular# = V#Application.UOMCaseAbrSingular# - V3#Application.UOMCaseAbrSingular#<CFIF ListFindNoCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0  OR Associated_Ship_TO NEQ ""> - V2#Application.UOMCaseAbrSingular#</CFIF></TD>
+			<CFSET Expected_Volume_Cases = (Total_Cases_Invoiced - Total_Cases_In_Overlapped_Billbacks)>
+			<CFIF ListFindNoCase(DEVIATION_CONSTANTS_Operator_Deviated, Generic_Type) NEQ 0  OR Associated_Ship_TO NEQ "">
+				<CFSET Expected_Volume_Cases = Expected_Volume_Cases - Total_Cases_In_Operator_Deviated_Billbacks>
+			</CFIF>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">#NumberFormat(Expected_Volume_Cases, DEVIATION_VOLUME_FORMAT)# #Application.UOMCaseSingular#</TD>
+		</TR>
+		<CFSET Expected_Volume_Per_Case = Expected_Volume_Cases>
+
+		<cfif applyDateDevAgaunstClaimedVolume>
+		<cfset programDateDeviation = bbDeviationManager.getProgramDateDeviation(Billback_ID, Billback_Program_ID) />
+		<cfset Dates_Not_Match_Percent = Val(programDateDeviation.Dates_Not_Match_Percent)>
+
+		<TR>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">Date mismatch percentage with delivery period</TD>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">DM%</TD>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">#NumberFormat(Dates_Not_Match_Percent * 100, DEVIATION_PERCENT_FORMAT)#%</TD>
+		</TR>
+		<CFIF BB_Product_UOM EQ 1>
+			<CFSET Final_Expected_Volume = Expected_Volume_Per_Case>
+		<CFELSE>
+			<CFSET Final_Expected_Volume = Expected_Volume>
+		</CFIF>
+		<CFSET Final_Expected_Volume = request.app_general_functions.roundDecimalPlaces(Final_Expected_Volume * (1 - Dates_Not_Match_Percent), 2) />
+		<TR CLASS="MaintableTHEAD">
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">Expected Volume (#ListGetAt(DEVIATION_QUANTITY_UOM, BB_Product_UOM, ",")#)</TD>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;"><CFIF BB_Product_UOM EQ 1>EV = V3#Application.UOMCaseAbrSingular# - DM% V3#Application.UOMCaseAbrSingular#<CFELSE>EV = V3#Application.UOMPoundAbrSingular# - DM% V3#Application.UOMPoundAbrSingular#</CFIF></TD>
+			<TD STYLE="border-bottom:solid 93BEE2 1px;">#NumberFormat(Final_Expected_Volume, DEVIATION_VOLUME_FORMAT)# #ListGetAt(DEVIATION_QUANTITY_UOM, BB_Product_UOM, ",")#</TD>
+		</TR>
+		</cfif>
+
+		</TABLE>
+		</CFOUTPUT>
+
+</CFIF>
+
+</CFIF><!--- Ignore_Billback_Volume_Deviation = 0 --->
+
+<CFIF BB_Product_Type_ID NEQ 1 AND BB_Product_Type_ID NEQ 2 AND BB_Product_Type_ID NEQ 5 AND BB_Product_Type_ID NEQ 11>
+	<B><FONT COLOR="Red"><cfoutput>#appSettings.getDeviationLabel()#</cfoutput> not yet done !!!</FONT></B>
+	<CFABORT>
+</CFIF>
+
+<CFSET bSameProductInFixedAndRebate = 0 />
+<cfif BB_Product_Type_ID EQ 1 OR BB_Product_Type_ID EQ 2>
+	<CFQUERY  dataSource="#application.datasource#" NAME="qGetBillbackProductFixedRebate">
+		SELECT	Billback_Product_Detail.Billback_Product_ID
+		FROM	Billback_Product_Detail
+		INNER JOIN	BB_Fixed_Product_Volume
+		ON		BB_Fixed_Product_Volume.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID
+		AND		BB_Fixed_Product_Volume.Deleted = 0
+		INNER JOIN	BB_Rebate_Product_Volume
+		ON		BB_Rebate_Product_Volume.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID
+		AND		BB_Rebate_Product_Volume.Deleted = 0
+		WHERE	Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+		AND		Billback_Product_Detail.Deleted = 0
+	</CFQUERY>
+	<CFSET bSameProductInFixedAndRebate = qGetBillbackProductFixedRebate.recordCount />
+</cfif>
+
+<CFQUERY  dataSource="#application.datasource#" NAME="Billback_Product_Discount_Type_Volume">
+SELECT	Billback_Product.BB_Product_Quantity, Units_of_Measure.Unit_Of_Measure_Desc, Units_of_Measure.Unit_Of_Measure_ID
+		, Billback_Product_Detail.BB_Rate
+		,ISNULL(CASE
+		WHEN Units_of_Measure.Unit_Of_Measure_ID = 1 THEN
+			E_Volume_CS
+		ELSE
+			E_Volume_LB
+		END, 0) AS Expected_Volume
+		FROM	Billback_Product_Detail
+		INNER JOIN	Billback_Product
+		ON
+		(
+			(Billback_Product.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(Billback_Product.Deleted = 0)
+		)
+		<CFSWITCH EXPRESSION="#BB_Product_Type_ID#">
+		<CFCASE VALUE="1">
+		INNER JOIN	BB_Fixed_Product_Volume
+		ON
+		(
+			(BB_Fixed_Product_Volume.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Fixed_Product_Volume.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		<CFCASE VALUE="2">
+		INNER JOIN	BB_Rebate_Product_Volume
+		ON
+		(
+			(BB_Rebate_Product_Volume.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Rebate_Product_Volume.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		<CFCASE VALUE="5">
+		INNER JOIN	BB_Formula_Product_Volume
+		ON
+		(
+			(BB_Formula_Product_Volume.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Formula_Product_Volume.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		<CFCASE VALUE="11">
+		INNER JOIN	BB_Bid_Request_Product_Volume
+		ON
+		(
+			(BB_Bid_Request_Product_Volume.Billback_Product_ID = Billback_Product_Detail.Billback_Product_ID)
+			AND
+			(BB_Bid_Request_Product_Volume.BB_Product_Type_ID = Billback_Product_Detail.BB_Product_Type_ID)
+		)
+		</CFCASE>
+		</CFSWITCH>
+		LEFT JOIN	Units_of_Measure
+		ON
+		(Units_of_Measure.Unit_Of_Measure_ID = Billback_Product.BB_Product_UOM)
+	WHERE
+		Billback_Product_Detail.Billback_Product_Detail_ID = '#Billback_Product_Detail_ID#'
+		AND
+		Billback_Product_Detail.Deleted = 0
+</CFQUERY>
+
+
+<BR>
+<SPAN CLASS="Title2">Volume <cfoutput>#appSettings.getDeviationLabel()#</cfoutput> calculation</SPAN>
+<HR COLOR="Orange">
+<CFIF Billback_Product_Discount_Type_Volume.recordCount GT 0>
+<CFOUTPUT>
+
+<!------------- Find dates deviated ------------------>
+
+
+
+
+<TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" WIDTH="#Evaluate("#Table_Width#*2/3")#">
+	<TR>
+		<TD>Total Amount Claimed</TD>
+		<TD>A1</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		#DollarFormat(Billback_Product_Discount_Type_Volume.BB_Rate)#
+		</TD>
+	</TR>
+	<TR>
+		<TD>Total Volume Claimed</TD>
+		<TD>V1</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		#Billback_Product_Discount_Type_Volume.BB_Product_Quantity# #Billback_Product_Discount_Type_Volume.Unit_Of_Measure_Desc#
+		</TD>
+	</TR>
+	<TR>
+		<TD>Rate Claimed</TD>
+		<TD>R1 = A1 / V1</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		<cfif Billback_Product_Discount_Type_Volume.BB_Product_Quantity NEQ 0>
+			<CFSET Rate_Claimed=(Billback_Product_Discount_Type_Volume.BB_Rate/Billback_Product_Discount_Type_Volume.BB_Product_Quantity)>
+		<cfelse>
+			<CFSET Rate_Claimed=Billback_Product_Discount_Type_Volume.BB_Rate>
+		</cfif>
+		#DollarFormat(Rate_Claimed)# / #Left(Billback_Product_Discount_Type_Volume.Unit_Of_Measure_Desc, Len(Billback_Product_Discount_Type_Volume.Unit_Of_Measure_Desc) - 1)#
+		</TD>
+	</TR>
+	<TR>
+		<TD><B>Expected Volume</B></TD>
+		<TD><B>V2</B></TD>
+		<TD><B>&nbsp:&nbsp;</B></TD>
+
+
+<CFSET Expected_Volume = Billback_Product_Discount_Type_Volume.Expected_Volume>
+
+<!------
+<CFIF Billback_Product_Discount_Type_Volume.Unit_Of_Measure_ID EQ 1>
+	<CFSET Expected_Volume = Expected_Volume_Per_Case>
+<CFELSE>
+	<CFSET Expected_Volume = Expected_Volume>
+</CFIF>
+----->
+		<TD><B>#NumberFormat(Expected_Volume, DEVIATION_VOLUME_FORMAT)# #Left(Billback_Product_Discount_Type_Volume.Unit_Of_Measure_Desc, Len(Billback_Product_Discount_Type_Volume.Unit_Of_Measure_Desc) - 1)#</B>
+		<cfif bSameProductInFixedAndRebate><b style="color:red;">*</b></cfif>
+		</TD>
+	</TR>
+	<CFIF Billback_Volume_Tolerance.recordCount GT 0>
+		<CFSET Volume_Tolerance = Billback_Volume_Tolerance.BB_Tolerance_DVT>
+	<CFELSE>
+		<CFSET Volume_Tolerance = 0>
+	</CFIF>
+	<TR>
+		<TD>Volume Tolerance</TD>
+		<TD>V3</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		#NumberFormat(Volume_Tolerance,"___")#%
+		</TD>
+	</TR>
+	<TR>
+		<TD>Adjusted Expected Volume</TD>
+		<TD>V4 = V2 + (V2 * V3)</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		<CFSET adjusted_Expected_Volume = Expected_Volume + (Expected_Volume * Volume_Tolerance) / 100>
+    <CFSET adjusted_Expected_Volume = Round(adjusted_Expected_Volume) />
+		#NumberFormat(adjusted_Expected_Volume , DEVIATION_VOLUME_FORMAT)#
+		</TD>
+	</TR>
+	<TR>
+		<TD>#appSettings.getDeviationLabel()# Volume</TD>
+		<TD>V5 = V4 - V1</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		<CFSET dev_Volume = adjusted_Expected_Volume - Billback_Product_Discount_Type_Volume.BB_Product_Quantity>
+		#NumberFormat(dev_Volume, DEVIATION_VOLUME_FORMAT)#
+		</TD>
+	</TR>
+
+	<CFIF dev_Volume GT 0>
+	<TR>
+		<TD>Effective #appSettings.getDeviationLabel()# Volume</TD>
+		<TD>R6</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		<CFSET dev_Volume = 0>
+		#NumberFormat(dev_Volume, DEVIATION_VOLUME_FORMAT)#
+		</TD>
+	</TR>
+	</CFIF>
+
+
+	<TR>
+		<TD>Volume #appSettings.getDeviationLabel()# Percentage</TD>
+		<TD>V6 = V5 / V1</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		<CFIF Billback_Product_Discount_Type_Volume.BB_Product_Quantity EQ 0 >
+			<CFSET dev_Volume_Percent = 0>
+		<CFELSE>
+			<CFSET dev_Volume_Percent = (dev_Volume * 100) / Billback_Product_Discount_Type_Volume.BB_Product_Quantity>
+		</CFIF>
+
+		#NumberFormat(dev_Volume_Percent, DEVIATION_PERCENT_FORMAT)#%
+		</TD>
+	</TR>
+	<TR>
+		<TD>#appSettings.getDeviationLabel()# Amount</TD>
+		<TD>A2 = A1 * V6</TD>
+		<TD>&nbsp:&nbsp;</TD>
+		<TD>
+		<CFSET dev_Amount = (Billback_Product_Discount_Type_Volume.BB_Rate * dev_Volume_Percent) / 100>
+		#DollarFormat(dev_Amount)#
+		</TD>
+	</TR>
+	<cfif bSameProductInFixedAndRebate>
+	<TR>
+		<TD colspan="100%" style="color:red">
+		* Total expected volume for the claim may be less than the expected volume for a given discount type if the customer is claiming against multiple discounts [e.g., rebate and fixed price]
+		</TD>
+	</TR>
+	</cfif>
+</TABLE>
+</CFOUTPUT>
+</CFIF>
+
+
+<CFIF SHOW_DEVIATION_DETAIL_FOOTER>
+
+	<BR><BR>
+<TABLE ALIGN="CENTER" WIDTH="50%">
+	<TD ALIGN="CENTER">
+	<CF_button
+			button_name		=	""
+			button_caption	=	"print"
+			button_action	=	"printPage();"
+			button_type		=	"javascript_link"
+			button_width	=	"150"
+			button_color	=	"Navy"
+			button_tip		=	"print"
+			font_color		=	"White"
+			font_size		=	"12"
+			font_weight		=	"bold"
+		>
+	</TD>
+	<TD ALIGN="CENTER">
+	<CF_button
+			button_name		=	""
+			button_caption	=	"close this window"
+			button_action	=	"window.close();"
+			button_type		=	"javascript_link"
+			button_width	=	"150"
+			button_color	=	"Navy"
+			button_tip		=	"close this window"
+			font_color		=	"White"
+			font_size		=	"12"
+			font_weight		=	"bold"
+		>
+	</TD>
+</TABLE>
+		<BR><BR>
+</BLOCKQUOTE>
+<CFIF ADDSCRIPT EQ "Yes">
+	<SCRIPT LANGUAGE="javaScript">
+	showDates();
+	</SCRIPT>
+
+	<SCRIPT LANGUAGE="JavaScript">
+	window.onbeforeprint=new Function ("AllOpenLayers(1);");
+	document.body.onload=new Function ("AllOpenLayers(0);");
+	</SCRIPT>
+</CFIF>
+</BODY>
+</HTML>
+<CFELSE>
+	</BLOCKQUOTE>
+</CFIF>
+

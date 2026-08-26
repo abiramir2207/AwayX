@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 implements="mx.controls.listClasses.IDropInListItemRenderer,mx.managers.IFocusManagerComponent"
+		 remove="cleanUp()">
+	<fx:Script>
+		<![CDATA[
+		import com.Billback.Main.models.vos.ClosingMethod;
+		import com.asfusion.mate.events.Dispatcher;
+		
+		import mx.controls.dataGridClasses.DataGridItemRenderer;
+		import mx.controls.dataGridClasses.DataGridListData;
+		import mx.controls.listClasses.BaseListData;
+		import mx.controls.listClasses.ListData;
+		import mx.events.FlexEvent;
+		
+		private var _listData:DataGridListData;
+		// Define a property for returning the new value to the cell.
+		[Bindable]
+		public var closingMethod:ClosingMethod;
+		[Bindable]
+		public var cmDp:Array = new Array();
+		
+		import com.shared.models.Destroy;
+		private function cleanUp():void{
+			Destroy.cleanUp(this,mx_internal);
+		}
+			
+		// Implement the drawFocus() method for the VBox.
+		override public function drawFocus(draw:Boolean):void {
+			cboClosingMethod.setFocus();
+		}
+		// Implement the setFocus() method for the VBox.
+		override public function setFocus():void {
+			cboClosingMethod.setFocus();
+		}
+		
+		override public function get data():Object {
+			return super.data;
+		}
+		
+		override public function set data(value:Object):void {
+			//var s:String = '';
+			//s = _listData.dataField;
+			//s = 'uom';
+			super.data = value;
+			var i:int = 0; //counter
+	
+			//cboClosingMethod.dataProvider = value['closingMethodDp'];
+			for each(var cm:ClosingMethod in cboClosingMethod.dataProvider){
+				if (cm.id == value['closingMethod']['id']){
+					cboClosingMethod.selectedIndex = i;
+				}
+				i++;
+			}
+			//cbo.selectedItem = value[_listData.dataField];
+			
+		} 
+		public function get listData():BaseListData{
+			return _listData;
+		}
+		
+		public function set listData(value:BaseListData):void
+		{
+			_listData = DataGridListData(value);
+		} 
+		private function setClosingMethod(cm:ClosingMethod):void{
+			
+			this.data = cm;
+		}
+		
+		]]>
+	</fx:Script>
+	<fx:Binding destination="closingMethod" source="{cboClosingMethod.selectedItem as ClosingMethod}"/>
+	
+	<mx:ComboBox id="cboClosingMethod"
+				  dataProvider="{this.cmDp}"
+				 editable="false" 
+				 width="75" 
+				 labelField="abbreviation" 
+				 change="setClosingMethod(this.cboClosingMethod.selectedItem as ClosingMethod);" />
+</mx:Canvas>
+

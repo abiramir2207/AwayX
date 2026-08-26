@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" height="100%" 
+		 xmlns:views="com.Admin.Redi.views.*">
+	
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}" />
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.events.RediEvent;
+			import com.Admin.Redi.models.vos.RediCorrectionHeader;
+			import com.Admin.Redi.views.RediEdit;
+			import com.Admin.Redi.views.pm.RediPModel;
+			
+			import flash.utils.getDefinitionByName;
+			import flash.utils.getQualifiedClassName;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:RediPModel;
+			[Bindable]
+			private var iPadding:Number = 0;
+			
+			
+			public function editCorrection(e:RediEvent):void{
+				/*var ui:DisplayObject = RediEdit as DisplayObject;
+				tnCorrections.addChild(com.Admin.Redi.views.RediEdit as DisplayObject)*/;
+				var myNavigatorContent:NavigatorContent = new NavigatorContent();
+				myNavigatorContent.percentHeight = 100;
+				myNavigatorContent.percentWidth = 100;
+				myNavigatorContent.label = "Edit";
+				myNavigatorContent.id = e.rch.rediCorrectionHeaderId.toString();
+				// Convert class name to Class object.
+				var cls:Class = getDefinitionByName(getQualifiedClassName(RediEdit)) as Class;
+				// Create a new instance of the class.
+				var instance:RediEdit = new cls();
+				instance.id = e.rediId;
+				
+				myNavigatorContent.addElement(instance);
+				instance.settings = this.pModel.oSettings;
+				//TODO: Populate with Selected Item from RediOpen Grid [dgRediOpen]
+				instance.rediCorrectionHeader = e.rch;
+				tnCorrections.addChild(myNavigatorContent);
+				tnCorrections.selectedChild = myNavigatorContent;
+			}
+			
+			/*private function edit():void{
+				var e:RediEvent = new RediEvent(RediEvent.EDIT_CORRECTION);
+				e.rediId = 'INV-1234';
+				this.editCorrection(e);
+			}*/
+			
+			public function closeCorrection(e:RediEvent):void{
+				var i:int = 0;
+				for each(var nc:NavigatorContent in tnCorrections.getChildren()){
+					if(e.rch && nc.id == e.rch.rediCorrectionHeaderId.toString()){
+						trace('yahtzee');
+						tnCorrections.removeChildAt(i);
+						var ix:int = tnCorrections.numChildren - 1;// selectedIndex = 0;
+						if(ix == 1){ix = 0};//don't go to history tab on close
+						tnCorrections.selectedIndex = ix;
+						break;
+					}
+					i++;
+				}
+				var ix:int = 0;
+				if(e.rch.errorMessage == ''){//after it is validated and there are no errors, we can remove from list
+					var arrLoop:Array = this.pModel.acRediOpen.source.concat();
+					for each(var rch:RediCorrectionHeader in arrLoop){
+						if(rch.rediCorrectionHeaderId == e.rch.rediCorrectionHeaderId){
+							this.pModel.acRediOpen.removeItem(rch);
+							break;
+						}
+					}
+					this.pModel.acRediOpen.refresh();
+					/*for each(var rch:RediCorrectionHeader in this.pModel.acRediOpen){
+						if(rch.rediCorrectionHeaderId == e.rch.rediCorrectionHeaderId){
+							this.pModel.acRediOpen.removeItemAt(ix);
+							break;
+						}
+						ix ++;
+					}*/	
+				}
+				
+			}
+		
+		]]>
+	</fx:Script>
+	
+<!--	<s:Button label="edit" click="edit()"/>-->
+	<mx:TabNavigator id="tnCorrections"  width="100%" height="100%" tabStyleName="tab" selectedTabTextStyleName="tab" 
+					 paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}" >
+		<!-- Define each panel using a VBox container. -->
+		<s:NavigatorContent label="Open ({pModel.acRediOpen.length} records)">
+			<views:RediOpen height="100%" />
+		</s:NavigatorContent>
+		<s:NavigatorContent label="History">
+			<views:RediHistory />
+		</s:NavigatorContent>
+		
+	</mx:TabNavigator>
+	
+</s:Group>

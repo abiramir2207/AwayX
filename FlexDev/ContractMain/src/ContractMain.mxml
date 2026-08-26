@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				layout="vertical"
+	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+	xmlns:view="com.shared.views.*" 
+	xmlns:viewComp="com.shared.components.*"
+	xmlns:maps="com.shared.maps.*" 
+	xmlns:vos="com.shared.vos.*" height="100%" width="100%"
+	preinitialize="applyRuntimeStyleSheet();" >
+	<!--  preloader="com.shared.components.baProgressBar" -->
+	<mx:Script><![CDATA[
+		import com.shared.events.*;
+		import com.shared.views.MainUIPM;
+		
+		import mx.controls.Alert;
+		import mx.controls.DataGrid;
+		import mx.controls.ProgressBar;
+		import mx.managers.DragManager;
+		import mx.managers.HistoryManager;
+		import mx.styles.StyleManager;
+		import mx.utils.ObjectUtil;
+			[Bindable]
+			public var model:MainUIPM;
+        
+        	private var _historyManager:HistoryManager;
+        	private var _dragManager:DragManager;
+			private var _progBar:ProgressBar;
+			private var _dg:DataGrid = new DataGrid();
+		
+        public function applyRuntimeStyleSheet():void {
+			//styleManager.loadStyleDeclarations("/flex/Program/assets/styles/mainFx46.swf") 
+			styleManager.loadStyleDeclarations("/flex/mainFx410.swf") 
+        }
+        
+        
+  		]]>
+	</mx:Script>
+	
+	<!-- Event Maps __________________________________________________ -->
+	<maps:MainEventMap />
+	<maps:ModelMap />
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox id="vMain" height="100%" width="100%"><!--width="1000" height="680" -->
+		<view:MainPanel id="MainPanel" height="100%" width="100%"/>
+	</mx:HBox>
+	<!-- States ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!--<mx:states>
+		<mx:State name="{ MainUIPM.ADMIN_STATE }"/>
+		<mx:State name="{ MainUIPM.ITEM_SEARCH_STATE }" basedOn="{ MainUIPM.ADMIN_STATE }">
+			<mx:AddChild id = "vItemSearch" 
+                relativeTo="{vMain}" creationPolicy="auto" >
+				<viewComp:ItemSearchComp />
+			</mx:AddChild>
+			<mx:RemoveChild target="{ MainPanel }"/>
+		</mx:State>
+	</mx:states>-->
+	
+</mx:Application>

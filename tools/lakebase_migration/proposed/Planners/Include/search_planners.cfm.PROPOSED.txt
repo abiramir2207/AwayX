@@ -1,0 +1,40 @@
+===== QUERY: GetLinesOfBiz =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetFamilyNames =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetBuyingGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCustIds =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCustIds = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_customer_id")>
+<cfif useLakebaseForGetCustIds>
+	<cftry>
+		<cfset GetCustIds = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_customer_id", {
+				"deleted" = "eq.0",
+				"custid_name" = "not.is.null",
+				"order" = "custid_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustIds = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustIds>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetZones =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetRegions =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qRsp =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+

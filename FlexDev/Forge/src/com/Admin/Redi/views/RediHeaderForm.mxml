@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.views.pm.RediPModel;
+			
+			import mx.utils.ObjectUtil;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:RediPModel;
+			
+			[Bindable]
+			private var iWidth:Number = 175;
+			[Bindable]
+			private var iPadding:Number = 3;
+		]]>
+	</fx:Script>
+	<s:BorderContainer height="100%">
+		<s:VGroup paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}">
+			<s:HGroup width="100%">
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+						</s:layout>
+						<!--<s:FormHeading fontSize="10"  label="Search"/>-->
+						
+						<s:FormItem label="Report Id" >
+							<s:TextInput width="{iWidth}" height="18" />
+						</s:FormItem>
+						
+						<s:FormItem label="Title">
+							<s:TextInput id="bbHeader"  width="{iWidth}" height="18"  /> <!-- height="25" focusIn="this.bbHeader.height=300" focusOut="this.bbHeader.height=35"-->
+						</s:FormItem>
+						
+						<s:FormItem label="Payee">
+							<s:TextInput id="Payee" width="{iWidth}" height="18"/>
+						</s:FormItem>
+						
+						<!--<s:FormItem label="">
+							<s:Button id="btnSearch" label="Search" />
+						</s:FormItem>-->
+	
+					</s:Form>
+				</s:VGroup>
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay2" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+						</s:layout>
+						<!--<s:FormHeading fontSize="10"  label=""/>-->
+						
+						<s:FormItem label="Start">
+							<s:TextInput id="Start" width="{iWidth}" height="18"/>
+						</s:FormItem>
+						
+						<s:FormItem label="End">
+							<s:TextInput id="End" width="{iWidth}" height="18"/>
+						</s:FormItem>
+						
+						<s:FormItem label="Status">
+							<s:TextInput id="Status" width="{iWidth}" height="18"/>
+						</s:FormItem>
+			
+					</s:Form>
+				</s:VGroup>
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay3" gap="0" paddingTop="0" paddingBottom="0"  /><!--variableRowHeight="false" rowHeight="30"-->
+						</s:layout>
+						<!--<s:FormHeading fontSize="10"  label=""/>-->
+						
+						<s:FormItem label="Program">
+							<s:TextInput id="Program" width="{iWidth}" height="18"/>
+						</s:FormItem>
+						
+						<s:FormItem label="Billback">
+							<s:TextInput id="Billback" width="{iWidth}" height="18"/>
+						</s:FormItem>
+						
+						<s:FormItem label="User">
+							<s:TextInput id="User" width="{iWidth}" height="18"/>
+						</s:FormItem>
+						
+						<!--<s:FormItem label="Status">
+							<s:TextInput id="Status" width="{iWidth}" height="18"/>
+						</s:FormItem>
+						
+						<s:FormItem label="Closing Method">
+							<s:TextInput id="Closing_Method" width="{iWidth}" height="18"/>
+						</s:FormItem>-->
+					</s:Form>
+				</s:VGroup>
+			</s:HGroup>
+			<s:Button id="btnSearch" label="Search" />
+		</s:VGroup>
+	</s:BorderContainer>
+</s:Group>

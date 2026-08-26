@@ -1,0 +1,113 @@
+===== QUERY: getEZCompID =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GPLD =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGPLD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGPLD>
+	<cftry>
+		<cfset GPLD = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"product_type_id" = "eq.2",
+				"pricing_level_id" = "eq.#arguments.Pricing_Level_ID#",
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "pricing_level_id"
+			}), "pricing_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGPLD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGPLD>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updPL =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdPL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForupdPL>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"product_type_id" = "eq.2",
+				"pricing_level_id" = "eq.#NextPL#",
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"pricing_level_id" = "#arguments.Pricing_Level_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdPL = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdPL>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updPL =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdPL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForupdPL>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"product_type_id" = "eq.2",
+				"pricing_level_id" = "eq.#NextPL#",
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"pricing_level_id" = "#arguments.Pricing_Level_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdPL = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdPL>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getGroupLevelID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGroupLevelID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("all_product_group_types")>
+<cfif useLakebaseForgetGroupLevelID>
+	<cftry>
+		<cfset getGroupLevelID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("all_product_group_types", {
+				"group_guid" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0",
+				"select" = "product_group_level_id"
+			}), "product_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupLevelID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupLevelID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InvUOM =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: CProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: PrgProdData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: PrdCompData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

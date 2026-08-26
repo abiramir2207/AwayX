@@ -1,0 +1,281 @@
+===== QUERY: qLSAmount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: local.tempPaidLS =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qVendorInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qVendorGUID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqVendorGUID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForqVendorGUID>
+	<cftry>
+		<cfset qVendorGUID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#arguments.form.Vendor_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqVendorGUID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqVendorGUID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertIntoLog =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsertGroupLevel =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetBBInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_quick_pay_log")>
+<cfif useLakebaseForqGetBBInfo>
+	<cftry>
+		<cfset qGetBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_quick_pay_log", {
+				"billback_quick_pay_log_id" = "eq.#qInsertIntoLog.Billback_Quick_Pay_Log_ID#",
+				"select" = "bb_code"
+			}), "bb_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBBInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.drop =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qBudgetBalance =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qinsertData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qinsertData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qfinalInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqfinalInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqfinalInfo>
+	<cftry>
+		<cfset qfinalInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"deleted" = "eq.0",
+				"processed" = "eq.1",
+				"billback_id" = "not.is.null",
+				"user_id" = "eq.#arguments.unique_ID#",
+				"select" = "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+			}), "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqfinalInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqfinalInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qfinalInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqfinalInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqfinalInfo>
+	<cftry>
+		<cfset qfinalInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"deleted" = "eq.0",
+				"processed" = "eq.1",
+				"billback_id" = "not.is.null",
+				"user_id" = "eq.#arguments.unique_ID#",
+				"select" = "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+			}), "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqfinalInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqfinalInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qcheckBBCreation =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqcheckBBCreation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqcheckBBCreation>
+	<cftry>
+		<cfset qcheckBBCreation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"deleted" = "eq.0",
+				"processed" = "eq.1",
+				"billback_id" = "not.is.null",
+				"bb_approved" = "eq.0",
+				"user_id" = "eq.#arguments.uniqueID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqcheckBBCreation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqcheckBBCreation>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qinsertData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdateData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qfinalInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqfinalInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqfinalInfo>
+	<cftry>
+		<cfset qfinalInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"deleted" = "eq.0",
+				"processed" = "eq.1",
+				"billback_id" = "not.is.null",
+				"user_id" = "eq.#arguments.unique_ID#",
+				"select" = "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+			}), "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqfinalInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqfinalInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qfinalInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqfinalInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqfinalInfo>
+	<cftry>
+		<cfset qfinalInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"deleted" = "eq.0",
+				"processed" = "eq.1",
+				"billback_id" = "not.is.null",
+				"user_id" = "eq.#arguments.unique_ID#",
+				"select" = "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+			}), "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqfinalInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqfinalInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: LockDD =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "#arguments.Lock_Status#",
+				"locked_by" = "#request.AccessStructure.User_ID#",
+				"dd_locked_by_quick_pay" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: LockDD =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "#arguments.Lock_Status#",
+				"locked_by" = "#request.AccessStructure.User_ID#",
+				"dd_locked_by_quick_pay" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckDD =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqCheckDD>
+	<cftry>
+		<cfset qCheckDD = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"user_id" = "eq.#arguments.unique_ID#",
+				"deleted" = "eq.0",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckDD>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDeleteRecords =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdatePRGStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

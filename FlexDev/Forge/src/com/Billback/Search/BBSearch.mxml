@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  xmlns:view="com.Billback.Search.views.*" 
+		  xmlns:maps="com.Billback.Search.maps.*" 
+		  xmlns:vos="com.Billback.Search.vos.*" 
+		  creationComplete="applyRuntimeStyleSheet();" 
+		  implements="com.Billback.Main.models.IBBSearch"
+		  height="97%">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:BBSearchEventMap dispatcher="{this}" cache="local" />
+	</fx:Declarations>
+	<fx:Script><![CDATA[
+		import com.Billback.Main.models.IBBSearch;
+		import com.Billback.Main.models.vos.BBHeader;
+		import com.Billback.Search.events.BBSearchEvent;
+		import com.shared.events.MainEvent;
+		import com.shared.models.SettingsManager;
+		import com.shared.vos.Settings;
+		
+		import mx.controls.Alert;
+		import mx.core.mx_internal;
+		
+		private function applyRuntimeStyleSheet():void {
+			//styleManager.loadStyleDeclarations("/flex/mainFx410.swf");
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+			this.addEventListener(KeyboardEvent.KEY_UP, searchBBKeyHandler,false,0,true);
+		}
+
+		private function searchBBKeyHandler(event:KeyboardEvent):void 
+		{
+			var bShiftPressed:Boolean = event.shiftKey;
+			var bCTRLPressed:Boolean = event.ctrlKey;
+			
+			if (bCTRLPressed) {
+				var curKeyCode:int = event.keyCode;
+				
+				// Refresh Dashboard = CTRL+SHIFT+R(82)
+				if (bShiftPressed && curKeyCode == 82) {
+					event.preventDefault();
+					var evt:BBSearchEvent = new BBSearchEvent(BBSearchEvent.REFRESH_BB_SEARCH);
+					this.dispatchEvent( evt );					
+				}				
+			}
+		}
+		
+		public function getLoadLookupData(uid:String):void{
+			var event:BBSearchEvent = new BBSearchEvent ( BBSearchEvent.LOAD_BB_SEARCH_LOOKUP_DATA );
+			event.userId = uid;
+			this.dispatchEvent( event );
+		}
+		
+		
+		public function setSettings(settings:Settings):void{
+			var event:MainEvent = new MainEvent ( MainEvent.SET_LOCAL_APP_SETTINGS );
+			event.settings = settings;
+			this.dispatchEvent( event );
+			
+		}
+		
+		public function setSearch(uid:String,status:int):void{
+			var event:BBSearchEvent = new BBSearchEvent ( BBSearchEvent.LOAD_SO_ITEMS );
+			event.userId = uid;
+			event.eStatus = status;
+			this.dispatchEvent( event );
+		}
+		
+		public function setUpdateSearchBBHeader(bh:BBHeader):void{
+			var event:BBSearchEvent = new BBSearchEvent ( BBSearchEvent.SET_UPDATE_BB_HEADER );
+			event.eBBHeader = bh;
+			this.dispatchEvent( event );
+		}
+		
+		public function setDeleteSearchBBHeader(bh:BBHeader):void{
+			var event:BBSearchEvent = new BBSearchEvent ( BBSearchEvent.SET_DELETE_BB_HEADER );
+			event.eBBHeader = bh;
+			this.dispatchEvent( event );
+		}
+	]]>
+	</fx:Script>
+	
+	<!-- Views _______________________________________________________ -->
+	<s:HGroup width="100%" height="100%">
+		<view:BBSearchPanel />
+	</s:HGroup>
+</s:Module>

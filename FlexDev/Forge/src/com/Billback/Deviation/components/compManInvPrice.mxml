@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for calculating and displaying the column Final Payment in the DataGrid
+-->
+
+	<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" textAlign="center" horizontalScrollPolicy="off" verticalScrollPolicy="off" width="100%"  
+		verticalAlign="middle" implements="mx.managers.IFocusManagerComponent">
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.external.ExternalInterface
+			import com.Billback.Deviation.asfusion.mate.events.Dispatcher;
+			import mx.events.CloseEvent;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			[Bindable]
+			public var newManPrice:String;
+
+			[Bindable]
+      public var value:Object;
+      
+      // Implement the drawFocus() method for the VBox.
+            override public function drawFocus(draw:Boolean):void {
+                //txtMan.setFocus();
+                rdoInvPr.setFocus();
+                //if(rdoInvPr.tabIndex)
+                
+            }      
+            
+			public function fnKeyEntered(eventObj:KeyboardEvent):void
+			{
+				if (eventObj.keyCode == Keyboard.ENTER)
+				{
+					parentDocument.fnSetInvManual(this)
+				}
+			}
+			
+		]]>
+</mx:Script>
+
+						    		<mx:RadioButton selected="{data.Selected_Invoice_Price_Type=='3'}" groupName="rdoInv{data.SrNo}" value="3" id="rdoInvPr"
+						    			paddingLeft="6" click="parentDocument.fnRdoInvChange(this,'3');" paddingRight="0" tabIndex="1"
+						    			 deactivate="txtMan.text=''"  enabled="{(parentDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0')}"
+						    			visible="{data.Editable_Rate=='0'}"/> 
+						    			<mx:TextInput  id="txtMan" restrict="0-9.,-" maxChars="9"   
+						    				textAlign="right" width="70" paddingLeft="0" toolTip="Hit &lt;Enter&gt; after entering value" height="20" 
+						    		 	 enabled="{(data.Selected_Invoice_Price_Type=='3') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0')}" 
+						    		 	 text="{data.Manual_Invoice_Price}" tabIndex="2"
+						    		 	visible="{data.Editable_Rate=='0'}"
+						    		 	enter="parentDocument.fnSetInvManual(this)"
+						    		 	 focusOut="parentDocument.fnSetInvManual(this)" 
+						    		 	/><!--  change="parentDocument.fnSetInvManual(this)" keyUp="fnKeyEntered(event)" change="parentDocument.fnSetInvManual(this)" newManPrice=txtMan.text;  -->
+						    	</mx:HBox>		 			 
+
+ 

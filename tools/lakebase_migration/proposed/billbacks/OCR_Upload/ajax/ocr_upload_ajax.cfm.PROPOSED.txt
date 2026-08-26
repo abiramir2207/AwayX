@@ -1,0 +1,22 @@
+===== QUERY: getDuplicateUpload =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetDuplicateUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForgetDuplicateUpload>
+	<cftry>
+		<cfset getDuplicateUpload = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"header_file_name" = "eq.#cffile.serverFile#",
+				"limit" = "1",
+				"select" = "[file_name]"
+			}), "[file_name]"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDuplicateUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDuplicateUpload>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

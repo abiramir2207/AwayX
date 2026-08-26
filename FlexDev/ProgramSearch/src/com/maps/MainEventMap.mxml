@@ -1,0 +1,1208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- It controls the application flow.Here events are created and dispatched. -->
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" 
+	xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.events.*;
+			import com.models.*;
+			import com.views.*;
+			//import com.vos.*;
+		]]>
+	</mx:Script>
+	
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  _________________________________________________________________________ -->
+	
+	<!-- <mate:Debugger level="{Debugger.ALL}" /> -->
+	
+	<!--- source: mvc.Models.Program.Search_Program -->
+	<mx:RemoteObject  id="SearchProgramDataService" destination="ColdFusion" source="mvc.Models.Program.Search_Program" />
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.Models.ErrorService" />
+	<!--- source: mvc.Models.Program.ProgramList -->
+	<mx:RemoteObject id="ProgramListService" destination="ColdFusion" source="mvc.Models.Program.ProgramList" />
+	<!--- url: /flex/HTTPService/program/getHTTPServiceData.cfm -->
+	<mx:HTTPService  id="MainProgramService" method="GET" resultFormat="text" showBusyCursor="true"/>
+	
+	<!--- FlexEvent.PREINITIALIZE __________________________________________________________________-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="FlexEvent_PREINITIALIZE">
+		<ObjectBuilder generator="{ProgramSearchManager}" id="oProgramSearchManager" cache="global" />
+		<ObjectBuilder generator="{ProgramSettingsManager}" id="oSettingsManager" cache="global" />		
+		<ObjectBuilder generator="{BAError}" id="oBAError" cache="global" />
+		<ObjectBuilder generator="{ListManager}" id="oListManager" cache="global" />
+		<MethodInvoker generator="{ProgramSettingsManager}" method="loadURLParameters"   cache="global" />
+
+		<EventAnnouncer type="{SearchProgramEvent.LOAD_APP_SETTINGS}" generator="{SearchProgramEvent}" >
+		<!-- Call the "SearchProgramEvent.EVT_LOADCOMBOS" to load the search options dropdowns, right after the 
+		setting are loaded. The event call exists on "ProgramSettingsManager.as".
+		-->
+			<Property sourceCache="global" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			<Property source="{ProgramSettingsManager}" sourceKey="settings.timeZoneOffset" targetKey="timeZoneOffset" />
+			<Property source="{ProgramSettingsManager}" sourceKey="settings.useDayLightSavingsTime" targetKey="useDayLightSavingsTime" />
+		</EventAnnouncer>				
+		<!--Get Programs -->
+		<!--<EventAnnouncer type="{SearchProgramEvent.GET}" generator="{SearchProgramEvent}" >
+			<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			<Properties ArchiveYear = "" />
+			<Properties showCatalog = "false" />
+		</EventAnnouncer>-->	
+	</EventHandlers>	
+	
+	<!--- Call this Event right after the application creation is Complete -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" dispatcherType="global" id="FlexEvent_CREATION_COMPLETE">
+		<!--<MethodInvoker generator="{ProgramSearchManager}" method="setdSOlastSavedDate"  cache="global" />-->
+		<!-- The "SearchProgramEvent.EVT_LOADCOMBOS" call is on ProgramSettingsManager -->
+		<!--<EventAnnouncer generator="{SearchProgramEvent}"  type="{SearchProgramEvent.EVT_LOADCOMBOS}"  />-->
+
+		<!-- Get Programs -->
+		<!--<EventAnnouncer type="{SearchProgramEvent.GET}" generator="{SearchProgramEvent}" >
+			<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			<Properties ArchiveYear = "" />
+			<Properties showCatalog = "false" />
+			<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.status" targetKey="eStatus"/>
+		</EventAnnouncer> -->
+			<!-- We need to filter the records based on the status link linked.
+			By default, it will get all (When we click on Search program Link), as no status is passed. -->		
+			<EventAnnouncer generator="{SearchProgramEvent}"  type="{SearchProgramEvent.LOAD_SO_ITEMS}">
+					<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.status" targetKey="eStatus"/>
+					<Properties sStartDate = "" />
+					<Properties sEndDate = "" />
+					<Property sourceCache="global" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+					<Properties showCatalog = "0" />
+					<Property sourceCache="global" source="{ProgramSettingsManager}" sourceKey="settings.Creating_User_Position" targetKey="Creating_User_Position"/>
+					<Property sourceCache="global" source="{ProgramSettingsManager}" sourceKey="settings.Include_work_in_progress_below_me" targetKey="Include_work_in_progress_below_me"/>
+			</EventAnnouncer>
+	</EventHandlers>
+		
+	<!--- 
+	 Load Program Data 
+	 @see com.models.ProgramSearchManager#loadSOitems() 
+     ** Handler: ProgramSearchManager.loadSOitems 
+	-->
+	<EventHandlers type="{SearchProgramEvent.LOAD_SO_ITEMS}" id="SearchProgramEvent_LOAD_SO_ITEMS">
+		<MethodInvoker generator="{ProgramSearchManager}" method="loadSOitems" arguments="{[event.eStatus,event.sStartDate,event.sEndDate,event.userId,event.showCatalog,event.Creating_User_Position,event.Include_work_in_progress_below_me]}" />
+	</EventHandlers>
+	
+	 <!--- 
+	  LOAD APP SETTINGS ___________________________________________________________
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getSettingsObject
+      @see com.models.ProgramSettingsManager#setAppSettings() 
+      ** Handler: ProgramSettingsManager.setAppSettings 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.LOAD_APP_SETTINGS}" id="SearchProgramEvent_LOAD_APP_SETTINGS">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getSettingsObject" arguments="{[event.userId,event.timeZoneOffset,event.useDayLightSavingsTime]}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+			<EventAnnouncer type="{SearchProgramEvent.GET_USERLIST}" generator="{SearchProgramEvent}" >
+				<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+			</EventAnnouncer>
+	</EventHandlers>
+	
+	<!--- Event that calls the GET Event -->
+	<!--
+	<EventHandlers type="{SearchProgramEvent.CALL_GET}" id="SearchProgramEvent_CALL_GET">
+		<EventAnnouncer type="{SearchProgramEvent.GET}" generator="{SearchProgramEvent}" >
+			<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			<Properties ArchiveYear = "" />
+			<Properties showCatalog = "0" />
+		</EventAnnouncer>
+	</EventHandlers>
+	-->
+	
+	<!--- 
+	Check if all the data required to load the "program search data" has already been loaded.
+	@see com.models.ProgramSearchManager#checkMasterDataComplete() 
+	** Invoke: ProgramSearchManager.checkMasterDataComplete  
+	-->
+	<EventHandlers type="{SearchProgramEvent.CHECK_MASTER_DATA_COMPLETE}" id="SearchProgramEvent_CHECK_MASTER_DATA_COMPLETE">
+		<MethodInvoker generator="{ProgramSearchManager}" method = "checkMasterDataComplete" />
+	</EventHandlers>
+
+	<!--- 
+	  GET Program data through HTTPService___________________________________________________________	
+      @see #MainProgramService
+      ** HTTPServiceInvoke: MainProgramService
+      @see com.models.ProgramSearchManager#saveCSVData() 
+      ** Handler: ProgramSearchManager.saveCSVData 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET}" id="SearchProgramEvent_GET">
+	<HTTPServiceInvoker  instance="{MainProgramService}" url="/flex/HTTPService/program/getHTTPServiceData.cfm">
+		<Request 
+			sStartDate ="{event.sStartDate}"
+			sEndDate ="{event.sEndDate}" 
+			userId ="{event.userId}"
+			showCatalog = "{event.showCatalog}"
+			Include_work_in_progress_below_me = "{event.Include_work_in_progress_below_me}"
+			Creating_User_Position = "{event.Creating_User_Position}"
+
+			 />
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="saveCSVData" arguments="{[resultObject,event.showCatalog,event.sStartDate,event.sEndDate,event.Creating_User_Position,event.Include_work_in_progress_below_me]}" />
+				<!-- We do not need the status filter below as it is already being done above using event called FILTER_STATUS_RESULTS -->
+				<!--if a status is passed send it to search panel to invoke the filter
+				<EventAnnouncer type="{SearchProgramEvent.SET_FILTER}" generator="{SearchProgramEvent}" >
+					<Properties eStatus="{event.eStatus}" />
+				</EventAnnouncer>
+				-->
+				<!-- Sort the Grid by its default values (column name and sort order)
+				<EventAnnouncer type="{SearchProgramEvent.DATA_GRID_SORT}" generator="{SearchProgramEvent}" />
+				-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get programs)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</HTTPServiceInvoker>
+	</EventHandlers>
+
+
+
+	<EventHandlers type="{SearchProgramEvent.IMPORT_ITEMS}" id="eIMPORT_ITEMS">
+        <MethodInvoker 	generator="{ProgramSearchManager}" method="importItems" />
+    </EventHandlers>
+
+
+
+
+	<!--- 
+	  Remote Filter data call___________________________________________________________		
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.filterData
+      @see com.models.ProgramSearchManager#setRoFilter() 
+      ** Handler: ProgramSearchManager.setRoFilter  
+  	-->
+	<EventHandlers type="{SearchProgramEvent.RO_FILTER_PROGRAMS}" id="SearchProgramEvent_RO_FILTER_PROGRAMS">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="filterData" 
+			arguments="{[event.eDistributor_Info,event.eOperator_Info,event.eItem_Info,event.eStatus,event.userId,event.eBuyingGroups,event.eFamilyName,
+			event.eUName,event.ePositions,event.eProgramInfo,event.eBudgetClasses]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="setRoFilter" arguments="{resultObject}" />
+				<EventAnnouncer generator="{SearchProgramEvent}"  type="{SearchProgramEvent.FILTER_RESULTS}">
+					<Properties eStatus="{event.eStatus}" />
+					<Properties eTemplate="{event.eTemplate}" />
+					<Properties eRSP="{event.eRSP}" />
+					<Properties eBuyingGroups="{event.eBuyingGroups}" />
+					<Properties eFamilyName="{event.eFamilyName}" />
+					<Properties eUName ="{event.eUName}" />
+					<Properties ePositions="{event.ePositions}" />
+					<Properties eProgramInfo="{event.eProgramInfo}" />
+					<Properties eReportType="{event.eReportType}" />
+					<Properties eConditions="{event.eConditions}" />
+					<Properties eProgram_Info="{event.eProgram_Info}" />
+					<Properties eDistributor_Info="{event.eDistributor_Info}" />
+					<Properties eOperator_Info="{event.eOperator_Info}" />
+					<Properties eItem_Info="{event.eItem_Info}" />
+					<Properties eBudgetClasses="{event.eBudgetClasses}" />
+					<Properties eBusinessSegments ="{event.eBusinessSegments}" />
+    			</EventAnnouncer>
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get remote filter array)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	<!-- END END Remote Filter Data call -->
+	
+	<!--- 
+	  Remote Filter data call___________________________________________________________		
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getAllTemplate
+      @see com.models.ProgramSearchManager#fnGetAllTemplate() 
+      ** Handler: ProgramSearchManager.fnGetAllTemplate  
+
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getAllStatus
+      @see com.models.ProgramSearchManager#fnGetAllStatus() 
+      ** Handler: ProgramSearchManager.fnGetAllStatus  
+      
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getAllUserPositions
+      @see com.models.ProgramSearchManager#fnGetAllUserPositions() 
+      ** Handler: ProgramSearchManager.fnGetAllUserPositions  
+      
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getAllBuyingGroups
+      @see com.models.ProgramSearchManager#fnGetAllBuyingGroups() 
+      ** Handler: ProgramSearchManager.fnGetAllBuyingGroups 
+      
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getAllFamilyNames
+      @see com.models.ProgramSearchManager#fnGetAllFamilyNames() 
+      ** Handler: ProgramSearchManager.fnGetAllFamilyNames 
+	
+	  @see #SearchProgramDataService
+	  ** RemoteInvoke: SearchProgramDataService.getBudgetClasses
+	  @see com.models.ProgramSearchManager#fnGetBudgetClasses() 
+	  ** Handler: ProgramSearchManager.fnGetBudgetClasses
+            
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getUsersAndPositions
+      @see com.models.ProgramSearchManager#fnGetUsers() 
+      ** Handler: ProgramSearchManager.fnGetUsers 
+      
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getUsersAndPositions
+      @see com.models.ProgramSearchManager#fnGetRSP() 
+      ** Handler: ProgramSearchManager.fnGetRSP 
+      
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getIsBidRequest
+      @see com.models.ProgramSearchManager#fnGetBidRequestTemplate() 
+      ** Handler: ProgramSearchManager.fnGetBidRequestTemplate 
+      @see com.models.ProgramSearchManager#fnGetReportType() 
+      ** Handler: ProgramSearchManager.fnGetReportType 
+      
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getDistinctYears
+      @see com.models.ProgramSearchManager#fnGetProgramDistinctYears() 
+      ** Handler: ProgramSearchManager.fnGetProgramDistinctYears
+      
+      @see com.models.ProgramSearchManager#fnGetProgram() 
+      ** Invoke: ProgramSearchManager.fnGetProgram     
+  	-->
+	<EventHandlers type="{SearchProgramEvent.EVT_LOADCOMBOS}" id="SearchProgramEvent_EVT_LOADCOMBOS">
+		<!-- initialize all the drop downs on the page -->	
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getAllTemplate">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetAllTemplate" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="TEMPLATE ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		
+	 	<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getAllStatus">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker  generator="{ProgramSearchManager}" method="fnGetAllStatus" arguments="{resultObject}" />
+					<!-- Earlier, we used to set the status passed from the scorecard as the status selected in the status dropdown and then
+						  search based on the status of the dropdown, but since we do not know the order of the Mate call, the filter function 
+						  ("setStatusFilter" on programsearchpanel file used to fired even before the status dropdown was populated. So, we 
+						  separated the code for filtering and dropdown status selection. Now the filtering is independent of the dropdown status 
+						  selection. The dropdown status selection happens when the dropdown gets populated and that is why the event "SET_FILTER"
+						  is being called from here. The filtering on the other hand happens using the event "FILTER_STATUS_RESULTS". The statuses
+						  are filtered in 2 ways - one is flitering the grid based on what is already available to flex and the other is when Flex
+						  needs to make a CF call to get the program id's to filter. This happens on Agreed, Under Review and Pending Approval.
+					-->
+					<EventAnnouncer type="{SearchProgramEvent.SET_FILTER}" generator="{SearchProgramEvent}" >
+						<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.status" targetKey="eStatus"/>
+					</EventAnnouncer>
+					
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="STATUS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>		
+
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getAllUserPositions">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetAllUserPositions" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="USERPOSITIONS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>		
+	
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getAllBuyingGroups">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetAllBuyingGroups" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault  -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="BUYING GROUPS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getAllFamilyNames">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetAllFamilyNames" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="FAMILY NAMES ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>		
+
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getUsersAndPositions">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetUsersAndPositions" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="USERS AND POSITIONS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+			
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getBudgetClasses">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetBudgetClasses" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="BUDGET CLASS LIST ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getBusinessSegments">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetBusinessSegments" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="BUSINESS SEGMENTS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+		<!---
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getUsersAndPositions">
+			- result sequence gets executed when service returns with a result -
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetRSP" arguments="{resultObject}" />
+			</resultHandlers>
+			- server fault -
+			<faultHandlers>
+				- announce error event -
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="RSP ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		-->
+		
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getIsBidRequest">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetBidRequestTemplate" arguments="{resultObject}" />
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetReportType"  /> 
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM BID REQUEST TEMPLATE CHECK ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+		
+		<!--	<EventHandlers type="{SearchProgramEvent.GET_DISTINCT_PROGRAM_YEARS}" debug="false">
+		--><RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getDistinctYears">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetProgramDistinctYears" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM DISTINCT YEARS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+	<!--</EventHandlers>-->
+	
+		 <MethodInvoker generator="{ProgramSearchManager}" method="fnGetProgram"  /> 
+ 		 <MethodInvoker generator="{ProgramSearchManager}" method="fnGetConditions"  />
+
+ 	</EventHandlers>
+
+	<!--- 
+	  Filter results by status when visited by scorecard
+      @see com.models.ProgramSearchManager#programFilterStatus() 
+      ** Invoke: ProgramSearchManager.programFilterStatus  
+  	-->
+ 	<EventHandlers type="{SearchProgramEvent.FILTER_STATUS_RESULTS}" id="SearchProgramEvent_FILTER_STATUS_RESULTS">
+		<MethodInvoker generator="{ProgramSearchManager}" method = "programFilterStatus"
+		 arguments="{[event.eStatus]}" />
+	</EventHandlers>	
+	
+	<!--- 
+	  It accepts the search options and calls "programFilterFunc", which filters the results
+      @see com.models.ProgramSearchManager#programFilter() 
+      ** Invoke: ProgramSearchManager.programFilter  
+  	-->
+	<EventHandlers type="{SearchProgramEvent.FILTER_RESULTS}" id="SearchProgramEvent_FILTER_RESULT">
+		<MethodInvoker generator="{ProgramSearchManager}" method = "programFilter"
+		 arguments="{[	event.eProgram_Info,
+		 				event.eDistributor_Info,
+		 				event.eOperator_Info,
+						event.eItem_Info,
+						event.eStatus,
+						event.eTemplate,
+						event.eRSP,
+						event.eBuyingGroups,
+						event.eFamilyName,
+		 				event.eUName,
+						event.ePositions,
+						event.eProgramInfo,
+						event.eReportType,
+						event.eConditions,
+		 				event.eBudgetClasses,
+		 				event.eBusinessSegments]}" />
+	</EventHandlers>	
+			
+	<!-- 
+	<EventHandlers type="{SearchProgramEvent.RESET_FILTERS}">
+	 <MethodInvoker generator="{ProgramSearchManager}" method = "programResults"
+		 arguments="{[event.programAC]}" />
+	</EventHandlers>		
+	-->
+	
+   	<!--- 
+	  Delete the program from db and datagrid
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.SetDeleteProgram
+      @see com.models.ProgramSearchManager#delRowInGrid() 
+      ** Handler: ProgramSearchManager.delRowInGrid  
+  	-->
+	<EventHandlers type="{SearchProgramEvent.SC_SCISSOR_CLICKED}" debug="false" id="SearchProgramEvent_SC_SCISSOR_CLICKED">
+
+	 <RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="SetDeleteProgram" 
+       arguments="{[event.programId,event.userId]}"> 
+	
+	<resultHandlers>
+	 <MethodInvoker generator="{ProgramSearchManager}" method = "delRowInGrid"
+		 arguments="{[event.programId,resultObject]}" />
+	</resultHandlers>
+	
+	<!-- server fault -->
+	<faultHandlers>
+		<!--announce error event -->
+		<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+			<Properties sBaError="PROGRAM DELETE ERROR" />
+			<Properties oBaError="{fault}" />
+		</EventAnnouncer>
+	</faultHandlers>
+	</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--- 
+	  Get the list of programs to generate a xls file
+      @see com.models.ProgramSearchManager#fnExportxls()
+      ** Invoke: ProgramSearchManager.fnExportxls 
+  	-->
+	<EventHandlers type="{SearchProgramEvent.EXPORT_XLS}" debug="false" id="SearchProgramEvent_Export_XLS">
+    <MethodInvoker generator="{ProgramSearchManager}" method="fnExportXLS" />
+	</EventHandlers>
+		
+	<!-- START USER LIST -->
+   	<!--- 
+	  CREATE USER ITEM LIST  _________________________________________________________
+      @see com.models.ProgramSearchManager#createList() 
+      ** Invoke: ProgramSearchManager.createList  
+  	-->
+	<EventHandlers type="{SearchProgramEvent.CREATE_LIST}" id="SearchProgramEvent_CREATE_LIST">
+        <MethodInvoker 	generator="{ProgramSearchManager}" method="createList"
+        				arguments="{[event.iList]}" />
+    </EventHandlers>
+    
+	<!--- 
+	  DISPLAY USER ITEM LIST  _________________________________________________________
+      @see com.models.ProgramSearchManager#displayList() 
+      ** Invoke: ProgramSearchManager.displayList  
+  	-->
+	<EventHandlers type="{SearchProgramEvent.GET_USERLIST_ITEMS}" id="SearchProgramEvent_GET_USERLIST_ITEMS">
+        <MethodInvoker 	generator="{ProgramSearchManager}" method="displayList"
+        				arguments="{[event.arrUserListItems]}" />
+    </EventHandlers>
+    
+  	<!--- 
+	  GET SAVED USER ITEM LIST  _________________________________________________________
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getUserProgramList
+      @see com.models.ListManager#userItemListResults() 
+      ** Handler: ListManager.userItemListResults 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_USERLIST}" id="SearchProgramEvent_GET_USERLIST">
+        <RemoteObjectInvoker instance="{ProgramListService}" showBusyCursor="true" method="getUserProgramList" 
+        						arguments="{event.userId}">  		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ListManager}" method="userItemListResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="USER LIST SERVICE (get)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+  
+    <!--- 
+	  SAVE FAVORITES AS A QUERY _________________________________________________________
+      @see #ProgramListService
+      ** RemoteInvoke: ProgramListService.saveUserProgramCriteria
+      @see com.models.ListManager#saveItemListResults() 
+      ** Handler: ListManager.saveItemListResults 
+  	 -->
+  	 <EventHandlers type="{SearchProgramEvent.SAVE_USERLIST}" id="SearchProgramEvent_SAVE_USERLIST">
+       <RemoteObjectInvoker instance="{ProgramListService}" showBusyCursor="true" method="saveUserProgramCriteria" 
+        	arguments="{[event.userId,event.userListItemsName,event.eStatus,event.eTemplate,event.eRSP,event.eBuyingGroups,event.eFamilyName,event.eUName,event.ePositions,event.eProgramInfo,
+			event.eReportType,event.eConditions,event.eProgram_Info,event.eDistributor_Info,event.eOperator_Info,event.eItem_Info,event.eBudgetClasses,event.eBusinessSegments]}">		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<!--
+			<resultHandlers>
+				<MethodInvoker generator="{ListManager}" method="saveItemListResults" arguments="{resultObject}" />
+			</resultHandlers>
+			 -->
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="SAVE FAVORITES QUERY" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		<!--reload user list-->
+			<EventAnnouncer type="{SearchProgramEvent.GET_USERLIST}" generator="{SearchProgramEvent}" >
+				<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			</EventAnnouncer>
+    </EventHandlers>
+    
+	<!--- 
+	  DELETE USER ITEM LIST  ___________________________________________________________
+      @see #ProgramListService
+      ** RemoteInvoke: ProgramListService.deleteUserProgramList
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.DELETE_USERLIST}" id="SearchProgramEvent_DELETE_USERLIST">
+        <RemoteObjectInvoker instance="{ProgramListService}" showBusyCursor="true" method="deleteUserProgramList" arguments="{event.userListId}">	 
+			<!-- result sequence gets executed when service returns with a result -->
+			
+			<resultHandlers>
+				<!--reload user list after the delete-->
+				<EventAnnouncer type="{SearchProgramEvent.GET_USERLIST}" generator="{SearchProgramEvent}" >
+					<Property sourceCache="inherit" source="{ProgramSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+				</EventAnnouncer>
+				<!-- MethodInvoker generator="{ProgramSearchManager}" method="Alerter" arguments="{data.tmpUserId}"/	
+				<MethodInvoker generator="{ListManager}" method="deleteItemListResults" arguments="{data.tmpUserId}" />
+				-->	
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event-->
+				<EventAnnouncer type="{SearchProgramEvent.BSA_ERROR}" generator="{SearchProgramEvent}" >
+					<Properties sBaError="USER LIST SERVICE (delete)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+	
+	<EventHandlers type="{SearchProgramEvent.UPDATE_CREATE_LIST}" id="SearchProgramEvent_UPDATE_CREATE_LIST" debug="false">
+		<MethodInvoker generator="{ProgramSearchManager}" method = "update_create_list"
+					   arguments="{event.sUpdateCreateList}" />
+	</EventHandlers>
+	
+<!-- END USER LIST -->	
+
+	<!--- 
+	  By selecting a user from the user dropdown, the position dropdown will have the position of the selected user
+      @see com.models.ProgramSearchManager#Set_User_Position() 
+      ** Invoke: ProgramSearchManager.Set_User_Position  
+  	-->
+	<EventHandlers type="{SearchProgramEvent.SET_USER_POSITION}" id="SearchProgramEvent_SET_USER_POSITION" debug="false">
+	 <MethodInvoker generator="{ProgramSearchManager}" method = "Set_User_Position"
+		 arguments="{event.eUserName}" />
+	</EventHandlers>	
+	
+	<!--- 
+	  Get program renewal info: Whether the program is to be renewed OR has been renewed
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getProgramAutoRenewInfo
+      @see com.models.ProgramSearchManager#fnGetProgramAutoRenewInfo() 
+      ** Handler: ProgramSearchManager.fnGetProgramAutoRenewInfo 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_PROGRAM_AUTORENEW_INFO}" id="SearchProgramEvent_GET_PROGRAM_AUTORENEW_INFO" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getProgramAutoRenewInfo" arguments="{event.eAutoRenewInfo}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetProgramAutoRenewInfo" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP AUTO RENEW ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program Interface (ERP) info:sending,sent etc
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getInterfaceInfo
+      @see com.models.ProgramSearchManager#fnGetInterfaceInfo() 
+      ** Handler: ProgramSearchManager.fnGetInterfaceInfo 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_INTERFACE_INFO}" id="SearchProgramEvent_GET_INTERFACE_INFO" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getInterfaceInfo" arguments="{event.eInterfaceInfo}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetInterfaceInfo" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP INTERFACE INFO ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program Attachment info
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getAttachmentInfo
+      @see com.models.ProgramSearchManager#fnGetAttachmentInfo() 
+      ** Handler: ProgramSearchManager.fnGetAttachmentInfo 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_ATTACHMENT_INFO}" id="SearchProgramEvent_GET_ATTACHMENT_INFO" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getAttachmentInfo" arguments="{event.eAttachmentInfo}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetAttachmentInfo" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP ATTACHMENT ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program SAP reference numbers
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getProgramSAPInfo
+      @see com.models.ProgramSearchManager#fnGetProgramSAPInfo() 
+      ** Handler: ProgramSearchManager.fnGetProgramSAPInfo 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_PROGRAM_SAP_INFO}" id="SearchProgramEvent_GET_PROGRAM_SAP_INFO" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getProgramSAPInfo" arguments="{event.eProgramSAPInfo}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetProgramSAPInfo" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP SAP INFO ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program details for the pop up
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getProgramDetails
+      @see com.models.ProgramSearchManager#fnGetProgramDetails() 
+      ** Handler: ProgramSearchManager.fnGetProgramDetails 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_PROGRAM_DETAILS}" id="SearchProgramEvent_GET_PROGRAM_DETAILS" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getProgramDetails" arguments="{event.eProgramDetailsInfo}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetProgramDetails" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP PROGRAM DETAILS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program CRA info
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getApprovableUserList
+      @see com.models.ProgramSearchManager#fnGetCRADetails() 
+      ** Handler: ProgramSearchManager.fnGetCRADetails 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_CRA_DETAILS}" id="SearchProgramEvent_GET_CRA_DETAILS" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getApprovableUserList" arguments="{[event.eCRADetailsInfo,event.eResponsibleUserIDInfo]}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetCRADetails" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP CRA DETAILS ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+
+	<!--- 
+	  Get program workflow info
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getWorkFlowData
+      @see com.models.ProgramSearchManager#fnGetWorkFlowData() 
+      ** Handler: ProgramSearchManager.fnGetWorkFlowData 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_WORKFLOW_DATA}" id="SearchProgramEvent_GET_WORKFLOW_DATA" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getWorkFlowData" arguments="{event.eWorkflowData}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetWorkflowData" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP WORKFLOW DATA ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program next responsible approver info
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getNextApprovableUsers
+      @see com.models.ProgramSearchManager#fnGetNRAData() 
+      ** Handler: ProgramSearchManager.fnGetNRAData 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_NRA_DATA}" id="SearchProgramEvent_GET_NRA_DATA" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getNextApprovableUsers" arguments="{event.eNRAData}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetNRAData" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP NEXT RESPONSIBLE APPROVER DATA ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program revision info: whether the program is revised
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getAreThereRevisions
+      @see com.models.ProgramSearchManager#fnGetProgramRevisionCount() 
+      ** Handler: ProgramSearchManager.fnGetProgramRevisionCount 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_PROGRAM_REVISION_COUNT}" id="SearchProgramEvent_GET_PROGRAM_REVISION_COUNT" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getAreThereRevisions" arguments="{event.eProgramRevisionCountInfo}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetProgramRevisionCount" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM POPUP REVISION COUNT ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+	<!--- 
+	  Get program GL Account info
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getGLAccount
+      @see com.models.ProgramSearchManager#fnGetGLAccount() 
+      ** Handler: ProgramSearchManager.fnGetGLAccount 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_GL_ACCOUNT_INFO}" id="SearchProgramEvent_GET_GL_ACCOUNT_INFO" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getGLAccount" arguments="{event.eGLAccountInfo}">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetGLAccount" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM GL ACCOUNT ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+
+	</EventHandlers>
+	
+
+	<!--- 	
+	GET ALL COLUMNS SIZE
+	@see #SearchProgramDataService
+	** RemoteInvoke : SearchProgramDataService.getSearchGridColumnSize() -->
+	<EventHandlers type="{SearchProgramEvent.GET_ALL_COLUMNS_SIZE}" id="SearchProgramEvent_GET_ALL_COLUMNS_SIZE" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getSearchGridColumnSize" arguments="{event.userId}">
+			<resultHandlers>	
+				<!-- set grid's column width -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.SET_COLUMN_SIZE}">
+					<Properties eSearchGridColumnSize = "{resultObject}" />
+				</EventAnnouncer>
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer  generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="GET ALL COLUMNS SIZE ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker> 	
+	</EventHandlers>
+	
+	<!--- 
+	SAVE ALL COLUMNS SIZE
+	@see #SearchProgramDataService
+	** RemoteInvoke: SearchProgramDataService.saveBBSearchGridColumnSize
+	-->
+	<EventHandlers type="{SearchProgramEvent.SAVE_ALL_COLUMNS_SIZE}" id="SearchProgramEvent_SAVE_ALL_COLUMNS_SIZE" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="saveSearchGridColumnSize" arguments="{[event.userId,event.eSearchGridColumnSize]}">
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="SAVE ALL COLUMNS SIZE ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+	</EventHandlers>
+	
+	
+	<!--- 
+	SET COLUMN SIZE
+	@see com.models.ProgramSearchManager#setColumnSize() 
+	** Invoke: ProgramSearchManager.setColumnSize  
+	-->
+	<EventHandlers type="{SearchProgramEvent.SET_COLUMN_SIZE}" id="SearchProgramEvent_SET_COLUMN_SIZE" debug="false">
+		<MethodInvoker generator="{ProgramSearchManager}" method = "setAllColumnsSize"
+					   arguments="{event.eSearchGridColumnSize}" />
+	</EventHandlers>
+	
+	<!--- 
+	  Whether the business segment is ON
+      @see #SearchProgramDataService
+      ** RemoteInvoke: SearchProgramDataService.getBusinessSegmentSetting
+      @see com.models.ProgramSearchManager#fnGetBusinessSegmentSetting() 
+      ** Handler: ProgramSearchManager.fnGetBusinessSegmentSetting 
+  	 -->
+	<EventHandlers type="{SearchProgramEvent.GET_BUSINESS_SEGMENT_SETTING}" id="SearchProgramEvent_GET_BUSINESS_SEGMENT_SETTING" debug="false">
+		<RemoteObjectInvoker instance="{SearchProgramDataService}" showBusyCursor="true" method="getBusinessSegmentSetting">
+		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ProgramSearchManager}" method="fnGetBusinessSegmentSetting" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer generator="{SearchProgramEvent}" type="{SearchProgramEvent.BSA_ERROR}">
+					<Properties sBaError="PROGRAM BUSINESS SEGMENT SETTING RETRIEVAL ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>	
+	</EventHandlers>
+	
+	<!--- 
+	PASS STATUS FOR FILTER  _________________________________________________________
+	@see com.models.ProgramSearchManager#setStatus() 
+	** Invoke: ProgramSearchManager.setStatus  
+	-->
+	<EventHandlers type="{SearchProgramEvent.SET_STATUS}" id="SearchProgramEvent_SET_STATUS">
+		<MethodInvoker 	generator="{ProgramSearchManager}" method="setStatus"
+						arguments="{[event.eStatus]}" />
+	</EventHandlers>
+	
+	<!---BSA CUSTOM ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{SearchProgramEvent.BSA_ERROR}" id="SearchProgramEvent_BSA_ERROR">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+     </EventHandlers>
+
+	<!---GLOBAL ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}" id="UnhandledFaultEvent_FAULT">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+     
+   <!-- **********************************************************************
+			Some of the properties that are set using the "get" methods does 
+			not seem to be working as intended therefore we are setting the 
+			values here using the below PropertyInjectors
+			- Anand Rao/27-APR-09	
+	********************************************************************** -->
+	<Injectors target="{ProgramSearchPanel}" debug="false">
+		<PropertyInjector softBinding="true"  targetKey="dgProgramData" source="{ProgramSearchManager}" sourceKey="acProgramData" />
+		<PropertyInjector softBinding="true"  targetKey="dpTemplate" source="{ProgramSearchManager}" sourceKey="arrAllTemplate" />
+		<PropertyInjector softBinding="true"  targetKey="dpStatus" source="{ProgramSearchManager}" sourceKey="arrAllStatus" />
+		<PropertyInjector softBinding="true"  targetKey="dpUserPositions" source="{ProgramSearchManager}" sourceKey="arrAllUserPositions" />
+		<PropertyInjector softBinding="true"  targetKey="dpBuyingGroups" source="{ProgramSearchManager}" sourceKey="arrAllBuyingGroups" />
+		<PropertyInjector softBinding="true"  targetKey="dpFamilyNames" source="{ProgramSearchManager}" sourceKey="arrAllFamilyNames" />
+		<PropertyInjector softBinding="true"  targetKey="dpBudgetClasses" source="{ProgramSearchManager}" sourceKey="arrAllBudgetClasses" />
+		<PropertyInjector softBinding="true"  targetKey="dpBusinessSegments" source="{ProgramSearchManager}" sourceKey="arrAllBusinessSegments" />
+		<PropertyInjector softBinding="true"  targetKey="dpUsers" source="{ProgramSearchManager}" sourceKey="arrAllUsers" />
+		<PropertyInjector softBinding="true"  targetKey="dpRSP" source="{ProgramSearchManager}" sourceKey="arrAllRSP" />
+		<PropertyInjector softBinding="true"  targetKey="dpProgram" source="{ProgramSearchManager}" sourceKey="arrAllProgram" />	
+		<PropertyInjector softBinding="true"  targetKey="dpDistictProgramYears" source="{ProgramSearchManager}" sourceKey="getProgramDistinctYears" />
+		<PropertyInjector softBinding="true"  targetKey="iUserID" source="{ProgramSettingsManager}" sourceKey="settings.userId" />
+		<PropertyInjector softBinding="true"  targetKey="dpReportType" source="{ProgramSearchManager}" sourceKey="arrAllReportType" />
+		<PropertyInjector softBinding="true"  targetKey="dpConditions" source="{ProgramSearchManager}" sourceKey="arrAllConditions" />
+		<PropertyInjector softBinding="true"  targetKey="siUserPositions" source="{ProgramSearchManager}" sourceKey="UserPositionSelectedIndex" />		
+		<PropertyInjector softBinding="true"  targetKey="oSettings" source="{ProgramSettingsManager}" sourceKey="settings" />
+		<PropertyInjector softBinding="true"  targetKey="sFamilyLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_familyLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sBuyingGroupLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_buyingGroupLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sOperatorLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_operatorLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sDistributorLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_distributorLabel" />		
+		<PropertyInjector softBinding="true"  targetKey="sReferenceNumberLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_referencenumberlabel" />
+		<PropertyInjector softBinding="true"  targetKey="sQbrandLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_qbrandlabel" />
+		<PropertyInjector softBinding="true"  targetKey="sTypeGroupLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_typegrouplabel" />
+		<PropertyInjector softBinding="true"  targetKey="sTypeCodeLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_typecodelabel" />
+		<PropertyInjector softBinding="true"  targetKey="sItemLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_itemlabel" />
+		<PropertyInjector softBinding="true"  targetKey="sShardShipToLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_shardshiptolabel" />
+		<PropertyInjector softBinding="true"  targetKey="sFileSize" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfMis_fileSize" />
+		<PropertyInjector softBinding="true"  targetKey="sDtLastModified" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfMis_dtFileModified" />		
+		<PropertyInjector softBinding="true"  targetKey="sDeleteIsCancelAutoRenew" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_deleteIsCancelAutoRenew" />
+		<PropertyInjector softBinding="true"  targetKey="sDeleteProgramMessage" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_deleteProgramMessage" />
+		<PropertyInjector softBinding="true"  targetKey="sApprovalSpendingCapOn" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_approvalSpendingCapOn" />
+		<PropertyInjector softBinding="true"  targetKey="sPgmScorecardRevisionReport" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_pgmScorecardRevisionReport" />
+		<PropertyInjector softBinding="true"  targetKey="sProgramAgreeEscalate" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_programAgreeEscalate" />
+		<PropertyInjector softBinding="true"  targetKey="sApprovalLayeredOn" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_approvalLayeredOn" />		
+   		<PropertyInjector softBinding="true"  targetKey="sDeleteProgramAccess" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_deleteProgramAccess" />
+   		<PropertyInjector softBinding="true"  targetKey="sMassRFAProgramApprove" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_massRFAProgramApprove" />
+		<PropertyInjector softBinding="true"  targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" />	
+		<PropertyInjector softBinding="true"  targetKey="bShowClaimRatesReport" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_ShowClaimRatesReport" />		
+		<PropertyInjector softBinding="true"  targetKey="bShowPricingReport" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_ShowPricingReport" />	
+		<PropertyInjector softBinding="true"  targetKey="bBidRequestTemplate" source="{ProgramSearchManager}" sourceKey="getBidRequestTemplate" />
+		<PropertyInjector softBinding="true"  targetKey="iButtonHeight" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_buttonHeight" />
+		<PropertyInjector softBinding="true"  targetKey="iComboBoxHeight" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_comboBoxHeight" />
+		<PropertyInjector softBinding="true"  targetKey="iComboBoxContentWidth" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_comboBoxContentWidth" />
+		<PropertyInjector softBinding="true"  targetKey="iTextInputHeight" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_textInputHeight" />
+		<PropertyInjector softBinding="true"  targetKey="sScorecardSortOption" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_scorecardsortoption" />
+		<PropertyInjector softBinding="true"  targetKey="sScorecardSortMethod" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_scorecardsortmethod" />
+		<PropertyInjector softBinding="true"  targetKey="sExactListMatchingOnMessage" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_exactlistmatchingonmessage" />	
+		<PropertyInjector softBinding="true"  targetKey="dSODate" source="{ProgramSearchManager}" sourceKey="dSOlastSavedDate" />
+		<PropertyInjector softBinding="true"  targetKey="bPrgReadOnlyCatalogAccess" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_readOnlyCatalogAccess" />
+		<PropertyInjector softBinding="true"  targetKey="bCreateProgramAccess" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_createProgramAccess" />
+		<PropertyInjector softBinding="true"  targetKey="bSearchDocuments" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_searchdocuments" />
+		<PropertyInjector softBinding="true"  targetKey="iInclude_work_in_progress_below_me" source="{ProgramSettingsManager}" sourceKey="settings.Include_work_in_progress_below_me" />
+		<PropertyInjector softBinding="true"  targetKey="iCreating_User_Position" source="{ProgramSettingsManager}" sourceKey="settings.Creating_User_Position" />
+		<PropertyInjector softBinding="true"  targetKey="objGridColumnSize" source="{ProgramSearchManager}" sourceKey="objGridColumnSize" />				
+		<PropertyInjector softBinding="true"  targetKey="bDisplayTradeDollars" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayTradeDollars" />	
+		<PropertyInjector softBinding="true"  targetKey="bDisplayPaymentDollars" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayPaymentDollars" />	
+		<PropertyInjector softBinding="true"  targetKey="bDisplayVolume" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayVolume" />		
+		<PropertyInjector softBinding="true"  targetKey="sDisplayTradeDollarsLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayTradeDollarsLabel" />	
+		<PropertyInjector softBinding="true"  targetKey="sDisplayPaymentDollarsLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayPaymentDollarsLabel" />	
+		<PropertyInjector softBinding="true"  targetKey="sDisplayVolumeLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayVolumeLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sBusinessSegmentsLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_BusinessSegmentsLabel" />
+		<PropertyInjector softBinding="true"  targetKey="bshowbudgetDropdown" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_showbudgetDropdown" />
+		<PropertyInjector softBinding="true"  targetKey="bshowBusinessSegment" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_businesssegmenton" />		
+		<PropertyInjector softBinding="true"  targetKey="sOperatorIDLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_operatorIDLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sOperatorNameLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_operatorNameLabel" />
+		
+		<ListenerInjector eventType="{SearchProgramEvent.HIDE_INFO}" method="hideInfo" />
+		<ListenerInjector eventType="{SearchProgramEvent.SHOW_INFO}" method="showInfo" />
+		<ListenerInjector eventType="{SearchProgramEvent.UNCHECK_SELECTED}" method="uncheckSelectedItems" />
+		<ListenerInjector eventType="{SearchProgramEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+		<ListenerInjector eventType="{SearchProgramEvent.SHOW_SELECTED_OPTIONS}" method="showSelectedOptions" />	
+		<ListenerInjector eventType="{SearchProgramEvent.SELECT_OPTIONS_PROGRAM}" method="selectOptionsProgram" />
+		<ListenerInjector eventType="{SearchProgramEvent.SELECT_OPTIONS_CATALOG}" method="selectOptionsCatalog" />
+		<ListenerInjector eventType="{SearchProgramEvent.RESET_COLUMN_ORDER}" method="resetColumnOrder" />
+	</Injectors>					
+	<Injectors target="{popup}">
+		<PropertyInjector softBinding="true"  targetKey="Renewal_Info" source="{ProgramSearchManager}" sourceKey="getProgramAutoRenewInfo" />
+		<PropertyInjector softBinding="true"  targetKey="Interface_Info" source="{ProgramSearchManager}" sourceKey="getInterfaceInfo" />
+		<PropertyInjector softBinding="true"  targetKey="Attachment_Info" source="{ProgramSearchManager}" sourceKey="getAttachmentInfo" />
+		<PropertyInjector softBinding="true"  targetKey="Program_Details" source="{ProgramSearchManager}" sourceKey="getProgramDetails" />
+		<PropertyInjector softBinding="true"  targetKey="CRA_Details" source="{ProgramSearchManager}" sourceKey="getCRADetails" />
+		<PropertyInjector softBinding="true"  targetKey="WorkFlowData" source="{ProgramSearchManager}" sourceKey="getWorkflowData" />	
+		<PropertyInjector softBinding="true"  targetKey="NRAData" source="{ProgramSearchManager}" sourceKey="getNRAData" />	
+		<PropertyInjector softBinding="true"  targetKey="Program_Revision_Count" source="{ProgramSearchManager}" sourceKey="getProgramRevisionCount" />			
+		<PropertyInjector softBinding="true"  targetKey="sApprovalStandardOn" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_approvalStandardOn" />
+		<PropertyInjector softBinding="true"  targetKey="Business_Segment_Setting" source="{ProgramSettingsManager}" sourceKey="getBusinessSegmentSetting" />
+		<PropertyInjector softBinding="true"  targetKey="sSendToSAP" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_sendToSAP" />
+		<PropertyInjector softBinding="true"  targetKey="sGLAccount" source="{ProgramSearchManager}" sourceKey="getGLAccount" />
+		<PropertyInjector softBinding="true"  targetKey="sQuoteLetters" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_QuoteLetters" />
+		<PropertyInjector softBinding="true"  targetKey="sStatus" source="{ProgramSearchManager}" sourceKey="sStatus" />
+	</Injectors>
+	
+	<Injectors target="{show_sap_references}">
+		<PropertyInjector softBinding="true"  targetKey="Program_SAP" source="{ProgramSearchManager}" sourceKey="getProgramSAPInfo" />
+	</Injectors>
+	
+	<Injectors target="{ProgramSearchManager}">
+		<PropertyInjector softBinding="true"  targetKey="sPrgBuyingGroupLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_buyingGroupLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sPrgFamilyLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_familyLabel" />
+	    <PropertyInjector softBinding="true"  targetKey="sRFAAgreed" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_RFAAgreed" />
+		<PropertyInjector softBinding="true"  targetKey="sApprovalSpendingCapOn" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_approvalSpendingCapOn" />
+		<PropertyInjector softBinding="true"  targetKey="sMassRFAProgramApprove" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_massRFAProgramApprove" />
+		<PropertyInjector softBinding="true"  targetKey="sDeleteProgramAccess" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_deleteProgramAccess" />
+   		<PropertyInjector softBinding="true"  targetKey="sDeleteIsCancelAutoRenew" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_deleteIsCancelAutoRenew" />			
+		<PropertyInjector softBinding="true"  targetKey="bExactListMatchingOn" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_exactlistmatchingon" />	
+		<PropertyInjector softBinding="true"  targetKey="sReload" source="{ProgramSettingsManager}" sourceKey="settings.reload" />
+		<PropertyInjector softBinding="true"  targetKey="_iUserId" source="{ProgramSettingsManager}" sourceKey="settings.userId" />
+		<PropertyInjector softBinding="true"  targetKey="bShowClaimRatesReport" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_ShowClaimRatesReport" />
+		<PropertyInjector softBinding="true"  targetKey="bShowPricingReport" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_ShowPricingReport" />
+		<PropertyInjector softBinding="true"  targetKey="bRolloverProgramsOn" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_rolloverprogramson" />	
+		<PropertyInjector softBinding="true"  targetKey="bPgmPostApprovalStatus" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_pgmpostapprovalstatus" />
+		<PropertyInjector softBinding="true"  targetKey="bDisplayTradeDollars" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayTradeDollars" />	
+		<PropertyInjector softBinding="true"  targetKey="bDisplayPaymentDollars" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayPaymentDollars" />	
+		<PropertyInjector softBinding="true"  targetKey="bDisplayVolume" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayVolume" />	
+		<PropertyInjector softBinding="true"  targetKey="sDisplayTradeDollarsLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayTradeDollarsLabel" />	
+		<PropertyInjector softBinding="true"  targetKey="sDisplayPaymentDollarsLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayPaymentDollarsLabel" />	
+		<PropertyInjector softBinding="true"  targetKey="sDisplayVolumeLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayVolumeLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sBusinessSegmentsLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_BusinessSegmentsLabel" />
+		<PropertyInjector softBinding="true"  targetKey="bReleaseSettlement" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_releaseSettlement" />
+		<PropertyInjector softBinding="true"  targetKey="iprogramLockTypeID" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_programlocktypeid" />
+		<PropertyInjector softBinding="true"  targetKey="sProfileReleaseSettlement" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfPro_releaseSettlement" />
+		<PropertyInjector softBinding="true"  targetKey="bshowBusinessSegment" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_businesssegmenton" />
+		<PropertyInjector softBinding="true"  targetKey="bDisplayOperatorInfo" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_displayOperatorInfo" />
+
+		<PropertyInjector softBinding="true"  targetKey="bshowBestPlan" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_BestPlanOn" />
+		<PropertyInjector softBinding="true"  targetKey="sOperatorIDLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_operatorIDLabel" />
+		<PropertyInjector softBinding="true"  targetKey="sOperatorNameLabel" source="{ProgramSettingsManager}" sourceKey="settings.appFlex.cfApp_operatorNameLabel" />
+	</Injectors>
+	</EventMap>

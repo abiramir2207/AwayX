@@ -1,0 +1,66 @@
+===== QUERY: session.get_data =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetLockedByName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetLockedByName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetLockedByName>
+	<cftry>
+		<cfset GetLockedByName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#locked_by#",
+				"select" = "name_first + ' ' + name_last as lockedbyname"
+			}), "name_first + ' ' + name_last as lockedbyname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockedByName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockedByName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetLockedByName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetLockedByName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetLockedByName>
+	<cftry>
+		<cfset GetLockedByName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#locked_by#",
+				"select" = "name_first + ' ' + name_last as lockedbyname"
+			}), "name_first + ' ' + name_last as lockedbyname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockedByName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockedByName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetLockedByName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetLockedByName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetLockedByName>
+	<cftry>
+		<cfset GetLockedByName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#locked_by#",
+				"select" = "name_first + ' ' + name_last as lockedbyname"
+			}), "name_first + ' ' + name_last as lockedbyname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockedByName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockedByName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

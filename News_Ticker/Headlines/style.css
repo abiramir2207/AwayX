@@ -1,0 +1,66 @@
+div.section_title
+{
+	color:				#555555;
+	margin:				15px 0px 5px 0px;
+	padding:			0px 0px 5px 0px;
+	border-bottom:		3px #DDDDDD solid;
+	font-size:			13px;
+	font-weight:		bold;
+}
+
+div.news_date
+{
+	color:				#CCCCCC;
+	font-size:			10px;
+	font-style:			italic;
+}
+
+li.toc
+{
+	font-size:			10px;
+	font-weight:		bold;
+	border-bottom:		1px #DDDDDD solid;
+	padding:			3px 0px 3px 0px;
+}
+
+li.news
+{
+	padding:			6px 0px 6px 0px;
+}
+
+
+
+/*
+	body,td
+		{
+			font-family: Arial;
+			font-size: 11px;
+		}
+
+	a
+		{
+			color: Blue;
+			text-decoration: none;
+			font-size: 9px;
+		}
+
+	a:hover
+		{
+			color: Red;
+			text-decoration: underline;
+		}
+
+	.group
+		{
+			font-size: 18px;
+			font-weight: bold;
+		}
+
+	a.title
+		{
+			font-weight: bold;
+			font-size: 11px;
+			color: Green;
+			text-decoration: underline;
+		}
+ */

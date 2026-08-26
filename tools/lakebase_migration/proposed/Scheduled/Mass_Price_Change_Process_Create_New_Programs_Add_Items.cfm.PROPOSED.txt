@@ -1,0 +1,120 @@
+===== QUERY: Programs_Custom_Revision =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: Getcompany =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetProgramSpan =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetDiscountDataToAdd =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDiscountDataToAdd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("simplot_items_add")>
+<cfif useLakebaseForqGetDiscountDataToAdd>
+	<cftry>
+		<cfset qGetDiscountDataToAdd = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("simplot_items_add", {
+				"program_id" = "eq.#programNumberToUseForAdd#",
+				"order" = "component_type.asc",
+				"select" = "item,uom,unit_of_measure_id,rate,component_type,component_name_id"
+			}), "item,uom,unit_of_measure_id,rate,component_type,component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountDataToAdd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountDataToAdd>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetItemMasterID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qAddContractProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetProgramFixedCompID =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAddFixedProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetProgramThisRebateCompID =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAddRebateProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qAddRebateCompData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckVolume =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_volume")>
+<cfif useLakebaseForqCheckVolume>
+	<cftry>
+		<cfset qCheckVolume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#qGetItemMasterID.BSA_Foodservice_Items_Master_ID#",
+				"program_id" = "eq.#renewed_program_id#",
+				"deleted" = "eq.0",
+				"select" = "program_product_volume_id"
+			}), "program_product_volume_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckVolume>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertVol =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckForMultipleRebateComps =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateDatesAndVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetNewProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: InsertBizCon =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: SetProcessed =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: UpdateStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - Could not parse SET assignment
+
+===== QUERY: qSetLettersProcessed =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

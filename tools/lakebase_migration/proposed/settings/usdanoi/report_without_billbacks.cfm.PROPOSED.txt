@@ -1,0 +1,42 @@
+===== QUERY: GetOpsForCounty =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetOpsForCounty = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usdanoi_operators_no_claims")>
+<cfif useLakebaseForGetOpsForCounty>
+	<cftry>
+		<cfset GetOpsForCounty = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usdanoi_operators_no_claims", {
+				"countyfips" = "eq.#url.County#",
+				"select" = "bsa_operator_id"
+			}), "bsa_operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOpsForCounty = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOpsForCounty>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetOpsForState =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetOpsForState = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usdanoi_operators_no_claims")>
+<cfif useLakebaseForGetOpsForState>
+	<cftry>
+		<cfset GetOpsForState = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usdanoi_operators_no_claims", {
+				"statefips" = "eq.#url.State#",
+				"select" = "bsa_operator_id"
+			}), "bsa_operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOpsForState = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOpsForState>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

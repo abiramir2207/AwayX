@@ -1,0 +1,24 @@
+===== QUERY: qTarget =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqTarget = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_target_header")>
+<cfif useLakebaseForqTarget>
+	<cftry>
+		<cfset qTarget = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_target_header", {
+				"fiscal_year" = "eq.#form.fiscal_year#",
+				"main_distributor_group_id" = "eq.#form.main_distributor_group_id#",
+				"invoice_start_date" = "eq.#form.invoice_start_date#",
+				"invoice_end_date" = "eq.#form.invoice_end_date#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqTarget = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqTarget>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

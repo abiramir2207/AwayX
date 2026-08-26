@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.maps.MainEventMap;
+		]]>
+	</mx:Script>
+	
+	
+	<!-- MainPanel View __________________________________________________________________ -->
+	
+	<Injectors target="{MainPanel}">
+		<PropertyInjector targetKey="acData" source="{MainManager}" sourceKey="acData" />
+		<PropertyInjector targetKey="var1" source="{SettingsManager}" sourceKey="settings.appFlex.var1" />
+		<PropertyInjector targetKey="var2" source="{SettingsManager}" sourceKey="settings.appFlex.var2" />
+		<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="oUser" source="{SettingsManager}" sourceKey="settings.user" />
+	</Injectors>
+
+
+</EventMap>

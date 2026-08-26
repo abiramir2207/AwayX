@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.Redi;
+			import com.Admin.Redi.events.RediEvent;
+			import com.Admin.Redi.models.RediGridManager;
+			import com.Admin.Redi.models.RediManager;
+			import com.Admin.Redi.views.RediCorrections;
+			import com.Admin.Redi.views.RediDashboard;
+			import com.Admin.Redi.views.RediHistory;
+			import com.Admin.Redi.views.RediOpen;
+			import com.Admin.Redi.views.RediSettingsForm;
+			import com.Admin.Redi.views.pm.RediEditPModel;
+			import com.Admin.Redi.views.pm.RediPModel;
+			import com.ContractProds.events.SearchEvent;
+			import com.ContractProds.models.SearchManager;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import com.shared.events.MainEvent;
+			import com.shared.models.BAError;
+			import com.shared.models.SettingsManager;
+			
+			import mx.events.FlexEvent;
+			//import com.ContractProds.vos.*;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+	<!--<mate:Debugger level="{Debugger.ALL}" />-->
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  ***************************************************************************************** -->
+	<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.Models.Admin.Redi.RediManager" />
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+
+	<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+	<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+			Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+		<ObjectBuilder generator="{RediManager}" id="oRediManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{RediGridManager}" id="oRediGridManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{RediPModel}" id="oRediPModel" constructorArguments="{scope.dispatcher}" />
+		<!--<ObjectBuilder generator="{RediEditPModel}" id="oRediEditPModel" constructorArguments="{scope.dispatcher}" />-->
+		<ObjectBuilder generator="{BAError}" id="oBAError"  />
+		<!--<MethodInvoker generator="{SettingsManager}" method="loadURLParameters"  />-->
+	</EventHandlers>
+		
+	<!-- FlexEvent.CREATION_COMPLETE     ************************************************************************* -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE">
+		<!--call db for other settings-->
+		<EventAnnouncer type="{MainEvent.LOAD_APP_SETTINGS}" generator="{MainEvent}">
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+		
+	</EventHandlers>
+		
+	
+	<!--GET DATA ******** modify this event to get data from CF ************ -->
+	   
+	<EventHandlers type="{RediEvent.LOAD_REDI_OPEN}" id="eLOAD_REDI_OPEN">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getRediOpen" arguments="{event.userId}">
+			<resultHandlers>
+				<MethodInvoker generator="{RediManager}" method="getRediOpenResults" arguments="{resultObject}" />
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer type="{RediEvent.BSA_ERROR}" generator="{RediEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+		
+	<EventHandlers type="{RediEvent.LOAD_REDI_HISTORY}" id="eLOAD_REDI_HISTORY">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getRediHistory" arguments="{event.userId}">
+			<resultHandlers>
+				<MethodInvoker generator="{RediManager}" method="getRediHistoryResults" arguments="{resultObject}" />
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer type="{RediEvent.BSA_ERROR}" generator="{RediEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+		
+	<EventHandlers type="{RediEvent.GET_REDI_SETTINGS}" id="eGET_REDI_SETTINGS">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getRediSettings">
+			<resultHandlers>
+				<MethodInvoker generator="{RediManager}" method="getRediSettingsResults" arguments="{resultObject}" />
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer type="{RediEvent.BSA_ERROR}" generator="{RediEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+		
+		<EventHandlers type="{RediEvent.DELETE_CORRECTION}" id="eDELETE_CORRECTION">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="deleteCorrection" arguments="{event.arr}"><!-- This ir the Original Buyer ID -->
+				<resultHandlers>
+					<MethodInvoker generator="{RediManager}" method="getRediOpenResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{RediEvent.BSA_ERROR}" generator="{RediEvent}" >
+						<Properties sBaError="SEARCH SERVICE (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<EventHandlers type="{RediEvent.VALIDATE_MULTIPLE_REDI}" id="eVALIDATE_MULTIPLE_REDI">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="reprocessRediCorrection" arguments="{event.arr}"><!-- This ir the Original Buyer ID -->
+				<resultHandlers>
+					<MethodInvoker generator="{RediManager}" method="reprocessRediOpenResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{RediEvent.BSA_ERROR}" generator="{RediEvent}" >
+						<Properties sBaError="SEARCH SERVICE (get data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<EventHandlers type="{RediEvent.FILTER}" debug="true" id="eFILTER">
+			<MethodInvoker 	generator="{RediManager}" method="filter" arguments="{event.b}" />
+		</EventHandlers>
+ 
+		<EventHandlers type="{RediEvent.SAVE_REDI_SETTINGS}" id="eSAVE_REDI_SETTINGS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="saveRediSettings" arguments="{[event.arr, event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{RediManager}" method="getRediSettingsResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{RediEvent.BSA_ERROR}" generator="{RediEvent}" >
+						<Properties sBaError="SAVE SERVICE (save data)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<EventHandlers type="{RediEvent.EXTRACT_OPEN_REDI}" id="eEXTRACT_OPEN_REDI">
+			<MethodInvoker generator="{RediManager}" method="exportCorrections" arguments="{event}" />
+		</EventHandlers>
+
+    <!-- ************************************************
+    	 ADD NEW EventHandlers Here   *******************
+         ************************************************-->
+
+		<!--LOAD APP SETTINGS *************************************************************************** -->
+		<EventHandlers type="{MainEvent.LOAD_APP_SETTINGS}" debug="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" debug="true">
+				<!-- result sequence gets executed when service returns with a result -->
+				<resultHandlers>
+					<MethodInvoker cache="global" generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+					<!-- after settings are applied (user has been validated) load Modules
+					** THIS WAS MOVED TO SETTINGSMANAGER setAppSettings()-->
+					<!--<EventAnnouncer type="{MainEvent.LOAD_MODS_MAIN}" generator="{MainEvent}" />-->
+				</resultHandlers>
+				<!-- server fault -->
+				<faultHandlers>
+					<!--announce error event -->
+					<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+						<Properties sBaError="MainEvent SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--............... SET_APP_SETTINGS ............................................-->
+	<!--	<EventHandlers type="{MainEvent.SET_LOCAL_APP_SETTINGS}" debug="true" id="eSET_LOCAL_APP_SETTINGS" useWeakReference="true">
+			<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+		</EventHandlers>-->
+
+
+	
+	<!--	*****************************************************************************************
+			***		BSA CUSTOM ERROR HANDLER 		*************************************************
+			***************************************************************************************** -->
+
+<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.ContractProds.models.BAError#showBAError()
+		** Invoke : com.ContractProds.models.BAError.showBAError()		
+		*			@see #roErrorService
+	    ** RemoteInvoke : roErrorService.logError()
+	    *		@see com.ContractProds.models.BAError#logError() 
+	    ** faultHandler : com.ContractProds.models.BAError.showBAError()   -->
+	<EventHandlers type="{RediEvent.BSA_ERROR}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<!--<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>-->
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+	
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+
+		<!-- RediPModel ....................................................... -->
+		<Injectors target="{Redi}" debug="false">
+			<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager1" constructorArguments="{scope.dispatcher}" />
+			<PropertyInjector targetKey="pModel" source="{RediPModel}" softBinding="false"/>
+			<ListenerInjector eventType="{com.shared.events.MainEvent.LOAD_MODS_MAIN}" method="loadAlias" useWeakReference="true" />
+		</Injectors>
+		
+		<!-- RediGridManager ....................................................... -->
+		<Injectors target="{RediGridManager}" debug="false">
+			<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager5" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{RediPModel}" id="oRediPModela" constructorArguments="{scope.dispatcher}" />
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="dgRediOpen" source="{RediOpen}" sourceKey="dgRediOpen"  softBinding="false" />
+			<PropertyInjector targetKey="dgRediHistory" source="{RediHistory}" sourceKey="dgRediHistory"  softBinding="false" />
+		</Injectors>
+		
+		<!-- RediPModel ....................................................... -->
+		<Injectors target="{RediPModel}" debug="true">
+			<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager2" constructorArguments="{scope.dispatcher}" />
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="arrRediOpenDgCols" source="{RediGridManager}" sourceKey="arrRediOpenDgCols"  softBinding="false" />
+			<PropertyInjector targetKey="arrRediHistoryDgCols" source="{RediGridManager}" sourceKey="arrRediHistoryDgCols"  softBinding="false" />
+			<PropertyInjector targetKey="acRediOpen" source="{RediManager}" sourceKey="acRediOpen"  softBinding="false" />
+			<PropertyInjector targetKey="acRediHistory" source="{RediManager}" sourceKey="acRediHistory"  softBinding="false" />
+			<PropertyInjector targetKey="acRediSettings" source="{RediManager}" sourceKey="acRediSettings"  softBinding="false" />
+			<PropertyInjector targetKey="funcFilterInsert" source="{RediManager}" sourceKey="funcFilterInsert" />
+		</Injectors>
+		<!-- RediManager ....................................................... -->
+		<Injectors target="{RediManager}" debug="false">
+			<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager4" constructorArguments="{scope.dispatcher}" />
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<ListenerInjector eventType="{com.shared.events.MainEvent.LOAD_MODS_MAIN}" method="getData" useWeakReference="true" />
+		</Injectors>
+		
+		<!-- RediCorrections ....................................................... -->
+		<Injectors target="{RediCorrections}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{RediPModel}" softBinding="false"/>
+			<ListenerInjector eventType="{RediEvent.CLOSE_CORRECTION}" method="closeCorrection" useWeakReference="true" dispatcher="{scope.dispatcher}"  />
+			<ListenerInjector eventType="{RediEvent.EDIT_CORRECTION}" method="editCorrection" useWeakReference="true" dispatcher="{scope.dispatcher}"  />
+		</Injectors>
+		
+		<!-- RediOpen....................................................... -->
+		<Injectors target="{RediOpen}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{RediPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- RediHistory ....................................................... -->
+		<Injectors target="{RediHistory}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{RediPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- RediSettings ....................................................... -->
+		<Injectors target="{RediSettingsForm}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{RediPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- RediDashboard ....................................................... -->
+		<Injectors target="{RediDashboard}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{RediPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- RediOpen....................................................... -->
+		<!--	<Injectors target="{RediEdit}" debug="true">
+			<PropertyInjector targetKey="pModel" source="{RediEditPModel}" softBinding="false"/>
+			<PropertyInjector targetKey="pModelMain" source="{RediPModel}" softBinding="false"/>
+		</Injectors>-->
+		
+	</fx:Declarations>
+</EventMap>

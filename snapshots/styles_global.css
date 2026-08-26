@@ -1,0 +1,369 @@
+/* set the body tag ----------------------------------------------------------------------------  */
+body
+{
+	margin:						10px 10px 10px 10px;
+	font-family:				Arial, Helvetica, sans-serif;
+}
+
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/* page title --------------------------------------------------------------------------- */
+div.page_title, div.page_title_details
+{
+	color:			 	#FFFFFF;
+	padding:			15px 0px 15px 10px;
+	margin:				0px auto 0px auto;
+	font-size:			13px;
+	font-weight:		bold;
+
+	/*background-color:	#004799;*/
+	background-color:	#00648a;
+
+    -webkit-border-top-left-radius:		5px;
+    -webkit-border-top-right-radius:	5px;
+    -webkit-border-bottom-right-radius:	0px;
+    -webkit-border-bottom-left-radius:	0px;
+    
+    -moz-border-radius-topleft:			5px;
+    -moz-border-radius-topright:		5px;
+    -moz-border-radius-bottomright:		0px;
+    -moz-border-radius-bottomleft:		0px;
+    
+    border-top-left-radius:				5px;
+    border-top-right-radius:			5px;
+    border-bottom-right-radius:			0px;
+    border-bottom-left-radius:			0px;
+
+}
+/* ---------------------------------------------------------------------------------------------- */
+
+/* the section title ---------------------------------------------------------------------------- */
+div.section_title
+{
+	font-size:					14px;
+	font-weight:				bold;
+	
+	padding:					20px 0px 3px 4px;
+	margin:						0px 0px 0px 0px;
+
+	color:						#00648a;
+	background-color:			#000000;
+
+	border-top:					0px #FFFFFF solid;
+	border-right:				0px #FFFFFF solid;
+	border-bottom:				1px #FFFFFF solid;
+	border-left:				0px #FFFFFF solid;
+	
+	text-align:					left;
+
+	text-shadow: 				1px 1px 0px #ffffff;
+	
+	vertical-align:				bottom;
+}
+/* ---------------------------------------------------------------------------------------------- */
+
+/* the sub section title ------------------------------------------------------------------------ */
+div.sub_section_title
+{
+	font-size:					14px;
+	font-weight:				bold;
+	
+	padding:					3px 0px 3px 0px;
+	margin:						0px 0px 5px 0px;
+
+	color:						#004799;
+
+	border-top:					0px #004799 solid;
+	border-right:				0px #FFFFFF solid;
+	border-bottom:				4px #004799 solid;
+	border-left:				0px #FFFFFF solid;
+	
+	text-align:					left;
+
+	vertical-align:				bottom;
+	
+	width:						100%;
+}
+/* ---------------------------------------------------------------------------------------------- */
+
+
+
+/* data grid tables ---------------------------------------------------------------------------- */
+table.datagrid
+{
+	border-spacing: 			0px;
+}
+
+/* the headers of the data grid tables ---------------------------------------------------------- */
+td.datagrid_header, th.datagrid_header
+{
+	font-size:					11px;
+	font-weight:				bold;
+
+	padding:					2px 5px 2px 5px;
+	margin:						0px 0px 0px 0px;
+
+	color:						#00648a;
+	background-color:			#CCCCCC;
+
+	border-top:					0px #FFFFFF solid;
+	border-right:				0px #FFFFFF solid;
+	border-bottom:				0px #FFFFFF solid;
+	border-left:				0px #FFFFFF solid;
+	
+	text-align:					left;
+	
+	vertical-align:				bottom;
+}
+/* ---------------------------------------------------------------------------------------------- */
+
+/* the names of the rows of the data grid tables ------------------------------------------------ */
+td.datagrid_row_name
+{
+	font-size:					10px;
+	font-weight:				bold;
+
+	padding:					5px 5px 5px 5px;
+	margin:						0px 0px 0px 0px;
+
+	color:						#333333;
+
+	border-top:					0px #FFFFFF solid;
+	border-right:				0px #FFFFFF solid;
+	border-bottom:				1px #cccccc dotted;
+	border-left:				0px #FFFFFF solid;
+	
+	text-align:					left;
+}
+/* ---------------------------------------------------------------------------------------------- */
+
+/* the data grid tables data fields ------------------------------------------------------------- */
+td.datagrid_data
+{
+	font-size:					10px;
+	font-weight:				none;
+
+	padding:					5px 5px 5px 5px;
+	margin:						0px 0px 0px 0px;
+
+	color:						#333333;
+
+	border-top:					0px #FFFFFF solid;
+	border-right:				0px #FFFFFF solid;
+	border-bottom:				1px #cccccc dotted;
+	border-left:				0px #FFFFFF solid;
+	
+	text-align:					left;
+}
+
+/* colored data grid row ------------------------------------------------------------------------ */
+tr.dark_row
+{
+	background-color:			#EFEFEF;
+}
+tr.light_row
+{
+	background-color:			#FFFFFF;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/* used used for data grid totals --------------------------------------------------------------- */
+td.totals
+{
+	border-top:					2px #000000 solid;
+	border-right:				0px #FFFFFF solid;
+	border-bottom:				0px #FFFFFF solid;
+	border-left:				0px #FFFFFF solid;
+}
+
+/* alignment of  numeric data ------------------------------------------------------------------- */
+td.align_right
+{
+	text-align:					right;
+}
+
+/* the notes used ------------------------------------------------------------------------------- */
+div.notes
+{
+	font-size:					10px;
+	font-weight:				bold;
+	font-style:					italic;
+	margin:						0px 0px 0px 8px;
+	color:						#FFFFFF;
+}
+/* ---------------------------------------------------------------------------------------------- */
+
+/* rounded corners ------------------------------------------------------------------------------ */
+*.rounded_corners
+{
+    -webkit-border-radius:		5px;
+    -moz-border-radius:			5px;
+    border-radius:				5px;
+	margin:						0px 0px 5px 0px;
+	padding:					5px 5px 5px 5px;
+	border:						1px #eeeeee solid;	
+}
+/* ---------------------------------------------------------------------------------------------- */
+
+/* hr lines ---------------------------------------------------------------------------------- */
+hr.thin 
+{
+	height: 					1px;
+	border: 					0;
+	color: 						#aaaaaa;
+	background-color: 			#aaaaaa;
+	width: 						100%;
+}
+
+/* emphasis link ----------------------------------------------------------------------------- */
+div.emphasis
+{
+	margin:						0px 0px 0px 0px;
+	font-size:					11px;
+	font-weight:				bold;
+	color:						#0000FF;
+}
+
+/* data grid/landscape mode ------------------------------------------------------------------ */
+td.landscape_row_title
+{
+	font-size:					13px;
+	font-weight:				bold;
+	color:						#000000;
+	text-align:					right;
+}
+
+td.landscape_row_data
+{
+	font-size:					10px;
+	font-weight:				bold;
+	color:						#777777;
+}
+
+td.landscape_row_border
+{
+	border-bottom:				1px silver dotted;
+}
+
+/* navlinks ----------------------------------------------------------------------------------- */
+a.navlinks, a:visited.navlinks
+{
+	color:						#FFFFFF;
+	text-decoration:			none;
+	font-weight:				bold;
+	padding:					0px 0px 0px 0px;
+	margin:						0px 7px 0px 7px;
+	line-height:				10px;
+	font-size:					11px;
+}
+
+a:hover.navlinks
+{
+	text-decoration:			underline;
+}
+
+div.header_navlinks
+{
+	/*background-color:	#004799;*/
+	background-color:	#00648a;
+
+	text-align:					right;
+	margin:						1px auto 0px auto;
+	padding:					5px 0px 5px 0px;
+
+    -webkit-border-top-left-radius:		0px;
+    -webkit-border-top-right-radius:	0px;
+    -webkit-border-bottom-right-radius:	5px;
+    -webkit-border-bottom-left-radius:	5px;
+    
+    -moz-border-radius-topleft:			0px;
+    -moz-border-radius-topright:		0px;
+    -moz-border-radius-bottomright:		5px;
+    -moz-border-radius-bottomleft:		5px;
+    
+    border-top-left-radius:				0px;
+    border-top-right-radius:			0px;
+    border-bottom-right-radius:			5px;
+    border-bottom-left-radius:			5px;
+	
+}
+
+
+/* tabs: default setting ------------------------------------------------------------------- */
+div.tabs
+{
+	/*width:				140px;*/
+	height:				22px;
+	line-height:		22px;
+	display:			inline-block;
+	text-align:			left;
+	margin:				0px 0px 0px 0px;
+	padding:			5px 25px 0px 25px;
+	text-transform:		uppercase;
+	font-size:			9px;
+	font-weight:		bold;
+	color:				#00648a;
+	cursor:				pointer;
+
+	background: #eeeeee; /* Old browsers */
+	/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2VlZWVlZSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNjY2NjY2MiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+	background: -moz-linear-gradient(top,  #eeeeee 0%, #cccccc 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eeeeee), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* IE10+ */
+	background: linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#cccccc',GradientType=0 ); /* IE6-8 */
+
+	-moz-border-radius-topleft: 		5px;
+	-moz-border-radius-topright: 		5px;
+	-moz-border-radius-bottomright: 	0px;
+	-moz-border-radius-bottomleft: 		0px;
+	-webkit-border-radius: 				5px 5px 0px 0px;
+	border-radius: 						5px 5px 0px 0px; 
+
+}
+
+/* tab wrapper ---------------------------------------------------------------------------------- */
+div.tab_wrapper
+{
+	text-align:			left;
+	border-bottom:		5px #CCCCCC solid;
+}
+
+/* the tabs ------------------------------------------------------------------------------------- */
+div.tab_a
+{
+	border-bottom:		2px #FFFFFF solid;
+}
+
+div.tab_b
+{
+	border-bottom:		2px #CCCCCC solid;
+}
+
+img.button_icon
+{
+	margin:				0px 10px 0px 0px;
+	border:				0px #CCCCCC solid;
+}
+
+
+/* gradient -------------------------------------------------------------------------------------- */
+div.gradient
+{
+	background: #eeeeee; /* Old browsers */
+	/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2VlZWVlZSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNjY2NjY2MiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+	background: -moz-linear-gradient(top,  #eeeeee 0%, #cccccc 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eeeeee), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* IE10+ */
+	background: linear-gradient(top,  #eeeeee 0%,#cccccc 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#cccccc',GradientType=0 ); /* IE6-8 */
+}
+

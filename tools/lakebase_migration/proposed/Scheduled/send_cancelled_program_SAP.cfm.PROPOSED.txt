@@ -1,0 +1,230 @@
+===== QUERY: getwebservicedetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetwebservicedetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForgetwebservicedetails>
+	<cftry>
+		<cfset getwebservicedetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"bsa_program_id" = "eq.#getPrograms.bsa_program_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetwebservicedetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetwebservicedetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updatewebservicedetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdatewebservicedetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForupdatewebservicedetails>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_webservices_detail",
+			{
+				"bsa_program_id" = "eq.#getPrograms.bsa_program_id#"
+			},
+			{
+				"bsa_xml_structure" = "#tempxml#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatewebservicedetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatewebservicedetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertwebserviceserrordetails =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updatewebservicedetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdatewebservicedetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForupdatewebservicedetails>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_webservices_detail",
+			{
+				"bsa_program_id" = "eq.#getPrograms.bsa_program_id#"
+			},
+			{
+				"bsa_xml_structure" = "#tempxml#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatewebservicedetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatewebservicedetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PurgeFutureContracts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPurgeFutureContracts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
+<cfif useLakebaseForPurgeFutureContracts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_period_dates",
+			{
+				"program_id" = "eq.#url.program_id#"
+			},
+			{
+				"sap_deleted_status" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPurgeFutureContracts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPurgeFutureContracts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CancelContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCancelContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCancelContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#url.program_id#"
+			},
+			{
+				"sent_to_external_client" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCancelContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCancelContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PurgeFutureContracts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPurgeFutureContracts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
+<cfif useLakebaseForPurgeFutureContracts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_period_dates",
+			{
+				"program_id" = "eq.#url.program_id#"
+			},
+			{
+				"sap_deleted_status" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPurgeFutureContracts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPurgeFutureContracts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CancelContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCancelContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCancelContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#url.program_id#"
+			},
+			{
+				"sent_to_external_client" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCancelContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCancelContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CancelContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCancelContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCancelContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#url.program_id#"
+			},
+			{
+				"sent_to_external_client" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCancelContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCancelContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CancelContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCancelContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCancelContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#url.program_id#"
+			},
+			{
+				"sent_to_external_client" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCancelContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCancelContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CancelContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCancelContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCancelContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#url.program_id#"
+			},
+			{
+				"sent_to_external_client" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCancelContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCancelContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

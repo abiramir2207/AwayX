@@ -1,0 +1,32 @@
+===== QUERY: qDropTempTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDropTempTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetBillbackArchiveData =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetAutoApprove =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetAutoApprove = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqgetAutoApprove>
+	<cftry>
+		<cfset qgetAutoApprove = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "auto_approve_on"
+			}), "auto_approve_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetAutoApprove = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetAutoApprove>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDistinctYears =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

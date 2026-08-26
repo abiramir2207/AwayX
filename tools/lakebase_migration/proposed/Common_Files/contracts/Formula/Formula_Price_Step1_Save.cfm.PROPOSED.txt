@@ -1,0 +1,50 @@
+===== QUERY: Save_Rule_Basic_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: checkCommOverageData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckCommOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_comm_data")>
+<cfif useLakebaseForcheckCommOverageData>
+	<cftry>
+		<cfset checkCommOverageData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_comm_data", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_formula_pricing_rule_comm_data_id"
+			}), "program_formula_pricing_rule_comm_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckCommOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckCommOverageData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkOverageData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_commodity_overage")>
+<cfif useLakebaseForcheckOverageData>
+	<cftry>
+		<cfset checkOverageData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_commodity_overage", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"select" = "formula_pricing_commodity_overage_id"
+			}), "formula_pricing_commodity_overage_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckOverageData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Rule_Basic_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

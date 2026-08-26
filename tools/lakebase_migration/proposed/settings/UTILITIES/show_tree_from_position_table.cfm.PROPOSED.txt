@@ -1,0 +1,110 @@
+===== QUERY: getPositions =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getPositions =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getGodLabel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGodLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetGodLabel>
+	<cftry>
+		<cfset getGodLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_zone_id" = "is.null",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGodLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGodLabel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getZones =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetZones = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetZones>
+	<cftry>
+		<cfset getZones = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_zone_id" = "not.is.null",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null",
+				"order" = "service_zone_name.asc",
+				"select" = "service_zone_id,service_zone_name,position_label"
+			}), "service_zone_id,service_zone_name,position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetZones = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetZones>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getRegions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRegions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetRegions>
+	<cftry>
+		<cfset getRegions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_zone_id" = "eq.#getZones.Service_Zone_ID#",
+				"service_region_id" = "not.is.null",
+				"service_market_id" = "is.null",
+				"order" = "service_region_name.asc",
+				"select" = "service_region_id,service_region_name,position_label"
+			}), "service_region_id,service_region_name,position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRegions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRegions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getMarkets =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetMarkets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetMarkets>
+	<cftry>
+		<cfset getMarkets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_region_id" = "eq.#getRegions.Service_Region_ID#",
+				"service_zone_id" = "not.is.null",
+				"service_market_id" = "not.is.null",
+				"order" = "service_market_name.asc",
+				"select" = "service_market_id,service_market_name,position_label"
+			}), "service_market_id,service_market_name,position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarkets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarkets>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Zones =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Regions =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Markets =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

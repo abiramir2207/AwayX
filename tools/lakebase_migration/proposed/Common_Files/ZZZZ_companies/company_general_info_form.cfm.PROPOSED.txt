@@ -1,0 +1,81 @@
+===== QUERY: RetrieveCompanyInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForRetrieveCompanyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForRetrieveCompanyInfo>
+	<cftry>
+		<cfset RetrieveCompanyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRetrieveCompanyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRetrieveCompanyInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetNationalAffiliationCodes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetNationalAffiliationCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetNationalAffiliationCodes>
+	<cftry>
+		<cfset GetNationalAffiliationCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"national_affiliation_code" = "neq.0",
+				"order" = "national_affiliation_code.asc",
+				"select" = "national_affiliation_code,company_main_id"
+			}), "national_affiliation_code,company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNationalAffiliationCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNationalAffiliationCodes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetCompanyTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCompanyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_types")>
+<cfif useLakebaseForGetCompanyTypes>
+	<cftry>
+		<cfset GetCompanyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_types", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetCompanies =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetCompanies>
+	<cftry>
+		<cfset GetCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "neq.#Form.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanies>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Holds all event handlers registered with Mate : SearchEvent and native : FlexEvent -->
+<LocalEventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.DistributorSearch.events.*;
+			import com.DistributorSearch.models.*;
+			import com.DistributorSearch.views.*;
+			//import com.vos.*;
+		]]>
+	</mx:Script>
+	<mate:Debugger level="{Debugger.ALL}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  .......................................... -->
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<mx:RemoteObject id="roSearchService" destination="ColdFusion" source="mvc.models.Distributor.DistributorSearchService" />
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="roErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+	<!--- Handles User List (Favorites) Logic <p>roItemListService : <strong>mvc.models.Distributor.DistributorList</strong></p> -->
+	<mx:RemoteObject id="roItemListService" destination="ColdFusion" source="mvc.models.Distributor.DistributorList" />
+
+	<!-- FlexEvent.PREINITIALIZE .......................................... -->
+	<!---@see com.models.SettingsManager#loadURLParameters()
+			Invoke : com.models.SettingsManager.loadURLParameters()-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE"  useWeakReference="true" debug="true">
+		<ObjectBuilder generator="{SearchManager}" id="oSearchManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{ListManager}" id="oListManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{BAError}" id="oBAError" />
+		<!--<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" />-->
+		<!--call db for other settings-->
+		<!--<EventAnnouncer type="{SearchEvent.LOAD_APP_SETTINGS}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			<Property source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+		</EventAnnouncer>-->
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE .......................................... -->
+	<!--- Announce creationComplete() events -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" debug="true"  useWeakReference="true">
+		<!--Get Items -->
+		<!--<EventAnnouncer type="{SearchEvent.GET}" generator="{SearchEvent}">
+			<Property source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+		</EventAnnouncer>-->
+		<!--for sharedObjects test:<MethodInvoker generator="{SearchManager}" method="loadResults" />--> 
+		<!-- Load from SO or get from DB: Used to cache query as Local SharedObject on client.  Call instead of SearchEvent.Get-->
+		<!--<EventAnnouncer type="{SearchEvent.LOAD_ALL_ITEMS}" generator="{SearchEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.discountType" targetKey="discountType"/>
+		</EventAnnouncer>-->
+		<!--Populate the Saved Lists -->
+		<!--<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>-->
+	</EventHandlers>
+
+	 <!--SAVE SETTINGS ..........................................-->
+	 <!---@see com.models.SettingsManager#loadURLParameters()
+			Invoke : com.models.SettingsManager.SaveSettings()-->
+	<EventHandlers type="{SearchEvent.SAVE_SETTINGS}" id="eSAVE_SETTINGS" useWeakReference="true" debug="true">
+        <!--Store passed in values (flashvars)-->
+		<!--<MethodInvoker 	generator="{SettingsManager}" method="SaveSettings" 
+						arguments="{event.settings}" /> -->
+		<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" arguments="{[event.programId,event.oneDistSelection]}" />
+		<!-- get user list -->
+		<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+		<!--call db for other settings-->
+		<EventAnnouncer type="{SearchEvent.LOAD_APP_SETTINGS}" generator="{SearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			<Property source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+		</EventAnnouncer>
+		<!--Get Items -->
+		<EventAnnouncer type="{SearchEvent.GET}" generator="{SearchEvent}">
+			<Property source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+		</EventAnnouncer>
+    </EventHandlers>
+ 
+	<!--GET ITEMS ..........................................-->
+    <!---			@see #roSearchService
+	    ** RemoteInvoke : roSearchService.getDistributors()
+	    		@see com.models.SearchManager#itemResults() 
+	    ** Handler : com.models.SearchManager.itemResults()   -->
+	<EventHandlers type="{SearchEvent.GET}" id="eGET" debug="true" useWeakReference="true">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getDistributors" arguments="{event.programId}" debug="true">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="itemResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get items)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--Get Items from SO -->
+ 	<!--- 	   @see com.models.SearchManager#loadSOitems()
+	    ** Invoke : com.models.SearchManager.loadSOitems()  -->
+	<EventHandlers type="{SearchEvent.LOAD_ALL_ITEMS}" id="eLOAD_ALL_ITEMS"  useWeakReference="true">
+		<MethodInvoker generator="{SearchManager}" method="loadSOitems" arguments="{[event.programId,event.discountType]}" />
+	</EventHandlers>
+	<!--UPDATE COMBOBOX FILTERS ..........................................-->
+	<!--- 	   @see com.models.SearchManager#updFilters()
+	    ** Invoke : com.models.SearchManager.updFilters()  -->
+	<EventHandlers type="{SearchEvent.UPD_CB_FILTERS}" id="eUPD_CB_FILTERS"  useWeakReference="true">
+        <MethodInvoker generator="{SearchManager}" method="updFilters" />
+    </EventHandlers>
+    
+    <!--FILTER  ..........................................-->
+    <!--- 	   @see com.models.SearchManager#itemFilter()
+	    ** Invoke : com.models.SearchManager.itemFilter()  -->
+	<EventHandlers type="{SearchEvent.FILTER}" debug="true" id="eFILTER"  useWeakReference="true">
+        <MethodInvoker 	generator="{SearchManager}" method="itemFilter" 
+        				arguments="{[event.searchFieldText,event.f1,event.f2,event.f3,event.f4,event.f5,event.f6]}" />
+    </EventHandlers>
+    
+     <!--RESET FILTER  ..........................................-->
+     <!--- 	   @see com.models.SearchManager#filterReset()
+	    ** Invoke : com.models.SearchManager.filterReset()  -->
+	<EventHandlers type="{SearchEvent.RESET_FILTER}" id="eRESET_FILTER"  useWeakReference="true">
+        <MethodInvoker 	generator="{SearchManager}" method="filterReset" />
+    </EventHandlers>
+    
+    <!--FILTER SELECTED  _________________________________________________________-->
+    <!--- 	   @see com.models.SearchManager#filterSelected()
+	    ** Invoke : com.models.SearchManager.filterSelected()  -->
+	<EventHandlers type="{SearchEvent.FILTER_SELECTED}" id="eFILTER_SELECTED"  useWeakReference="true">
+        <MethodInvoker 	generator="{SearchManager}" method="filterSelected" />
+    </EventHandlers>
+    
+      <!--FILTER MINI ITEMS (180 table)  ..........................................-->
+      <!---    @see com.models.SearchManager#filterMiniItems()
+	    ** Invoke : com.models.SearchManager.filterMiniItems()  -->
+	<EventHandlers type="{SearchEvent.FILTER_MINI_ITEMS}" id="eFILTER_MINI_ITEMS"  useWeakReference="true">
+        <MethodInvoker generator="{SearchManager}" method="filterMiniItems" />
+    </EventHandlers>
+    
+    <!--CREATE USER ITEM LIST  ..........................................-->
+    <!--- 	   @see com.models.SearchManager#createList()
+	    ** Invoke : com.models.SearchManager.createList()  -->
+	<EventHandlers type="{SearchEvent.CREATE_LIST}" id="eCREATE_LIST"  useWeakReference="true">
+        <MethodInvoker 	generator="{SearchManager}" method="createList"
+        				arguments="{[event.iList]}" />
+    </EventHandlers>
+    <!--DISPLAY USER ITEM LIST  ..........................................-->
+    <!--- 	   @see com.models.SearchManager#displayList()
+	    ** Invoke : com.models.SearchManager.displayList()  -->
+	<EventHandlers type="{SearchEvent.GET_USERLIST_ITEMS}" id="eGET_USERLIST_ITEMS"  useWeakReference="true">
+        <MethodInvoker 	generator="{SearchManager}" method="displayList"
+        				arguments="{[event.arrUserListItems]}" />
+    </EventHandlers>
+    
+	<!--GET SAVED USER ITEM LIST  ..........................................-->
+  <!--- 			@see #roItemListService
+	    ** RemoteInvoke : roItemListService.getUserDistributorList()
+	    		@see com.models.ListManager#userItemListResults() 
+	    ** Handler : com.models.ListManager.userItemListResults()   -->
+	<EventHandlers type="{SearchEvent.GET_USERLIST}" id="eGET_USERLIST"  useWeakReference="true">
+        <RemoteObjectInvoker instance="{roItemListService}" showBusyCursor="true" method="getUserDistributorList" 
+        						arguments="{event.userId}">		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ListManager}" method="userItemListResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (get)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+    
+    <!--SAVE NEW USER ITEM LIST  ..........................................-->
+    <!--- 			@see #roItemListService
+	    ** RemoteInvoke : roItemListService.saveUserDistributorList()
+	    		@see com.models.ListManager#saveItemListResults() 
+	    ** Handler : com.models.ListManager.saveItemListResults()   -->
+	<EventHandlers type="{SearchEvent.SAVE_USERLIST}" id="eSAVE_USERLIST" useWeakReference="true">
+        <RemoteObjectInvoker instance="{roItemListService}" showBusyCursor="true" method="saveUserDistributorList" 
+        						arguments="{[event.userId,event.userListItemsName,event.arrUserListItems]}">		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ListManager}" method="saveItemListResults" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (save)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		<!--reload user list-->
+			<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+				<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			</EventAnnouncer>
+    </EventHandlers>
+    
+	<!--DELETE USER ITEM LIST  ..........................................-->
+	<!--- 			@see #roItemListService
+	    ** RemoteInvoke : roItemListService.deleteUserDistributorList()
+	    		@see #eGET_USERLIST
+	    ** Handler : AnnounceEvent :  GET_USERLIST  -->
+	<EventHandlers type="{SearchEvent.DELETE_USERLIST}" useWeakReference="true">
+        <RemoteObjectInvoker instance="{roItemListService}" showBusyCursor="true" method="deleteUserDistributorList" 
+        						arguments="{event.userListId}">	 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!--reload user list after the delete-->
+				<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+					<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+				</EventAnnouncer>
+				<!--<MethodInvoker generator="{ListManager}" method="deleteItemListResults" arguments="{data.tmpUserId}" />-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event-->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (delete)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+    
+    <!--GET DISTRIBUTOR ITEMS (180 DAY TABLE)..........................................-->
+    <!--- 			@see #roSearchService
+	    ** RemoteInvoke : roSearchService.getMiniItemMasterItems()
+	    		@see com.models.SearchManager#miniItemResults() 
+	    ** Handler : com.models.SearchManager.miniItemResults()   -->
+	<EventHandlers type="{SearchEvent.GET_MINI_ITEMS}" id="eGET_MINI_ITEMS" useWeakReference="true">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getMiniItemMasterItems" arguments="{event.programId}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="miniItemResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event-->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (item invoice query)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+    
+    <!--IMPORT ITEMS ..........................................-->
+    <!--- 	   @see com.models.SearchManager#importItems()
+	    ** Invoke : com.models.SearchManager.importItems()  -->
+	<EventHandlers type="{SearchEvent.IMPORT_ITEMS}" id="eIMPORT_ITEMS"  useWeakReference="true">
+        <MethodInvoker 	generator="{SearchManager}" method="importItems" />
+    </EventHandlers>
+    
+    <!--LOAD APP SETTINGS ..........................................-->
+    <!--- 			@see #roSearchService
+	    ** RemoteInvoke : roSearchService.getSettingsObject()
+	    		@see com.models.SettingsManager#setAppSettings() 
+	    ** Handler : com.models.SettingsManager.setAppSettings()   
+	    		@see com.models.SearchManager#settings() 
+	    ** Handler : com.models.SearchManager.settings()-->
+	<EventHandlers type="{SearchEvent.LOAD_APP_SETTINGS}" id="eLOAD_APP_SETTINGS"  useWeakReference="true">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getSettingsObject" arguments="{[event.userId,event.programId]}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+				<!--<MethodInvoker generator="{SearchManager}" method="settings" >
+					<Property source="{SettingsManager}" sourceKey="settings" targetKey="settings"/>
+				</MethodInvoker>-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+    
+    <!--UPDATE COMBO BOX FILTERS  ..........................................-->
+	<!--<EventHandlers type="{SearchEvent.UPDATE_CBO_FILTERS}">
+        <MethodInvoker 	generator="{SearchManager}" method="updFilters" />
+    </EventHandlers>-->
+	
+	<!--BSA CUSTOM ERROR HANDLER  ..........................................-->
+	<EventHandlers type="{SearchEvent.BSA_ERROR}"  useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  ..........................................-->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}"  useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+     
+     	<!--....................................................................................................
+     		........................................ INJECTORS ..........................................
+     		....................................................................................................-->
+	
+	<!--.................. SearchPanel ................-->
+	<Injectors target="{SearchPanel}">
+		<PropertyInjector id="injitems" targetKey="items" source="{SearchManager}" sourceKey="itemList" softBinding="true" />
+		<PropertyInjector id="dp1" targetKey="dp1" source="{SearchManager}" sourceKey="arr1" softBinding="true"  />
+		<PropertyInjector id="dp2" targetKey="dp2" source="{SearchManager}" sourceKey="arr2" softBinding="true"  />
+		<PropertyInjector id="dp3" targetKey="dp3" source="{SearchManager}" sourceKey="arr3" softBinding="true"  />
+		<PropertyInjector id="dp4" targetKey="dp4" source="{SearchManager}" sourceKey="arr4" softBinding="true"  />
+		<PropertyInjector id="dp5" targetKey="dp5" source="{SearchManager}" sourceKey="arr5" softBinding="true"  />
+		<PropertyInjector id="dp6" targetKey="dp6" source="{SearchManager}" sourceKey="arr6" softBinding="true"  />
+		<PropertyInjector id="sRecordMessage" targetKey="sRecordMessage" source="{SearchManager}" sourceKey="sRecordMessage" softBinding="true"  />
+		<PropertyInjector id="AllText" targetKey="AllText" source="{SearchManager}" sourceKey="AllText" softBinding="true"  />
+		<PropertyInjector id="lblCol1" targetKey="lblCol1" source="{SettingsManager}" sourceKey="settings.appFlex.col1" softBinding="true"  />
+		<PropertyInjector id="lblCol2" targetKey="lblCol2" source="{SettingsManager}" sourceKey="settings.appFlex.col2" softBinding="true"  />
+		<PropertyInjector id="lblCol3" targetKey="lblCol3" source="{SettingsManager}" sourceKey="settings.appFlex.col3" softBinding="true"  />
+		<PropertyInjector id="lblCol4" targetKey="lblCol4" source="{SettingsManager}" sourceKey="settings.appFlex.col4" softBinding="true"  />
+		<PropertyInjector id="lblCol5" targetKey="lblCol5" source="{SettingsManager}" sourceKey="settings.appFlex.col5" softBinding="true"  />
+		<PropertyInjector id="lblCol6" targetKey="lblCol6" source="{SettingsManager}" sourceKey="settings.appFlex.col6" softBinding="true"  />
+		<PropertyInjector id="distLabel" targetKey="distLabel" source="{SettingsManager}" sourceKey="settings.appFlex.distLabel" softBinding="true"  />
+		<PropertyInjector id="oSettings" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" softBinding="true"  />
+		<PropertyInjector id="oAppFlex" targetKey="oAppFlex" source="{SettingsManager}" sourceKey="settings.appFlex" softBinding="true"  />
+		<PropertyInjector id="oneDistSelection" targetKey="oneDistSelection" source="{SettingsManager}" sourceKey="settings.oneDistSelection" softBinding="true"  />
+		<PropertyInjector id="arrUserList" targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" softBinding="true"  />
+		<PropertyInjector id="iButtonHeight" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight" softBinding="true"  />
+		<PropertyInjector id="iComboBoxHeight" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight" softBinding="true"  />
+		<PropertyInjector id="iTextInputHeight" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight" softBinding="true"  />
+		<ListenerInjector eventType="{SearchEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+	</Injectors>
+	
+</LocalEventMap>

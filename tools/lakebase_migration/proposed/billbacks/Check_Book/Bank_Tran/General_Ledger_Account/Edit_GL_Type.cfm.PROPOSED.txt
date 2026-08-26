@@ -1,0 +1,46 @@
+===== QUERY: Get_Tot_Amount =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: All_GL_Type =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAll_GL_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_type")>
+<cfif useLakebaseForAll_GL_Type>
+	<cftry>
+		<cfset All_GL_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_type", {
+				"order" = "gl_type_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAll_GL_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAll_GL_Type>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Available_GL_Type =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAvailable_GL_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code")>
+<cfif useLakebaseForAvailable_GL_Type>
+	<cftry>
+		<cfset Available_GL_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code", {
+				"q_brand_id" = "eq.#Q_Brand_ID#",
+				"deleted" = "eq.0",
+				"order" = "gl_type_id.asc",
+				"select" = "gl_type_id,descr"
+			}), "gl_type_id,descr"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAvailable_GL_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAvailable_GL_Type>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

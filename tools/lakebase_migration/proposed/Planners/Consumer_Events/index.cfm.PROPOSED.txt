@@ -1,0 +1,21 @@
+===== QUERY: qTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_event_type")>
+<cfif useLakebaseForqTypes>
+	<cftry>
+		<cfset qTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_event_type", {
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

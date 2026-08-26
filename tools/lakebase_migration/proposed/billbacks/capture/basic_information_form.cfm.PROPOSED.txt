@@ -1,0 +1,24 @@
+===== QUERY: LoadBillbackData =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getUomDesc =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUomDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUomDesc>
+	<cftry>
+		<cfset getUomDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#FORM.BB_Volume_UOM#",
+				"select" = "abbreviation"
+			}), "abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUomDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUomDesc>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

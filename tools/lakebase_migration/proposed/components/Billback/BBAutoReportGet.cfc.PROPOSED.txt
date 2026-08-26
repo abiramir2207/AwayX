@@ -1,0 +1,96 @@
+===== QUERY: qGetReportPrograms =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUserSegments =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUserSegments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
+<cfif useLakebaseForqUserSegments>
+	<cftry>
+		<cfset qUserSegments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_business_segment", {
+				"user_id" = "eq.#request.accessStructure.User_Id#",
+				"deleted" = "eq.0",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUserSegments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUserSegments>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUserSegments =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUserSegments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
+<cfif useLakebaseForqUserSegments>
+	<cftry>
+		<cfset qUserSegments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_business_segment", {
+				"user_id" = "eq.#request.accessStructure.User_Id#",
+				"deleted" = "eq.0",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUserSegments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUserSegments>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUserSegments =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUserSegments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
+<cfif useLakebaseForqUserSegments>
+	<cftry>
+		<cfset qUserSegments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_business_segment", {
+				"user_id" = "eq.#request.accessStructure.User_Id#",
+				"deleted" = "eq.0",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUserSegments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUserSegments>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetLumpsum =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetAdjustments =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetAdjustments =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetTotalEarned =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qDropTempTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetReportInvoicesResults =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetIsAnAutoPayExceptionReport =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetIsAnAutoPayExceptionReport =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: delTbl =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

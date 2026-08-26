@@ -1,0 +1,48 @@
+===== QUERY: getAllFixedComponentsAccess =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAllFixedComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_profile")>
+<cfif useLakebaseForgetAllFixedComponentsAccess>
+	<cftry>
+		<cfset getAllFixedComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"allow_user_to_view" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllFixedComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllFixedComponentsAccess>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getdistinctcompnames =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: isGroup_check =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForisGroup_check = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getfixedpriceproducts")>
+<cfif useLakebaseForisGroup_check>
+	<cftry>
+		<cfset isGroup_check = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getfixedpriceproducts", {
+				"is_group" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisGroup_check = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisGroup_check>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: variables.customPrint =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

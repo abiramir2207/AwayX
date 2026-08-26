@@ -1,0 +1,121 @@
+===== QUERY: Get_NOI_Status =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_NOI_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGet_NOI_Status>
+	<cftry>
+		<cfset Get_NOI_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "usdanoi_enabled"
+			}), "usdanoi_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_NOI_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_NOI_Status>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_EDPS =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_EDPS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds")>
+<cfif useLakebaseForGet_EDPS>
+	<cftry>
+		<cfset Get_EDPS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usda_noi_epds", {
+				"order" = "name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_EDPS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_EDPS>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_LastUpdated_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_LastUpdated_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("global_last_edited_by")>
+<cfif useLakebaseForGet_LastUpdated_Details>
+	<cftry>
+		<cfset Get_LastUpdated_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("global_last_edited_by", {
+				"global_last_edited_by_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_LastUpdated_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_LastUpdated_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_LastUpdated_Details.User_ID#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getCurrentSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCurrentSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetCurrentSettings>
+	<cftry>
+		<cfset getCurrentSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "usdanoi_i_agree_enabled,usdanoi_summary_time,usdanoi_summary_email"
+			}), "usdanoi_i_agree_enabled,usdanoi_summary_time,usdanoi_summary_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Item =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Item = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds")>
+<cfif useLakebaseForGet_Item>
+	<cftry>
+		<cfset Get_Item = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usda_noi_epds", {
+				"usda_noi_epds_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Item = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Item>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml"
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+	layout="vertical" height="100%" width="100%"
+	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+	xmlns:view="com.ContractProds.views.*" 
+	xmlns:maps="com.ContractProds.maps.*" 
+	xmlns:vos="com.ContractProds.vos.*" preinitialize="applyRuntimeStyleSheet()">
+<!-- preinitialize="applyRuntimeStyleSheet()" 	 preloader="com.shared.components.baProgressBar"-->
+	<mx:Script><![CDATA[
+			import com.ContractProds.events.*;
+			//import com.shared.vos.Settings;
+			
+			import mx.controls.Alert;
+			import mx.styles.StyleManager;
+			import mx.utils.ObjectUtil;
+
+        private function applyRuntimeStyleSheet():void {
+			//styleManager.loadStyleDeclarations("/flex/Program/assets/styles/mainFx46.swf") 
+			styleManager.loadStyleDeclarations("/flex/mainFx410.swf") 
+        }
+        
+         	//[Bindable]
+           // private var _settings:Settings;
+            
+            public function setSettings():void {
+               // _settings = parentApplication.MainPanel.oSettings;
+                /* Dispatch Event 
+					var event:SearchEvent = new SearchEvent(SearchEvent.CREATE_LIST);
+					event.iList = txt;
+					this.dispatchEvent(event);*/
+            }
+  		]]>
+	</mx:Script>
+
+	<!-- Event Maps __________________________________________________ -->
+	<maps:ContractProdsEventMap dispatcher="{this}" />
+	<!--<maps:ModelMap cache="local" dispatcher="{this}" />-->
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox height="100%" width="100%"> <!-- width="1000" height="680" -->
+		<view:SearchPanel height="100%" width="100%" />
+	</mx:HBox>
+</mx:Module>

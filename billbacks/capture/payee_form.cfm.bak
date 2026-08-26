@@ -1,0 +1,2668 @@
+<!--- load bb --->
+
+<cfset variables.appSettings = application.oApplicationAppSettingsManager.getApplicationAppSettings() />
+<!--- <cfdump var="#appSettings.getMultiDistributorBB()#"> --->
+<CFSET Ship_To_For_Operator = variables.appSettings.getBB_Payee_Operator_Ship_To_Req()>
+<CFSET Ship_To_For_Broker = variables.appSettings.getBBPayeeBrokerShipToReq()>
+
+<CFINCLUDE TEMPLATE="/get_access_profile.cfm">
+<cfinclude template="/Script/cf/ListCompare.cfm">
+<cfset disableUnknown = 0>
+<cfif LEFT(application.returned_customer_setting.Customer_Keyword,5) EQ "Heinz">
+	<cfset disableUnknown = 1>
+</cfif>
+
+<cfset Can_Associated_Ship_To = 0 />
+<cfparam name="URL.BBID"								default="">
+<cfparam name="Form.Billback_ID"						default="">
+<cfparam name="Form.Load_ID_From_Form"					default="0">
+<CFPARAM NAME="FORM.Vendor_ID" DEFAULT="">
+<cfparam name="Scheduled_Auto_BB"						default="0">
+<cfparam name="showAlertMessage" default="0">
+<cfparam name="alertList" default="">
+<CFSET is_an_unknown_payee = 0>
+<CFSET LoadBillback = 0>
+<CFIF len(trim(URL.BBID)) GT 0 AND (FORM.Load_ID_From_Form EQ 0)>
+	<CFSET Form.Billback_ID = URL.BBID>
+	<CFSET LoadBillback = 1>
+</CFIF>
+
+<cfset CountDistributor = 0/><!--- D30517: Item not appearing on Billback 'programs' page after importing it --->
+<cfset savedPayeeType = 0 />
+<cfset savedPayeeID = "" />
+<CFIF LoadBillback EQ 1>
+	<cfquery name="LoadBillbackData" datasource="#Application.Datasource#">
+		SELECT 
+			BB_Title,
+			BB_Date,
+			BB_Start_Date,
+			BB_End_Date,
+			BB_Amount,
+			BB_Reference,
+			BB_Creator_ID,
+			BB_Creator_Notes,
+			BB_Code,
+			BB_Creator_User_Position_ID,
+			--BB_Is_Locked,
+			--BB_Locked_By_User_ID,
+			--BB_Lock_Date,
+			Billback_Status_ID,
+			Billback_Payee_Type_ID,
+			BB_UP,
+			BB_PNF,
+			Created_Date,
+			Deleted,
+			Scheduled_Auto_BB,
+			BB_Closing_Method
+		FROM Billback
+		WHERE Billback_ID = '#Form.Billback_ID#'
+	</cfquery>
+	
+<!--- D30517: Item not appearing on Billback 'programs' page after importing it START	 --->
+<cfquery name="CheckDistributors" datasource="#Application.Datasource#">	
+SELECT top 1 bp.billback_id, bp.Billback_Program_ID, bp.Product_ID, COUNT(*) as cnt
+FROM  Billback_Product bp
+WHERE bp.Billback_ID = '#Form.Billback_ID#'
+ANd   bp.Deleted = 0
+GROUP BY bp.billback_id, bp.Billback_Program_ID, bp.Product_ID
+HAVING COUNT(*) > 1
+</cfquery>	
+	
+<cfset CountDistributor = CheckDistributors.recordcount>
+<!--- D30517: Item not appearing on Billback 'programs' page after importing it END	 --->	
+
+<cfset Scheduled_Auto_BB = LoadBillbackData.Scheduled_Auto_BB>
+	<cfset savedPayeeType = LoadBillbackData.Billback_Payee_Type_ID />
+	<CFSWITCH expression="#LoadBillbackData.Billback_Payee_Type_ID#">
+		<CFCASE value="1"><!--- di --->
+			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+				SELECT *
+				FROM Billback_Distributor
+				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+			</cfquery>
+			<cfset savedPayeeID = getPayeeData.Distributor_ID />
+<!--- 			<cfif len(getPayeeData.Distributor_ID) EQ 0>
+				<CFSET is_an_unknown_payee = 1>
+			</cfif>
+ --->		</CFCASE>
+
+		<CFCASE value="2"><!--- op --->
+			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+				SELECT *
+				FROM Billback_Operator
+				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+			</cfquery>
+				
+			<CFPARAM NAME="FORM.Associated_Ship_To" DEFAULT="#getPayeeData.Associated_Ship_To#">
+<!--- 			<cfif len(getPayeeData.Operator_ID) EQ 0>
+				<CFSET is_an_unknown_payee = 1>
+			</cfif>	 --->		
+		</CFCASE>
+
+		<CFCASE value="3"><!--- br --->
+			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+				SELECT *
+				FROM Billback_Broker
+				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+			</cfquery>
+<!--- 			<cfif len(getPayeeData.Broker_ID) EQ 0>
+				<CFSET is_an_unknown_payee = 1>
+			</cfif>		 --->			
+		</CFCASE>
+
+		<CFCASE value="4"><!--- other --->
+			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+				SELECT *
+				FROM Billback_Unidentified_Payee
+				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+			</cfquery>
+			<CFPARAM NAME="FORM.Associated_Ship_To" DEFAULT="#getPayeeData.Associated_Ship_To#">
+		</CFCASE>
+		
+		<cfcase value="5"><!--- unidentified distributor --->
+			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+				SELECT *
+				FROM Billback_Distributor
+				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+			</cfquery>			
+			<CFSET is_an_unknown_payee = 1>
+		</cfcase>
+		<cfcase value="6"><!--- unidentified operator --->
+			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+				SELECT *
+				FROM Billback_Operator
+				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+			</cfquery>
+			<CFSET is_an_unknown_payee = 1>
+		</cfcase>
+		<cfcase value="7"><!--- unidentified broker --->
+			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+				SELECT *
+				FROM Billback_Broker
+				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+			</cfquery>
+			<CFSET is_an_unknown_payee = 1>
+		</cfcase>
+	</CFSWITCH>
+	<CFIF LoadBillbackData.Billback_Payee_Type_ID EQ 1 OR LoadBillbackData.Billback_Payee_Type_ID EQ 2 OR LoadBillbackData.Billback_Payee_Type_ID EQ 3>
+		<CFSET FORM.Vendor_ID = getPayeeData.Uploaded_Vendor_ID>
+	</CFIF>
+</CFIF>
+<!---  end load bb --->
+<cfparam name="FORM.BB_Payee_Type" 						default="0">
+<cfparam name="Form.Default_Payee"						default="1">
+
+<CFIF Not IsDefined("FORM.Associated_Ship_To")>
+	<CFPARAM NAME="FORM.Associated_Ship_To" DEFAULT="">
+</CFIF>
+
+<CFIF FORM.Associated_Ship_To NEQ "">
+	<CFQUERY NAME="GetAssociatedShipToInfo" DATASOURCE="#Application.Datasource#">
+		SELECT  BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID, BSA_Foodservice_Customers.Name, 
+				BSA_Foodservice_Customers.Ship_To, BSA_Foodservice_Customers.Address_1, BSA_Foodservice_Customers.City, 
+				BSA_Foodservice_Customers.State, BSA_Foodservice_Customers.ZipCode, BSA_Foodservice_Customers.Country_Code,
+				<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+				BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID, BSA_Foodservice_Brokers.Broker_Name, 
+				</cfif>
+				Distributor_Family.Family_Name, Distributor_Buying_Groups.Buying_Group_Name, BSA_Foodservice_Customers.Shr_Ship_To
+		FROM	BSA_Foodservice_Customers 
+		<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+		INNER JOIN	BSA_Foodservice_Brokers 
+		ON 		BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID = BSA_Foodservice_Brokers.BSA_Foodservice_Brokers_ID 
+		</cfif>
+		INNER JOIN Distributor_Family 
+		ON 		BSA_Foodservice_Customers.Family_ID = Distributor_Family.Family_ID 
+		INNER JOIN Distributor_Buying_Groups 
+		ON 		BSA_Foodservice_Customers.Buying_Group_ID = Distributor_Buying_Groups.Buying_Group_ID
+		WHERE 	BSA_Foodservice_Customers_ID = 	'#FORM.Associated_Ship_To#'
+												
+	</CFQUERY>
+</CFIF>
+
+<CFIF LoadBillback EQ 1>
+	<CFIF len(trim(LoadBillbackData.Billback_Payee_Type_ID)) GT 0>
+		<!--- mapp the db value to the object index of the radio buttons --->
+		<CFSWITCH expression="#LoadBillbackData.Billback_Payee_Type_ID#">
+			<CFCASE value="1"><!--- dis --->
+				<CFSET FORM.Default_Payee = 1>			
+			</CFCASE>
+			<CFCASE value="2"><!--- op ---> 
+				<CFSET FORM.Default_Payee = 2>			
+			</CFCASE>
+			<CFCASE value="3"><!--- br --->
+				<CFSET FORM.Default_Payee = 3>			
+			</CFCASE>
+			<CFCASE value="4"><!--- other --->
+				<CFSET FORM.Default_Payee = 4>
+			</CFCASE>
+			<CFCASE value="5"><!--- unknown dis --->
+				<CFSET FORM.Default_Payee = 1>			
+			</CFCASE>
+			<CFCASE value="6"><!--- unknown op --->
+				<CFSET FORM.Default_Payee = 2>			
+			</CFCASE>
+			<CFCASE value="7"><!--- unknown br --->
+				<CFSET FORM.Default_Payee = 3>			
+			</CFCASE>			
+		</CFSWITCH>
+	</CFIF>
+	<CFSET BB_Closing_method = LoadBillbackData.BB_Closing_Method>
+<CFELSE>
+	<cfquery name="LoadBillbackData_Two" datasource="#Application.Datasource#">
+		SELECT 
+			Billback_Payee_Type_ID,
+			BB_Closing_Method
+		FROM Billback
+		WHERE Billback_ID = '#Form.Billback_ID#'
+	</cfquery>
+	<CFSET BB_Closing_method = LoadBillbackData_Two.BB_Closing_Method>
+	<!--- <CFSET FORM.Default_Payee = LoadBillbackData_Two.Billback_Payee_Type_ID>  --->
+	<cfset savedPayeeType = LoadBillbackData_Two.Billback_Payee_Type_ID />
+	<cfif savedPayeeType eq 1>
+		<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+			SELECT *
+			FROM Billback_Distributor
+			WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
+		</cfquery>
+		<cfset savedPayeeID = getPayeeData.Distributor_ID />
+	</cfif>
+
+</CFIF>
+
+
+<!--- 
+	1	Broker
+	2	Distributor
+	3	Operator
+	4	Other
+ --->
+<CFPARAM name="FORM.Broker_List" default="">
+<CFSET FORM.Broker_List = trim(FORM.Broker_List)>
+<CFIF len(FORM.Broker_List) GT 0 AND FORM.Load_ID_From_Form EQ 1>
+	<CFIF FORM.Broker_List NEQ "0">
+		<CFSET FORM.Broker_ID = FORM.Broker_List>
+	</CFIF>
+ </CFIF>
+ 
+<CFPARAM name="FORM.Distributor_List" default="">
+<CFSET FORM.Distributor_List = trim(FORM.Distributor_List)>
+<CFIF len(FORM.Distributor_List) GT 0 AND FORM.Load_ID_From_Form EQ 1>
+	<CFIF FORM.Distributor_List NEQ "0">
+		<CFSET FORM.Distributor_ID = FORM.Distributor_List>
+	</CFIF>
+ </CFIF>
+ 
+ <CFPARAM name="FORM.Operator_List" default="">
+<CFSET FORM.Operator_List = trim(FORM.Operator_List)>
+<CFIF len(FORM.Operator_List) GT 0 AND FORM.Load_ID_From_Form EQ 1>
+	<CFIF FORM.Operator_List NEQ "0">
+		<CFSET FORM.operator_iD = FORM.Operator_List>
+	</CFIF>
+<CFELSEIF LEN(FORM.Operator_List) EQ 0 AND IsDefined("getPayeeData.Operator_ID") AND LEN(getPayeeData.Operator_ID) GT 0>
+	<CFSET FORM.operator_id = getPayeeData.Operator_ID>
+</CFIF>
+<!---<cfdump var="#form#"><cfabort>--->
+<cfparam name="form.multiDistList"	default = "">
+<cfset billbackSummaryManager = CreateObject("component", "components.Billback.BillbackSummaryManager") >
+<cfset prodList = billbackSummaryManager.getBBProdDistIdList(FORM.Billback_ID)>
+<cfset currentList = billbackSummaryManager.getBBCurrDistIdList(FORM.Billback_ID)>
+
+<cfif form.multidistList eq "" and not isdefined("Form.FIELDNAMES")>
+	<cfset getMultiDistList = billbackSummaryManager.getMultiDistList(form.Billback_ID) />
+	<cfset form.multiDistList = valuelist(getMultiDistList.Distributor_ID)> 
+<cfelse>
+	<!--- Clean up the distributorList --->
+	<cfset insertList = form.multiDistList>
+	<cfset deleteList = ListCompare(currentList, insertList)>
+	<cfset alertList  = ListCompare(prodList, insertList)>
+	<cfset form.alertList = alertList>
+</cfif>
+ 
+<!--- Distributor Fields --->
+<cfparam name="Form.Distributor_ID"						default="">
+<cfparam name="Form.Distributor_Notes"					default="">
+
+<!--- Unknown Distributor Fields --->
+<cfparam name="Form.Unknown_Distributor_Name"			default="">
+<cfparam name="Form.Unknown_Distributor_Address_1"		default="">
+<cfparam name="Form.Unknown_Distributor_Address_2"		default="">
+<cfparam name="Form.Unknown_Distributor_City"			default="">
+<cfparam name="Form.Unknown_Distributor_State"			default="">
+<cfparam name="Form.Unknown_Distributor_Zip"			default="">
+<cfparam name="Form.Unknown_Distributor_Country_Code"			default="">
+<cfparam name="Form.Unknown_Distributor_Notes"			default="">
+
+<CFIF LoadBillback EQ 1 AND is_an_unknown_payee EQ 0 AND isdefined("getPayeeData.Distributor_ID") AND FORM.Load_ID_From_Form EQ 0>
+	<CFSET FORM.Distributor_ID = getPayeeData.Distributor_ID>
+	<CFSET FORM.Distributor_List = FORM.Distributor_ID>
+	<CFSET Form.Distributor_Notes = getPayeeData.BB_Distributor_Notes>
+</CFIF>
+
+<CFIF LoadBillback EQ 1 AND is_an_unknown_payee EQ 1>
+	<CFIF LoadBillbackData.Billback_Payee_Type_ID EQ 5>
+		<CFSET Form.Unknown_Distributor_Name 		= getPayeeData.BB_Distributor_Name>
+		<CFSET Form.Unknown_Distributor_Address_1 	= getPayeeData.BB_Distributor_Address1>
+		<CFSET Form.Unknown_Distributor_Address_2 	= getPayeeData.BB_Distributor_Address2>
+		<CFSET Form.Unknown_Distributor_City 		= getPayeeData.BB_Distributor_City>
+		<CFSET Form.Unknown_Distributor_State 		= getPayeeData.BB_Distributor_State>
+		<CFSET Form.Unknown_Distributor_Zip 		= getPayeeData.BB_Distributor_Zipcode>
+		<CFSET Form.Unknown_Distributor_Country_Code 		= getPayeeData.BB_Distributor_Country_Code>
+		<CFSET Form.Unknown_Distributor_Notes 		= getPayeeData.BB_Distributor_Notes>
+	</CFIF>
+</CFIF>
+
+
+<!--- Broker Fields --->
+<cfparam name="Form.Broker_ID"							default="">
+<cfparam name="Form.Broker_Notes"						default="">
+
+<!--- Unknown Broker Fields --->
+<cfparam name="Form.Unknown_Broker_Name"				default="">
+<cfparam name="Form.Unknown_Broker_Address_1"			default="">
+<cfparam name="Form.Unknown_Broker_Address_2"			default="">
+<cfparam name="Form.Unknown_Broker_City"				default="">
+<cfparam name="Form.Unknown_Broker_State"				default="">
+<cfparam name="Form.Unknown_Broker_Zip"					default="">
+<cfparam name="Form.Unknown_Broker_Country_Code"					default="">
+<cfparam name="Form.Unknown_Broker_Notes"				default="">
+
+<CFIF LoadBillback EQ 1 AND is_an_unknown_payee EQ 0 AND isdefined("getPayeeData.Broker_ID") AND FORM.Load_ID_From_Form EQ 0>
+	<CFSET FORM.Broker_ID = getPayeeData.Broker_ID>
+	<CFSET Form.Broker_Notes = getPayeeData.BB_Broker_Notes>
+</CFIF>
+
+<CFIF LoadBillback EQ 1 AND is_an_unknown_payee EQ 1>
+	<CFIF LoadBillbackData.Billback_Payee_Type_ID EQ 7>
+		<CFSET Form.Unknown_Broker_Name 		= getPayeeData.BB_Broker_Name>
+		<CFSET Form.Unknown_Broker_Address_1 	= getPayeeData.BB_Broker_Address1>
+		<CFSET Form.Unknown_Broker_Address_2 	= getPayeeData.BB_Broker_Address2>
+		<CFSET Form.Unknown_Broker_City 		= getPayeeData.BB_Broker_City>
+		<CFSET Form.Unknown_Broker_State 		= getPayeeData.BB_Broker_State>
+		<CFSET Form.Unknown_Broker_Zip 			= getPayeeData.BB_Broker_Zipcode>
+		<CFSET Form.Unknown_Broker_Country_Code 			= getPayeeData.BB_Broker_Country_Code>
+		<CFSET Form.Unknown_Broker_Notes 		= getPayeeData.BB_Broker_Notes>
+	</CFIF>
+</CFIF>
+
+<!--- Operator Fields --->
+<cfparam name="Form.operator_id"						default="">
+<cfparam name="Form.Operator_Notes"						default="">
+
+<!--- Unknown Operator Fields --->
+<cfparam name="Form.Unknown_Operator_Name"				default="">
+<cfparam name="Form.Unknown_Operator_Address_1"			default="">
+<cfparam name="Form.Unknown_Operator_Address_2"			default="">
+<cfparam name="Form.Unknown_Operator_City"				default="">
+<cfparam name="Form.Unknown_Operator_State"				default="">
+<cfparam name="Form.Unknown_Operator_Zip"				default="">
+<cfparam name="Form.Unknown_Operator_Country_Code"				default="">
+<cfparam name="Form.Unknown_Operator_Notes"				default="">
+
+<CFIF LoadBillback EQ 1 AND is_an_unknown_payee EQ 0 AND isdefined("getPayeeData.Operator_ID") AND FORM.Load_ID_From_Form EQ 0>
+	<CFSET FORM.operator_id = getPayeeData.Operator_ID>
+	<CFSET Form.Operator_Notes = getPayeeData.BB_Operator_Notes>
+</CFIF>
+
+<CFIF LoadBillback EQ 1 AND is_an_unknown_payee EQ 1>
+	<CFIF LoadBillbackData.Billback_Payee_Type_ID EQ 6>
+		<CFSET Form.Unknown_Operator_Name 		= getPayeeData.BB_Operator_Name>
+		<CFSET Form.Unknown_Operator_Address_1 	= getPayeeData.BB_Operator_Address1>
+		<CFSET Form.Unknown_Operator_Address_2 	= getPayeeData.BB_Operator_Address2>
+		<CFSET Form.Unknown_Operator_City 		= getPayeeData.BB_Operator_City>
+		<CFSET Form.Unknown_Operator_State 		= getPayeeData.BB_Operator_State>
+		<CFSET Form.Unknown_Operator_Zip 		= getPayeeData.BB_Operator_Zipcode>
+		<CFSET Form.Unknown_Operator_Country_Code 	= getPayeeData.BB_Operator_Country_Code>
+		<CFSET Form.Unknown_Operator_Notes 		= getPayeeData.BB_Operator_Notes>
+	</CFIF>
+</CFIF>
+
+
+<!--- Other Fields --->	
+<cfparam name="Form.Other_Name"							default="">
+<cfparam name="Form.Other_Address_1"					default="">
+<cfparam name="Form.Other_Address_2"					default="">
+<cfparam name="Form.Other_City"							default="">
+<cfparam name="Form.Other_State"						default="">
+<cfparam name="Form.Other_Country_code"						default="">
+<cfparam name="Form.Other_Zip"							default="">
+<cfparam name="Form.Other_Notes"						default="">
+
+<CFIF LoadBillback EQ 1 AND is_an_unknown_payee EQ 0>
+	<CFIF LoadBillbackData.Billback_Payee_Type_ID EQ 4>
+		<CFSET Form.Other_Name 			= getPayeeData.BB_UP_Name>
+		<CFSET Form.Other_Address_1 	= getPayeeData.BB_UP_Address1>
+		<CFSET Form.Other_Address_2 	= getPayeeData.BB_UP_Address2>
+		<CFSET Form.Other_City 			= getPayeeData.BB_UP_City>
+		<CFSET Form.Other_State 		= getPayeeData.BB_UP_State>
+		<CFSET Form.Other_Country_Code 		= getPayeeData.BB_UP_Country_Code>
+		<CFSET Form.Other_Zip 			= getPayeeData.BB_UP_Zipcode>
+		<CFSET Form.Other_Notes 		= getPayeeData.BB_UP_Notes>
+	</CFIF>
+</CFIF>
+
+<cfparam name="disablelinks" default="0">
+<cfparam name="actionchange" default="0">
+
+<cfif appsettings.getBillbackModifyAgree() EQ 1>
+<cfquery name="getBB_AgreedInfo" datasource="#Application.Datasource#">
+	SELECT 	count(*) as BB_AgreedCount
+	FROM 	BB_Agreed_Info 
+	WHERE 	Billback_ID =  '#Form.Billback_ID#'
+	AND Deleted = 0	
+</cfquery>	
+<cfquery name="getBB_ModifyAgree" datasource="#Application.Datasource#">
+	SELECT 	BB_modify_agree,BB_Modify_Agree_User
+	FROM 	Billback 
+	WHERE 	Billback_ID =  '#Form.Billback_ID#'
+	AND Deleted = 0	
+</cfquery>	
+
+<cfif getBB_AgreedInfo.BB_AgreedCount GT 0>
+<cfset disablelinks = 1>
+</cfif>
+
+<cfif getBB_AgreedInfo.BB_AgreedCount EQ 0>
+<cfset actionchange = 0>
+<cfelseif getBB_ModifyAgree.BB_modify_agree EQ 1 and getBB_AgreedInfo.BB_AgreedCount GT 0 and getBB_ModifyAgree.BB_Modify_Agree_User EQ request.AccessStructure.user_id>
+<cfset actionchange = 0>
+<cfset disablelinks = 0>
+<cfelseif getBB_ModifyAgree.BB_modify_agree EQ 0 and getBB_AgreedInfo.BB_AgreedCount GT 0>
+<cfset actionchange = 1>
+<cfelseif getBB_ModifyAgree.BB_modify_agree EQ 1 and getBB_AgreedInfo.BB_AgreedCount GT 0 and getBB_ModifyAgree.BB_Modify_Agree_User NEQ request.AccessStructure.user_id>
+<cfset actionchange = 1>
+</cfif>
+</cfif>
+
+
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<!--- Get the states																				 --->
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<CFQUERY NAME="Get_States" datasource="#application.datasource#">
+	Select s.*, c.Country_Sort_Order
+	from _states s
+	join _country c on s.Country_ID = c.Country_ID
+	ORDER BY  isnull(c.Country_Sort_Order, c.country_id) ASC
+</CFQUERY>
+<!--- Country code --->
+<CFQUERY NAME="getCountry" datasource="#application.datasource#">
+	SELECT *
+	FROM _Country
+	where active = 1
+	ORDER BY Country_id ASC
+</CFQUERY>
+
+<cfset OnlyDistributorsUnderMe = 1 />
+<cfif Get_Profile_Settings.BB_Add_Payee_Any_Position EQ 1>
+	<cfset OnlyDistributorsUnderMe = 0 />
+</cfif>
+
+<CFSET PAGE_TITLE="Payee">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<HTML>
+<HEAD>
+	<TITLE><CFOUTPUT>#PAGE_TITLE#</CFOUTPUT></TITLE>
+	<LINK REL="STYLESHEET" TYPE="text/css" HREF="/common_files/main_style.css">
+	<style type="text/css">
+	 .odd{background-color: #EAFFEA;}
+	 #tooltip {
+	position: absolute;
+	z-index: 3000;
+	font-family: Arial;
+	border: 1px solid #000;
+	width: 130px;
+	padding:10px;
+	height: 25px;
+	opacity: 0.8;
+	background-color: #FFF;
+}
+#tooltip h3 {
+	margin-bottom: 0.75em;
+	font-size: 8pt;
+	width: 130px;
+	text-align: center;
+}
+#tooltip div { width: 220px; text-align: left; }
+     </style>
+
+	<SCRIPT language="JavaScript" src="/script/javascript/string_functions.js"></SCRIPT>
+	<script>
+		function initPage() {
+<!--- 			<CFSET x = (form.default_payee - 1)>
+			
+			<CFIF x EQ 0>
+				<CFSET x = 1>
+			</CFIF> --->
+			
+			<CFOUTPUT>
+			for(var y=0; y<BB_Payee_Type.length;y++){
+				if(BB_Payee_Type[y].value == #form.default_payee#){
+					/* true or false based on browser - IE 10 and above or IE 9 and below. 
+					'1' as an argument below means "true". */
+					BB_Payee_Type[y].checked = checkOrUncheckBeforeFireEvent(1);
+					callfireEvent(document,document.BB_Payee_Type[y],'Click');
+				}
+			}
+			</CFOUTPUT>
+			
+			<CFIF is_an_unknown_payee EQ 1 AND disableUnknown EQ 0>
+				/* true or false based on browser - IE 10 and above or IE 9 and below. 
+				'1' as an argument below means "true". */
+				is_unknown.checked = checkOrUncheckBeforeFireEvent(1);
+				callfireEvent(document,document.is_unknown,'Click');
+			</CFIF>
+		}
+	</script>
+	<cfinclude template="iframe_style.cfm">
+	<link rel="stylesheet" type="text/css" href="/common_files/impromptu.css">
+</HEAD>
+
+<BODY BGCOLOR="White" TEXT="Black" LINK="Blue" VLINK="Blue" ALINK="Red" LEFTMARGIN="0" TOPMARGIN="0" onLoad="initPage();">
+<SCRIPT SRC="/Script/javascript/dhtml.js"></SCRIPT>
+<SCRIPT SRC="/Common_Files/Delete_Functions.js"></SCRIPT>
+<!--- AjaxCFC calls --->
+<script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery-1.2.1-min.js"></script>
+<script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery.AjaxCFC.js"></script>
+<script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery.flydom-3.1.0.js"></script>
+<script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery.dimensions.js"></script>
+<script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery.bgiframe.js"></script>
+<script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery.tooltip.min.js"></script>
+
+<script type="text/javascript" src="/Script/javascript/jquery-impromptu.3.1.min.js"></script>
+
+	<script type="text/javascript">
+		// additional files
+		// $.AjaxCFC({require:'dDumper'});
+		// more additional files
+		// $.AjaxCFC({require:'jquery.fastSerialize'});
+
+		// optional global settings
+		// using these setters also automatically include dependencies
+		$.AjaxCFCHelper.setDebug(false);
+		$.AjaxCFCHelper.setBlockUI(false);
+		$.AjaxCFCHelper.setUseDefaultErrorHandler(true);
+		$.AjaxCFCHelper.setSerialization('json'); // json, wddx
+	</script>
+<script>
+  
+	var lastknownselectedradio = 0;
+	function toggleDataScreens() {
+		//is_unknown.disabled = false; 
+		
+		BB_Payee_Type_Data_1.style.display 					= 'none';
+		BB_Payee_Type_Data_1_Form.style.display 			= 'none';
+		BB_Payee_Type_Data_1_Unknown.style.display 			= 'none';
+		BB_Payee_Type_Data_1_Unknown_Form.style.display 	= 'none';
+		
+		BB_Payee_Type_Data_2.style.display 					= 'none';
+		BB_Payee_Type_Data_2_Form.style.display 			= 'none';
+		BB_Payee_Type_Data_2_Unknown.style.display 			= 'none';
+		BB_Payee_Type_Data_2_Unknown_Form.style.display 	= 'none';
+		// multiDistHead.style.display                         = 'none';
+	
+		BB_Payee_Type_Data_3.style.display 					= 'none';
+		BB_Payee_Type_Data_3_Form.style.display 			= 'none';
+		BB_Payee_Type_Data_3_Unknown.style.display 			= 'none';
+		BB_Payee_Type_Data_3_Unknown_Form.style.display 	= 'none';
+				
+		BB_Payee_Type_Data_4.style.display 					= 'none';
+		BB_Payee_Type_Data_4_Form.style.display 			= 'none';
+		BB_Payee_Type_Data_4_Unknown.style.display 			= 'none';
+		BB_Payee_Type_Data_4_Unknown_Form.style.display 	= 'none';
+
+		
+			eval('BB_Payee_Type_Data_'+event.srcElement.value+'.style.display = "block"')
+			eval('BB_Payee_Type_Data_'+event.srcElement.value+'_Form.style.display = "block"')
+			document.all.selected_bb_payee_type.value = event.srcElement.value
+			document.all.selected_bb_payee_type_is_unknown.value = 0
+
+			lastknownselectedradio = event.srcElement.value;
+		
+		// set a spacer so that there is enough space for message display
+		var divHeight = parseFloat(document.all.divSpacer.style.height);
+		if(isNaN(divHeight)) divHeight = 0;
+		
+		var newDivHeight = 500-window.document.body.scrollHeight+divHeight;
+		if(newDivHeight<=0) newDivHeight = 10;
+		
+		document.all.divSpacer.style.height = newDivHeight;
+		
+		document.BB_Payee_Form.Default_Payee.value = event.srcElement.value;
+		
+		try { window.parent.dyniframesize(); } catch (err) { };
+		
+	}
+
+	function searchData(typeofdata){
+		switch (typeofdata) {
+			case "br" :
+				NewWindow("../search_screens/pm_select_brokers.cfm?Formname=broker_form", "brokerwindow", 850, 600, "yes", "yes")
+			break;
+
+			case "di" :
+				NewWindow("../search_screens/PM_select_distributors.cfm?Formname=distributor_form&OnlyDistributorsUnderMe=<cfoutput>#OnlyDistributorsUnderMe#</cfoutput>", "distributorwindow", 850, 600, "yes", "yes")
+			break;
+			case "diMulti" :
+				NewWindow("../search_screens/PM_select_distributors.cfm?Formname=multiDist_form&SelectSingleSearchResultOnly=0&FieldName=multiDistList&OnlyDistributorsUnderMe=<cfoutput>#OnlyDistributorsUnderMe#</cfoutput>", "distributorwindow", 850, 600, "yes", "yes")
+			break;
+			
+			case "diMultiOp" :
+				NewWindow("../search_screens/PM_select_distributors.cfm?Formname=operator_form&SelectSingleSearchResultOnly=0&FieldName=multiDistList&OnlyDistributorsUnderMe=<cfoutput>#OnlyDistributorsUnderMe#</cfoutput>", "distributorwindow", 850, 600, "yes", "yes")
+			break;
+
+			case "diMultiBr" :
+				NewWindow("../search_screens/PM_select_distributors.cfm?Formname=broker_form&SelectSingleSearchResultOnly=0&FieldName=multiDistList&OnlyDistributorsUnderMe=<cfoutput>#OnlyDistributorsUnderMe#</cfoutput>", "distributorwindow", 850, 600, "yes", "yes")
+			break;
+
+			case "op" :
+				NewWindow("../search_screens/PM_select_operators.cfm?Formname=operator_form", "operatorwindow", 850, 600, "yes", "yes")
+			break;
+			
+			case "vn":
+				if (document.BB_Payee_Form.distributor_id.value != "") 
+				{
+					NewWindow("/GL_Code/Vendor_Management/Vendor_Cross_Ref_Search.cfm?Formname=BB_Payee_Form&Distributor_ID="+document.BB_Payee_Form.distributor_id.value, "Vensearchwindow", 850, 600, "yes", "yes")
+				}
+				else
+				{
+					NewWindow("/GL_Code/Vendor_Management/Vendor_Cross_Ref_Search.cfm?Formname=BB_Payee_Form&operator_id="+document.BB_Payee_Form.operator_id.value, "Vensearchwindow", 850, 600, "yes", "yes")
+				}				
+			break;
+			
+			case "vm":
+				if (document.BB_Payee_Form.distributor_id.value != "") 
+				{
+					NewWindow("/GL_Code/Vendor_Management/Vendor_Master_Search.cfm?Formname=BB_Payee_Form", "Vensearchwindow", 850, 600, "yes", "yes")
+				}
+				else
+				{
+					NewWindow("/GL_Code/Vendor_Management/Vendor_Master_Search.cfm?Formname=BB_Payee_Form", "Vensearchwindow", 850, 600, "yes", "yes")
+				}				
+			break;
+			
+		}
+	}
+	
+	function AssociateShipTo(formName)
+	{
+		NewWindow("../search_screens/PM_select_distributors.cfm?Formname=" + formName + "&FieldName=Associated_Ship_To&OnlyDistributorsUnderMe=<cfoutput>#OnlyDistributorsUnderMe#</cfoutput>", "distributorwindow", 850, 600, "yes", "yes")
+	}
+	
+	function deleteThisCust(custID, bgCol)
+		{	
+			var srcObj = event.srcElement;
+			var trObj = getParentObject(srcObj, "tr");
+			var trIndex = trObj.rowIndex;
+
+			/* If payee selected is a "broker" */
+			if(document.all.selected_bb_payee_type.value == 3){
+				var FINALITEMLIST = document.broker_form.multiDistList.value;	
+			}
+			/* If payee selected is an "operator" */
+			else{
+				var FINALITEMLIST = document.operator_form.multiDistList.value;	
+			}
+			var resultString = ListDeleteItem(FINALITEMLIST, ",", custID);
+			var bDelete = true;
+			var startDataCol = 1;
+			var objGroupLevel;
+			//document.KnownProgramForm.Count_ID.value = Program_Count_ID;
+			if(resultString == FINALITEMLIST)
+			{
+				resultString = ListAppendItem(FINALITEMLIST, ",", custID);
+				bDelete = false;
+			}
+			/* If payee selected is a "broker" */
+			if(document.all.selected_bb_payee_type.value == 3){
+				document.broker_form.multiDistList.value = resultString;
+			}
+			/* If payee selected is an "operator" */
+			else{
+				document.operator_form.multiDistList.value = resultString;
+			}
+
+			document.BB_Payee_Form.multiDistList.value = resultString;
+			document.all.multiDistList.value = resultString;
+			var empty_String = "<IMG SRC=\"/Images/fill.gif\" width=\"1\" height=\"1\">";	
+			if(trObj)
+			{
+				if(bDelete)
+				{ 
+					trObj.height = trObj.offsetHeight;
+					
+					//trObj.cells[trObj.cells.length-1].innerHTML = empty_String;
+					for (i=1; i<=trObj.cells.length-2; i++)
+					{
+					disableDiv(trObj.cells[i+startDataCol], true, false);
+					}
+					
+					propogateProperty(trObj, "style.backgroundColor", "#DDDDDD", false);
+					propogateProperty(trObj, "style.textDecoration", "line-through", true);				
+					
+					srcObj.title = "undo customer deletion";
+					srcObj.src = undodeleteImg.src;
+					//document.KnownProgramForm.Data_Action_ID.value = 5;
+					//document.KnownProgramForm.prodUpdate.value = 1;
+					//resetnavigate();
+				}
+				else
+				{
+					
+					for (i=1; i<=trObj.cells.length-2; i++)
+					{
+					disableDiv(trObj.cells[i+startDataCol], false, false);
+					}
+					//var bgCol = "FFFFFF";
+					//if(trObj.rowIndex % 2 == 1)
+					//{
+					//	bgCol = "C6FFC6";
+					//}
+					propogateProperty(trObj, "style.backgroundColor", bgCol, false);
+					propogateProperty(trObj, "style.textDecoration", "none", false);
+					
+					srcObj.title = "delete this customer";
+					srcObj.src = deleteImg.src;
+					//document.KnownProgramForm.prodUpdate.value = 1;
+					propogateProperty(trObj, "style.backgroundColor", "FFFFFF", false, true);
+					
+				}
+	
+				srcObj.bDelete = !bDelete;
+				trObj.bDelete = (bDelete?1:0);
+			}
+			
+		}
+		
+		function getCustomerPayee(id){
+			if (id)
+			{
+			$.AjaxCFC({
+            url: "/components/billback/BBPayee.cfc", // your CFC
+            method: "customerPayeeInfo",
+            //data: id,
+			data: {"shipTo":id,"bBySingleId":1},
+            serialization: "json",
+            success: function(r){ 
+            if (r.recordcount > 0){
+            // Change or add Distributor Name
+						if(r.data[0].shr_ship_to != ''){
+            $("#distName").html(r.data[0].name + "<br />" + r.data[0].shr_ship_to);
+						}
+						else{
+					  $("#distName").html(r.data[0].name + "<br />" + r.data[0].ship_to);
+						}
+            $("#distName").click(function() {
+              NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID='+r.data[0].bsa_foodservice_customers_id,'name','400','450','Yes', 'No');
+              return false;
+             });
+            // Change or add distributor Address Info
+            $("#distAddrInfo").html(r.data[0].address_1 + "<br />");
+            $("#distAddrInfo").append(r.data[0].city + ",");
+            $("#distAddrInfo").append(r.data[0].state + " ");
+            $("#distAddrInfo").append(r.data[0].zipcode + " ");
+            $("#distAddrInfo").append(r.data[0].country_code);
+            $("#distAddrInfo").click(function() {
+              NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID='+r.data[0].bsa_foodservice_customers_id,'name','400','450','Yes', 'No');
+              return false;
+             });
+			<cfif not variables.appSettings.getDistributorMultiPosition()>
+            // Change or add Broker Name
+            $("#distBrokerName").html(r.data[0].broker_name);
+            $("#distBrokerName").click(function() {
+              NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID='+r.data[0].bsa_foodservice_customers_id,'name','400','450','Yes', 'No');
+              return false;
+             });
+            </cfif>
+			$("#distFamName").html(r.data[0].family_name + "<br />");
+			$("#distFamName").append(r.data[0].buying_group_name);
+			$("#distFamName").click(function() {
+              NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID='+r.data[0].bsa_foodservice_customers_id,'name','400','450','Yes', 'No');
+              return false;
+             });
+			document.all.BB_Payee_Form.distributor_id.value = r.data[0].bsa_foodservice_customers_id;
+			$("#noCustSelected").hide();
+			 	try { window.parent.dyniframesize(); } catch (err) { };    
+             }
+			else
+			{
+				alert('There is no <cfoutput>#lcase(application.returned_customer_setting.distributor_label_singular)#</cfoutput> listed with that ID');
+				document.all.BB_Payee_Form.custId.focus();
+				return false;
+			}
+            }
+           });
+		 }
+		}
+		
+		  function getBrokerPayee(id){
+		   if (id)
+		   {
+			$.AjaxCFC({
+            url: "/components/billback/BBPayee.cfc", // your CFC
+            method: "vendorPayee",
+            data: id,
+            serialization: "json",
+            success: function(r){ 
+            if (r.recordcount > 0){
+            // Change or add Broker Name
+            $("#brkrname").html(r.data[0].broker_name + "<br />" + r.data[0].broker_shard);
+            
+            // Add click event to cell so we can show the new broker
+            $("#brkrname").click(function() {
+             NewWindow('/Profiles/Brokers/Broker_profile.cfm?BID='+r.data[0].bsa_foodservice_brokers_id,'name','400','450','Yes', 'No');
+             });
+            
+            // Change or add Broker Address Info
+            $("#brkrAddress").html(r.data[0].address);
+            if (r.data[0].address_2 != "")
+            {
+            	$("#brkrAddress").append( "<br />" + r.data[0].address_2 + "<br />");
+            }
+            $("#brkrAddress").append(r.data[0].city + ",");
+            $("#brkrAddress").append(r.data[0].state + " ");
+            $("#brkrAddress").append(r.data[0].zip + " ");
+             // Add click event to cell so we can show the new broker
+            $("#brkrAddress").click(function() {
+             NewWindow('/Profiles/Brokers/Broker_profile.cfm?BID='+r.data[0].bsa_foodservice_brokers_id,'name','400','450','Yes', 'No');
+             });
+            $("#brkrRegion").html(r.data[0].region_name + "<br />");
+			$("#brkrRegion").append(r.data[0].zone_name);
+			// Add click event to cell so we can show the new broker
+			$("#brkrRegion").click(function() {
+             NewWindow('/Profiles/Brokers/Broker_profile.cfm?BID='+r.data[0].bsa_foodservice_brokers_id,'name','400','450','Yes', 'No');
+             });
+			// The form fields need to be updated with the new value for saving
+			document.all.broker_form.broker_id.value = r.data[0].bsa_foodservice_brokers_id;
+			document.all.broker_form.Broker_List.value = r.data[0].bsa_foodservice_brokers_id;
+			document.all.BB_Payee_Form.broker_id.value = r.data[0].bsa_foodservice_brokers_id;
+			// Hide the No Brokers found message
+			$("#brkrEmpty").hide();
+			<cfset Can_Associated_Ship_To = 1 />;
+			$("#associateMultiDistBrk").show();
+			$("#multiDistHeadBrk").show();
+			$("#showCustomerSearchBrk").show();
+    			$("#shipToAssociateIdBrk").show(); 
+			try { window.parent.dyniframesize(); } catch (err) { };
+             }
+			else
+			{
+				alert('There is no <cfoutput>#application.returned_customer_setting.broker_label_singular#</cfoutput> listed with that ID');
+				document.all.broker_form.brkrId.focus();
+				return false;
+			}
+            }
+           });
+		 }
+		}
+		
+			  function getOperatorPayee(id){
+		  if (id)
+		  {
+			$.AjaxCFC({
+            url: "/components/billback/BBPayee.cfc", // your CFC
+            method: "operatorPayee",
+            data: id,
+            serialization: "json",
+            success: function(r){ 
+            if (r.recordcount > 0){
+            // Change or add Broker Name
+            $("#oprName").html(r.data[0].operator_name + "<br />");
+             if (r.data[0].legacy_id == "")
+             {
+             	$("#oprName").append(r.data[0].bsa_operator_id);
+             }
+             else {
+             	$("#oprName").append(r.data[0].legacy_id);
+             }
+            // Add click event to cell so we can show the new broker
+            $("#oprName").click(function() {
+             NewWindow('/profiles/operators/operator_profile.cfm?OID='+r.data[0].bsa_operator_id,'name','400','450','Yes', 'No');
+             return false;
+             });
+            
+            // Change or add Broker Address Info
+            $("#oprLocType").html(r.data[0].operator_location_type);
+             // Add click event to cell so we can show the new broker
+            $("#oprLocType").click(function() {
+              NewWindow('/profiles/operators/operator_profile.cfm?OID='+r.data[0].bsa_operator_id,'name','400','450','Yes', 'No');
+              return false;
+             });
+            $("#oprLocation").html(r.data[0].operator_city + " - ");
+			$("#oprLocation").append(r.data[0].operator_state);
+			// Add click event to cell so we can show the new broker
+			$("#oprLocation").click(function() {
+              NewWindow('/profiles/operators/operator_profile.cfm?OID='+r.data[0].bsa_operator_id,'name','400','450','Yes', 'No');
+              return false;
+             });
+             
+             $("#oprNumLocations").html(r.data[0].operator_number_of_locations + "&nbsp;");
+             $("#oprNumLocations").click(function() {
+             NewWindow('/profiles/operators/operator_profile.cfm?OID='+r.data[0].bsa_operator_id,'name','400','450','Yes', 'No');
+             return false;
+             });
+             
+             $("#oprDba").html("&nbsp;" + r.data[0].operator_dba);
+             $("#oprDba").click(function() {
+             NewWindow('/profiles/operators/operator_profile.cfm?OID='+r.data[0].bsa_operator_id,'name','400','450','Yes', 'No');
+             return false;
+             });
+
+			// The form fields need to be updated with the new value for saving
+			document.all.operator_form.operator_id.value = r.data[0].bsa_operator_id;
+			document.all.BB_Payee_Form.operator_id.value = r.data[0].bsa_operator_id;
+			document.all.operator_form.Operator_List.value = r.data[0].bsa_operator_id;
+			// Hide the No Brokers found message
+			$("#operatorEmpty").hide();
+			<cfset Can_Associated_Ship_To = 1 />;
+			$("#associateMultiDist").show();
+			$("#multiDistHead").show();
+			$("#showCustomerSearch").show();
+    	$("#shipToAssociateId").show(); 
+		try { window.parent.dyniframesize(); } catch (err) { };     
+			//$("#shipToAssociateId").focus();
+             }
+			else
+			{
+				alert('There is no <cfoutput>#application.returned_customer_setting.operator_label_singular#</cfoutput> listed with that ID');
+				document.all.operator_form.oprId.focus();
+				return false;
+			}
+            }
+           });
+		 }
+		}
+		
+		function getMultiDist(id){
+		if (id)
+		{
+		var canAssociateMultiple = <cfoutput>#appSettings.getMultiDistributorBB()#</cfoutput>
+		var Shr_Ship_To_OR_Ship_To;
+		$.AjaxCFC({
+		url: "/components/billback/BBPayee.cfc", // your CFC
+		method: "customerPayeeInfo",
+		data: id,
+  serialization: "json",
+  success: function(r){ 
+     /* If payee selected is a "broker" */
+     if(document.all.selected_bb_payee_type.value == 3){
+	var frmName = 'broker_form';
+	var multi_ship_To_Table = 'multiShipToTableBrk';
+     }
+     /* If payee selected is an "operator" */
+     else{
+	var frmName = 'operator_form';
+	var multi_ship_To_Table = 'multiShipToTable';
+     }
+
+  // If the bsa_foodservice_customers_id exists in the list then don't add it again
+ if (r.recordcount > 0 && ListFindItem('document.'+frmName+'.multiDistList.value',",",r.data[0].bsa_foodservice_customers_id) == -1){   
+   // If only one Distributor can be added then
+   // delete any table rows that may exist
+   if (canAssociateMultiple == 0) { 
+	    $('#'+multi_ship_To_Table+' tr').remove();
+	
+			if(r.data[0].shr_ship_to != ''){
+				Shr_Ship_To_OR_Ship_To = r.data[0].shr_ship_to;
+			}
+			else{
+				Shr_Ship_To_OR_Ship_To = r.data[0].ship_to;
+			}
+     // Re-populate table with new customer Id using jquery plugin
+     // called jquery.flydom-3.1.0.js
+    $('#'+multi_ship_To_Table).createAppend(
+     'table', { border: '0', cellspacing: '0', cellpadding: '3', align: 'center', width: '100%', className: 'MainTable'}, [
+      'tr', {}, [
+         'td',{colSpan:'2', style: 'cursor:pointer'},"<img bDelete='true' name='IMG_Delete_Scissor' src='/images/scissor.gif' onclick=\"deleteThisCust(\'" + r.data[0].bsa_foodservice_customers_id + "')\" title='click here to delete this customer' border='0' />",
+         'td', { style: 'color: black;' }, r.data[0].name + "<br />" + Shr_Ship_To_OR_Ship_To,
+         'td', { style: 'color: black;' }, r.data[0].address_1 + "<br />" + r.data[0].city + "," + r.data[0].state + " " + r.data[0].zipcode + " " + r.data[0].country_code,
+         <cfif not variables.appSettings.getDistributorMultiPosition()>
+         // Change or add Broker Name
+         'td', {style: 'color:black;'},'&nbsp;' + r.data[0].broker_name,
+         </cfif>
+         'td', {style: 'color:black;'}, r.data[0].family_name + "<br />" + r.data[0].buying_group_name
+       ]
+     ]
+      );
+ // we only want to store one value here. If multiple ship to's have been 
+ // entered then we grab only the first value
+
+ 	document.BB_Payee_Form.Associated_Ship_To.value = r.data[0].bsa_foodservice_customers_id;//D32305 When selecting a distr to associate to operator payee can't enter distr num
+	/* If payee selected is a "broker" */
+	if(document.all.selected_bb_payee_type.value == 3){
+		document.broker_form.multiDistList.value = r.data[0].bsa_foodservice_customers_id;
+	}
+	/* If payee selected is an "operator" */
+	else{
+		document.operator_form.multiDistList.value = r.data[0].bsa_foodservice_customers_id;
+	}
+	document.BB_Payee_Form.multiDistList.value = r.data[0].bsa_foodservice_customers_id;
+	document.all.multiDistList.value = r.data[0].bsa_foodservice_customers_id;
+	}
+	// If the multidistributor app setting is on then we loop
+	// through all the values returned
+	else {
+	var Shr_Ship_To_OR_Ship_To;
+	for (i = 0; i < r.recordcount; i++) {
+	if(r.data[i].shr_ship_to != ''){
+	Shr_Ship_To_OR_Ship_To = r.data[i].shr_ship_to;
+	}
+	else{
+	Shr_Ship_To_OR_Ship_To = r.data[i].ship_to;
+	}
+	$('#'+multi_ship_To_Table).createAppend(
+	'table', { border: '0', cellspacing: '0', cellpadding: '3', align: 'center', width: '100%', className: 'MainTable'}, [
+  'tr', {}, [
+         'td',{colSpan:'2', style: 'cursor:pointer'},"<img bDelete='true' name='IMG_Delete_Scissor' src='/images/scissor.gif' onclick=\"deleteThisCust(\'" + r.data[i].bsa_foodservice_customers_id + "')\" title='click here to delete this customer' border='0' />",
+         'td', { style: 'color: black;' }, r.data[i].name + "<br />" + Shr_Ship_To_OR_Ship_To,
+         'td', { style: 'color: black;' }, r.data[i].address_1 + "<br />" + r.data[i].city + "," + r.data[i].state + " " + r.data[i].zipcode + " " + r.data[i].country_code,
+         <cfif not variables.appSettings.getDistributorMultiPosition()>
+         // Change or add Broker Name
+         'td', {style: 'color:black;'},'&nbsp;' + r.data[i].broker_name,
+         </cfif>
+         'td', {style: 'color:black;'}, r.data[i].family_name + "<br />" + r.data[i].buying_group_name
+       ]
+     ]
+      );
+	if (document.operator_form.multiDistList.value.length >= 1) {
+	document.operator_form.multiDistList.value += "," + r.data[i].bsa_foodservice_customers_id;
+	document.BB_Payee_Form.multiDistList.value = document.operator_form.multiDistList.value;
+ 	document.all.multiDistList.value = document.operator_form.multiDistList.value;
+
+	}
+	else {
+	document.operator_form.multiDistList.value = r.data[i].bsa_foodservice_customers_id;
+	document.BB_Payee_Form.multiDistList.value = r.data[i].bsa_foodservice_customers_id;
+	 document.all.multiDistList.value = r.data[i].bsa_foodservice_customers_id;
+	}
+	}
+   }
+   // alternate row colors
+      $('#'+multi_ship_To_Table +' tr:nth-child(odd)').addClass("odd");
+	/*Milan 14351 - To be on the safe side, add this function to dynamically change the size of the page,
+	while adding multiple distributors */
+	try { window.parent.dyniframesize(); } catch (err) { };
+	}
+
+ 	 }
+
+ 	});
+	}
+
+	}	
+
+		
+		  function getVendor(id){
+		   if (id)
+		   {
+			$.AjaxCFC({
+            url: "/components/billback/BBPayee.cfc", // your CFC
+            method: "getVendorById",
+            data: id,
+            serialization: "json",
+            success: function(r){ 
+            if (r.recordcount > 0){
+			$("#vendorTable").show();
+              // Change or add Broker Name
+            $("#vendorid").html(r.data[0].vendor_id);
+
+            // Change or add Broker Address Info
+            $("#vendorname").html(r.data[0].vendorname);
+            
+			if (r.data[0].address_1 != "")
+            {
+            	$("#vendoraddress").html(r.data[0].vendoraddress1 + "<br />");
+            }
+			if (r.data[0].address_2 != "")
+            {
+            	$("#vendoraddress").append(r.data[0].vendoraddress2 + "<br />");
+            }
+			if (r.data[0].city != "")
+			{
+				$("#vendoraddress").append(r.data[0].vendorcity + ",");
+			}			
+            if (r.data[0].state != "")
+			{
+			  $("#vendoraddress").append(r.data[0].vendorstate + " ");
+			}
+            if (r.data[0].zipcode != "")
+			{
+			  $("#vendoraddress").append(r.data[0].vendorzipcode + " ");
+			}
+
+			// The form fields need to be updated with the new value for saving
+			document.all.BB_Payee_Form.Vendor_ID.value = r.data[0].vendor_id;
+			// Hide the No Brokers found message
+			$("#noVendor").hide();
+			try { window.parent.dyniframesize(); } catch (err) { };
+             }
+			else
+			{
+				alert('There is no vendor listed with that ID');
+				document.all.BB_Payee_Form.vendorId.value = '';
+				document.all.BB_Payee_Form.vendorId.focus();
+				return false;
+			}
+            }
+           });
+		 }
+		}
+		
+		$(document).ready(function() {
+    	 var canAssociateMultiple = <cfoutput>#appSettings.getMultiDistributorBB()#</cfoutput>    
+		if(canAssociateMultiple !=0){
+		/* If payee selected is a "broker" */
+		  if(document.all.selected_bb_payee_type.value == 3){
+			var shipTo_Associate_Id = 'shipToAssociateIdBrk';
+			var shipTo_Associate_Id_big = 'shipToAssociateIdbigBrk';
+		  }
+		  /* If payee selected is an "operator" */
+		  else{
+			var shipTo_Associate_Id = 'shipToAssociateId';
+			var shipTo_Associate_Id_big = 'shipToAssociateIdbig';
+		  }
+
+		  $('#'+shipTo_Associate_Id).focus(function(){
+		   	$('#'+shipTo_Associate_Id).animate({ height: 'hide', opacity: 'hide' }, 'fast');
+		  });	
+		  
+		  $('#'+shipTo_Associate_Id).blur(function(){
+		   	 $('#'+shipTo_Associate_Id_big).animate({ height: 'show', opacity: 'show' }, 'slow');		   	 
+		   	 });
+
+		  $('#'+shipTo_Associate_Id_big).focus(function(){
+		   	  if ($('#'+shipTo_Associate_Id_big).is(':visible') == true) {
+		   	  	this.focus();
+		   	  }		   	 
+		   	 });
+		  
+		  $('#'+shipTo_Associate_Id_big).blur(function() {
+		   	getMultiDist(this.value);
+		    $('#'+shipTo_Associate_Id_big).val("");
+		    $('#'+shipTo_Associate_Id_big).animate({ height: 'hide', opacity: 'hide' }, 'fast');
+			$('#'+shipTo_Associate_Id).animate({ height: 'show', opacity: 'show' }, 'slow');
+		   }
+		  );
+		   
+		 $('#'+shipTo_Associate_Id_big).Tooltip({
+  			delay: 0,
+  			track: true,
+  			event: "focus"
+		 });
+		}});
+		
+
+</script>
+
+
+<CFSET DIST_SHOW = 0>
+<CFSET DIST_UNKNOWN_SHOW = 0>
+<CFSET OP_SHOW = 0>
+<CFSET OP_UNKNOWN_SHOW = 0>
+<CFSET BROKER_SHOW = 0>
+<CFSET BROKER_UNKNOWN_SHOW = 0>
+<CFSET OTHER_SHOW = 0>
+
+<CFSWITCH EXPRESSION="#form.default_payee#">
+	<CFCASE VALUE="1">
+		<CFIF is_an_unknown_payee EQ 0>
+			<CFSET DIST_SHOW = 1>
+		<CFELSE>
+			<CFSET DIST_UNKNOWN_SHOW = 1>
+		</CFIF>
+	</CFCASE>
+	<CFCASE VALUE="2">
+		<CFIF is_an_unknown_payee EQ 0>
+			<CFSET OP_SHOW = 1>
+		<CFELSE>
+			<CFSET OP_UNKNOWN_SHOW = 1>
+		</CFIF>
+	</CFCASE>
+	<CFCASE VALUE="3">
+		<CFIF is_an_unknown_payee EQ 0>
+			<CFSET BROKER_SHOW = 1>
+		<CFELSE>
+			<CFSET BROKER_UNKNOWN_SHOW = 1>
+		</CFIF>
+	</CFCASE>
+	<CFCASE VALUE="4">
+		<CFSET OTHER_SHOW = 1>
+	</CFCASE>
+</CFSWITCH>
+<CFSET Payee_Label_Text = "#application.returned_customer_setting.distributor_label_singular#,#application.returned_customer_setting.operator_label_singular#,#application.returned_customer_setting.broker_label_singular#">
+
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
+
+
+<CFIF Not Scheduled_Auto_BB> <!--- Lock down the Form if it is scheduled...Decisions are made by the software for the Auto BB --->
+<TABLE align="center">
+	<TR>
+		<TD align="center">select the payee:</TD>
+		<cfoutput><TD>
+    <!--- D18281 Anand Rao/29-May-09 Added BB_Closing_Method EQ 5 in condition for Credit Memo --->
+		<input type="Radio" name="BB_Payee_Type" value="1"  onclick="toggleDataScreens()" labeltext="#ListGetAt(Payee_Label_Text, 1)#"<CFIF DIST_SHOW OR DIST_UNKNOWN_SHOW>  CHECKED</CFIF>>#application.returned_customer_setting.distributor_label_singular#&nbsp;
+		<input type="Radio" name="BB_Payee_Type" value="2" onClick="toggleDataScreens()" labeltext="#ListGetAt(Payee_Label_Text, 2)#"<CFIF OP_SHOW OR OP_UNKNOWN_SHOW>  CHECKED</CFIF> <CFIF BB_Closing_method EQ 2 OR BB_Closing_method EQ 5>DISABLED</CFIF>>#application.returned_customer_setting.operator_label_singular#<!--- Operator --->&nbsp;
+		<input type="Radio" name="BB_Payee_Type" value="3" onClick="toggleDataScreens()" labeltext="#ListGetAt(Payee_Label_Text, 3)#"<CFIF BROKER_SHOW OR BROKER_UNKNOWN_SHOW>  CHECKED</CFIF> <CFIF disableUnknown OR BB_Closing_method EQ 2 OR BB_Closing_method EQ 5>DISABLED</CFIF>>#application.returned_customer_setting.broker_label_singular#&nbsp;
+		<!--- <input type="Radio" name="BB_Payee_Type" value="4" onClick="toggleDataScreens()" labeltext="#ListGetAt(Payee_Label_Text, 4)#"<CFIF OTHER_SHOW>  CHECKED</CFIF>>Other&nbsp; --->
+			<!--- Dev Note: Milan 10380 --->
+			
+			<!---BJF per label D10783 all unknowns are being removed--->
+		<!--- <cfif variables.appSettings.getAllowUnKnownPayeeInBillback() ><input type="Checkbox" name="is_unknown" onClick="toggleDataScreens()" <CFIF (OTHER_SHOW EQ 1) OR (disableUnknown EQ 1)>DISABLED</CFIF> <CFIF OTHER_SHOW EQ 0 AND is_an_unknown_payee EQ 1> CHECKED</CFIF>>Unknown <span id="unknownLabel">#ListGetAt(Payee_Label_Text, form.default_payee)#</span>
+		<cfelse><span id="unknownLabel" style="visibility:hidden"></span><input type="hidden" name="is_unknown" value="0"></cfif>---></TD></cfoutput>
+	</TR>
+</TABLE>
+<cfelse>
+	<cfoutput>
+		<CFIF DIST_SHOW OR DIST_UNKNOWN_SHOW>
+			<input type="Hidden" name="BB_Payee_Type" value="1">
+		<CFELSEIF OP_SHOW OR OP_UNKNOWN_SHOW>
+			<input type="Hidden" name="BB_Payee_Type" value="2">
+		<CFELSEIF BROKER_SHOW OR BROKER_UNKNOWN_SHOW>	
+			<input type="Hidden" name="BB_Payee_Type" value="3">
+		<CFELSEIF OTHER_SHOW>	
+			<input type="Hidden" name="BB_Payee_Type" value="4">
+		</CFIF>
+			<span style="visibility: hidden;"><input type="Checkbox" name="is_unknown"></span>	
+	</cfoutput>
+	
+</CFIF> 
+<style type="text/css">
+	.NoItemsFromSearchSelected {
+		font-weight: bold;
+		font-size: 15px;
+		color:red;
+	}
+	
+	.FormHeaderLabel {
+		font-weight: bold;
+		font-size: 12px;
+		height: 30px;
+		/*display: none;*/
+	}
+	
+	.DataTitleCell {
+		text-align : right;
+		font-weight : bold;
+		vertical-align : top;
+	}
+	
+</style>
+
+<form action="payee_form.cfm?BBID=#FORM.Billback_ID#" method="post" name="BB_Payee_Form" id="BB_Payee_Form">
+<TABLE align="center" border="0" width="95%">
+	<TR valign="bottom">
+		<TD id="BB_Payee_Type_Data_1_Unknown" class="FormHeaderLabel" align="center"<CFIF DIST_UNKNOWN_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>>
+			<CFIF Not Scheduled_Auto_BB>Enter the available <cfoutput>#lcase(application.returned_customer_setting.distributor_label_singular)#</cfoutput> information:</CFIF>
+		</TD>
+		<TD id="BB_Payee_Type_Data_2_Unknown" align="center" class="FormHeaderLabel"<CFIF OP_UNKNOWN_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>>
+			<CFIF Not Scheduled_Auto_BB>Enter the available <cfoutput>#lcase(application.returned_customer_setting.operator_label_singular)#</cfoutput> information:</CFIF>
+		</TD>
+		<TD id="BB_Payee_Type_Data_3_Unknown" align="center" class="FormHeaderLabel"<CFIF BROKER_UNKNOWN_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>>
+			<CFIF Not Scheduled_Auto_BB>Enter the available <cfoutput>#lcase(application.returned_customer_setting.broker_label_singular)#</cfoutput> information:</CFIF>
+		</TD>		
+		<TD id="BB_Payee_Type_Data_4" align="center" class="FormHeaderLabel"<CFIF OTHER_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>>
+			<CFIF Not Scheduled_Auto_BB>Enter the available payee information below:</CFIF>
+		</TD>
+		<TD id="BB_Payee_Type_Data_4_Unknown" align="center" class="FormHeaderLabel" STYLE="DISPLAY:NONE;">
+			<CFIF Not Scheduled_Auto_BB>other unknown</CFIF>
+		</TD>
+	</TR>
+	<TR>
+		<TD id="BB_Payee_Type_Data_1_Form"<CFIF DIST_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- Distributor in our database --->
+		<!---<cfset appSettings = application.oApplicationAppSettingsManager.getApplicationAppSettings() />--->
+			<CFSET getDistributorInformation = QueryNew('BSA_Foodservice_Customers_ID')>
+			<CFIF len(trim(Form.Distributor_ID)) GT 0>
+				<cfquery name="getDistributorInformation" datasource="#Application.Datasource#">
+					SELECT     dbo.BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID, dbo.BSA_Foodservice_Customers.Name, 
+					                      dbo.BSA_Foodservice_Customers.Ship_To, dbo.BSA_Foodservice_Customers.Address_1, dbo.BSA_Foodservice_Customers.City, 
+					                      dbo.BSA_Foodservice_Customers.State, dbo.BSA_Foodservice_Customers.ZipCode,  BSA_Foodservice_Customers.Country_Code,
+										  <cfif NOT variables.appSettings.getDistributorMultiPosition()>
+					                      dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID, dbo.BSA_Foodservice_Brokers.Broker_Name, 
+										  </cfif>
+					                      dbo.Distributor_Family.Family_Name, dbo.Distributor_Buying_Groups.Buying_Group_Name, dbo.BSA_Foodservice_Customers.Shr_Ship_To
+					FROM	dbo.BSA_Foodservice_Customers 
+							<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+							LEFT JOIN	dbo.BSA_Foodservice_Brokers ON 
+							dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID = dbo.BSA_Foodservice_Brokers.BSA_Foodservice_Brokers_ID 
+							</cfif>
+							INNER JOIN dbo.Distributor_Family ON dbo.BSA_Foodservice_Customers.Family_ID = dbo.Distributor_Family.Family_ID 
+							INNER JOIN dbo.Distributor_Buying_Groups ON dbo.BSA_Foodservice_Customers.Buying_Group_ID = dbo.Distributor_Buying_Groups.Buying_Group_ID
+					WHERE BSA_Foodservice_Customers_ID = '#FORM.Distributor_ID#'
+				</cfquery>
+			</CFIF>
+            <!--- Ajax Distributor Code --->
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+				
+<!--- 				<tr>
+				 <td valgin="bottom" id="BB_Payee_Type_Data_1" align="center" class="FormHeaderLabel"<CFIF DIST_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>>
+			       <span id="error_distributor_select"></span><CFIF Scheduled_Auto_BB><cfoutput>Rebate Recipient<!--- #lcase(application.returned_customer_setting.distributor_label_singular)# payee ---></cfoutput><CFELSE>&nbsp;<a onClick="searchData('di')" style="cursor: pointer;"><!--- Click here to search for a  ---><cfoutput>#lcase(application.returned_customer_setting.distributor_label_singular)#</cfoutput> payee search</a></CFIF>
+		         </td>
+				</tr> --->
+				
+				<!--- D25341 Using a table to format below span
+				<span id="BB_Payee_Type_Data_1" style="padding:none;top:0;display:<cfif DIST_SHOW neq 1>none;<cfelse>block;</cfif>">
+				 <span id="custIdTxt" style="color:blue;">Search By Id: <input type="text" name="custId" id="custId" style="font-size:9px;border:1px solid blue;" onChange="getCustomerPayee(this.value)"  /></span>
+				 <span style="margin-left: 520px;"><span id="error_distributor_select"></span><CFIF Scheduled_Auto_BB><cfoutput>Rebate Recipient<!--- #lcase(application.returned_customer_setting.distributor_label_singular)# payee ---></cfoutput><CFELSE>&nbsp;<a onClick="searchData('di')" style="cursor: pointer;">payee search<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></span></CFIF>
+				</span>
+				--->
+				<tr  style="border-bottom:0px;">
+					<td width="100%" colspan="100%" style="border-bottom:0px;">
+						<span id="BB_Payee_Type_Data_1" style="padding:none;top:0;display:<cfif DIST_SHOW neq 1>none;<cfelse>block;</cfif>">
+						<table border="0" width="100%" cellpadding="0" cellspacing="0">
+							<tr>
+							<td style="border-bottom:0px;" width="5%" nowrap="nowrap" valign="top">
+								<span id="custIdTxt" style="color:blue; font-size : 8pt;"> Search By Id: </td><td style="border-bottom:0px;"><input type="text" size="26" name="custId" id="custId" style="font-size:9px;border:1px solid blue;" onChange="getCustomerPayee(this.value)"  /><br>(Type Id and click tab key)</span></td>
+							<td style="border-bottom:0px; font-size : 8pt;" align="right" nowrap="nowrap" valign="bottom" >
+								<span id="error_distributor_select"></span><CFIF Scheduled_Auto_BB><cfoutput>Rebate Recipient<!--- #lcase(application.returned_customer_setting.distributor_label_singular)# payee ---></cfoutput><CFELSE>&nbsp;<a onClick="searchData('di')" style="cursor: pointer;">payee search<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></CFIF>&nbsp;&nbsp;&nbsp;
+							</td>
+							</tr>
+						</table>
+						</span>
+					</td>
+				</tr>
+
+				<tr><td style="border:1px solid #fff;">&nbsp;</td></tr>
+				<TR ID="header" BGCOLOR="#ffce84">
+
+					<TD align="left" ID="header"><B>Name / <cfoutput>#application.returned_customer_setting.shard_ship_to_label#</cfoutput></B></TD>
+					<TD ID="header"><B>Address</B></TD>
+					<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+					<cfoutput><TD ID="header"><B>#application.returned_customer_setting.broker_label_singular#</B></TD></cfoutput>
+					</cfif>
+					<cfoutput><TD ID="header"><B>#application.returned_customer_setting.family_name_label_singular# / #application.returned_customer_setting.buying_group_label_singular#</B></TD></cfoutput>
+				</TR>
+
+			<cfif getDistributorInformation.recordcount eq 0>
+			<tr id="noCustSelected">
+			  <cfoutput><td colspan="100%" align="center"><span class="NoItemsFromSearchSelected">No #application.returned_customer_setting.distributor_label_singular# Selected</span></td></cfoutput>
+			</tr>
+			<tr style="cursor:pointer;">
+						<td NOWRAP id="distName"></td>
+						<td id="distAddrInfo"></td>
+						<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+						<td id="distBrokerName"></td>
+						</cfif>
+						<td NOWRAP id="distFamName"></td>
+	 				</tr>
+				<cfelse>
+				<cfoutput query="getDistributorInformation">
+					<tr style="cursor:pointer;">
+						<td onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#getDistributorInformation.BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP id="distName">#getDistributorInformation.Name#<BR>
+						<cfif trim(len(getDistributorInformation.Shr_Ship_To)) neq 0>#getDistributorInformation.Shr_Ship_To#<cfelse>#getDistributorInformation.Ship_To#</cfif>&nbsp;</TD>
+						<td onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#getDistributorInformation.BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" id="distAddrInfo">#getDistributorInformation.Address_1#<BR>#getDistributorInformation.City#,#getDistributorInformation.State# #getDistributorInformation.ZipCode#&nbsp;#getDistributorInformation.Country_Code#</TD>
+						<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+						<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#getDistributorInformation.BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" id="distBrokerName">#getDistributorInformation.Broker_Name#&nbsp;</TD>
+						</cfif>
+						<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#getDistributorInformation.BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP id="distFamName">#getDistributorInformation.Family_Name#<BR>#getDistributorInformation.Buying_Group_Name#&nbsp;</TD>
+	 				</tr>
+				</cfoutput>
+		       </cfif>
+<CFOUTPUT>
+			</TABLE>
+			<!--- Multi customer stuff ditributor List for Auto BB's  **** Need to update this when the multi BB users turn on Auto BB  ****--->
+			<cfif (Scheduled_Auto_BB) and len(trim(Form.Distributor_ID)) GT 0> <!--- or appSettings.getMultiDistributorBB() --->
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+			<TR>
+					<TD colspan="5" align="center" class="FormHeaderLabel">
+						<CFIF Not Scheduled_Auto_BB>
+							<a onClick="searchData('diMulti')" style="cursor: pointer;"><span style="font-size: 13px; font-weight:bold;">
+								include multiple <cfoutput>#lcase(application.returned_customer_setting.Shard_Ship_To_Label)#'s</cfoutput></span>
+							</a>
+						<CFELSE>
+							<span style="font-size: 13px; font-weight:bold;">
+								<cfoutput>additional #lcase(application.returned_customer_setting.Shard_Ship_To_Label)#'s</cfoutput>
+							</span>
+						</CFIF>
+					</TD>
+				</TR>
+				<TR ID="header" BGCOLOR="##ffce84">
+					<TD align="left" ID="header" colspan="2"><B>Name / <cfoutput>#application.returned_customer_setting.shard_ship_to_label#</cfoutput></B></TD>
+					<TD ID="header"><B>Address</B></TD>
+					<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+					<cfoutput><TD ID="header"><B>#application.returned_customer_setting.broker_label_singular#</B></TD></cfoutput>
+					</cfif>
+					<cfoutput><TD ID="header"><B>#application.returned_customer_setting.family_name_label_singular# / #application.returned_customer_setting.buying_group_label_singular#</B></TD></cfoutput>
+				</TR>
+				<CFSET x = 0>
+				<CFLOOP list="#form.multiDistList#" index="Dist">
+					<cfif Dist neq FORM.Distributor_ID>
+						<cfquery name="qGetDistListInfo" datasource="#Application.Datasource#">
+								SELECT     dbo.BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID, dbo.BSA_Foodservice_Customers.Name, 
+													  dbo.BSA_Foodservice_Customers.Ship_To, dbo.BSA_Foodservice_Customers.Address_1, dbo.BSA_Foodservice_Customers.City, 
+													  dbo.BSA_Foodservice_Customers.State, dbo.BSA_Foodservice_Customers.ZipCode,  BSA_Foodservice_Customers.Country_Code,
+													  <cfif NOT variables.appSettings.getDistributorMultiPosition()>
+													  dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID, dbo.BSA_Foodservice_Brokers.Broker_Name, 
+													  </cfif>
+													  dbo.Distributor_Family.Family_Name, dbo.Distributor_Buying_Groups.Buying_Group_Name, dbo.BSA_Foodservice_Customers.Shr_Ship_To
+								FROM	dbo.BSA_Foodservice_Customers 
+										<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+										INNER JOIN	dbo.BSA_Foodservice_Brokers ON 
+										dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID = dbo.BSA_Foodservice_Brokers.BSA_Foodservice_Brokers_ID 
+										</cfif>
+										INNER JOIN dbo.Distributor_Family ON dbo.BSA_Foodservice_Customers.Family_ID = dbo.Distributor_Family.Family_ID 
+										INNER JOIN dbo.Distributor_Buying_Groups ON dbo.BSA_Foodservice_Customers.Buying_Group_ID = dbo.Distributor_Buying_Groups.Buying_Group_ID
+								WHERE BSA_Foodservice_Customers_ID = '#Dist#'
+							</cfquery>
+								<cfif Evaluate(x mod 2) eq 0>
+			  						<cfset tmpBgColor = "FFFFFF" />
+			 					<cfelse>
+									<cfset tmpBgColor = "EAFFEA" />
+								</cfif>
+								<TR id="custRow_#x#" STYLE="cursor:pointer;" bgcolor="#tmpBgColor#">
+									<TD><img bDelete="true" name="IMG_Delete_Scissor"  src="/images/scissor.gif" title="click here to delete this customer" border="0" onClick="deleteThisCust('#Dist#', '#tmpBgColor#')" style="cursor: pointer;">&nbsp;</TD>
+									<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" NOWRAP>#qGetDistListInfo.Name#<BR>
+									<cfif trim(len(qGetDistListInfo.Shr_Ship_To)) neq 0>#qGetDistListInfo.Shr_Ship_To#<cfelse>#qGetDistListInfo.Ship_To#</cfif>&nbsp;</TD>
+									<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;">#qGetDistListInfo.Address_1#<BR>#qGetDistListInfo.City#,#qGetDistListInfo.State# #qGetDistListInfo.ZipCode#&nbsp;#qGetDistListInfo.Country_Code#</TD>
+									<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+									<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" >#qGetDistListInfo.Broker_Name#&nbsp;</TD>
+									</cfif>
+									<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" NOWRAP>#qGetDistListInfo.Family_Name#<BR>#qGetDistListInfo.Buying_Group_Name#&nbsp;</TD>
+								</TR>
+								<CFSET x = x + 1>
+						</cfif>
+				</CFLOOP>
+			</TABLE>
+			</cfif>
+			<!--- End Multi customer stuff --->
+			<!--- <table align="center">
+				<TR>
+					<TD>
+						<span style="color: gray; font-size: 13px; font-weight:bold;">additional notes:</span><span id="distributor_notes_error"></span>
+						<textarea cols="64" rows="3" name="Distributor_Notes">#FORM.Distributor_Notes#</textarea>
+					</TD>
+				</TR>
+			</table> --->
+			<input type="hidden" name="Distributor_Notes" value="#form.Distributor_Notes#">
+			
+		</TD>
+
+		<TD id="BB_Payee_Type_Data_1_Unknown_Form"<CFIF DIST_UNKNOWN_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- Unknown Distributor Information --->
+			<table border="0" cellspacing="2" cellpadding="1" align="center">
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_distributor_name_error"></span>&nbsp;Name:</TD>
+					<TD rowspan="100%" bgcolor="0000ff"><img src="/images/fill.gif" alt="" width="1" height="1" border="0"></TD>
+					<TD><input type="text" name="Unknown_Distributor_Name" id="Unknown_Distributor_Name" size="50" maxlength="50" value="#FORM.Unknown_Distributor_Name#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_distributor_address_error"></span>&nbsp;Address 1:</TD>
+					<TD><input type="text" name="Unknown_Distributor_Address_1" id="Unknown_Distributor_Address_1" size="50" maxlength="50" value="#FORM.Unknown_Distributor_Address_1#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell">Address 2:</TD>
+					<TD><input type="text" name="Unknown_Distributor_Address_2" id="Unknown_Distributor_Address_2" size="50" maxlength="50" value="#FORM.Unknown_Distributor_Address_2#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_distributor_city_error"></span>&nbsp;<span id="unknown_distributor_state_error"></span>&nbsp;<span id="unknown_distributor_zip_error"></span>&nbsp;City\State\Postal:</TD>
+					<TD><input type="text" name="Unknown_Distributor_City" id="Unknown_Distributor_City" value="#FORM.Unknown_Distributor_City#" maxlength="50">
+						&nbsp;
+
+</CFOUTPUT>						
+						<SELECT NAME="Unknown_Distributor_State" STYLE="<!--- width:	200px;  --->font-size: 10px;">
+							<OPTION VALUE="0" <CFIF FORM.Unknown_Distributor_State EQ 0>selected</CFIF>>Select State</OPTION>
+							<CFOUTPUT QUERY="Get_States">
+								<OPTION VALUE="#State_ID#" <CFIF FORM.Unknown_Distributor_State EQ Get_States.State_ID>selected</CFIF>>#State_Code#</OPTION>
+							</CFOUTPUT>
+						</SELECT>
+						&nbsp;
+<CFOUTPUT>
+						<input type="text" name="Unknown_Distributor_Zip" id="Unknown_Distributor_Zip" size="4" maxlength="10"  value="#FORM.Unknown_Distributor_Zip#" ></TD>  <!--- onkeyup="clenseText(this, '0123456789')" --->
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_distributor_Country_error"></span>&nbsp;Country:</TD>
+				    <TD VALIGN="top"> 
+							<CFOUTPUT>
+								<SELECT NAME="Unknown_Distributor_Country_Code" id="Unknown_Distributor_Country_Code"><OPTION VALUE="" SELECTED></OPTION><CFLOOP QUERY="getCountry"><OPTION VALUE="#getCountry.Country_Code#"<cfif getCountry.Country_Code eq form.Unknown_Distributor_Country_Code> selected </cfif>>#getCountry.Country_Name#</OPTION></CFLOOP></SELECT>&nbsp;  
+							</CFOUTPUT>
+				    </TD>
+				</TR>
+			</table>
+			
+			<BR>
+			<table align="center">
+				<TR>
+					<TD>
+						<HR>
+						<span style="color: gray; font-size: 13px; font-weight:bold;">additional notes:</span>&nbsp;<span id="unknown_distributor_notes_error"></span><BR>
+						<textarea cols="64" rows="3" name="Unknown_Distributor_Notes">#FORM.Unknown_Distributor_Notes#</textarea>
+					</TD>
+				</TR>
+			</table>	
+		</TD>
+
+</CFOUTPUT>		
+		<TD id="BB_Payee_Type_Data_2_Form"<CFIF OP_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- Operator in our database --->
+			<CFSET getOperatorInformation = QueryNew('BSA_Operator_ID')>
+			<CFIF len(trim(Form.operator_id)) GT 0>
+				<cfquery name="getOperatorInformation" datasource="#Application.Datasource#">
+					SELECT	BSA_Operator_ID, operator_name, Operator_Location_Type, Operator_City, Operator_State, Operator_Number_Of_Locations, Operator_DBA, legacy_id
+					FROM 	BSA_Operator
+					WHERE 	BSA_Operator_ID = '#FORM.Operator_ID#'
+				</cfquery> 
+			</CFIF>
+            <!--- Ajax Operator Info --->
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+				<!--- D25341 Using a table to format below span
+				<span id="BB_Payee_Type_Data_2" style="padding:none;top:0;display:<cfif OP_SHOW neq 1>none;<cfelse>block;</cfif>">
+				<span id="operatorIdTxt" style="color:blue;">Search By Id: <input type="text" name="oprId" id="oprId" style="font-size:9px;border:1px solid blue;" onChange="getOperatorPayee(this.value)" /></span>
+				<span style="margin-left: 520px;"><span id="error_operator_select"></span><CFIF Scheduled_Auto_BB><cfoutput>#lcase(application.returned_customer_setting.operator_label_singular)# payee</cfoutput><CFELSE>&nbsp;<a onClick="searchData('op')" style="cursor: pointer;">payee search<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></CFIF></span>
+				</span>
+				--->
+				<tr  style="border-bottom:0px;">
+					<td width="100%" colspan="100%" style="border-bottom:0px;">
+						<span id="BB_Payee_Type_Data_2" style="padding:none;top:0;display:<cfif OP_SHOW neq 1>none;<cfelse>block;</cfif>">
+						<table border="0" width="100%" cellpadding="0" cellspacing="0">				
+						<tr>
+						<td style="border-bottom:0px;" width="5%" nowrap="nowrap" valign="top">
+							<span id="operatorIdTxt" style="color:blue; font-size : 8pt;">Search By Id:</td><td style="border-bottom:0px;"> <input type="text" size="26" name="oprId" id="oprId" style="font-size:9px;border:1px solid blue;" onChange="getOperatorPayee(this.value)" /><br>(Type Id and click tab key)</span></td>
+						<td style="border-bottom:0px; font-size : 8pt;" align="right" nowrap="nowrap" valign="bottom" >				
+							<span id="error_operator_select"></span><CFIF Scheduled_Auto_BB><cfoutput>#lcase(application.returned_customer_setting.operator_label_singular)# payee</cfoutput><CFELSE>&nbsp;<a onClick="searchData('op')" style="cursor: pointer;">payee search<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></CFIF>&nbsp;&nbsp;&nbsp;
+						</td>
+						</tr>
+						</table>
+						</span>
+					</td>
+				</tr>
+				
+	            <tr><td style="border:1px solid #fff;">&nbsp;</td></tr>
+				<TR ID="header" BGCOLOR="#ffce84">
+						<TD ID="header" align="left" NOWRAP><B><cfoutput>#application.returned_customer_setting.operator_label_singular#</cfoutput> Name</B></TD>
+						<TD ID="header" align="left" WIDTH="150" NOWRAP><B>Location<BR>Type</B></TD>
+						<TD ID="header" align="left" NOWRAP><B>City<BR>State</B></TD>
+						<TD ID="header" align="left" NOWRAP><B>## of<BR>Locations</B>&nbsp;</TD>
+						<TD ID="header" align="left" VALIGN="bottom" WIDTH="30%" NOWRAP><B>Doing Business As</B></TD>
+				</TR>
+
+			<cfif getOperatorInformation.recordcount eq 0>
+			 <tr id="operatorEmpty">
+			  <td colspan="100%" align="center"><span class="NoItemsFromSearchSelected"><cfoutput>No #application.returned_customer_setting.operator_label_singular#</cfoutput> Selected</span></td>					
+			 </tr>
+			 <tr STYLE="cursor:pointer;">
+			  <td id="oprName" nowrap></td>
+			  <td id="oprLocType" nowrap></td>
+			  <td id="oprLocation" nowrap></td>
+			  <td id="oprNumLocations" nowrap></td>
+			  <td id="oprDba"></td>
+	 		  </tr>	
+				<cfelse>
+				<CFOUTPUT QUERY="getOperatorInformation">
+					<TR STYLE="cursor:pointer;">
+						<TD id="oprName" NOWRAP onClick="NewWindow('/profiles/operators/operator_profile.cfm?OID=#trim(getOperatorInformation.BSA_Operator_ID)#','name','400','450','Yes', 'No');return false;">#getOperatorInformation.operator_name#<CFIF trim(getOperatorInformation.legacy_id) EQ "">&nbsp;[#getOperatorInformation.BSA_Operator_Id#]<cfelse>&nbsp;[#getOperatorInformation.legacy_id#]</cfif></TD>
+						<TD id="oprLocType" NOWRAP onClick="NewWindow('/profiles/operators/operator_profile.cfm?OID=#trim(getOperatorInformation.BSA_Operator_ID)#','name','400','450','Yes', 'No');return false;">#getOperatorInformation.Operator_Location_Type#&nbsp;</TD>
+						<TD id="oprLocation" NOWRAP onClick="NewWindow('/profiles/operators/operator_profile.cfm?OID=#trim(getOperatorInformation.BSA_Operator_ID)#','name','400','450','Yes', 'No');return false;">#getOperatorInformation.Operator_City# - #getOperatorInformation.Operator_State#&nbsp;</TD>
+						<TD id="oprNumLocations" NOWRAP onClick="NewWindow('/profiles/operators/operator_profile.cfm?OID=#trim(getOperatorInformation.BSA_Operator_ID)#','name','400','450','Yes', 'No');return false;">#numberformat(getOperatorInformation.Operator_Number_Of_Locations,'_,___,___')#&nbsp;</TD>
+						<TD id="oprDba" onClick="NewWindow('/profiles/operators/operator_profile.cfm?OID=#trim(getOperatorInformation.BSA_Operator_ID)#','name','400','450','Yes', 'No');return false;">#getOperatorInformation.Operator_DBA#&nbsp;</TD>
+	 				</TR>
+				</CFOUTPUT>
+				<cfset Can_Associated_Ship_To = 1 />				
+			</CFIF>
+					
+			</TABLE>
+			<table>
+			<tr style="border-bottom:none;">
+			 <td>&nbsp;</td>
+			</tr>	
+			</table>
+<CFOUTPUT>	
+			<!------ Associate Distributor to Payee ----->
+ 
+			<cfif Can_Associated_Ship_To EQ 1>
+			<cfif Not appSettings.getMultiDistributorBB()><!---Associate only one distributor--->
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+			    <!--- D25341 Using a table to format below span
+			    <span id="showCustomerSearch" style="padding:none;top:0;display:<cfif OP_SHOW neq 1>none;<cfelse>block;</cfif>">
+				    <span id="associateShipToIdTxt" style="color:blue;">Search By Id: <input type="text" name="shipToAssociateId" id="shipToAssociateId" style="font-size:9px;border:1px solid blue;" onChange="getMultiDist(this.value)" />
+            </span>
+				    <span style="margin-left:420px;"><span id="error_Associate_ShipTo"></span><cfoutput><a onClick="AssociateShipTo('operator_form')" style="cursor: pointer;">associate a #application.returned_customer_setting.Shard_Ship_To_Label# to this #lcase(application.returned_customer_setting.operator_label_singular)#</cfoutput><img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a>
+            </span>
+				</span>
+			    --->
+				<tr  style="border-bottom:0px;">
+					<td width="100%" colspan="100%" style="border-bottom:0px;">
+						<span id="showCustomerSearch" style="padding:none;top:0;display:<cfif OP_SHOW neq 1>none;<cfelse>block;</cfif>">
+						<table border="0" width="100%" cellpadding="0" cellspacing="0">
+							<tr>
+							<td style="border-bottom:0px;" width="5%" nowrap="nowrap" valign="top">
+								<span id="associateShipToIdTxt" style="color:blue;  font-size : 8pt;">Search By Id: </td><td style="border-bottom:0px;"><input type="text" size="26" name="shipToAssociateId" id="shipToAssociateId" style="font-size:9px;border:1px solid blue;" onChange="getMultiDist(this.value)" /><br>(Type Id and click tab key)</span></td>
+							<td style="border-bottom:0px; font-size : 8pt;" align="right" nowrap="nowrap" valign="bottom" >
+								<span><span id="error_Associate_ShipTo"></span><cfoutput><a onClick="AssociateShipTo('operator_form')" style="cursor: pointer;">associate a #application.returned_customer_setting.Shard_Ship_To_Label# to this #lcase(application.returned_customer_setting.operator_label_singular)#</cfoutput><img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></span>&nbsp;&nbsp;&nbsp;
+							</td>
+							</tr>
+						</table>
+						</span>
+					</td>
+				</tr>
+<!--- 				<TR>
+					<TD COLSPAN="100%" ALIGN="Center" STYLE="Border-Bottom: None">	<BR>	
+						<B><SPAN ID="error_Associate_ShipTo"></SPAN><a onClick="AssociateShipTo('operator_form')" style="cursor: pointer;"><FONT SIZE="2">associate a <CFOUTPUT>#application.returned_customer_setting.Shard_Ship_To_Label# to this #lcase(application.returned_customer_setting.operator_label_singular)#</CFOUTPUT></FONT></a></B>
+					</TD>
+				</TR> --->
+			 <tr>
+			 <td style="border:none;">&nbsp;</td>
+			  </tr>
+				<TR id="multiDistHead" style="<cfif form.operator_id eq "">display:none</cfif>">
+					<TD COLSPAN="100%" STYLE="Border-Bottom:None">
+						<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+							<TR ID="header" BGCOLOR="ffce84">
+								<TD align="left" ID="header"><B>Name / #application.returned_customer_setting.shard_ship_to_label#</B></TD>
+								<TD ID="header"><B>Address</B></TD>
+								<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+								<TD ID="header"><B>#application.returned_customer_setting.broker_label_singular#</B></TD>
+								</cfif>
+								<TD ID="header"><B>#application.returned_customer_setting.family_name_label_singular# / #application.returned_customer_setting.buying_group_label_singular#</B></TD>
+							</TR>
+							<CFIF FORM.Associated_Ship_To NEQ "" AND GetAssociatedShipToInfo.recordcount GT 0>
+							<CFLOOP QUERY="GetAssociatedShipToInfo">
+							<TR STYLE="cursor:pointer;">
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP>#Name#<BR>
+								<cfif trim(len(Shr_Ship_To)) neq 0>#Shr_Ship_To#<cfelse>#Ship_To#</cfif>&nbsp;</TD>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;">#Address_1#<BR>#City#,#State# #ZipCode#&nbsp;</TD>
+								<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" >#Broker_Name#&nbsp;</TD>
+								</cfif>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP>#Family_Name#<BR>#Buying_Group_Name#&nbsp;</TD>
+			 				</TR>
+							</CFLOOP>
+							</CFIF>
+						</TABLE>
+					</TD>
+				</TR>				
+				
+			</TABLE>
+			<div id="multiShipToTable"></div>
+			<!------ Associate Multiple Distributors to Payee ----->
+			<!--- Multi customer stuff ditributor List--->
+			<cfelse>
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+				<span id="associateMultiDist" style="padding:none;top:0;display:<cfif form.operator_id neq "">block<cfelse>none</cfif>;">
+				 <span id="associateShipToIdTxt" style="color:blue;">Search By Id:</span> <span id="shipText" style="position:absolute;"><input type="text" name="shipToAssociateId" id="shipToAssociateId" style="font-size:9px;border:1px solid blue;"/><textarea name="shipToAssociateIdBig" id="shipToAssociateIdbig" title="Multiple Ship To Id's must be separated by comma's" cols="25" rows="5" style="display:none;"></textarea></span>
+				<span style="margin-left: 525px;"><span id="error_Associate_ShipTo"></span><cfoutput><a onClick="searchData('diMultiOp')" style="cursor: pointer;">associate #lcase(application.returned_customer_setting.Shard_Ship_To_Label)#s to this #lcase(application.returned_customer_setting.operator_label_singular)#</cfoutput><img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></span>
+				</span>
+				
+			 <tr>
+			 <td style="broder:none;">&nbsp;</td>
+			  </tr>
+<!--- 				<tr id="associateMultiDist">
+					<td COLSPAN="100%" ALIGN="Center" STYLE="Border-Bottom: None"><BR>
+						<CFIF Not Scheduled_Auto_BB><a onClick="searchData('diMultiOp')" style="cursor: pointer;"><span style="font-size: 13px; font-weight:bold;">associate <cfoutput>#lcase(application.returned_customer_setting.Shard_Ship_To_Label)#'s to this #lcase(application.returned_customer_setting.operator_label_singular)#</cfoutput></span></a><CFELSE><span style="font-size: 13px; font-weight:bold;"><cfoutput>#lcase(application.returned_customer_setting.distributor_label_plural)#</cfoutput></span></CFIF>
+					</td>
+				</tr> --->
+				<TR id="multiDistHead" style="<cfif form.operator_id eq "">display:none</cfif>">
+					<TD COLSPAN="100%" STYLE="Border-Bottom:None">
+						<table border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+							<tr ID="header" BGCOLOR="ffce84">
+								<TD align="left" ID="header" colspan="2"><B>Name / <cfoutput>#application.returned_customer_setting.shard_ship_to_label#</cfoutput></B></TD>
+								<TD ID="header"><B>Address</B></TD>
+								<cfif NOT appSettings.getDistributorMultiPosition()>
+									<cfoutput>
+									<TD ID="header"><B>#application.returned_customer_setting.broker_label_singular#</B></TD>
+									</cfoutput>
+								</cfif>
+									<cfoutput>
+									<TD ID="header"><B>#application.returned_customer_setting.family_name_label_singular# / #application.returned_customer_setting.buying_group_label_singular#</B></TD>
+									</cfoutput>
+							</tr>
+							
+							<CFSET x = 0>
+							<CFLOOP list="#form.multiDistList#" index="Dist">
+								<cfif Dist neq '00000000-0000-0000-0000-000000000000'> <!--- don't show the empty distributo record  *** probably need to keep this out of the distributor list in the first place **** --->
+								<cfquery name="qGetDistListInfo" datasource="#Application.Datasource#">
+										SELECT     dbo.BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID, dbo.BSA_Foodservice_Customers.Name, 
+										                      dbo.BSA_Foodservice_Customers.Ship_To, dbo.BSA_Foodservice_Customers.Address_1, dbo.BSA_Foodservice_Customers.City, 
+										                      dbo.BSA_Foodservice_Customers.State, dbo.BSA_Foodservice_Customers.ZipCode,  BSA_Foodservice_Customers.Country_Code,
+															  <cfif NOT appSettings.getDistributorMultiPosition()>
+										                      dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID, dbo.BSA_Foodservice_Brokers.Broker_Name, 
+															  </cfif>
+										                      dbo.Distributor_Family.Family_Name, dbo.Distributor_Buying_Groups.Buying_Group_Name, dbo.BSA_Foodservice_Customers.Shr_Ship_To
+										FROM	dbo.BSA_Foodservice_Customers 
+												<cfif NOT appSettings.getDistributorMultiPosition()>
+												INNER JOIN	dbo.BSA_Foodservice_Brokers ON 
+												dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID = dbo.BSA_Foodservice_Brokers.BSA_Foodservice_Brokers_ID 
+												</cfif>
+												INNER JOIN dbo.Distributor_Family ON dbo.BSA_Foodservice_Customers.Family_ID = dbo.Distributor_Family.Family_ID 
+												INNER JOIN dbo.Distributor_Buying_Groups ON dbo.BSA_Foodservice_Customers.Buying_Group_ID = dbo.Distributor_Buying_Groups.Buying_Group_ID
+										WHERE BSA_Foodservice_Customers_ID = '#Dist#'
+							  </cfquery>
+							  <cfif Evaluate(x mod 2) eq 0>
+			  						<cfset tmpBgColor = "FFFFFF" />
+			 					<cfelse>
+									<cfset tmpBgColor = "EAFFEA" />
+								</cfif>
+										<tr id="custRow_#x#" STYLE="cursor:pointer;" bgcolor="#tmpBgColor#">
+											<TD><img bDelete="true" name="IMG_Delete_Scissor"  src="/images/scissor.gif" title="click here to delete this customer" border="0" onClick="deleteThisCust('#Dist#', '#tmpBgColor#')" style="cursor: pointer;">&nbsp;</TD>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" NOWRAP>
+												
+													<cfif listfind(alertList,Dist)><cfset showAlertMessage = 1><font color="##FF0000">Can Not Delete</font><br></cfif>#qGetDistListInfo.Name#<BR>
+													<cfif trim(len(qGetDistListInfo.Shr_Ship_To)) neq 0>#qGetDistListInfo.Shr_Ship_To#<cfelse>#qGetDistListInfo.Ship_To#</cfif>&nbsp;</TD>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;">#qGetDistListInfo.Address_1#<BR>#qGetDistListInfo.City#,#qGetDistListInfo.State# #qGetDistListInfo.ZipCode#&nbsp;#qGetDistListInfo.Country_Code#</TD>
+											<cfif NOT appSettings.getDistributorMultiPosition()>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" >#qGetDistListInfo.Broker_Name#&nbsp;</TD>
+											</cfif>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" NOWRAP>#qGetDistListInfo.Family_Name#<BR>#qGetDistListInfo.Buying_Group_Name#&nbsp;</TD>
+						 				</tr>
+										<CFSET x = x + 1> <!--- counter for rowcolor --->
+								</cfif>
+							</CFLOOP>
+						</TABLE><cfif showAlertMessage eq 1><font color="##FF0000">A <cfoutput>#lcase(application.returned_customer_setting.Shard_Ship_To_Label)#</cfoutput> can not be removed from a billback if it has products associated with it on the programs page.</font></cfif>
+					</TD>
+				</TR>
+			</TABLE>
+			<div id="multiShipToTable"></div>
+			
+			</cfif>
+			<!--- End Multi customer stuff --->
+			</cfif>
+			<!---<BR>
+
+			 <table align="center">
+				<TR>
+					<TD>
+						<span style="color: gray; font-size: 13px; font-weight:bold;">Additional Notes:</span><span id="operator_notes_error"></span>
+						<textarea cols="64" rows="3" name="Operator_Notes">#FORM.Operator_Notes#</textarea>
+					</TD>
+				</TR>
+			</table>	 --->		
+			<input type="hidden" name="Operator_Notes" value="#form.Operator_Notes#">
+		</TD>
+        
+		<TD id="BB_Payee_Type_Data_2_Unknown_Form"<CFIF OP_UNKNOWN_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- Unknown Operator --->
+			<table border="0" cellspacing="2" cellpadding="1" align="center">
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_operator_name_error"></span>&nbsp;Name:</TD>
+					<TD rowspan="100%" bgcolor="0000ff"><img src="/images/fill.gif" alt="" width="1" height="1" border="0"></TD>
+					<TD><input type="text" name="Unknown_Operator_Name" id="Unknown_Operator_Name" size="50" maxlength="50" value="#FORM.Unknown_Operator_Name#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_operator_address_error"></span>&nbsp;Address 1:</TD>
+					<TD><input type="text" name="Unknown_Operator_Address_1" id="Unknown_Operator_Address_1" size="50" maxlength="50" value="#FORM.Unknown_Operator_Address_1#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell">Address 2:</TD>
+					<TD><input type="text" name="Unknown_Operator_Address_2" id="Unknown_Operator_Address_2" size="50" maxlength="50" value="#FORM.Unknown_Operator_Address_2#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_operator_city_error"></span>&nbsp;<span id="unknown_operator_state_error"></span>&nbsp;<span id="unknown_operator_zip_error"></span>&nbsp;City\State\Postal:</TD>
+					<TD><input type="text" name="Unknown_Operator_City" id="Unknown_Operator_City" value="#FORM.Unknown_Operator_City#" maxlength="50">
+						&nbsp;
+</CFOUTPUT>
+						<SELECT NAME="Unknown_Operator_State" STYLE="<!--- width:	200px;  --->font-size: 10px;">
+							<OPTION VALUE="0" <CFIF FORM.Unknown_Operator_State EQ 0>selected</CFIF>>Select State</OPTION>
+							<CFOUTPUT QUERY="Get_States">
+								<OPTION VALUE="#State_ID#" <CFIF FORM.Unknown_Operator_State EQ Get_States.State_Code>selected</CFIF>>#State_Code#</OPTION>
+							</CFOUTPUT>
+						</SELECT>
+						&nbsp;
+<CFOUTPUT>
+						<input type="text" name="Unknown_Operator_Zip" id="Unknown_Operator_Zip" size="4" maxlength="10" value="#FORM.Unknown_Operator_Zip#"></TD>    <!--- onkeyup="clenseText(this, '0123456789')" --->
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_Operator_Country_error"></span>&nbsp;Country:</TD>
+				    <TD VALIGN="top"> 
+							<CFOUTPUT>
+								<SELECT NAME="Unknown_Operator_Country_Code" id="Unknown_Operator_Country_Code"><OPTION VALUE="" SELECTED></OPTION><CFLOOP QUERY="getCountry"><OPTION VALUE="#getCountry.Country_Code#"<cfif getCountry.Country_Code eq form.Unknown_Operator_Country_Code> selected </cfif>>#getCountry.Country_Name#</OPTION></CFLOOP></SELECT>&nbsp;  
+							</CFOUTPUT>
+					</TD>
+				</TR>
+			</table>
+			
+			<BR>
+			<table align="center">
+				<TR>
+					<TD>
+						<HR>
+						<span style="color: gray; font-size: 13px; font-weight:bold;">Additional Notes:</span>&nbsp;<span id="unknown_operator_notes_error"></span><BR>
+						<textarea cols="64" rows="3" name="Unknown_Operator_Notes">#FORM.Unknown_Operator_Notes#</textarea>
+					</TD>
+				</TR>
+			</table>				
+		</TD>
+</CFOUTPUT>
+		<TD id="BB_Payee_Type_Data_3_Form"<CFIF BROKER_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- Broker in our database --->
+			<CFSET getBrokerInformation = QueryNew('BSA_Foodservice_Brokers_ID')>
+			<CFIF len(trim(Form.Broker_ID)) GT 0>
+				<cfquery name="getBrokerInformation" datasource="#Application.Datasource#">
+					SELECT     dbo.Service_Zones.Zone_Name AS Zone_Name, dbo.Service_Regions.Region_Name AS Region_name, dbo.BSA_Foodservice_Brokers.Broker_Name,dbo.BSA_Foodservice_Brokers.Broker_Shard,dbo.BSA_Foodservice_Brokers.Address,dbo.BSA_Foodservice_Brokers.ADDRESS_2,dbo.BSA_Foodservice_Brokers.City,dbo.BSA_Foodservice_Brokers.State,dbo.BSA_Foodservice_Brokers.Zip, dbo.BSA_Foodservice_Brokers.BSA_Foodservice_Brokers_ID
+					FROM       dbo.BSA_Foodservice_Brokers LEFT JOIN
+			                   dbo.Service_Regions ON dbo.BSA_Foodservice_Brokers.Service_Region_ID = dbo.Service_Regions.Service_Region_ID LEFT JOIN
+							   dbo.Service_Zones ON dbo.BSA_Foodservice_Brokers.Service_Zone_ID = dbo.Service_Zones.Service_Zone_ID
+					WHERE BSA_Foodservice_Brokers_ID = '#FORM.Broker_ID#'
+				</cfquery> 
+			</CFIF>
+            <!--- Ajax Broker Code --->
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" CLASS="Maintable" width="100%">
+				<!--- D25341 Using a table to format below span
+				<span id="BB_Payee_Type_Data_3" style="padding:none;top:0;display:<cfif BROKER_SHOW neq 1>none;<cfelse>block;</cfif>">
+				<span id="brokerIdTxt" style="color:blue;">Search By Id: <input type="text" name="brkrId" id="brkrId" style="font-size:9px;border:1px solid blue;" onChange="getBrokerPayee(this.value)" /></span>
+				<span style="margin-left:520px;"><span id="error_broker_select"></span><CFIF Scheduled_Auto_BB><cfoutput>#lcase(application.returned_customer_setting.broker_label_singular)# payee</cfoutput><CFELSE>&nbsp;<a onClick="searchData('br')" style="cursor: pointer;">payee search<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></CFIF></span>
+				</span>
+				--->
+				<tr  style="border-bottom:0px;">
+					<td width="100%" colspan="100%" style="border-bottom:0px;">
+						<span id="BB_Payee_Type_Data_3" style="padding:none;top:0;display:<cfif BROKER_SHOW neq 1>none;<cfelse>block;</cfif>">
+						<table border="0" width="100%" cellpadding="0" cellspacing="0">
+							<tr>
+							<td style="border-bottom:0px;" width="5%" nowrap="nowrap" valign="top">
+								<span id="brokerIdTxt" style="color:blue; font-size : 8pt;">Search By Id: </td><td style="border-bottom:0px;"><input type="text" size="26" name="brkrId" id="brkrId" style="font-size:9px;border:1px solid blue;" onChange="getBrokerPayee(this.value)" /><br>(Type Id and click tab key)</span></td>
+							<td style="border-bottom:0px; font-size : 8pt;" align="right" nowrap="nowrap" valign="bottom" >								
+								<span id="error_broker_select"></span><CFIF Scheduled_Auto_BB><cfoutput>#lcase(application.returned_customer_setting.broker_label_singular)# payee</cfoutput><CFELSE>&nbsp;<a onClick="searchData('br')" style="cursor: pointer;">payee search<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></CFIF>&nbsp;&nbsp;&nbsp;
+							</td>
+							</tr>
+						</table>
+						</span>
+					</td>
+				</tr>
+				
+				<tr><td style="border:1px solid #fff;">&nbsp;</td></tr>
+				<TR ID="header" BGCOLOR="#ffce84">
+					<TD align="left" NOWRAP ID="header"><B>Name / ID</B></TD>
+					<TD align="left" ID="header"><B>Address</B></TD>
+					<cfoutput><TD align="left" ID="header"><B>#application.returned_customer_setting.region_label_singular# / #application.returned_customer_setting.zone_label_singular#</B></TD></cfoutput>
+</TR>
+                
+                <cfif getBrokerInformation.recordcount eq 0>
+				  <tr id="brkrEmpty">
+						<cfoutput><td colspan="100%" align="center"><span class="NoItemsFromSearchSelected">No #application.returned_customer_setting.broker_label_singular# Selected</span></td></cfoutput>
+					</tr>
+					<tr style="cursor:pointer;">
+						<td id="brkrname" nowrap></td>
+						<td id="brkrAddress" nowrap></td>
+						<td id="brkrRegion" nowrap></td>
+	 				</tr>
+				<cfelse>
+				<CFOUTPUT QUERY="getBrokerInformation">
+					<tr STYLE="cursor:pointer;">
+						<td id="brkrname" nowrap onClick="NewWindow('/Profiles/Brokers/Broker_profile.cfm?BID=#getBrokerInformation.BSA_Foodservice_Brokers_ID#','name','400','450','Yes', 'No');">#getBrokerInformation.Broker_Name#<BR>#getBrokerInformation.Broker_Shard#&nbsp;</td>
+						<td id="brkrAddress" nowrap onClick="NewWindow('/Profiles/Brokers/Broker_profile.cfm?BID=#getBrokerInformation.BSA_Foodservice_Brokers_ID#','name','400','450','Yes', 'No');">#getBrokerInformation.Address#<BR><cfif len(trim(address_2))>#getBrokerInformation.ADDRESS_2#<BR></cfif>#getBrokerInformation.City#,#getBrokerInformation.State# #getBrokerInformation.Zip#&nbsp;</td>
+						<td id="brkrRegion" nowrap onClick="NewWindow('/Profiles/Brokers/Broker_profile.cfm?BID=#getBrokerInformation.BSA_Foodservice_Brokers_ID#','name','400','450','Yes', 'No');">#getBrokerInformation.Region_Name#<BR>#getBrokerInformation.Zone_Name#&nbsp;</td>
+	 				</tr>
+				</CFOUTPUT>
+				<cfset Can_Associated_Ship_To = 1 />
+			</cfif>
+<CFOUTPUT>
+			</TABLE>
+			
+			<cfif Can_Associated_Ship_To EQ 1>
+			<cfif Not appSettings.getMultiDistributorBB()><!---Associate only one distributor--->
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+				<tr  style="border-bottom:0px;">
+					<td width="100%" colspan="100%" style="border-bottom:0px;">
+						<span id="showCustomerSearchBrk" style="padding:none;top:0;display:<cfif BROKER_SHOW neq 1>none;<cfelse>block;</cfif>">
+						<table border="0" width="100%" cellpadding="0" cellspacing="0">
+							<tr>
+							<td style="border-bottom:0px;" width="5%" nowrap="nowrap" valign="top">
+								<span id="associateShipToIdTxtBrk" style="color:blue;  font-size : 8pt;">Search By Id: </td><td style="border-bottom:0px;"><input type="text" size="26" name="shipToAssociateIdBrk" id="shipToAssociateIdBrk" style="font-size:9px;border:1px solid blue;" onChange="getMultiDist(this.value)" /><br>(Type Id and click tab key)</span></td>
+							<td style="border-bottom:0px; font-size : 8pt;" align="right" nowrap="nowrap" valign="bottom" >
+								<span><span id="error_Associate_ShipToBrk"></span><cfoutput><a onClick="AssociateShipTo('broker_form')" style="cursor: pointer;">associate a #application.returned_customer_setting.Shard_Ship_To_Label# to this #lcase(application.returned_customer_setting.broker_label_singular)#</cfoutput><img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></span>&nbsp;&nbsp;&nbsp;
+							</td>
+							</tr>
+						</table>
+						</span>
+					</td>
+				</tr>
+			 <tr>
+			 <td style="border:none;">&nbsp;</td>
+			  </tr>
+				<TR id="multiDistHeadBrk" style="<cfif FORM.Broker_ID eq "">display:none</cfif>">
+					<TD COLSPAN="100%" STYLE="Border-Bottom:None">
+						<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+							<TR ID="header" BGCOLOR="ffce84">
+								<TD align="left" ID="header"><B>Name / #application.returned_customer_setting.shard_ship_to_label#</B></TD>
+								<TD ID="header"><B>Address</B></TD>
+								<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+								<TD ID="header"><B>#application.returned_customer_setting.broker_label_singular#</B></TD>
+								</cfif>
+								<TD ID="header"><B>#application.returned_customer_setting.family_name_label_singular# / #application.returned_customer_setting.buying_group_label_singular#</B></TD>
+							</TR>
+							<CFIF FORM.Associated_Ship_To NEQ "" AND GetAssociatedShipToInfo.recordcount GT 0>
+							<CFLOOP QUERY="GetAssociatedShipToInfo">
+							<TR STYLE="cursor:pointer;">
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP>#Name#<BR>
+								<cfif trim(len(Shr_Ship_To)) neq 0>#Shr_Ship_To#<cfelse>#Ship_To#</cfif>&nbsp;</TD>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;">#Address_1#<BR>#City#,#State# #ZipCode#&nbsp;</TD>
+								<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" >#Broker_Name#&nbsp;</TD>
+								</cfif>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP>#Family_Name#<BR>#Buying_Group_Name#&nbsp;</TD>
+			 				</TR>
+							</CFLOOP>
+							</CFIF>
+						</TABLE>
+					</TD>
+				</TR>				
+				
+			</TABLE>
+			<div id="multiShipToTableBrk"></div>
+			<!------ Associate Multiple Distributors to Payee ----->
+			<!--- Multi customer stuff ditributor List --->
+		<cfelse>
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+				<span id="associateMultiDistBrk" style="padding:none;top:0;display:<cfif form.broker_id neq "">block<cfelse>none</cfif>;">
+				 <span id="associateShipToIdTxtBrk" style="color:blue;">Search By Id:</span> <span id="shipText" style="position:absolute;"><input type="text" name="shipToAssociateIdBrk" id="shipToAssociateIdBrk" style="font-size:9px;border:1px solid blue;"/><textarea name="shipToAssociateIdBigBrk" id="shipToAssociateIdbigBrk" title="Multiple Ship To Id's must be separated by comma's" cols="25" rows="5" style="display:none;"></textarea></span>
+				<span style="margin-left: 525px;"><span id="error_Associate_ShipToBrk"></span><cfoutput><a onClick="searchData('diMultiBr')" style="cursor: pointer;">associate #lcase(application.returned_customer_setting.Shard_Ship_To_Label)#s to this #lcase(application.returned_customer_setting.broker_label_singular)#</cfoutput><img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a></span>
+				</span>
+				
+			 <tr>
+			 <td style="broder:none;">&nbsp;</td>
+			  </tr>
+				<TR id="multiDistHeadBrk" style="<cfif form.broker_id eq "">display:none</cfif>">
+					<TD COLSPAN="100%" STYLE="Border-Bottom:None">
+						<table border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+							<tr ID="header" BGCOLOR="ffce84">
+								<TD align="left" ID="header" colspan="2"><B>Name / <cfoutput>#application.returned_customer_setting.shard_ship_to_label#</cfoutput></B></TD>
+								<TD ID="header"><B>Address</B></TD>
+								<cfif NOT appSettings.getDistributorMultiPosition()>
+									<cfoutput>
+									<TD ID="header"><B>#application.returned_customer_setting.broker_label_singular#</B></TD>
+									</cfoutput>
+								</cfif>
+									<cfoutput>
+									<TD ID="header"><B>#application.returned_customer_setting.family_name_label_singular# / #application.returned_customer_setting.buying_group_label_singular#</B></TD>
+									</cfoutput>
+							</tr>
+							
+							<CFSET x = 0>
+							<CFLOOP list="#form.multiDistList#" index="Dist">
+								<cfif Dist neq '00000000-0000-0000-0000-000000000000'> <!--- don't show the empty distributo record  *** probably need to keep this out of the distributor list in the first place **** --->
+								<cfquery name="qGetDistListInfo" datasource="#Application.Datasource#">
+										SELECT     dbo.BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID, dbo.BSA_Foodservice_Customers.Name, 
+										                      dbo.BSA_Foodservice_Customers.Ship_To, dbo.BSA_Foodservice_Customers.Address_1, dbo.BSA_Foodservice_Customers.City, 
+										                      dbo.BSA_Foodservice_Customers.State, dbo.BSA_Foodservice_Customers.ZipCode,  BSA_Foodservice_Customers.Country_Code,
+															  <cfif NOT appSettings.getDistributorMultiPosition()>
+										                      dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID, dbo.BSA_Foodservice_Brokers.Broker_Name, 
+															  </cfif>
+										                      dbo.Distributor_Family.Family_Name, dbo.Distributor_Buying_Groups.Buying_Group_Name, dbo.BSA_Foodservice_Customers.Shr_Ship_To
+										FROM	dbo.BSA_Foodservice_Customers 
+												<cfif NOT appSettings.getDistributorMultiPosition()>
+												INNER JOIN	dbo.BSA_Foodservice_Brokers ON 
+												dbo.BSA_Foodservice_Customers.BSA_Foodservice_Brokers_ID = dbo.BSA_Foodservice_Brokers.BSA_Foodservice_Brokers_ID 
+												</cfif>
+												INNER JOIN dbo.Distributor_Family ON dbo.BSA_Foodservice_Customers.Family_ID = dbo.Distributor_Family.Family_ID 
+												INNER JOIN dbo.Distributor_Buying_Groups ON dbo.BSA_Foodservice_Customers.Buying_Group_ID = dbo.Distributor_Buying_Groups.Buying_Group_ID
+										WHERE BSA_Foodservice_Customers_ID = '#Dist#'
+							  </cfquery>
+							  <cfif Evaluate(x mod 2) eq 0>
+			  						<cfset tmpBgColor = "FFFFFF" />
+			 					<cfelse>
+									<cfset tmpBgColor = "EAFFEA" />
+								</cfif>
+										<tr id="custRow_#x#" STYLE="cursor:pointer;" bgcolor="#tmpBgColor#">
+											<TD><img bDelete="true" name="IMG_Delete_Scissor"  src="/images/scissor.gif" title="click here to delete this customer" border="0" onClick="deleteThisCust('#Dist#', '#tmpBgColor#')" style="cursor: pointer;">&nbsp;</TD>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" NOWRAP>
+												
+													<cfif listfind(alertList,Dist)><cfset showAlertMessage = 1><font color="##FF0000">Can Not Delete</font><br></cfif>#qGetDistListInfo.Name#<BR>
+													<cfif trim(len(qGetDistListInfo.Shr_Ship_To)) neq 0>#qGetDistListInfo.Shr_Ship_To#<cfelse>#qGetDistListInfo.Ship_To#</cfif>&nbsp;</TD>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;">#qGetDistListInfo.Address_1#<BR>#qGetDistListInfo.City#,#qGetDistListInfo.State# #qGetDistListInfo.ZipCode#&nbsp;#qGetDistListInfo.Country_Code#</TD>
+											<cfif NOT appSettings.getDistributorMultiPosition()>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" >#qGetDistListInfo.Broker_Name#&nbsp;</TD>
+											</cfif>
+											<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#Dist#','name','400','450','Yes', 'No');return false;" NOWRAP>#qGetDistListInfo.Family_Name#<BR>#qGetDistListInfo.Buying_Group_Name#&nbsp;</TD>
+						 				</tr>
+										<CFSET x = x + 1> <!--- counter for rowcolor --->
+								</cfif>
+							</CFLOOP>
+						</TABLE><cfif showAlertMessage eq 1><font color="##FF0000">A <cfoutput>#lcase(application.returned_customer_setting.Shard_Ship_To_Label)#</cfoutput> can not be removed from a billback if it has products associated with it on the programs page.</font></cfif>
+					</TD>
+				</TR>
+			</TABLE>
+			<div id="multiShipToTableBrk"></div>
+			
+			</cfif>
+			<!--- End Multi customer stuff --->
+			</cfif>
+		<!--- 	<BR>
+			<table align="center">
+				<TR>
+					<TD>
+						<!---<HR color="7A9AB1" width="100%" style="height: 1px;">--->
+						<span style="color: gray; font-size: 13px; font-weight:bold;">Additional Notes:</span><span id="broker_notes_error"></span>
+						<textarea cols="64" rows="3" name="Broker_Notes">#FORM.Broker_Notes#</textarea>
+					</TD>
+				</TR>
+			</table> --->		
+			<input type="hidden" name="Broker_Notes" value="#form.Broker_Notes#">
+		</TD>
+</CFOUTPUT>		
+<CFOUTPUT>
+		<TD id="BB_Payee_Type_Data_3_Unknown_Form"<CFIF BROKER_UNKNOWN_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- Unknown Broker --->
+			<table border="0" cellspacing="2" cellpadding="1" align="center">
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_broker_name_error"></span>&nbsp;Name:</TD>
+					<TD rowspan="100%" bgcolor="0000ff"><img src="/images/fill.gif" alt="" width="1" height="1" border="0"></TD>
+					<TD><input type="text" name="Unknown_Broker_Name" id="Unknown_Broker_Name" size="50" maxlength="50" value="#Form.Unknown_Broker_Name#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_broker_address_error"></span>&nbsp;Address 1:</TD>
+					<TD><input type="text" name="Unknown_Broker_Address_1" id="Unknown_Broker_Address_1" size="50" maxlength="50" value="#Form.Unknown_Broker_Address_1#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell">Address 2:</TD>
+					<TD><input type="text" name="Unknown_Broker_Address_2" id="Unknown_Broker_Address_2" size="50" maxlength="50" value="#Form.Unknown_Broker_Address_2#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_broker_city_error"></span>&nbsp;<span id="unknown_broker_state_error"></span>&nbsp;<span id="unknown_broker_zip_error"></span>&nbsp;City\State\Postal:</TD>
+					<TD><input type="text" name="Unknown_Broker_City" id="Unknown_Broker_City" value="#form.Unknown_Broker_City#" maxlength="50">
+</CFOUTPUT>
+						&nbsp;
+						<SELECT NAME="Unknown_Broker_State" STYLE="<!--- width:	200px;  --->font-size: 10px;">
+							<OPTION VALUE="0" <CFIF FORM.Unknown_Broker_State EQ 0>selected</CFIF>>Select State</OPTION>
+							<CFOUTPUT QUERY="Get_States">
+								<OPTION VALUE="#State_ID#" <CFIF FORM.Unknown_Broker_State EQ Get_States.State_ID>selected</CFIF>>#State_Code#</OPTION>
+							</CFOUTPUT>
+						</SELECT>
+						&nbsp;
+<CFOUTPUT>
+						<input type="text" name="Unknown_Broker_Zip" id="Unknown_Broker_Zip" size="4" maxlength="10" value="#Form.Unknown_Broker_Zip#" ></TD>  <!--- onkeyup="clenseText(this, '0123456789')" --->
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="unknown_Broker_Country_error"></span>&nbsp;Country:</TD>
+				     <TD VALIGN="top"> 
+							<CFOUTPUT>
+								<SELECT NAME="Unknown_Broker_Country_Code" id="Unknown_Broker_Country_Code"><OPTION VALUE="" SELECTED></OPTION><CFLOOP QUERY="getCountry"><OPTION VALUE="#getCountry.Country_Code#"<cfif getCountry.Country_Code eq form.Unknown_Broker_Country_Code> selected </cfif>>#getCountry.Country_Name#</OPTION></CFLOOP></SELECT>&nbsp;  
+							</CFOUTPUT>
+					</TD>
+				</TR>
+			</table>
+			
+			<BR>
+			<table align="center">
+				<TR>
+					<TD>
+						<HR color="7A9AB1" width="100%" style="height: 1px;">
+						<span style="color: gray; font-size: 13px; font-weight:bold;">Additional Notes:</span>&nbsp;<span id="unknown_broker_notes_error"></span><BR>
+						<textarea cols="64" rows="3" name="Unknown_Broker_Notes">#FORM.Unknown_Broker_Notes#</textarea>
+					</TD>
+				</TR>
+			</table>	
+		</TD>
+</CFOUTPUT>				
+<CFOUTPUT>
+		<TD id="BB_Payee_Type_Data_4_Form"<CFIF OTHER_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- unknown entity --->
+			<table border="0" cellspacing="2" cellpadding="1" align="center">
+				<TR>
+					<TD class="DataTitleCell"><span id="other_address_error"></span>&nbsp;Name:</TD>
+					<TD rowspan="100%" bgcolor="0000ff"><img src="/images/fill.gif" alt="" width="1" height="1" border="0"></TD>
+					<TD><input type="text" name="Other_Name" id="Other_Name" size="50" maxlength="50" value="#FORM.Other_Name#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="other_name_error"></span>&nbsp;Address 1:</TD>
+					<TD><input type="text" name="Other_Address_1" id="Other_Address_1" size="50" maxlength="50" value="#FORM.Other_Address_1#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell">Address 2:</TD>
+					<TD><input type="text" name="Other_Address_2" id="Other_Address_2" size="50" maxlength="50" value="#FORM.Other_Address_2#"></TD>
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="other_city_error"></span>&nbsp;<span id="other_state_error"></span>&nbsp;<span id="other_zip_error"></span>&nbsp;City\State\Postal:</TD>
+					<TD><input type="text" name="Other_City" id="Other_City" value="#form.Other_City#" maxlength="50">
+						&nbsp;
+</CFOUTPUT>
+						<SELECT NAME="Other_State" STYLE="<!--- width:	200px;  --->font-size: 10px;">
+							<OPTION VALUE="0" <CFIF FORM.Other_State EQ 0>selected</CFIF>>Select State</OPTION>
+							<CFOUTPUT QUERY="Get_States">
+								<OPTION VALUE="#State_ID#" <CFIF FORM.Other_State EQ Get_States.State_ID>selected</CFIF>>#State_Code#</OPTION>
+							</CFOUTPUT>
+						</SELECT>
+						&nbsp;
+<CFOUTPUT>
+						<input type="text" name="Other_Zip" id="Other_Zip" size="4" maxlength="10" value="#Form.Other_Zip#"></TD>   <!--- onkeyup="clenseText(this, '0123456789')" --->
+				</TR>
+				<TR>
+					<TD class="DataTitleCell"><span id="other_country_error"></span>Country:</TD>
+					<TD VALIGN="top"> 
+							<CFOUTPUT>
+								<SELECT NAME="Other_Country_Code" id="Other_Country_Code"><OPTION VALUE="" SELECTED></OPTION><CFLOOP QUERY="getCountry"><OPTION VALUE="#getCountry.Country_Code#"<cfif getCountry.Country_Code eq form.Other_Country_Code> selected </cfif>>#getCountry.Country_Name#</OPTION></CFLOOP></SELECT>&nbsp;  
+							</CFOUTPUT>
+					</TD>
+				</TR>
+			</table>
+			
+			<!------ Associate Distributor to Payee ----->
+			<cfif 1 EQ 1>
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+				<TR>
+					<TD COLSPAN="100%" ALIGN="Center" STYLE="Border-Bottom: None">	<BR><BR>	
+						<B><SPAN ID="error_Associate_ShipTo_Other"></SPAN><a onClick="AssociateShipTo('BB_Payee_Form')" style="cursor: pointer;"><FONT SIZE="2">Associate a <CFOUTPUT>#application.returned_customer_setting.Shard_Ship_To_Label#</CFOUTPUT> to this payee</FONT></a></B>
+					</TD>
+				</TR>
+				<CFIF FORM.Associated_Ship_To NEQ "" AND GetAssociatedShipToInfo.recordcount GT 0>
+				<TR>
+					<TD COLSPAN="100%" STYLE="Border-Bottom:None">
+						<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+							<TR ID="header" BGCOLOR="ffce84">
+								<TD align="left" ID="header"><B>Name / #application.returned_customer_setting.shard_ship_to_label#</B></TD>
+								<TD ID="header"><B>Address</B></TD>
+								<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+								<TD ID="header"><B>#application.returned_customer_setting.broker_label_singular#</B></TD>
+								</cfif>
+								<TD ID="header"><B>#application.returned_customer_setting.family_name_label_singular# / #application.returned_customer_setting.buying_group_label_singular#</B></TD>
+							</TR>
+							
+							<CFLOOP QUERY="GetAssociatedShipToInfo">
+							<TR STYLE="cursor:pointer;">
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP>#Name#<BR>
+								<cfif trim(len(Shr_Ship_To)) neq 0>#Shr_Ship_To#<cfelse>#Ship_To#</cfif>&nbsp;</TD>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;">#Address_1#<BR>#City#,#State# #ZipCode#&nbsp;#country_code#</TD>
+								<cfif NOT variables.appSettings.getDistributorMultiPosition()>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" >#Broker_Name#&nbsp;</TD>
+								</cfif>
+								<TD onClick="NewWindow('/profiles/Distributors/Distributor_profile.cfm?DID=#BSA_Foodservice_Customers_ID#','name','400','450','Yes', 'No');return false;" NOWRAP>#Family_Name#<BR>#Buying_Group_Name#&nbsp;</TD>
+			 				</TR>
+							</CFLOOP>
+							
+						</TABLE>
+					</TD>
+				</TR>				
+				</CFIF>
+			</TABLE>
+			</cfif>
+			<!------ Associate Distributor to Payee ----->
+			
+			<BR>
+			<table align="center">
+				<TR>
+					<TD>
+						<!---<HR color="7A9AB1" width="100%" style="height: 1px;">--->
+						<span style="color: gray; font-size: 13px; font-weight:bold;">Additional Notes:</span>&nbsp;<span id="other_notes_error"></span>
+						<textarea cols="64" rows="3" name="Other_Notes">#form.Other_Notes#</textarea>
+					</TD>
+				</TR>
+			</table>		
+				
+		</TD>
+</CFOUTPUT>
+		<TD id="BB_Payee_Type_Data_4_Unknown_Form">
+			
+		</TD>
+	</TR>
+	<tr><td>&nbsp;</td></tr>	
+	<!--- 
+	<SCRIPT LANGUAGE="JavaScript">
+		function showVendSearchWindow() 
+		{				
+			//document.all.Form_Submitted.value=0;		
+			document.SearchForm.target = "_self";
+			document.SearchForm.action = "<CFOUTPUT>#CGI.PATH_INFO#</CFOUTPUT>";		
+			NewWindow("vendor_master_search.cfm?Formname=distributor_form", "Vensearchwindow", 850, 600, "yes", "yes")
+		}
+	</SCRIPT>
+	 --->
+	<CFSET Display = 0> 
+	<CFIF FORM.Distributor_ID NEQ "" OR FORM.Operator_ID NEQ "">
+		<CFIF FORM.Operator_ID NEQ "" AND Ship_To_For_Operator EQ 1 AND FORM.Associated_Ship_To NEQ "">
+			<CFSET Display = 1>
+		<CFELSEIF FORM.Operator_ID NEQ "" AND Ship_To_For_Operator EQ 0>
+			<CFSET Display = 1>
+		<CFELSEIF FORM.Distributor_ID NEQ "">
+			<CFSET Display = 1>
+		</CFIF>
+	</CFIF>
+	
+	<CFIF variables.appSettings.getVendorSearchInBBPayeePage()>	
+	<tr>
+	 <td> 
+	   <!--- D25341 Using a table to format below span
+	   <span id="vendor_Payee" style="padding:none;top:0;display:block;">
+	   	<span id="vendorTxt" style="color:blue;">Search By Id:</span> <span id="vendText" style="position:absolute;"><input type="text" name="vendorId" id="vendorId" style="font-size:9px;border:1px solid blue;" onBlur="getVendor(this.value)"/></span>
+        <span style="margin-left: 520px;">
+		<cfif variables.appSettings.getBBAllowVendorMasterSearch() AND Get_Profile_Settings.BB_Allow_Vendor_Master_Search EQ 1 >
+		 <a onClick="searchData('vm')" style="cursor: pointer;">vendor master<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a>
+	   </cfif>
+	   <span>
+		<cfif variables.appSettings.getBBAllowVendorCrossRefSearch()>
+			<a onClick="searchData('vn')" style="cursor: pointer;"> vendor cross ref<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a>
+		</cfif>
+		</span>
+		</span>
+		</span>
+	    --->
+ 		<span id="vendor_Payee" style="padding:none;top:0;display:block;">
+	   	<table border="0" width="100%" cellpadding="0" cellspacing="0">
+			<tr>
+			<td style="border-bottom:0px;" width="5%" nowrap="nowrap" valign="top">
+	   			<span id="vendorTxt" style="color:blue; font-size : 8pt;">Search By Id:</span> </td><td style="border-bottom:0px;"><span id="vendText"><input type="text" size="26" name="vendorId" id="vendorId" style="font-size:9px;border:1px solid blue;" onBlur="getVendor(this.value)"/><br>(Type Id and click tab key)</span></td>
+ 			<td style="border-bottom:0px; font-size : 8pt;" align="right" nowrap="nowrap" valign="bottom" >
+				<span>
+					<cfif variables.appSettings.getBBAllowVendorMasterSearch() AND Get_Profile_Settings.BB_Allow_Vendor_Master_Search EQ 1 >
+		 			<a onClick="searchData('vm')" style="cursor: pointer;">vendor master<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a>
+	   				</cfif>
+	   				<span>
+					<cfif variables.appSettings.getBBAllowVendorCrossRefSearch()>
+					<a onClick="searchData('vn')" style="cursor: pointer;"> vendor cross ref<img src="/images/arrow_link.gif" style="vertical-align:bottom;" /></a>
+					</cfif>
+					</span>
+				</span>&nbsp;&nbsp;&nbsp;
+			</td>
+			</tr>
+		</table>
+		</span>
+	</td>
+
+<!--- 	  
+		
+		<TD valign="bottom" align="center" class="FormHeaderLabel">
+			Click here to search 
+			<CFIF variables.appSettings.getBBAllowVendorMasterSearch() AND Get_Profile_Settings.BB_Allow_Vendor_Master_Search EQ 1 >
+				<font color="red">[ </font><a onClick="searchData('vm')" style="cursor: pointer;"> vendor master</a><font color="red"> ]</font>&nbsp;&nbsp;			
+			</CFIF>
+			<font color="red">[ </font><a onClick="searchData('vn')" style="cursor: pointer;"> vendor cross ref</a><font color="red"> ]</font>
+		</TD> --->
+	</TR>
+	<tr><td>&nbsp;</td></tr>
+<!---	<TR>
+		<TD colspan="100%" valign="top" style="height: 1px;" ><HR color="7A9AB1" width="50%" style="height: 1px;"></TD>
+	</TR>--->
+	<TR>
+		<TD <CFIF FORM.Vendor_ID EQ ""> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF> id="vendorTable">	
+			<CFIF len(trim(FORM.Vendor_ID)) GT 0>
+				<cfquery name="getVendorInfo" datasource="#Application.Datasource#">
+					SELECT 	Vendor_Name as vendorName,
+							Vendor_Master.Address_1 as vendorAddress1,
+							Vendor_Master.Address_2 as vendorAddress2,	
+							Vendor_Master.City as vendorCity,
+							Vendor_Master.State as vendorState,
+							Vendor_Master.Zipcode as vendorZipCode
+				 	FROM 	Vendor_Master 
+					WHERE 	Vendor_ID = '#FORM.Vendor_ID#' AND 
+							Deleted = 0 AND 
+							Active_Code = 'A'
+				</cfquery>
+			</CFIF>
+
+			<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">
+				<TR ID="header" BGCOLOR="#ffce84">
+					<TD align="left" ID="header"><B>Vendor #</TD>
+					<TD ID="header"><B>Name</B></TD>
+					<TD ID="header"><B>Address</B></TD>					
+				</TR>
+
+			
+			<CFIF len(trim(FORM.Vendor_ID)) eq 0>
+			  <tr id="noVendor">
+				 <cfoutput><td colspan="100%" align="center"><span class="NoItemsFromSearchSelected">No vendor Selected</span></TD></cfoutput>
+			  </tr>
+			  <tr style="cursor:pointer;">
+			   <td id="vendorid" nowrap></td>
+			   <td id="vendorname" nowrap></td>
+			   <td id="vendoraddress" nowrap></td>
+	 		  </tr>
+	 		  <cfelse>
+				<CFOUTPUT QUERY="getVendorInfo">
+				<cfset vendorAddr = "" >
+				<CFIF vendorAddress1 NEQ ""><cfset vendorAddr =  vendorAddress1 & "<BR>"></CFIF>
+				<CFIF vendorAddress2 NEQ ""><cfset vendorAddr =  vendorAddr & vendorAddress2 & "<BR>" ></CFIF>
+				<CFIF vendorCity NEQ ""><cfset vendorAddr =  vendorAddr & vendorCity ></CFIF>
+				<CFIF vendorState NEQ ""><cfset vendorAddr =  vendorAddr & "," & vendorState ></CFIF>
+				<CFIF vendorZipCode NEQ ""><cfset vendorAddr =  vendorAddr & " " & vendorZipCode></CFIF>	
+
+					<TR>
+						<TD id="vendorid" NOWRAP>#Vendor_ID#</TD>
+						<TD id="vendorname">#vendorName#</TD>
+						<TD id="vendoraddress">#vendorAddr#&nbsp;</TD>
+	 				</TR>
+				</CFOUTPUT>		
+			</CFIF>
+			</TABLE>
+		</TD>
+	</TR>
+	</CFIF>
+	
+	
+	
+	<TR>
+		<TD colspan="100%" align="center" width="100%" nowrap="nowrap">
+			<hr color="orange">
+			<CF_button
+				button_name		=	"save"
+				button_caption	=	"save"
+				button_action	=	"CheckForErrors('regular', 'save_table');"
+				button_type		=	"javascript_link"
+				button_width	=	"100"
+				button_color	=	"Navy"
+				button_tip		=	""
+				font_color		=	"White"
+				font_size		=	"12"
+				font_weight		=	"bold"
+			>	
+	<cfif disablelinks EQ 0>
+<!--- 			<CF_button
+				button_name		=	""
+				button_caption	=	"save and powerpunch"
+				button_action	=	"CheckForErrors('powerpunch');"
+				button_type		=	"javascript_link"
+				button_width	=	"200"
+				button_color	=	"Navy"
+				button_tip		=	""
+				font_color		=	"White"
+				font_size		=	"12"
+				font_weight		=	"bold"
+			> --->		
+			<cfif appSettings.getUse_Big_Billbacks()>
+				<CF_button
+				button_name		=	"save_bigbillback"
+				button_caption	=	"save and enter big billback"
+				button_action	=	"CheckForErrors('bigbillback', 'save_bigbillback_table');"
+				button_type		=	"javascript_link"
+				button_width	=	"200"
+				button_color	=	"Navy"
+				button_tip		=	""
+				font_color		=	"White"
+				font_size		=	"12"
+				font_weight		=	"bold"
+			>
+			</cfif>
+		</cfif>	
+		</TD>
+	</TR>
+</TABLE>
+<div id="divSpacer" style="text-align:bottom;"></div>
+<cfoutput>
+
+	<input type="Hidden" name="selected_bb_payee_type" 				value="#form.default_payee MOD 5#">
+	<input type="Hidden" name="selected_bb_payee_type_is_unknown" 	value="#is_an_unknown_payee#">
+	<input type="Hidden" name="billback_id" 						value="#form.billback_id#">
+	<input type="hidden" name="distributor_id" 						value="#form.distributor_id#">
+	<input type="Hidden" name="broker_id" 							value="#form.broker_id#">
+	<input type="Hidden" name="operator_id" 						value="#form.operator_id#">
+	<input type="hidden" name="RedirectTo" 							value="">
+	<input type="hidden" name="Associated_Ship_To" 					value = "#FORM.Associated_Ship_To#">
+	<INPUT TYPE="Hidden" NAME="testing" value="">
+	<INPUT TYPE="Hidden" ID="Load_ID_From_Form" NAME="Load_ID_From_Form" VALUE="1">
+	<INPUT TYPE="Hidden" ID="Default_Payee" NAME="Default_Payee" 	VALUE="#form.Default_Payee#">
+	<input type="Hidden" name="Vendor_ID" value="#FORM.Vendor_ID#">
+	<INPUT TYPE="hidden" ID="multiDistList" NAME="multiDistList" VALUE="#FORM.multiDistList#">
+	<input type="hidden" name="saveOverwriteOption" value="DistributorPayeeRetainExisting"><!--- DistributorPayeeRemoveExisting, DistributorPayeeRetainExisting --->
+<input type="hidden" name="modifyagreeacttion" value="#actionchange#">
+</FORM>
+
+<form action="payee_form.cfm?BBID=#FORM.Billback_ID#" method="post" name="operator_form" id="operator_form">
+	<INPUT TYPE="hidden" ID="Operator_List" NAME="Operator_List" VALUE="<cfif isDefined("Form.Operator_List")>#Form.Operator_List#</cfif>">
+	<INPUT TYPE="Hidden" NAME="Associated_Ship_To" VALUE="#FORM.Associated_Ship_To#">
+	<INPUT TYPE="Hidden" ID="Default_Payee" NAME="Default_Payee" VALUE="2">
+	<INPUT TYPE="Hidden" ID="Load_ID_From_Form" NAME="Load_ID_From_Form" VALUE="1">
+	<INPUT TYPE="Hidden" ID="Billback_ID" NAME="Billback_ID" VALUE="#FORM.Billback_ID#">	
+	<input type="Hidden" name="operator_id" value="#form.operator_id#">
+	<INPUT TYPE="hidden" ID="multiDistList" NAME="multiDistList" VALUE="#FORM.multiDistList#" size="200">
+</FORM>
+
+<form action="payee_form.cfm?BBID=#FORM.Billback_ID#" method="post" name="broker_form" id="broker_form">
+	<INPUT TYPE="hidden" ID="Broker_List" NAME="Broker_List" VALUE="<cfif isDefined("Form.Broker_List")>#Form.Broker_List#</cfif>">
+	<INPUT TYPE="Hidden" NAME="Associated_Ship_To" VALUE="#FORM.Associated_Ship_To#">
+	<INPUT TYPE="Hidden" ID="Default_Payee" NAME="Default_Payee" VALUE="3">
+	<INPUT TYPE="Hidden" ID="Load_ID_From_Form" NAME="Load_ID_From_Form" VALUE="1">
+	<INPUT TYPE="Hidden" ID="Billback_ID" NAME="Billback_ID" VALUE="#FORM.Billback_ID#">
+	<input type="Hidden" name="broker_id" value="#form.broker_id#">
+	<INPUT TYPE="hidden" ID="multiDistList" NAME="multiDistList" VALUE="#FORM.multiDistList#" size="200">
+</FORM>
+
+<form action="payee_form.cfm?BBID=#FORM.Billback_ID#" method="post" name="distributor_form" id="distributor_form">
+	<INPUT TYPE="Hidden" ID="Distributor_List" NAME="Distributor_List" VALUE="<cfif isDefined("Form.Distributor_List")>#Form.Distributor_List#</cfif>">
+	<INPUT TYPE="Hidden" ID="Default_Payee" NAME="Default_Payee" VALUE="1">
+	<INPUT TYPE="Hidden" ID="Load_ID_From_Form" NAME="Load_ID_From_Form" VALUE="1">
+	<INPUT TYPE="Hidden" ID="Billback_ID" NAME="Billback_ID" VALUE="#FORM.Billback_ID#">	
+	<INPUT TYPE="hidden" ID="multiDistList" NAME="multiDistList" VALUE="">	<!--- NO Multi Distributor for Payee =1  -> Operator BB has multis only --->
+</FORM>
+
+<form action="payee_form.cfm?BBID=#FORM.Billback_ID#" method="post" name="multiDist_form" id="multiDist_form">
+	<INPUT TYPE="Hidden" ID="Distributor_List" NAME="Distributor_List" VALUE="<cfif isDefined("Form.Distributor_List")>#Form.Distributor_List#</cfif>">
+	<INPUT TYPE="Hidden" ID="Default_Payee" NAME="Default_Payee" VALUE="1">
+	<INPUT TYPE="Hidden" ID="Load_ID_From_Form" NAME="Load_ID_From_Form" VALUE="1">
+	<INPUT TYPE="Hidden" ID="Billback_ID" NAME="Billback_ID" VALUE="#FORM.Billback_ID#">
+	<INPUT TYPE="Hidden" ID="multiDistList" NAME="multiDistList" VALUE="#FORM.multiDistList#">	
+</FORM>
+
+
+
+</cfoutput>
+
+<CF_MessageWindow>
+<SCRIPT>
+	var bFormSubmitted = 0;
+	function CheckForErrors(redirect, disableClickedButtonName) {
+
+		ErrorCount = 0;
+		is_unkown_type = 0;
+		var shiptToLabel = "<cfoutput>#LCase(application.returned_customer_setting.shard_ship_to_label)#</cfoutput>";
+		<cfoutput>
+		var savedPayeeType = "#savedPayeeType#";
+		var savedPayeeID = "#savedPayeeID#";
+		var showDistributorChoices = 0;
+		var showOperatorChoices = 0;
+		var showBrokerChoices = 0;
+		var prodList = "#prodList#";
+		var CountDistributor = "#CountDistributor#";//D30517: Item not appearing on Billback 'programs' page after importing it
+		</cfoutput>
+		
+		//Use the app setting "Allow Multi Distributor Billbacks:"
+		<cfif appSettings.getMultiDistributorBB()>
+			var associatedShipTo = document.BB_Payee_Form.multiDistList.value;
+		<cfelse>
+			var associatedShipTo = document.BB_Payee_Form.Associated_Ship_To.value;
+		</cfif>
+
+		switch(lastknownselectedradio) {
+		
+			
+
+			case "1": //distributor
+				
+
+						<!---  DISTRIBUTOR is selected --->
+						error_text 		= "Please select a <cfoutput>#lcase(application.returned_customer_setting.distributor_label_singular)#</cfoutput>";
+						error_oSpan 	= document.all.error_distributor_select;
+
+						if(document.all.distributor_id.value.length == 0) {
+							ErrorCount++;
+							queueMessage(error_text, error_oSpan);
+						}
+						else
+						{
+							clearQueue(error_oSpan);
+						}
+
+						<!---  notes --->
+						error_text 		= "Notes may not be longer than 4000 characters. Please reduce the length of your notes.";
+						error_oSpan 	= document.all.distributor_notes_error;
+						if(document.all.Distributor_Notes.value.length > 3999) {
+							ErrorCount++;
+							queueMessage(error_text, error_oSpan);
+						}
+						else
+						{
+							clearQueue(error_oSpan);
+						}	
+						
+						<!---  D29495: check for payee selection change --->						
+						if(ErrorCount == 0 && savedPayeeType != "0" && savedPayeeType != ""){
+							if(	(savedPayeeType == 1 && savedPayeeID != document.all.distributor_id.value && associatedShipTo != document.all.distributor_id.value) || 
+								(savedPayeeType == 2 && associatedShipTo != document.all.distributor_id.value) ||
+								(savedPayeeType != 1 && savedPayeeType != 2)
+								){
+								//payee was distributor but is different from previously selected payee and is different from previous associated ship to
+								//or payee was operator and current payee is different from previous associated ship to
+								//or payee was not distributor or operator 
+								showDistributorChoices = 1;
+							}
+						}
+					
+			break;
+
+			case "2": //Operator
+			
+						var checkShipTo = "<CFOUTPUT>#Ship_To_For_Operator#</CFOUTPUT>";	
+									
+						<!---  operator is selected --->
+						error_text 		= "Please select an <cfoutput>#application.returned_customer_setting.operator_label_singular#</cfoutput>";
+						error_oSpan 	= document.all.error_operator_select;
+						if(document.operator_form.operator_id.value.length == 0) {
+							ErrorCount++;
+							queueMessage(error_text, error_oSpan);
+						}
+						else
+						{
+							clearQueue(error_oSpan);
+						}
+						if (checkShipTo == 1)
+						{				
+							<!---  operator is selected --->
+							error_text 		= "Please associate a " +shiptToLabel +" to this <cfoutput>#application.returned_customer_setting.operator_label_singular#</cfoutput>.";
+							error_oSpan 	= document.all.error_Associate_ShipTo;
+							<!---  D29495: check for payee selection change 
+							Require associated ship to
+							--->
+							if (associatedShipTo == "")  {
+								ErrorCount++;
+								queueMessage(error_text, error_oSpan);
+							}
+							else
+							{
+								clearQueue(error_oSpan);
+							}
+						}
+						
+						<!---  notes --->
+						error_text 		= "Notes may not be longer than 4000 characters. Please reduce the length of your notes.";
+						error_oSpan 	= document.all.operator_notes_error;
+						if(document.all.Operator_Notes.value.length > 3999) {
+							ErrorCount++;
+							queueMessage(error_text, error_oSpan);
+						}
+						else
+						{
+							clearQueue(error_oSpan);
+						}	
+						
+						<!---  D29495: check for payee selection change --->						
+						//compare prodList (distributor id for saved products) with multiDistList/Associated_Ship_To (associatedShipTo)
+						if(ErrorCount == 0 && prodList.length){
+							var arAssociatedShipTo = associatedShipTo.split(",");
+							var arProdList = prodList.split(",");
+							//check if there are any products associated to distributors that are not in currect associated distributor selection
+							Inner:
+							for(var i=0;i<arProdList.length;i++){
+								 if($.inArray(arProdList[i], arAssociatedShipTo) == -1){
+									showOperatorChoices = 1;
+									break Inner;
+								}
+								
+							}
+						}							
+					
+								
+			break;
+			
+			case "3": //broker
+						var checkShipTo = "<CFOUTPUT>#Ship_To_For_Broker#</CFOUTPUT>";
+				
+						<!---  Broker is selected --->
+						error_text 		= "Please select a <cfoutput>#lcase(application.returned_customer_setting.broker_label_singular)#</cfoutput>";
+						error_oSpan 	= document.all.error_broker_select;
+						if(document.broker_form.broker_id.value.length == 0) {
+							ErrorCount++;
+							queueMessage(error_text, error_oSpan);
+						}
+						else
+						{
+							clearQueue(error_oSpan);
+						}
+
+						if (checkShipTo == 1)
+						{				
+							<!---  broker is selected --->
+							error_text 		= "Please associate a " +shiptToLabel +" to this <cfoutput>#application.returned_customer_setting.broker_label_singular#</cfoutput>.";
+							error_oSpan 	= document.all.error_Associate_ShipTo;
+							<!---  check for payee selection change 
+							Require associated ship to
+							--->
+							if (associatedShipTo == "")  {
+								ErrorCount++;
+								queueMessage(error_text, error_oSpan);
+							}
+							else
+							{
+								clearQueue(error_oSpan);
+							}
+						}
+
+						<!---  notes --->
+						error_text 		= "Notes may not be longer than 4000 characters. Please reduce the length of your notes.";
+						error_oSpan 	= document.all.broker_notes_error;
+						if(document.all.Broker_Notes.value.length > 3999) {
+							ErrorCount++;
+							queueMessage(error_text, error_oSpan);
+						}
+						else
+						{
+							clearQueue(error_oSpan);
+						}
+						
+					
+						<!---  check for payee selection change --->						
+						//compare prodList (distributor id for saved products) with multiDistList/Associated_Ship_To (associatedShipTo)
+						if(ErrorCount == 0 && prodList.length){
+							var arAssociatedShipTo = associatedShipTo.split(",");
+							var arProdList = prodList.split(",");
+							//check if there are any products associated to distributors that are not in currect associated distributor selection
+							Inner:
+							for(var i=0;i<arProdList.length;i++){
+								 if($.inArray(arProdList[i], arAssociatedShipTo) == -1){
+									showBrokerChoices = 1;
+									break Inner;
+								}
+								
+							}
+						}
+			break;
+		}
+		
+			<!--- SHOW CONFIRMATION BOX IF ALL IS GOOD OR SHOW THE ERROR BOX --->
+			if(ErrorCount == 0) 
+			{
+			
+				if(redirect == "powerpunch")
+				{
+					BB_Payee_Form.RedirectTo.value="power_punch.cfm";
+				}
+				if(redirect == "bigbillback")
+				{					
+					BB_Payee_Form.RedirectTo.value="/billbacks/BigBillbacks/enter_bulk_information.cfm";
+				}
+				
+				<cfoutput>
+				if(showDistributorChoices){
+									
+					// show distibutor options window to user start
+					var sHtml = 'You are electing to change the Payee from the previously saved Payee.  The identity you are trying to save represents one or more conflicts with the identities currently saved at the product level for this billback.  Please select one of two choices:';
+					sHtml += '<br><br>';
+					sHtml += '<a href="##" onclick="javascript:SaveWithOption(\'DistributorPayeeRemoveExisting\');return true;">A. Click here to save selection and remove existing product entries for other #lcase(application.returned_customer_setting.distributor_label_plural)#.</a>';
+					sHtml += '<br><br>';
+					sHtml += '<a href="##" onclick="javascript:SaveWithOption(\'DistributorPayeeRetainExisting\');return true;">B. Click here to retain the existing entries for this billback, even though they do not all align with the new Payee selected.  Make this selection if your billback pays to a #lcase(application.returned_customer_setting.distributor_label_singular)# on behalf of others, as is often the case with centralized claims from customers such as U.S. Food Service.</a>';
+					//D30517: Item not appearing on Billback 'programs' page after importing it START
+					// we provide this option to user when payeetype is "DISTRIBUTOR" and we changing payee then we provide this option to user
+					if ((savedPayeeType == 1) && (CountDistributor == 0)) {
+					sHtml += '<br><br>';
+					sHtml += '<a href="##" onclick="javascript:SaveWithOption(\'DistributorPayeeReplaceExisting\');return true;">C. Click here to update all existing entries to match the new entity you selected.  Make this selection if your billback pays to a single distributor on behalf of the same distributor.</a>';
+					}
+					//D30517: Item not appearing on Billback 'programs' page after importing it END					
+					$.prompt(sHtml,
+						{ 
+						buttons:{Cancel: false},
+						callback: function(v,m,f){
+							return true;							
+						}
+					});
+					// show distibutor options window to user end
+					return false;
+				}
+				
+				if(showOperatorChoices || showBrokerChoices){
+					// show operator options window to user start
+					$.prompt("By saving this change, you will lose the existing relationships between the individual #lcase(application.returned_customer_setting.distributor_label_plural)# that may be associated with the item level details.  <br/><br/> Would you like to proceed?",
+						{ 
+						buttons:{Yes: true,Cancel: false},
+						callback: function(v,m,f){
+							if(v)submitForm();
+							return true;
+						}
+					});
+					// show operator options window to user end
+					return false;
+				}
+				
+				</cfoutput>
+
+				submitForm();
+				
+			}
+		
+		
+			else {
+				showMessageWindow()
+			}	
+	}
+	
+	function submitForm() {
+		if(!bFormSubmitted){
+			document.all.BB_Payee_Form.action = "payee_action.cfm";
+			document.all.BB_Payee_Form.submit()
+			disableButton('save_table', true, false);
+			<cfif appSettings.getUse_Big_Billbacks()>
+				disableButton('save_bigbillback_table', true, false);
+			</cfif>
+			bFormSubmitted = 1;
+		}
+	}
+	
+	function SaveWithOption(sOption) {
+		$.prompt.close();
+		document.all.BB_Payee_Form.saveOverwriteOption.value = sOption;
+		submitForm();
+	}
+
+</SCRIPT>
+
+<CFSET InfoBar_BBID = Billback_ID>
+<cfinclude template="billback_load_infobar.cfm">
+<script>
+try { window.parent.dyniframesize(); } catch (err) { };
+</script>
+</BODY>
+</HTML>

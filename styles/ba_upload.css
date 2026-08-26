@@ -1,0 +1,49 @@
+/*      
+Copyright (c) 2018 Blacksmith Applications, Inc.              
+Description:  styles for file upload details
+Modified By: Sharon Harris 2-Feb-2018 
+*/
+
+.upl-table{
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+ .upl-details {
+    display: flex;
+    align-items: stretch;
+    margin-top: 5px;
+ /*   max-width: 600px;   */ 
+
+ } 
+
+.ellipsis {
+    text-overflow: ellipsis;
+    
+    /* Required for text-overflow to do anything */
+    white-space: nowrap;
+    overflow: hidden;
+}
+.upl-name {
+    color:#343540;
+    flex-grow: 1;
+    max-width: 80%;
+    margin-bottom: 2px;
+}
+.upl-size {
+    flex: 0 0 70px;
+    padding-left:5px;
+    width: 70px;
+}
+.upl-result {
+/*    flex: 1;
+    text-align: right; */
+}
+
+.progress-bar {
+    width: 100%; 
+    background-color: #d8d9dd; }
+.progress-bar-progression {
+    width: 0%;
+    height: 6px;
+    background-color: #92d36e; }

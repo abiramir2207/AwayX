@@ -1,0 +1,18 @@
+===== QUERY: myQuery =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFormyQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mytable")>
+<cfif useLakebaseFormyQuery>
+	<cftry>
+		<cfset myQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("mytable", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormyQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormyQuery>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

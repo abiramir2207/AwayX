@@ -1,0 +1,24 @@
+===== QUERY: BillbacksToDelete =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbacksToDelete = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBillbacksToDelete>
+	<cftry>
+		<cfset BillbacksToDelete = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_code,bb_title,bb_amount,bb_date,auto_billback"
+			}), "bb_code,bb_title,bb_amount,bb_date,auto_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbacksToDelete = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbacksToDelete>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeleteTheBillbacks =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

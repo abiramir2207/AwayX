@@ -1,0 +1,88 @@
+===== QUERY: GetWorkRequest =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetWorkRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGetWorkRequest>
+	<cftry>
+		<cfset GetWorkRequest = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#Work_Request_ID#",
+				"select" = "work_title,request_type,app_area,user_created,client_priority,client_reference_number,item_status,urlenvironment,progbbddids,userinfo,errorevent,currentbehavior,expectedbehavior"
+			}), "work_title,request_type,app_area,user_created,client_priority,client_reference_number,item_status,urlenvironment,progbbddids,userinfo,errorevent,currentbehavior,expectedbehavior"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetWorkRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetWorkRequest>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetUserInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetWorkRequest.User_Created#",
+				"select" = "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+			}), "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetForgeRelease =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: SupportEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email,mappunchcompany"
+			}), "ba_support_email,mappunchcompany"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdatePunchlist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdatePunchlist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForUpdatePunchlist>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"work_request_id" = "eq.#Work_Request_ID#"
+			},
+			{
+				"ba_ticket_number" = "#Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunchlist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunchlist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

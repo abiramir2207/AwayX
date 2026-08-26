@@ -1,0 +1,49 @@
+===== QUERY: getCurrentlySelectedTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCurrentlySelectedTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds_type")>
+<cfif useLakebaseForgetCurrentlySelectedTypes>
+	<cftry>
+		<cfset getCurrentlySelectedTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usda_noi_epds_type", {
+				"usda_noi_epds_id" = "eq.#form.usda_noi_epds_id#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentlySelectedTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentlySelectedTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Delete =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDelete = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds_type")>
+<cfif useLakebaseForDelete>
+	<cftry>
+		<cfset application.oLakebase.updateRows("usda_noi_epds_type",
+			{
+				"usda_noi_epds_id" = "eq.#form.usda_noi_epds_ID#",
+				"type_id" = "eq.#x#"
+			},
+			{
+				"deleted" = "1",
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

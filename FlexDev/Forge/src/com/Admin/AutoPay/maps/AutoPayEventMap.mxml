@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<fx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.Admin.AutoPay.events.*;
+			import com.Admin.AutoPay.models.*;
+			import com.Admin.AutoPay.views.pm.*;
+			import com.Admin.AutoPay.views.*;
+			import com.shared.models.*;
+			import com.shared.events.MainEvent;
+			//import com.ContractProds.vos.*;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+	<!--<mate:Debugger level="{Debugger.ALL}" />-->
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  ***************************************************************************************** -->
+	<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.Models.Admin.AutoPay.AutoPayManager" />
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+
+	<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+	<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+			Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+		<ObjectBuilder generator="{AutoPayManager}" id="oAutoPayManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{AutoPayItemsGridManager}" id="oAutoPayItemsGridManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" />
+		<ObjectBuilder generator="{AutoPayPModel}" id="oAutoPayPModel" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{AutoPayItemsPModel}" id="oAutoPayItemsPModel" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{BAError}" id="oBAError"  />
+		<!--<MethodInvoker generator="{SettingsManager}" method="loadURLParameters"  />-->
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" useWeakReference="true" debug="false">
+		<EventAnnouncer type="{AutoPayEvent.GET_DATA}" generator="{AutoPayEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+		</EventAnnouncer>
+		
+		<EventAnnouncer type="{AutoPayEvent.GET_REPORT_LOCK}" generator="{AutoPayEvent}" />
+	</EventHandlers>
+
+	<!--GET DATA ******** modify this event to get data from CF ************ -->
+	   
+	<EventHandlers type="{AutoPayEvent.GET_DATA}" id="eGET_DATA" useWeakReference="true" debug="true">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getAutoPayData" arguments="{event.searchParms}">
+			<resultHandlers>
+				<MethodInvoker generator="{AutoPayManager}" method="getAutoPayResults" arguments="{resultObject}" />
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer type="{AutoPayEvent.BSA_ERROR}" generator="{AutoPayEvent}" >
+					<Properties sBaError="AUTO PAY SERVICE (get data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+		
+	<!--GET_REPORT_SUMMARY ******** get summary info about an Auto Pay Report************ -->
+	<EventHandlers type="{AutoPayEvent.GET_REPORT_SUMMARY}" id="eGET_REPORT_SUMMARY" useWeakReference="true" debug="true">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getReportSummary" arguments="{event.searchParms.reportId}">
+			<resultHandlers>
+				<MethodInvoker generator="{AutoPayManager}" method="getReportSummaryResults" arguments="{resultObject}" />
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer type="{AutoPayEvent.BSA_ERROR}" generator="{AutoPayEvent}" >
+					<Properties sBaError="AUTO PAY SERVICE (get report summary)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+		
+		<!--APPROVE_AUTO_PAY_REPORT ******** approve Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.APPROVE_AUTO_PAY_REPORT}" id="eAPPROVE_AUTO_PAY_REPORT" useWeakReference="true" debug="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="approveReport" arguments="{event.searchParms.reportId}">
+				<resultHandlers>
+					<MethodInvoker generator="{AutoPayManager}" method="approveAutoPayReportResult" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AutoPayEvent.BSA_ERROR}" generator="{AutoPayEvent}" >
+						<Properties sBaError="AUTO PAY SERVICE (approve auto pay report)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--DELETE_AUTO_PAY_REPORT ******** delete Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.DELETE_AUTO_PAY_REPORT}" id="eDELETE_AUTO_PAY_REPORT" useWeakReference="true" debug="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="deleteReport" arguments="{event.searchParms.reportId}">
+				<resultHandlers>
+					<MethodInvoker generator="{AutoPayManager}" method="deleteAutoPayReportResult" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AutoPayEvent.BSA_ERROR}" generator="{AutoPayEvent}" >
+						<Properties sBaError="AUTO PAY SERVICE (delete auto pay report)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--RUN_AUTO_PAY_REPORT ******** delete Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.RUN_AUTO_PAY_REPORT}" id="eRUN_AUTO_PAY_REPORT" useWeakReference="true" debug="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="runReport" arguments="{event.searchParms.reportId}">
+				<resultHandlers>
+					<MethodInvoker generator="{AutoPayManager}" method="runAutoPayReportResult" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AutoPayEvent.BSA_ERROR}" generator="{AutoPayEvent}" >
+						<Properties sBaError="AUTO PAY SERVICE (run auto pay report)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--COPY_AUTO_PAY_REPORT ******** copy Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.COPY_AUTO_PAY_REPORT}" id="eCOPY_AUTO_PAY_REPORT" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="copyEditAutoPayReport" arguments="{event}" />
+		</EventHandlers>
+		
+		<!--EDIT_AUTO_PAY_REPORT ******** edit Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.EDIT_AUTO_PAY_REPORT}" id="eEDIT_AUTO_PAY_REPORT" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="copyEditAutoPayReport" arguments="{event}" />
+		</EventHandlers>
+		
+		<!--MODIFY_AUTO_PAY_REPORT ******** edit Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.MODIFY_AUTO_PAY_REPORT}" id="eMODIFY_AUTO_PAY_REPORT" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="copyEditAutoPayReport" arguments="{event}" />
+		</EventHandlers>
+		
+		<!--EXPORT_UNIVERSAL ******** export Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.EXPORT_UNIVERSAL}" id="eEXPORT_UNIVERSAL" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="exportUniversal" arguments="{event}" />
+		</EventHandlers>
+		
+		<!--SELECT_ROW ******** select detail row in grid************ -->
+		<EventHandlers type="{AutoPayEvent.SELECT_ROW}" id="eSELECT_ROW" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="selectRow" arguments="{event.autoPayDetail}" />
+		</EventHandlers>
+		
+		<!--SET_SEARCH_PARMS ******** set search parms************ -->
+		<EventHandlers type="{AutoPayEvent.SET_SEARCH_PARMS}" id="eSET_SEARCH_PARMS" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="setSearchParms" arguments="{event.searchParms}" />
+		</EventHandlers>
+		
+		<!--GET_REPORT_LOCK ******** delete Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.GET_REPORT_LOCK}" id="eGET_REPORT_LOCK" useWeakReference="true" debug="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getReportLock" arguments="{event.lock}">
+				<resultHandlers>
+					<MethodInvoker generator="{AutoPayManager}" method="getReportLockResult" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{AutoPayEvent.BSA_ERROR}" generator="{AutoPayEvent}" >
+						<Properties sBaError="AUTO PAY SERVICE (get report lock)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--SET_REPORT_LOCK ******** set report lock.  After we run a report, a message with lock data is sent from server async when it is done************ -->
+		<EventHandlers type="{AutoPayEvent.SET_REPORT_LOCK}" id="eSET_REPORT_LOCK" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="getReportLockResult" arguments="{event.lock}" />
+		</EventHandlers>
+		
+		<!--UPDATE_REPORT_BY_ID ******** edit Auto Pay Report************ -->
+		<EventHandlers type="{AutoPayEvent.UPDATE_REPORT_BY_ID}" id="eUPDATE_REPORT_BY_ID" useWeakReference="true" debug="true">
+			<MethodInvoker generator="{AutoPayManager}" method="updateReportById" arguments="{event}" />
+		</EventHandlers>
+    <!-- ************************************************
+    	 ADD NEW EventHandlers Here   *******************
+         ************************************************-->
+		<!--............... FILTER_DATAGRID_COMPLETE ............................................-->
+		<EventHandlers type="{MainEvent.FILTER_DATAGRID_COMPLETE}" debug="true" id="eFILTER_DATAGRID_COMPLETE" useWeakReference="true">
+			<MethodInvoker generator="{AutoPayManager}" method="calculateTotals" arguments="{event}" />
+		</EventHandlers>
+
+    <!--LOAD APP SETTINGS *************************************************************************** -->
+   
+	<EventHandlers type="{AutoPayEvent.AutoPay_LOAD_APP_SETTINGS}" useWeakReference="true" debug="false" >
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" debug="false" >
+			
+			<resultHandlers>
+				<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}"  />
+			</resultHandlers>
+			
+			<faultHandlers>
+				
+				<EventAnnouncer type="{AutoPayEvent.BSA_ERROR}" generator="{AutoPayEvent}">
+					<Properties sBaError="AutoPay SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+		<!--............... SET_APP_SETTINGS ............................................-->
+		<EventHandlers type="{MainEvent.SET_LOCAL_APP_SETTINGS}" debug="true" id="eSET_LOCAL_APP_SETTINGS" useWeakReference="true">
+			<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+		</EventHandlers>
+
+
+	
+	<!--	*****************************************************************************************
+			***		BSA CUSTOM ERROR HANDLER 		*************************************************
+			***************************************************************************************** -->
+
+<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.ContractProds.models.BAError#showBAError()
+		** Invoke : com.ContractProds.models.BAError.showBAError()		
+		*			@see #roErrorService
+	    ** RemoteInvoke : roErrorService.logError()
+	    *		@see com.ContractProds.models.BAError#logError() 
+	    ** faultHandler : com.ContractProds.models.BAError.showBAError()   -->
+	<EventHandlers type="{AutoPayEvent.BSA_ERROR}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<!--<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>-->
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+	
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+		<!-- AutoPayPModel ....................................................... -->
+		<Injectors target="{AutoPayPModel}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="lock" source="{AutoPayManager}" sourceKey="lock"  softBinding="false" />
+			<PropertyInjector targetKey="actions" source="{AutoPayManager}" sourceKey="actions"  softBinding="false" />
+			<PropertyInjector targetKey="searchParms" source="{AutoPayManager}" sourceKey="searchParms"  softBinding="false" />
+			<PropertyInjector targetKey="autoPayDetail" source="{AutoPayManager}" sourceKey="autoPayDetail"  softBinding="false" />
+		</Injectors>
+		
+		<!-- AutoPayItemsPModel ....................................................... -->
+		<Injectors target="{AutoPayItemsPModel}" debug="false">
+			<!--<ObjectBuilder generator="{AutoPayItemsGridManager}" id="oAutoPayItemsGridManager2" constructorArguments="{scope.dispatcher}"  />-->
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<!--<PropertyInjector targetKey="bbHeader" source="{AutoPayManager}" sourceKey="bbHeader"  softBinding="false" />-->
+			<PropertyInjector targetKey="arrAutoPayItemsDgCols" source="{AutoPayItemsGridManager}" sourceKey="arrAutoPayItemsDgCols"  softBinding="false" />
+			<PropertyInjector targetKey="acAutoPay" source="{AutoPayManager}" sourceKey="acAutoPay"  softBinding="false" />
+			<PropertyInjector targetKey="totals" source="{AutoPayManager}" sourceKey="totals"  softBinding="false" />
+			<PropertyInjector targetKey="objSelectedReport" source="{AutoPayManager}" sourceKey="objSelectedReport"  softBinding="false" />
+			<PropertyInjector targetKey="lock" source="{AutoPayManager}" sourceKey="lock"  softBinding="false" />
+			<PropertyInjector targetKey="actions" source="{AutoPayManager}" sourceKey="actions"  softBinding="false" />
+			<PropertyInjector targetKey="autoPayDetail" source="{AutoPayManager}" sourceKey="autoPayDetail"  softBinding="false" />
+		</Injectors>
+		
+		<!-- AutoPayManager ....................................................... -->
+		<Injectors target="{AutoPayManager}" debug="false">
+			<!--<ObjectBuilder generator="{AutoPayItemsPModel}" id="oAutoPayItemsPModel2" constructorArguments="{scope.dispatcher}" />-->
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			
+		</Injectors>
+		
+		<!-- AutoPayHeaderForm ....................................................... -->
+		<Injectors target="{AutoPayHeaderForm}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{AutoPayPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- AutoPayItemsGrid ....................................................... -->
+		<Injectors target="{AutoPayItemsGrid}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{AutoPayItemsPModel}" softBinding="false"/>
+			<ListenerInjector eventType="{AutoPayEvent.FILTER_EMPTY_PAY_PERIOD}" method="hideEmptyPayPeriod" useWeakReference="true"/>
+		</Injectors>
+	</fx:Declarations>
+</LocalEventMap>

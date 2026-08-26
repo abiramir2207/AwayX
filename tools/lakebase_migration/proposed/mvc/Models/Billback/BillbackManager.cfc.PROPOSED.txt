@@ -1,0 +1,108 @@
+===== QUERY: updBBonReset =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getAllChildBBs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAllChildBBs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetAllChildBBs>
+	<cftry>
+		<cfset getAllChildBBs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#BBID#",
+				"deleted" = "eq.0",
+				"select" = "billback_id_int,billback_id"
+			}), "billback_id_int,billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllChildBBs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllChildBBs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAssociatedDeductionID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAssociatedDeductionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForgetAssociatedDeductionID>
+	<cftry>
+		<cfset getAssociatedDeductionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure_detail", {
+				"dd_closure_id" = "eq.#getAllChildBBs.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssociatedDeductionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssociatedDeductionID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAssociatedDeductionID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAssociatedDeductionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForgetAssociatedDeductionID>
+	<cftry>
+		<cfset getAssociatedDeductionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure_detail", {
+				"dd_closure_id" = "eq.#getAllChildBBs.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssociatedDeductionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssociatedDeductionID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryBillback =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qryGetUserID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryGetUserID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqryGetUserID>
+	<cftry>
+		<cfset qryGetUserID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"sales_person_id" = "eq.#strArrreassignToBBUser#",
+				"select" = "user_id"
+			}), "user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetUserID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetUserID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updAnalyst =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: qryBillback =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qgetIsSplit =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qLock =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUnlock =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

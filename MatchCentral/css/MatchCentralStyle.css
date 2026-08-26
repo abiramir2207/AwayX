@@ -1,0 +1,392 @@
+body {
+	font-family: Century Gothic;
+	font-size:10px;
+}
+
+th {
+	text-align:left;
+	background-color:#ffce84;
+	font-family: Century Gothic;
+}
+
+div,td,tr,table,input,select {
+	font-family: Century Gothic;
+	font-size:10px;
+	vertical-align:top;
+}
+
+
+/* Container Styles */
+#HelpContainer {
+	margin:5px 0;
+	position:absolute;
+	width:145px;	
+	height:640px;
+}
+#HelpContainer fieldset {
+	height:640px;
+}
+#MasterContainer {
+	position:absolute;
+	/* margin-left:150px; Removed, was allowing room for help container */
+	margin:0px;
+	width:970px;
+}
+#leftColumn {
+	width:300px;
+	float:left;
+	height:500px;
+	background-color:#EEE;
+}
+#rightColumn {
+	width:670px;
+	float:right;
+	height:500px;
+	background-color:#EEE;
+}
+
+#RightTopContainer {
+	width:100%;
+	height:50px;
+	background-color:#DDD;
+	margin:5px 5px 5px 0;
+	padding:5px;
+}
+#RightBottomContainer {
+	width:100%;
+	height:435px;
+	background-color:#DDD;
+	margin:0 5px 5px 0;
+	padding:5px;
+}
+
+#LeftTopContainer {
+	width:100%;
+	height:245px;
+	background-color:#DDD;
+	margin:5px;
+	padding:5px;
+}
+#LeftBottomContainer {
+	width:100%;
+	height:240px;
+	background-color:#DDD;
+	margin:0 5px 5px 5px;
+	padding:5px;
+}
+
+#actionBar {
+	width:100%;
+	background-color:#DDD;
+	margin:0 15px 0 0;
+	padding:0 15px 0 0;
+}
+#masterLoadingDiv {
+	position:absolute;
+	margin:0;
+	width:970px;
+	height:530px;
+	background-color:black;
+	filter:alpha(opacity=40);
+	-moz-opacity:.40;
+	opacity:.40;
+	z-index:3;
+}
+#loaderDiv{
+	position:absolute;
+	width:250px;
+	margin-top:235px;
+	margin-left:375px;
+	padding:3px;
+	text-align:left;
+	font-weight:bold;
+	font-size:10px;
+	background-color:white;
+	border:3px outset;
+	z-index:4;	
+}
+#miniLoader{
+	text-align:left;
+	font-weight:bold;
+	font-size:10px;
+	width:200px;
+	height:18px;
+	margin: 5px 0 0 0;
+}
+
+/* List Styles */
+#SearchContainer {
+	width:420px;
+	height:400px;
+	position:absolute;
+	background-color:#FFF;
+	border-left:2px solid #AAA;
+	border-right:2px solid #AAA;
+	border-bottom:2px solid #AAA;
+	margin-left:10px;
+	font-size:10px;
+	padding:0;
+	overflow:auto;
+	z-index:2;
+}
+#itemList {
+	width:655px;
+	height:425px;
+	background:#FFF;
+	position:absolute;
+	border:2px inset;
+	font-size:10px;
+	padding:2px;
+	overflow:auto;
+}
+#matchList {
+	width:280px;
+	height:230px;
+	background:#FFF;
+	position:absolute;
+	border:2px inset;
+	font-size:10px;
+	padding:2px;
+	overflow:auto;
+}
+#workList {
+	width:280px;
+	height:235px;
+	background:#FFF;
+	position:absolute;
+	border:2px inset;
+	font-size:10px;
+	padding:2px;
+	overflow:auto;
+}
+#previewPaneWrapper {
+	font-family: Century Gothic;
+	position:absolute;
+	width:900px;
+	height:500px;
+	overflow:hidden;
+	background-color:white;
+	left:50px;
+	top:20px;
+	margin:0;
+	background:buttonface;
+	padding:2px 2px 20px 2px;
+	z-index:2;
+	border:2px outset white;
+}
+#previewPane {
+	overflow:auto;
+	background-color:white;
+	border:2px inset white;
+	width:100%;
+	height:100%;
+	clear:both;
+}
+
+/* Special Styles */
+#waterMark {
+	text-align:center;
+	vertical-align:middle;
+	background-color:#EEE;
+	color:#CCC;
+	height:100%;
+	width:100%;
+	font-size:30px;
+}
+
+.itemListWatermarkMargin {
+	padding-top:165px;
+}
+.matchListWatermarkMargin {
+	padding-top:95px;
+}
+.workListWatermarkMargin {
+	padding-top:95px;
+}
+
+#remainingDollarAmount {
+	width:200px;
+	height:100%; /* This is so that the box for the dollar amount at the top right can be modified. */
+	background-color:#FFF;
+	float:right;
+	border:2px inset;
+	color:green;
+	font-size:26px;
+	font-weight:bolder;
+	text-align:right;
+	padding:2px;
+	margin-left:25px; /* IE 10- This is so that we have a margin on the left for the dollar amount at the top right. */
+}
+
+.rowEven {
+	background-color:#CFC;
+	border-bottom:1px solid black;
+}
+.rowOdd {
+	background-color:#FFF;
+	border-bottom:1px solid black;
+}
+.rowSelected {
+	background-color:#BBB;
+	border-bottom:1px solid black;
+}
+.rowSelectedAll {
+	background-color:#E55;
+	border-bottom:1px solid black;
+}
+
+.hover {
+	background-color:#DDD;
+	border-bottom:1px solid black;
+}
+.unhover {
+	background-color:#FFF;
+	border-bottom:1px solid black;
+}
+
+.searchHeader {
+	border-bottom:1px solid black;
+	font-weight:bold;
+	background-color:#ffce84;
+}
+.searchRow {
+	border-bottom:1px solid black;
+}
+.toolTip {
+	position:absolute;
+	width:200px;
+	background-color:lightyellow;
+	border:2px solid black;
+	padding:3px;
+}
+.toolTip2 {
+	position:absolute;
+	width:250px;
+	top:150px;
+	left:140px;
+	background-color:lightyellow;
+	border:2px solid black;
+	padding:3px;
+	color:black;
+	text-align:left;
+	overflow:visible;
+	z-index:1000;
+}
+.formError {
+	width:200px;
+	background-color:red;
+	border:1px solid black;
+	padding:2px;
+	font-weight:bold;
+}
+.winclose {
+	background-image:url('/images/win_close.gif');
+	background-repeat:no-repeat;
+	background-position:center center;
+}
+.winclosehover {
+	background-image:url('/images/win_close_over.gif');
+	background-repeat:no-repeat;
+	background-position:center center;
+}
+.wincloseclick {
+	background-image:url('/images/win_close_down.gif');
+	background-repeat:no-repeat;
+	background-position:center center;
+}
+/* Search Styles */
+#searchBox {
+	position:absolute;
+	width:100%;
+}
+#tabHeader {
+	width:100%;
+	background-color:#DDD;
+	height:25px;
+	padding:0px;
+}
+#tab a {
+	width:130px;
+	height:25px;
+	background-color:#DDD;
+	float:left;
+	padding:2px;
+	text-align:center;
+	font-size:13px;
+	color:black;
+}
+#tab a:hover {
+	width:130px;
+	height:25px;
+	float:left;
+	padding:2px;
+	text-align:center;
+	background-color:#CCC;
+	font-size:13px;
+	color:black;
+}
+#tabSelected {
+	width:130px;
+	height:25px;
+	background-color:#FFF;
+	float:left;
+	padding:2px;
+	text-align:center;
+	font-size:13px;
+	color:black;
+}
+
+
+/* TAB SLIDER DROPDOWN */
+
+#accordion {
+	width:200px;
+	left:20px;
+	top:0;
+	font-family: Trebuchet MS, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	position:absolute !important;
+	overflow:hidden;
+	z-index:100;
+}
+#tab-body {
+	bottom:0px;
+	margin:0px;
+	padding:0px;
+	z-index:101;
+	position:relative;
+	color:#FFFFFF;
+	z-index:101;
+}
+
+#contents table {
+	border-bottom:1px solid #DA1074;
+	background-image:url('/images/tab-contents.gif');
+	background-repeat:repeat-y;
+}
+#contents td {
+	padding:3px 5px;
+	color:#FFFFFF;
+	z-index:102;
+}
+#contents td.header {
+	font-weight:bold;
+	text-align:center;
+	border-bottom:1px solid white;
+}
+
+#tabDrop {
+	height:20px;
+	font-size:10px;
+	font-weight:bold;
+	text-align:center;
+	color:#FFFFFF;
+	padding:2px 0 0 0;
+	margin:0;
+	background-image:url('/images/tab-down.gif');
+	background-repeat:no-repeat;
+	cursor:pointer;
+	z-index:101;
+}
+
+

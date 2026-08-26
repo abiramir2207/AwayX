@@ -1,0 +1,95 @@
+
+
+<BODY BGCOLOR="White" TEXT="Black" LINK="Blue" VLINK="Blue" ALINK="Red" LEFTMARGIN="0" TOPMARGIN="0">
+
+
+	<TABLE HEIGHT="97%" WIDTH="100%" CELLPADDING="0" CELLSPACING="0" BORDER="0">
+	<TR><TD HEIGHT="100%" VALIGN="top">
+
+<BLOCKQUOTE><BLOCKQUOTE>
+
+<BR><BR><BR><BR><BR>
+
+
+	
+		<TABLE BORDER="0" CELLPADDING="10" CELLSPACING="0">
+		<TR>
+			<TD VALIGN="top"><IMG SRC="/images/event.gif" BORDER="0" ALT=""></TD>
+			<TD VALIGN="top">
+				<B>
+				We are sorry for the inconvenience, but we are unable to execute this action at this time.<BR>
+				This event has been logged and is being addressed.<BR><BR>
+				Event # 83
+				</B>
+				<BR><BR><BR>
+				<FONT COLOR="Navy"><H4>Blacksmith Applications, Inc.</H4></FONT>
+			</TD>
+		</TR>
+		</TABLE>
+
+
+	</TD></TR>
+	</TABLE>
+
+</BLOCKQUOTE></BLOCKQUOTE>
+
+		
+		<SCRIPT LANGUAGE="JavaScript">  
+		
+			window.open('/Error_Reason_Frm.cfm?CFML_Error_Log_ID=83&User_ID=0&Program_ID=0&Billback_ID=0&Deduction_ID=0','ErrorMessageComments','toolbar=no,width=450,height=365,resizable=no,scrollbars=no,left='+(window.screen.availWidth-750)+',top='+(window.screen.availHeight-420));
+		
+		</SCRIPT>
+		
+		
+		
+
+
+<SCRIPT LANGUAGE="JavaScript">
+	function hideHeaderAndFooter()
+	{
+		var hideHeaders = false;
+		
+		//iframes
+		if(window != window.top)
+		{
+			hideHeaders = true;
+		}
+		//pop ups
+		else if(window.opener)
+		{
+			hideHeaders = true;
+		}
+		
+		if(hideHeaders)
+		{
+			if(document.all.TABLE_HEADER)
+			{
+				if(document.all.TABLE_HEADER.length)
+				{
+				}
+				else
+				{
+					document.all.TABLE_HEADER.style.visibility = "hidden";
+				}
+			}
+			if(document.all.TABLE_FOOTER)
+			{
+				if(document.all.TABLE_FOOTER.length)
+				{
+				}
+				else
+				{
+					document.all.TABLE_FOOTER.style.visibility = "hidden";
+				}
+			}
+		}
+	}
+	document.body.onload = new Function("hideHeaderAndFooter()");
+		if (window.parent.contentIFrame != undefined)
+	    {
+			window.parent.dyniframesize();
+	    }
+</SCRIPT>
+</BODY>
+</HTML>
+

@@ -1,0 +1,295 @@
+<cfcomponent hint="HQ PositionManager" extends="components.base">
+
+	<cffunction name="init" output="false" returntype="components.user.HQPositionManager">
+	
+		<cfreturn this />
+		
+	</cffunction>
+	
+	<cffunction name="getAll" output="false" returntype="query">
+	
+		<cfargument name="HQ_Position_ID" type="numeric" required="false" default="0">
+	
+		<cfquery name="qGetAllHQPositions" datasource="#application.datasource#">
+			SELECT	*
+			FROM	HQ_Positions
+			WHERE	Deleted = 0
+			<cfif arguments.HQ_Position_ID>
+					AND HQ_Position_ID = #arguments.HQ_Position_ID#
+			</cfif>
+			ORDER BY HQ_Position_Order
+		</cfquery>
+	
+		<cfreturn qGetAllHQPositions />
+		
+	</cffunction>
+	
+	<cffunction name="getAStoAssign" output="false" returntype="query">
+	
+		<cfargument name="HQ_Position_ID" type="numeric" required="false" default="0">
+		<cfargument name="HQ_Position_Order" type="numeric" required="false" default="0">
+
+ 		<cfquery name="getMaxASAssigned" datasource="#application.datasource#">
+		select ISNULL(max(Authority_Sequence_order),0) as max_AS
+		from Authority_Sequence
+		inner join HQ_Positions on
+		HQ_Positions.HQ_Position_id =Authority_Sequence.HQ_Position_id
+		and HQ_Positions.deleted = 0
+		where Authority_Sequence.HQ_Position_id ! = 0
+		and Authority_Sequence.deleted = 0
+		and HQ_Positions.HQ_Position_order < #arguments.HQ_Position_Order#
+		</cfquery>
+		
+		<cfquery name="getMinASAssigned" datasource="#application.datasource#">
+				select ISNULL(min(Authority_Sequence_order),0) as max_AS
+				from Authority_Sequence
+				inner join HQ_Positions on
+				HQ_Positions.HQ_Position_id =Authority_Sequence.HQ_Position_id
+				and HQ_Positions.deleted = 0
+				where Authority_Sequence.HQ_Position_id ! = 0
+				and Authority_Sequence.deleted = 0
+				and HQ_Positions.HQ_Position_order > #arguments.HQ_Position_Order#
+		</cfquery>
+	
+		<cfquery name="qgetAStoAssign" datasource="#application.datasource#">
+			SELECT	*
+			FROM	Authority_Sequence
+			WHERE	Deleted = 0
+			and (HQ_Position_ID = 0 OR HQ_Position_ID = #arguments.HQ_Position_ID#)
+			<cfif getMaxASAssigned.max_AS NEQ 0>
+			and Authority_Sequence_order > #getMaxASAssigned.max_AS#
+			</cfif>
+			<cfif getMinASAssigned.max_AS NEQ 0>
+			and Authority_Sequence_order < #getMinASAssigned.max_AS#
+			</cfif>
+			ORDER BY Authority_Sequence_Order
+		</cfquery>
+	
+		<cfreturn qgetAStoAssign />
+		
+	</cffunction>
+	
+	<cffunction name="getASAssigned" output="false" returntype="query">
+		<cfargument name="HQ_Position_ID" type="numeric" required="false" default="0">
+			<cfquery name="qgetASAssigned" datasource="#application.datasource#">
+			SELECT	Authority_Sequence_ID
+			FROM	Authority_Sequence
+			WHERE	Deleted = 0
+			and HQ_Position_ID = #arguments.HQ_Position_ID#
+			ORDER BY Authority_Sequence_Order
+		</cfquery>
+	
+		<cfreturn qgetASAssigned />
+	</cffunction>
+	
+	<cffunction name="InsertAssignAS" output="false">
+		<cfargument name="HQ_Position_ID" type="numeric" required="false" default="0">
+		<cfargument name="Authority_Sequence_ID" type="string" required="false" default="">
+		<cfquery name="qDeleteAssignAS" datasource="#application.datasource#">
+			update Authority_Sequence
+			set HQ_Position_ID =  0
+			where HQ_Position_ID =  #arguments.HQ_Position_ID#
+		</cfquery>
+		<cfif LEN(arguments.Authority_Sequence_ID) GT 0>
+		<cfquery name="qInsertAssignAS" datasource="#application.datasource#">
+			update Authority_Sequence
+			set HQ_Position_ID =  #arguments.HQ_Position_ID#
+			where Authority_Sequence_id in (#arguments.Authority_Sequence_ID#)
+		</cfquery>
+		</cfif>
+		
+	</cffunction>
+	
+		<cffunction name="DeleteAssignAS" output="false">
+		<cfargument name="HQ_Position_ID" type="numeric" required="false" default="0">
+		<cfquery name="qDeleteAssignAS" datasource="#application.datasource#">
+			update Authority_Sequence
+			set HQ_Position_ID =  0
+			where HQ_Position_ID =  #arguments.HQ_Position_ID#
+		</cfquery>
+		</cffunction>
+		
+	<cffunction name="getHQPositionLevel" output="false" returntype="query">
+	
+		<cfargument name="HQPositionId" type="numeric" required="true">
+	
+		<cfquery name="qGetHQPositionLevel" datasource="#application.datasource#">
+			SELECT	HQ_Position_Order
+			FROM	HQ_Positions
+			WHERE	Deleted = 0
+					AND HQ_Position_ID = #arguments.HQPositionId#			
+		</cfquery>
+	
+		<cfreturn qGetHQPositionLevel />
+		
+	</cffunction>
+	
+	<cffunction name="addEditSequence" output="false" returntype="string">
+	
+		<cfargument name="HQPositionId" type="numeric" required="true">
+		<cfargument name="HQPositionOrder" type="numeric" required="true">
+		<cfargument name="HQPositionDesc" type="string" required="true">
+		<cfargument name="AccessStructure" type="struct" required="false">
+		
+		<cfset returnValue = "">
+		<!------ Find if same desc exist for other record ----->
+		<cfquery name="qGetSameName" datasource="#application.datasource#">
+			SELECT	*
+			FROM	HQ_Positions
+			WHERE	HQ_Positions.Deleted = 0
+					AND HQ_Positions.HQ_Position_ID <> #arguments.HQPositionId#
+					AND HQ_Positions.HQ_Position_Name = '#arguments.HQPositionDesc#'
+		</cfquery>
+		
+		<cfif NOT qGetSameName.recordCount>
+		
+			<cfif arguments.HQPositionId><!------ Edit ----->
+			
+				<!------ Edit the description alone ----->
+				<cfquery name="qUpdateAS" datasource="#application.datasource#">
+					UPDATE	HQ_Positions
+					SET		HQ_Position_Name = '#arguments.HQPositionDesc#',
+							Updated_By = '#arguments.AccessStructure.user_id#',
+							Updated_Date = GetDate()
+					WHERE	HQ_Position_ID = #arguments.HQPositionId#
+				</cfquery>
+				
+			<cfelse><!------ Insert ----->
+			
+				<!------ 1: Increment order # for all order >= current order ----->
+				<cfquery name="qUpdateOrder" datasource="#application.datasource#">
+					UPDATE	HQ_Positions
+					SET		HQ_Position_Order = HQ_Position_Order + 1,
+							Updated_By = '#arguments.AccessStructure.user_id#',
+							Updated_Date = GetDate()
+					WHERE	Deleted = 0
+							AND HQ_Position_Order >= #arguments.HQPositionOrder#
+				</cfquery>
+				
+				<cfquery name="qInsertAS" datasource="#application.datasource#">
+					INSERT INTO HQ_Positions (HQ_Position_Order, HQ_Position_Name, Updated_By, Updated_Date)
+					VALUES (#arguments.HQPositionOrder#, '#arguments.HQPositionDesc#', '#arguments.AccessStructure.user_id#', GetDate())
+				</cfquery>
+			
+			</cfif>
+			
+			<cfset returnValue = "">
+		
+		<cfelse>
+		
+			<cfset returnValue = "Description already exists">
+		
+		</cfif>
+		
+		<cfreturn returnValue />
+		
+	</cffunction>
+	
+	
+	<cffunction name="getASAssosiated" output="false" returntype="query">
+	
+		<cfargument name="HQPositionId" type="numeric" required="true">
+		
+		<cfquery name="qGetASAssosiated" datasource="#application.datasource#">
+			SELECT 	TOP 1 *
+			FROM	Authority_Sequence
+			WHERE	Deleted = 0
+					AND HQ_Position_ID = #arguments.HQPositionId#
+					AND HQ_Position_ID <> 0
+		</cfquery>
+		
+		<cfreturn qGetASAssosiated />
+		
+	</cffunction>
+	
+	<cffunction name="deleteSequence" output="false" returntype="string">
+	
+		<cfargument name="HQPositionId" type="numeric" required="true">
+		<cfargument name="AccessStructure" type="struct" required="false">
+		
+		<cfset returnValue = "">
+		
+		<cfset qgetASAssosiated = this.getASAssosiated(arguments.HQPositionId) />
+		
+		<cfif NOT qgetASAssosiated.recordCount>
+		
+			<!------ Get current order ----->
+			<cfquery name="qGetAuthOrder" datasource="#application.datasource#">
+				SELECT	HQ_Position_Order
+				FROM	HQ_Positions
+				WHERE	HQ_Position_ID = #arguments.HQPositionId#
+			</cfquery>
+			
+			<cfif qGetAuthOrder.recordCount>
+			
+				<!------ 1: Decrease order # for all order > current order ----->
+				<cfquery name="qUpdateOrder" datasource="#application.datasource#">
+					UPDATE	HQ_Positions
+					SET		HQ_Position_Order = HQ_Position_Order - 1,
+							Updated_By = '#arguments.AccessStructure.user_id#',
+							Updated_Date = GetDate()
+					WHERE	Deleted = 0
+							AND HQ_Position_Order > #qGetAuthOrder.HQ_Position_Order#
+				</cfquery>
+					
+				<!------ Delete ----->
+				<cfquery name="qUpdateAS" datasource="#application.datasource#">
+					UPDATE	HQ_Positions
+					SET		Deleted = 1,
+							Updated_By = '#arguments.AccessStructure.user_id#',
+							Updated_Date = GetDate()
+					WHERE	HQ_Position_ID = #arguments.HQPositionId#
+				</cfquery>
+				
+				<cfset returnValue = "">
+			
+			</cfif>
+		
+		<cfelse>
+		
+			<cfset returnValue = "In Use">
+		
+		</cfif>
+		
+		<cfreturn returnValue />
+		
+	</cffunction>
+	
+	<cffunction name="editSequenceOrder" output="false" returntype="string">
+	
+		<cfargument name="HQPositionId" type="numeric" required="true">
+		<cfargument name="newHQPositionOrder" type="numeric" required="true">
+		
+		<cfset returnValue = "">
+		
+		<!------ Update Order ----->
+		<cfquery name="qUpdateAS" datasource="#application.datasource#">
+			UPDATE	HQ_Position
+			SET		HQ_Position_Order = #arguments.newHQPositionOrder#
+			WHERE	HQ_Position_ID = #arguments.HQPositionId#
+		</cfquery>		
+		
+		<cfreturn returnValue />
+		
+	</cffunction>
+	
+	<cffunction name="InsertAssignRT" output="false">
+		<cfargument name="formScope" required="true" type="struct" />
+		<cfquery name="deleteRT" datasource="#application.datasource#">
+			Delete from RevisionType_Approval
+		</cfquery>
+		<cfquery name="qInsertRT" datasource="#application.datasource#">
+			INSERT INTO RevisionType_Approval (Revision_TypeA, Revision_TypeB,Revision_TypeC)
+			VALUES ( #Evaluate("arguments.formScope.HQPosition_A")#,  #Evaluate("arguments.formScope.HQPosition_B")#, #Evaluate("arguments.formScope.HQPosition_C")#)
+		</cfquery>
+	</cffunction>
+	
+	<cffunction name="getRevisionHQAssigned" output="false" returntype="query">
+		<cfquery name="qgetRevisionHQAssigned" datasource="#application.datasource#">
+			select * from
+			RevisionType_Approval
+		</cfquery>
+		<cfreturn qgetRevisionHQAssigned>
+	</cffunction>
+	
+</cfcomponent>

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	MinMaxPanel (aka Minimize-Maximize Panel)
+	
+	This custom component creates a Panel with min and max buttons in the 
+	upper-right corner, seemingly in the title area of the Panel.
+	
+	What is actually happening is that this custom component extends
+	Canvas and positions two buttons on top of a Panel.
+	
+	Using the new component creation architecture of Flex 2, you can
+	pass to this component the children you wish the panel to have:
+	
+	<MinMaxPanel title="Some Title">
+		<mx:Text text="Your Name:" width="100%" />
+		<mx:TextInput id="name" />
+	</MinMaxPanel>
+	
+	In addition to content, you can also populate a ControlBar using the
+	controlComponents property:
+	
+	<MinMaxPanel title="Some Title">
+		<mx:Text text="Your Name:" width="100%" />
+		<mx:TextInput id="name" />
+		<controlComponents>
+			<mx:Button label="Submit" />
+		</controlComponents>
+	</MinMaxPanel>
+-->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:s="library://ns.adobe.com/flex/spark" xmlns="*" 
+	creationComplete="initComp()" backgroundAlpha="1" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+	
+	<!-- setting subComponents as the default property of this component
+	     makes it possible to do the examples above and the developer is
+	     none the wiser
+	  -->
+	<mx:Metadata>
+		[DefaultProperty("subComponents")]
+		
+		[Event("minimized")]
+		[Event("maximized")]
+		[Event("normalized")]
+	</mx:Metadata>
+	
+	<!-- states and transitions are used for the minimize and maximize
+	     conditions. note that the inherited properties of maxWidth
+	     and maxHeight are used for the maximization bounds.
+	  -->
+	<mx:states>
+		<mx:State name="minimized">
+			<mx:SetProperty name="height" value="32"/>
+		</mx:State>
+		<mx:State name="maximized">
+			<mx:SetProperty name="width" value="{maxWidth}"/>
+			<mx:SetProperty name="height" value="{maxHeight}"/>
+		</mx:State>
+	</mx:states>
+	
+	<mx:transitions>
+		<mx:Transition fromState="*" toState="*">
+			<mx:Resize target="{this}" />
+		</mx:Transition>
+	</mx:transitions>
+
+	<mx:Script>
+	<![CDATA[
+		
+		import mx.core.ScrollPolicy;
+		
+		// the title property
+		private var _panelTitle:String;
+		public function set panelTitle(t:String) : void
+		{
+			_panelTitle = t;
+		}
+		[Bindable] 
+		public function get panelTitle() : String
+		{
+			return _panelTitle;
+		}
+		
+		// the subComponents property (default)
+		private var _myChildren:Array;
+		public function set subComponents(a:Array) : void
+		{
+			_myChildren = a;
+		}		
+		public function get subComponents() : Array
+		{
+			return _myChildren;
+		}
+		
+		private function addSubComponents() : void
+		{
+			if( _myChildren == null ) return;
+			for(var i:int=0; i < _myChildren.length; i++) {
+				panel.addElement( _myChildren[i] );
+			}
+		}
+		
+		// the controlComponents property
+		private var _myControlChildren:Array;
+		public function set controlComponents(a:Array) : void
+		{
+			_myControlChildren = a;
+		}
+		public function get controlComponents() : Array
+		{
+			return _myControlChildren;
+		}
+		
+		private function addControls() : void
+		{
+			/*if( _myControlChildren == null ) return;
+			for(var i:int=0; i < _myControlChildren.length; i++) {
+				controlBar.addChild( _myControlChildren[i] );				
+			}*/
+		}
+		
+		// display minimize button property
+		[Bindable]
+		public var showMinimize:Boolean = true;
+		
+		// display maximize button property
+		[Bindable]
+		public var showMaximize:Boolean = true;
+		
+		private function initComp() : void
+		{
+			if( !showMinimize ) minButton.width=0;
+			if( !showMaximize ) maxButton.width=0;
+		}
+		
+		// minimizes (or restores) this control
+		public function minimize(fireEvent:Boolean=true) : void
+		{
+			if( currentState == 'minimized' ) {
+				currentState = '';
+				if( fireEvent ) dispatchEvent( new Event("normalized") );
+			}
+			else {
+				currentState = 'minimized';
+				if( fireEvent ) dispatchEvent( new Event("minimized") );
+			}
+		}
+		
+		// maximizes (or restores) this control
+		public function maximize(fireEvent:Boolean=true) : void
+		{
+			if( currentState == 'maximized' ) {
+				currentState = '';
+				if( fireEvent ) dispatchEvent( new Event("normalized") );
+			}
+			else {
+				currentState = 'maximized';
+				if( fireEvent ) dispatchEvent( new Event("minimized") );
+			}
+		}
+		
+		public function normalize(fireEvent:Boolean=true) : void
+		{
+			currentState = '';
+			if( fireEvent ) dispatchEvent( new Event("normalized") );
+		}
+	]]>
+	</mx:Script>
+	<!--creationComplete="addSubComponents(); addControls()"-->
+	<s:Panel id="panel" title="{panelTitle}"
+		left="0" top="0" bottom="0" right="0"
+		initialize="addSubComponents();" color="#000000"
+		>
+		<!--
+		<mx:ControlBar id="controlBar" width="0" height="0" 
+			           label="test" verticalAlign="bottom"
+			           tabEnabled="true">
+		</mx:ControlBar>
+		-->		
+	</s:Panel>
+	
+	<!-- position the min and max buttons on top of the Panel.
+		 the buttons are in an HBox so if one is hidden the HBox
+		 will make sure the other is shifted to the right.-->
+	  
+	<mx:HBox top="0" right="10" verticalAlign="top">
+		<mx:LinkButton top="0" right="40"
+				id="minButton" 
+				icon="@Embed('assets/Images/minimize_icon.gif')"
+				visible="{showMinimize}" 
+				click="minimize()" height="10" 
+				toolTip="click to expand/collapse" 
+				tabEnabled="false"/>
+		<mx:LinkButton top="0" right="40"  
+				id="maxButton"
+				icon="@Embed('assets/Images/maximize_icon.gif')" 
+				visible="{showMaximize}"
+				click="maximize()"/>
+	</mx:HBox>
+	
+</mx:Canvas>

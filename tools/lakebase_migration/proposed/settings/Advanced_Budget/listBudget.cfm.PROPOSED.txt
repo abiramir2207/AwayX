@@ -1,0 +1,139 @@
+===== QUERY: qBusinessSegmentCount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: vars.defaultClasses =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvars_defaultClasses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_class")>
+<cfif useLakebaseForvars_defaultClasses>
+	<cftry>
+		<cfset vars.defaultClasses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_class", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"default_filter" = "eq.1",
+				"select" = "budget_class_id"
+			}), "budget_class_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvars_defaultClasses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvars_defaultClasses>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: vars.classes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvars_classes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_class")>
+<cfif useLakebaseForvars_classes>
+	<cftry>
+		<cfset vars.classes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_class", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "created_date.asc",
+				"select" = "budget_class_number,budget_class_desc,budget_class_id,default_filter"
+			}), "budget_class_number,budget_class_desc,budget_class_id,default_filter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvars_classes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvars_classes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CodeTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCodeTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget")>
+<cfif useLakebaseForCodeTypes>
+	<cftry>
+		<cfset CodeTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget", {
+				"deleted" = "eq.0",
+				"order" = "budget_code.asc",
+				"select" = "budget_code"
+			}), "budget_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCodeTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCodeTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GroupTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGroupTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_group")>
+<cfif useLakebaseForGroupTypes>
+	<cftry>
+		<cfset GroupTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_group", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "budget_group_desc.asc",
+				"select" = "budget_group_desc as gtype,budget_group_id"
+			}), "budget_group_desc as gtype,budget_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGroupTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGroupTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BudgetTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBudgetTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_contribution_factor_type")>
+<cfif useLakebaseForBudgetTypes>
+	<cftry>
+		<cfset BudgetTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_contribution_factor_type", {
+				"deleted" = "eq.0",
+				"order" = "contribution_factor_type.asc",
+				"select" = "contribution_factor_type as btype,budget_contribution_factor_type_id"
+			}), "contribution_factor_type as btype,budget_contribution_factor_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBudgetTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBudgetTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: SegmentTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSegmentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForSegmentTypes>
+	<cftry>
+		<cfset SegmentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "business_unit_desc.asc",
+				"select" = "business_unit_desc as segment,business_segment_id"
+			}), "business_unit_desc as segment,business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSegmentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSegmentTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

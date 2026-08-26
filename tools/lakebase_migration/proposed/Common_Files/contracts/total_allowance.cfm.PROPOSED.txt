@@ -1,0 +1,225 @@
+===== QUERY: getfloor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetfloor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetfloor>
+	<cftry>
+		<cfset getfloor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "floor_price"
+			}), "floor_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetfloor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetfloor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetFloor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetFloor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetFloor>
+	<cftry>
+		<cfset GetFloor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "floor_price"
+			}), "floor_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFloor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFloor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetFloor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetFloor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetFloor>
+	<cftry>
+		<cfset GetFloor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "floor_price"
+			}), "floor_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFloor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFloor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ItemDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForItemDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForItemDetails>
+	<cftry>
+		<cfset ItemDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "item,description"
+			}), "item,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForItemDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForItemDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetItemInformation =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetItemInformation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetItemInformation>
+	<cftry>
+		<cfset GetItemInformation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "item,description,net_weight"
+			}), "item,description,net_weight"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetItemInformation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetItemInformation>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPriceList =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getBidRequestCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetBidRequestCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetBidRequestCosts>
+	<cftry>
+		<cfset getBidRequestCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.10"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBidRequestCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBidRequestCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFixedPriceCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetFixedPriceCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetFixedPriceCosts>
+	<cftry>
+		<cfset getFixedPriceCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedPriceCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedPriceCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFormulaPriceCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetFormulaPriceCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetFormulaPriceCosts>
+	<cftry>
+		<cfset getFormulaPriceCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.5"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFormulaPriceCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFormulaPriceCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getOffInvoiceCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOffInvoiceCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetOffInvoiceCosts>
+	<cftry>
+		<cfset getOffInvoiceCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.8"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOffInvoiceCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOffInvoiceCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getRebateCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRebateCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetRebateCosts>
+	<cftry>
+		<cfset getRebateCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRebateCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRebateCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getGrowthCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetGrowthCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetGrowthCosts>
+	<cftry>
+		<cfset getGrowthCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.4"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGrowthCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGrowthCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

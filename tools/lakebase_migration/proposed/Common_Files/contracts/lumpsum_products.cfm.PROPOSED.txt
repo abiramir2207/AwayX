@@ -1,0 +1,108 @@
+===== QUERY: getContractProgramID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetContractProgramID>
+	<cftry>
+		<cfset getContractProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractProgramID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#getContractProgramID.ProgramType_ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetLumpSums =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetLumpSums = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqGetLumpSums>
+	<cftry>
+		<cfset qGetLumpSums = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"program_lump_sum_id" = "eq.#URL.Program_Lump_Sum_ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLumpSums = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLumpSums>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetLevel_1_Products =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetLevel_1_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getlumpsumproducts")>
+<cfif useLakebaseForqGetLevel_1_Products>
+	<cftry>
+		<cfset qGetLevel_1_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getlumpsumproducts", {
+				"product_group_level_id" = "eq.1",
+				"select" = "product_group_id"
+			}), "product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLevel_1_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLevel_1_Products>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ComponentForbiddenProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForComponentForbiddenProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
+<cfif useLakebaseForComponentForbiddenProducts>
+	<cftry>
+		<cfset ComponentForbiddenProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_products_restricted", {
+				"discount_type_id" = "eq.3 --Growth",
+				"component_id" = "eq.#getComponent.Program_Lump_Sum_Name_ID#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForComponentForbiddenProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForComponentForbiddenProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,39 @@
+===== QUERY: Lock_BB =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: ChangeStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UNLock_BB =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Check_Lock =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheck_Lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForCheck_Lock>
+	<cftry>
+		<cfset Check_Lock = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_allied", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_is_locked"
+			}), "bb_is_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Lock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Lock>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Lock_BB =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Approve_BB =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: Lock_BB =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+

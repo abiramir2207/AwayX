@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="-1" xmlns="*" width="100%" height="100%">
+<mx:Script>
+        <![CDATA[
+            import mx.core.*
+            // Declare and initialize the variables used in the component.
+            // The application sets the actual prodTotal value.
+            [Bindable]
+            public var pageNumber:Number = 1;
+            [Bindable]
+            public var prodTotal:Number = 0;
+            [Bindable]
+            public var pageSizing:Boolean = false;
+
+            // Control the page contents by selectively hiding the header and
+            // footer based on the page type.
+            public function showPage(pageType:String):void {
+                if(pageType == "first" || pageType == "middle") {
+                    // Hide the footer.
+                    footer.includeInLayout=false;
+                    footer.visible=false;
+                }
+                
+                if(pageType == "middle" || pageType == "last") {
+                    // The header won't be used again; hide it.
+                    header.includeInLayout=false;
+                    header.visible = false;
+                    labels.includeInLayout = false;
+                    labels.visible = false;
+                    footer.includeInLayout=false;
+                    footer.visible=false;
+                }
+                
+                if(pageType == "last") {
+                    header.includeInLayout=false;
+                    header.visible = false;
+                    labels.includeInLayout = false;
+                    labels.visible = false;
+                    footer.includeInLayout=true;
+                    footer.visible=true;
+                    
+                }
+                //Update the DataGrid layout to reflect the results.
+                validateNow();
+            }        
+        ]]>
+    </mx:Script>
+	<mx:HBox width="100%" height="88" horizontalAlign="center" verticalAlign="bottom" id="header">
+		<mx:Image source="@Embed(source='/assets/logo_2.gif')" scaleContent="true" autoLoad="true" width="180" height="86"/>
+		<mx:Image source="@Embed(source='/assets/Lamb_Weston.jpg')" scaleContent="true" autoLoad="true" width="175" height="36"/>
+	</mx:HBox>
+	<mx:HBox width="100%" id="labels">
+		<mx:VBox height="100%" verticalGap="-1">
+			<mx:Label id="ProgramNum" text="PROGRAM NO:" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="DESCRIPTION:" id="desc" fontAntiAliasType="advanced" fontSize="9"/>
+			<mx:Label text="PROGRAM EFF DATE:" id="effDate" fontAntiAliasType="advanced" fontSize="9"/>
+			<mx:Label text="PROGRAM END DATE:" id="endDate" fontAntiAliasType="advanced" fontSize="9"/>
+			<mx:Label text="Inv/Ref No:" id="invNum" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Distributor:" id="distributor" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Ship-To No:" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9" id="shipNum"/>
+			<mx:Label text="Destination" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9" id="dest"/>
+			<mx:Label text="ST:" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9" id="stateTxt"/>
+			<mx:Label text="From Date:" id="claimDateFromVis" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="To Date:" id="claimDateToVis" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+		</mx:VBox>
+		<!--
+		<mx:VBox height="100%" verticalGap="-1">
+			<mx:Label/>
+			<mx:Label/>
+			<mx:Label fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+			<mx:Label fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+			<mx:Label fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+		</mx:VBox>
+		-->
+		<mx:VBox height="100%" verticalGap="-1">
+			<mx:Label text="BSA #" id="bsNum" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Pay To No:" id="payNum" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Pay To Name:" id="payName" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Amount:" id="claimAmt" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Broker:" id="broker" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Broker No:" id="brokerNum" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Purchasing Group:" id="purchaseGrp" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Corp PGM:" id="corpPGM" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Deduct Autos From F:" id="deductAutosF" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Deduct Autos?:" id="deductAutos" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+			<mx:Label text="Auto Pullback:" id="pullback" fontAntiAliasType="advanced" fontSharpness="50" fontSize="9"/>
+		</mx:VBox>
+		<!--
+		<mx:VBox height="100%" verticalGap="-1">
+			<mx:Label text="From Date:" id="claimDateFromVis" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+			<mx:Label text="To Date:" id="claimDateToVis" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+			<mx:Label/>
+			<mx:Label/>
+			<mx:Label/>
+			<mx:Label/>
+			<mx:Label text="Deduct Autos From F:" id="deductAutosF" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+			<mx:Label text="Deduct Autos?:" id="deductAutos" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+			<mx:Label text="Auto Pullback:" id="pullback" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8"/>
+		</mx:VBox>
+		-->
+	</mx:HBox>
+	<mx:PrintDataGrid id="PrintGrid" borderColor="#FFFFFF" 
+		              verticalGridLines="false" 
+		              horizontalGridLines="false" 
+		              fontFamily="Arial"
+		              fontSize="8"
+		              fontSharpness="50"
+		              width="100%"
+		              height="100%"
+		              scaleX="0.75" scaleY="0.75"
+		              bottom="11"
+		              sizeToPage="true">
+		<mx:columns>
+			<mx:DataGridColumn dataField="Program_ItemId" headerText="CAT NO." width="48" />
+			<mx:DataGridColumn dataField="Item_Desc" headerText="Desc" width="100" />
+			<mx:DataGridColumn headerText="Net Wt" dataField="Item_Case_Weight" width="45" />
+			<mx:DataGridColumn headerText="# Cases Claimed" dataField="Cases_Claimed" headerWordWrap="true"/>
+			<mx:DataGridColumn headerText="Net Lbs Claimed" dataField="Net_Lbs_Claimed" headerWordWrap="true" />
+			<mx:DataGridColumn headerText="STD" dataField="STD" width="30"/>
+			<mx:DataGridColumn headerText="Rebate Rate" dataField="Promo_rate" headerWordWrap="true" labelFunction="Application.application.formatCurrency" />
+			<mx:DataGridColumn headerText="Base Price" dataField="Invoice_Price" headerWordWrap="true" labelFunction="Application.application.formatCurrency" />
+			<mx:DataGridColumn headerText="(If Fixed) Promo Amt" dataField="Promo_Amt" headerWordWrap="true" labelFunction="Application.application.formatCurrency" />
+			<mx:DataGridColumn headerText="Pricelist" dataField="Price_List" />
+			<mx:DataGridColumn headerText="Less Corp Allow" dataField="Less_Corp_Allow" headerWordWrap="true" labelFunction="Application.application.formatCurrency" />
+			<mx:DataGridColumn headerText="Less Local Allow" dataField="Less_Local_Allow" headerWordWrap="true" labelFunction="Application.application.formatCurrency" />
+			<mx:DataGridColumn headerText="Promo Amt" dataField="Net_Promo_Amt" headerWordWrap="true" labelFunction="Application.application.formatCurrency" />
+			<mx:DataGridColumn headerText="Adjusted Ext Amt Claimed" dataField="Adj_Extended_Amt" headerWordWrap="true" labelFunction="Application.application.standardCurrencyFormatter" /> 
+		</mx:columns>
+	</mx:PrintDataGrid>
+	<mx:VBox id="footer" verticalGap="1" width="100%">
+		<mx:Label id="casesTotal" text="" fontFamily="Arial" fontSize="8" fontSharpness="50" width="300" textAlign="left" />
+		<mx:Label id="extAmtTotal" text="" fontFamily="Arial" fontSize="8" fontSharpness="50" width="300" textAlign="left" />
+		<mx:Spacer height="10" width="100%"/>		
+		<mx:Label text="*STD; M=%, P=CENTS P/LB, C=CENTS P/CS, F=FIXEDPRICE PER P/LB" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8" width="100%" textAlign="left" />
+	    <mx:Label text="** CYCLE: PAYMENT CYCLE M=MONTHLY, Q=QUARTERLY;" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8" width="100%" textAlign="left" />
+	    <mx:Label text="*** CORPORATE/LOCAL SME'S DEDUCTED FROM BILLBACKS FOR DEVIATED CONTRACTED BID/PRICING" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8" width="100%" textAlign="left" />
+	    <mx:Label text="BASE PRICE: Reflects pricing effective when form was printed (date above) and is exclusive of promotions" fontAntiAliasType="advanced" fontSharpness="50" fontSize="8" width="100%" textAlign="left" />
+	    <mx:Label text="PRICELISTS: Allowances do not apply to items invoiced with a pricelist unless the program identifies a pricelist." fontAntiAliasType="advanced" fontSharpness="50" fontSize="8" width="100%" textAlign="left" />
+	    <mx:Label text="Claims over 1 year old will not be honored." fontAntiAliasType="advanced" fontSharpness="50" fontSize="8" width="100%" textAlign="left" />
+	</mx:VBox>
+</mx:VBox>

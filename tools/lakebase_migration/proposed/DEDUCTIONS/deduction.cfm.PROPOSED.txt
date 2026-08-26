@@ -1,0 +1,435 @@
+===== QUERY: LockDD =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#FORM.Deduction_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "#FORM.Lock_Status#",
+				"locked_by" = "#Locked_By#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateDeductions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateDeductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDeductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"distributor_id" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDeductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDeductions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetPriorAnalyst =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPriorAnalyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetPriorAnalyst>
+	<cftry>
+		<cfset GetPriorAnalyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "analyst_user_id"
+			}), "analyst_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPriorAnalyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPriorAnalyst>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDistInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDistInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistInfo>
+	<cftry>
+		<cfset GetDistInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#form.Distributor_List#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetAnalyst =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetMarket =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetMarket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForGetMarket>
+	<cftry>
+		<cfset GetMarket = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"bsa_foodservice_brokers_id" = "eq.#GetDistInfo.BSA_Foodservice_Brokers_ID#",
+				"deleted" = "eq.0",
+				"select" = "service_market_id"
+			}), "service_market_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMarket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMarket>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetAnalyst =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetAnalyst =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetAnalyst =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCurrentDetail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCurrentDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetCurrentDetail>
+	<cftry>
+		<cfset GetCurrentDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentDetail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AddDistributor =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Get_Broker =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Broker = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGet_Broker>
+	<cftry>
+		<cfset Get_Broker = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#form.Distributor_List#",
+				"select" = "bsa_foodservice_brokers_id"
+			}), "bsa_foodservice_brokers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Broker = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Broker>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: LogReassign =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: DeletedIfRefesh =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: BrokerUpdate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBrokerUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_broker_reassign")>
+<cfif useLakebaseForBrokerUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_broker_reassign",
+			{
+				"latest_insert" = "eq.1",
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"latest_insert" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBrokerUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBrokerUpdate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsHistory =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: DDUpdate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDDUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForDDUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"broker_id" = "#Broker_List#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDDUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDDUpdate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDistributor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDistributor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetDistributor>
+	<cftry>
+		<cfset GetDistributor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "distributor_id,distributor_bill_to_id,dd_stage,dd_status"
+			}), "distributor_id,distributor_bill_to_id,dd_stage,dd_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeductionSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeductionSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForDeductionSettings>
+	<cftry>
+		<cfset DeductionSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeductionSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeductionSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: SetClearedAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSetClearedAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForSetClearedAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"cleared_amount" = "#Deduction_Info.DD_Amount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSetClearedAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSetClearedAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateDeduction =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateDeduction = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateDeduction>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#Deduction_ID#"
+			},
+			{
+				"dd_closure_id" = "#BillbackReplaced#",
+				"dd_closure_type" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDeduction = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDeduction>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AddProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetReminders =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetColor =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetColor =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: CheckForAgreed =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckForAgreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_agreed_info")>
+<cfif useLakebaseForCheckForAgreed>
+	<cftry>
+		<cfset CheckForAgreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_agreed_info", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForAgreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForAgreed>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDefault =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDefault = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForGetDefault>
+	<cftry>
+		<cfset GetDefault = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_classification", {
+				"is_default" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDefault = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDefault>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DisableIfParent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDisableIfParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForDisableIfParent>
+	<cftry>
+		<cfset DisableIfParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_parent_id" = "eq.#Deduction_Info.Deduction_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDisableIfParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDisableIfParent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetStages =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetStages = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_stage")>
+<cfif useLakebaseForGetStages>
+	<cftry>
+		<cfset GetStages = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_stage", {
+				"deleted" = "eq.0",
+				"order" = "dd_stage_description.asc",
+				"select" = "dd_stage_description,dd_stage_id"
+			}), "dd_stage_description,dd_stage_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStages = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStages>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetStatusDescription =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetStatusDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_stage")>
+<cfif useLakebaseForGetStatusDescription>
+	<cftry>
+		<cfset GetStatusDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_stage", {
+				"dd_stage_id" = "eq.#Deduction_Info.DD_Stage#",
+				"select" = "dd_stage_description"
+			}), "dd_stage_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatusDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatusDescription>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetCalls =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

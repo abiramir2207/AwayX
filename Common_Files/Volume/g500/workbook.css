@@ -1,0 +1,61 @@
+/*
+<!---------------------------------------------------------------------------------------------------------------------
+			File:    \Common_Files\Volume\g500\workbook.css
+			Date:    Nov 21 2011
+			Author:  Chris Nguyen
+			
+			Purpose: Volume Forecast CSS Styles
+----------------------------------------------------------------------------------------------------------------------->
+*/
+
+/* For IE 10: 
+Note: Currently, three classes which are being used for vertical and horizontal scrolling:
+- headerTopAndLeft (being used for vertical and horizontal scrolling).
+- headerTop (being used for vertical scrolling)
+- headerLeft (being used for horizontal scrolling)
+
+The above classes are not being used for any design feature and are not included in this file, but
+are instead being used on "/Script/javascript/scrollHeader.js" for scrolling.
+*/
+
+#pageinfo { position:relative; top:-21px; width:100%; }
+#lockedby   { color:yellow; float:left; font-size:12px; font-weight:bold; margin-left:10px; }
+#updatedby  { color:yellow; float:right; font-size:12px; font-weight:bold; margin-right:10px; }
+#workbookform { margin-top:-15px; }
+
+/* border-collapse:collapse; on a table causes issue on IE 10 when used in conjunction with position:relative on
+a td (cell). I removed "border-collapse:collapse" on "table.tbl" below.
+"border-spacing:0px" is also not a solution as it does not work on IE 9 and below.
+The solution is to use "cellspacing="0" as a table attribute.
+*/	
+table.tbl{table-layout:fixed;}
+#tbl-container{clear:both;overflow:auto;width:99.9%;display:none;}
+thead th,thead th.locked{text-align:center;color:black;position:relative;cursor:default;background-color:#f5f5f5;}
+thead th{z-index:30;/*width:55px;*/ font-size:10px;border:black 1px solid !important;}
+.colhdr_readonly{width:60px;}
+.colhdr_edit{width:80px;}
+thead th.locked{z-index:20;}
+td.locked{z-index:20;padding-left:7px;font-weight:bold;font-size:10px;}
+td.locked,th.locked{background-color:#f5f5f5;position:relative;z-index:10;}
+tbody td{font-size:10px;}
+
+.header  { text-align:center; }
+.header2 { border:white 0px solid !important; font-size:14px; background-color:white; color:blue; }
+.header3 { border-right:black 1px solid !important; }
+.header4 { border-left:black 1px solid !important; }
+td { border:black 1px solid; text-align:right; padding:3px; height:25px; }
+.locked { text-align: left; width:200px !important; /*z-index:40 !important;*/ }
+.gtotal { text-align: right; padding:3px; }
+.divider { background-color:black !important; border:black 1px solid !important; width:5px !important;}
+.action { margin-right:25px; font-weight:bold; font-size:10px; }
+
+.last { margin:0; }
+.editable { background-color:#A5BAFF; vertical-align:middle; }
+.over{background-color:#c6ffc6 !important;}
+
+#pagemode { color:white; background-color:black; font-weight:bold; position:relative; top:3px; border:1px solid white; }
+.clickforaction { background-color:#A5BAFF; }
+.percent { position:relative; top:-2px; }
+input { text-align:right; }
+.carry { font-size:8px; font-weight:bold; }
+.stay { z-index: 50 !important; }

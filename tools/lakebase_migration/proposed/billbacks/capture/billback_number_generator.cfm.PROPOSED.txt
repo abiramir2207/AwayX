@@ -1,0 +1,42 @@
+===== QUERY: AliveUpload =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAliveUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_master")>
+<cfif useLakebaseForAliveUpload>
+	<cftry>
+		<cfset AliveUpload = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_upload_master", {
+				"alive_upload" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAliveUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAliveUpload>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AliveUpload2 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAliveUpload2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_txt_upload_header")>
+<cfif useLakebaseForAliveUpload2>
+	<cftry>
+		<cfset AliveUpload2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_txt_upload_header", {
+				"bb_creation_in_process" = "eq.1",
+				"limit" = "1",
+				"select" = "billback_txt_upload_header_id"
+			}), "billback_txt_upload_header_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAliveUpload2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAliveUpload2>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

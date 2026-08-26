@@ -1,0 +1,31 @@
+﻿.pq-demo-user-notes
+{
+    /*background: rgb(250,250,255); /*margin:20px 20px 20px 0px;*/
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.pq-demo-developer-notes
+{
+    background: #ffffee;
+    margin: 20px 20px 20px 0px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+pre.prettyprint,pre.prettyprint2
+{
+    background-color: #f9f9f9;
+    font-family: monospace;
+    border: 1px solid #ccc;
+    padding: 20px; /*margin:20px 20px 20px 0px;*/
+    margin: 20px auto;
+    border-radius: 5px;
+}
+pre.prettyprint span.com,pre.prettyprint2 span.com
+{
+    color:#aaa;
+}
+

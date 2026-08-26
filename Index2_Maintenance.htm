@@ -1,0 +1,132 @@
+
+
+<HEAD>
+	<LINK REL="STYLESHEET" TYPE="text/css" HREF="/common_files/main_style.css">
+
+	<SCRIPT LANGUAGE="JavaScript">
+	function NewWindow(mypage, myname, w, h, scroll, resize, returnWindow,menubar)
+	{
+		var winl = (screen.width - w) / 2;
+		var wint = (screen.height - h) / 2;
+		status = "";
+		winprops = 'height='+h+',width='+w+',top='+wint+',left='+winl+',scrollbars='+scroll+',resizable='+resize+',status='+status;
+		if(menubar)
+		{
+		winprops = winprops + ',menubar='+menubar
+		}
+		win = window.open(mypage, myname, winprops)
+		if (parseInt(navigator.appVersion) >= 4) { win.window.focus(); }
+		if(returnWindow)
+		{
+			return win;
+		}
+	}
+
+function NewWindowTopLeft(mypage, myname, w, h, scroll, resize, returnWindow,menubar)
+{
+/******************************************************************************
+  Dev Notes: 21553/Anand Rao/26-Mar-10
+  Dev Notes: 21330/Anand Rao/19-Nov-09
+  Added this function as an exact replica of the above one except that this
+  will open a window and move it to 0,0 position
+********************************************************************************/
+/*
+	global replace of front slashes (octal representation) or '-'. This is for clients who have dates or '-' in Invoice Names.
+*/
+if(myname.indexOf('/') != -1){
+	myname = myname.replace(/\057/g,"")
+}
+	if(myname.indexOf('-') != -1){
+		myname = myname.replace(/-/g,"");
+	}
+
+	var winl = (screen.width - w) / 2;
+	var wint = (screen.height - h) / 2;
+	status = "";
+	winprops = 'height='+h+',width='+w+',top='+wint+',left='+winl+',scrollbars='+scroll+',resizable='+resize+',status='+status
+	if(menubar)
+	{
+	winprops = winprops + ',menubar='+menubar
+	}
+	win = window.open(mypage, myname, winprops)
+  	win.moveTo(0,0);
+    win.focus();
+	if (parseInt(navigator.appVersion) >= 4) { win.window.focus(); }
+	if(returnWindow)
+	{
+		return win;
+	}
+}
+	</SCRIPT>
+</HEAD>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<HTML>
+<HEAD>
+	<TITLE>Blacksmith Applications</TITLE>
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+	<LINK REL="STYLESHEET" TYPE="text/css" HREF="common_files/main_style.css">
+</HEAD>
+
+
+<BODY 	BGCOLOR=#FFFFFF			TEXT="Black"			LINK="Blue"
+		VLINK="Blue"			ALINK="Red"				LEFTMARGIN="0"
+		TOPMARGIN="0" 			MARGINWIDTH=0 			MARGINHEIGHT=0>
+
+
+
+<SPAN ID="bodyText">
+
+<BR><BR><BR>
+
+
+
+<TABLE WIDTH=784 BORDER=0 CELLPADDING=0 CELLSPACING=0 ALIGN="CENTER"  valign="top">
+	<TR>
+
+		<TD VALIGN="TOP"><IMG SRC="/images/Logon_Blacksmith/index_01.gif" WIDTH=38 HEIGHT=171 ALT=""></TD>
+		<TD VALIGN="TOP"><IMG SRC="/images/Logon_Blacksmith/index_02.gif"  ALT=""><br /><IMG SRC="/images/Logon_Blacksmith/index_05.gif" WIDTH=75 HEIGHT=178 ALT="" valign="top"></TD>
+		<TD VALIGN="TOP"><IMG SRC="/images/Logon_Blacksmith/index_03.gif" WIDTH=606 HEIGHT=98 BORDER="0" USEMAP="#mymap">
+			<br />
+		<TABLE border="0" cellspacing="0" cellpadding="6" align="center">
+				<TR>
+					<TD COLSPAN="3" ALIGN="LEFT">
+					<h2><span style="color:#990000">This site is down for maintenance.  Please check back later.
+					</h2>
+
+					Access to this system or information on this system is restricted to authorized persons only. Unauthorized use of this system or information on this system, access by unauthorized parties, or exceeding authorized access may constitute computer fraud in violation of applicable federal and/or state laws. Anyone using this system expressly consents to computer activity monitoring. If monitoring reveals evidence of possible unauthorized activity, systems personnel may be required to provide such evidence to appropriate enforcement officials. Unauthorized use of this system may result in both civil and criminal liability.
+					<p>
+					<span style="color:#CCCCCC;font-family:Arial,Helvetica,sans-serif;font-size:smaller">
+					Version: 6.1.000. Copyright© 2000-2010, Blacksmith Applications, Inc. All Rights Reserved.
+					</span>
+					</p>
+
+					</TD>
+				</TR>
+
+			</TABLE>
+
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="/images/Logon_Blacksmith/index_07.gif" WIDTH=38 HEIGHT=104 ALT="">
+		</TD>
+		<TD ALIGN="CENTER">
+
+		</TD>
+		<TD ALIGN="CENTER">&nbsp;
+
+		</TD>
+	</TR>
+</TABLE>
+</SPAN>
+
+<MAP NAME="mymap">
+  <AREA SHAPE="RECT" COORDS="375,75,601,93" HREF="http://www.blacksmithapps.com" TARGET="_blank">
+</MAP>
+</BODY>
+</HTML>
+
+

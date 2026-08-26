@@ -1,0 +1,295 @@
+===== QUERY: checkForDuplicateUsername =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: saveUser =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: AddUserTransCreateUser =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateUser =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetUserCode =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: AddUserTransActivateUser =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: AddUserTransUpdateUser =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getExistingUserPosition =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetExistingUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetExistingUserPosition>
+	<cftry>
+		<cfset getExistingUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExistingUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExistingUserPosition>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDeleteUserBusinessSegment =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqDeleteUserBusinessSegment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
+<cfif useLakebaseForqDeleteUserBusinessSegment>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_business_segment",
+			{
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteUserBusinessSegment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteUserBusinessSegment>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertUserBusinessSegment =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteUserClassCode =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqDeleteUserClassCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_class_code")>
+<cfif useLakebaseForqDeleteUserClassCode>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_class_code",
+			{
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteUserClassCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteUserClassCode>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertUserClassCode =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateTypeCodes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateTypeCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_type_code")>
+<cfif useLakebaseForUpdateTypeCodes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_type_code",
+			{
+				"user_id" = "eq.#form.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTypeCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTypeCodes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertTypeCode =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateLOB =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateLOB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_lob")>
+<cfif useLakebaseForUpdateLOB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_lob",
+			{
+				"user_id" = "eq.#form.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLOB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLOB>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertLOB =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: addNewPrimaryPositionHolder =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: addNewSecondaryPositionHolder =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UPDATEPRIMARYUSERPOSITION =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUPDATEPRIMARYUSERPOSITION = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForUPDATEPRIMARYUSERPOSITION>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_position_holders",
+			{
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0",
+				"user_position_type" = "eq.P"
+			},
+			{
+				"user_positions_id" = "#FORM.USER_POSITIONS_ID#",
+				"user_position_type" = "P"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUPDATEPRIMARYUSERPOSITION = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUPDATEPRIMARYUSERPOSITION>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UPDATESECONDARYUSERPOSITION_1 =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: GETSECONDARYUSERPOSITIONS =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGETSECONDARYUSERPOSITIONS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForGETSECONDARYUSERPOSITIONS>
+	<cftry>
+		<cfset GETSECONDARYUSERPOSITIONS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#FORM.User_ID#",
+				"user_position_type" = "eq.S",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGETSECONDARYUSERPOSITIONS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGETSECONDARYUSERPOSITIONS>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UPDATESECONDARYUSERPOSITION_2 =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UPDATESECONDARYUSERPOSITION_1 =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: getProfileDescription =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProfileDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForgetProfileDescription>
+	<cftry>
+		<cfset getProfileDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"profiles_id" = "eq.#USER_PROFILE_ID#",
+				"select" = "profiles_desc"
+			}), "profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProfileDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProfileDescription>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getCompanyInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCompanyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForgetCompanyInfo>
+	<cftry>
+		<cfset getCompanyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#COMPANY_MAIN_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCompanyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCompanyInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getStateCode =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetStateCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_states")>
+<cfif useLakebaseForgetStateCode>
+	<cftry>
+		<cfset getStateCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_states", {
+				"state_id" = "eq.#WORK_STATE#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetStateCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetStateCode>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPositionInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPositionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetPositionInfo>
+	<cftry>
+		<cfset getPositionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#USER_POSITIONS_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPositionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPositionInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

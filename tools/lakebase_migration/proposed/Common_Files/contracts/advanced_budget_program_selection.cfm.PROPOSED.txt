@@ -1,0 +1,27 @@
+===== QUERY: GetProgramExpired =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetProgramDates =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetProgramDates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetProgramDates>
+	<cftry>
+		<cfset GetProgramDates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#programId#",
+				"select" = "contract_start_date,contract_end_date"
+			}), "contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProgramDates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProgramDates>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBudgetClassEndDate =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

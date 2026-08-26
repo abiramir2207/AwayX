@@ -1,0 +1,22 @@
+===== QUERY: budgetCategories =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForbudgetCategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_group_classification")>
+<cfif useLakebaseForbudgetCategories>
+	<cftry>
+		<cfset budgetCategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_group_classification", {
+				"deleted" = "eq.0",
+				"order" = "budget_group_classification_id.asc",
+				"select" = "budget_group_classification_id as "category_id",budget_group_classification_desc as "category_desc""
+			}), "budget_group_classification_id as "category_id",budget_group_classification_desc as "category_desc""
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForbudgetCategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForbudgetCategories>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

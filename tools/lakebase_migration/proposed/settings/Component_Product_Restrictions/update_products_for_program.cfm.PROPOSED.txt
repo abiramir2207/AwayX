@@ -1,0 +1,193 @@
+===== QUERY: GetDiscountList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetDiscountList>
+	<cftry>
+		<cfset GetDiscountList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "product_type_id"
+			}), "product_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetProgramContractProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetProgramContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetProgramContractProducts>
+	<cftry>
+		<cfset GetProgramContractProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "contract_products_id,bsa_foodservice_items_master_id"
+			}), "contract_products_id,bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProgramContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProgramContractProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: HasFixedValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForHasFixedValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForHasFixedValue>
+	<cftry>
+		<cfset HasFixedValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_price_product_data", {
+				"contract_products_id" = "eq.#Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHasFixedValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHasFixedValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: HasRebateValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForHasRebateValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
+<cfif useLakebaseForHasRebateValue>
+	<cftry>
+		<cfset HasRebateValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_product_data", {
+				"contract_products_id" = "eq.#Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHasRebateValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHasRebateValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: HasLumpSumValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForHasLumpSumValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_product_data")>
+<cfif useLakebaseForHasLumpSumValue>
+	<cftry>
+		<cfset HasLumpSumValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_product_data", {
+				"contract_products_id" = "eq.#Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHasLumpSumValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHasLumpSumValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: HasGrowthValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForHasGrowthValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
+<cfif useLakebaseForHasGrowthValue>
+	<cftry>
+		<cfset HasGrowthValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_product_data", {
+				"contract_products_id" = "eq.#Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHasGrowthValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHasGrowthValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: HasOffInvoiceValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForHasOffInvoiceValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_offinvoice_product_data")>
+<cfif useLakebaseForHasOffInvoiceValue>
+	<cftry>
+		<cfset HasOffInvoiceValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_offinvoice_product_data", {
+				"contract_products_id" = "eq.#Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHasOffInvoiceValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHasOffInvoiceValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: HasBidRequestValue =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForHasBidRequestValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request_product")>
+<cfif useLakebaseForHasBidRequestValue>
+	<cftry>
+		<cfset HasBidRequestValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request_product", {
+				"contract_products_id" = "eq.#Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHasBidRequestValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHasBidRequestValue>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeleteProduct =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeleteProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForDeleteProduct>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"contract_products_id" = "eq.#Contract_Products_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteProduct>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,51 @@
+===== QUERY: updateBBModifyAgreeprogramList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateBBModifyAgreeprogramList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_modifyagree_programchanges")>
+<cfif useLakebaseForupdateBBModifyAgreeprogramList>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_modifyagree_programchanges",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"active" = "eq.1"
+			},
+			{
+				"to_programid_list" = "#newprogram_list#",
+				"to_programnum_list" = "#newprogramnum_list#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateBBModifyAgreeprogramList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateBBModifyAgreeprogramList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateModifyPrgInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateModifyPrgInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_modifyagree_programchanges")>
+<cfif useLakebaseForUpdateModifyPrgInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_modifyagree_programchanges",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"active" = "eq.1"
+			},
+			{
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateModifyPrgInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateModifyPrgInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

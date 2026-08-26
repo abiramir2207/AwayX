@@ -1,0 +1,52 @@
+/* CSS file */
+
+Application {
+	themeColor: #B6CFFF;
+	backgroundGradientColors: #ffffff, #c0c0c0;
+	verticalGap: 5;
+	fontSize: 10;
+	fontFamily: Verdana;
+}
+
+Panel {
+	/* headerColors: #B6CFFF,#E5FFFF; */
+	headerColors: #e7e7e7, #d9d9d9;
+	borderAlpha: 1;
+	cornerRadius: 0;
+	borderThicknessBottom: 0;
+	borderThicknessLeft: 0;
+	borderThicknessRight:0;
+	paddingTop: 5;
+	paddingLeft: 5;
+	paddingRight: 5;
+	paddingBottom: 5;
+	verticalGap: 5;
+	horizontalCenter: 0;
+}
+
+Button {
+	cornerRadius: 10;
+}
+
+
+.message {
+	fontWeight: bold;
+	color: #000000;
+}
+
+.error {
+	fontWeight: bold;
+	color: #FF1217;
+}
+DataGrid {
+   alternatingItemColors: #CFC, #FFF;
+   headerColors: #ffce84, #ffffff;
+   rollOverColor: #DDD;
+   selectionColor: #BBB;
+}
+ToolTip {
+   paddingLeft: 6;
+   paddingRight: 6;
+   fontWeight: bold;
+   fontSize: 11;
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	This item renderer displays a star if the record is edited and is based 
+	on the field user_edited.
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+ <mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+	<![CDATA[
+		import mx.controls.Alert;
+		import mx.utils.ObjectUtil;
+		import flash.external.ExternalInterface
+		import com.asfusion.mate.events.Dispatcher;
+		import mx.events.CloseEvent;
+ 
+	]]>
+</mx:Script>
+
+	<mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+			id="imgScissor"	
+			width="8"
+			height="8"
+			source="{getSource(data.user_edited)}" 
+			toolTip="User edited record (Original: {data.original_cases} cases, {data.original_pounds} pounds)"> 
+			<mx:Script>
+				<![CDATA[
+					[Bindable]
+					public var imgHolder:String;
+					private function getSource(recType:Boolean):String
+					{
+						if (data.user_edited == 0)   
+						{
+							imgHolder = "";// No image 
+						}
+						else if (data.user_edited == 1)
+						{
+							/* ************************************************************** 
+							The image star.gif is displayed if the record is edited and coming 
+							from the program_product_volume_forecast table and e.ico if the 
+							record is coming from program_product_volume table 
+							- Anand Rao/29-Jun-09
+							************************************************************** */
+							imgHolder = "/flex/assets/images/star.gif";
+						}
+						else
+						{
+							imgHolder = "";
+						}
+						return imgHolder;
+					}	 
+				]]>
+			</mx:Script>
+	</mx:Image>
+ 
+</mx:HBox>						
+ 

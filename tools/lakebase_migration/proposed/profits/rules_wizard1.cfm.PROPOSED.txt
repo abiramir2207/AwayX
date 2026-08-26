@@ -1,0 +1,25 @@
+===== QUERY: Get_Products =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGet_Products>
+	<cftry>
+		<cfset Get_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"deleted" = "eq.0",
+				"order" = "type_code_desc.asc",
+				"select" = "item,upc,type_code_desc,description"
+			}), "item,upc,type_code_desc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Products>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_data =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

@@ -1,0 +1,421 @@
+<!---
+FILE:     Application file for global settings...
+FILENAME: Application.cfc
+APP:      Blacksmith Applications, Inc. Application [v11]
+CREATED:  5/08/2008 - Brad Lee ACI
+EDITED:   03/18/2009 [MVC v11 getObject()]
+
+FUNCTIONALITY:
+- This is the Application.cfc for all templates in the BA application.
+
+Textual explanation of implementation - /components/mvc/readMe.txt
+
+--->
+<cfcomponent name="Application" displayname="BA Application file for ALL templates." hint="I govern the entire BA application." output="true">
+
+    <!--- NOTE: application and session scopes have to be enabled in CF administrator --->
+
+    <cfscript>
+        this.componentPath                    = 'mvc';
+        this.errorEmail                       = '';
+        this.lockTimeoutSeconds               = 15;
+        this.lsObjectsToNeverKill             = 'ApplicationAppSettingsManager,Controller,LetterManager,ProgramLetterFreightManager,View';
+        this.webrootMapping                   = '/';
+        this.webrootFolderName = 'AwayX'; // default to AwayX
+        /*  - ChrisN April 27, 2011 - add the specific custom tag path for the release this application is on, instruct CF to look at this path first, before it gets to the common custom tag path defined in CF admin (which may be under a different release version)
+            - use this.rootDir below sice it already looks up path  */
+
+        /* - ChrisN June 13, 2011 - CF 9 and above disable ColdFusion's ancient automatic form checker (form field that ends with '_required' or '_time' would trigger "Form entries are incomplete" error by default)  */
+        this.searchimplicitscopes                   = true;
+        this.serverSideFormValidation               = false;
+        this.sessionManagement                      = true;
+        this.serialization.preservecaseforstructkey = false;
+        this.wschannels                             = [{name = 'cfData'}];
+        this.rootDir                                = expandpath("/");
+        this.customtagpaths                         = this.rootDir & "CustomTags";
+        this.mappings["/"]                          = this.rootDir;
+        this.name                                   = "#hash( this.rootDir )#"; /* guarantee unique application name */
+        this.clientManagement                       = "yes";
+        this.clientStorage                          = "cookie";
+        this.setDomainCookies                       = "no";
+        this.sessionManagement                      = "yes";
+        this.setClientCookies                       = "yes";
+        this.sessionTimeout                         = "#createtimespan(0,8,0,0)#";
+        this.applicationTimeout                     = "#createtimespan(5,0,0,0)#";
+        this.blockedExtForFileUpload                = "cfm, cfml, cfc, js, com, exe, ps1, bat";
+
+        // -----------------------------------------------------------------------------------------------------------------------------
+        // 2021 July - retrieve datasource from a .config file; no longer needed to specify the "datasource" attribute in cfquery tags
+        // -----------------------------------------------------------------------------------------------------------------------------
+        awayx_config        = this.rootDir & "/Awayx.config";
+        awayx               = deserializeJSON( fileRead( awayx_config ) );
+        this.datasource     = awayx.datasource;
+        this.WebServerName  = awayx.WebServerName;
+        /* Databricks Lakebase Data API config (optional; disabled unless present in AwayX.config) */
+        this.lakebaseConfig = structKeyExists( awayx, "LAKEBASE" ) ? awayx.LAKEBASE : { enabled = false };
+        /* Library for ALL instances on a server.  SERVER LEVEL SETTINGS ONLY => NOT APPLICATION SPECIFIC */
+        this.libraryPath= left( this.rootDir, 1 ) & ":\inetpub\wwwroot\library\coldfusion\";
+        this.mappings[ "/library" ] = this.libraryPath;
+
+        if(structKeyExists(server,'smtpServerSettings')){
+            this.smtpServerSettings = server.smtpServerSettings;
+        }
+        else{
+            try {
+                this.smtpServerSettings   = { server = 'smtp.sendgrid.net', username = 'apikey', password = '' };
+                server_config             = this.libraryPath & "Server.config";
+                stSettings                = deserializeJSON( fileRead( server_config ) );
+                this.smtpServerSettings   = stSettings.mail;
+                server.smtpServerSettings = stSettings.mail;
+                WriteLog(type="information", log="Application", text="Mail Settings Initialized");
+            }
+            catch ( any e ) {
+                /*  Let the application run */
+            }
+        }  
+    </cfscript>
+
+  <cferror type="Exception" exception="any" template="/site_wide_error_handler.cfm">
+
+
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <!--- ~~~~ setApplicationVariables() ~~~~~ --->
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <cffunction name="setApplicationVariables" output="false">
+        <cfscript>
+            /*  "this" scope is set above...outsice of any functions => now set appplication scope variable*/
+            application.appPath           = this.rootDir;
+            application.datasource        = this.datasource;
+            application.WebServerName     = this.WebServerName;
+
+            /* Databricks Lakebase Data API client (REST replacement for direct "Resers" querying) */
+            application.LakebaseConfig = this.lakebaseConfig;
+            try {
+                application.oLakebase = createObject("component", "components.lakebase.LakebaseClient").init( this.lakebaseConfig );
+            }
+            catch ( any e ) {
+                /* never block application startup if Lakebase is misconfigured */
+                application.oLakebase = '';
+            }
+
+            application.util = createObject("component", "components.UtilManager").init();
+            application.util.query.application_settings();
+            // IF YOU HAVE DIRECT ACCESS TO THE CF ADMINISTRATOR [end] 2 of 4
+            application.stMvcAppInfo = {    applicationStartTime: createODBCDateTime(now())
+                                            ,componentPath: this.componentPath
+                                            ,documentMapping: this.webrootMapping & 'common_documents'
+                                            ,lockTimeoutSeconds: this.lockTimeoutSeconds
+                                            ,lsObjectsToNeverKill: this.lsObjectsToNeverKill
+                                            ,webrootFolderName: this.webrootFolderName
+                                            ,webrootMapping: this.webrootMapping
+                                        };
+
+            if (cgi.https IS 'on') {
+                application.stMvcAppInfo.protocol = 'https';
+                application.stMvcAppInfo.bIsHttps = 1;
+                application.stMvcAppInfo.port     = 443;
+            }
+            else {
+                application.stMvcAppInfo.protocol = 'http';
+                application.stMvcAppInfo.bIsHttps = 0;
+                application.stMvcAppInfo.port     = 80;
+            }
+
+            application.stMvcAppInfo.applicationPath = '';
+            application.stMvcAppInfo.applicationURL  = application.stMvcAppInfo.protocol & '://' & lCase(cgi.http_host) & ':' & application.stMvcAppInfo.port;
+
+            application.stMvcAppInfo.lsLoggedInUserIDs = '';
+
+            application.HomePage          = "/Manufacturers/home.cfm";
+            application.MainFrameHomePage = "/Manufacturers/home_new.cfm";
+            application.LoginPage         = "/index.htm";
+        </cfscript>
+
+        <cftry>
+            <!--- IMPORTANT: In MVC V11 Model: application-scoped objects = oController, oView
+            All other MVC Model Objects optional and created upon first request via application.oController. --->
+
+            <!--- (1 of 3 Top Level Objects) MODEL If the BA Controller object does not exist in application scope... --->
+            <!--- Create and initialize the MODEL object --->
+            <cfset application.oController = createObject("component", "#this.componentPath#.Controller")>
+            <cfinvoke
+                component="#application.oController#"
+                method="getApplicationPath"
+                webrootFolderName="#application.stMvcAppInfo.webrootFolderName#"
+                returnVariable="this.applicationPath">
+
+            <cfset application.stMvcAppInfo.applicationPath = this.applicationPath>
+            <cfset this.documentPath                        = this.applicationPath & '\common_documents'>
+            <cfset application.stMvcAppInfo.documentPath    = this.documentPath>
+
+            <!--- Create and initialize the MODEL object --->
+            <cfset application.oView = createObject("component", "#this.componentPath#.View")>
+
+            <!--- (3 of 3 Top Level Objects) MODEL If the ApplicationAppSettingsManager object does not exist in application scope... --->
+            <cfscript>
+                application.oController.getObject("components.settings.ApplicationAppSettingsManager");
+            </cfscript>
+
+            <cfinclude template="/Application_Vars.cfm">
+
+            <cfscript>
+                application.forge_cdn = trim(application.util.query.get_setting("forge_cdn", 0));
+                // get rid of trailing slash
+                if (right(application.forge_cdn,1) eq "/") {
+                    application.forge_cdn = left(application.forge_cdn, len(application.forge_cdn) - 1);
+                }
+
+                application.numberOfProductGroupLevels = 3;
+                if (application.util.query.get_Setting("Product_Group_Sequencing", 0) eq '1') {
+                    local.qPricing = queryExecute("SELECT 1 FROM Pricing_Level WHERE Deleted = 0", [], {datasource=application.datasource});
+                    application.numberOfProductGroupLevels = local.qPricing.recordCount;
+                }
+
+                /* TPO => TPM Webservice -- Let the application start even if this does not initialize */
+                try {
+                        restInitApplication(directory="#application.appPath#\components\Interfaces\Service", serviceMapping="api", options=[usehost="true"]);   /*    */
+                        WriteLog(type="information", log="Application", text="TPO Webservice Initialized");
+                    }
+                catch (any e) {
+                        WriteLog(type="Error", log="Application", text="[#e.type#] #e.message#");
+                    }            
+            </cfscript>
+            
+            <cfcatch type="any">
+                <cfoutput>
+                <h2>Unfortunately, the application encountered an error.</h2>
+                <p>Application startup has failed.</p>
+                <p>Date/Time: #dateFormat(now(),"mm/dd/yy")# #timeFormat(now(),"hh:mm:ss tt")#</p>
+                <p>Please <a href="mailto:?subject= Application encountered an error. message: #cfcatch.message# Detail: #cfcatch.detail#">contact support</a>.</p>
+                <cfdump var="#cfcatch#" expand="yes">
+                </cfoutput>
+
+                <cflog file="#application.applicationName#" type="error" application="yes" log="application" text="Application exception message: #cfcatch.message# #cgi.path_translated# #cfcatch.detail#">
+
+                <cfreturn false>
+            </cfcatch>
+        </cftry>
+
+        <cfreturn true>
+    </cffunction>
+
+
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <!--- ~~~~~~~ onApplicationStart() ~~~~~~~ --->
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <cffunction name="onApplicationStart" returntype="boolean" output="false">
+        <cfif setApplicationVariables() eq false>
+            <cfreturn false>
+        </cfif>
+        <!--- Our business rules dictate these MUST exist to have our App. --->
+
+        <cfif 	(structKeyExists(application, "oApplicationAppSettingsManager") AND isObject(application.oApplicationAppSettingsManager)) AND
+                (structKeyExists(application, "oController") AND isObject(application.oController)) AND
+                (structKeyExists(application, "oView") AND isObject(application.oView))>
+            <cfreturn true>
+        <cfelse>
+            <cflog file="#application.applicationName#" type="information" application="yes" log="application" text="#application.applicationName# Application MVC Error - Application Failed">
+            <cfreturn false>
+        </cfif>
+    </cffunction>
+
+
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <!--- ~~~~~~~~~ onSessionStart() ~~~~~~~~~ --->
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <cffunction name="onSessionStart" returntype="boolean" output="false">
+        <cfparam name="Session.DoNotRunThisApplicationCFM" default="0">
+
+        <!--- :::::::::: Create our session-scoped structure - stMvcUserInfo... [begin] :::::::: --->
+        <cfscript>
+            session.stMvcUserInfo = {   numberOfPagesVisited: 0
+                                        ,sessionMillisecondsElapsedTime: 0
+                                        ,sessionMillisecondsElapsedTimeString: ''
+                                        ,sessionSecondsElapsedTimeString: ''
+                                        ,sessionLoggedInTimeStamp: createODBCDateTime(now())
+                                        ,sessionStartTime: getTickCount()
+                                        ,User_ID: ''
+                                    };
+            // MVC V11 User Vars [end]
+        </cfscript>
+
+        <!--- Our business rules dictate this MUST exist to have our App. --->
+        <cfif structKeyExists(session, "stMvcUserInfo") AND structCount(session.stMvcUserInfo)>
+            <!--- Session Start OK --->
+            <cfreturn true>
+        <cfelse>
+            <cflog file="#application.applicationName#" type="information" application="yes" text="#application.applicationName# Application MVC Error - Session Failed">
+            <cfreturn false>
+        </cfif>
+    </cffunction>
+
+
+    <cfinclude template="/setRequestVariables.cfm">
+
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <!--- ~~~~~~~~ onRequestStart() ~~~~~~~~ --->
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <cffunction name="onRequestStart" returntype="boolean" output="true">
+        <cfargument name="targetPage" required="true" type="string">
+
+        <cfscript>
+            // prevent attackers from running CFM in uploaded folders
+            if (arguments.targetPage contains "/uploaded/" and arguments.targetPage contains ".cfm") {
+                cfmail( to      = "forge.security.alerts@blacksmithapplications.com",
+                        from    = "forge.security.alerts@blacksmithapplications.com",
+                        subject = "Malicious CFM Execution From " & cgi.server_name,
+                        type    = "text/html" ) {
+                    writeDump( var=arguments, label="ARGUMENTS" );
+                    writeDump( var=url,       label="URL" );
+                    writeDump( var=form,      label="FORM" );
+                    writeDump( var=request,   label="REQUEST" );
+                    writeDump( var=cgi,       label="CGI" );
+                    writeDump( var=session,   label="SESSION" );
+                    writeDump( var=cookie,    label="COOKIE" );
+                };
+
+                abort;
+            }
+
+            if (isDefined("url.onApplicationStart")) {
+                lock timeout="21" scope="application" type="exclusive" throwOnTimeout="false" {
+                    onApplicationStart();
+                }
+            }
+
+            // 29706 - chrisN
+            if (structKeyExists(URL, 'resetUtil')) {
+                lock timeout="30" scope="Application" type="exclusive" throwontimeout="false" {
+                    structDelete(application, 'util');
+                    structDelete(application, "forge_cdn");
+                }
+            }
+
+            if (not structKeyExists(application, 'util')) {
+                lock timeout="30" scope="Application" type="exclusive" throwontimeout="true" {
+                    if (not structKeyExists(application, 'util')) {
+                        application.util = CreateObject("component", "components.UtilManager").init();
+                    }
+                }
+            }
+
+            // 2018 april - wr 76496 - chrisN
+            if (not structKeyExists(application, 'forge_cdn')) {
+                lock timeout="30" scope="Application" type="exclusive" throwontimeout="true" {
+                    if (not StructKeyExists(application, 'forge_cdn')) {
+                        application.forge_cdn = trim(application.util.query.get_setting("forge_cdn", 0));
+                        // get rid of trailing slash
+                        if (right(application.forge_cdn,1) eq "/") {
+                            application.forge_cdn = left(application.forge_cdn, len(application.forge_cdn) - 1);
+                        }
+                    }
+                }
+            };
+        </cfscript>
+
+        <!--- legacy [begin] --->
+        <cfinclude template="/Application_Common.cfm">
+        <!--- legacy [end] --->
+
+        <cfset setRequestVariables()>
+
+        <!--- Let's keep track of who is officially IN our house... [begin] --->
+        <cfif isdefined("session.stMvcUserInfo") eq false>
+            <cfset session.stMvcUserInfo = {    numberOfPagesVisited                 : 0,
+                                                sessionMillisecondsElapsedTime       : 0,
+                                                sessionMillisecondsElapsedTimeString : '',
+                                                sessionSecondsElapsedTimeString      : '',
+                                                sessionLoggedInTimeStamp             : createODBCDateTime(now()),
+                                                sessionStartTime                     : getTickCount(),
+                                                User_ID                              : ''
+                                            }>
+        </cfif>
+        <!--- Let's keep track of who is officially IN our house... [end] --->
+
+        <cfif findNoCase(this.webrootMapping, arguments.targetPage, 1)>
+            <!--- IF we wish to start over... [begin] --->
+            <cfif isDefined("url.reinit")>
+                <cfif isDefined("url.entity")>
+                    <cfset structDelete(application,'o' & url.entity,false)>
+                <cfelseif isDefined("url.key")>
+                    <cfset structDelete(application,url.key,false)>
+                <cfelseif isDefined("url.scope")>
+                    <!--- not graceful... --->
+                    <cfset structClear(url.scope)>
+                </cfif>
+            </cfif>
+            <!--- Request Start AOK --->
+            <cfreturn true>
+        <cfelse>
+            <cflog file="#application.applicationName#" type="information" application="yes" log="application" text="#application.applicationName# Application MVC Error - Request Start Failed">
+            <!--- Houston, we have an onRequestStart() PROBLEM --->
+            <cfreturn false>
+        </cfif>
+    </cffunction>
+
+
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <!--- ~~~~~~~~~ onRequestEnd() ~~~~~~~~~ --->
+    <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
+    <cffunction name="onRequestEnd" returntype="void" output="true">
+        <cfargument name="targetPage" 	type="string" required="true">
+
+        <!--- elapsed time... --->
+        <cfscript>
+            request.requestEndTime                       = getTickCount();
+            request.requestMillisecondsElapsedTime       = (request.requestEndTime-request.requestStartTime);
+            request.requestMillisecondsElapsedTimeString = request.requestMillisecondsElapsedTime & ' milliseconds';
+            request.requestSecondsElapsedTimeString      = (request.requestMillisecondsElapsedTime/1000) & ' seconds';
+
+            if (isDefined("session.stMvcUserInfo")) {
+                session.stMvcUserInfo.numberOfPagesVisited                 = session.stMvcUserInfo.numberOfPagesVisited+1;
+                session.stMvcUserInfo.sessionMillisecondsElapsedTime       = session.stMvcUserInfo.sessionMillisecondsElapsedTime+request.requestMillisecondsElapsedTime;
+                session.stMvcUserInfo.sessionMillisecondsElapsedTimeString = session.stMvcUserInfo.sessionMillisecondsElapsedTime & ' milliseconds';
+                session.stMvcUserInfo.sessionSecondsElapsedTimeString      = (session.stMvcUserInfo.sessionMillisecondsElapsedTime/1000) & ' seconds';
+            }
+        </cfscript>
+
+        <!--- NOTE: if you make changes to these conditions you would need to apply the same changes to Application_Common.cfm  --->
+        <cfif arrayFindNoCase([ 'ez_button_programs.cfm'   <!---32419--->
+                                ,'/common_files/csv.cfm'   <!---export to cvs--->
+                                ,'/index2.cfm'             <!---login page--->
+                                ,'/enter.cfm'              <!---login page--->
+                                ,'/processing.cfm'         <!---processing page--->
+                                ,'uploadOneFile.cfm' ], arguments.targetPage)
+            or (arguments.targetPage contains "/ajax")
+            or (arguments.targetPage contains "/scheduled")
+            or (arguments.targetPage contains "/MatchCentral")
+            or (arguments.targetPage contains ".cfc")
+            or structKeyExists(request, "focusHiLightOff")>
+            <!---  skip the above templates  --->
+        <cfelse>
+            <!--- add jQuery UI tooltip effect --->
+            <cfsavecontent variable="local.tooltip_ui">
+                <script>
+                    if ( window.jQuery ) {
+                        if ( window.jQuery.ui ) {
+                            try {
+                                jQuery.widget("ui.tooltip", jQuery.ui.tooltip, {
+                                    options: { 	content: function() {
+                                                                        jQuery(".ui-tooltip").fadeOut();    /* tooltip genocide */
+                                                                        return jQuery(this).prop("title");
+                                                                    }
+                                                ,show: { effect: "fade", delay: 300 }
+                                            }
+                                });
+                                jQuery( "[title]" )
+                                    .tooltip()
+                                    .click(function(){ jQuery('[class^="ui-tooltip"]').remove(); });
+                            }
+                            catch (err) {
+                            };
+                        }
+                    }
+                </script>
+            </cfsavecontent>
+            <!--- compress code for speed and make the logic harder to read for curious end-users --->
+            <cfoutput>#application.util.string.compress(local.tooltip_ui)#</cfoutput>
+        </cfif>
+    </cffunction>
+
+</cfcomponent>

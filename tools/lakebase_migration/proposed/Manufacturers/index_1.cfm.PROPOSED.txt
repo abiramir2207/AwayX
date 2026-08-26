@@ -1,0 +1,42 @@
+===== QUERY: GetDist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDist>
+	<cftry>
+		<cfset GetDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Form.Distributor_List#",
+				"select" = "ship_to,name"
+			}), "ship_to,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetProd =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetProd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetProd>
+	<cftry>
+		<cfset GetProd = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#Form.Product_List#",
+				"select" = "item,upc,description"
+			}), "item,upc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProd>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

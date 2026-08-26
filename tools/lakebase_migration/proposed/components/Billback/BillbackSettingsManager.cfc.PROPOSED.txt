@@ -1,0 +1,234 @@
+===== QUERY: qUpdateSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetSearchExpiredProgramWithin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSearchExpiredProgramWithin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqGetSearchExpiredProgramWithin>
+	<cftry>
+		<cfset qGetSearchExpiredProgramWithin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "search_expired_program_within"
+			}), "search_expired_program_within"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSearchExpiredProgramWithin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSearchExpiredProgramWithin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetSearchExpiredProgramWithin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSearchExpiredProgramWithin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqGetSearchExpiredProgramWithin>
+	<cftry>
+		<cfset qGetSearchExpiredProgramWithin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "search_expired_program_within"
+			}), "search_expired_program_within"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSearchExpiredProgramWithin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSearchExpiredProgramWithin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetAdjustmentDefault =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAdjustmentDefault = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqGetAdjustmentDefault>
+	<cftry>
+		<cfset qGetAdjustmentDefault = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "adjustment_default"
+			}), "adjustment_default"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAdjustmentDefault = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAdjustmentDefault>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Default_sort_columns =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDefault_sort_columns = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForDefault_sort_columns>
+	<cftry>
+		<cfset Default_sort_columns = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "default_sort_option_for_scorecard,default_sort_by"
+			}), "default_sort_option_for_scorecard,default_sort_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefault_sort_columns = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefault_sort_columns>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qBB_Status_for_Budget_Actual =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqBB_Status_for_Budget_Actual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqBB_Status_for_Budget_Actual>
+	<cftry>
+		<cfset qBB_Status_for_Budget_Actual = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "bb_status_for_budget_actual"
+			}), "bb_status_for_budget_actual"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBB_Status_for_Budget_Actual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBB_Status_for_Budget_Actual>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qBB_Status_for_Budget_Actual =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqBB_Status_for_Budget_Actual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqBB_Status_for_Budget_Actual>
+	<cftry>
+		<cfset qBB_Status_for_Budget_Actual = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "bb_status_for_budget_actual"
+			}), "bb_status_for_budget_actual"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBB_Status_for_Budget_Actual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBB_Status_for_Budget_Actual>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSaveAdjustmentDefault =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSaveDefaultOptions =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSaveAdjustmentDefault =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSaveAdjustmentDefault =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSaveIII_P_UploadSingleBBPerINV =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSaveAdjustmentDefault =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetFamilyList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFamilyList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForqGetFamilyList>
+	<cftry>
+		<cfset qGetFamilyList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFamilyList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFamilyList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckFamily =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckFamily = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_match_deviation_family")>
+<cfif useLakebaseForqCheckFamily>
+	<cftry>
+		<cfset qCheckFamily = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_match_deviation_family", {
+				"family_id" = "eq.#Family#",
+				"select" = "auto_match_family,auto_deviation_family"
+			}), "auto_match_family,auto_deviation_family"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckFamily = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckFamily>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateAutoMatchFamily =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qUpdateAutoDeviationFamily =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qInsertFamily =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckCurrentFamily =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateFamily =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCheckFamily =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckFamily = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_match_deviation_family")>
+<cfif useLakebaseForqCheckFamily>
+	<cftry>
+		<cfset qCheckFamily = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_match_deviation_family", {
+				"family_id" = "eq.#Family#",
+				"select" = "auto_match_family,auto_deviation_family"
+			}), "auto_match_family,auto_deviation_family"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckFamily = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckFamily>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDeleteFamilyRecord =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsertIntoHistory =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Set_Status =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

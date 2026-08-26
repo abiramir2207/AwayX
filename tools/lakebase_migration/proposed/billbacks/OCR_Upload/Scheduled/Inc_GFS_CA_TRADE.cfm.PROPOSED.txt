@@ -1,0 +1,46 @@
+===== QUERY: qCreateTableGFS =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsertTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateOCRUploadLogStatus5 =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateOCRUploadLogStatus5 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatus5>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2.CF_Error",
+				"ocr_upload_status" = "Data mismatch between the file and the Docparser template. ",
+				"debug_dev_status" = "In docParser.cfm Checkpoint 1. The parser failed to return the data. The data location are not correct in the file and did not match the docparser template."
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatus5 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatus5>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSelGFSFileDataCheck =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qInsertPermTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogUpdateTries =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

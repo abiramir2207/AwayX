@@ -1,0 +1,470 @@
+/*  standard colors used the dashboards *************************
+
+	white= 				#FFFFFF
+	gray_light= 		#777777
+	gray_medium= 		#373737
+	gray_dark= 			#222222
+	black= 				#000000
+	
+	blue= 				#0097fe
+	green= 				#006200
+
+	yellow= 			#ffdd00
+	orange= 			#FFA500
+	red= 				#FF0000
+	red_bsa= 			#990000
+*/
+
+/* HTML5: used to fix the content shift due to the scroll bar appearing */
+html
+{
+	overflow-y:				scroll;
+}
+
+
+
+/* body section ****************************************************** */
+
+body 
+{
+	background-color:		#373737;
+	background-image:		url(images/black_sand.png);
+	margin:					0px 0px 0px 0px;
+	padding:				0px 0px 0px 0px;
+} 
+
+/* header section **************************************************** */
+div.header
+{
+	font-family:			sans-serif;
+	font-size:				14px;
+	font-weight:			bold;
+
+	color:					#FFFFFF;
+	background-color:		#000000;
+
+	margin:					10px 0px 0px 0px;
+
+	width:					950px;
+	height:					60px;
+
+	padding:				0px 0px 0px 0px;
+
+	border:					0px #000000 solid;
+	border-radius:			8px;
+
+	background: #777777; /* Old browsers */
+	/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzc3Nzc3NyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyMjIyMjIiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+	background: -moz-linear-gradient(top,  #777777 0%, #222222 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#777777), color-stop(100%,#222222)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #777777 0%,#222222 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #777777 0%,#222222 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #777777 0%,#222222 100%); /* IE10+ */
+	background: linear-gradient(top,  #777777 0%,#222222 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#777777', endColorstr='#222222',GradientType=0 ); /* IE6-8 */
+	
+	text-shadow: 			1px 1px 1px #000000;
+	
+	text-align:				left;
+}
+
+div.header_page_name
+{
+	font-family:			sans-serif;
+	font-size:				18px;
+	font-weight:			bold;
+	text-transform:			capitalize;
+
+	color:					#FFFFFF;
+}
+
+select.header_select_box
+{
+	border:					0px #000000 solid;
+	border-radius:			4px;
+	font-size:				15px;
+}
+
+/* main content section ********************************************* */
+div.main_container
+{
+	font-family:			sans-serif;
+	font-size:				14px;
+	font-weight:			bold;
+
+	color:					#FFFFFF;
+	background-color:		#000000;
+
+	margin:					10px 0px 10px 0px;
+	
+	width:					950px;
+
+	padding:				0px 0px 5px 0px;
+
+	border:					0px #000000 solid;
+
+	border-radius:			8px;
+
+
+}
+
+
+/* footer section **************************************************** */
+div.footer
+{
+	font-family:			sans-serif;
+	font-size:				10px;
+	font-weight:			bold;
+
+	color:					#FFFFFF;
+	background-color:		#000000;
+
+	margin:					0px 0px 0px 0px;
+	
+	width:					950px;
+	height:					50px;
+
+	padding:				0px 0px 5px 0px;
+
+	border:					0px #000000 solid;
+
+	border-radius:			8px;
+
+
+	background: #777777; /* Old browsers */
+	/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzc3Nzc3NyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyMjIyMjIiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+	background: -moz-linear-gradient(top,  #777777 0%, #222222 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#777777), color-stop(100%,#222222)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #777777 0%,#222222 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #777777 0%,#222222 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #777777 0%,#222222 100%); /* IE10+ */
+	background: linear-gradient(top,  #777777 0%,#222222 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#777777', endColorstr='#222222',GradientType=0 ); /* IE6-8 */
+	
+	text-align:				left;
+
+}
+
+
+
+
+/* data grid section ************************************************* */
+td.data_grid_header, th.data_grid_header
+{
+	font-family:			sans-serif;
+	font-size:				12px;
+	font-weight:			bold;
+	color:					#FFFFFF;
+
+	background-color:		#000000;
+	
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			1px #FFA500 solid;
+	border-left:			0px #000000 solid;
+
+	margin:					0px 0px 0px 0px;
+
+	padding:				0px 0px 0px 0px;
+}
+
+td.data_grid_level1
+{
+
+	font-family:			sans-serif;
+	font-size:				16px;
+	font-weight:			bold;
+
+	color:					#FFA500;
+	background-color:		#000000;
+
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			4px #FFA500 solid;
+	border-left:			0px #000000 solid;
+	
+	margin:					0px 0px 0px 0px;
+
+	padding:				8px 0px 4px 0px;
+	
+	text-align:				left;
+}
+
+td.data_grid_level2
+{
+
+	font-family:			sans-serif;
+	font-size:				12px;
+	font-weight:			bold;
+
+	color:					#0097fe;
+	background-color:		#000000;
+
+	border-top:				10px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			2px #0097fe solid;
+	border-left:			0px #000000 solid;
+	
+	margin:					0px 0px 0px 0px;
+
+	padding:				8px 4px 4px 4px;
+
+	text-align:				left;
+}
+
+td.data_grid_level3
+{
+
+	font-family:			sans-serif;
+	font-size:				11px;
+	font-weight:			normal;
+
+	color:					#AAAAAA;
+
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			0px #000000 solid;
+	border-left:			0px #000000 solid;
+	
+	margin:					0px 0px 0px 0px;
+
+	padding:				0px 0px 8px 0px;
+
+	text-align:				left;
+	vertical-align:			top;
+
+}
+
+
+td.data_grid_subtotals
+{
+
+	font-family:			sans-serif;
+	font-size:				11px;
+	font-weight:			bold;
+
+	background-color:		#000000;
+	color:					#FFFFFF;
+
+	border-top:				1px #FFA500 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			0px #000000 solid;
+	border-left:			0px #000000 solid;
+	
+	margin:					0px 0px 0px 0px;
+
+	padding:				4px 20px 8px 5px;
+
+	text-align:				left;
+	vertical-align:			top;
+
+}
+
+
+td.data_grid_totals
+{
+
+	font-family:			sans-serif;
+	font-size:				14px;
+	font-weight:			bold;
+
+	background-color:		#777777;
+	color:					#ffffff;
+
+	border-top:				0px #FFA500 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			0px #FFA500 solid;
+	border-left:			0px #000000 solid;
+	
+	margin:					0px 0px 0px 0px;
+
+	padding:				5px 20px 5px 5px;
+
+	text-align:				left;
+	vertical-align:			top;
+
+}
+
+
+/* links *********************************************** */
+a, a:visited, a:hover
+{
+	color:					#FFFFFF;
+	text-decoration:		none;
+}
+
+/* grid used by the user content page ************************************* */
+td.grid_column_title
+{
+	font-family:			sans-serif;
+	font-size:				16px;
+	font-weight:			bold;
+
+	color:					#0097fe;
+
+	margin:					5px 5px 5px 0px;
+	padding:				5px 5px 5px 0px;
+
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			2px #0097fe solid;
+	border-left:			0px #000000 solid;
+
+	text-align:				left;
+}
+
+td.grid_legend
+{
+	font-family:			sans-serif;
+	font-size:				14px;
+	font-weight:			bold;
+
+	color:					#f09f00;
+
+	margin:					0px 0px 0px 0px;
+	padding:				2px 0px 2px 0px;
+
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			1px #444444 solid;
+	border-left:			0px #000000 solid;
+	
+	text-align:				left;
+	
+	white-space:			nowrap;
+}
+
+td.grid_data
+{
+	font-family:			sans-serif;
+	font-size:				12px;
+	font-weight:			bold;
+
+	color:					#DDDDDD;
+
+	margin:					5px 5px 5px 0px;
+	padding:				5px 5px 5px 0px;
+
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			1px #444444 solid;
+	border-left:			0px #000000 solid;
+
+	text-align:				left;
+	
+	white-space:			nowrap;
+}
+
+/* user name in the user content page ********************************* */
+div.user_name
+{
+	font-family:			sans-serif;
+	font-size:				18px;
+	font-weight:			bold;
+	
+	text-align:				left;
+
+	color:					#ffa200;
+
+	margin:					5px 5px 5px 5px;
+	padding:				5px 5px 5px 5px;
+
+	border-bottom:			3px #ffa200 solid;
+}
+
+
+/* charts in the user content page ****************************************************** */
+
+div.chart_title
+{
+	font-family:			sans-serif;
+	font-size:				16px;
+	font-weight:			bold;
+
+	color:					#0097fe;
+
+	margin:					5px 5px 5px 0px;
+	padding:				5px 5px 5px 0px;
+
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			2px #0097fe solid;
+	border-left:			0px #000000 solid;
+}
+
+/* pies in the user content page ****************************************************** */
+
+div.pie_detail
+{
+	font-family:			sans-serif;
+	font-size:				12px;
+	font-weight:			bold;
+
+	color:					#FFFFFF;
+
+	margin:					0px 0px 0px 0px;
+	padding:				0px 0px 0px 0px;
+
+	border-top:				0px #000000 solid;
+	border-right:			0px #000000 solid;
+	border-bottom:			0px #0097fe solid;
+	border-left:			0px #000000 solid;
+	
+	text-align:				center;
+}
+
+/* used by the small "dollars in thousands" note used everywhere ************************ */
+
+span.dollars_note
+{
+	color:			#ffdd00;
+	font-weight:	bold;
+	font-size:		12px;
+	font-style:		italic;
+	text-align:		left;
+	margin:			0px 0px 0px 25px;
+	padding:		0px 0px 0px 0px;
+}
+
+
+/* header section that need to be frozen so the table bodies can scroll */
+th
+{
+		text-align:				left;
+		border-bottom:			10px #000000 solid;
+		padding:				4px 0px 4px 0px;
+		vertical-align:			bottom;
+		font-family:			Arial, Helvetica, sans-serif;
+		font-size:				12px;
+		font-weight:			bold;
+		text-transform:			uppercase;
+		color:					#FFFFFF;
+		background-color:		#060;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

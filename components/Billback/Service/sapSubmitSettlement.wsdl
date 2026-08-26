@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<wsdl:definitions name="PTV_CONTRACTMTG_process" targetNamespace="http://b2b.pactiv.com/BS/Settlement/"
+			xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+			xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+			xmlns:tns="http://b2b.pactiv.com/BS/Settlement/"
+			xmlns:wsdns1="http://localhost/PTV_CONTRACTMTG/process/sapSubmitSettlement"
+			xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/"
+			xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+	<wsdl:types>
+        <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://localhost/PTV_CONTRACTMTG/process/sapSubmitSettlement" xmlns:tns="http://localhost/PTV_CONTRACTMTG/process/sapSubmitSettlement" xmlns:SOAP_ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+          <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <xsd:complexType name="__in">
+            <xsd:sequence>
+              <xsd:element name="debug" nillable="true" type="xsd:string"/>
+              <xsd:element name="SettlementHeader" type="tns:__SettlementHeader"/>
+              <xsd:element name="SettlementDetail" type="tns:ArrayOf__SettlementDetail"/>
+            </xsd:sequence>
+          </xsd:complexType>
+          <xsd:complexType name="__SettlementHeader">
+            <xsd:sequence>
+              <xsd:element name="Rebate_ID" nillable="true" type="xsd:string"/>
+              <xsd:element name="Rebate_Ref_ID" nillable="true" type="xsd:string"/>
+              <xsd:element name="Shared_ShipTo" nillable="true" type="xsd:string"/>
+              <xsd:element name="Settlement_Total" nillable="true" type="xsd:string"/>
+              <xsd:element name="Settlement_Withhold_Ref" nillable="true" type="xsd:string"/>
+              <xsd:element name="Settlement_Withhold_Amt" nillable="true" type="xsd:string"/>
+              <xsd:element name="Settlement_Reason_Code" nillable="true" type="xsd:string"/>
+              <xsd:element name="Credit_Order" nillable="true" type="xsd:string"/>
+              <xsd:element name="Credit_Order_Date" nillable="true" type="xsd:string"/>
+              <xsd:element name="SAP_Accrual" nillable="true" type="xsd:string"/>
+              <xsd:element name="Created_By" nillable="true" type="xsd:string"/>
+              <xsd:element name="Created_Date" nillable="true" type="xsd:string"/>
+              <xsd:element name="Approved_By" nillable="true" type="xsd:string"/>
+              <xsd:element name="Approved_Date" nillable="true" type="xsd:string"/>
+              <xsd:element name="Active_Code" nillable="true" type="xsd:string"/>
+            </xsd:sequence>
+          </xsd:complexType>
+          <xsd:complexType name="__SettlementDetail">
+            <xsd:sequence>
+              <xsd:element name="Rebate_ID" nillable="true" type="xsd:string"/>
+              <xsd:element name="Rebate_Ref_ID" nillable="true" type="xsd:string"/>
+              <xsd:element name="Shared_ShipTo" nillable="true" type="xsd:string"/>
+              <xsd:element name="Buy_Group_ID" nillable="true" type="xsd:string" minOccurs="0"/>
+              <xsd:element name="Prod_Group" nillable="true" type="xsd:string"/>
+              <xsd:element name="Settlement_Total" nillable="true" type="xsd:string"/>
+              <xsd:element name="Active_Code" nillable="true" type="xsd:string"/>
+            </xsd:sequence>
+          </xsd:complexType>
+          <xsd:complexType name="ArrayOf__SettlementDetail">
+            <xsd:complexContent>
+              <xsd:restriction base="SOAP_ENC:Array">
+                <xsd:attribute ref="SOAP_ENC:arrayType" wsdl:arrayType="tns:__SettlementDetail[]"/>
+              </xsd:restriction>
+            </xsd:complexContent>
+          </xsd:complexType>
+          <xsd:complexType name="__out">
+            <xsd:sequence>
+              <xsd:element name="SettlementResult" nillable="true" type="tns:ArrayOf__SettlementResult"/>
+            </xsd:sequence>
+          </xsd:complexType>
+          <xsd:complexType name="__SettlementResult">
+            <xsd:sequence>
+              <xsd:element name="MessageType" nillable="true" type="xsd:string"/>
+              <xsd:element name="MessageFor" nillable="true" type="xsd:string"/>
+              <xsd:element name="MessageText" nillable="true" type="xsd:string"/>
+              <xsd:element name="Rebate_ID" nillable="true" type="xsd:string"/>
+              <xsd:element name="Rebate_Ref_ID" nillable="true" type="xsd:string"/>
+			  <xsd:element name="SAPCreditMemoRequestNumber" nillable="true" type="xsd:string"/>
+			  <xsd:element name="SAPAccrualAmountAtSettlement" nillable="true" type="xsd:string"/>
+            </xsd:sequence>
+          </xsd:complexType>
+          <xsd:complexType name="ArrayOf__SettlementResult">
+            <xsd:complexContent>
+              <xsd:restriction base="SOAP_ENC:Array">
+                <xsd:attribute ref="SOAP_ENC:arrayType" wsdl:arrayType="tns:__SettlementResult[]"/>
+              </xsd:restriction>
+            </xsd:complexContent>
+          </xsd:complexType>
+        </xsd:schema>
+
+	</wsdl:types>
+	
+	<wsdl:message name="sapSubmitSettlementInput">
+		<wsdl:part name="debug" type="xsd:string"/>
+		<wsdl:part name="SettlementHeader" type="wsdns1:__SettlementHeader"/>
+		<wsdl:part name="SettlementDetail" type="wsdns1:ArrayOf__SettlementDetail"/>
+	</wsdl:message>
+	
+	<wsdl:message name="sapSubmitSettlementOutput">
+		<wsdl:part name="SettlementResult" type="wsdns1:ArrayOf__SettlementResult"/>
+	</wsdl:message>
+	<wsdl:portType name="PTV_CONTRACTMTG_processPortType">
+		<wsdl:operation name="sapSubmitSettlement">
+			<wsdl:input message="tns:sapSubmitSettlementInput"/>
+			<wsdl:output message="tns:sapSubmitSettlementOutput"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="PTV_CONTRACTMTG_processBinding" type="tns:PTV_CONTRACTMTG_processPortType">
+		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="sapSubmitSettlement">
+			<soap:operation soapAction=""/>
+			<wsdl:input>
+				<soap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="http://b2b.pactiv.com/BS/Settlement/PTV_CONTRACTMTG.process" use="encoded"/>
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="http://b2b.pactiv.com/BS/Settlement/PTV_CONTRACTMTG.process" use="encoded"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="PTV_CONTRACTMTG_processService">
+		<wsdl:port name="PTV_CONTRACTMTG_processPort0" binding="tns:PTV_CONTRACTMTG_processBinding">
+			<soap:address location="http://b2b.pactiv.com:5081/soap/wsRPC"/>
+		</wsdl:port>
+	</wsdl:service>
+	</wsdl:definitions>

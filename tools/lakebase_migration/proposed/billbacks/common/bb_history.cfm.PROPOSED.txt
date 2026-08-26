@@ -1,0 +1,270 @@
+===== QUERY: bbApprovalHistory =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: CopiedBillback =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCopiedBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCopiedBillback>
+	<cftry>
+		<cfset CopiedBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#billbackinfo.copiedbb#",
+				"select" = "bb_code,bb_title,bb_start_date,bb_end_date"
+			}), "bb_code,bb_title,bb_start_date,bb_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCopiedBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCopiedBillback>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getusersmodifyagreed =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetusersmodifyagreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackmodifyagreedchanges")>
+<cfif useLakebaseForgetusersmodifyagreed>
+	<cftry>
+		<cfset getusersmodifyagreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackmodifyagreedchanges", {
+				"select" = "bb_modifyagree_prgid,date_changed,user_modified"
+			}), "bb_modifyagree_prgid,date_changed,user_modified"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetusersmodifyagreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetusersmodifyagreed>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackCreate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackCreate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackcreatequery")>
+<cfif useLakebaseForBillbackCreate>
+	<cftry>
+		<cfset BillbackCreate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackcreatequery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackCreate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackCreate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackRFA =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackRFA = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackrfaquery")>
+<cfif useLakebaseForBillbackRFA>
+	<cftry>
+		<cfset BillbackRFA = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackrfaquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackRFA = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackRFA>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackAgreed =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackAgreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackagreedquery")>
+<cfif useLakebaseForBillbackAgreed>
+	<cftry>
+		<cfset BillbackAgreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackagreedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackAgreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackAgreed>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackDisAgreed =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackDisAgreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackdisagreedquery")>
+<cfif useLakebaseForBillbackDisAgreed>
+	<cftry>
+		<cfset BillbackDisAgreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackdisagreedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackDisAgreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackDisAgreed>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackReset =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackReset = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackresetquery")>
+<cfif useLakebaseForBillbackReset>
+	<cftry>
+		<cfset BillbackReset = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackresetquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackReset = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackReset>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackApproved =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackapprovedquery")>
+<cfif useLakebaseForBillbackApproved>
+	<cftry>
+		<cfset BillbackApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackapprovedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackApproved>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackPaymentRequested =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackPaymentRequested = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackpaymentrequestedquery")>
+<cfif useLakebaseForBillbackPaymentRequested>
+	<cftry>
+		<cfset BillbackPaymentRequested = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackpaymentrequestedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackPaymentRequested = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackPaymentRequested>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackPaymentApproved =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackPaymentApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackpaymentapprovedquery")>
+<cfif useLakebaseForBillbackPaymentApproved>
+	<cftry>
+		<cfset BillbackPaymentApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackpaymentapprovedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackPaymentApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackPaymentApproved>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BillbackReversed =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBillbackReversed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackreversedquery")>
+<cfif useLakebaseForBillbackReversed>
+	<cftry>
+		<cfset BillbackReversed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackreversedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackReversed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackReversed>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkifanychanged =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getchangedPrograms =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetchangedPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackmodifyagreedchanges")>
+<cfif useLakebaseForgetchangedPrograms>
+	<cftry>
+		<cfset getchangedPrograms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackmodifyagreedchanges", {
+				"programchanges" = "neq.0",
+				"bb_modifyagree_prgid" = "eq.#getusersmodifyagreed.BB_ModifyAgree_PrgId#",
+				"select" = "to_programnum_list,from_programnum_list"
+			}), "to_programnum_list,from_programnum_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetchangedPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetchangedPrograms>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getchangedProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+

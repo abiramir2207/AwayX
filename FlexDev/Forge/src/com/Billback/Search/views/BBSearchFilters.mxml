@@ -1,0 +1,951 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- When a user clicks on the panel and the grid's expands and occupies the space taken by the bb filter screen - This can happen
+only when we have no height for the filter screen (s:Group below). Below I have minHeight as 0 and maxHeight as 215. This takes care
+of the issue. It seems since we have no height, the grid can take the place occupied by the filter screen.
+-->
+<s:Group color="0x333333"
+		 minHeight="0"
+		 maxHeight="{this.pModel.nHeightContainer}"
+		 width="{this.pModel.nWidthContainer}"
+		 xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:local="com.shared.views.renderer.*"
+		 xmlns:ba="com.shared.components.*"
+		 xmlns:mate="http://mate.asfusion.com/"
+		 creationComplete="fnInitialize();"
+		 >
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:RadioButtonGroup id="DataLoadType" selectedValue="{this.pModel.dataViewOption}" itemClick="loadCurrentData(event);" />
+	</fx:Declarations>
+	<fx:Script>	
+		<![CDATA[
+			import com.Billback.Main.models.vos.*;
+			import com.Billback.Main.models.vos.BBHeader;
+			import com.Billback.Search.events.*;
+			import com.Billback.Search.events.BBSearchEvent;
+			import com.Billback.Search.views.pm.BBSearchFiltersPModel;
+			import com.Billback.Search.views.pm.BBSearchGridPModel;
+			import com.asfusion.mate.events.Dispatcher;
+			import com.shared.components.HTMLToolTip;
+			
+			import flash.sampler.NewObjectSample;
+			
+			import mx.collections.ArrayList;
+			import mx.collections.IList;
+			import mx.controls.Alert;
+			import mx.controls.ToolTip;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.events.ToolTipEvent;
+			import mx.managers.ToolTipManager;
+			import mx.utils.ObjectUtil;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBSearchFiltersPModel;
+			[Bindable]
+			public var pModelSearchGrid:BBSearchGridPModel;			
+			[Bindable]
+			private var sToolTip:String;
+			/*
+			This function get called when the filters are initialized and it is mainly called
+			to set the tooltip properties.
+			*/
+			public function fnInitialize():void  
+			{
+				//set tool tip maxwidth so that the rate decimal tool tip takes up more horizontally space than vertical
+				ToolTipManager.toolTipClass = HTMLToolTip;
+				ToolTip.maxWidth = 550;
+				setToolTip();
+			}
+			
+			private function setToolTip():void
+			{
+				/* 
+				The below variable is used to set the tooltip on the Data view **Check the <textformat> tag within the help "leading"  actually
+				equals the padding property.
+				*/
+				this.sToolTip = "<textformat leading='8'>Current = Billbacks created within the last " + this.pModel.oSettings.appSettings.BB_Created_Recently_Days + " days that are <u>not</u> in Paid or Approved-Void status" + "\n"
+					+ "Current including paid/void = All billbacks, includes those in Paid and Approved-Void status" + "\n </textformat>";
+			}
+			
+			public function fnPositionToolTip(event:ToolTipEvent):void
+			{
+				var pt:Point = event.currentTarget.contentToGlobal(new Point(0,0));
+				ToolTipManager.currentToolTip.y = pt.y - 85; // 68
+				ToolTipManager.currentToolTip.x = pt.x - 20;
+				ToolTipManager.currentToolTip.height = 50;
+				
+			}
+			
+			/* for handling any action related to file */
+			private var objFileRef:FileReference = new FileReference();
+			
+			/* Hide/Show controls based on user selection. */
+			private function loadCurrentData(event:ItemClickEvent):void
+			{
+				if(event.currentTarget.selectedValue == 'current'){
+					/* Load the data from the shared object */
+					this.pModel.loadCurrent();		
+				}		
+				
+				this.pModel.dataViewOption = event.currentTarget.selectedValue;				
+			}
+			
+			public function TextBoxfilterReset(resetType:String):void
+			{
+				this.pModel.resetType = resetType;
+				
+				/* Reset the textbox values */
+				tiPayableNumber.text = '';
+				tiBillbackNumber.text = '';
+				tiProgram.text = '';
+				tiPayee.text = '';
+				tiEntitySearch.text = '';
+				tiAmountValue.text = '';
+				dtSearchDateRangeStart.text = '';
+				dtSearchDateRangeEnd.text = '';
+				tiCheckNumber.text = '';
+				chkDuplicate.selected = false;
+				
+				/* Reset the checkboxes in the dropdowns */
+				//this.pModel.objLookupData.analystList = this.pModel.objLookupData.analystList;
+				
+				if(this.pModel.resetType == 'FullReset')
+				{
+					
+					/* Set the "Data View" radio button option to "current" */
+					DataLoadType.selectedValue = 'current';	
+					
+					/* Fire the click event on the selected radio button ("current" option) above */
+					DataLoadType.dispatchEvent(new ItemClickEvent(ItemClickEvent.ITEM_CLICK));
+				}
+				
+				/* Reset controls, other than textbox values */
+				var eventReset:BBSearchEvent = new BBSearchEvent(BBSearchEvent.RESET_FILTERS);
+				
+				/* When the user attaches documents to billbacks, the result set gets filtered to those billbacks. Then when the user clicks 
+				on "options", then all the filters need to be reset. For that purpose, I need to send eRefreshData = true.
+				On clicking of "reset", we do not need it, as the Data View needs to be set to current" view, which already takes care of it,
+				*/
+				if(this.pModel.resetType == 'BBFilterForDocs')
+				{
+					eventReset.eRefreshData = true;
+				}
+				else
+				{
+					eventReset.eRefreshData = false;
+				}
+				
+				this.dispatchEvent(eventReset);
+				
+				/* If there are any previously checked items, uncheck them */
+				var eventUncheckSelected:BBSearchEvent = new BBSearchEvent(BBSearchEvent.UNCHECK_SELECTED);
+				this.dispatchEvent(eventUncheckSelected);
+				
+				/* Set the height of the top search filters section to it's original height. The code will only be useful when a user
+				chooses the "reassign" option from the "action" dropdown for which the height of the screen needs to be increased so that
+				the "Reassign To" dropdown can be added on an additional row. Once the user clicks reset, this code will set the screen to 
+				it's original height.
+				*/
+				var eventSearchScreenHeight:BBSearchEvent = new BBSearchEvent ( BBSearchEvent.BB_SEARCH_FILTERS_SCREEN_HEIGHT);							
+				eventSearchScreenHeight.eSearchFiltersScreenHeightIncrease = false;
+				
+				this.dispatchEvent( eventSearchScreenHeight );
+			}
+			
+			private function FilterBillbacks(type:String):void
+			{
+				
+				/* Set bGetFavorites = true, so that "saveBBFilterParams" function is  not fired before it should, when user either 
+				saves the "Favorites" list OR loads "Archive" data.
+				*/
+				if(type == 'userList')
+				{
+					this.pModel.bGetFavorites =  true;				
+				}
+					/* When user searches for "current including paid/void" data */
+				else if(this.pModel.dataViewOption == 'current_including_paid')
+				{
+					this.pModel.bSearchData = true;
+				}
+				
+				/* All the selected values from the different textboxes and dropdowns or any other control are now a part of "BBFilterParams" object */
+				this.pModel.updatePayableNumber(tiPayableNumber.text);
+				this.pModel.updateBBNumber(tiBillbackNumber.text);
+				this.pModel.updateProgram(tiProgram.text);
+				this.pModel.updatePayee(tiPayee.text);
+				this.pModel.updateAmountValue(drpAmountType.selectedItem,drpAmountCriteria.selectedItem,tiAmountValue.text);
+				this.pModel.updateEntity(drpEntity.selectedItem,tiEntitySearch.text);
+				this.pModel.updateCheckNumber(tiCheckNumber.text);
+				
+				this.pModel.updateStatus(drpStatus.arrSelectedItems);
+				this.pModel.updateAnalyst(drpAnalyst.arrSelectedItems);
+				this.pModel.updateClosingMethod(drpClosingMethod.arrSelectedItems);
+				this.pModel.updateBBType(drpBBType.arrSelectedItems);
+				this.pModel.updateDateRangeStartValue(drpDateRangeStartType.selectedItem,drpDateRangeStartCriteria.selectedItem,dtSearchDateRangeStart.text);
+				this.pModel.updateDateRangeEndValue(drpDateRangeEndType.selectedItem,drpDateRangeEndCriteria.selectedItem,dtSearchDateRangeEnd.text);
+				this.pModel.updateAmountValue(drpAmountType.selectedItem,drpAmountCriteria.selectedItem,tiAmountValue.text);
+				this.pModel.updateEntity(drpEntity.selectedItem,tiEntitySearch.text);
+				this.pModel.updateActions(drpActions.selectedItem);
+				this.pModel.updateUser(drpHistory.selectedItem,drpUser.arrSelectedItems);
+				this.pModel.updateConditionsValue(drpConditions.selectedItem);
+				if (this.chkDuplicate.selected)
+				{
+					this.pModel.updateDuplicateCheck(true);	
+				}
+				else
+				{
+					this.pModel.updateDuplicateCheck(false);
+				}
+				
+				/* This is called for searching, whether it is "current" or "current including paid/void" */
+				if(type == 'search'){
+					
+					this.pModel.updateSearchData();
+					//this.pModel.saveBBFilterParams();	
+				} 
+					/* User saving "favorites" data */
+				else{			  
+					if(tListName.text.length == 0){
+						Alert.show("Please enter a name for your favorites");
+					}
+					else{
+						this.pModel.saveUserList(tListName.text);
+						tListName.text = '';
+					}			  	
+				}			   
+			}
+			
+			/* Call this when the user hits the "Enter" key */
+			private function enterSearchBox(event:KeyboardEvent):void 
+			{        
+				if (event.keyCode == Keyboard.ENTER)
+				{
+					/* call main filter method */       
+					
+					FilterBillbacks('search');
+				}
+			}
+			
+			private function validateUserListItems():void
+			{
+				if(this.lsUserList.selectedItems.length == 0)
+				{
+					Alert.show("Please select a list to display");
+				}
+				else
+				{
+					/* If the favorite returns any billback in paid/approved-void status besides non-paid (if any) */				
+					if(this.lsUserList.selectedItem.currentIncludingPaid == true){					
+						/* Set the "Data View" radio button option to "current including paid/void" */
+						DataLoadType.selectedValue = 'current_including_paid';							
+					}
+					else{	
+						/* When the user searches for a billback in non-paid status right after searching
+						for in paid/void status,reset the datasource to the original data. This will make sure 
+						when the filtering happens correctly, especially for full-text search.
+						*/
+						if(DataLoadType.selectedValue == 'current_including_paid'){
+							
+							TextBoxfilterReset('FullReset');
+						}
+						
+						/* Set the "Data View" radio button option to "Current" */
+						DataLoadType.selectedValue = 'current';	
+					}
+					/* Without this, when the user retrieves favorites having paid data (not paid status) and then filters that data
+					by paid status, the code does not allow to search by paid data */
+					this.pModel.dataViewOption = DataLoadType.selectedValue.toString();
+					/* Get data */
+					this.pModel.getUserListItems(this.lsUserList.selectedItem);
+				}
+			}
+			
+			/* handler for when a user presses enter on a Saved user List row (lsUserList)*/
+			private function enterUserListRow(event:KeyboardEvent):void 
+			{                
+				if (event.keyCode == Keyboard.ENTER) 
+				{
+					/* ITEM_DOUBLE_CLICK calls validateUserListItems()   */                   
+					lsUserList.dispatchEvent(new ListEvent(ListEvent.ITEM_DOUBLE_CLICK));
+				}
+			}
+			
+			private function validateDeleteUserList():void
+			{
+				if(this.lsUserList.selectedItems.length == 0)
+				{
+					Alert.show("Please select a list to delete");				
+				}
+				else
+				{
+					this.pModel.deleteUserList(this.lsUserList.selectedItem.userBillbackListId);
+				}
+			}
+			
+			private function callupdateActions():void
+			{   
+				this.pModel.updateActions(drpActions.selectedItem);
+			}
+			
+			/* Reset the filter for uploaded docs and then reset the entire grid. Do not reset the "Data View" though, i.e.
+			if the user was in "current" OR "current including paid/void" or "Year" Data View, let the screen be in that view.
+			*/
+			private function updateBBFilterForDocs():void
+			{   
+				if(this.pModel.objBBFilterParams.BBIDIntList.length > 0)
+				{
+					this.pModel.bFilterBBForUploadedDocs =  false;
+					this.pModel.objBBFilterParams.BBIDIntList = new Array();
+					TextBoxfilterReset('BBFilterForDocs');
+				}
+			}
+		]]>
+	</fx:Script>	
+	<ba:MinMaxPanel id="header" width="{this.pModel.nWidthContainer}" height="{this.pModel.nHeightContainer}" borderStyle="none" panelTitle="Billback Search Results: {this.pModelSearchGrid.acData.length} records" showMaximize="false" showMinimize="true">
+		<!-- tbNavList.selectedIndex is 1 when the user is on the "tools" tab. So, when the user clicks on "options" tab, 
+		since the tbNavList.selectedIndex is 1, "updateBBFilterForDocs" is fired to reset the filter for uploaded docs.
+		Now tbNavList.selectedIndex is set to 0 and so this code is not fired when the user clicks on "tools" tab.
+		-->
+		<s:ButtonBar skinClass="com.shared.views.skins.ButtonBarBa" dataProvider="{tbNavList}" requireSelection="true" click="if(tbNavList.selectedIndex == 1){updateBBFilterForDocs()}"  /> 		
+		<s:VGroup id="vgHeader" height="100%" paddingTop="20">
+			<mx:ViewStack id="tbNavList" width="100%" height="100%"  
+						  selectedIndex="{this.pModel.intNavListSelectedIndex}">	
+				<s:NavigatorContent label="options" width="100%" height="100%">
+					<s:VGroup top="5">
+						<s:HGroup>
+							<s:HGroup verticalAlign="middle" width="320">
+								<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Payable}" width="55" />
+								<s:TextInput
+									tabEnabled="true"			  	
+									id="tiPayableNumber" 
+									toolTip="Keyword search on any of the fields:&#13; {this.pModel.oSettings.appFlex.bbLabels.Payable} #,{this.pModel.oSettings.appFlex.bbLabels.Title}"			
+									height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									width="160"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup>
+							
+							<s:HGroup verticalAlign="middle" width="405">
+								<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Billback} #" width="50"/>
+								<s:TextInput
+									tabEnabled="true"			  	
+									id="tiBillbackNumber" 
+									toolTip="Keyword search on any of the fields:&#13; {this.pModel.oSettings.appFlex.bbLabels.Billback} #,{this.pModel.oSettings.appFlex.bbLabels.Reference_Number} #"			
+									height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									width="160"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup>
+							
+							<s:HGroup verticalAlign="middle">
+								<s:Label text="Status" width="90" />
+								<local:MultiSelectionDropDown
+									id="drpStatus"
+									labelField="description"
+									toolTip="filter:Status"
+									width="189"
+									requireSelection="false"
+									currentSelection="{this.pModel.objBBFilterParams.statusListSelect}"
+									itemRenderer="com.shared.components.MultiSelectItemRenderer"
+									skinClass="com.shared.components.MultiSelectionDropDownListSkin"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.statusList)}"							
+									keyDown="enterSearchBox(event)">
+									<!--selectionChange="FilterBillbacks('search')"
+									selectedIndex="{this.pModel.DefaultOption}"-->
+									<local:layout>
+										<s:VerticalLayout requestedMaxRowCount="8" horizontalAlign="justify"/>
+									</local:layout>
+								</local:MultiSelectionDropDown>	
+							</s:HGroup>
+						</s:HGroup> 
+						
+						<s:HGroup>
+							<s:HGroup verticalAlign="middle" width="320">
+								<s:Label text="Program" width="55" />
+								<s:TextInput 
+									tabEnabled="true"			  	
+									id="tiProgram" 
+									toolTip="Keyword search on any of the fields:&#13; Program #,Title"			
+									height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									width="160"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup> 
+							<s:HGroup verticalAlign="middle" width="405">
+								<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Analyst}" width="50" />
+								<local:MultiSelectionDropDown
+									id="drpAnalyst"
+									labelField="fullName"
+									toolTip="filter:{this.pModel.oSettings.appFlex.bbLabels.Analyst}"
+									width="189"
+									requireSelection="false" 							
+									currentSelection="{this.pModel.objBBFilterParams.analystListSelect}"
+									itemRenderer="com.shared.components.MultiSelectItemRenderer"
+									skinClass="com.shared.components.MultiSelectionDropDownListSkin"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.analystList)}"
+									keyDown="enterSearchBox(event)"
+									>	
+									<!--selectionChange="FilterBillbacks('search')"
+									selectedIndex="{this.pModel.DefaultOption}" close="this.pModel.updateAnalyst(drpAnalyst.arrSelectedItems)"
+									change="this.pModel.updateAnalyst(drpAnalyst.arrSelectedItems)"-->
+									<local:layout>
+										<s:VerticalLayout requestedMaxRowCount="8" horizontalAlign="justify"/>
+									</local:layout>
+								</local:MultiSelectionDropDown>	
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="350">
+								<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Closing_Method}" width="90"/>
+								<local:MultiSelectionDropDown
+									id="drpClosingMethod"
+									labelField="description"
+									toolTip="filter:{this.pModel.oSettings.appFlex.bbLabels.Closing_Method}"
+									width="189"
+									requireSelection="false"
+									currentSelection="{this.pModel.objBBFilterParams.closingMethodSelect}"
+									itemRenderer="com.shared.components.MultiSelectItemRenderer"
+									skinClass="com.shared.components.MultiSelectionDropDownListSkin"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.closingMethodList)}"	
+									keyDown="enterSearchBox(event)"
+									>	
+									<!--selectionChange="FilterBillbacks('search')"
+									selectedIndex="{this.pModel.DefaultOption}"-->
+									<local:layout>
+										<s:VerticalLayout requestedMaxRowCount="8" horizontalAlign="justify"/>
+									</local:layout>
+								</local:MultiSelectionDropDown>	
+							</s:HGroup>
+						</s:HGroup>
+						
+						<s:HGroup>
+							<s:HGroup verticalAlign="middle" width="320">
+								<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Type}" width="55" />
+								<local:MultiSelectionDropDown
+									id="drpBBType"
+									labelField="description"
+									toolTip="filter:{this.pModel.oSettings.appFlex.bbLabels.Type}"
+									width="189"
+									requireSelection="false"
+									currentSelection="{this.pModel.objBBFilterParams.typeListSelect}"
+									itemRenderer="com.shared.components.MultiSelectItemRenderer"
+									skinClass="com.shared.components.MultiSelectionDropDownListSkin"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.typeList)}"
+									keyDown="enterSearchBox(event)"
+									>	
+									<!--selectionChange="FilterBillbacks('search')"
+									selectedIndex="{this.pModel.DefaultOption}"-->
+									<local:layout>
+										<s:VerticalLayout requestedMaxRowCount="8" horizontalAlign="justify"/>
+									</local:layout>
+								</local:MultiSelectionDropDown>	
+							</s:HGroup> 
+							<s:HGroup verticalAlign="middle" width="405">
+								<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Payee}" width="50"/>
+								<s:TextInput
+									tabEnabled="true"			  	
+									id="tiPayee" 
+									toolTip="Keyword search on any of the fields:&#13; {this.pModel.oSettings.appFlex.bbLabels.Payee} ID,{this.pModel.oSettings.appFlex.bbLabels.Payee} Name"			
+									height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									width="160"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup>
+							<s:HGroup > 
+								<s:Label paddingTop="5" text="Start Date" width="90" />
+								<s:DropDownList
+									id="drpDateRangeStartType"
+									labelField="description"
+									toolTip="filter:Start Date Type"
+									width="100"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.dateTypeList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+								
+								<s:DropDownList
+									id="drpDateRangeStartCriteria"
+									labelField="description"
+									toolTip="filter:Start Date Condition"
+									width="54"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.criteriaList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup> 
+							<mx:DateField id="dtSearchDateRangeStart" toolTip="Date Search on selected Start Date Type and Date Condition" editable="true" keyDown="enterSearchBox(event)"/>
+						</s:HGroup>
+						<s:HGroup verticalAlign="top">
+							<s:HGroup width="320"> 
+								<s:Label paddingTop="5" text="Amount" width="55" />
+								
+								<s:DropDownList
+									id="drpAmountType"
+									toolTip="filter:Amount Type"
+									width="100"		
+									dataProvider="{new ArrayList(this.pModel.objLookupData.amountTypeList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+								
+								<s:DropDownList
+									id="drpAmountCriteria"
+									toolTip="filter:Amount Criteria"
+									width="54"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.criteriaList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+								
+								<s:TextInput
+									tabEnabled="true"			  	
+									id="tiAmountValue" 
+									toolTip="filter:Amount search on Amount Type and Amount Criteria"	
+									height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									width="50"
+									keyDown="enterSearchBox(event)"
+									/>			    
+							</s:HGroup> 
+							<s:HGroup width="405"> 
+								<!--keyDown="enterSearchBox(event);"-->
+								<s:Label paddingTop="5" text="Entity" width="50" />
+								<s:DropDownList
+									id="drpEntity"
+									toolTip="filter:Entity"
+									width="109"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.entityTypeList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+								
+								<s:TextInput
+									tabEnabled="true"			  	
+									id="tiEntitySearch" 
+									toolTip="Keyword search on any of the fields:&#13; Distributor #,Distributor Name,Operator #,Operator Name,Broker Number,Broker Name,{this.pModel.oSettings.appFlex.bbLabels.Vendor} #, {this.pModel.oSettings.appFlex.bbLabels.Vendor} Name"			
+									height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									width="160"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup> 
+							<s:HGroup > 
+								<s:Label paddingTop="5" text="End Date" width="90" />
+								<s:DropDownList
+									id="drpDateRangeEndType"
+									labelField="description"
+									toolTip="filter:End Date Type"
+									width="100"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.dateTypeList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+								
+								<s:DropDownList
+									id="drpDateRangeEndCriteria"
+									labelField="description"
+									toolTip="filter:End Date Condition"
+									width="54"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.criteriaList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup> 
+							<mx:DateField id="dtSearchDateRangeEnd" toolTip="Date Search on selected End Date Type and Date Condition" editable="true" keyDown="enterSearchBox(event)"/>
+							
+							
+						</s:HGroup> 
+						<s:HGroup id="idReassign" visible="{this.pModel.bshowReAssign}" includeInLayout="{this.pModel.bshowReAssign}" verticalAlign="middle">
+							<s:Label text="" width="712"/>
+							<s:Label text="Reassign To" width="75"/>
+							<local:MultiSelectionDropDown
+								id="drpReassign"
+								labelField="fullName"
+								toolTip="Select users to reassign {this.pModel.oSettings.appFlex.bbLabels.Billback} to"
+								width="189"
+								requireSelection="false"
+								itemRenderer="com.shared.components.MultiSelectItemRenderer"
+								skinClass="com.shared.components.MultiSelectionDropDownListSkin"
+								dataProvider="{new ArrayList(this.pModel.objLookupData.analystList)}"
+								keyDown="enterSearchBox(event)"
+								>
+								<local:layout>
+									<s:VerticalLayout requestedMaxRowCount="8" horizontalAlign="justify"/>
+								</local:layout>
+							</local:MultiSelectionDropDown>							
+							<s:Button id="btnReassign" label="reassign selected" click="this.pModel.updateReassign(drpReassign.arrSelectedItems);"/>
+						</s:HGroup>	
+						
+						<!-- start -->	
+						<s:HGroup verticalAlign="top">
+							<s:HGroup verticalAlign="middle" width="320">
+								<s:Label text="Check #" width="55"/>
+								<s:TextInput
+									tabEnabled="true"			  	
+									id="tiCheckNumber" 
+									toolTip="Keyword search on any of the fields:&#13; Check #"			
+									height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									width="160"
+									keyDown="enterSearchBox(event)"
+									/>
+							</s:HGroup>
+							<s:HGroup width="405"> 
+								<!--keyDown="enterSearchBox(event);"-->
+								<s:Label paddingTop="5" text="History" width="50" />
+								<s:DropDownList
+									id="drpHistory"
+									toolTip="filter:{this.pModel.oSettings.appFlex.bbLabels.Billback} creation/Approval history of"
+									width="119"		
+									dataProvider="{new ArrayList(this.pModel.objLookupData.historyTypeList)}"
+									selectedIndex="{this.pModel.DefaultOption}"
+									keyDown="enterSearchBox(event)"
+									/>
+								
+								<local:MultiSelectionDropDown
+									id="drpUser"
+									labelField="fullName"
+									width="209"
+									toolTip="filter:Billback creation/Approval history"
+									horizontalScrollPolicy="on"
+									requireSelection="false"
+									currentSelection="{this.pModel.objBBFilterParams.historyUsernameSelect}"
+									itemRenderer="com.shared.components.MultiSelectItemRenderer"
+									skinClass="com.shared.components.MultiSelectionDropDownListSkin"
+									dataProvider="{new ArrayList(this.pModel.objLookupData.userList)}"
+									keyDown="enterSearchBox(event)"
+									open="drpUser.dropDown.width = this.pModel.iComboBoxContentWidth;"
+									>
+									<!--selectionChange="FilterBillbacks('search')"
+									selectedIndex="{this.pModel.DefaultOption}"-->	
+									<local:layout>
+										<s:VerticalLayout requestedMaxRowCount="8" horizontalAlign="justify"/>
+									</local:layout>
+								</local:MultiSelectionDropDown>	
+							</s:HGroup>
+							<s:HGroup width="220"> 
+								<s:Label paddingTop="5" text="Actions" width="90" />
+								<s:HGroup width="148">
+									<s:DropDownList
+										id="drpActions"
+										toolTip="filter:{this.pModel.oSettings.appFlex.bbLabels.Billback} Actions"
+										width="133"
+										dataProvider="{new ArrayList(this.pModel.objLookupData.actionList)}"
+										selectedIndex="{this.pModel.DefaultOption}"
+										keyDown="enterSearchBox(event)" />
+								</s:HGroup>
+								<s:HGroup id="idReset" visible="{this.pModel.bshowReset}" includeInLayout="{this.pModel.bshowReset}">
+									<s:VGroup width="120">						
+										<s:Button id="btnReset" label="reset selected to WIP" click="this.pModel.updateReset();"/>
+									</s:VGroup>
+								</s:HGroup>
+								<s:HGroup id="idMassApprove" visible="{this.pModel.bshowMassApprove}" includeInLayout="{this.pModel.bshowMassApprove}">
+									<s:VGroup width="120">						
+										<s:Button id="btnMassApprove" label="approve selected" click="this.pModel.updateMassApprove();"/>	
+									</s:VGroup>
+								</s:HGroup>
+								<s:HGroup id="idDelete" visible="{this.pModel.bshowDelete}" includeInLayout="{this.pModel.bshowDelete}">
+									<s:VGroup width="120">							
+										<s:Button id="btnDelete" label="delete selected" click="this.pModel.updateDelete();"/>
+									</s:VGroup>
+								</s:HGroup>
+								<s:HGroup id="idRelease" visible="{this.pModel.bshowRelease}" includeInLayout="{this.pModel.bshowRelease}">
+									<s:VGroup width="120">							
+										<s:Button id="btnRelease" label="release selected"/>
+									</s:VGroup>
+								</s:HGroup>
+								<s:HGroup id="idHold" visible="{this.pModel.bshowHold}" includeInLayout="{this.pModel.bshowHold}">
+									<s:VGroup width="120">							
+										<s:Button id="btnHold" label="hold selected"/>
+									</s:VGroup>
+								</s:HGroup>
+							</s:HGroup> 
+						</s:HGroup>
+						
+						
+						<s:HGroup verticalAlign="top" includeInLayout="{this.pModel.bShowLoadingOptions}" visible="{this.pModel.bShowLoadingOptions}">
+							<s:HGroup verticalAlign="middle" width="377">
+								<s:Label text="Data View" fontSize="10" fontWeight="bold" width="58" fontFamily="Verdana"/>
+								<s:Image id="iconRatePrecisionInfo" 
+										 source="/flex/assets/Images/help.gif"
+										 toolTipShow="fnPositionToolTip(event);"
+										 width="14" height="14" 
+										 toolTip="{this.sToolTip}"
+										 />
+								<s:RadioButton groupName="DataLoadType" id="rdoBillback" value="current" scaleX="0.9" scaleY="0.9" label="Current"/>
+								<s:Label text="OR" fontSize="10" fontFamily="Verdana" fontWeight="bold" width="20" />
+								<s:RadioButton groupName="DataLoadType" id="rdoBillbackIncludingPaid" value="current_including_paid" scaleX="0.9" scaleY="0.9" label="Current including paid/void" />
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="348">
+								<s:Label text="Favorites" fontSize="10" fontWeight="bold" width="58" fontFamily="Verdana"/>
+								<s:Label text="(Click on the 'tools' tab to access)" fontSize="9" color="#4169E1" fontFamily="Verdana"/>
+							</s:HGroup>	
+								<s:HGroup width="235"> 
+									<s:Label paddingTop="5" text="Conditions" width="90" />
+									<s:DropDownList
+										id="drpConditions"	
+										width="135"
+										dataProvider="{new ArrayList(this.pModel.objLookupData.conditionList)}"
+										selectedIndex="{this.pModel.DefaultOption}"
+										keyDown="enterSearchBox(event)"
+										/>	
+									
+									<!--For some reason, when we click on "refresh", the selected item for the "drpConditions" dropdown becomes blank, If I do
+									not add another control with "dataprovider" property pointing to any property of "this.pModel.objLookupData". That is
+									why this "placeholder" has been added.
+									-->
+									<s:DropDownList
+										id="placeholder"	
+										dataProvider="{new ArrayList(this.pModel.objLookupData.conditionList)}"
+										visible="false"
+										includeInLayout="false"
+										/>	
+								</s:HGroup>  
+								
+								<s:HGroup width="80"> 
+									<s:Button label="search"  click="FilterBillbacks('search')" />
+								</s:HGroup>
+								
+								<s:HGroup width="80"> 
+									<s:Button label="reset" click="TextBoxfilterReset('FullReset');"/>
+								</s:HGroup> 
+						</s:HGroup>
+						
+						<s:HGroup verticalAlign="top" includeInLayout="{this.pModel.bShowLoadingOptions}" visible="{this.pModel.bShowLoadingOptions}">
+							<s:HGroup verticalAlign="middle" width="56">
+							</s:HGroup>
+							<!-- 
+								D39812:  Validate EDI files for potential billback duplicate/Anand Rao/07-Feb-2014
+								Added the below checkbox for displaying the duplicates alone, which will have a BB_Upload_Dup_Group_ID value in the BB record.
+							-->
+							<s:HGroup verticalAlign="middle" width="300">
+								<s:CheckBox id="chkDuplicate"/>
+								<s:Label text="Duplicates only" />
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="420">
+								<s:Label text="" width="12"/>
+								<s:Label text="Name:" />
+								<s:TextInput id="tListName" maxChars="25" width="135" toolTip="To access your favorites, go to the miscellaneous tab.&#13;To save a favorite&#13;Enter your search criteria &#13;In the name field, enter a name for your favorite&#13;Click Save" />
+								<s:Button id="btnSaveUserList" label="save" click="FilterBillbacks('userList');" toolTip="Save selected query for later use" />
+								<s:Label text="" width="3" />
+								<s:Button	
+									toolTip="Generate Excel file"
+									id="btnExportXLS" 			
+									label="download data"
+									click="this.pModel.callExportXLS()"							
+									/>	
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="90">
+								<s:Button id="btnCreateBB"
+										  label="Create {this.pModel.oSettings.appFlex.bbLabels.Billback}" 
+										  click="this.pModel.selectBB()"	
+										  toolTip="create new {this.pModel.oSettings.appFlex.bbLabels.Billback}"	 visible="{this.pModel.oSettings.user.stProfileSettings.BB_CREATE == 1}"			
+										  />
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="320">
+								<s:Button id="btnRefreshData"
+										  label="refresh data" 
+										  click="this.pModel.updateRefreshData()"	
+										  toolTip="Reload data set from server. Current data in view was loaded: {this.pModel.dSODate}"						
+										  />
+								<s:Label id="dataAsOf" text=" Data as of: {this.pModel.dSODate}" color="red" fontWeight="bold" toolTip="The time stamp for the data in the current view."/>
+							</s:HGroup>
+							
+						</s:HGroup>	
+						
+					</s:VGroup>   
+				</s:NavigatorContent>
+				<s:NavigatorContent label="tools" width="100%" height="100%" id="idMisc"> 
+					<!-- Do not remove this commented code. This can be useful for scrolling -->
+					<!--<s:Scroller width="100%" height="100%">
+					<s:Group width="100%" height="100%">
+					-->
+					<s:VGroup>
+						<s:HGroup>
+							<s:VGroup width="250">
+								<s:Label text="create list" fontWeight="bold" />
+								<mx:TextArea height="140" width="180" id="txtCrList" 
+											 toolTip="To search for a list of billbacks&#13;Type or paste in a list of billbacks.Separate each billback by the enter key. Click search."
+											 editable="true" enabled="true" wordWrap="false">
+								</mx:TextArea>
+								<!--To search for a list of programs:&#13;Type or paste in a list of programs.{sExactListMatchingOnMessage} Separate each program by the enter key. Click search."-->							
+								<s:Button id="btnCreateList" label="search" click="this.pModel.callCreateList(this.txtCrList.text);"/><!-- height="{iButtonHeight}" -->
+							</s:VGroup>
+							<s:HGroup>
+								<s:VGroup width="270">
+									<s:Label text="favorites" fontWeight="bold" />
+									<s:List id="lsUserList" 
+											labelField="listName" height="140" width="200"
+											doubleClickEnabled="true"
+											dataProvider="{new ArrayList(this.pModel.arrUserList)}"
+											doubleClick="this.validateUserListItems();"
+											toolTip="To see one of your favorites:&#13;Double click on the Favorites Name.&#13;The Favorites list will appear below."
+											keyDown="enterUserListRow(event);" 
+											alternatingItemColors="[#bbffbb,#ffffff]"/>
+									<s:HGroup>
+										<s:Button id="btnGetListItems" label="search" click="validateUserListItems();" toolTip="Display the programs in the selected list" />
+										<s:Button id="btnDeleteList" label="delete" click="validateDeleteUserList();" toolTip="Delete the selected list" />
+									</s:HGroup>
+								</s:VGroup>
+							</s:HGroup>		  
+							<s:VGroup width="220">			  
+								<s:HGroup>
+									<s:Label text="docs" fontWeight="bold" />			 	
+								</s:HGroup>
+								<s:HGroup>
+									<s:Label fontSize="9" text="[" width="4" />	
+									<s:Label fontSize="9" width="92" text="upload documents" color="blue" click="this.pModel.updateSearchAndUploadDocs(1)" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here to upload documents for billbacks"/>			 	
+									<s:Label fontSize="9" text="]" width="4" />
+								</s:HGroup>
+								<s:HGroup visible="{this.pModel.oSettings.user.stProfileSettings.SEARCH_DOCUMENTS == 1}" includeInLayout="{this.pModel.oSettings.user.stProfileSettings.SEARCH_DOCUMENTS == 1}">
+									<s:Label fontSize="9" text="[" width="4" />	
+									<s:Label fontSize="9" width="92" text="search documents" color="blue" click="this.pModel.updateSearchAndUploadDocs(2)" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here to search documents for billbacks"/>			 	
+									<s:Label fontSize="9" text="]" width="4" />
+								</s:HGroup>
+							</s:VGroup>
+							<s:VGroup width="370">			
+								<s:HGroup>
+									<!--<s:Label text="" width="24" />-->
+									<s:Label text="set column size" fontWeight="bold" />
+								</s:HGroup>
+								<s:HGroup verticalAlign="bottom">
+									<s:Label text="Status"  width="65" />
+									<s:HSlider id="sliderStatusSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.status}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize('Status',sliderStatusSize.value)" /> 				  
+									
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Payable}"  width="65" />
+									<s:HSlider id="sliderPayableNumberSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.BBCode}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Payable,sliderPayableNumberSize.value)" /> 
+								</s:HGroup>
+								<s:HGroup verticalAlign="bottom">
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Billback}"  width="65" />
+									<s:HSlider id="sliderBillbackNumberSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.BBNumber}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Billback,sliderBillbackNumberSize.value)" /> 
+									
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Title}"  width="65" />
+									<s:HSlider id="sliderTitleSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.title}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Title,sliderTitleSize.value)" /> 
+								</s:HGroup>
+								<s:HGroup verticalAlign="bottom">
+									<!-- <s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Billback} Date"  width="65" />
+									<s:HSlider id="sliderBBDateSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.BBDate}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Billback + ' Date',sliderBBDateSize.value)" /> 
+									-->
+									<s:Label text="Received Date"  width="65" />
+									<s:HSlider id="sliderBBReceivedDateSize"
+									minimum="50"
+									maximum="250"
+									value="{this.pModel.objBBSearchGridColumnSize.BBReceivedDate}"
+									liveDragging="true"
+									change="this.pModel.setColumnSize('Received Date',sliderBBReceivedDateSize.value)" />
+									
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Payee}"  width="65" />
+									<s:HSlider id="sliderPayeeSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.payee}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Payee,sliderPayeeSize.value)" /> 
+								</s:HGroup>
+								<s:HGroup verticalAlign="bottom">			 
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Vendor}"  width="65" />
+									<s:HSlider id="sliderVendorSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.vendor}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Vendor,sliderVendorSize.value)" /> 
+									
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_Start}"  width="65" />
+									<s:HSlider id="sliderStartDateSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.startDate}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_Start,sliderStartDateSize.value)" /> 
+								</s:HGroup>
+								<s:HGroup verticalAlign="bottom">
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_End}"  width="65" />
+									<s:HSlider id="sliderEndDateSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.endDate}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_End,sliderEndDateSize.value)" /> 
+									
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Claimed}"  width="65" />
+									<s:HSlider id="sliderClaimedAmountSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.claimedAmount}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Claimed,sliderClaimedAmountSize.value)" /> 
+								</s:HGroup>
+								<s:HGroup verticalAlign="bottom">				  
+									<s:Label text="Approved"  width="65" />
+									<s:HSlider id="sliderApprovedAmountSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.approvedAmount}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize('Approved',sliderApprovedAmountSize.value)" />	                       
+									
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Closing_Method}"  width="65" />
+									<s:HSlider id="sliderClosingMethodSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.closingMethod}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize(this.pModel.oSettings.appFlex.bbLabels.Closing_Method,sliderClosingMethodSize.value)" />	                       
+								</s:HGroup>			 
+								<s:HGroup verticalAlign="bottom">
+									<s:Label text="More Info"  width="65" />
+									<s:HSlider id="sliderMoreInfoSize"
+											   minimum="50"
+											   maximum="250"
+											   value="{this.pModel.objBBSearchGridColumnSize.moreInfo}"
+											   liveDragging="true"
+											   change="this.pModel.setColumnSize('More Info',sliderMoreInfoSize.value)" />
+								</s:HGroup>				
+								<s:HGroup verticalAlign="bottom">			  
+									<s:Label text="" width="140" />
+									<s:Button id="btnSaveColumnSize" label="save" click="this.pModel.saveColumnSize()" toolTip="save the search grid column size" />
+								</s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</s:VGroup>	
+					
+					<!-- Do not remove this commented code. This can be useful for scrolling -->
+					<!--</s:Group>
+					</s:Scroller>	
+					-->
+					
+				</s:NavigatorContent>	
+				
+			</mx:ViewStack>	
+		</s:VGroup>	
+	</ba:MinMaxPanel>	
+</s:Group>

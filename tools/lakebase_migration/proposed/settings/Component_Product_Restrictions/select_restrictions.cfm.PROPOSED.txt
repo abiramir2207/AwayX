@@ -1,0 +1,74 @@
+===== QUERY: DeleteFromComponentProductRestriction =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: DeleteFromComponentProductsRestricted =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertIntoMainTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: RestrictedProductCriteria =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForRestrictedProductCriteria = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForRestrictedProductCriteria>
+	<cftry>
+		<cfset RestrictedProductCriteria = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "component_product_restriction_criteria"
+			}), "component_product_restriction_criteria"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRestrictedProductCriteria = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRestrictedProductCriteria>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getComponentName =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCriteriaDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCriteriaDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductgroupattributes")>
+<cfif useLakebaseForGetCriteriaDetails>
+	<cftry>
+		<cfset GetCriteriaDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductgroupattributes", {
+				"product_group_level_id" = "eq.#RestrictedProductCriteria.Component_Product_Restriction_Criteria#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCriteriaDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCriteriaDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ExistingSelections =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForExistingSelections = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_product_restriction")>
+<cfif useLakebaseForExistingSelections>
+	<cftry>
+		<cfset ExistingSelections = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_product_restriction", {
+				"component_id" = "eq.#url.Component_ID#",
+				"discount_type_id" = "eq.#url.Discount_Type_ID#",
+				"select" = "criteria_restriction_id"
+			}), "criteria_restriction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForExistingSelections = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForExistingSelections>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

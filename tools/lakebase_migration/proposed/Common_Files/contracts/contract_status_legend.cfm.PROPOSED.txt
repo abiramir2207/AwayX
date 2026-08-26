@@ -1,0 +1,329 @@
+===== QUERY: isContractCurrentlyLocked =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForisContractCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForisContractCurrentlyLocked>
+	<cftry>
+		<cfset isContractCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CSL_Contract_Main_ID#",
+				"select" = "contract_is_locked,contract_locked_by_user_id"
+			}), "contract_is_locked,contract_locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisContractCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisContractCurrentlyLocked>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDiscountIdentifier =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetDiscountIdentifier>
+	<cftry>
+		<cfset GetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#GetSettings.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountIdentifier>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: IsALumpsum =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForIsALumpsum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForIsALumpsum>
+	<cftry>
+		<cfset IsALumpsum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#CSLGetContractInfo.contract_main_id#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsALumpsum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsALumpsum>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: LookUpTheLockingUser =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLookUpTheLockingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLookUpTheLockingUser>
+	<cftry>
+		<cfset LookUpTheLockingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Contract_Locked_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookUpTheLockingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookUpTheLockingUser>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getSessionTimeoutSetting =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetSessionTimeoutSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetSessionTimeoutSetting>
+	<cftry>
+		<cfset getSessionTimeoutSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "session_expiration_length"
+			}), "session_expiration_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSessionTimeoutSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSessionTimeoutSetting>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getSessionTime =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetDiscountIdentifier =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetDiscountIdentifier>
+	<cftry>
+		<cfset GetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#GetSettings.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountIdentifier>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getExclusioncount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetExclusioncount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetExclusioncount>
+	<cftry>
+		<cfset getExclusioncount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"original_program_id" = "eq.#CSL_Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExclusioncount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExclusioncount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Attachment_Count =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getProgramFreight =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getProgramDistributorFreightCount =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: deleteTmpTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getProgramDistributorFreightCount =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: hasQualifications =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForhasQualifications = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications_info")>
+<cfif useLakebaseForhasQualifications>
+	<cftry>
+		<cfset hasQualifications = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_qualifications_info", {
+				"program_id" = "eq.#CSL_Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForhasQualifications = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForhasQualifications>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Attachment_Count =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: hasQualifications =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForhasQualifications = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications_info")>
+<cfif useLakebaseForhasQualifications>
+	<cftry>
+		<cfset hasQualifications = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_qualifications_info", {
+				"program_id" = "eq.#CSL_Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForhasQualifications = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForhasQualifications>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramDistributorFreightCount =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getProgramDistributorFreightCount =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: ForbiddenAccess =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForForbiddenAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_template")>
+<cfif useLakebaseForForbiddenAccess>
+	<cftry>
+		<cfset ForbiddenAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_template", {
+				"template_id" = "eq.#GetSettings.ProgramControl_Panel_Options_ID#",
+				"profile_id" = "eq.#Get_Profile_Settings.Profiles_ID #",
+				"forbid_access_type" = "eq.7"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForForbiddenAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForForbiddenAccess>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: revisioncount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: CreatedUser =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCreatedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCreatedUser>
+	<cftry>
+		<cfset CreatedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Creator_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreatedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreatedUser>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetCopyParentInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: RFAUser =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForRFAUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForRFAUser>
+	<cftry>
+		<cfset RFAUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Broker_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRFAUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRFAUser>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApprovedUser =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApprovedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForApprovedUser>
+	<cftry>
+		<cfset ApprovedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Approved_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovedUser>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetCancellingUser =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCancellingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetCancellingUser>
+	<cftry>
+		<cfset GetCancellingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Cancelled_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCancellingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCancellingUser>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

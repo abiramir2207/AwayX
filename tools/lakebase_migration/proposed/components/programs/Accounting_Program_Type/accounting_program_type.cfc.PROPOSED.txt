@@ -1,0 +1,137 @@
+===== QUERY: qGetActiveComps =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "apt_name.asc",
+				"select" = "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetComp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"accounting_program_type_id" = "eq.#arguments.compId#",
+				"select" = "apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetComp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"accounting_program_type_id" = "eq.#arguments.compId#",
+				"select" = "apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActiveComps =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "apt_name.asc",
+				"select" = "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActiveComps =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "apt_name.asc",
+				"select" = "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActiveComps =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "apt_name.asc",
+				"select" = "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckCompNames =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

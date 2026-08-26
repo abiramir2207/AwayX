@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Search.events.*;
+			import com.Billback.Search.models.*;
+			import com.Billback.Search.views.*;
+			import com.Billback.Search.views.pm.*;
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import com.shared.events.MainEvent;
+			import com.shared.models.*;
+			
+			import mx.events.*;
+			//import com.ContractProds.vos.*;
+			[Bindable]
+			private var bDebug:Boolean = false;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!--<mate:Debugger level="{Debugger.ALL}" />-->
+		<!-- load up an instance of the remote objects -->
+		<!-- Remote Services  ***************************************************************************************** -->
+		<mx:RemoteObject id="MainService" 		destination="ColdFusion"	source="mvc.Models.Billback.BillbackManager" />
+		<mx:RemoteObject id="MainLoadService" 	destination="ColdFusion"	source="mvc.Models.Billback.BillbackLoadManager" />
+		<mx:RemoteObject id="MainSearchService"	destination="ColdFusion" 	source="mvc.Models.Billback.BillbackSearchManager" />
+		<mx:RemoteObject id="MainListService" 	destination="ColdFusion" 	source="mvc.Models.Billback.BillbackList" />
+		<mx:RemoteObject id="MainEditService" 	destination="ColdFusion"	source="mvc.Models.Billback.BillbackEditManager" />
+		<mx:RemoteObject id="SettlementService"	destination="ColdFusion"	source="mvc.Models.Billback.BillbackSettlementManager" />
+		
+		<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+		<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+		<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+		
+		<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+		<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+		Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+		<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+			<ObjectBuilder generator="{SettingsManager}" 		id="oSettingsManager"  />
+			<ObjectBuilder generator="{BBSearchManager}" 		id="oBBSearchManager" 		constructorArguments="{scope.dispatcher}"  />
+			<ObjectBuilder generator="{BBSearchGridManager}"	id="oBBSearchGridManager" 	constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BBSearchPModel}" 		id="oBBSearchPModel" 		constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BBSearchFiltersPModel}" 	id="oBBSearchFiltersPModel" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BBSearchGridPModel}" 	id="oBBSearchGridPModel" 	constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BAError}" 				id="oBAError"  />
+			<ObjectBuilder generator="{ListManager}" 			id="oBBListManager" 		constructorArguments="{scope.dispatcher}"  />
+			<!--<MethodInvoker generator="{SettingsManager}" method="loadURLParameters"  />-->
+		</EventHandlers>
+		
+		<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+		<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" useWeakReference="true" debug="{bDebug}">
+			<!--call db for other settings-->
+			<!--<EventAnnouncer type="{BBSearchEvent.BB_SEARCH_LOAD_APP_SETTINGS}" generator="{BBSearchEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+			</EventAnnouncer>-->
+			<!--Get Data ********  modify the property tag to send to the get GET ************-->
+			<!--<EventAnnouncer type="{MainEvent.GET}" generator="{MainEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+			</EventAnnouncer>-->
+			<!--<EventAnnouncer generator="{BBSearchEvent}"  type="{BBSearchEvent.LOAD_SO_ITEMS}">
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			</EventAnnouncer>
+			<EventAnnouncer generator="{BBSearchEvent}" type="{BBSearchEvent.GET_USER_LIST}">
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+			</EventAnnouncer>
+			<EventAnnouncer generator="{BBSearchEvent}" type="{BBSearchEvent.GET_ALL_COLUMNS_SIZE}">
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+			</EventAnnouncer>-->
+		</EventHandlers>
+		
+		<!--LOAD APP SETTINGS *************************************************************************** -->
+		<EventHandlers type="{MainEvent.SET_LOCAL_APP_SETTINGS}" debug="{bDebug}" id="eSET_LOCAL_APP_SETTINGS" useWeakReference="true">
+			<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+			
+			<!--<EventAnnouncer generator="{BBSearchEvent}"  type="{BBSearchEvent.LOAD_SO_ITEMS}">
+			<Properties userId="{event.settings.userId,event.eStatus}" />
+			</EventAnnouncer>-->
+			<EventAnnouncer generator="{BBSearchEvent}" type="{BBSearchEvent.GET_USER_LIST}">
+				<Properties userId="{event.settings.userId}" />
+			</EventAnnouncer>
+			<EventAnnouncer generator="{BBSearchEvent}" type="{BBSearchEvent.GET_ALL_COLUMNS_SIZE}">
+				<Properties userId="{event.settings.userId}" />
+			</EventAnnouncer>
+		</EventHandlers>
+		<!--GET BILLBACK HEADER DATA *************************************************************************** -->
+		<!--- 	@see #roMainLoadService
+		** RemoteInvoke : roMainLoadService.getBillbackHeader()
+		@see com.shared.models.SettingsManager#dataResults() 
+		** Handler : com.shared..models.SettingsManager.dataResults()   -->
+		<EventHandlers type="{BBSearchEvent.LOAD_BB_SEARCH}" id="eLOAD_BB_SEARCH">
+			<RemoteObjectInvoker instance="{MainLoadService}" showBusyCursor="true" method="getBillbackHeader" arguments="{[event.eBBFilterParams,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method="dataResults" arguments="{[resultObject,event.userId]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="SEARCH SERVICE (LOAD_BB_SEARCH)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET ARCHIVE BILLBACK HEADER DATA *************************************************************************** -->
+		<!--- 	@see #roMainLoadService
+		** RemoteInvoke : roMainLoadService.getBillbackHeader()
+		@see com.shared.models.SettingsManager#dataArchiveResults() 
+		** Handler : com.shared..models.SettingsManager.dataArchiveResults()   -->
+		<EventHandlers type="{BBSearchEvent.LOAD_ARCHIVE_BB_SEARCH}" id="eLOAD_ARCHIVE_BB_SEARCH">
+			<RemoteObjectInvoker instance="{MainLoadService}" showBusyCursor="true" method="getBillbackHeader" arguments="{[event.eBBFilterParams,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method="dataArchiveResults" arguments="{[resultObject,event.eBBFilterParams]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="SEARCH SERVICE (LOAD_ARCHIVE_BB_SEARCH)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>	
+		
+		<!--GET BILLBACK SEARCH LOOKUP DATA *************************************************************************** -->
+		<!--- 	@see #roMainLoadService
+		** RemoteInvoke : roMainLoadService.getBillbackLookupData()
+		@see com.shared.models.SettingsManager#dataLookup() 
+		** Handler : com.shared..models.SettingsManager.dataLookup()   -->
+		<EventHandlers type="{BBSearchEvent.LOAD_BB_SEARCH_LOOKUP_DATA}" id="eBB_SEARCH_LOOKUP_DATA">
+			<RemoteObjectInvoker instance="{MainLoadService}" showBusyCursor="true" method="getBillbackLookupData" arguments="{event.userId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method="dataLookup" arguments="{resultObject}" />
+					<EventAnnouncer type="{BBSearchEvent.SET_FILTER}" generator="{BBSearchEvent}" >
+						<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.status" targetKey="eStatus"/>
+					</EventAnnouncer>
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="SEARCH LOOKUP DATA (LOAD_BB_SEARCH_LOOKUP_DATA)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		
+		<!--GET BILLBACK DETAILS *************************************************************************** -->
+		<!--- 	@see #roMainService
+		** RemoteInvoke : roMainSearchService.getBillbackDetails()
+		@see com.shared.models.SettingsManager#dataLookup() 
+		** Handler : com.shared.models.SettingsManager.dataLookup() -->
+		<EventHandlers type="{BBSearchEvent.GET_BILLBACK_DETAILS}" id="eGET_BILLBACK_DETAILS">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBillbackDetails" arguments="{[event.ebillbackIDInt,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method="showBBDetails" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="BILLBACK DETAILS" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- Load Billback Data *************************************************************************** --> 
+		<!--- @see com.billback.search.models.BBSearchManager#loadSOitems() 
+		** Handler: com.billback.search.models.BBSearchManager.loadSOitems -->
+		<EventHandlers type="{BBSearchEvent.LOAD_SO_ITEMS}" id="eBB_LOAD_SO_ITEMS">
+			<ObjectBuilder generator="{BBSearchManager}" id="oBBSearchManagera" constructorArguments="{scope.dispatcher}"  />
+			<!-- Added the below object builder because when the user visited from the scorecard with a status, the following error would
+			be generated: "BBSearchGridManager" expected an argument and none was passed
+			-->
+			<ObjectBuilder generator="{BBSearchGridManager}" id="oBBSearchGrid_Managera" constructorArguments="{scope.dispatcher}"  />
+			<MethodInvoker generator="{BBSearchManager}" method="loadSOitems" arguments="{[event.userId,event.eStatus]}" />			
+		</EventHandlers>	
+		
+		<!--REMOTE FILTER DATA CALL *************************************************************************** -->
+		<!--- 	@see #MainSearchService
+		** RemoteInvoke : MainSearchService.filterData()
+		@see com.shared.models.SettingsManager#dataRemoteFilter() 
+		** Handler : com.shared..models.SettingsManager.dataRemoteFilter()   -->
+		<EventHandlers type="{BBSearchEvent.BB_REMOTE_SEARCH_FILTER_DATA}" id="eBB_REMOTE_SEARCH_FILTER_DATA">
+			<!--arguments="{[event.eEntitySelect,event.eEntityKeyword,event.eProgramKeyword,event.userId]} -->
+			<RemoteObjectInvoker instance="{MainSearchService}" showBusyCursor="true" method="filterRemoteData" arguments="{[event.eBBFilterParams,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method="dataRemoteFilter" arguments="{resultObject}" />
+					<EventAnnouncer type="{BBSearchEvent.BB_SEARCH_FILTER_DATA}" generator="{BBSearchEvent}" >
+						<Properties eBBFilterParams = "{event.eBBFilterParams}" />
+					</EventAnnouncer>
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="REMOTE DATA FILTER(BB_REMOTE_SEARCH_FILTER_DATA)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- CREATE USER ITEM LIST *************************************************************************** -->
+		<!--- @see com.billback.search.models.BBSearchManager#createList() 
+		** Invoke: BBSearchManager.createList  -->
+		<EventHandlers type="{BBSearchEvent.CREATE_LIST}" id="BBSearchEvent_CREATE_LIST">
+			<MethodInvoker 	generator="{BBSearchManager}" method="createList" arguments="{[event.eList]}" />
+		</EventHandlers>
+		
+		<!-- SAVE USER BILLBACK LIST (FAVORITES) *************************************************************************** -->
+		<!--- 	@see #roMainListService
+		** RemoteInvoke : roMainListService.saveUserBillbackCriteria() -->
+		<EventHandlers type="{BBSearchEvent.SAVE_USER_LIST}" id="eSAVE_USER_LIST">
+			<RemoteObjectInvoker instance="{MainListService}" showBusyCursor="true" method="saveUserBillbackCriteria" arguments="{[event.eBBFilterParams,event.userId,event.euserListItemsName]}">
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="REMOTE DATA FILTER(save favorites)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+			<!--reload user saved billback list (favorites) -->
+			<EventAnnouncer type="{BBSearchEvent.GET_USER_LIST}" generator="{BBSearchEvent}" >
+				<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+			</EventAnnouncer>
+		</EventHandlers>
+		
+		<!-- GET SAVED BILLBACK LIST (FAVORITES) *************************************************************************** -->
+		<!--- @see #roMainListService
+		** RemoteInvoke: roMainListService.getUserBillbackList()
+		@see com.models.ListManager#userItemListResults() 
+		** Handler: ListManager.userItemListResults -->
+		<EventHandlers type="{BBSearchEvent.GET_USER_LIST}" id="eGET_USER_LIST">
+			<RemoteObjectInvoker instance="{MainListService}" showBusyCursor="true" method="getUserBillbackList" arguments="{event.userId}">  		 
+				<!-- result sequence gets executed when service returns with a result -->
+				<resultHandlers>
+					<MethodInvoker generator="{ListManager}" method="userItemListResults" arguments="{resultObject}" />
+				</resultHandlers> 
+				<!-- server fault -->
+				<faultHandlers> 
+					<!--announce error event -->
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="USER BILLBACK LIST SERVICE (get favorites)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers> 
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- DELETE SAVED BILLBACK FAVORITE (FAVORITES) *************************************************************************** -->
+		<!--- @see #roMainListService
+		** RemoteInvoke: MainListService.deleteUserBillbackList -->
+		<EventHandlers type="{BBSearchEvent.DELETE_USERLIST}" id="eDELETE_USERLIST">
+			<RemoteObjectInvoker instance="{MainListService}" showBusyCursor="true" method="deleteUserBillbackList" arguments="{event.euserListId}">	 
+				<!-- result sequence gets executed when service returns with a result -->			
+				<resultHandlers>
+					<!--reload user list after the delete-->
+					<EventAnnouncer type="{BBSearchEvent.GET_USER_LIST}" generator="{BBSearchEvent}" >
+						<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+					</EventAnnouncer>
+				</resultHandlers>
+				<!-- server fault -->
+				<faultHandlers>
+					<!--announce error event-->
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="BILLBACK FAVORITES (delete)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--FILTER DATA CALL *************************************************************************** -->
+		<!--- 	@see #MainSearchService
+		** RemoteInvoke : MainSearchService.filterData()
+		@see com.shared.models.SettingsManager#dataFilter() 
+		** Handler : com.shared.models.SettingsManager.dataFilter()   -->
+		<EventHandlers type="{BBSearchEvent.BB_SEARCH_FILTER_DATA}" id="eBB_SEARCH_FILTER_DATA" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="dataFilter" arguments="{event.eBBFilterParams}" />
+			<EventAnnouncer type="{BBSearchEvent.BB_SHOW_HIDE_COLUMNS}" generator="{BBSearchEvent}" >
+				<Properties eBBFilterParams = "{event.eBBFilterParams}" />
+			</EventAnnouncer>
+		</EventHandlers>
+		
+		<!-- SET FILTER *************************************************************************** -->
+		<!--- @see com.billback.search.views.pm.BBSearchFiltersPModel#setStatusFilter() 
+		** Handler: BBSearchFiltersPModel.setStatusFilter -->
+		<!--<EventHandlers type="{BBSearchEvent.SET_FILTER}" id="eSET_FILTER" debug="false">
+		<MethodInvoker generator="{BBSearchFiltersPModel}" method="setStatusFilter" arguments="{event.eStatus}" />
+		</EventHandlers>-->
+		
+		<!-- RESET FILTERS  *************************************************************************** -->
+		<!--- @see com.billback.search.views.pm.BBSearchFiltersPModel#filterReset() 
+		** Handler: BBSearchFiltersPModel.filterReset -->
+		<EventHandlers type="{BBSearchEvent.RESET_FILTERS}" id="eRESET_FILTERS" debug="{bDebug}">
+			<ObjectBuilder generator="{BBSearchFiltersPModel}" id="oBBSearchFiltersPModela" constructorArguments="{scope.dispatcher}" />
+			<MethodInvoker generator="{BBSearchFiltersPModel}" method="filterReset" arguments="{event.eRefreshData}" />
+		</EventHandlers>
+		
+		<!-- SET FILTERS SCREEN HEIGHT  *************************************************************************** -->
+		<!--- @see com.billback.search.views.pm.BBSearchFiltersPModel#filterScreenReset() 
+		** Handler: BBSearchFiltersPModel.setFilterScreenHeight -->
+		<EventHandlers type="{BBSearchEvent.BB_SEARCH_FILTERS_SCREEN_HEIGHT}" id="eBB_SEARCH_FILTERS_SCREEN_HEIGHT" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchFiltersPModel}" method="setFilterScreenHeight" arguments="{event.eSearchFiltersScreenHeightIncrease}" />
+		</EventHandlers>
+		
+		<!-- SORT GRID DATA   *************************************************************************** -->
+		<!--- @see com.billback.search.models.BBSearchManager#SortGridData() 
+		** Handler: com.billback.search.models.BBSearchManager.SortGridData -->
+		<EventHandlers type="{BBSearchEvent.DATA_GRID_SORT}" id="eDATA_GRID_SORT" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="SortGridData" />
+		</EventHandlers>
+		
+		<!-- REFRESH BB SEARCH  *************************************************************************** -->
+		<!--- @see com.billback.search.BBSearch#searchBBKeyHandler()
+		** Handler: BBSearchFiltersPModel.updateRefreshData -->
+		<EventHandlers type="{BBSearchEvent.REFRESH_BB_SEARCH}" id="eREFRESH_BB_SEARCH" debug="{bDebug}">
+			<!--<ObjectBuilder generator="{BBSearchFiltersPModel}" id="oBBSearchFiltersPModelc" constructorArguments="{scope.dispatcher}" />-->
+			<MethodInvoker generator="{BBSearchFiltersPModel}" method="updateRefreshData" />
+		</EventHandlers>
+		
+		<!-- SHOW HIDE COLUMNS  *************************************************************************** -->
+		<!--- @see com.billback.search.models.BBSearchGridManager#showHideColumns() 
+		** Handler: BBSearchGridManager.showHideColumns -->
+		<EventHandlers type="{BBSearchEvent.BB_SHOW_HIDE_COLUMNS}" id="eBB_SHOW_HIDE_COLUMNS" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchGridManager}" method="showHideColumns" arguments="{event.eBBFilterParams}" />
+		</EventHandlers>
+		
+		<!-- SELECT BILLBACK  *************************************************************************** -->
+		<!--- @see com.billback.search.models.BBSearchManager#setSelectedBBHeader() 
+		** Handler: BBSearchManager.setSelectedBBHeader -->
+		<EventHandlers type="{BBSearchEvent.SELECT_BB}" id="eSELECT_BB" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="setSelectedBBHeader" arguments="{event.eBBHeader}" />
+		</EventHandlers>
+		
+		<!-- GET ALL COLUMNS SIZE *************************************************************************** -->
+		<!--- 	@see #MainSearchService
+		** RemoteInvoke : MainSearchService.getBBSearchGridColumnSize()
+		@see com.billback.search.models.BBSearchManager#dataGridColumnSize() 
+		@see com.billback.search.models.BBSearchGridManager#setAllColumnsSize() 
+		** Handler : com.billback.search.models.BBSearchManager.dataGridColumnSize() 
+		** Handler : com.billback.search.models.BBSearchGridManager.setAllColumnsSize()  -->
+		<EventHandlers type="{BBSearchEvent.GET_ALL_COLUMNS_SIZE}" id="eBB_GET_ALL_COLUMNS_SIZE" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{MainSearchService}" showBusyCursor="true" method="getBBSearchGridColumnSize" arguments="{event.userId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method="dataGridColumnSize" arguments="{resultObject}" />	
+					<MethodInvoker generator="{BBSearchGridManager}" method="setAllColumnsSize" arguments="{resultObject}" />					
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="GET ALL COLUMNS SIZE ERROR" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker> 	
+		</EventHandlers>
+		
+		<!-- SAVE ALL COLUMNS SIZE *************************************************************************** --> 
+		<!--- 	@see #MainSearchService
+		** RemoteInvoke : MainSearchService.saveBBSearchGridColumnSize() -->
+		<EventHandlers type="{BBSearchEvent.SAVE_ALL_COLUMNS_SIZE}" id="eBB_SAVE_ALL_COLUMNS_SIZE" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{MainSearchService}" showBusyCursor="true" method="saveBBSearchGridColumnSize" arguments="{[event.userId,event.eBBSearchGridColumnSize]}">
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="SAVE ALL COLUMNS SIZE ERROR" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker> 	
+		</EventHandlers>
+		
+		<!-- UNCHECK SELECTED ***************************************************************************
+		@see com.billback.search.models.BBSearchManager#uncheckSelectedItems() 
+		** Handler : com.billback.search.models.BBSearchManager.uncheckSelectedItems() -->    
+		<EventHandlers type="{BBSearchEvent.UNCHECK_SELECTED}" id="eUNCHECK_SELECTED" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="uncheckSelectedItems" />
+		</EventHandlers>
+		
+		<!-- BB DELETE *************************************************************************** --> 
+		<!--- 	@see #MainService
+		** RemoteInvoke : MainService.checkBBEligibleForDelete()
+		@see com.billback.search.models.BBSearchManager#delRowInGrid() 
+		** Handler : com.billback.search.models.BBSearchManager.delRowInGrid()   -->
+		<EventHandlers type="{BBSearchEvent.BB_DELETE}" id="eBB_DELETE" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="checkBBEligibleForDelete" arguments="{[event.userId,event.eBBDelete]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method = "delRowInGrid" arguments="{[resultObject]}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="BB DELETE ERROR" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- BB RESET *************************************************************************** --> 
+		<!--- 	@see #MainService
+		** RemoteInvoke : MainService.resetBB()
+		@see com.billback.search.models.BBSearchManager#resetConfirmation() 
+		** Handler : com.billback.search.models.BBSearchManager.resetConfirmation()   -->
+		<EventHandlers type="{BBSearchEvent.BB_RESET}" id="eBB_RESET" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="resetBB" arguments="{[event.userId,event.eBBReset]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method = "resetConfirmation" arguments="{[resultObject,event.userId]}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="BB RESET ERROR" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- BB REASSIGN *************************************************************************** --> 
+		<!--- 	@see #MainService
+		** RemoteInvoke : MainService.ressignBB()
+		@see com.billback.search.models.BBSearchManager#ressignConfirmation() 
+		** Handler : com.billback.search.models.BBSearchManager.ressignConfirmation()   -->
+		<EventHandlers type="{BBSearchEvent.BB_REASSIGN}" id="eBB_REASSIGN" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="reassignBB" arguments="{[event.eBBFilterParams,event.eBBRessign]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method = "ressignConfirmation" arguments="{[resultObject,event.userId]}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="BB REASSIGN ERROR" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- COPY_BILLBACK *************************************************************************** --> 
+		<EventHandlers type="{BBSearchEvent.COPY_BILLBACK}" id="eCOPY_BILLBACK" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{MainEditService}" showBusyCursor="true" method="copyBillback" arguments="{[event.ebillbackIDInt,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method = "copyBillbackHandler" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="BB COPY BILLBACK" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- APPROVE BILLBACK *************************************************************************** --> 
+		<EventHandlers type="{BBSearchEvent.MASS_APPROVE_BILLBACKS}" id="eMASS_APPROVE_BILLBACKS" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{SettlementService}" showBusyCursor="true" method="getApproveBB" arguments="{[event.eArrBBHeader,event.eBBApprovalAction]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSearchManager}" method="massApproveConfirmation" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="BB APPROVAL SERVICE (Mass Approve Billback :: APPROVE_BILLBACK)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- SET COLUMN COLUMNS *************************************************************************** -->  
+		<!--- @see com.billback.search.models.BBSearchGridManager#setColumnSize() 
+		** Handler: BBSearchGridManager.setColumnSize -->
+		<EventHandlers type="{BBSearchEvent.SET_COLUMN_SIZE}" id="eBB_SET_COLUMN_SIZE" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchGridManager}" method="setColumnSize" arguments="{[event.eColumnHeader,event.eColumnWidth]}" />
+		</EventHandlers>
+		
+		<!-- SET DATA BIEW OPTION *************************************************************************** -->  
+		<!--- @see com.billback.search.models.BBSearchManager#callDataViewOption() 
+		** Handler: BBSearchManager.callDataViewOption -->
+		<EventHandlers type="{BBSearchEvent.DATA_VIEW_OPTION}" id="eDATA_VIEW_OPTION" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="setDataViewOption" arguments="{[event.eStatus]}" />
+		</EventHandlers>
+		
+		<!-- SHOW HIDE CONTROLS *************************************************************************** -->
+		<!--- @see com.billback.search.models.BBSearchManager#showHideControls() 
+		** Handler: BBSearchManager.showHideControls -->
+		<EventHandlers type="{BBSearchEvent.SHOW_HIDE_CONTROLS}" id="eBB_SHOW_HIDE_CONTROLS" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="showHideControls" arguments="{event.eSearchResultsCount}" />
+		</EventHandlers>
+		
+		<!-- Get the list of billbacks to generate a xls file *************************************************************************** -->
+		<!--- @see com.billback.search.models.BBSearchManager#fnExportxls(
+		** Invoke: BBSearchManager.fnExportxls -->
+		<EventHandlers type="{BBSearchEvent.EXPORT_XLS}" debug="{bDebug}" id="BBSearchEvent_Export_XLS">
+			<MethodInvoker generator="{BBSearchManager}" method="fnExportXLS" />
+		</EventHandlers>
+		
+		<!-- UPDATE BBHEADER (One Row) *************************************************************************** -->  
+		<!--- @see com.billback.search.models.BBSearchManager#setUpdatedBBHeader() 
+		** Handler: BBSearchManager.setUpdatedBBHeader -->
+		<EventHandlers type="{BBSearchEvent.SET_UPDATE_BB_HEADER}" id="eSET_UPDATE_BB_HEADER" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="setUpdatedBBHeader" arguments="{[event.eBBHeader]}" />
+		</EventHandlers>
+		
+		<!-- UPDATE BBHEADER (LIST OF BBHEADERS) *************************************************************************** -->  
+		<!--- @see com.billback.search.models.BBSearchManager#setUpdatedBBHeaderList() 
+		** Handler: BBSearchManager.setUpdatedBBHeaderList -->
+		<EventHandlers type="{BBSearchEvent.SET_UPDATE_BB_HEADER_LIST}" id="eSET_UPDATE_BB_HEADER_LIST" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="setUpdatedBBHeaderList" arguments="{[event.eArrBBHeader]}" />
+		</EventHandlers>
+			
+		<!-- DELETE BBHEADER (One Row) *************************************************************************** -->  
+		<!--- @see com.billback.search.models.BBSearchManager#setDeleteBBHeader() 
+		** Handler: BBSearchManager.setDeleteBBHeader -->
+		<EventHandlers type="{BBSearchEvent.SET_DELETE_BB_HEADER}" id="eSET_DELETE_BB_HEADER" debug="{bDebug}">
+			<MethodInvoker generator="{BBSearchManager}" method="setDeletedBBHeader" arguments="{[event.eBBHeader]}" />
+		</EventHandlers>
+				
+		<!--GET UPDATED BB HEADER (multiple rows) ******************** -->
+		<EventHandlers type="{BBSearchEvent.GET_UPDATED_BB_HEADER_LIST}" id="eGET_UPDATED_BB_HEADER_LIST" debug="{bDebug}">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBBHeaderList" arguments="{[event.ebillbackIDIntList]}">
+				<resultHandlers>
+					<!-- update the search bbheader (It could be multiple bbheaders). --> 
+					<EventAnnouncer type="{BBSearchEvent.SET_UPDATE_BB_HEADER_LIST}" generator="{BBSearchEvent}">
+						<Properties eArrBBHeader="{resultObject}" />
+					</EventAnnouncer>
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}" >
+						<Properties sBaError="UPDATE BB HEADER LIST" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--LOAD APP SETTINGS *************************************************************************** -->
+		
+		<!--- 			@see #roMainService
+		** RemoteInvoke : roMainService.getSettingsObject()
+		@see com.shared.models.SettingsManager#setAppSettings() 
+		** Handler : com.shared.models.SettingsManager.setAppSettings()   -->
+		<!--<EventHandlers type="{BBSearchEvent.BB_SEARCH_LOAD_APP_SETTINGS}" useWeakReference="true" debug="true" >
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" debug="true" >		
+		<resultHandlers>
+		<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}"  />
+		</resultHandlers>			
+		<faultHandlers>				
+		<EventAnnouncer type="{BBSearchEvent.BSA_ERROR}" generator="{BBSearchEvent}">
+		<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+		<Properties oBaError="{fault}" />
+		</EventAnnouncer>
+		</faultHandlers>
+		</RemoteObjectInvoker>
+		</EventHandlers>	-->
+		
+		<!--	*****************************************************************************************
+		***		BSA CUSTOM ERROR HANDLER 		*************************************************
+		***************************************************************************************** -->
+		
+		<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>	
+		*  @see #roErrorService
+		** RemoteInvoke : roErrorService.logError()
+		*		@see com.ContractProds.models.BAError#logError() 
+		** faultHandler : com.ContractProds.models.BAError.showBAError() -->
+		<EventHandlers type="{BBSearchEvent.BSA_ERROR}">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+				<Properties BAErrorString="{event.sBaError}" />
+			</MethodInvoker>
+			<!--log error on server-->	
+			<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+				<faultHandlers>
+					<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+					<!--call method -->
+					<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+						<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+					</MethodInvoker>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+		<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+				<Properties BAErrorString="UNHANDLED" />
+			</MethodInvoker>
+			<!--log error on server-->	
+			<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+		</EventHandlers>
+		
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+		<!-- BBSearchPModel ....................................................... -->
+		<Injectors target="{BBSearchPModel}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="acData" source="{BBSearchManager}" sourceKey="acData"  softBinding="false" />
+		</Injectors>
+		
+		<!-- BBSearchFiltersPModel ....................................................... -->
+		<Injectors target="{BBSearchFiltersPModel}" debug="{bDebug}">
+			<ObjectBuilder generator="{BBSearchFiltersPModel}" id="oBBSearchFiltersPModelb" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BBSearchManager}" id="oBBSearchManagerb" constructorArguments="{scope.dispatcher}"  />
+			<ObjectBuilder generator="{BBSearchGridManager}" id="oBBSearchGridManagerb" constructorArguments="{scope.dispatcher}"  />
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="acData" source="{BBSearchManager}" sourceKey="acData"  softBinding="false" />
+			<PropertyInjector targetKey="listCollView" source="{BBSearchManager}" sourceKey="listCollView"  softBinding="false" />
+			<PropertyInjector targetKey="objLookupData" source="{BBSearchManager}" sourceKey="objLookupData"  softBinding="false" />
+			<PropertyInjector targetKey="objBBFilterParams" source="{BBSearchManager}" sourceKey="objBBFilterParams"  softBinding="false" />
+			<PropertyInjector targetKey="objBBSearchGridColumnSize" source="{BBSearchManager}" sourceKey="objBBSearchGridColumnSize"  softBinding="false" />
+			<PropertyInjector targetKey="bshowReAssign" source="{BBSearchManager}" sourceKey="bshowReAssign"  softBinding="false" />
+			<PropertyInjector targetKey="bshowHold" source="{BBSearchManager}" sourceKey="bshowHold"  softBinding="false" />
+			<PropertyInjector targetKey="bshowRelease" source="{BBSearchManager}" sourceKey="bshowRelease"  softBinding="false" />
+			<PropertyInjector targetKey="bshowReset" source="{BBSearchManager}" sourceKey="bshowReset"  softBinding="false" />
+			<PropertyInjector targetKey="bshowMassApprove" source="{BBSearchManager}" sourceKey="bshowMassApprove"  softBinding="false" />
+			<PropertyInjector targetKey="bshowDelete" source="{BBSearchManager}" sourceKey="bshowDelete"  softBinding="false" />
+			<PropertyInjector targetKey="bShowLoadingOptions" source="{BBSearchManager}" sourceKey="bShowLoadingOptions"  softBinding="false" />
+			<PropertyInjector targetKey="intNavListSelectedIndex" source="{BBSearchManager}" sourceKey="intNavListSelectedIndex"  softBinding="false" />
+			<PropertyInjector targetKey="objBBSearchGridColumnSize" source="{BBSearchGridManager}" sourceKey="objBBSearchGridColumnSize"  softBinding="false" />
+			<PropertyInjector targetKey="userId" source="{SettingsManager}" sourceKey="settings.userId"  softBinding="false" />
+			<PropertyInjector softBinding="true"  targetKey="dSODate" source="{BBSearchManager}" sourceKey="dSOlastSavedDate" />
+			<PropertyInjector softBinding="true"  targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" />
+			<PropertyInjector targetKey="dataViewOption" source="{BBSearchManager}" sourceKey="dataViewOption" softBinding="false"/>	
+			<PropertyInjector targetKey="scorecardStatusID" source="{BBSearchManager}" sourceKey="scorecardStatusID" softBinding="false"/>
+			<PropertyInjector targetKey="iComboBoxContentWidth" source="{SettingsManager}" sourceKey="settings.cfApp_comboBoxContentWidth"  softBinding="false" />
+		</Injectors>
+		
+		<!-- BBSearchGridPModel ....................................................... -->
+		<Injectors target="{BBSearchGridPModel}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="acData" source="{BBSearchManager}" sourceKey="acData"  softBinding="false" />
+			<PropertyInjector targetKey="listCollView" source="{BBSearchManager}" sourceKey="listCollView"  softBinding="false" />
+			<PropertyInjector targetKey="arrBBSearchDgCols" source="{BBSearchGridManager}" sourceKey="arrBBSearchDgCols"  softBinding="false" />
+			<PropertyInjector targetKey="objLookupData" source="{BBSearchManager}" sourceKey="objLookupData"  softBinding="false" />
+		</Injectors>
+		
+		<!-- BBSearchManager ....................................................... -->
+		<Injectors target="{BBSearchManager}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+		</Injectors>
+		
+		<!-- BBSearchPanel ....................................................... -->
+		<Injectors target="{BBSearchPanel}" debug="{bDebug}">
+			<PropertyInjector targetKey="pModel" source="{BBSearchPModel}" softBinding="false"/>
+		</Injectors>
+		<!-- BBSearchFilters ....................................................... -->
+		<Injectors target="{BBSearchFilters}" debug="{bDebug}">
+			<PropertyInjector targetKey="pModel" source="{BBSearchFiltersPModel}" softBinding="false"/>
+			<PropertyInjector targetKey="pModelSearchGrid" source="{BBSearchGridPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- BBSearchGrid ....................................................... -->
+		<Injectors target="{BBSearchGrid}" debug="{bDebug}">
+			<PropertyInjector targetKey="pModel" source="{BBSearchGridPModel}" softBinding="false"/>
+			<PropertyInjector targetKey="scrollToIndex" source="{BBSearchFiltersPModel}" sourceKey="scrollToIndex" softBinding="false"/>
+			<PropertyInjector targetKey="userId" source="{SettingsManager}" sourceKey="settings.userId"  softBinding="false" />
+			<PropertyInjector targetKey="pModelFilters" source="{BBSearchFiltersPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- BBSearchGridManager ....................................................... -->
+		<Injectors target="{BBSearchGridManager}" debug="{bDebug}">			
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+		</Injectors>			
+		
+	</fx:Declarations>
+</LocalEventMap>

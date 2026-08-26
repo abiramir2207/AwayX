@@ -1,0 +1,205 @@
+/* CSS file
+a.) classes, tags
+b.) objects in alpha
+c.) attributes in alpha order...
+@namespace "library://ns.adobe.com/flex/mx";
+@namespace s "library://ns.adobe.com/flex/spark";*/
+
+.blacksmithNormal {
+	color: #333333;   /*	#333333;  */
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+ }
+.blacksmithBold {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+    font-weight: bold;
+ }
+.blacksmithBoldItalic {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+	font-style: italic;
+    font-weight: bold;
+ } 
+.blacksmithHeader {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:11;
+	font-weight: bold;
+ }
+.blacksmithHeaderSelected {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:11;
+    font-style: italic;
+    font-weight: bold;
+ }   
+.blacksmithItalic {
+	color: #333333;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+    font-style: italic;
+ }
+.blacksmithTooltip {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:9;
+    font-style: italic;
+ }   
+.error {
+	color: #C02025;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+	font-weight: bold;
+ }
+.message {
+	color: #000000;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:9;
+	font-style: italic;
+ }
+/* ---------- */ 
+Application {
+	backgroundGradientColors: #ffffff, #e3e3e3;
+	themeColor: #000000;
+	verticalGap: 5;
+}
+Button {
+	borderColor: #b7babc;
+	color: #4169E1;
+   	fillColors: #ffffff, #ffce84, #ffffff, #ffce70;
+   	selectionColor: #c02025;
+   	styleName: "blacksmithHeader";
+   	textRollOverColor: #C02025;
+   	textSelectedColor: #ffffff;
+   	cornerRadius: 5;
+}
+.bxBorder{
+		 	verticalGap: 3;
+		 /*	backgroundColor: #ebe9ee; */
+		 	backgroundAlpha: 0.35;
+		 	borderThickness:1;
+			borderColor: #8B1313;
+			borderStyle: solid;
+			cornerRadius:7;
+			dropShadowEnabled: true;
+			dropShadowColor: #8B1313;
+			paddingTop: 3;
+		 	paddingBottom: 3;
+		 	paddingLeft: 2;
+		 	paddingRight: 2;
+		 	verticalAlign: 'middle';
+		 }
+ComboBox {
+	dropdownStyleName: "comboBoxDropdownStyles";
+    borderColor: #b7babc;
+	styleName: "blacksmithNormal";  
+}
+/*.baComboBox {
+	dropdownStyleName: "comboBoxDropdownStyles";
+    borderColor: #b7babc;
+    styleName: "blacksmithNormal";
+}*/
+
+.comboBoxDropdownStyles {
+    textRollOverColor: #000000;
+    textSelectedColor: #ffffff;
+    rollOverColor: #e3e3e3;
+    selectionColor: #c02025;
+    alternatingItemColors: #ffffff, #ffffff;
+	color: #333333;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+    fontWeight: normal;
+ }
+DataGrid {
+	alternatingItemColors: #ccffcc, #ffffff;
+	borderColor: #b7babc;
+	headerColors: #ffce84, #ffffff;
+	headerStyleName: "blacksmithHeader";
+	rollOverColor: #e3e3e3;
+    selectionColor: #c02025;
+    size: 10;
+    styleName: "blacksmithNormal";
+    textRollOverColor: #000000;
+    textSelectedColor: #ffffff;
+}
+AdvancedDataGrid {
+	alternatingItemColors: #ccffcc, #ffffff;
+	borderColor: #b7babc;
+	headerColors: #ffce84, #ffffff;
+	headerStyleName: "blacksmithHeader";
+	rollOverColor: #e3e3e3;
+    selectionColor: #c02025;
+    size: 10;
+    styleName: "blacksmithNormal";
+    textRollOverColor: #000000;
+    textSelectedColor: #ffffff;
+}
+HScrollBar {
+	borderColor: #b7babc;
+    cornerRadius: 0;
+    fillColors: #ffffff, #ffce84, #cccccc, #eeeeee;
+    iconColor: #c02025;
+    thumbOffset: 1;
+    trackColors: #666666, #b7babc; 
+}
+Label {
+   	styleName: "blacksmithHeader";	
+}
+List {
+	alternatingItemColors: #ccffcc, #ffffff;
+	rollOverColor: #e3e3e3;
+    selectionColor: #c02025;
+	color: #333333;   /*	#333333;  */
+/*    styleName: "blacksmithNormal";*/
+    textRollOverColor: #000000;
+    textSelectedColor: #ffffff;
+}
+Panel {
+	borderAlpha: 1;
+	cornerRadius: 7;
+	borderThicknessBottom: 0;
+	borderThicknessLeft: 0;
+	borderThicknessRight:0;
+	headerColors: #ffce84, #ffffff;
+	horizontalCenter: 0;
+	paddingTop: 5;
+	paddingRight: 5;
+	paddingBottom: 5;
+	paddingLeft: 5;
+	roundedBottomCorners: true;
+	titleStyleName: "blacksmithHeader";
+}
+ProgressBar {
+   borderColor: #b7babc;
+   barColor: #c02025;
+   trackColors: #666666, #b7babc;
+   color: #ffffff;
+   cornerRadius: 7;
+}
+TabNavigator {
+	firstTabStyleName: "blacksmithHeader";
+	lastTabStyleName: "blacksmithHeader";
+	selectedTabTextStyleName: "blacksmithHeaderSelected";
+	tabStyleName: "blacksmithHeader";	
+}
+Text {
+	styleName: "blacksmithItalic";
+}
+TextArea {
+	styleName: "blacksmithNormal";
+}
+TextInput {
+	styleName: "blacksmithNormal";
+}
+ToolTip {
+   	paddingLeft: 5;
+   	paddingRight: 5;
+   	styleName: "blacksmithTooltip";	
+}
+VScrollBar {
+	borderColor: #b7babc;
+    cornerRadius: 0;
+    fillColors: #ffffff, #ffce84, #cccccc, #eeeeee;
+    iconColor: #c02025;
+    thumbOffset: 1;
+    trackColors: #666666, #b7babc; 
+}

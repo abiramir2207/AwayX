@@ -1,0 +1,96 @@
+===== QUERY: set_Error_Status =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForset_Error_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("outbound_freight_upload")>
+<cfif useLakebaseForset_Error_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("outbound_freight_upload",
+			{
+				"outbound_freight_upload_id" = "eq.#URL.Outbound_Freight_Upload_ID#"
+			},
+			{
+				"outbound_freight_upload_status" = "4"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForset_Error_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForset_Error_Status>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: set_Error_Message =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: setUploadErrors =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: get_FileShare_Path =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_FileShare_Path = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_settings")>
+<cfif useLakebaseForget_FileShare_Path>
+	<cftry>
+		<cfset get_FileShare_Path = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_upload_settings", {
+				"select" = "file_path"
+			}), "file_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_FileShare_Path = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_FileShare_Path>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_Upload_File_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_Upload_File_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("outbound_freight_upload")>
+<cfif useLakebaseForget_Upload_File_Name>
+	<cftry>
+		<cfset get_Upload_File_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("outbound_freight_upload", {
+				"outbound_freight_upload_id" = "eq.#setUploadErrors.Outbound_Freight_Upload_ID#",
+				"select" = "outbound_freight_upload_file_name"
+			}), "outbound_freight_upload_file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Upload_File_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Upload_File_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: setErrorStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForsetErrorStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("outbound_freight_upload")>
+<cfif useLakebaseForsetErrorStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("outbound_freight_upload",
+			{
+				"outbound_freight_upload_id" = "eq.#setUploadErrors.Outbound_Freight_Upload_ID#"
+			},
+			{
+				"outbound_freight_upload_status" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetErrorStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetErrorStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: setErrorMessage =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

@@ -1,0 +1,20 @@
+
+
+ For detailed install instructions please read docs/install.html
+
+
+
+
+
+
+Quick Install
+
+1) Copy the activedit directory to your web server
+
+2) if you have the spellchecker directory, register the Java CFX tag.
+
+
+
+--
+ActivEdit
+CFDEV.COM

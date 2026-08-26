@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<!-- saved from url=(0032)http://paramquery.com/api/select -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="jQuery Grid, JavaScript Grid, jQuery DataGrid, HTML5 DataGrid, HTML5 Grid, jQuery DataGrid Control, iOS Grid, iOS DataGrid, Responsive Grid,
+Adaptive Layout, Adaptive Grid, PHP Grid, PHP DataGrid, ASP .NET Grid, Java Grid, Java DataGrid, Mobile Grid, Touch Grid, Android DataGrid, Android Grid,
+Web Grid, Web DataGrid, UI Grid, jQuery Mobile Grid, jQuery Mobile DataGrid, JavaScript Mobile Grid, JavaScript Mobile DataGrid, ASP .NET DataGrid,
+jQuery Excel, jQuery Spreadsheet, jQueryUI grid">
+        
+        <meta http-equiv="description" content="jQuery grid based on jQueryUI widget.">        
+
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+		
+		
+        <meta name="ROBOTS" content="INDEX, FOLLOW">
+		
+		<title></title>
+
+        <link rel="icon" type="image/png" href="http://paramquery.com/Content/images/favicon.ico">
+
+<link rel="stylesheet" href="./pqselect_files/jquery-ui.css">    
+<!--script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.1/jquery.min.js"></script-->
+<script type="text/javascript" async="" src="./pqselect_files/ga.js"></script><script src="./pqselect_files/jquery.min.js"></script>
+<script src="./pqselect_files/jquery-ui.min.js"></script>
+
+<!--jquery 1.7.0 to 1.10.0-->
+<!--jQueryui 9.0(uses msie,issues if used with higher jQuery),9.1(issues with pqgridevent doesn't fire in derived class),9.2, 10.0,10.1,10.2,10.3-->
+<!--<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/le-frog/jquery-ui.css" />    
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>-->
+
+<!--link rel="stylesheet" href="/jquery-ui-1.9.0.custom/development-bundle/themes/base/jquery.ui.all.css" />		
+<script src="/jquery-ui-1.9.0.custom/js/jquery-1.8.2.js" ></script>        
+<script src="/jquery-ui-1.9.0.custom/js/jquery-ui-1.9.0.custom.js" ></script-->
+        
+<link rel="stylesheet" href="./pqselect_files/demos.css">
+
+        
+		<style type="text/css">
+			*{
+                padding:0px;margin:0px;
+				font-size:12px;
+				font-family:Verdana, Geneva, Helvetica, sans-serif;
+                line-height:20px;                				
+			}
+			body{
+				background:#efefef;				
+			}
+			div.body_div{
+				width:1340px;
+				margin:0px auto;
+				padding:60px 0px 0px;	
+				position:relative;		
+				border:0px solid #fff;	
+			}
+            /*this block creates problem*/
+			div.content_div{
+				min-height:600px;                 
+                width:1195px;
+				margin:3px auto 0px;
+				border:1px solid #ddd;				
+				background:#fff;				
+				border-radius: 6px;
+				box-shadow: 0px 3px 3px -3px rgba(0, 0, 0, .30);
+				/*vertical-align:top;*//*this line causes IE grid header bug*/
+                padding:10px;
+			}
+            * html div.content_div{ height:600px; }
+
+		    /*div.content_div span.inline{
+				vertical-align:top;
+				border:0px solid red;
+				padding:18px;
+				display:inline-block;
+		    }*/
+			div.logo{
+                /*left:110px;*/
+				position:absolute;left:500px;top:18px;font-size:21px;font-weight:bold;font-family:"Arial Narrow";
+			}
+            div.selecttheme-div{
+            	position:absolute;left:850px;top:22px;font-weight:bold;font-family:"Arial";
+            }
+			div.logo *{
+				font-size:21px;font-weight:bold;font-family:Arial Narrow;
+			}
+			div.logo span.first{
+				background:#fff;line-height:30px;display:inline-block;border:1px solid #000;padding:0px 5px;
+			}
+			div.logo span.second{
+				background:#000;line-height:30px;display:inline-block;border:1px solid #000;color:#fff;padding:0 5px;
+			}
+			div.github-icon{
+                /*position:absolute;left:540px;bottom:14px;*/
+                margin:10px 100px 0px;width:30px;position:relative;
+            }
+            code
+            {
+                background:#eee;
+                color:#333;
+                border:1px dotted lightblue;
+            }
+
+            
+		</style>
+	</head>
+	<body>
+        <style>
+	ul.menu{
+		/*position:absolute;left:0px;top:20px;font-size:22px;font-weight:bold;*/
+		background:url(/Content/images/menu_bg.png);
+		height:38px;				
+		list-style-type:none;				
+		/*line-height:1.3em;*/
+		/*width:911px;*/
+        /*width:892px;*/
+        width: 981px;
+		margin:auto;
+	}
+	.menu li{
+		float:left;
+		height:38px;
+		background-image:url(/Content/images/menu_divider.png);
+		background-position:right center;
+		background-repeat:repeat-y;				
+	}
+	.menu li.last{
+		background-image:none;
+	}
+	.menu li.last a{
+		margin-right:0px;
+	}			
+	.menu li a{
+		float:left;
+		padding:0 28px;
+		color:#fff;
+		font-size:13px;
+		font-family:Arial;
+		font-weight:bolder;
+		line-height:36px;
+		height:36px;
+		margin-left:0px;
+		margin-right:3px;
+		text-decoration:none;
+	}
+	.menu li a:hover{
+		background:#555;
+		/*opacity:;*/
+	}
+	.menu li a.selected{
+		background:#333;
+		/*opacity:;*/
+	}			
+</style>
+<script>
+    $(function () {
+        $(".menu").find("a").removeClass("selected");
+        var url = document.URL.toString();
+        //remove # and beyond (api urls)
+        url = url.substring(0, (url.indexOf("#") > 0) ? url.indexOf("#") : url.length);
+        //alert(url);
+        var last = url.lastIndexOf("/");
+        var part = "";
+        if (last > 0) {
+            part = url.substring(last, url.length);
+            part = part.toLowerCase();
+            $(".menu").find("a[href~=\"" + part + "\"]").addClass("selected");
+        }
+    });
+    window.onload = function () {
+        var $pro = $(".menu").find("a[href~='/pro']");
+        //debugger;
+        //$pro.effect('pulsate', null, 1500, function () { });
+    }
+</script>
+<div style="position:fixed;top:0px;z-index:1000;width:100%;">
+<ul style="" class="menu">
+	<li><a href="http://paramquery.com/grid" class="">ParamQuery</a></li>
+    <li><a style="color:yellow;" href="http://paramquery.com/pro">Pro Version</a></li>
+	<li><a href="http://paramquery.com/demos">Demos</a></li>
+	<li><a href="http://paramquery.com/api">API</a></li>
+	<li><a href="http://paramquery.com/tutorial">Tutorial</a></li>
+	<li><a href="http://paramquery.com/faq">FAQ</a></li>
+    <li><a href="http://paramquery.com/download">Download</a></li>
+    <!--li><a href="https://github.com/paramquery/grid" target=_blank>Download</a></li-->
+    <li><a href="http://paramquery.com/forum">Forum</a></li>
+    <li class="last"><a href="http://paramquery.com/contact">Contact</a></li>
+</ul>
+</div>
+<div style="height:39px;">&nbsp;
+</div>
+
+		<div style="position:absolute;right:0px;top:0px;z-index:1000;">
+<a href="https://github.com/paramquery/grid">
+    <img style="border: 0;" src="./pqselect_files/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+</div>
+		<div class="body_div">
+			<div class="logo">				
+				jQuery Grid Plugin - <span class="first">PQ</span><span class="second">Grid</span>
+			</div>
+            <div class="selecttheme-div">
+                Choose your Theme: 
+<select id="select-themes">
+    <option value="base">Base</option>
+    <option value="blitzer">Blitzer</option>
+    <option value="cupertino">Cupertino</option>
+    <option value="dark-hive">Dark Hive</option>
+    <option value="dot-luv">Dot Luv</option>
+    <option value="eggplant">Eggplant</option>
+    <option value="excite-bike">Excite Bike</option>
+    <option value="hot-sneaks">Hot Sneaks</option>
+    <option value="humanity">Humanity</option>
+    <option value="le-frog">Le Frog</option>
+    <option value="mint-choc">Mint Choc</option>
+    <option value="paramquery" selected="">Office</option>    
+    <option value="overcast">Overcast</option>
+    
+    <option value="pepper-grinder">Pepper Grinder</option>
+    <option value="redmond">Redmond</option>    
+    <option value="south-street">South Street</option>
+    <option value="start">Start</option>
+    <option value="smoothness">Smoothness</option>
+    <option value="sunny">Sunny</option>
+    <option value="swanky-purse">Swanky Purse</option>
+    <option value="trontastic">Trontastic</option>                                         
+    <option value="ui-darkness">UI Darkness</option>
+    <option value="ui-lightness">UI Lightness</option>    
+    <option value="vader">Vader</option>
+</select>
+<link class="link-override" rel="stylesheet" href="./pqselect_files/pqgrid.css">
+<script>
+    $('#select-themes').change(function () {
+        var theme = $(this).val();        
+        try {
+            _gaq.push(['_trackPageview', "theme-"+theme]); //Google Analytics.
+        }
+        catch (ex) { }
+        if (theme == 'paramquery') {
+            var href = "http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/themes/base/jquery-ui.css";
+            $('head').append('<link href="' + href + '" rel="Stylesheet" type="text/css" />');
+            var href="/Content/css/themes/Office/pqgrid.css";
+            var loc=document.location.toString();
+            var indx=loc.indexOf("/",7);
+            loc=loc.substring(0,indx);
+
+            href=loc+href;
+            //alert(href);
+            //debugger;
+            $('head').append('<link href="' + href + '" class="link-override"  rel="Stylesheet" type="text/css" />');
+        }
+        else {
+            var href = "http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/themes/" + theme + "/jquery-ui.css";
+            $('head').append('<link href="' + href + '" rel="Stylesheet" type="text/css" />');
+            $("link.link-override").remove();
+        }
+
+        function refreshGrid() {
+            var active = $("#tabs").tabs("option", "active");
+            //debugger;
+            var $grid;
+            if(isNaN(active)){                
+                $grid=$(".pq-grid");
+            }
+            else{
+                var id = (active == 0) ? "tabs-1" : "ui-tabs-" + active;                            
+                $grid = $(".pq-grid", $("#" + id));
+            }
+            var obj=$grid.data();
+            for(var key in obj){
+                if(key.indexOf("pq")==0){
+                    $grid[key]("refresh");
+                }
+            }                    
+        }
+        window.setTimeout(refreshGrid, 1500);
+        return false;
+    });
+</script>
+               
+            </div>
+			<div style="" class="content_div">
+                <script>
+var loc="/Content/select";
+</script>
+<!--<link href="/google-code-prettify/distrib/google-code-prettify/prettify.css" type="text/css"  rel="stylesheet" />
+<script src="/google-code-prettify/distrib/google-code-prettify/prettify.js" type="text/javascript"></script-->
+
+    <script type="text/javascript" src="./pqselect_files/shCore.js"></script>
+	<script type="text/javascript" src="./pqselect_files/shBrushJScript.js"></script>
+	<link type="text/css" rel="stylesheet" href="./pqselect_files/shCoreDefault.css">
+    <link type="text/css" rel="stylesheet" href="./pqselect_files/syntaxhighlighter.css">
+
+<link href="./pqselect_files/api.css" type="text/css" rel="stylesheet">
+
+<script type="text/javascript">
+    function loadXMLDoc(dname) {
+        if (window.XMLHttpRequest) {
+            xhttp = new XMLHttpRequest();
+        }
+        else {
+            xhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xhttp.open("GET", dname, false);
+        try { xhttp.responseType = "msxml-document"; } catch (e) { };
+        xhttp.send("");
+        return xhttp.responseXML;
+        /*var response;
+        $.ajax({ type: 'GET', url: dname, async: false,dataType:'xml' ,success: function (resp) {
+            response = resp;
+        } 
+        });
+        return response;*/
+    }
+
+    function displayResult(api_type) {
+        //alert(loc);
+        var //loc="/pro2/Content",
+            _rand=Math.random(),
+            xml,xsl;
+        if(api_type=='utility'){
+            xml = loadXMLDoc(loc+"/utility-methods.xml?"+_rand);//4 to refresh XML in IE6
+            xsl = loadXMLDoc(loc+"/api-methods.xsl?"+_rand);
+        }
+        else{
+            xml = loadXMLDoc(loc+"/api-"+api_type+".xml?_="+_rand);//4 to refresh XML in IE6
+            xsl = loadXMLDoc(loc+"/api-"+api_type+".xsl?_="+_rand);
+        }
+        // code for Mozilla, Firefox, Opera, etc.
+        //if (document.implementation && document.implementation.createDocument && (XSLTProcessor!=undefined)) {
+        try{
+            var xsltProcessor = new XSLTProcessor();
+            xsltProcessor.importStylesheet(xsl);
+            resultDocument = xsltProcessor.transformToFragment(xml, document);
+            //document.getElementById("example").appendChild(resultDocument);
+            $("div.api-"+api_type).append(resultDocument);
+        }
+        catch(ex){
+            ex = xml.transformNode(xsl);
+            //document.getElementById("example").innerHTML = ex;
+            //$("div.api-options").append(ex);
+            $("div.api-"+api_type).append(ex);
+        }
+        // code for IE
+        /*else if (window.ActiveXObject) {
+        }*/
+    }
+    /*$(function () {
+        displayResult('options');
+        displayResult('methods');
+        displayResult('events');
+        displayResult('utility-methods');
+        $("pre.prettyprint").addClass("brush: js;");
+        SyntaxHighlighter.all();
+
+        //prettyPrint();
+    });*/
+</script>
+
+<script>
+    $(function () {
+        displayResult('options');
+        displayResult('methods');
+        displayResult('events');
+        //displayResult('utility-methods');
+        $("pre.prettyprint").addClass("brush: js;");
+        SyntaxHighlighter.all();
+        $(".option-description,.method-description,.event-description").each(function (i, ele) {
+            var $ele = $(ele);
+            var $html = $ele.html();
+            $html = $html.replace(/&lt;/g, "<");
+            $html = $html.replace(/&gt;/g, ">");
+            $html = $html.replace(/\[\[/g, "<span style='background:#eee;'>");
+            $html = $html.replace(/]]/g, "</span>");
+            $html = $html.replace(/\{\{/g, "<span style='color:green;font-weight:bold;'>");
+            $html = $html.replace(/}}/g, "</span>");
+            $(ele).html($html);
+        });
+        //prettyPrint();
+    });
+</script>
+<div class="row">
+
+<div class="col-xs-2" style="margin-top:100px;">
+<div style="margin:20px;border:1px solid #ccc;border-radius:5px;padding:10px 20px;">
+    <ul>
+        <li><a href="http://paramquery.com/api">pqGrid</a><sup style="font-size:11px;color:Red;">New</sup></li>
+        <li><a href="http://paramquery.com/api/scrollbar">pqScrollbar</a></li>
+        <li><a href="http://paramquery.com/api/pager">pqPager</a></li>
+        <li><a href="./pqselect_files/pqselect.html">pqSelect</a></li>                
+    </ul>        
+</div>
+
+</div>
+
+<div class="api-content col-lg-8 col-xs-10">
+    <div class="api-list" style="border: 0px; margin-bottom: 0px;">
+        <h2 style="color:#EB8C28;font-size:18px;font-family:Sans-Serif;font-weight:normal;">
+            ParamQuery Select API Documentation v1.3.0</h2>
+            <!--div style="clear:both;"></div-->
+    </div>
+    <div style="border: 0px; background: #eee; margin: 0px auto 25px; border-radius: 5px;
+        width: 100%; height: 9px;">
+    </div>
+    <div class="api-list">
+        <div class="sections">
+            <h2>
+                Options</h2>
+            <ul class="api-options">       
+                <li><a href="http://paramquery.com/api/select#option-bootstrap">bootstrap</a></li>
+                <li><a href="http://paramquery.com/api/select#option-checkbox">checkbox</a></li>
+                <li><a href="http://paramquery.com/api/select#option-closeOnWindowResize">closeOnWindowResize</a></li>
+                <li><a href="http://paramquery.com/api/select#option-closeOnWindowScroll">closeOnWindowScroll</a></li>
+                <li><a href="http://paramquery.com/api/select#option-deselect">deselect</a></li>
+                <li><a href="http://paramquery.com/api/select#option-displayText">displayText</a></li>
+                <li><a href="http://paramquery.com/api/select#option-edgeDetect">edgeDetect</a></li>                
+                <li><a href="http://paramquery.com/api/select#option-hoverCls">hoverCls</a></li>                
+                                
+                
+                <li><a href="http://paramquery.com/api/select#option-maxDisplay">maxDisplay</a></li>                
+                <li><a href="http://paramquery.com/api/select#option-maxSelect">maxSelect</a></li>
+                <li><a href="http://paramquery.com/api/select#option-multiplePlaceholder">multiplePlaceholder</a></li>
+                <li><a href="http://paramquery.com/api/select#option-position">position</a></li>
+                <li><a href="http://paramquery.com/api/select#option-radio">radio</a></li>
+                <li><a href="http://paramquery.com/api/select#option-selectCls">selectCls</a></li>                
+                
+                
+                <li><a href="http://paramquery.com/api/select#option-search">search</a></li>
+                <li><a href="http://paramquery.com/api/select#option-searchRule">searchRule</a></li>                
+                <li><a href="http://paramquery.com/api/select#option-selectallText">selectallText</a></li>                
+                <li><a href="http://paramquery.com/api/select#option-singlePlaceholder">singlePlaceholder</a></li>                
+                <li><a href="http://paramquery.com/api/select#option-width">width</a></li>
+            </ul>
+        </div>
+        <div class="sections">
+            <h2>
+                Methods</h2>
+            <ul class="api-options">
+                <li><a href="http://paramquery.com/api/select#method-close">close</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-destroy">destroy</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-disable">disable</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-enable">enable</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-isOpen">isOpen</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-open">open</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-option">option</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-refresh">refresh</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-refreshData">refreshData</a></li>      
+                <li><a href="http://paramquery.com/api/select#method-widget">widget</a></li>
+            </ul>
+        </div>
+        <div class="sections">
+            <h2>
+                Events</h2>
+            <ul class="api-options">
+                <!--li><a href="#event-change">change</a></li-->
+                <li><a href="http://paramquery.com/api/select#event-create">create</a></li>                
+                <li><a href="http://paramquery.com/api/select#event-maxSelectReach">maxSelectReach</a></li>
+                <li><a href="http://paramquery.com/api/select#event-maxSelectExceed">maxSelectExceed</a></li>
+            </ul>
+        </div>
+        <div style="clear: left;">
+        </div>
+    </div>
+
+    <div class="api-list">
+        <div>
+            pqSelect is a standalone jQueryUI widget which turns browsers' native single and multiple select lists 
+            into easy to use drop downs embellished with checkboxes, search box, keyboard navigation
+            and rich set of options, methods and events.
+            It works in all major browsers (IE8+, Chrome, Firefox, Safari, Opera)
+            and across desktops, tablets and touch devices.
+            It also supports grouping and disabled options.
+            Please check here for <a target="_blank" href="http://paramquery.com/select">demos</a>.
+        </div>
+        <div style="clear: left;">
+        </div>
+    </div>
+
+        <div class="api-options panel-primary">
+    <div class="api-header panel-heading">Options</div>
+    <div class="api-item" id="option-bootstrap">
+<div class="title">
+<span class="option-title">bootstrap</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Object" target="_blank">Object</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>{ on: false,
+                btn: 'btn btn-default',
+                popupCont: 'panel panel-default',
+                selectCls: 'label label-info',
+                itemCls: 'label label-default',
+                closeIcon: 'glyphicon glyphicon-remove',
+                searchIcon: 'glyphicon glyphicon-search' }</span>
+</div>
+<p class="option-description">
+            This option injects bootstrap specific classes in the component.
+        </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with bootstrap option specified.
+                </p>
+<div><div id="highlighter_700963" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//turn on bootstrap support in pqSelect.</code></div><div class="line number2 index1 alt1"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { bootstrap: { on: </code><code class="js keyword">true</code> <code class="js plain">} } } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the bootstrap option, after initialization:
+                </p>
+<div><div id="highlighter_345773" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">bootstrap = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"bootstrap"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"bootstrap"</code><code class="js plain">, { on: </code><code class="js keyword">true</code> <code class="js plain">} );</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-checkbox">
+<div class="title">
+<span class="option-title">checkbox</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Boolean" target="_blank">Boolean</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>false</span>
+</div>
+<p class="option-description">
+            Applicable to multiple select, it adds checkbox beside every option.
+        </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with checkbox option specified.
+                </p>
+<div><div id="highlighter_320659" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//create pqSelect with checkboxes.</code></div><div class="line number2 index1 alt1"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { checkbox: </code><code class="js keyword">true</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the checkbox option, after initialization:
+                </p>
+<div><div id="highlighter_382056" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">checkbox = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"checkbox"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"checkbox"</code><code class="js plain">, </code><code class="js keyword">true</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-closeOnWindowResize">
+<div class="title">
+<span class="option-title">closeOnWindowResize</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Boolean" target="_blank">Boolean</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>true</span>
+</div>
+<p class="option-description">
+            It closes the popup when browser window is resized.
+        </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with closeOnWindowResize option specified.
+                </p>
+<div><div id="highlighter_441799" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { closeOnWindowResize: </code><code class="js keyword">false</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the closeOnWindowResize option, after initialization:
+                </p>
+<div><div id="highlighter_537693" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">closeOnWindowResize = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"closeOnWindowResize"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"closeOnWindowResize"</code><code class="js plain">, </code><code class="js keyword">true</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-closeOnWindowScroll">
+<div class="title">
+<span class="option-title">closeOnWindowScroll</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Boolean" target="_blank">Boolean</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>true</span>
+</div>
+<p class="option-description">
+            It closes the popup when browser viewport is scrolled.
+        </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with closeOnWindowScroll option specified.
+                </p>
+<div><div id="highlighter_657983" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { closeOnWindowScroll: </code><code class="js keyword">false</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the closeOnWindowScroll option, after initialization:
+                </p>
+<div><div id="highlighter_423533" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">closeOnWindowScroll = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"closeOnWindowScroll"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"closeOnWindowScroll"</code><code class="js plain">, </code><code class="js keyword">true</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-deselect">
+<div class="title">
+<span class="option-title">deselect</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Boolean" target="_blank">Boolean</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>true</span>
+</div>
+<p class="option-description">Applicable to both single and multiple select, it allows to deselect the selected option / options by placing a clickable x icon beside the selected option / options.</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with deselect option specified.
+                </p>
+<div><div id="highlighter_299793" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { deselect: </code><code class="js keyword">false</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the deselect option, after initialization:
+                </p>
+<div><div id="highlighter_319922" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">deselect = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"deselect"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"deselect"</code><code class="js plain">, </code><code class="js keyword">true</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-displayText">
+<div class="title">
+<span class="option-title">displayText</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>'{ 0 } of { 1 } selected'</span>
+</div>
+<p class="option-description">Applicable to multiple select when number of selected options exceed the value of maxDisplay option, 
+            it displays the top text by replacing { 0 } with number of selected options and { 1 } with total number of options.</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with displayText option specified.
+                </p>
+<div><div id="highlighter_163838" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { displayText: </code><code class="js string">"{ 0 } selected"</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the displayText option, after initialization:
+                </p>
+<div><div id="highlighter_8159" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">displayText = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"displayText"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"displayText"</code><code class="js plain">, </code><code class="js string">"{ 0 } selected"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-edgeDetect">
+<div class="title">
+<span class="option-title">edgeDetect</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Boolean" target="_blank">Boolean</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>true</span>
+</div>
+<p class="option-description">
+            Added in v1.1.0, this option has been replaced by position option in v1.2.0
+            <br>  
+            When set to true, it tries to keep the select popup visible in the browser by keeping into consideration
+            the top and bottom edges of the browser viewport. 
+            </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with edgeDetect option specified.
+                </p>
+<div><div id="highlighter_957011" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { edgeDetect: </code><code class="js keyword">false</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the edgeDetect option, after initialization:
+                </p>
+<div><div id="highlighter_725436" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">edgeDetect = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"edgeDetect"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"edgeDetect"</code><code class="js plain">, </code><code class="js keyword">true</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-hoverCls">
+<div class="title">
+<span class="option-title">hoverCls</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>'pq-state-hover'</span>
+</div>
+<p class="option-description">Applicable to both single and multiple select, it adds class or space separated classes upon
+            mouseenter or key navigation ( up, down, pageUp, pageDown ) on options.
+            .</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with hoverCls option specified.
+                </p>
+<div><div id="highlighter_826576" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { hoverCls: </code><code class="js string">""</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the hoverCls option, after initialization:
+                </p>
+<div><div id="highlighter_231501" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">hoverCls = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"hoverCls"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"hoverCls"</code><code class="js plain">, </code><code class="js string">""</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-maxDisplay">
+<div class="title">
+<span class="option-title">maxDisplay</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Integer" target="_blank">Integer</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>4</span>
+</div>
+<p class="option-description">Applicable to multiple select, this option determines the maximum number of options to display on top before switching the display to displayText.</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with maxDisplay option specified.
+                </p>
+<div><div id="highlighter_11745" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { maxDisplay: 3 } } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the maxDisplay option, after initialization:
+                </p>
+<div><div id="highlighter_627871" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">maxDisplay = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"maxDisplay"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"maxDisplay"</code><code class="js plain">, 5 );</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-maxSelect">
+<div class="title">
+<span class="option-title">maxSelect</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Integer" target="_blank">Integer</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>0</span>
+</div>
+<p class="option-description">Applicable to multiple select, this option determines the maximum number of selectable options. 
+            Any number of options can be selected when this option is 0.</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with maxSelect option specified.
+                </p>
+<div><div id="highlighter_475023" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { maxSelect: 5 } } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the maxSelect option, after initialization:
+                </p>
+<div><div id="highlighter_807904" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">maxSelect = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"maxSelect"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"maxSelect"</code><code class="js plain">, 5 );</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-multiplePlaceholder">
+<div class="title">
+<span class="option-title">multiplePlaceholder</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>'Select options'</span>
+</div>
+<p class="option-description">
+By default any data-placeholder attribute in the select list is set as placeholder text.            
+Applicable to multiple select, this option is an alternative way to display the placeholder text  
+when no option is selected and select list has no data-placeholder attribute. 
+        </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with multiplePlaceholder option specified.
+                </p>
+<div><div id="highlighter_420657" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { multiplePlaceholder: </code><code class="js string">'Select some options'</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the multiplePlaceholder option, after initialization:
+                </p>
+<div><div id="highlighter_619236" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">multiplePlaceholder = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"multiplePlaceholder"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"multiplePlaceholder"</code><code class="js plain">, </code><code class="js string">"Select any options"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-position">
+<div class="title">
+<span class="option-title">position</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Object" target="_blank">Object</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>{ my: "left top", at: "left bottom", collision: "flipfit" }</span>
+</div>
+<p class="option-description">
+            Added in v1.2.0, it identifies the position of the options menu in relation to the 
+            associated select button element. 
+            The of option defaults to the select button element.
+            Please refer to the <a href="http://api.jqueryui.com/position/">jQuery UI Position</a> utility for more details about the various options.
+            </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with position option specified.
+                </p>
+<div><div id="highlighter_871893" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( position: { my : </code><code class="js string">"right top"</code><code class="js plain">, at: </code><code class="js string">"right bottom"</code> <code class="js plain">} );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the position option, after initialization:
+                </p>
+<div><div id="highlighter_296699" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">position = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"position"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"position"</code><code class="js plain">, { my : </code><code class="js string">"right top"</code><code class="js plain">, at: </code><code class="js string">"right bottom"</code> <code class="js plain">} );</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-radio">
+<div class="title">
+<span class="option-title">radio</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Boolean" target="_blank">Boolean</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>false</span>
+</div>
+<p class="option-description">Applicable to single select, this option displays radio buttons beside options. 
+            </p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with radio option specified.
+                </p>
+<div><div id="highlighter_594728" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { radio: </code><code class="js keyword">true</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the radio option, after initialization:
+                </p>
+<div><div id="highlighter_1542" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">radio = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"radio"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"radio"</code><code class="js plain">, </code><code class="js keyword">false</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-selectCls">
+<div class="title">
+<span class="option-title">selectCls</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>'ui-state-highlight pq-state-select'</span>
+</div>
+<p class="option-description">Applicable to both single and multiple select, this option adds a class or space separated list of classes to selected options. 
+</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with selectCls option specified.
+                </p>
+<div><div id="highlighter_950346" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { selectCls: </code><code class="js string">''</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the selectCls option, after initialization:
+                </p>
+<div><div id="highlighter_497953" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">selectCls = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"selectCls"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"selectCls"</code><code class="js plain">, </code><code class="js string">''</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-search">
+<div class="title">
+<span class="option-title">search</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Boolean" target="_blank">Boolean</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>true</span>
+</div>
+<p class="option-description">Applicable to both single and multiple select, this option adds a search box above list of options to search the options. 
+</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with search option specified.
+                </p>
+<div><div id="highlighter_120800" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { search: </code><code class="js keyword">false</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the search option, after initialization:
+                </p>
+<div><div id="highlighter_954994" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">search = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"search"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"search"</code><code class="js plain">, </code><code class="js keyword">false</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-searchRule">
+<div class="title">
+<span class="option-title">searchRule</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>'contain'</span>
+</div>
+<p class="option-description">Applicable to both single and multiple select search box, 
+            this option searches for text anywhere in the options with default value of 'contain'. 
+            It searches for text only in the beginning of options when set to 'begin'.
+</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with searchRule option specified.
+                </p>
+<div><div id="highlighter_441124" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { searchRule: </code><code class="js string">'begin'</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the searchRule option, after initialization:
+                </p>
+<div><div id="highlighter_590212" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">searchRule = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"searchRule"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"searchRule"</code><code class="js plain">, </code><code class="js string">'begin'</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-selectallText">
+<div class="title">
+<span class="option-title">selectallText</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>'Select All'</span>
+</div>
+<p class="option-description">Applicable to multiple select when maxSelect = 0, 
+            this option displays the text on the label to select/deselect all options at the top of list of options. 
+            This option can be disabled by setting its value to an empty string ''.
+</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with selectallText option specified.
+                </p>
+<div><div id="highlighter_606950" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { selectallText: </code><code class="js string">''</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the selectallText option, after initialization:
+                </p>
+<div><div id="highlighter_450187" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">selectallText = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"selectallText"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"selectallText"</code><code class="js plain">, </code><code class="js string">'Select All'</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-singlePlaceholder">
+<div class="title">
+<span class="option-title">singlePlaceholder</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>'Select an option'</span>
+</div>
+<p class="option-description">
+By default data-placeholder attribute in the select list is set as placeholder text.            
+Applicable to single select, this option is an alternative way to display the placeholder text  
+when no option is selected and select list has no data-placeholder attribute. 
+Placeholder text (either through this option or via data-placeholder attribute) works only when the topmost option in select list is an empty string "" or both value and label are empty strings.
+</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with singlePlaceholder option specified.
+                </p>
+<div><div id="highlighter_913357" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { singlePlaceholder: </code><code class="js string">''</code> <code class="js plain">} } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the singlePlaceholder option, after initialization:
+                </p>
+<div><div id="highlighter_740271" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">singlePlaceholder = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"singlePlaceholder"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"singlePlaceholder"</code><code class="js plain">, </code><code class="js string">'Select option'</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="option-width">
+<div class="title">
+<span class="option-title">width</span><span class="option-type"><strong>Type: </strong><a href="http://api.jquery.com/Types/#Integer" target="_blank">Integer</a><span> or </span><a href="http://api.jquery.com/Types/#String" target="_blank">String</a></span><div style="clear:both;"></div>
+<span class="option-type"><strong>Default: </strong>null</span>
+</div>
+<p class="option-description">Applicable to single and multiple select, 
+            this option fixes the width of pqSelect. It can be specified as number in px i.e., 120, "120px" or percent i.e., "70%".
+            By default the pqSelect assumes the width of the select list replaced by it when this option is not specified or is null.
+</p>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with width option specified.
+                </p>
+<div><div id="highlighter_227282" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( { width: 100 } } );</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Get or set the width option, after initialization:
+                </p>
+<div><div id="highlighter_55992" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js comments">//getter</code></div><div class="line number2 index1 alt1"><code class="js keyword">var</code> <code class="js plain">width = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"width"</code> <code class="js plain">);</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="js comments">//setter</code></div><div class="line number5 index4 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"width"</code><code class="js plain">, 120 );</code></div></div></td></tr></tbody></table></div></div>
+</div></div>
+    <div class="api-methods panel-primary">
+    <div class="api-header panel-heading">Methods</div>
+    <div class="api-item" id="method-close">
+<div class="title">
+<span class="option-title">close( )</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">It closes the popup menu of pqSelect.
+        </p>
+<ul></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_463025" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"close"</code> <code class="js plain">);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-destroy">
+<div class="title">
+<span class="option-title">destroy()</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Removes the pqSelect functionality completely. This will return the element back to its pre-init state.</p>
+<ul></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_134293" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"destroy"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-disable">
+<div class="title">
+<span class="option-title">disable()</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Disables the pqSelect.</p>
+<ul></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_423014" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"disable"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-enable">
+<div class="title">
+<span class="option-title">enable()</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Enables the pqSelect.</p>
+<ul></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_801779" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"enable"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-getInstance">
+<div class="title">
+<span class="option-title">getInstance()</span><span class="option-type"><strong>Returns: </strong><a href="http://api.jquery.com/Types/#Object" target="_blank">Object</a></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Gets the instance of select for convenient invocation of methods.
+		Returns an object { 'select': select }.</p>
+<ul><li>This method does not accept any arguments.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_84853" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js keyword">var</code> <code class="js plain">select = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"getInstance"</code> <code class="js plain">).select; </code></div><div class="line number2 index1 alt1"><code class="js spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>&nbsp;</div><div class="line number3 index2 alt2"><code class="js comments">//any method can be called on select in an easier to use and read syntax.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div><div class="line number4 index3 alt1"><code class="js plain">select.open();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-isOpen">
+<div class="title">
+<span class="option-title">isOpen( )</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">It checks whether the popup menu of pqSelect is already open.
+        </p>
+<ul></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_865367" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"isOpen"</code> <code class="js plain">);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-open">
+<div class="title">
+<span class="option-title">open( )</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">It opens the popup menu of pqSelect.
+        </p>
+<ul></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_400044" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"open"</code> <code class="js plain">);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-option">
+<div class="title">
+<span class="option-title">option()</span><span class="option-type"><strong>Returns: </strong><a href="http://api.jquery.com/Types/#PlainObject" target="_blank">PlainObject</a></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Gets an object containing key/value pairs representing the current pqSelect options hash.</p>
+<ul><li>This method does not accept any arguments.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_953371" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js keyword">var</code> <code class="js plain">options = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-">
+<div class="title">
+<span class="option-title">option( optionName )</span><span class="option-type"><strong>Returns: </strong><a href="http://api.jquery.com/Types/#Object" target="_blank">Object</a></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Gets the value currently associated with the specified optionName.</p>
+<ul><li>
+<b>optionName</b><br>
+                            Type:
+                            <a href="http://api.jquery.com/Types/#String" target="_blank">String</a><br>The name of the option to get.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_355657" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js keyword">var</code> <code class="js plain">disabled = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"disabled"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-">
+<div class="title">
+<span class="option-title">option( optionName, value )</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Sets the value of the pqSelect option associated with the specified optionName.</p>
+<ul><li>This method does not accept any arguments.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_665247" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, </code><code class="js string">"disabled"</code><code class="js plain">, </code><code class="js keyword">true</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-">
+<div class="title">
+<span class="option-title">option( options )</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Sets one or more options for the Select.</p>
+<ul><li>
+<b>optionName</b><br>
+                            Type:
+                            <a href="http://api.jquery.com/Types/#Object" target="_blank">Object</a><br>A map of option-value pairs to set.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_328657" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"option"</code><code class="js plain">, {disabled: </code><code class="js keyword">true</code><code class="js plain">} );</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-refresh">
+<div class="title">
+<span class="option-title">refresh()</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Refreshes the view of pqSelect. 
+It's useful to refresh view after change in option/options.
+</p>
+<ul><li>This method does not accept any arguments.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_630717" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"refresh"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-refreshData">
+<div class="title">
+<span class="option-title">refreshData()</span><span class="option-type"></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Reloads the data from select list and refreshes the view of pqSelect. 
+It's useful to refresh view after change in options of underlying select list.
+</p>
+<ul><li>This method does not accept any arguments.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_733780" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"refreshData"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div><hr class="api-divider"><div class="api-item" id="method-widget">
+<div class="title">
+<span class="option-title">widget()</span><span class="option-type"><strong>Returns: </strong><a href="http://api.jquery.com/Types/#jQuery" target="_blank">jQuery</a></span><div style="clear:both;"></div>
+</div>
+<br><p class="method-description">Returns a jQuery object containing the pqSelect.</p>
+<ul><li>This method does not accept any arguments.</li></ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Invoke the  method:  
+                </p>
+<div><div id="highlighter_225247" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js keyword">var</code> <code class="js plain">widget = $( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect( </code><code class="js string">"widget"</code> <code class="js plain">);</code></div></div></td></tr></tbody></table></div></div>
+<br>
+</div></div>
+    <div class="api-events panel-primary">
+    <div class="api-header panel-heading">Events</div>
+    <div class="api-item" id="event-create">
+<div class="title">
+<span class="option-title">create( event, ui )</span><span class="option-type"><strong>Type: </strong><span style="font-size:15px;background:#eee;font-style:italic;font-family:monospace;">pqselectcreate</span></span><div style="clear:both;"></div>
+</div>
+<br><p class="event-description">Triggered after the pqSelect is created. 
+		</p>
+<ul>
+<li>
+<b>event</b><br>
+                            Type: <a href="http://api.jquery.com/Types/#Event" target="_blank">
+                                Event
+                            </a>
+</li>
+<li>
+<b>ui</b><br>
+                            Type: <a href="http://api.jquery.com/Types/#Object" target="_blank">
+                                Object
+                            </a><ul style="list-style-type:none;"></ul>
+</li>
+</ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with the create callback specified:
+                </p>
+<div><div id="highlighter_188672" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect({</code></div><div class="line number2 index1 alt1"><code class="js spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="js plain">create: </code><code class="js keyword">function</code><code class="js plain">( event, ui ) {}</code></div><div class="line number3 index2 alt2"><code class="js plain">});</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Bind an event listener to the pqselectcreate event:
+                </p>
+<div><div id="highlighter_595783" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).on( </code><code class="js string">"pqselectcreate"</code><code class="js plain">, </code><code class="js keyword">function</code><code class="js plain">( event, ui ) {} );</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="event-maxSelectReach">
+<div class="title">
+<span class="option-title">maxSelectReach( event, ui )</span><span class="option-type"><strong>Type: </strong><span style="font-size:15px;background:#eee;font-style:italic;font-family:monospace;">pqselectmaxselectreach</span></span><div style="clear:both;"></div>
+</div>
+<br><p class="event-description">Applicable to multiple select, it's triggered when maxSelect limit is reached.
+		</p>
+<ul>
+<li>
+<b>event</b><br>
+                            Type: <a href="http://api.jquery.com/Types/#Event" target="_blank">
+                                Event
+                            </a>
+</li>
+<li>
+<b>ui</b><br>
+                            Type: <a href="http://api.jquery.com/Types/#Object" target="_blank">
+                                Object
+                            </a><ul style="list-style-type:none;"><li>
+<b>option</b><br>
+                                        Type:
+                                        <a href="http://api.jquery.com/Types/#jQuery" target="_blank">jQuery</a><br>Last selected option.</li></ul>
+</li>
+</ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with the maxSelectReach callback specified:
+                </p>
+<div><div id="highlighter_954831" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect({</code></div><div class="line number2 index1 alt1"><code class="js spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="js plain">maxSelectReach: </code><code class="js keyword">function</code><code class="js plain">( event, ui ) {}</code></div><div class="line number3 index2 alt2"><code class="js plain">});</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Bind an event listener to the pqselectmaxselectreach event:
+                </p>
+<div><div id="highlighter_545527" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).on( </code><code class="js string">"pqselectmaxselectreach"</code><code class="js plain">, </code><code class="js keyword">function</code><code class="js plain">( event, ui ) {} );</code></div></div></td></tr></tbody></table></div></div>
+</div><hr class="api-divider"><div class="api-item" id="event-maxSelectExceed">
+<div class="title">
+<span class="option-title">maxSelectExceed( event, ui )</span><span class="option-type"><strong>Type: </strong><span style="font-size:15px;background:#eee;font-style:italic;font-family:monospace;">pqselectmaxselectexceed</span></span><div style="clear:both;"></div>
+</div>
+<br><p class="event-description">Applicable to multiple select, it's triggered when another option is selected after 
+            maxSelect limit has already reached.
+		</p>
+<ul>
+<li>
+<b>event</b><br>
+                            Type: <a href="http://api.jquery.com/Types/#Event" target="_blank">
+                                Event
+                            </a>
+</li>
+<li>
+<b>ui</b><br>
+                            Type: <a href="http://api.jquery.com/Types/#Object" target="_blank">
+                                Object
+                            </a><ul style="list-style-type:none;"><li>
+<b>option</b><br>
+                                        Type:
+                                        <a href="http://api.jquery.com/Types/#jQuery" target="_blank">jQuery</a><br>Last selected option.</li></ul>
+</li>
+</ul>
+<p class="api-code-examples">
+                    Code examples:
+                </p>
+<p>
+                    Initialize the pqSelect with the maxSelectExceed callback specified:
+                </p>
+<div><div id="highlighter_933621" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).pqSelect({</code></div><div class="line number2 index1 alt1"><code class="js spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="js plain">maxSelectExceed: </code><code class="js keyword">function</code><code class="js plain">( event, ui ) {}</code></div><div class="line number3 index2 alt2"><code class="js plain">});</code></div></div></td></tr></tbody></table></div></div>
+<br><p>
+                    Bind an event listener to the pqselectmaxselectexceed event:
+                </p>
+<div><div id="highlighter_120505" class="syntaxhighlighter  js"><div class="toolbar"><span><a href="http://paramquery.com/api/select#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$( </code><code class="js string">".selector"</code> <code class="js plain">).on( </code><code class="js string">"pqselectmaxselectexceed"</code><code class="js plain">, </code><code class="js keyword">function</code><code class="js plain">( event, ui ) {} );</code></div></div></td></tr></tbody></table></div></div>
+</div></div>
+
+    
+
+</div>
+
+</div>                
+                                
+
+                   <!--div id="disqus_thread" style="margin:50px auto 50px;width:700px;"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'paramquery'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        $(function () {
+            //if (!$.browser.msie) {
+            if (!(document.compatMode && document.all)) {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            }
+            else {
+                $("#disqus_thread").hide();
+            }
+        });
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript-->
+    <!--<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>-->
+            
+                
+			</div>                        			
+		</div>
+            
+		<div style="margin:30px auto 25px;width:260px;color:#666;font-size:10px;line-height:20px;height:25px;">				
+			Copyright © 2012-2015 Paramvir Dhindsa (paramquery.com)
+		</div>
+        <!--Html.Partial("godaddy")-->
+        <script type="text/javascript">
+
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-36965243-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function () {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+</script>        
+	
+
+</body></html>

@@ -1,0 +1,29 @@
+===== QUERY: update_del =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdate_del = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForupdate_del>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"program_id" = "eq.#FORM.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdate_del = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdate_del>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insert_selection =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Save_Attachments =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

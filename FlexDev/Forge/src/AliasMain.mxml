@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:maps="com.shared.maps.*"
+			   applicationComplete="applyRuntimeStyleSheet();"
+			   minWidth="1200" minHeight="600" height="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<maps:MainEventMap />
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.shared.events.MainEvent;
+			import com.shared.models.IModuleBa;
+			import com.shared.vos.Settings;
+			import com.shared.views.skins.FormItemSkinBa;
+			import com.shared.views.skins.FormSkinBa;
+			import flash.system.ApplicationDomain;
+			import flash.system.SecurityDomain;
+			/* Some of the import statements are required for modules. Without it, modules do not have access to some of the adobe source code.
+			   eg: PopUpManager, IDragManager, Alert.
+			 */
+			
+			/* import mx.managers.PopUpManager;PopUpManager; is the same as declaring "private var iPopUpManager:PopUpManager;"*/
+			import mx.managers.PopUpManager;PopUpManager;			
+			import mx.controls.Alert;	
+			import mx.utils.ObjectUtil;			
+			import mx.managers.IDragManager;
+
+			/* Could have done "import mx.managers.IDragManager;IDragManager" too, instead of instantiating a variable */
+			private var iDragManager:IDragManager;
+			
+			/* Could have done "import mx.managers.IDragManager;Alert" too, instead of instantiating a variable */
+			private var iAlert:Alert;
+			
+			import mx.events.ModuleEvent;
+			
+			import spark.modules.ModuleLoader;
+			import com.shared.views.skins.FormItemSkinBa;
+			import com.shared.views.skins.FormSkinBa;
+			
+			[Bindable]
+			public var settings:Settings = new Settings();
+			private var frmSkin:FormSkinBa;
+			private var frmItemSkin:FormItemSkinBa;
+			
+			private function applyRuntimeStyleSheet():void {
+				styleManager.loadStyleDeclarations("/flex/mainFx412.swf") 
+			}
+
+			
+			public function loadAlias(event:MainEvent):void {
+					var AliasMod:ModuleLoader;
+					AliasMod = new ModuleLoader();
+					var s:String = '/flex/com/Admin/Alias/Alias.swf';//REMOVE /flex/ in order to DEBUG
+					AliasMod.label = "Alias";
+					AliasMod.addEventListener(ModuleEvent.READY, aliasModReady,false,0,true);
+					AliasMod.loadModule(s);
+					//grpAliasMain.addElementAt(AliasMod,0);
+					grpAliasMain.addChild(AliasMod);
+			}
+			
+			public function aliasModReady(e:Event):void {
+				var mod:ModuleLoader = new ModuleLoader();
+				mod = e.currentTarget as ModuleLoader;
+				var ichild:* = mod.child as IModuleBa;
+				if (mod.child != null) {                    
+					/* Call data getters in the module  */
+					ichild.setSettings(this.settings);
+				} else {                
+					trace("Alias Module could not load ()");                 
+				}
+				//clean up
+				mod.removeEventListener(ModuleEvent.READY,aliasModReady);
+			}			
+		]]>
+	</fx:Script>
+	
+	<!-- Since the style sheet is being called from "Alias.mxml", that is why it seems I need to specifically use color and font properties for the tabnavigator here -->
+	<mx:TabNavigator id="grpAliasMain" width="1200" tabHeight="30" 
+					 height="100%" tabFocusEnabled="false" paddingTop="0"
+					 tabStyleName="tab" selectedTabTextStyleName="tab">
+		
+	</mx:TabNavigator>
+		
+	<!-- This one does not recognize height and so the grid is small when called to be included inside this. The grid also does not expand/contract using this code.
+	<s:Group id="grpAliasMain" height="100%">
+		
+	</s:Group>
+	-->
+</s:Application>
+ 

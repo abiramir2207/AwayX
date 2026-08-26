@@ -1,0 +1,61 @@
+===== QUERY: GetReimbursementInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetReimbursementInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement")>
+<cfif useLakebaseForGetReimbursementInfo>
+	<cftry>
+		<cfset GetReimbursementInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_reimbursement", {
+				"bb_reimbursement_id" = "eq.#BB_Reimbursement_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetReimbursementInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetReimbursementInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDistributorName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDistributorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistributorName>
+	<cftry>
+		<cfset GetDistributorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#FinalDistributorList#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetReimbursementTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetReimbursementTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement_type")>
+<cfif useLakebaseForGetReimbursementTypes>
+	<cftry>
+		<cfset GetReimbursementTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_reimbursement_type", {
+				"order" = "bb_reimbursement_type_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetReimbursementTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetReimbursementTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

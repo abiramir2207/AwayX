@@ -1,0 +1,23 @@
+<cfscript>
+ alias_columns_arr = 
+			["RECORDID"
+			,"ALIASID"
+			,"ALIASDESC"
+			,"ALIASREGION"
+			,"ALIASADDRESS"
+			,"ALIASCITY"
+			,"ALIASSTATE"
+			,"ALIASZIP"
+			,"ALIASUNIPRONUM"
+			,"ALIASLOC"
+			,"HOLDINVOICECOUNT"
+			,"ENTITYID"
+			,"ENTITYDESC"
+			,"ENTITYADDRESS"
+			,"ISASSIGNED"
+			,"UNKNOWN"
+			,"SOURCETYPEDESC"
+			,"PAYEEID"
+			,"ROWS_CNT"
+			];
+</cfscript>

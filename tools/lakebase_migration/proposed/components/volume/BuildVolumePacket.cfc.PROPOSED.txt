@@ -1,0 +1,33 @@
+===== QUERY: Distributor_In_Forecast_Not_In_AppArea =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Distributor_In_Forecast_And_In_AppArea =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getProductInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getProductInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Get_Forecast_Volume =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Forecast_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qforecastvolumeinfo")>
+<cfif useLakebaseForGet_Forecast_Volume>
+	<cftry>
+		<cfset Get_Forecast_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qforecastvolumeinfo", {
+				"product_id" = "eq.#arguments.productId#",
+				"select" = "forecastvolume"
+			}), "forecastvolume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Forecast_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Forecast_Volume>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

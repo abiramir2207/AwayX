@@ -1,0 +1,28 @@
+﻿div.tab {
+    border: none;
+}
+    div.tab > ul {
+        border: none;
+        border-bottom: 1px solid #CCC;
+        background-color:white;
+    }
+    div.tab .ui-tabs-nav li {
+        margin: 7px 3px 0 3px;
+        font-size: 11px;
+        opacity:0.5;
+    }
+    div.tab .ui-tabs-nav .ui-state-default a,
+    div.tab .ui-tabs-nav .ui-state-active a {
+        color: blue;
+    }
+    div.tab .ui-tabs-nav li.ui-tabs-selected,
+    div.tab .ui-tabs-nav li.ui-state-active {
+        height: 32px;
+        margin-top: 2px;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 0.35px;
+        text-shadow: 4px 4px 4px #aaa;
+        opacity:1;
+        border-bottom:none;
+    }

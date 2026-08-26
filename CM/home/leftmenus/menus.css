@@ -1,0 +1,43 @@
+/* MENUS.CSS */
+
+DIV#divMenuBar 
+	{ 
+		background-color:	#FFFFFF; 
+	}
+
+TABLE#tblMenuBar TD 
+	{ 
+		color:				white; 
+		padding:			1px 16px 1px 16px; 
+		cursor:				default; 
+		background-color:	#4169E1;
+		font-family:		Arial;
+	}
+
+TABLE#tblMenuBar TD.clsMenuBarItem 
+	{ 
+		font-weight:		bold; 
+		cursor:				hand;
+	}
+DIV.clsMenu 
+	{ 
+		font-size:12px; 
+		background-color:	#4169E1; 
+		position:			absolute; 
+		visibility:			hidden; 
+		width:				130px; 
+		padding:			2px 2px 2px 6px; 
+		border-top:			1 white solid; 
+	}
+DIV.clsMenu A, A:LINK, A:VISITED 
+	{ 
+		text-decoration:none; 
+		color:				white;
+		font-family:		Arial; 
+		font-weight:		bold;
+	}
+DIV.clsMenu A:hover 
+	{ 
+		color:				White;
+		text-decoration:	underline;
+	}

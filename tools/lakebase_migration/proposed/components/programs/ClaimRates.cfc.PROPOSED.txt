@@ -1,0 +1,41 @@
+===== QUERY: vars.query349873 =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: local.query =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: updSetting =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("claim_rates_setting")>
+<cfif useLakebaseForupdSetting>
+	<cftry>
+		<cfset application.oLakebase.updateRows("claim_rates_setting",
+			{
+				"default_setting" = "eq.1"
+			},
+			{
+				"default_setting" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdSetting>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.query =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: local.update =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: local.update =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: local.query =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

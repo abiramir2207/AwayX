@@ -1,0 +1,24 @@
+===== QUERY: GetProdName =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetBBBData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBBBData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("big_billback")>
+<cfif useLakebaseForGetBBBData>
+	<cftry>
+		<cfset GetBBBData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("big_billback", {
+				"big_billback_id" = "eq.#Big_Billback_ID#",
+				"select" = "product"
+			}), "product"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBBData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBBData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

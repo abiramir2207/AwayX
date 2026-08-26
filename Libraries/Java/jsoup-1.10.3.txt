@@ -1,0 +1,6 @@
+
+
+Add to the Coldfusion "Lib" directory and restart CF.
+
+CF11:
+C:\ColdFusion11\cfusion\lib

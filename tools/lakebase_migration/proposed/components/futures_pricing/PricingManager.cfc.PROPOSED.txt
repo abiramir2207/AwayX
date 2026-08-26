@@ -1,0 +1,69 @@
+===== QUERY: qGetPricingOverheadUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPricingOverheadUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_overhead_uom")>
+<cfif useLakebaseForqGetPricingOverheadUOM>
+	<cftry>
+		<cfset qGetPricingOverheadUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_overhead_uom", {
+				"deleted" = "eq.0",
+				"select" = "fp_overhead_uom_id,uom_desc"
+			}), "fp_overhead_uom_id,uom_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPricingOverheadUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPricingOverheadUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdatePricingStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetProductPricingOverheads =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProductPricingOverheads = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetpricingoverheads")>
+<cfif useLakebaseForqGetProductPricingOverheads>
+	<cftry>
+		<cfset qGetProductPricingOverheads = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetpricingoverheads", {
+				"fp_product_id" = "eq.#currentProductId#",
+				"componded_independent" = "eq.#thisCompIndep#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductPricingOverheads = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductPricingOverheads>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdatePrice =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdatePrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_product")>
+<cfif useLakebaseForqUpdatePrice>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fp_product",
+			{
+				"fp_product_id" = "eq.#currentProductId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"final_price" = "#totalPrice#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdatePrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdatePrice>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

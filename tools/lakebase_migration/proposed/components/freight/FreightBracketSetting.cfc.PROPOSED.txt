@@ -1,0 +1,23 @@
+===== QUERY: qrygetFreightSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetFreightSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("freight_settings")>
+<cfif useLakebaseForqrygetFreightSettings>
+	<cftry>
+		<cfset qrygetFreightSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("freight_settings", {
+				"freight_setting_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetFreightSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetFreightSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetMaxFreightBracket =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

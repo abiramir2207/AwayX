@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Pop Up that displays list of valid and invalid items for create List -->
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	backgroundColor="0xffffff"
+	close="PopUpManager.removePopUp(this)"
+	color="0x333333"
+	layout="vertical"
+	name="validAndInvalidItemIDs"
+	showCloseButton="true"
+	title="Item IDs">
+
+	<mx:Script>
+		<![CDATA[
+			import flash.events.Event;
+			import mx.events.*;
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			public var aInvalidItems:Array;
+			[Bindable]
+			public var aValidItems:Array;
+
+		]]>
+	</mx:Script>	
+
+	<mx:VBox horizontalAlign="center">
+		<!--styleName="blacksmithHeader"
+		styleName="blacksmithNormal"-->
+		
+		<mx:Label text="Invalid Item IDs" fontWeight="bold"/>
+		<mx:List id="lsInvalidItemIDs" dataProvider="{aInvalidItems}" name="lsInvalidItemIDs" width="100%" toolTip="These are Invalid item IDs" enabled="true" allowMultipleSelection="true"/>
+		<mx:Label text="Valid Item IDs" fontWeight="bold"/>
+		<mx:List id="lsValidItemIDs" dataProvider="{aValidItems}" name="lsValidItemIDs" width="100%" toolTip="These are Valid item IDs" enabled="true" allowMultipleSelection="true"/>		
+	</mx:VBox>		
+
+</mx:TitleWindow>

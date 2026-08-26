@@ -1,0 +1,132 @@
+===== QUERY: Pg_groups_info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPg_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_planning_groups")>
+<cfif useLakebaseForPg_groups_info>
+	<cftry>
+		<cfset Pg_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_planning_groups", {
+				"vf_plan_id" = "eq.#form.clicked_edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPg_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPg_groups_info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Dist_groups_info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDist_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_distributor_planning_groups")>
+<cfif useLakebaseForDist_groups_info>
+	<cftry>
+		<cfset Dist_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_distributor_planning_groups", {
+				"vf_plan_id" = "eq.#form.clicked_edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_groups_info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qPlanGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qDistGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: class_name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForclass_name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("class_list")>
+<cfif useLakebaseForclass_name>
+	<cftry>
+		<cfset class_name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("class_list", {
+				"vf_class_id" = "eq.#vf_plan_class_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForclass_name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForclass_name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: group_name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgroup_name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_list")>
+<cfif useLakebaseForgroup_name>
+	<cftry>
+		<cfset group_name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_list", {
+				"vf_group_id" = "eq.#vf_plan_group_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgroup_name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgroup_name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: business_segment_name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForbusiness_segment_name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qsegments")>
+<cfif useLakebaseForbusiness_segment_name>
+	<cftry>
+		<cfset business_segment_name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qsegments", {
+				"business_segment_id" = "eq.#vf_plan_segment_id#",
+				"select" = "business_unit_desc"
+			}), "business_unit_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForbusiness_segment_name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForbusiness_segment_name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UOM_pull =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qSortedSegments =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSortedSegments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qsegments")>
+<cfif useLakebaseForqSortedSegments>
+	<cftry>
+		<cfset qSortedSegments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qsegments", {
+				"order" = "business_unit_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSortedSegments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSortedSegments>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

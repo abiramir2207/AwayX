@@ -1,0 +1,124 @@
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="85"
+	 paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+    implements="mx.controls.listClasses.IDropInListItemRenderer,mx.managers.IFocusManagerComponent">
+    <mx:Script>
+        <![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.collections.ListCollectionView;
+			import mx.controls.AdvancedDataGrid;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridItemRenderer;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			import mx.controls.listClasses.BaseListData;
+			import mx.controls.listClasses.ListData;
+			import mx.events.FlexEvent;
+			import mx.formatters.NumberFormatter;
+
+
+            private var _listData:AdvancedDataGridListData;
+			[Bindable]
+			public var itemSource:Object = new Object();
+            // Define a property for returning the new value to the cell.
+            [Bindable]
+            public var value:Object;            
+
+            // Implement the drawFocus() method for the VBox.
+            override public function drawFocus(draw:Boolean):void {
+                txtInp.setFocus();
+            }
+             // Implement the setFocus() method for the VBox.
+            override public function setFocus():void {
+                txtInp.setFocus();
+            }
+			[Bindable]
+            override public function get data():Object {
+                return super.data;
+            }
+            [Bindable]
+            override public function set data(value:Object):void {
+            	var s:String = '';
+					s = _listData.dataField;
+					s = s.replace('.prodRate.rate','');
+					itemSource = _listData.item[s];
+                txtInp.text = value[s]['prodRate']['rate'];
+                
+            } 
+            public function get listData():BaseListData
+            {
+                return _listData;
+            }
+
+            public function set listData(value:BaseListData):void
+            {
+                _listData = AdvancedDataGridListData(value);
+            } 
+     		 private function setRate(sTxt:String):void{
+          		var s:String = '';
+			
+				s = _listData.dataField;
+				s = s.replace('.prodRate.rate','');
+            	this._listData.item[s]['prodRate']['rate'] = sTxt;
+				this._listData.item[s]['prodRate']['rateConverted'] = parseFloat(sTxt) * this._listData.owner.document.pModel.program.conversionFactor;
+				
+				//KRAFT if(this._listData.item.marketPrice){
+
+				var variancePercMp:Number;
+				/* this._listData.item[s+'.prodRate.varianceMP'] = this._listData.item[s+'.prodRate.rateMP'] - this._listData.item[s]['prodRate']['rate'];
+				varianceMp = (this._listData.item[s+'.prodRate.varianceMP']/this._listData.item[s+'.prodRate.rateMP'])*100;
+				this._listData.item[s+'.prodRate.variancePercMP'] = varianceMp; */
+				//KRAFT if Fixed
+				if(this._listData.item[s]['prodRate']['rateMPCustom'] > 0){
+					if(s.indexOf('1') == 0){ //if fixed component, variance is calced
+						this._listData.item[s]['prodRate']['varianceMP'] = this._listData.item[s]['prodRate']['rateMPCustom'] - this._listData.item[s]['prodRate']['rate'];
+					}
+					else{//if rebate, the varaince is the ProdRate.rate
+						this._listData.item[s]['prodRate']['varianceMP'] = this._listData.item[s]['prodRate']['rate'];
+					}
+					variancePercMp = (this._listData.item[s]['prodRate']['varianceMP']/this._listData.item[s]['prodRate']['rateMPCustom'])*100;
+				}
+				else if(this._listData.item[s]['prodRate']['rateMP'] > 0){
+					if(s.indexOf('1') == 0){ //if fixed component, variance is calced
+						this._listData.item[s]['prodRate']['varianceMP'] = this._listData.item[s]['prodRate']['rateMP'] - this._listData.item[s]['prodRate']['rate'];
+					}
+					else{//if rebate, the varaince is the ProdRate.rate
+						this._listData.item[s]['prodRate']['varianceMP'] = this._listData.item[s]['prodRate']['rate'];
+					}
+					variancePercMp = (this._listData.item[s]['prodRate']['varianceMP']/this._listData.item[s]['prodRate']['rateMP'])*100;
+				}
+				
+				this._listData.item[s]['prodRate']['variancePercMP'] = variancePercMp;
+
+				//KRAFT }
+				itemSource = _listData.item[s];
+			 }
+            
+            public var _decFormat:NumberFormatter =  new NumberFormatter();
+            public function formatDecimal(s:String):String 
+		    {
+		    	_decFormat.precision = 4
+		    	if(!isNaN(Number(s))){
+		    		return _decFormat.format(s);
+		    	}
+		    	else{
+		    		return '';
+		    	}
+		    }
+
+        ]]>
+    </mx:Script>
+    <mx:Binding destination="value" source="itemSource"/>
+    
+   <!-- <mx:ComboBox id="cbo" editable="false" width="80" labelField="abbreviation" change="setUom(this.cbo.selectedItem as Uom);" />-->
+    <mx:TextInput id="txtInp" 
+    		editable="true" text="" 
+    		change="setRate(this.txtInp.text)" width="75"/>
+    <mx:NumberValidator 
+    	precision="4" precisionError="The max precision is 4 deciamls."
+    	source="{txtInp}" 
+    	property="text" 
+    	required="false" 
+		invalidCharError="Please enter a valid number."
+		domain="real" 
+		invalid="txtInp.text=formatDecimal(txtInp.text)" 
+		allowNegative="false" 
+		negativeError="Please enter a positive number."/>
+</mx:VBox>

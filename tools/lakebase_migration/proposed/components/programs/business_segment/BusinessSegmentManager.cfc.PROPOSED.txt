@@ -1,0 +1,277 @@
+===== QUERY: qGetClassCodesOn =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetClassCodesOn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqGetClassCodesOn>
+	<cftry>
+		<cfset qGetClassCodesOn = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "classcodes_on"
+			}), "classcodes_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClassCodesOn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClassCodesOn>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBusinessSegmentID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBusinessSegmentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetBusinessSegmentID>
+	<cftry>
+		<cfset qGetBusinessSegmentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBusinessSegmentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBusinessSegmentID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDistChannelID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDistChannelID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDistChannelID>
+	<cftry>
+		<cfset qGetDistChannelID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"business_segment_id" = "eq.#arguments.businessSegmentID#",
+				"select" = "bs_var_2"
+			}), "bs_var_2"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistChannelID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistChannelID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetInActiveBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qMakeInActive =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqMakeInActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqMakeInActive>
+	<cftry>
+		<cfset application.oLakebase.updateRows("business_segment",
+			{
+				"deleted" = "eq.0",
+				"business_segment_id" = "eq.#arguments.busSegId#"
+			},
+			{
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqMakeInActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqMakeInActive>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qMakeInActive =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqMakeInActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqMakeInActive>
+	<cftry>
+		<cfset application.oLakebase.updateRows("business_segment",
+			{
+				"deleted" = "eq.0",
+				"business_segment_id" = "eq.#arguments.busSegId#"
+			},
+			{
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqMakeInActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqMakeInActive>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateBusinessSegment =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertBusinessSegment =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetBusSegIdFromProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBusSegIdFromProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetBusSegIdFromProgram>
+	<cftry>
+		<cfset qGetBusSegIdFromProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBusSegIdFromProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBusSegIdFromProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qIsEnabled =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqIsEnabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForqIsEnabled>
+	<cftry>
+		<cfset qIsEnabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment_enabled", {
+				"deleted" = "eq.0",
+				"select" = "enabled,distributor_enabled,product_enabled,vendor_enabled_type,operator_enabled,autopay_segment_enable,allow_multiple_segment,allow_segment_change,budget_segment_enabled,display_segment_in_billbacks,planner_volume_plan_segment_enable,user_segment_filters_autopay_results"
+			}), "enabled,distributor_enabled,product_enabled,vendor_enabled_type,operator_enabled,autopay_segment_enable,allow_multiple_segment,allow_segment_change,budget_segment_enabled,display_segment_in_billbacks,planner_volume_plan_segment_enable,user_segment_filters_autopay_results"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsEnabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsEnabled>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckEnabled =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckEnabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForqCheckEnabled>
+	<cftry>
+		<cfset qCheckEnabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment_enabled", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckEnabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckEnabled>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateEnabled =====
+STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
+
+===== QUERY: qSetEnabled =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckExists =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqCheckExists>
+	<cftry>
+		<cfset qCheckExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckExists>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetClassCodes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetClassCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("class_code")>
+<cfif useLakebaseForqGetClassCodes>
+	<cftry>
+		<cfset qGetClassCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("class_code", {
+				"deleted" = "eq.0",
+				"class_code_id" = "eq.#arguments.id#",
+				"select" = "class_code_id,class_code,class_code_desc,class_code_uuid,business_segment_id,external_id"
+			}), "class_code_id,class_code,class_code_desc,class_code_uuid,business_segment_id,external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClassCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClassCodes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetClasscodes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetClasscodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("class_code")>
+<cfif useLakebaseForqGetClasscodes>
+	<cftry>
+		<cfset qGetClasscodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("class_code", {
+				"deleted" = "eq.0",
+				"class_code_id" = "eq.#arguments.id#",
+				"select" = "class_code_id,class_code,class_code_desc,class_code_uuid,business_segment_id,external_id"
+			}), "class_code_id,class_code,class_code_desc,class_code_uuid,business_segment_id,external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClasscodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClasscodes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateClassCode =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertBusinessSegment =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetTemplateBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertTemplateBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteTemplateBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertTemplateBusinessSegments =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

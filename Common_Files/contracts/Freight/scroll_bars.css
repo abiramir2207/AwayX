@@ -1,0 +1,14 @@
+td.locked_top,th.locked_top{
+		background-color:#ffce84;
+   /* top: expression(document.getElementById('table_container').scrollTop);
+    position: relative;
+    z-index: 1;
+	*/
+  }
+/*
+  #table_container {
+     height: 300px;
+     overflow: scroll;
+		 overflow-x: hidden;
+*/
+  }

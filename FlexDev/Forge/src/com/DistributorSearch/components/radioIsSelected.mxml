@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--- This is the radio box displayed in the datagrid itemrenderer (row level) that a user selects a single distributor with -->
+<!--<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" backgroundAlpha="0" backgroundColor="white" horizontalAlign="center" width="3">
+    <mx:Script>
+        <![CDATA[
+        import mx.controls.RadioButtonGroup;
+            [Bindable]
+            public var varCbSelected:Boolean;            
+        ]]>
+    </mx:Script>
+   <mx:RadioButton id="cbIsSelected"
+        height="100%" width="50%" 
+        selected="{data.isSelected}" 
+        click="varCbSelected=cbIsSelected.selected" />
+</mx:VBox>-->
+
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center"
+    implements="mx.controls.listClasses.IDropInListItemRenderer" >
+
+    <mx:Script>
+    <![CDATA[
+		import mx.collections.ArrayCollection;
+		import mx.controls.AdvancedDataGrid;
+		import mx.controls.DataGrid;
+		import mx.controls.RadioButtonGroup;
+		import mx.controls.dataGridClasses.DataGridListData;
+		import mx.controls.listClasses.BaseListData;
+        
+		[Bindable]
+        public var varCbSelected:Boolean; 
+        private var _listData:BaseListData;
+        private var _dataField:String;
+
+        private var myDG:AdvancedDataGrid;
+		private var radIsSelectedGroup:RadioButtonGroup = new RadioButtonGroup();
+		
+        public function get listData():BaseListData {
+          return _listData;
+        }
+        public function set listData( value:BaseListData ):void {
+			if(value){
+				_listData = value;
+				myDG = _listData.owner as AdvancedDataGrid;
+				_dataField = (value as DataGridListData).dataField;
+			}
+        }
+        override public function set data(value:Object):void {
+                super.data = value;
+				varCbSelected=rdo.selected;
+				 //myDG.invalidateList();
+            }
+         private function onCBchange(event:Event):void
+		{
+			   var dp:Array = myDG.dataProvider.source as Array;
+			  // var i:int = 0;
+		   	for each(var item:Object in dp)
+		   	{
+		   		//if the item we are on (in the loop) matches the selected item -> selected = true.  All others are false
+		   		if(item.distGuid  == data.distGuid){
+                    item.isSelected = true;
+                }
+                else
+                {
+                    item.isSelected = false;
+                }
+               // i++;
+		    }
+			   myDG.invalidateList();
+		}
+    ]]>
+    </mx:Script>
+     <mx:RadioButton id="rdo"
+        height="100%" width="50%" 
+        selected="{data.isSelected}" 
+        click="onCBchange(event);" />
+
+</mx:HBox>
+
+

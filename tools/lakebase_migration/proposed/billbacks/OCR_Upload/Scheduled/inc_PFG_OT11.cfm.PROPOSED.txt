@@ -1,0 +1,47 @@
+===== QUERY: qCreateTablePFGOT11 =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qInsertTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdateFileName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdateFileName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdateFileName>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"db_input_filename" = "#qGetOCRUploadExtracted.File_Name#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateFileName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateFileName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSelPFGOT11FileDataCheck =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qInsertPermTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus4 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus5 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogUpdateTries =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

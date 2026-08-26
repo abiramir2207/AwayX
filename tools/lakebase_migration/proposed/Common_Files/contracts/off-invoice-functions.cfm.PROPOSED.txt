@@ -1,0 +1,3 @@
+===== QUERY: Get_Program_OffInvoice_Component_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

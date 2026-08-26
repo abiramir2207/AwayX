@@ -1,0 +1,436 @@
+<cfcomponent hint="Manages Duplicate Definition Template" extends="components.Base">
+	<!--- properites ---->
+	<cfset variables.templateID = 0 />
+	<cfset variables.pageID = -1 />
+	<cfset variables.dupProgramDefinition = "" />
+	<cfset variables.dupDefItemRecordCount = 0 />
+	<cfset variables.preDefinedDupDef  = "" />
+	<cfset variables.preDefinedDupDefItemDetail  = "" />
+	<cfset variables.currDuplicateDefItemDetail = "" />
+	<cfset variables.AddIsChecked = 0>
+	
+	<cffunction name="init" returntype="DuplicateTemplateManager" output="false">
+		<cfargument name="templateID" type="numeric" required="true"/>
+		<cfargument name="pageName" type="string" required="true"/>
+		<cfargument name="AddIsChecked" type="numeric" required="false" default=0/>
+		<!--- set template id --->
+		<cfset setTemplateID(arguments.templateID) />
+		<cfset setPageID(this.getPageIDByName(arguments.pageName)) />
+		<cfset setAddIsChecked(arguments.AddIsChecked) />
+		<cfset setDupProgramDefinition(this.addDupProgramDefinition()) />
+		<cfset setPreDefinedDupDef(this.addPreDefinedDupDef()) />
+		<cfset setDupDefItemRecordCount(this.addDupProgramDefItemCount()) />
+		<cfset setPreDefinedDupDefItemDetail(this.addPreDefinedDupDefItemDetail()) />
+		<cfset setCurrDuplicateDefItemDetail(this.addCurrDuplicateDefItemDetail()) />		
+		<cfset addTemplate() />
+		<cfreturn this />
+	</cffunction>
+	<!--- getter (public)--->
+	<cffunction name="getPageID" returntype="numeric" output="false" access="public">
+		<cfreturn variables.pageID />
+	</cffunction>
+	<cffunction name="getTemplateID" returntype="numeric" output="false" access="public">
+		<cfreturn variables.templateID />
+	</cffunction>
+	<cffunction name="getAddIsChecked" returntype="numeric" output="false" access="public">
+		<cfreturn variables.AddIsChecked />
+	</cffunction>
+	<cffunction name="getDupProgramDefinition" returntype="query" output="false" access="public">
+		<cfreturn variables.dupProgramDefinition />
+	</cffunction>
+	<cffunction name="getPreDefinedDupDef" returntype="query" output="false" access="public">
+		<cfreturn variables.preDefinedDupDef />
+	</cffunction>
+	<cffunction name="getPreDefinedDupDefItemDetail" returntype="query" output="false" access="public">
+		<cfreturn variables.preDefinedDupDefItemDetail />
+	</cffunction>
+	<cffunction name="getCurrDuplicateDefItemDetail" returntype="query" output="false" access="public">
+		<cfreturn variables.currDuplicateDefItemDetail />
+	</cffunction>
+	<cffunction name="getDupDefItemRecordCount" returntype="numeric" output="false" access="public">
+		<cfreturn variables.dupDefItemRecordCount />
+	</cffunction>
+	<!--- setter (private)---->
+	<cffunction  name="setPageID" returntype="void" access="private" output="false">
+		<cfargument name="pageID" type="numeric" required="true"/>
+		<cfset variables.pageID = arguments.pageID />
+	</cffunction>
+	<cffunction  name="setTemplateID" returntype="void" access="private" output="false">
+		<cfargument name="templateID" type="numeric" required="true"/>
+		<cfset variables.templateID = arguments.templateID />
+	</cffunction>
+	<cffunction  name="setAddIsChecked" returntype="void" access="private" output="false">
+		<cfargument name="AddIsChecked" type="numeric" required="true"/>
+		<cfset variables.AddIsChecked = arguments.AddIsChecked />
+	</cffunction>
+	<cffunction  name="setDupProgramDefinition" returntype="void" access="private" output="false">
+		<cfargument name="dupProgramDefinition" type="query" required="true"/>
+		<cfset variables.dupProgramDefinition = arguments.dupProgramDefinition />
+	</cffunction>
+	<cffunction  name="setPreDefinedDupDef" returntype="void" access="private" output="false">
+		<cfargument name="preDefinedDupDef" type="query" required="true"/>
+		<cfset variables.preDefinedDupDef = arguments.preDefinedDupDef />
+	</cffunction>
+	<cffunction  name="setPreDefinedDupDefItemDetail" returntype="void" access="private" output="false">
+		<cfargument name="preDefinedDupDefItemDetail" type="query" required="true"/>
+		<cfset variables.preDefinedDupDefItemDetail = arguments.preDefinedDupDefItemDetail />
+	</cffunction>
+	<cffunction  name="setCurrDuplicateDefItemDetail" returntype="void" access="private" output="false">
+		<cfargument name="currDuplicateDefItemDetail" type="query" required="true"/>
+		<cfset variables.currDuplicateDefItemDetail = arguments.currDuplicateDefItemDetail />
+	</cffunction>
+	<cffunction  name="setDupDefItemRecordCount" returntype="void" access="private" output="false">
+		<cfargument name="dupDefItemRecordCount" type="numeric" required="true"/>
+		<cfset variables.dupDefItemRecordCount = arguments.dupDefItemRecordCount />
+	</cffunction>
+	<!--- methods --->
+	<!--- access: package ---->
+	<!---check discount type? --->
+	<cffunction name="requireDiscountTypeCheck" returntype="boolean" access="public">
+		<cfset var qryDupDef = this.getDupProgramDefinition() />
+		<cfif ListFind(valueList(qryDupDef.item), 1) GT 0 >
+			<cfreturn true  />
+		<cfelse>
+			<cfreturn false />
+		</cfif>
+	</cffunction>
+	<!---check distributors?--->
+	<cffunction name="requireDistributorCheck" returntype="boolean" access="public">
+		<cfset var qryDupDef = this.getDupProgramDefinition() />		
+		<cfif ListFind(valueList(qryDupDef.item), 4) GT 0 >
+			<cfreturn true  />
+		<cfelse>
+			<cfreturn false />
+		</cfif>
+	</cffunction>
+		<!---check operator?--->
+	<cffunction name="requireOperatorCheck" returntype="boolean" access="public">
+		<cfset var qryDupDef = this.getDupProgramDefinition() />
+		<cfif ListFind(valueList(qryDupDef.item), 3) GT 0 >
+			<cfreturn true  />
+		<cfelse>
+			<cfreturn false />
+		</cfif>
+	</cffunction>
+	<!---check Template?--->
+	<cffunction name="requireTemplateCheck" returntype="boolean" access="public">
+		<cfset var qryDupDef = this.getDupProgramDefinition() />
+		<cfif ListFind(valueList(qryDupDef.item), 7) GT 0>
+			<cfreturn true  />
+		<cfelse>
+			<cfreturn false />
+		</cfif>
+	</cffunction>
+	<!---check Component?--->
+	<cffunction name="requireComponentCheck" returntype="boolean" access="public">
+		<cfset var qryDupDef = this.getDupProgramDefinition() />
+		<cfif ListFind(valueList(qryDupDef.item), 9) GT 0>
+			<cfreturn true  />
+		<cfelse>
+			<cfreturn false />
+		</cfif>
+	</cffunction>
+	
+	<cffunction name="GetGenericTypeDefinition" output="true">
+		<cfargument name="id" required="true" type="numeric" />
+		
+		<CFQUERY NAME="GetTemplateID" DATASOURCE="#Application.Datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT ProgramType_ID FROM Contract_Main  WHERE Contract_Main_ID = #arguments.id#
+		</CFQUERY>
+		
+		<cfquery name="qGetGenericTypeDefinition" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT 		DISTINCT pwdd.ProgramControl_Panel_Options_ID,
+						pwdd.Item, 
+						pwdd.Item_Radio_Index,
+						pwdd.isChecked,
+						Generic_Type
+			FROM    	Program_Wizard_Duplicate_Definition pwdd  
+			INNER JOIN 	Program_Control_Panel_Options CPO  ON CPO.ProgramControl_Panel_Options_ID = pwdd.ProgramControl_Panel_Options_ID
+			WHERE   	(pwdd.Deleted = 0) AND
+						(pwdd.ProgramControl_Panel_Options_ID = '#GetTemplateID.ProgramType_ID#') AND
+						pwdd.page_id = 1 AND
+						pwdd.isChecked = 1	AND
+						pwdd.Item  = 7						
+		</cfquery>
+		<cfreturn qGetGenericTypeDefinition/>
+	</cffunction>
+	
+		<!---check Spending Category?--->
+	<cffunction name="requireSpendingCategoryCheck" returntype="boolean" access="public">
+		<cfset var qryDupDef = this.getDupProgramDefinition() />
+		<cfif ListFind(valueList(qryDupDef.item), 8) GT 0 >
+			<cfreturn true  />
+		<cfelse>
+			<cfreturn false />
+		</cfif>
+	</cffunction>
+	<!---get template information --->
+	<cffunction name="addTemplate" access="package" returntype="void" output="false">
+		<cfquery name="qGetTemplate" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+				SELECT 	pwdd.ProgramControl_Panel_Options_ID,
+						pwdd.Page_ID,pwp.page_name,count(pwdd.item) as item_count
+				FROM	Program_Wizard_Duplicate_Definition pwdd, program_wizard_page pwp 
+				WHERE 	pwdd.Deleted = 0
+				AND		pwdd.ProgramControl_Panel_Options_ID = '#this.getTemplateID()#'
+				AND 	pwdd.page_id = pwp.page_id
+				AND		pwdd.Deleted = 0
+				AND		pwp.Deleted = 0
+				group by pwdd.ProgramControl_Panel_Options_ID,pwdd.Page_ID,pwp.page_name
+		</cfquery>
+		<cfif qGetTemplate.recordCount GT 0>
+			<cfif qGetTemplate.item_count GT 0>
+				<cfset hasTemplate = 1>
+			<cfelse>
+				<cfset hasTemplate = 0>
+			</cfif>
+			<cfset CreateObject("component","components.programs.template.DuplicateTemplate").init(qGetTemplate.Page_ID,qGetTemplate.page_name,hasTemplate) />
+		</cfif>
+	</cffunction>
+	<!--- get page id by the page Name --->
+	<cffunction name="getPageIDByName" output="true" access="package" returntype="numeric">
+		<cfargument name="pageName" required="true" type="string" />
+		<cfquery name="qGetPageID" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT	Page_ID
+			FROM	Program_Wizard_Page 
+			WHERE	(Page_Name = '#arguments.pageName#')
+			AND		Deleted = 0
+		</cfquery>
+		<cfreturn qGetPageID.Page_ID />				
+	</cffunction>
+	<cffunction name="GetSelectedDefinition" output="true">
+		<cfquery name="qGetSelectedDefinition" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT DISTINCT pwdd.ProgramControl_Panel_Options_ID,
+					pwdd.Item, 
+					pwdd.Item_Radio_Index,
+					pwdd.isChecked,
+					pwf.Logic_Flow_Order
+			FROM    Program_Wizard_Duplicate_Definition pwdd  
+			INNER JOIN Program_Wizard_Form pwf  ON pwf.Item = pwdd.Item AND pwf.page_id = pwdd.page_id and pwf.deleted = 0
+			WHERE   (pwdd.Deleted = 0) 
+			AND 	(pwdd.ProgramControl_Panel_Options_ID = '#this.getTemplateID()#')
+			AND 	pwdd.page_id = #this.getPageID()#
+			AND		pwdd.isChecked = 1		
+			ORDER BY pwf.Logic_Flow_Order
+		</cfquery>
+		<cfreturn qGetSelectedDefinition/>
+	</cffunction>
+	<cffunction name="addDupProgramDefinition" output="true" access="package">
+		<cfquery name="qGetDupProgramDefinition" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT DISTINCT pwdd.ProgramControl_Panel_Options_ID,
+					pwf.Item,  
+					<CFIF application.appSettingsGet.get_Setting('Lump_Sums_Programs_Paid_To_Vendor') eq '1'>
+					CASE WHEN pcpo.Allow_Vendor_Only = 1 AND pwf.Item_Name = 'Distributors'
+							THEN 'Vendors'
+						ELSE
+							pwf.Item_Name
+					END
+					<CFELSE>
+					pwf.Item_Name
+					</CFIF>
+						As Item_Name,
+					pwf.Item_Type,
+					pwdd.Item_Radio_Index,
+					pwdd.isChecked,
+					pwf.sort_order
+			FROM    Program_Wizard_Duplicate_Definition pwdd  
+			INNER JOIN	Program_Wizard_Form pwf  
+						ON pwdd.Page_ID = pwf.Page_ID AND pwdd.Item = pwf.Item
+			INNER JOIN Program_Control_Panel_Options pcpo
+						ON pcpo.ProgramControl_Panel_Options_ID =pwdd.ProgramControl_Panel_Options_ID
+			WHERE   (pwdd.Deleted = 0) 
+			AND 	(pwf.Deleted = 0) 
+			AND 	(pwdd.ProgramControl_Panel_Options_ID = '#this.getTemplateID()#')
+			AND 	pwdd.page_id = #this.getPageID()#
+			<CFIF this.getAddIsChecked() EQ 1>
+			AND pwdd.isChecked = 1
+			</CFIF>	
+			order by pwf.sort_order		
+		</cfquery>
+		<cfreturn qGetDupProgramDefinition />
+	</cffunction>
+	<cffunction name="addDupProgramDefItemCount" returntype="numeric" output="true" access="package">
+		<cfquery name="qGetDupProgramDefItemCount" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT 	count(*) as def_items_count
+			FROM 	Program_Wizard_Duplicate_Definition 
+			WHERE 	(ProgramControl_Panel_Options_ID = '#this.getTemplateID()#')
+			AND		Deleted = 0	
+		</cfquery>
+		<cfreturn qGetDupProgramDefItemCount.def_items_count />
+	</cffunction>
+	<!---function to retrieve summary information from the given page--->
+	<cffunction name="addPreDefinedDupDef" returntype="query" output="true" access="package">
+		<cfquery name="qGetPreDefinedDupDef" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT	pwp.Page_ID, pwf.sort_order, pwf.Item, pwf.Item_Name, pwf.Item_Type, count(pwf.Item) as Item_Count
+			FROM	Program_Wizard_Page pwp  
+					LEFT OUTER JOIN Program_Wizard_Form pwf  ON pwp.Page_ID = pwf.Page_ID
+					AND		pwp.Deleted = 0
+					AND		pwf.Deleted = 0 
+					LEFT OUTER JOIN Program_Wizard_Items pwi  ON pwp.Page_ID = pwi.Page_ID AND pwf.Item = pwi.Item
+					AND		pwi.Deleted = 0
+			WHERE	(pwp.Page_ID = #this.getPageID()#)
+			group by pwp.Page_ID,  pwf.sort_order, pwf.Item, pwf.Item_Name, pwf.Item_Type
+			order by pwp.Page_ID, pwf.sort_order, pwf.Item
+		</cfquery>
+		<cfreturn qGetPreDefinedDupDef />
+	</cffunction>
+	<!---function to retrieve items information from the given page--->
+	<cffunction name="addPreDefinedDupDefItemDetail" returntype="query" output="true" access="package">
+		<cfquery name="qGetPreDefinedDupDefItemDetail" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT	pwp.Page_ID, pwp.Page_Name, pwf.Item, pwf.Item_Name, pwf.Item_Type, pwf.Sort_Order, pwi.Item_Desc
+			FROM	Program_Wizard_Page pwp  
+					LEFT OUTER JOIN Program_Wizard_Form pwf  ON pwp.Page_ID = pwf.Page_ID 
+					LEFT OUTER JOIN Program_Wizard_Items pwi  ON pwp.Page_ID = pwi.Page_ID AND pwf.Item = pwi.Item
+			WHERE	(pwp.Page_ID = #this.getPageID()#)
+			AND		pwp.Deleted = 0 
+			AND		pwf.Deleted = 0
+			AND		pwi.Deleted = 0
+			ORDER BY pwp.Page_ID, pwf.Sort_Order
+		</cfquery>
+		<cfreturn qGetPreDefinedDupDefItemDetail />
+	</cffunction>
+	<!--- check for the duplicate program definition table to retrive defintion by template id--->
+	<cffunction name="addCurrDuplicateDefItemDetail" returntype="query" output="true" access="package">
+		<cfquery name="qGetCurrDuplicateDefItemDetail" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			SELECT	distinct pwdd.Page_ID, pwf.sort_order, pwf.Item, pwi.item_radio_id, pwi.Item_Desc
+			FROM	Program_Wizard_Duplicate_Definition pwdd  
+			INNER 	JOIN Program_Wizard_Form pwf  ON pwdd.Page_ID = pwf.Page_ID 
+			INNER 	JOIN Program_Wizard_Items pwi  ON pwf.Page_ID = pwi.Page_ID AND pwf.Item = pwi.Item
+			WHERE	(pwdd.Page_ID = #this.getPageID()# )
+			AND 	(pwdd.ProgramControl_Panel_Options_ID = '#this.getTemplateID()#')
+			AND		pwdd.Deleted = 0 
+			AND		pwf.Deleted = 0
+			AND		pwi.Deleted = 0
+			order by pwdd.Page_ID, pwf.sort_order, pwi.item_radio_id
+		</cfquery>
+		<cfreturn qGetCurrDuplicateDefItemDetail />
+	</cffunction>
+	
+	<!--- access: public ---->
+	<cffunction name="isDuplicateDefExisted" output="true" access="public">
+		<cfquery name="qGetDupDefinition" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			select *
+			from	program_wizard_duplicate_definition  
+			where	(ProgramControl_Panel_Options_ID = '#this.getTemplateID()#') 
+			and 	deleted = 0						
+		</cfquery>
+		<cfif qGetDupDefinition.recordCount GT 0>
+			<cfreturn true />
+		<cfelse>
+			<cfreturn false />
+		</cfif>
+	</cffunction>
+	
+	<cffunction name="importDefinitionFromTemplate" output="false" access="public">
+		<cfargument name="newID" required="true" type="numeric" />
+		<cfquery name="qImportDefinition" datasource="#application.datasource#">
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+			INSERT INTO program_wizard_duplicate_definition 
+			(programcontrol_Panel_Options_ID,page_id,item,item_radio_index,isChecked)  
+			select #arguments.newID#,page_id,item,item_radio_index,isChecked
+			from	program_wizard_duplicate_definition  
+			where	(ProgramControl_Panel_Options_ID = '#this.getTemplateID()#') 
+			and 	deleted = 0					
+		</cfquery>				
+	</cffunction>
+	
+	<!---Save duplicate program template setting into the program_wizard_duplicate_definition table--->
+	<cffunction name="saveTemplateInfo" output="true">
+		<cfargument name="dupStruc" required="true" type="struct" />
+		<!--- check if the given template info already existing , if so, update else insert--->
+		<!--- format of key: sort_order-item-item-radio_index-isChecked--->
+		<cfset tempArray = ArrayNew(1) >
+		<cfset keyArray = ArrayNew(1) >
+		<cfset tempArray = StructKeyArray(arguments.dupStruc) >
+		<cfloop index="i" from="1" to="#ArrayLen(tempArray)#" step="1">
+			<cfset currItemKey = tempArray[i] >
+			<cfset findItem = find("-",currItemKey) >
+			<!--- find --->
+			<cfif findItem GT 0 >
+				<cfscript>
+					ArrayAppend(keyArray, currItemKey);
+				</cfscript>
+			</cfif>
+		</cfloop>
+		<cfscript>
+			ArraySort(keyArray, "textnocase", "asc");
+		</cfscript> 
+		<cfset id = arguments.dupStruc.programcontrol_Panel_Options_ID />
+		<!--- is current id exising in the dup definition table --->
+		<!---<cftransaction action="begin">--->	
+		<cftry>
+			<cfif this.getDupDefItemRecordCount() LT 1 >
+				<cfloop index="i" from="1" to="#ArrayLen(keyArray)#" step="1">
+					<!--- <cfset curItem = arguments[dupStruc][keyArray[i]] > --->
+					<cfset itemRadios = ListToArray(keyArray[i] , "-")>
+					<cfset item = itemRadios[2] >
+					<cfset item_radio_index = itemRadios[3] >
+					<cfset isChecked = itemRadios[4] >
+					<cfquery name="qSaveTemplateInfo" datasource="#application.datasource#">
+						INSERT INTO program_wizard_duplicate_definition 
+						(
+							programcontrol_Panel_Options_ID,
+							page_id,
+							item,
+							item_radio_index,
+							isChecked
+						)  
+						values 
+						(
+							#arguments.dupStruc.programcontrol_Panel_Options_ID#,
+							#arguments.dupStruc.page_id#,
+							#item#,
+							#item_radio_index#,
+							#isChecked#
+						)
+					</cfquery>
+				</cfloop>
+			<cfelse>
+				<cfloop index="i" from="1" to="#ArrayLen(keyArray)#" step="1">
+					<cfset itemRadios = ListToArray(keyArray[i] , "-")>
+					<cfset item = itemRadios[2] >
+					<cfset item_radio_index = itemRadios[3] >
+					<cfset isChecked = itemRadios[4] >
+					<!--- need to get ischecked value --->
+					<cfquery name="qSaveTemplateInfo" datasource="#application.datasource#">
+						Update program_wizard_duplicate_definition
+						SET item_radio_index = #item_radio_index#, isChecked = #isChecked#
+						WHERE programcontrol_Panel_Options_ID = #arguments.dupStruc.programcontrol_Panel_Options_ID#
+						AND		item = #item#
+						AND		page_id = #arguments.dupStruc.page_id#
+						AND		Deleted = 0			
+					</cfquery>
+				</cfloop>
+			</cfif>
+		<!---<cftransaction action="COMMIT"> --->
+			<cfcatch>
+				<!--- <cftransaction action="ROLLBACK"> --->
+				<cfrethrow>
+			</cfcatch>
+		</cftry>
+		<!---</cftransaction>--->
+	</cffunction>
+
+	<cffunction name="saveTemplateDuplicateCheckInfo" output="false">
+		<cfargument name="id" required="true" type="numeric" />
+		<cfargument name="DuplicateCheckForRevisions" required="true" type="numeric" />
+
+		<cfquery name="qsaveTemplateDuplicateCheckInfo" datasource="#application.datasource#">
+			UPDATE	Program_Control_Panel_Options
+			SET	Disable_Duplicate_Check_For_Revisions = '#arguments.DuplicateCheckForRevisions#'
+			WHERE	ProgramControl_Panel_Options_ID = '#arguments.id#'				
+		</cfquery>
+
+	</cffunction>
+	
+</cfcomponent>

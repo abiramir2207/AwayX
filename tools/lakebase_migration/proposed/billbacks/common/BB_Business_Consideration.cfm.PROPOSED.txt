@@ -1,0 +1,49 @@
+===== QUERY: GetBBInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetBBInfo>
+	<cftry>
+		<cfset GetBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "contract_number,is_a_revision"
+			}), "contract_number,is_a_revision"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: editSaveEvaluationNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: postEvaluationNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetBB_BusiConsi_Edit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBB_BusiConsi_Edit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_business_consideration")>
+<cfif useLakebaseForGetBB_BusiConsi_Edit>
+	<cftry>
+		<cfset GetBB_BusiConsi_Edit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_business_consideration", {
+				"billback_id" = "eq.#FORM.BBID#",
+				"bb_business_consideration_id" = "eq.#editRecord#",
+				"select" = "bb_business_consideration_id,notes"
+			}), "bb_business_consideration_id,notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBB_BusiConsi_Edit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBB_BusiConsi_Edit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

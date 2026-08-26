@@ -1,0 +1,42 @@
+===== QUERY: PaymentTypeforProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPaymentTypeforProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForPaymentTypeforProgram>
+	<cftry>
+		<cfset PaymentTypeforProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#CSLGetContractInfo.ClaimMechanics#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPaymentTypeforProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPaymentTypeforProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApprovedUser =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApprovedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForApprovedUser>
+	<cftry>
+		<cfset ApprovedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Approved_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovedUser>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

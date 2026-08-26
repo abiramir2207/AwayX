@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This is the popup for program details. -->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="top" horizontalScrollPolicy="off">
+<mx:Script>
+	<![CDATA[
+		import com.maps.*;
+		import com.views.*;
+		import com.models.*;
+		import com.events.*;
+		import mx.controls.Alert;
+		import mx.utils.ObjectUtil;
+		import mx.managers.PopUpManager;
+		import flash.display.DisplayObject;
+		import mx.core.Application;
+		import mx.core.IFlexDisplayObject;
+		
+		public var pop_up:popup;
+		/* This is used to open the pop up for program details */
+		private function openProgramDetails(Program_ID:int,Status_ID:int):void{	
+			var ResolutionX:Number = Capabilities.screenResolutionX;
+			var ResolutionY:Number = Capabilities.screenResolutionY;
+
+		pop_up = popup(PopUpManager.createPopUp(Application.application as DisplayObject,popup,true));
+			pop_up.Program_ID = Program_ID;
+			pop_up.Status_ID = Status_ID;
+			/* Calculate the height based on screen resolution. This way for screens with lower resolution, 
+			the vertical scrollbars will appear when the screen vertical content is long.
+			*/
+			pop_up.height = ResolutionY * .6;
+			pop_up.width = 1000;
+			PopUpManager.centerPopUp(pop_up);
+		}
+		
+		/* Program Preview */
+		private function openProgramSummary(Program_ID:int,Catalog:String) : void{  
+ 	    /* If its a catalog program, then we send "CatalogView=1", so that we do not see product rates
+ 	       on the program preview page.
+ 	    */
+ 	        if(Catalog == '1')
+ 	        {
+ 	        	var winjscommand:String ="/CID_Wrapper.cfm?Program_ID="+Program_ID+"&CatalogView=1"+"&Page_Relocate=/scorecard/program_display.cfm";
+ 	        }
+ 	        else
+ 	        {
+ 	        	var winjscommand:String ="/CID_Wrapper.cfm?Program_ID="+Program_ID+"&Page_Relocate=/scorecard/program_display.cfm";
+ 	        }
+			var jscommand:String = "window.open('"+winjscommand+"','winPreview','height=640,width=815,toolbar=no,scrollbars=yes,resizable=yes');"   
+			var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+			navigateToURL(url, "_self"); 
+		}
+		
+		[Bindable]
+		/* This is used to open the pop up for payment history */
+ 		private function openExternalURL(iContractMainID:String):void
+		{
+			var jsURL:String = "/common_files/contracts/view_contract_payment_history.cfm?ContractId=" + iContractMainID;
+			var jscommand:String = "window.open('"+ jsURL + "','winPaymentHistory','height=620,width=1150,toolbar=no,scrollbars=yes,resizable=yes');";			
+			var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);"); 
+			navigateToURL(url, "_self"); 
+		}
+		
+		[Bindable]
+		/* This is used to get the image for payment history */
+		private function getSource(pymntInfo:int):String
+		{
+			var paymentHistoryText:String = ''; 
+				if (pymntInfo == 1 && data.is_catalog == 0){									
+					paymentHistoryText = "[$]";
+				}
+			return paymentHistoryText;
+		}
+		/* This is used to display Quick Pay link */
+		private function getQuickPay(claim_mechanics:int):String
+		{
+			var quickPayText:String = ''; 
+			if (claim_mechanics != 0){									
+				quickPayText = "[quick pay]";
+			}
+			return quickPayText;
+		}
+		private function openQuickPay(Program_ID:int) : void{  
+			var winjscommand:String ="/CID_Wrapper.cfm?Program_ID="+Program_ID+"&Page_Relocate=/scorecard/quick_pay.cfm";
+			var jscommand:String = "window.open('"+winjscommand+"','winPreview','height=620,width=1150,toolbar=no,scrollbars=yes,resizable=yes');"   
+			var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+			navigateToURL(url, "_self"); 
+		}
+	]]>    
+</mx:Script>
+
+<mx:HBox verticalAlign="top" horizontalGap="0">
+<mx:Text fontSize="9" text="[preview]" click="openProgramSummary(data['contract_main_id'],data['is_catalog'])" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here for program preview"/>
+<!-- Pass Program_ID and Status_ID -->
+<mx:Text fontSize="9" text="[details]" click="openProgramDetails(data['contract_main_id'],data['status_id'])"  useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here for program details"/>	
+<mx:Text fontSize="9" text="{getQuickPay(data.claim_mechanics)}" click="openQuickPay(data['contract_main_id'])"  useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here for quick pay details"/>	
+<mx:Text fontSize="10"  color="green" text="{getSource(data.payment_history)}" click="openExternalURL(data.contract_main_id.toString())" useHandCursor="true" buttonMode="true" mouseChildren="false" toolTip="Payment History for {data.contract_number}" />
+</mx:HBox>	
+</mx:VBox>

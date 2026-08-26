@@ -1,0 +1,46 @@
+===== QUERY: qNewProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqNewProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_new_product")>
+<cfif useLakebaseForqNewProducts>
+	<cftry>
+		<cfset qNewProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_new_product", {
+				"deleted" = "eq.0",
+				"fp_new_product_id" = "eq.#arguments.id#",
+				"select" = "fp_new_product_id,product_desc,customer_request"
+			}), "fp_new_product_id,product_desc,customer_request"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqNewProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqNewProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qNewProductSurrogates =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetNewProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetNewProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_new_product")>
+<cfif useLakebaseForqGetNewProducts>
+	<cftry>
+		<cfset qGetNewProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_new_product", {
+				"deleted" = "eq.0",
+				"select" = "fp_new_product_id,product_desc,customer_request"
+			}), "fp_new_product_id,product_desc,customer_request"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetNewProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetNewProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

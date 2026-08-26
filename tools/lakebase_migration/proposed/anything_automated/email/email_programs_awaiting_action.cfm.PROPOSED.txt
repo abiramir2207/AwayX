@@ -1,0 +1,23 @@
+===== QUERY: getAllRFAPrograms =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getRFAtitle =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRFAtitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetRFAtitle>
+	<cftry>
+		<cfset getRFAtitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "report_name,send_report_to"
+			}), "report_name,send_report_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRFAtitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRFAtitle>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

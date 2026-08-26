@@ -1,0 +1,32 @@
+===== QUERY: Saved_Formula_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSaved_Formula_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_rule")>
+<cfif useLakebaseForSaved_Formula_Info>
+	<cftry>
+		<cfset Saved_Formula_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_rule", {
+				"formula_pricing_rule_id" = "eq.#URL.RID#",
+				"deleted" = "eq.0",
+				"order" = "rule_name.asc",
+				"select" = "rule_name,number_of_comms,show_details"
+			}), "rule_name,number_of_comms,show_details"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaved_Formula_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaved_Formula_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_All_Commodities =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: Get_All_Commodities =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: Get_Current_Commodity_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

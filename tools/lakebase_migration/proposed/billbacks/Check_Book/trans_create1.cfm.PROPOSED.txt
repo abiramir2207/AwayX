@@ -1,0 +1,68 @@
+===== QUERY: Get_bb_code =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_bb_code = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGet_bb_code>
+	<cftry>
+		<cfset Get_bb_code = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#form.billback_ID#",
+				"select" = "bb_reference"
+			}), "bb_reference"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_bb_code = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_bb_code>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_desc_amt =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Get_desc_amt =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: check_no_list =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheck_no_list = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForcheck_no_list>
+	<cftry>
+		<cfset check_no_list = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"check_number" = "not.is.null",
+				"select" = "check_number"
+			}), "check_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck_no_list = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck_no_list>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Data =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"ledger_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,1 @@
+<cfoutput> INNER JOIN Product_Q_Brand_Desc pqb ON (pcla.BSA_Foodservice_Items_Master_ID=pqb.BSA_Foodservice_Items_Master_ID AND pqb.LOB IN (#ListQualify(application.returned_customer_setting.Line_Business_Default, "'", ",")#)) INNER JOIN Q_Brand_Desc qb ON (pqb.Q_Brand_ID=qb.Q_Brand_ID)</cfoutput>

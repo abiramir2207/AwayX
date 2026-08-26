@@ -1,0 +1,3352 @@
+<!----
+/Program_Wizard/create_edit_action.cfm
+
+Created By: Brenda Flynn
+			bflynn@awayx.com
+Created On: May 5, 2003
+			Feliz Cinco de Mayo
+Modified By: Anand Rao - for D18996
+Last Modified On: 15-May-09
+-----------------------------
+
+Processes form information from the previous page.
+
+--->
+<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
+<cfset appSettings = genSettingsManager.get()>
+<cfset templateManager = CreateObject("component","components.programs.template.TemplateManager").init() />
+<cfset createLog = createObject("component", "components.settings.AuditTrail.AuditTrail").init()>
+<cfset baseSettings = CreateObject("component","components.Base") />
+
+<cfset bTemplateLevelComponentFilter = 1 />
+<cfif appSettings.getOperatingGroupOn()>
+	<cfset bTemplateLevelComponentFilter = 0 />
+</cfif>
+
+<!---Default parameters--->
+<cfparam name="Form.Max_Duration" 					default="0">
+<cfparam name="Form.Max_Duration_Length" 			default="0">
+<cfif len(trim(Form.Max_Duration_Length)) IS 0>
+	<cfset Form.Max_Duration_Length = 0>
+</cfif>
+<cfparam name="Form.Min_Duration" 					default="0">
+<cfparam name="Form.Min_Duration_Length" 			default="0">
+<cfif len(trim(Form.Min_Duration_Length)) IS 0>
+	<cfset Form.Min_Duration_Length = 0>
+</cfif>
+
+<cfparam name="Form.Max_Global_Volume" 				default="0">
+<cfparam name="Form.Max_Global_Volume_Size_CS" 		default="0">
+<cfif isDefined("Max_Global_Volume_Size_CS")>
+	<cfif len(trim(Form.Max_Global_Volume_Size_CS)) IS 0>
+		<cfset Form.Max_Global_Volume_Size_CS = 0>
+	</cfif>
+</cfif>
+<cfparam name="Form.Max_Global_Volume_Size_LBS" 	default="0">
+<cfif isDefined("Max_Global_Volume_Size_LBS")>
+	<cfif len(trim(Form.Max_Global_Volume_Size_LBS)) IS 0>
+		<cfset Form.Max_Global_Volume_Size_LBS = 0>
+	</cfif>
+</cfif>
+<cfparam name="Form.Min_Global_Volume" 				default="0">
+<cfparam name="Form.Min_Global_Volume_Size_CS" 		default="0">
+<cfif isDefined("Min_Global_Volume_Size_CS")>
+	<cfif len(trim(Form.Min_Global_Volume_Size_CS)) IS 0>
+		<cfset Form.Min_Global_Volume_Size_CS = 0>
+	</cfif>
+</cfif>
+<cfparam name="Form.Min_Global_Volume" 				default="0">
+<cfparam name="Form.Min_Global_Volume_Size_LBS"		default="0">
+<cfif isDefined("Min_Global_Volume_Size_LBS")>
+	<cfif len(trim(Form.Min_Global_Volume_Size_LBS)) IS 0>
+		<cfset Form.Min_Global_Volume_Size_LBS = 0>
+	</cfif>
+</cfif>
+
+<cfparam name="Form.Payable_To" 					default="0">
+<cfparam name="Form.Pay_To_Distributor"             default="0">
+<cfparam name="Form.Send_Payment_To"				default="0">
+
+
+<cfparam name="Form.Required_Payable_To" 			default="0">
+
+
+<cfparam name="Form.Required_Send_Payment_To"		default="0">
+<cfparam name="Form.Trade_Blurb" 					default="">
+<cfparam name="Form.Broker_Trade_Question" 			default="0">
+<cfparam name="Form.Customer_Acceptance" 			default="0">
+<cfparam name="Form.Currency_Conversion_Factor" 			default="0">
+
+<cfparam name="Form.Allow_Retro_Create" 			default="0">
+<cfif len(trim(Form.Allow_Retro_Create_Max)) IS 0><cfset Form.Allow_Retro_Create_Max = 0></cfif>
+<cfparam name="Form.Billback_Date"					default="0">
+<cfparam name="Form.Billback_Date_Span"				default="0">
+<cfif len(trim(Form.Billback_Date_Span)) IS 0><cfset Form.Billback_Date_Span = 0></cfif>
+
+<cfparam name="Form.Created_Type"					default="">
+<cfparam name="Form.Adv_Spend" 						default="0">
+<cfparam name="Form.Zero_Volume"					default="0">
+<cfparam name="Form.Auto_Renew_Option" 				default="0">
+<cfparam name="Form.Allow_AR_Modification" 			default="0">
+<cfparam name="Form.Controllable_Volume" 			default="0">
+<cfparam name="Form.Volume_Cap" 					default="0">
+<cfparam name="Form.Allow_Add_All_Products"			default="0">
+<cfparam name="Form.Include_In_Catalog"				default="0">
+<cfparam name="Form.Catalog_Type"					default="1">
+<cfparam name="Form.Show_Awarded_In_Catalog"		default="0">
+<cfparam name="Form.Restrict_On_Approval_Group"		default="0">
+<cfparam name="Form.Specify_Distributors" 			default="0">
+<cfparam name="Form.Specify_Operators" 				default="0">
+<cfparam name="Form.Specify_Brokers" 				default="0">
+<cfparam name="Form.Allow_Only_One_Broker" 				default="0"><!---D37702 :: Brokerage template type doesn't allow vendor select --->
+<cfparam name="FORM.Use_Discount_ID" 				default="0">
+<CFPARAM NAME="FORM.Discount_Identifier_ID" 		DEFAULT="">
+<cfparam name="FORM.Group_Level_Distributor" 		default="0">
+<cfparam name="FORM.Revision_Not_Allowed"			default="0">
+<cfparam name="FORM.Allow_Retro_Revision" 			default="0">
+<cfparam name="FORM.Allow_Retro_Revision_Span" 		default="">
+<cfparam name="FORM.allow_dup_programs" 			default="0">
+<cfparam name="FORM.dupAction" 						default="0">
+<cfparam name="FORM.One_Distributor" 				default="0">
+<cfparam name="FORM.One_Operator" 					default="0">
+<cfparam name="FORM.Require_Distributor" 			default="0">
+<cfparam name="FORM.Require_Operator" 				default="0">
+<cfparam name="FORM.Min_Lump_Sum" 					default="">
+<cfparam name="FORM.Max_Lump_Sum" 					default="">
+<cfparam name="FORM.Lump_Sum_Cap" 					default="">
+<cfparam name="FORM.No_Negative_OI" 				default="0">
+<cfparam name="FORM.One_Discount_Mandated"			default="0">
+<cfparam name="FORM.Allow_Only_One_Discount"			default="0">
+<cfparam name="FORM.Equipment_Placement" 			default="0">
+<cfparam name="form.Group_Deal" 					default="0" />
+<cfparam name="form.Discount_Rebates_Item_Level" 	default="0" />
+<cfparam name="form.Discount_Rebates_Group_Level" 	default="0" />
+<cfparam name="form.Discount_Lump_Sums_Item_Level" 	default="0" />
+<cfparam name="form.Discount_Lump_Sums_Group_Level" default="0" />
+<cfparam name="form.Discount_Growth_Item_Level" 	default="0" />
+<cfparam name="form.Discount_Growth_Group_Level" 	default="0" />
+<cfparam name="form.Date_Exclusions_ON" 			default="0" />
+<cfparam name="form.Sysco_Report_ON" 				default="0" />
+<cfparam name="form.Sequential_Net_Sales_Operating_Margin" 	default="0" />
+<cfparam name="form.exclude_sig_products" 			default="0" />
+<cfparam name="form.price_protection_on" 			default="0" />
+<cfparam name="form.Program_Date_Type" 				default="1" />
+<cfparam name="form.Previous_Fiscal_Year_Volume" 	default="0" />
+<cfparam name="form.apply_rebate_rates" 			default="0" />
+<cfparam name="form.mass_billback_pay" 						default="0" />
+<cfparam name="form.Competitive_Information_On" 			default="0" />
+<cfparam name="form.program_start_day" 						default="0" />
+<cfparam name="form.program_end_day" 						default="0" />
+<cfparam name="form.Program_Min_Start_Date" 				default="" />
+<cfparam name="form.Program_Max_End_Date" 					default="" />
+<cfparam name="form.Pullbacks_On" 							default="0" />
+<cfparam name="form.Recapture_Pays_To_Id" 					default="0" /><!--- D41285: Auto Pay - Pays To option by template for Recapture --->
+<cfparam name="form.default_pullback_rate" 					default="0" />
+<cfparam name="form.is_pullback_corporate_deal" 			default="0" />
+<cfparam name="form.pullback_from_corporate" 				default="0" />
+<cfparam name="form.Pullback_Include_RediVolume" 			default="0" />
+<cfparam name="form.Pullback_redi_volume_percent" 			default="0" />
+<cfparam name="Form.pullback_template_type" 				default="0" />
+<cfparam name="Form.Include_Open_Date" 						default="0">
+<cfparam name="Form.Include_Date_Needed_by" 				default="0">
+<cfparam name="Form.Include_Reply_Date" 					default="0">
+<cfparam name="Form.Include_Competitive_Data_Tracking" 		default="0">
+<cfparam name="Form.display_basesales_Competitive_Data" 	default="0">
+<cfparam name="Form.display_bid_info_page" 					default="0">
+<cfparam name="Form.line_number" 							default="0">
+<cfparam name="Form.growth_auto_pay" 							default="0"><!---D35731 - Growth Auto Pay --->
+<cfparam name="Form.BidRequestStatusOn" 					default="0">
+<cfparam name="Form.BidRequestStatusChangePgmStatus" 		default="0">
+<!--- While adding cases on the volume page, we may get a pop-up message. This variable stores that message --->
+<!---<cfparam name="Form.Volume_Related_Message"					default="">--->
+<cfparam name="Form.Include_Template_In_Deals_IF" 			default="">
+<cfparam name="Form.Include_Treatment_Basis_Code" 			default="">
+<cfparam name="Form.Exclude_Same_Spending_Cat_From_TPA" 	default="">
+<cfparam name="form.Restrict_Product_Group_Level"			default="0">
+<cfparam name="Form.Allow_Product_Group_Level" 				default="">
+<cfparam name="Form.Allow_Lower_Pricing_Level" 				default="0">
+<cfparam name="form.EZButton_On" 							default="0" />
+<cfparam name="form.EZprogram_editcomponent" 				default="0" />
+<cfparam name="Form.BB_D_Template_Overrides_Deviation_Tolerances" default="0">
+<cfparam name="Form.BB_D_Purchase_Period_OverRide"			default="0">
+<cfparam name="Form.BB_D_Purchase_Period_OverRide_Rate"			default="0">
+<cfparam name="Form.BB_D_Aggregation_Period_OverRide"			default="0">
+<cfparam name="Form.ReleaseSettlement"						default="0">
+<cfparam name="Form.RS_DaysToClaim" 						default="0">
+<cfparam name="Form.RS_CreatedDaysFilter"						default="0"><!--- 68628 --->
+<cfparam name="Form.RS_CreatedDaysGreater"				default="0"><!--- 68628 --->
+<cfparam name="Form.Performance_Dates_On" 					default="0">
+<cfparam name="Form.Performance_Dates_On_Required" 			default="0">
+<cfparam name="Form.distribution_channel"              		default="" />
+<cfparam name="Form.division"                           	default="" />
+<cfparam name="Form.Interface_On_Approval"          	    default="0" />
+<cfparam name="Form.Track_Price_Comp"           	        default="0" />
+<cfparam name="Form.Retailer_Info_On"          	         	default="0" />
+<cfparam name="Form.Send_RFA_Email"             	      	default="0" />
+<cfparam name="Form.Distributor_Product_Integrity_Rule_ID"	default="" />
+<cfparam name="Form.Freight_Approval_Reqd"					default="0" />
+<cfparam name="Form.Freight_accrual_considers_cash_discount"			default="0" />
+<cfparam name="Form.Use_Fixed_Price_As_Base_Sales"			default="0" />
+<cfparam name="Form.CurrencyDefaultOption"					default="2" />
+<cfparam name="Form.LabelSetDefaultOption"					default="" />
+<cfparam name="Form.Template_UPC_Display"					default="0" />
+<cfparam name="Form.Fixed_Rebate_Grid_Option"				default="0" />
+<cfparam name="Form.Market_Price"							default="0" />
+<cfparam name="Form.Market_Price_Update_Process"			default="1" />
+<!---************** BEGIN New Settings for Bid Programs Competitive Data ******************** --->
+<cfparam name="FORM.Won_By" 								default="0" />
+<cfparam name="FORM.Won_Rate" 								default="0" />
+<cfparam name="FORM.Won_UOM" 								default="0" />
+<cfparam name="FORM.Won_By_Required" 						default="0" />
+<cfparam name="FORM.Won_Rate_Required" 						default="0" />
+<cfparam name="FORM.Won_UOM_Required" 						default="0" />
+<cfparam name="FORM.Delivery_Type" 							default="0" />
+<cfparam name="FORM.Category" 								default="0" />
+<cfparam name="FORM.Package" 								default="0" />
+<cfparam name="FORM.Shared" 								default="0" />
+<cfparam name="FORM.Incremental" 							default="0" />
+<cfparam name="FORM.Source" 								default="0" />
+<cfparam name="FORM.Source_Type" 							default="0" />
+<cfparam name="FORM.Date_Source_Received" 				default="0" />
+<cfparam name="FORM.Source_Required" 						default="0" />
+<cfparam name="FORM.Source_Type_Required" 					default="0" />
+<cfparam name="FORM.Date_Source_Received_Required" 			default="0" />
+<cfparam name="FORM.Download_Comp_Data_History"				default="0" />
+<cfparam name="FORM.Specd"								default="0" />
+<cfparam name="Form.Display_Reminder_Comp_Data_Page"        		default="0" />
+<cfparam name="FORM.Opportunity_Volume" 				default="0" />
+<cfparam name="FORM.Include_Time_Of_Open_Date" 				default="0" />
+<!---<cfparam name="FORM.Update_Program_Distributors_Approved_Billbacks" 	default="0" />  removed by 28113 --->
+<cfparam name="FORM.Single_Component_Per_Discount_Type" 		default="0" />
+<cfparam name="FORM.Item_Fixed_Rebate_Paid_To_Dup_Message" 		default="0" />
+<cfparam name="FORM.AutoAdd_Distributor_ThirdPartyClaims" 		default="0" />
+<cfparam name="FORM.Ignore_Billback_Volume_Deviation" 		default="0" />
+<cfparam name="FORM.Ignore_Date_Overlap_Deviation" 		default="0" /><!--- D36368 --->
+<cfparam name="FORM.Ignore_Rate_Deviation" 				default="0" /> <!---D71856 RETAIL-195 --->
+<cfparam name="FORM.Auto_Volume" 					default="0" />
+<cfparam name="FORM.Blackout_Periods" 				default="0" /><!--- D38942 :: Program Blackout Period on Frontend --->
+<cfparam name="FORM.Start_Zero" 					default="0" /><!--- D38942 :: Program Blackout Period on Frontend --->
+<cfparam name="FORM.Future_Zero" 					default="0" /><!--- D38942 :: Program Blackout Period on Frontend --->
+<cfparam name="FORM.Auto_Actual" 					default="0" />
+<cfparam name="FORM.Auto_Future" 					default="0" />
+<cfparam name="FORM.Auto_Committed_Equal_Actual" 					default="0" />
+<cfparam name="FORM.Auto_Committed_Equal_Actual_ON" 					default="0" />
+<cfparam name="FORM.Auto_Volume_Program_Equal_Actual_Weeks" 					default="0" />
+<cfif FORM.Auto_Committed_Equal_Actual_ON EQ 0>
+	<cfset FORM.Auto_Committed_Equal_Actual = 0 />
+</cfif>
+<cfparam name="FORM.Clear_Lumpsum" 					default="0" />
+<cfparam name="FORM.Base_Sales_Equal_To_Lowest_Bracket" 		default="0" />
+<cfparam name="Form.Generate_Letters_On_Approval"			default="0" />
+<cfparam name="FORM.Margin_Price_List_Header_ID" 			default="0" />
+<cfparam name="FORM.Base_Sales_based_on_Prg_Start_Date" 	default="0" />
+<cfparam name="FORM.Select_Effective_Date_for_Price" 		default="0" />
+<cfparam name="FORM.BB_Tolerance_DVT" 					default=0 />
+<cfparam name="FORM.BB_Tolerance_ERT" 					default=0 />
+<cfparam name="FORM.Cannot_Exceed_Percent" 				default="" />
+<cfparam name="FORM.Cannot_Exceed_Dollar" 				default="" />
+<cfparam name="FORM.Maximum_Dollar_Amount_Checked" 		default=0 />
+<cfparam name="FORM.Maximum_Dollar_Amount" 				default="" />
+<cfparam name="FORM.Billback_Status_For_Max_Dollar_Amt" default=0 />
+<cfparam name="FORM.Auto_Deviation_Inc_Manual_BB" 		default=0 />
+<cfparam name="FORM.Specify_Operator_Groups"			default="0"/><!--- D31561: Operator Groups Search --->
+<cfparam name="Form.Default_rate_equal_to_zero" default="0"> <!---36607--->
+<cfparam name="Form.Alternate_Payment_Recipient" default="0"> <!---D37492 --->
+<cfparam name="form.Claim_Rates_ConFig_Id"  default="0"/>
+<cfparam name="form.ItemMarked_Lost_Program_Volume_Automation"  default="0"/>
+<cfparam name="form.ItemMarked_Lost_Budget_Committed_Dollars"  default="0"/>
+<!---<cfparam name="Form.Custom_Fixed_Price_Options"  default="0"/>--->
+<cfparam name="form.Payment_Notification"  default="0" />
+<cfparam name="form.Payment_Notification_Span"  default="" />
+<cfparam name="form.Billback_Sales_Tax" default="0" /> <!--- D41801:  Billback Sales Tax --->
+<cfparam name="form.Document_Attachment_Required"  default="0"/><!--- D42591:: Template setting - document attachment required --->
+<cfparam name="form.Most_Favored_Nation"  default="0"/><!--- 42349: Most Favored Nations - setup and alert  --->
+<cfparam name="form.Approval_Considerations_ID"  default="" /><!--- D43651: Commodity Assumption Display --->
+<cfparam name="form.Price_List_Download"  default="0"/><!---  D47306 : Price List Download --->
+<cfparam name="form.Manual_Selection_Of_Approvers"  default="0"/><!---  D47065 : Change Order - Program Approvals --->
+<cfparam name="form.Filter_EZButton_Products" 														default="0"><!---63628 --->
+<cfparam name="Form.allowBestPlanPrograms" default="0" /><!--- 60308 --->
+<cfparam name="Form.Pullback_Operator_Fixed_Price_Only" default="0" />
+<cfparam name="Form.isBrokerage" default="0" /><!---74641 --->
+<cfparam name="Form.Template_In_Program_LH_Recapture_Link" default="0" />
+<cfparam name="Form.Template_In_Program_LH_Recapture_Link_Default" default="0" />
+<cfparam name="Form.allowReference2" default="0" />
+<cfparam name="Form.Allow_Vendor_Only" default="0">
+		<!--- If Include Competitive Data Tracking is not checked then set it's relative form variables to 0 --->
+<cfif form.Include_Competitive_Data_Tracking eq 0>
+	<cfset FORM.Won_By = 0 />
+	<cfset FORM.Won_Rate = 0 />
+	<cfset FORM.Won_UOM = 0 />
+	<cfset FORM.Won_By_Required = 0 />
+	<cfset FORM.Won_Rate_Required = 0 />
+	<cfset FORM.Won_UOM_Required = 0 />
+	<cfset FORM.Delivery_Type = 0 />
+	<cfset FORM.Category = 0 />
+	<cfset FORM.Package = 0 />
+	<cfset FORM.Shared = 0 />
+	<cfset FORM.Incremental = 0 />
+	<cfset FORM.Source = 0 />
+	<cfset FORM.Source_Type = 0 />
+	<cfset FORM.Date_Source_Received = 0 />
+	<cfset FORM.Source_Required = 0 />
+	<cfset FORM.Source_Type_Required = 0 />
+	<cfset FORM.Date_Source_Received_Required = 0 />
+	<cfset FORM.Download_Comp_Data_History = 0 />
+	<cfset FORM.Specd = 0 />
+	<cfset Form.Display_Reminder_Comp_Data_Page = 0/>
+	<cfset FORM.Opportunity_Volume = 0 />
+</cfif>
+
+<!--- Dev Note: WR 78635 - Check to see if it is a template which pays to "vendor only" --->
+<cfif appSettings.get_Setting('Lump_Sums_Programs_Paid_To_Vendor') eq '1'>
+	<cfif form.Allow_Vendor_Only eq 1>
+		<cfset Form.Specify_Distributors = 0>
+		<cfset Form.Specify_Operators = 0>
+		<cfset Form.Specify_Brokers = 0>
+	</cfif>
+</cfif>
+
+<!--- If Include Open Date is not checked then set Include Time of Open Date to 0 --->
+<cfif form.Include_Open_Date eq 0>
+	<cfset form.Include_Time_Of_Open_Date = 0 />
+</cfif>
+<!---************** END New Settings for Bid Programs Competitive Data ******************** --->
+
+<cfif Generic_Type IS NOT "Brokerage">
+	<cfparam name="Form.ByPass_Margin_Evaluation" 			default="0">
+<cfelse>
+	<cfparam name="Form.ByPass_Margin_Evaluation" 			default="1">
+</cfif>
+	<cfparam name="ByPass_Margin_Evaluation_Options" default="1">
+
+<cfif Len(Form.Allow_Product_Group_Level) EQ 0>
+	<cfset Form.Restrict_Product_Group_Level = 0>
+	<cfset Form.Allow_Lower_Pricing_Level = 1>
+</cfif>
+<cfif Form.Restrict_Product_Group_Level EQ 0>
+	<cfset Form.Allow_Product_Group_Level = "">
+	<cfset Form.Allow_Lower_Pricing_Level = 1>
+</cfif>
+
+<cfif form.is_pullback_corporate_deal EQ 1>
+<cfset form.pullback_from_corporate = 0>
+</cfif>
+
+<cfif form.Pullbacks_On EQ 0>
+<cfset form.Pullback_Include_RediVolume = 0>
+<cfset form.is_pullback_corporate_deal = 1>
+<cfset form.pullback_from_corporate = 0>
+<cfset form.default_pullback_rate = 0>
+<cfset form.Pullback_redi_volume_percent = 0>
+</cfif>
+
+<cfparam name="Form.Allow_Approval_group" 			default="">
+<cfif Len(Form.Allow_Approval_group) EQ 0>
+	<cfset Form.Restrict_On_Approval_Group = 0>
+</cfif>
+<cfif Form.Restrict_On_Approval_Group EQ 0>
+	<cfset Form.Allow_Approval_group = "">
+</cfif>
+<cfparam name="form.Include_Program" 				default="0">
+
+<cfparam name="form.perfIndMinClaims" 				default="0">
+<cfparam name="form.perfIndMinDays"					default="0">
+<CFPARAM NAME="FORM.GroupLevelBB" 					DEFAULT="0">
+
+<cfif Len(trim(form.Allow_Retro_Revision_Span)) eq 0>
+	<cfset FORM.Allow_Retro_Revision_Span = 0>
+</cfif>
+<cfparam name="form.Expiring_Notification_Span"		default="0">
+<cfparam name="form.Days_For_Reminder"				default="0">
+<cfparam name="form.Days_Before_Auto_Renew"			default="0">
+<cfparam name="form.Apply_Lead_Time_To_All"			default="0">
+<cfparam name="form.Billback_Closing_Method_ID_List"	default="">
+<cfparam name="form.BB_Dont_Count_Volume_Select"	default="0">
+<cfparam name="form.Include_In_Sales_Tracker_Dashboard"	default="0">
+<cfparam name="Form.Manual_Committed_Equal_Actual" default="0" /><!---D50326 --->
+<cfparam name="Form.Hide_On_Create_Program" default="0"/>
+<cfparam name="form.Percentage_Of_List_Price" 		default="0"><!--- D48146 --->
+<cfparam name="form.Price_List_ID" 		default=""><!--- D48146 --->
+<cfparam name="form.Set_Billbacks_To_Paid_No_Interface" default="0"/><!--- 55348 --->
+<cfparam name="form.Retail_Planner" default="0"/><!--- 55348 --->
+<cfparam name="form.Optional_Dates_Program" default="0"/><!--- 60410 --->
+<cfparam name="form.Show_Contract_Dates" default="0" /><!--- 64090 --->
+<cfparam name="Form.Ignore_Rebate_Volume" default="0" /><!--- 79614 --->
+
+<cfif len(trim(form.Expiring_Notification_Span)) IS 0>
+	<cfset form.Expiring_Notification_Span = 0>
+</cfif>
+<cfif len(trim(form.Days_For_Reminder)) IS 0>
+	<cfset form.Days_For_Reminder = 0>
+</cfif>
+<cfif len(trim(form.Days_Before_Auto_Renew)) IS 0>
+	<cfset form.Days_Before_Auto_Renew = 0>
+	<cfset form.Apply_Lead_Time_To_All = 0 />
+</cfif>
+
+<cfif Form.BB_D_Template_Overrides_Deviation_Tolerances eq 0>
+	<cfset Form.Maximum_Dollar_Amount_Checked = 0 />
+	<cfset Form.Auto_Deviation_Inc_Manual_BB = 0 />
+</cfif>
+<cfif Form.Maximum_Dollar_Amount_Checked eq 0>
+	<cfset Form.Maximum_Dollar_Amount = "" />
+	<cfset Form.Billback_Status_For_Max_Dollar_Amt = 0 />
+</cfif>
+
+<!--- Replace any comma with a space for the template name --->
+<cfset Form.Created_Type = Replace(Form.Created_Type,chr(44)," ","ALL")>
+
+<!---D38942 :: Program Blackout Period on Frontend --->
+<cfquery name="getFisrParentID" datasource="#application.datasource#">
+	SELECT	First_Parent_ID, Created_Type
+	FROM	Program_Control_Panel_Options
+	WHERE ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="CF_SQL_INTEGER">
+</cfquery>
+<!---D38942 :: Program Blackout Period on Frontend --->
+
+<!---Action is defined--->
+<cfif isDefined("form.Action")>
+
+	<cfset Action = form.Action>
+
+	<!---Action is edit or copy--->
+	<cfif ListFindNoCase("Edit,Copy",Form.Action)>
+
+		<!---29808 Chris get old settings before changes are made--->
+		<cfquery name="tmp_oldInfo" datasource="#application.datasource#">
+			SELECT EZButton_On
+				FROM Program_Control_Panel_Options
+			 WHERE ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+		</cfquery>
+
+	<!---Only does the copy crap if the program is active--->
+	<cfif Active IS 1>
+
+	<!---Copies old version into new version--->
+		<cftransaction action="BEGIN" isolation="read_uncommitted">
+			<cfquery name="CopyInfo" datasource="#application.datasource#">
+
+				SET NOCOUNT ON
+				INSERT INTO Program_Control_Panel_Options
+					(
+						Company_Main_ID,
+						First_Parent_ID,
+						Generic_Type,
+						Created_Type,
+						Program_Description,
+						Include_Trade,
+						<cfif application.ProgramPerformanceIndicatorLinksAvailable>
+						Include_Program,
+						</cfif>
+						Performace_Min_Claims,
+						Performace_Min_Days,
+						Max_Duration,
+						Max_Duration_Length,
+						Min_Duration,
+						Min_Duration_Length,
+						Max_Global_Volume,
+						Max_Global_Volume_Size_CS,
+						Max_Global_Volume_Size_LBS,
+						Min_Global_Volume,
+						Min_Global_Volume_Size_CS,
+						Min_Global_Volume_Size_LBS,
+						Allow_Retro_Create,
+						Adv_Spend,
+						Zero_Volume,
+						Auto_Renew_Option,
+						Allow_AR_Modification,
+						Allow_Retro_Create_Max,
+						Billback_Date,
+						Billback_Date_Span,
+						Controllable_Volume,
+						Specify_Distributors,
+						Specify_Operators,
+						Specify_Brokers,
+						Allow_Only_One_Broker,<!---D37702 :: Brokerage template type doesn't allow vendor select --->
+						Deleted,
+						Active,
+						IsDominant,
+						RateTypeOption_1,
+						RateTypeOption_2,
+						RateTypeOption_3,
+						RateTypeOption_4,<!---63887--->
+						RateTypeOption_5,<!---76541--->
+						RateTypeDefault,
+						Group_Programs_UOM,
+						Groups_UOM_1,
+						Groups_UOM_2,
+						Groups_UOM_3,
+						Groups_UOM_Default,
+						ClaimMechDefaultOption,
+						PayCycleOption_1,
+						PayCycleOption_2,
+						PayCycleOption_3,
+						PayCycleOption_4,
+						PayCycleOption_5,
+						PayCycleOption_6,
+						PayCycleOption_7,
+						PayCycleOption_8,
+						PayCycleOption_9,
+						PayCycleOption_10,
+						PayCycleOption_11,
+						PayCycleDefaultOption,
+						Discount_Fixed_Prices,
+						Fixed_Type,
+						Fixed_Type_Explanation,
+						Discount_Rebates,
+						Discount_Lump_Sums,
+						Discount_Growth,
+						Discount_Formula_Pricing,
+						Min_Fixed_Pound,
+						Max_Fixed_Pound,
+						Min_Fixed_Case,
+						Max_Fixed_Case,
+						Min_Rebate_Pound,
+						Min_Rebate_Case,
+						Min_Rebate_Percent,
+						Max_Rebate_Pound,
+						Max_Rebate_Case,
+						Max_Rebate_Percent,
+						Min_Growth_Pound,
+						Min_Growth_Case,
+						Min_Growth_Percent,
+						Max_Growth_Pound,
+						Max_Growth_Case,
+						Max_Growth_Percent,
+						Min_Formula_Pound,
+						Max_Formula_Pound,
+						Min_Formula_Percent,
+						Max_Formula_Percent,
+						Min_OffInvoice_Pound,
+						Min_OffInvoice_Case,
+						Min_OffInvoice_Percent,
+						Max_OffInvoice_Pound,
+						Max_OffInvoice_Case,
+						Max_OffInvoice_Percent,
+						Min_BidRequest_Pound,
+						Max_BidRequest_Pound,
+						Min_BidRequest_Case,
+						Max_BidRequest_Case,
+						Invoice_Billback,
+						Claim_Period,
+						Item_Number,
+						Total_Dollar_Pound,
+						Menu_Listing,
+						Branded_Point_of_Sale,
+						Mandated_Specification,
+						Optional_Specification,
+						Feature_Sheet,
+						ChildOf,
+						Payable_To,
+						Send_Payment_To,
+						Payable_To_Required,
+						Send_Payment_To_Required,
+						Trade_Blurb,
+						Broker_Trade_Question,
+						Customer_Acceptance,
+						Bid_Rule_Option,
+						Discount_Identifier_ID,
+						Revision_Not_Allowed,
+						Allow_Retro_Revision,
+						Allow_Retro_Revision_Span,
+						Check_Duplicate_Program,
+						Duplicate_Program_Action,
+						One_Distributor,
+						One_Operator,
+						Require_Distributor,
+						Require_Operator,
+						Min_Lump_Sum,
+						Max_Lump_Sum,
+						Lump_Sum_Cap,
+						No_Negative_OI,
+						One_Discount_Mandated,
+											Allow_Only_One_Discount,
+						Equipment_Placement,
+						Discount_Lump_Sums_Item_Mandated,
+						Discount_Lump_Sums_Distributor_Mandated,
+						Discount_Lump_Sums_Document_Attachment_Mandated,
+						Default_Product,
+						Volume_Cap,
+						<!--- Allow_Add_All_Products, ---><!--- 10406 --->
+						Include_In_Catalog,
+						Catalog_Type,
+						Show_Awarded_In_Catalog,
+						Restrict_On_Approval_Group,
+						Restrict_Product_Group_Level,
+						Allow_Lower_Pricing_Level,
+						Discount_Rebates_Item_Level,
+						Discount_Rebates_Group_Level,
+						Discount_Lump_Sums_Item_Level,
+						Discount_Lump_Sums_Group_Level,
+						Discount_Growth_Item_Level,
+						Discount_Growth_Group_Level,
+						Allow_Growth_Multi_Rate,
+						Allow_Multi,
+						Allow_Single,
+						Allow_Stairway,
+						Allow_XofY,
+						Date_Exclusions_ON,
+						Sysco_Report_On,
+						Sequential_Net_Sales_Operating_Margin,
+						Program_Spending_Type,
+						LumpSum_Spending_Type,
+						GroupLevelBB,
+						Allow_Volume_Pool_Seperation
+						<!---insert for distributor groups if it's defined--->
+						<cfif isDefined("form.Specify_Distributor_Groups")>
+							, Specify_Distributor_Groups
+						</cfif>
+						<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs START--->
+						<cfif isDefined("form.Specify_Individual_Distributors")>
+							,Specify_Individual_Distributors
+						</cfif>
+						<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs END--->
+						, Specify_Operator_Groups  <!--- D31561: Operator Groups Search --->
+						<!---insert for group deals if it's defined--->
+						<cfif isDefined("form.Group_Deal")>
+							, Group_Deal
+						</cfif>
+						<!---insert for dynamic groups if it's defined--->
+						<cfif isDefined("form.Dynamic_Static_Groups")>
+							, Dynamic_Static_Groups
+						</cfif>
+						<!---insert for Program Date Type if it's defined--->
+						<cfif isDefined("form.Program_Date_Type")>
+							, Program_Date_Type
+						</cfif>
+						,Previous_Fiscal_Year_Volume
+						<cfif isDefined("form.Days_Before_Auto_Renew")>
+						,Days_Before_Auto_Renew
+						</cfif>
+						,Expiring_Notification_Span
+						,Days_For_Reminder
+						,distributor_letters_required
+						,operator_letters_required
+						,exclude_sig_products
+						,approval_margin_item
+						,approval_spend_item
+						,approval_program_margin
+						,approval_program_spend
+						,approval_uom
+						,Distributor_Fixed_Pricing
+						,Operator_Fixed_Pricing
+						,Distributor_Rebate
+						,Operator_Rebate
+						,Distributor_Lumpsum
+						,Operator_Lumpsum
+						,Distributor_Growth
+						,Operator_Growth
+						,Distributor_paysto_dis
+						,Distributor_paysto_opr
+						,Operator_paysto_opr
+						,Operator_paysto_dis
+						,Apply_Clause_All_Programs
+						,price_protection_on
+						,Apply_rebate_rates
+						,Mass_Billback_Pay
+						,Competitive_Information_On
+						,template_parent_id
+						,Bid_Line_Item_Option
+						,Bid_Line_Item_Option_Default
+						<!------ ,Group_Level_Distributor ----->
+						,Date_Updated
+						,IS_LOCKED
+						,LOCKED_BY
+						,LOCKED_TIME
+						,Program_Start_Day
+						,Program_End_Day
+						,Program_Min_Start_Date
+						,Program_Max_End_Date
+						,Pullbacks_On
+						,Recapture_Pays_To_Id
+						,default_pullback_rate
+						,is_pullback_corporate_deal
+						,pullback_from_corporate
+						,Pullback_Include_RediVolume
+						,pullback_redi_volume_percent
+						,pullback_template_type
+						,Include_Open_Date
+						,Include_Date_Needed_by
+						,Include_Reply_Date
+						,Include_Competitive_Data_Tracking
+						,Discount_BidRequest
+						,display_BidRequest_basesales
+						,display_FixedPrice_basesales
+						,display_basesales_Competitive_Data
+						,display_bid_info_page
+						,line_number
+						,BidRequestStatusOn
+						,BidRequestStatusChangePgmStatus
+						,Discount_Fixed_Prices_Product_Message
+						,Discount_Rebates_Product_Message
+						,Discount_Lump_Sums_Product_Message
+						,Discount_Growth_Product_Message
+						,Discount_Formula_Pricing_Product_Message
+						,Discount_BidRequest_Product_Message
+						,Discount_OffInvoice_Product_Message
+						<!---,Volume_Related_Message--->
+						,Include_Template_In_Deals_IF
+						,Include_Treatment_Basis_Code
+						,Exclude_Same_Spending_Cat_From_TPA
+						,ByPass_Margin_Evaluation
+											,ByPass_Margin_Evaluation_Options
+						,EZButton_On
+						,EZ_Contract_Id
+						,EZprogram_editcomponent
+											,BB_D_Template_Overrides_Deviation_Tolerances
+						,BB_D_Purchase_Period_OverRide
+						,BB_D_Purchase_Period_OverRide_Rate
+						,BB_D_Aggregation_Period_OverRide
+											,Release_Settlement
+						,RS_DaysToClaim
+						,RS_CreatedDaysFilter<!--- 68628 --->
+						,RS_CreatedDaysGreater<!--- 68628 --->
+						,Retail_Performance_Dates
+						,Retail_Performance_Dates_Required
+						,MinPerfRequirementsOn
+						,MaxPerfRequirementsOn
+						,MinPerfRequirements
+						,MaxPerfRequirements
+						,Discount_Fixed_Prices_Freight
+						,Distribution_Channel
+						,Division_Num
+						,Interface_On_Approval
+											,Track_Price_Comp
+						,Retailer_Info_On
+						,Send_RFA_Email
+						,Distributor_Product_Integrity_Rule_ID
+						,Freight_Approval_Required
+						,Freight_accrual_considers_cash_discount
+						,Freight_Program
+						,Use_Fixed_Price_As_Base_Sales
+						,CurrencyDefaultOption
+						,Label_Set_Default
+								 ,include_freight_summary
+								,freight_uom
+								,Fixed_Price_Populates_Price_List_Special
+						,Template_UPC_Display
+											<!------ D19117 Start ----->
+											,Operator_Off_Invoice_Volume
+											,Operator_Billback_Volume
+											,Distributor_Off_Invoice_Volume
+											,Distributor_Billback_Volume
+											,Adjust_For_Credits
+											<!------ D19117 End ----->
+											,Discount_Rebate_Max_Rate_On
+												,EzButton_Update_With_Latest_Template_Settings_On_Revise
+						,Pre_Defined_Page_Break
+						,letters_accepted_by <!---D36100 --->
+						,Distributor_UOM
+						,Operator_UOM
+						,Distributor_Discount_Type
+						,Operator_Discount_Type
+						,Distributor_Component_Name
+						,Operator_Component_Name
+						,Distributor_Claim_Mechanism
+						,Operator_Claim_Mechanism
+						,Distributor_Payable_To
+						,Operator_Payable_To
+						,Distributor_Pricing_Type
+						,Operator_Pricing_Type
+						,Distributor_Payment_Frequency
+						,Operator_Payment_Frequency
+						,Distributor_GTIN
+						,Operator_GTIN
+						,Distributor_Product_Attribute_1
+						,Operator_Product_Attribute_1
+						,Fixed_Rebate_Grid_Option
+						,Market_Price
+						,Market_Price_Update_Process
+						,Won_By
+						,Won_Rate
+						,Won_UOM
+						,Won_By_Required
+						,Won_Rate_Required
+						,Won_UOM_Required
+						,Delivery_Type
+						,Category
+						,Package
+						,Shared
+						,Incremental
+						,Source
+						,Source_Type
+						,Date_Source_Received
+						,Source_Required
+						,Source_Type_Required
+						,Date_Source_Received_Required
+						,Download_Comp_Data_History
+						,Specd
+						,Display_Reminder_Comp_Data_Page
+						,Opportunity_Volume
+						,Include_Time_Of_Open_Date
+						,EzButton_Enter_Beyond_Max_Rates
+						,EzButton_Default_Show_Item_Rates
+						,Email_Letters_On_Approval                  <!---25704--->
+						,Generate_Letters_On_Approval
+						,Pay_To_Distributor
+						,EZ_Button_Rate_ID
+						,EzButton_Auto_Approve_On
+						,Single_Component_Per_Discount_Type
+						,AutoAdd_Distributor_ThirdPartyClaims
+						,Ignore_Billback_Volume_Deviation
+						,Auto_Volume
+						,Blackout_Periods <!--- D38942 :: Program Blackout Period on Frontend --->
+						,Auto_Actual
+						,Auto_Future
+						,Auto_Committed_Equal_Actual
+						,Auto_Committed_Equal_Actual_ON
+						,Auto_Volume_Program_Equal_Actual_Weeks
+						,Future_Zero
+						,Start_Zero<!--- D38942 :: Program Blackout Period on Frontend --->
+						,Clear_Lumpsum
+						,Base_Sales_Equal_To_Lowest_Bracket
+						,Margin_Price_List_Header_ID
+						,Base_Sales_based_on_Prg_Start_Date
+						,Select_Effective_Date_for_Price
+												,DispalyPaysToOnViewProgPage        <!---28419--->
+						,Item_Fixed_Rebate_Paid_To_Dup_Message
+						,Distributor_Price_Brackets
+						,Operator_Price_Brackets
+						,Distributor_Open_Date
+						,Operator_Open_Date
+						,Distributor_Date_Needed
+						,Operator_Date_Needed
+						,Distributor_Expected_Date
+						,Operator_Expected_Date
+						,Distributor_Est_Value_Volume
+						,Operator_Est_Value_Volume
+						,Distributor_Dist_Product_Codes
+						,Distributor_Customer_Acceptance_Block
+						,Operator_Customer_Acceptance_Block
+						,Distributor_Line
+						,Operator_Line
+						,Is_Fiscal
+						,Distributor_Notes
+						,Operator_Notes
+						,BB_Tolerance_DVT
+						,BB_Tolerance_ERT
+						,Cannot_Exceed_Percent
+						,Cannot_Exceed_Dollar
+						,Maximum_Dollar_Amount_Checked
+						,Maximum_Dollar_Amount
+						,Billback_Status_For_Max_Dollar_Amt
+						,Auto_Deviation_Inc_Manual_BB
+						,EzButton_Max_Rate_Consider
+						,Currency_Conversion_Factor
+						,growth_auto_pay <!---D35731 - Growth Auto Pay --->
+						,Growth_Min_Purchase
+						,Discount_Fixed_Group_Level
+						,Default_rate_equal_to_zero <!---	36607--->
+						,Alternate_Payment_Recipient<!--- D37492  --->
+						,Custom_Fixed_Price_Options  <!--- D34597 --->
+						,Claim_Rates_ConFig_Id
+						,ItemMarked_Lost_Program_Volume_Automation
+						,ItemMarked_Lost_Budget_Committed_Dollars
+						,Payment_Notification
+						,Payment_Notification_Span
+						,Default_Rebate_Component_Name_Id
+						,Default_Fixed_Component_Name_Id
+						,Billback_Sales_Tax
+						,Document_Attachment_Required<!--- D42591 --->
+						,Bonus_Field
+						,Enable_Program_Qualifications<!---D43539 --->
+						,Most_Favored_Nation
+						,Approval_Considerations_ID <!--- D43651 --->
+						,Program_Qualifications_Doc_Attach_Req
+						,Program_Qualifications_Doc_Msg
+						,Price_List_Download <!---  D47306 : Price List Download --->
+						,Manual_Selection_Of_Approvers <!---  D47065 : Change Order - Program Approvals --->
+						,Volume_Page_UOM_LB
+						,BB_Dont_Count_Volume_Select
+						,Include_In_Sales_Tracker_Dashboard
+						,Manual_Committed_Equal_Actual <!--- D50326 --->
+						,Hide_On_Create_Program
+						,Percentage_Of_List_Price
+						,Price_List_ID
+						,Set_Billbacks_To_Paid_No_Interface <!--- 55348 --->
+						,Retail_Planner <!--- 55348 --->
+						,Optional_Dates_Program<!---60410--->
+						,Filter_EZButton_Products<!---63628--->
+						,Operator_Rate_Change
+						,Operator_display_product_groups
+						,Distributor_Rate_Change
+						,Distributor_display_product_groups
+						,Show_Contract_Dates
+						,allow_Best_Plan_Programs<!---60308 --->
+						,Pullback_Operator_Fixed_Price_Only
+						,Distributor_show_volume_summary
+						,Operator_show_volume_summary
+						,Distributor_Product_Net_Weight
+						,Operator_Product_Net_Weight
+						,Restrict_On_Inventory_UOM_Pound
+						,Restrict_On_Inventory_UOM_Case
+						,Disable_Duplicate_Check_For_Revisions
+						,price_list_type
+						,isBrokerage<!---74641--->
+						,Template_In_Program_LH_Recapture_Link
+						,Template_In_Program_LH_Recapture_Link_Default
+						,allow_Reference_2<!---77539--->
+						,Distributor_Broker_Number
+						,Operator_Broker_Number
+						,Distributor_UPC
+						,Operator_UPC
+						,Operator_Approval_Date
+						,Distributor_Approval_Date
+						,Operator_Generate_Excel_File_Product_Group_Members
+						,Distributor_Generate_Excel_File_Product_Group_Members
+						,Allow_Vendor_Only
+						,Ignore_Rebate_Volume
+						,Display_Blanket_Bid
+					)
+				SELECT
+						Company_Main_ID,
+						First_Parent_ID,
+						Generic_Type,
+						Created_Type,
+						Program_Description,
+						Include_Trade,
+						<cfif application.ProgramPerformanceIndicatorLinksAvailable>
+						Include_Program,
+						</cfif>
+						Performace_Min_Claims,
+						Performace_Min_Days,
+						Max_Duration,
+						Max_Duration_Length,
+						Min_Duration,
+						Min_Duration_Length,
+						Max_Global_Volume,
+						Max_Global_Volume_Size_CS,
+						Max_Global_Volume_Size_LBS,
+						Min_Global_Volume,
+						Min_Global_Volume_Size_CS,
+						Min_Global_Volume_Size_LBS,
+						Allow_Retro_Create,
+						Adv_Spend,
+						Zero_Volume,
+						Auto_Renew_Option,
+						Allow_AR_Modification,
+						Allow_Retro_Create_Max,
+						Billback_Date,
+						Billback_Date_Span,
+						Controllable_Volume,
+						Specify_Distributors,
+						Specify_Operators,
+						Specify_Brokers,
+						Allow_Only_One_Broker,<!---D37702 :: Brokerage template type doesn't allow vendor select --->
+						Deleted,
+						Active,
+						IsDominant,
+						RateTypeOption_1,
+						RateTypeOption_2,
+						RateTypeOption_3,
+						RateTypeOption_4,<!---63887--->
+						RateTypeOption_5,<!---76541--->
+						RateTypeDefault,
+						Group_Programs_UOM,
+						Groups_UOM_1,
+						Groups_UOM_2,
+						Groups_UOM_3,
+						Groups_UOM_Default,
+						ClaimMechDefaultOption,
+						PayCycleOption_1,
+						PayCycleOption_2,
+						PayCycleOption_3,
+						PayCycleOption_4,
+						PayCycleOption_5,
+						PayCycleOption_6,
+						PayCycleOption_7,
+						PayCycleOption_8,
+						PayCycleOption_9,
+						PayCycleOption_10,
+						PayCycleOption_11,
+						PayCycleDefaultOption,
+						Discount_Fixed_Prices,
+						Fixed_Type,
+						Fixed_Type_Explanation,
+						Discount_Rebates,
+						Discount_Lump_Sums,
+						Discount_Growth,
+						Discount_Formula_Pricing,
+						Min_Fixed_Pound,
+						Max_Fixed_Pound,
+						Min_Fixed_Case,
+						Max_Fixed_Case,
+						Min_Rebate_Pound,
+						Min_Rebate_Case,
+						Min_Rebate_Percent,
+						Max_Rebate_Pound,
+						Max_Rebate_Case,
+						Max_Rebate_Percent,
+						Min_Growth_Pound,
+						Min_Growth_Case,
+						Min_Growth_Percent,
+						Max_Growth_Pound,
+						Max_Growth_Case,
+						Max_Growth_Percent,
+						Min_Formula_Pound,
+						Max_Formula_Pound,
+						Min_Formula_Percent,
+						Max_Formula_Percent,
+						Min_OffInvoice_Pound,
+						Min_OffInvoice_Case,
+						Min_OffInvoice_Percent,
+						Max_OffInvoice_Pound,
+						Max_OffInvoice_Case,
+						Max_OffInvoice_Percent,
+						Min_BidRequest_Pound,
+						Max_BidRequest_Pound,
+						Min_BidRequest_Case,
+						Max_BidRequest_Case,
+						Invoice_Billback,
+						Claim_Period,
+						Item_Number,
+						Total_Dollar_Pound,
+						Menu_Listing,
+						Branded_Point_of_Sale,
+						Mandated_Specification,
+						Optional_Specification,
+						Feature_Sheet,
+						<cfif Action eq "Copy">
+						NULL,
+						<cfelse>
+						ProgramControl_Panel_Options_ID,
+						</cfif>
+						Payable_To,
+						Send_Payment_To,
+						Payable_To_Required,
+						Send_Payment_To_Required,
+						Trade_Blurb,
+						Broker_Trade_Question,
+						Customer_Acceptance,
+						Bid_Rule_Option,
+						Discount_Identifier_ID,
+						Revision_Not_Allowed,
+						Allow_Retro_Revision,
+						Allow_Retro_Revision_Span,
+						Check_Duplicate_Program,
+						Duplicate_Program_Action,
+						One_Distributor,
+						One_Operator,
+						Require_Distributor,
+						Require_Operator,
+						Min_Lump_Sum,
+						Max_Lump_Sum,
+						Lump_Sum_Cap,
+						No_Negative_OI,
+						One_Discount_Mandated,
+											Allow_Only_One_Discount,
+						Equipment_Placement,
+						Discount_Lump_Sums_Item_Mandated,
+						Discount_Lump_Sums_Distributor_Mandated,
+						Discount_Lump_Sums_Document_Attachment_Mandated,
+						Default_Product,
+						Volume_Cap,
+						<!--- Allow_Add_All_Products, ---><!--- 10406 --->
+						Include_In_Catalog,
+						Catalog_Type,
+						Show_Awarded_In_Catalog,
+						Restrict_On_Approval_Group,
+						Restrict_Product_Group_Level,
+						Allow_Lower_Pricing_Level,
+						Discount_Rebates_Item_Level,
+						Discount_Rebates_Group_Level,
+						Discount_Lump_Sums_Item_Level,
+						Discount_Lump_Sums_Group_Level,
+						Discount_Growth_Item_Level,
+						Discount_Growth_Group_Level,
+						Allow_Growth_Multi_Rate,
+						Allow_Multi,
+						Allow_Single,
+						Allow_Stairway,
+						Allow_XofY,
+						Date_Exclusions_ON,
+						Sysco_Report_On,
+						Sequential_Net_Sales_Operating_Margin,
+						Program_Spending_Type,
+						LumpSum_Spending_Type,
+						GroupLevelBB,
+						Allow_Volume_Pool_Seperation
+						<!---insert for distributor groups if it's defined--->
+						<cfif isDefined("form.Specify_Distributor_Groups")>
+							, Specify_Distributor_Groups
+						</cfif>
+						<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs START--->
+						<cfif isDefined("form.Specify_Individual_Distributors")>
+							,Specify_Individual_Distributors
+						</cfif>
+						<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs END--->
+						,Specify_Operator_Groups <!--- D31561: Operator Groups Search --->
+						<!---insert for group deals if it's defined--->
+						<cfif isDefined("form.Group_Deal")>
+							, Group_Deal
+						</cfif>
+						<!---insert for dynamic groups if it's defined--->
+						<cfif isDefined("form.Dynamic_Static_Groups")>
+							, Dynamic_Static_Groups
+						</cfif>
+						<!---insert for Program Date Type if it's defined--->
+						<cfif isDefined("form.Program_Date_Type")>
+							, Program_Date_Type
+						</cfif>
+						,Previous_Fiscal_Year_Volume
+						<cfif isDefined("form.Days_Before_Auto_Renew")>
+						,Days_Before_Auto_Renew
+						</cfif>
+						,Expiring_Notification_Span
+						,Days_For_Reminder
+						,distributor_letters_required
+						,operator_letters_required
+						,exclude_sig_products
+						,approval_margin_item
+						,approval_spend_item
+						,approval_program_margin
+						,approval_program_spend
+						,approval_uom
+						,Distributor_Fixed_Pricing
+						,Operator_Fixed_Pricing
+						,Distributor_Rebate
+						,Operator_Rebate
+						,Distributor_Lumpsum
+						,Operator_Lumpsum
+						,Distributor_Growth
+						,Operator_Growth
+						,Distributor_paysto_dis
+						,Distributor_paysto_opr
+						,Operator_paysto_opr
+						,Operator_paysto_dis
+						,Apply_Clause_All_Programs
+						,price_protection_on
+						,Apply_rebate_rates
+						,Mass_Billback_Pay
+						,Competitive_Information_On
+						<cfif Action eq "Copy">
+						,0
+						<cfelse>
+						,case when template_parent_id = 0
+							then <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+							else template_parent_id
+						end
+						</cfif>
+						,Bid_Line_Item_Option
+						,Bid_Line_Item_Option_Default
+						, Date_Updated
+						,IS_LOCKED
+						,LOCKED_BY
+						,LOCKED_TIME
+						,Program_Start_Day
+						,Program_End_Day
+						,Program_Min_Start_Date
+						,Program_Max_End_Date
+						,Pullbacks_On
+						,Recapture_Pays_To_Id
+						,default_pullback_rate
+						,is_pullback_corporate_deal
+						,pullback_from_corporate
+						,Pullback_Include_RediVolume
+						,pullback_redi_volume_percent
+						,pullback_template_type
+						,Include_Open_Date
+						,Include_Date_Needed_by
+						,Include_Reply_Date
+						,Include_Competitive_Data_Tracking
+						,Discount_BidRequest
+						,display_BidRequest_basesales
+						,display_FixedPrice_basesales
+						,display_basesales_Competitive_Data
+						,display_bid_info_page
+						,line_number
+						,BidRequestStatusOn
+						,BidRequestStatusChangePgmStatus
+						,Discount_Fixed_Prices_Product_Message
+						,Discount_Rebates_Product_Message
+						,Discount_Lump_Sums_Product_Message
+						,Discount_Growth_Product_Message
+						,Discount_Formula_Pricing_Product_Message
+						,Discount_BidRequest_Product_Message
+						,Discount_OffInvoice_Product_Message
+						<!---,Volume_Related_Message--->
+						,Include_Template_In_Deals_IF
+						,Include_Treatment_Basis_Code
+						,Exclude_Same_Spending_Cat_From_TPA
+						,ByPass_Margin_Evaluation
+									,ByPass_Margin_Evaluation_Options
+						,EZButton_On
+						,EZ_Contract_Id
+						,EZprogram_editcomponent
+									,BB_D_Template_Overrides_Deviation_Tolerances
+						,BB_D_Purchase_Period_OverRide
+						,BB_D_Purchase_Period_OverRide_Rate
+									,BB_D_Aggregation_Period_OverRide
+						,Release_Settlement
+						,RS_DaysToClaim
+						,RS_CreatedDaysFilter<!--- 68628 --->
+						,RS_CreatedDaysGreater<!--- 68628 --->
+						,Retail_Performance_Dates
+						,Retail_Performance_Dates_Required
+						,MinPerfRequirementsOn
+						,MaxPerfRequirementsOn
+						,MinPerfRequirements
+						,MaxPerfRequirements
+						,Discount_Fixed_Prices_Freight
+						,Distribution_Channel
+						,Division_Num
+						,Interface_On_Approval
+									,Track_Price_Comp
+						,Retailer_Info_On
+						,Send_RFA_Email
+						,Distributor_Product_Integrity_Rule_ID
+						,Freight_Approval_Required
+						,Freight_accrual_considers_cash_discount
+						,Freight_Program
+						,Use_Fixed_Price_As_Base_Sales
+						,CurrencyDefaultOption
+						,Label_Set_Default
+							,include_freight_summary
+							,freight_uom
+							,Fixed_Price_Populates_Price_List_Special
+						,Template_UPC_Display
+						<!--- D19117 --->
+						,Operator_Off_Invoice_Volume
+						,Operator_Billback_Volume
+						,Distributor_Off_Invoice_Volume
+						,Distributor_Billback_Volume
+						,Adjust_For_Credits
+											,Discount_Rebate_Max_Rate_On
+											,EzButton_Update_With_Latest_Template_Settings_On_Revise
+						,Pre_Defined_Page_Break
+						,letters_accepted_by <!---D36100 --->
+						,Distributor_UOM
+						,Operator_UOM
+						,Distributor_Discount_Type
+						,Operator_Discount_Type
+						,Distributor_Component_Name
+						,Operator_Component_Name
+						,Distributor_Claim_Mechanism
+						,Operator_Claim_Mechanism
+						,Distributor_Payable_To
+						,Operator_Payable_To
+						,Distributor_Pricing_Type
+						,Operator_Pricing_Type
+						,Distributor_Payment_Frequency
+						,Operator_Payment_Frequency
+						,Distributor_GTIN
+						,Operator_GTIN
+						,Distributor_Product_Attribute_1
+						,Operator_Product_Attribute_1
+						,Fixed_Rebate_Grid_Option
+						,Market_Price
+						,Market_Price_Update_Process
+						,Won_By
+						,Won_Rate
+						,Won_UOM
+						,Won_By_Required
+						,Won_Rate_Required
+						,Won_UOM_Required
+						,Delivery_Type
+						,Category
+						,Package
+						,Shared
+						,Incremental
+						,Source
+						,Source_Type
+						,Date_Source_Received
+						,Source_Required
+						,Source_Type_Required
+						,Date_Source_Received_Required
+						,Download_Comp_Data_History
+						,Specd
+						,Display_Reminder_Comp_Data_Page
+						,Opportunity_Volume
+						,Include_Time_Of_Open_Date
+						,EzButton_Enter_Beyond_Max_Rates
+						,EzButton_Default_Show_Item_Rates
+						,Email_Letters_On_Approval     <!---25704--->
+						,Generate_Letters_On_Approval
+						,Pay_To_Distributor
+						,EZ_Button_Rate_ID
+						,EzButton_Auto_Approve_On
+						,Single_Component_Per_Discount_Type
+						,AutoAdd_Distributor_ThirdPartyClaims
+						,Ignore_Billback_Volume_Deviation
+						,Auto_Volume
+						,Blackout_Periods<!---D38942 :: Program Blackout Period on Frontend  --->
+						,Auto_Actual
+						,Auto_Future
+						,Auto_Committed_Equal_Actual
+						,Auto_Committed_Equal_Actual_ON
+						,Auto_Volume_Program_Equal_Actual_Weeks
+						,Future_Zero
+						,Start_Zero<!--- D38942 :: Program Blackout Period on Frontend --->
+						,Clear_Lumpsum
+						,Base_Sales_Equal_To_Lowest_Bracket
+						,Margin_Price_List_Header_ID
+						,Base_Sales_based_on_Prg_Start_Date
+						,Select_Effective_Date_for_Price
+												,DispalyPaysToOnViewProgPage        <!---28419--->
+						,Item_Fixed_Rebate_Paid_To_Dup_Message
+						,Distributor_Price_Brackets
+						,Operator_Price_Brackets
+						,Distributor_Open_Date
+						,Operator_Open_Date
+						,Distributor_Date_Needed
+						,Operator_Date_Needed
+						,Distributor_Expected_Date
+						,Operator_Expected_Date
+						,Distributor_Est_Value_Volume
+						,Operator_Est_Value_Volume
+						,Distributor_Dist_Product_Codes
+						,Distributor_Customer_Acceptance_Block
+						,Operator_Customer_Acceptance_Block
+						,Distributor_Line
+						,Operator_Line
+						,Is_Fiscal
+						,Distributor_Notes
+						,Operator_Notes
+						,BB_Tolerance_DVT
+						,BB_Tolerance_ERT
+						,Cannot_Exceed_Percent
+						,Cannot_Exceed_Dollar
+						,Maximum_Dollar_Amount_Checked
+						,Maximum_Dollar_Amount
+						,Billback_Status_For_Max_Dollar_Amt
+						,Auto_Deviation_Inc_Manual_BB
+						,EzButton_Max_Rate_Consider
+						,Currency_Conversion_Factor
+						,growth_auto_pay <!---D35731 - Growth Auto Pay --->
+						,Growth_Min_Purchase
+						,Discount_Fixed_Group_Level
+						,Default_rate_equal_to_zero <!---	36607--->
+						,Alternate_Payment_Recipient <!--- D37492  --->
+						,Custom_Fixed_Price_Options  <!--- D34597 --->
+						,Claim_Rates_ConFig_Id
+						,ItemMarked_Lost_Program_Volume_Automation
+						,ItemMarked_Lost_Budget_Committed_Dollars
+						,Payment_Notification
+						,Payment_Notification_Span
+						,Default_Rebate_Component_Name_Id
+						,Default_Fixed_Component_Name_Id
+						,Billback_Sales_Tax
+						,Document_Attachment_Required<!--- D42591 --->
+						,Bonus_Field
+						,Enable_Program_Qualifications<!---D43539 --->
+						,Most_Favored_Nation
+						,Approval_Considerations_ID <!--- D43651 --->
+						,Program_Qualifications_Doc_Attach_Req
+						,Program_Qualifications_Doc_Msg
+						,Price_List_Download <!---  D47306 : Price List Download --->
+						,Manual_Selection_Of_Approvers <!---  D47065 : Change Order - Program Approvals --->
+						,Volume_Page_UOM_LB
+						,BB_Dont_Count_Volume_Select
+						,Include_In_Sales_Tracker_Dashboard
+						,Manual_Committed_Equal_Actual <!--- D50326 --->
+						,Hide_On_Create_Program
+						,Percentage_Of_List_Price
+						,Price_List_ID
+						,Set_Billbacks_To_Paid_No_Interface <!--- 55348 --->
+						,Retail_Planner <!--- 57305 --->
+						,Optional_Dates_Program<!---60410--->
+						,Filter_EZButton_Products<!---63628--->
+						,Operator_Rate_Change
+						,Operator_display_product_groups
+						,Distributor_Rate_Change
+						,Distributor_display_product_groups
+						,Show_Contract_Dates
+						,allow_Best_Plan_Programs<!---60308 --->
+						,Pullback_Operator_Fixed_Price_Only
+						,Distributor_show_volume_summary
+						,Operator_show_volume_summary
+						,Distributor_Product_Net_Weight
+						,Operator_Product_Net_Weight
+						,Restrict_On_Inventory_UOM_Pound
+						,Restrict_On_Inventory_UOM_Case
+						,Disable_Duplicate_Check_For_Revisions
+						,price_list_type
+						,isBrokerage<!---74641--->
+						,Template_In_Program_LH_Recapture_Link
+						,Template_In_Program_LH_Recapture_Link_Default					
+						,allow_Reference_2<!---77539--->
+						,Distributor_Broker_Number
+						,Operator_Broker_Number
+						,Distributor_UPC
+						,Operator_UPC
+						,Operator_Approval_Date
+						,Distributor_Approval_Date
+						,Operator_Generate_Excel_File_Product_Group_Members
+						,Distributor_Generate_Excel_File_Product_Group_Members
+						,Allow_Vendor_Only
+						,Ignore_Rebate_Volume
+						,Display_Blanket_Bid
+				FROM 	Program_Control_Panel_Options
+				WHERE 	ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+				SELECT ProgramControl_Panel_Options_ID = @@IDENTITY
+				SET NOCOUNT OFF
+			</cfquery>
+
+		<cfset NewID = CopyInfo.ProgramControl_Panel_Options_ID />
+
+<!---D43539 :: Qualification settings on template become unchecked START--->
+	<cfquery name="updateAllPrograms" datasource="#application.datasource#">
+		INSERT INTO Qualification_Template_Mapping
+				(
+					 Template_ID
+					,Program_Qualification_Id
+					,Answer_Required
+					,Display_Sequence
+					,is_Included
+				)
+	SELECT #NewID#
+				,Program_Qualification_Id
+				,Answer_Required
+				,Display_Sequence
+				,is_Included
+	FROM Qualification_Template_Mapping
+	WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+	</cfquery>
+<!---D43539 :: Qualification settings on template become unchecked END--->
+
+<!---D38942 :: Program Blackout Period on Frontend --->
+<cfif FORM.Blackout_Periods EQ 1>
+	<cfquery name="updateAllPrograms" datasource="#application.datasource#">
+		UPDATE Contract_Main_Aux_Data
+		SET 	Program_Start_Zero = #FORM.Start_Zero#,
+			Program_future_zero = #FORM.Future_Zero#
+		FROM	Program_Control_Panel_Options PCPO
+		INNER JOIN Contract_Main CM
+		ON CM.ProgramType_ID = PCPO.ProgramControl_Panel_Options_ID
+		INNER JOIN Contract_Main_Aux_Data CMAD
+		ON CMAD.Contract_Main_ID = CM.Contract_Main_ID
+		WHERE PCPO.First_Parent_ID = '#getFisrParentID.First_Parent_ID#'
+	</cfquery>
+</cfif>
+<!---D38942 :: Program Blackout Period on Frontend --->
+
+		<!--- If the action is copy them we have to handle for budgets and update the First_Parent_ID to the New Id and the Copied_From_Template_ID--->
+	<cfif Action eq "Copy">
+
+		<cfset NewName = getFisrParentID.Created_Type />
+		<!--- Dev Note: Drachala; D27338 : JS error - syntax error when creating program START --->
+			<cfquery name="insert_template_filter" datasource="#application.datasource#">
+				SET NOCOUNT ON
+					INSERT INTO Template_Filters
+					(
+					template_id,
+					parent_template_id,
+					name,
+					description,
+					status,
+					created_user_id
+					)
+					SELECT
+					#NewID#,
+					#NewID#,
+					'#NewName#',
+					description,
+					status,
+					created_user_id
+					FROM Template_Filters
+					WHERE parent_template_id =  #getFisrParentID.First_Parent_ID#
+					AND deleted = 0
+				SELECT Template_Filters_Id = @@IDENTITY
+				SET NOCOUNT OFF
+			</cfquery>
+
+	<!--- Dev Note: drachala; D28180: Copying a template with PG filters has issues  START
+	What I did: creating new variable Template_Filters_Id with value on new Template_Filters_Id--->
+		<cfset Template_Filters_Id = insert_template_filter.Template_Filters_Id>
+
+			<cfquery name="insert_group_template" datasource="#application.datasource#">
+			INSERT INTO Group_Template
+			(
+			Template_ID,
+			Group_Level_ID,
+			PG_Group_Type,
+			Allow_in_search,
+			Allow_In_Group_Search,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+			Allow_Filter
+			)
+			SELECT
+			#NewID#,
+			Group_Level_ID,
+			PG_Group_Type,
+			Allow_in_search,
+			Allow_In_Group_Search,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+			Allow_Filter
+			FROM Group_Template
+			WHERE Template_ID = #getFisrParentID.First_Parent_ID#
+									AND Deleted = 0
+			</cfquery>
+			<cfquery name="insert_customer_group_template" datasource="#application.datasource#">
+			INSERT INTO Customer_Group_Template_Selection
+			(
+			Template_ID,
+			Distributor_Group_Level_ID,
+			Distributor_Group_ID,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+			Template_Filters_Id
+			)
+			SELECT
+			#NewID#,
+			Distributor_Group_Level_ID,
+			Distributor_Group_ID,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+		<!--- Dev Note: drachala; D28180:  D28180: Copying a template with PG filters has issues --->
+			#Template_Filters_Id#
+			FROM Customer_Group_Template_Selection
+			WHERE Template_ID = #getFisrParentID.First_Parent_ID#
+									AND Deleted = 0
+			</cfquery>
+			<cfquery name="insert_Operator_group_template" datasource="#application.datasource#">
+			INSERT INTO Operator_Group_Template_Selection
+			(
+			Template_ID,
+			Operator_Group_Level_ID,
+			Operator_Group_ID,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+			Template_Filters_Id
+			)
+			SELECT
+			#NewID#,
+			Operator_Group_Level_ID,
+			Operator_Group_ID,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+		<!--- Dev Note: drachala; D28180:  D28180: Copying a template with PG filters has issues --->
+			#Template_Filters_Id#
+			FROM Operator_Group_Template_Selection
+			WHERE Template_ID = #getFisrParentID.First_Parent_ID#
+									AND Deleted = 0
+			</cfquery>
+			<cfquery name="insert_Product_group_template" datasource="#application.datasource#">
+			INSERT INTO Product_Group_Template_Selection
+			(
+			Template_ID,
+			Product_Group_Level_ID,
+			Product_Group_ID,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+			Template_Filters_Id
+			)
+			SELECT
+			#NewID#,
+			Product_Group_Level_ID,
+			Product_Group_ID,
+			Active,
+			Created_By,
+			PG_Flag,
+			Updated_From,
+		<!--- Dev Note: drachala; D28180:  D28180: Copying a template with PG filters has issues --->
+					#Template_Filters_Id#
+			FROM Product_Group_Template_Selection
+			WHERE Template_ID = #getFisrParentID.First_Parent_ID#
+									AND Deleted = 0
+			</cfquery>
+		<!--- Dev Note: Drachala; D27338 : JS error - syntax error when creating program START --->
+
+			<cfset 	budgetManager = CreateObject("component","components.budgets.BudgetManager") />
+			<cfset	budgetManager.copyTemplateBudget(getFisrParentID.First_Parent_ID , NewID) />
+
+			<cfquery name="updatedFirstParent" datasource="#application.datasource#">
+				UPDATE 	Program_Control_Panel_Options
+				SET 	First_Parent_ID = <cfqueryparam value="#NewID#" cfsqltype="CF_SQL_INTEGER">,
+						Copied_From_Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+				WHERE 	ProgramControl_Panel_Options_ID = <cfqueryparam value="#NewID#" cfsqltype="CF_SQL_INTEGER">
+			</cfquery>
+
+		</cfif>
+
+			<!--- Copy access proiles to new template ID --->
+			<cfquery name="AccessInfo" datasource="#application.datasource#">
+				INSERT INTO Profile_Forbidden_Template
+					(
+					Profile_ID,
+					Template_ID,
+					Forbid_Access_Type,
+					Forbid_Type
+					)
+				SELECT
+					Profile_ID,
+					<cfqueryparam cfsqltype="cf_sql_integer" value="#NewID#">,
+					Forbid_Access_Type,
+					Forbid_Type
+				FROM Profile_Forbidden_Template
+				WHERE Template_ID = <cfqueryparam cfsqltype="cf_sql_integer" value="#ID#">
+			</cfquery>
+
+
+			<!--- update check duplicate based on the newID--->
+			<cfquery name="UpdateCheckDup" datasource="#application.datasource#">
+				UPDATE 	Program_Control_Panel_Options
+				SET 	Check_Duplicate_Program = <cfqueryparam value="#FORM.allow_dup_programs#" cfsqltype="cf_sql_bit">,
+						Duplicate_Program_Action = <cfqueryparam value="#FORM.dupAction#" cfsqltype="cf_sql_integer">
+				WHERE 	ProgramControl_Panel_Options_ID = <cfqueryparam value="#NewID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+
+			<!---Deactivates previous version only if its an edit not copy--->
+			<cfif Action neq "Copy">
+				<cfquery name="UpdateOldInfo" datasource="#application.datasource#">
+					UPDATE 	Program_Control_Panel_Options
+					SET 	IsDominant = 0
+					WHERE 	ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+				</cfquery>
+			</cfif>
+
+			<cfquery name="CurrentPerformanceReq" datasource="#application.datasource#">
+				SELECT 	DISTINCT Program_Perf_Req_ID, isnull(Program_Perf_Req_Checked, 1) as Program_Perf_Req_Checked
+				FROM 	Program_Perf_Mapping
+				WHERE 	Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+
+			<cfloop query="CurrentPerformanceReq">
+				<!---Updates performance requirements--->
+				<cfquery name="UpdatePerfReqs" datasource="#application.datasource#">
+				INSERT INTO Program_Perf_Mapping
+				(Template_ID,
+				Program_Perf_Req_ID,
+				Program_Perf_Req_Checked)
+				VALUES
+				(
+				<cfqueryparam value="#NewID#" cfsqltype="cf_sql_integer">,
+				<cfqueryparam value="#Program_Perf_Req_ID#" cfsqltype="cf_sql_integer">,
+				<!--- 17677 RBL NOTE: In 5.0 and 5.1, this is a cfqueryparamed as tinyint instead of legacy bit. In 4.3 not datatyped. [begin] --->
+				<cfqueryparam value="#Program_Perf_Req_Checked#" cfsqltype="cf_sql_tinyint">
+								<!--- 17677 RBL NOTE: In 5.0 and 5.1, this is a cfqueryparamed as tinyint instead of legacy bit. In 4.3 not datatyped. [end] --->
+				)
+				</cfquery>
+			</cfloop>
+
+
+			<!---Updates payment types--->
+
+			<cfquery name="CurrentPaymentType" datasource="#application.datasource#">
+				SELECT 	distinct Payment_Type_ID
+				FROM 	Payment_Template_Mapping
+				WHERE 	Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+
+			<cfloop query="CurrentPaymentType">
+				<!---Updates performance requirements--->
+				<cfquery name="UpdatePaymentType" datasource="#application.datasource#">
+				INSERT INTO Payment_Template_Mapping
+				(Template_ID,
+				Payment_Type_ID,
+				Deleted,
+				Created_Date)
+				VALUES
+				(
+				<cfqueryparam value="#NewID#" cfsqltype="cf_sql_integer">,
+				<cfqueryparam value="#Payment_Type_ID#" cfsqltype="cf_sql_integer">,
+				0,
+				GetDate()
+				)
+				</cfquery>
+			</cfloop>
+
+
+			<!---Updates currency --->
+
+			<cfquery name="CurrentCurrency" datasource="#application.datasource#">
+				SELECT 	distinct Currency_ID
+				FROM 	Currency_Mapping
+				WHERE 	Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+
+			<cfloop query="CurrentCurrency">
+				<cfquery name="UpdateCurrency" datasource="#application.datasource#">
+				INSERT INTO Currency_Mapping
+				(Template_ID,
+				Currency_ID,
+				Deleted,
+				Created_Date)
+				VALUES
+				(
+				<cfqueryparam value="#NewID#" cfsqltype="cf_sql_integer">,
+				<cfqueryparam value="#Currency_ID#" cfsqltype="cf_sql_integer">,
+				0,
+				GetDate()
+				)
+				</cfquery>
+			</cfloop>
+
+
+			<!---Updates payment paid to types--->
+
+			<cfquery name="CurrentPaymentPaidToType" datasource="#application.datasource#">
+				SELECT 	distinct Payment_Paid_To_ID
+				FROM 	Payment_Paid_To_Template_Mapping
+				WHERE 	Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+
+			<cfloop query="CurrentPaymentPaidToType">
+				<!---Updates performance requirements--->
+				<cfquery name="UpdatePaymentPaidToType" datasource="#application.datasource#">
+				INSERT INTO Payment_Paid_To_Template_Mapping
+				(Template_ID,
+				Payment_Paid_To_ID,
+				Deleted,
+				Created_Date)
+				VALUES
+				(
+				<cfqueryparam value="#NewID#" cfsqltype="cf_sql_integer">,
+				<cfqueryparam value="#Payment_Paid_To_ID#" cfsqltype="cf_sql_integer">,
+				0,
+				GetDate()
+				)
+				</cfquery>
+			</cfloop>
+
+			<!------ Copy Template Discount Components ----->
+			<cfif bTemplateLevelComponentFilter>
+				<cfset templateManager.copyTemplateDiscountComponents(ID, NewID) />
+			</cfif>
+
+			<!------ copy revision settings from the parent template  ----->
+			<cfset templateManager.copyRevisionSettings(fromTemplateId = ID, toTemplateId = NewID) />
+
+			<cfparam name="PageName" default="Duplicate Program">
+			<!------ Bring over all the duplicate definition in the parent template to this new tamplate ----->
+			<cfset dupTemplateManager = CreateObject("component","components.programs.template.DuplicateTemplateManager").init(ID,trim(PageName)) />
+			<!--- check to see if there's definition based on old ID --->
+			<!--- if not, check if duplicate program check is on, if so, include importDupDefinition --->
+			<cfif Not dupTemplateManager.isDuplicateDefExisted()>
+				<cfif Not isDefined("template")>
+					<cfset template = templateManager.get(NewID)>
+				</cfif>
+				<cfset allow_dup_programs = template.getDuplicate()>
+				<cfif allow_dup_programs EQ 1>
+					<cfinclude template="importDupDefinition.cfm">
+				</cfif>
+			</cfif>
+				<cfset dupTemplateManager.importDefinitionFromTemplate(NewID)>
+				<!------ Bring over all the clauses in the parent template to this new tamplate ----->
+				<cfset clauseTemplateManager = CreateObject("component", "components.clause_library.ClauseTemplateManager").init() />
+				<cfset clauseTemplateManager.importClauseFromTemplate(NewID, ID)>
+
+				<!------ Save product category filter ----->
+				<cfset productCategory = CreateObject("component", "components.products.Category.ProductCategory") />
+				<cfif isDefined("application.returned_customer_setting.product_category_filter") and application.returned_customer_setting.product_category_filter>
+					<cfset productCategory.saveCategoryFilters(NewID, productCategory.getCategoryFilters(ID)) />
+				</cfif>
+
+				<!---Save Template Business Segment if it's enabled--->
+				<!---init BusinessSegmentManager to check if it's enabled--->
+				<cfset variables.businessSegmentManager = CreateObject("component", "components.programs.business_segment.BusinessSegmentManager") />
+				<cfif variables.businessSegmentManager.isEnabled() and appSettings.getFilterBusinessSegments()>
+					<cfset variables.businessSegmentManager.addBusinessSegmentTemplateSettings(ID, NewID, form.Template_Business_Segment_ID) />
+				</cfif>
+
+<!--- save pullback default rates for Corporate Programs --->
+		<!--- ************************************************************************************** --->
+			<!---START: COMMENTED OUT WR 67118 DATA IS STORED AT Template_Parent_Id- LEVEL NOW  START --->
+	<!--- ************************************************************************************** --->
+<!---		<cfif form.Pullbacks_On EQ 1 and form.is_pullback_corporate_deal EQ 1>
+						<cfquery name="currentdefaultrates" datasource="#application.datasource#">
+						SELECT 	*
+						FROM 	template_pullback_defaults
+						WHERE 	corp_Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+						and deleted = 0
+					</cfquery>
+
+					<cfloop query="currentdefaultrates">
+						<!---Updates performance requirements--->
+						<cfquery name="insertdefaultrates" datasource="#application.datasource#">
+						INSERT INTO template_pullback_defaults
+						(Corp_Template_ID,
+						Opr_Loc_Template_Id,
+						Pullback_Default_Rate)
+						VALUES
+						(
+						<cfqueryparam value="#NewID#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#Opr_Loc_Template_ID#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#Pullback_Default_Rate#" cfsqltype="cf_sql_float">
+						)
+						</cfquery>
+					</cfloop>
+		<cfelseif ((form.generic_type EQ 'Distributor Trade/Shelter' and form.Pullbacks_On EQ 1 and form.is_pullback_corporate_deal EQ 0 and form.pullback_from_corporate EQ 1) OR ((form.generic_type EQ 'Operator Direct or HQ Programs' OR form.generic_type EQ 'Operator-Deviated Pricing') and form.Pullbacks_On EQ 1))>
+				<cfquery name="currentdefaultrates" datasource="#application.datasource#">
+						SELECT 	*
+						FROM 	template_pullback_defaults
+						WHERE 	Opr_Loc_Template_Id = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+						and deleted = 0
+				</cfquery>
+				<!---
+				Dev Note: Milan (48182) - Remove any insert/update to "template_pullback_program_defaults".
+				This table is not being used anymore.
+				--->
+
+				<cfloop query="currentdefaultrates">
+						<!---Updates performance requirements--->
+				<cfquery name="insertdefaultrates" datasource="#application.datasource#">
+						INSERT INTO template_pullback_defaults
+						(Corp_Template_ID,
+						Opr_Loc_Template_Id,
+						Pullback_Default_Rate)
+						VALUES
+						(
+						<cfqueryparam value="#Corp_Template_ID#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#NEWID#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#Pullback_Default_Rate#" cfsqltype="cf_sql_float">
+						)
+				</cfquery>
+				</cfloop>
+
+		</cfif>--->
+	<!--- ************************************************************************************** --->
+			<!--- END: COMMENTED OUT WR 67118 DATA IS STORED AT Template_Parent_Id- LEVEL NOW END  --->
+	<!--- ************************************************************************************** --->
+<!--- end save pullback default rates for Corporate Programs --->
+				<cfset ID = NewID>
+				<cftransaction action="COMMIT">
+				</cftransaction>
+
+			<!---Gets ID for new version--->
+
+			<!---Sets the ID equal to the new ID--->
+		<!---It is active--->
+		</cfif>
+
+		<cfif Form.Active EQ "">
+			<cfset Form.Active = "NULL">
+		</cfif>
+
+		<cfif Action eq "Copy">
+			<cfset Form.Active = "0">
+			<cfset Active = "0">
+		</cfif>
+
+		<!--- Update new information for old version --->
+		<cfquery name="UpdateNewRecord" datasource="#application.datasource#">
+			UPDATE 	Program_Control_Panel_Options
+			SET
+					Created_Type 				= 	'#Form.Created_Type#',
+					Program_Description 		= 	'#Form.Program_Description#',
+					<cfif FORM.Use_Discount_ID IS 1 and len(trim(Form.Discount_Identifier_ID)) GT 0>
+					Discount_Identifier_ID		= 	'#Form.Discount_Identifier_ID#',
+					</cfif>
+					Include_Trade				= 	#Form.Include_Trade#,
+					<cfif application.ProgramPerformanceIndicatorLinksAvailable>
+					Include_Program				=	#Form.Include_Program#,
+					</cfif>
+					Performace_Min_Claims		= 	<cfif isDefined("Form.perfIndMinClaims") and Form.perfIndMinClaims NEQ "">#Form.perfIndMinClaims#<cfelse>0</cfif>,
+					Performace_Min_Days			= 	<cfif isDefined("Form.perfIndMinDays") and Form.perfIndMinDays NEQ "">#Form.perfIndMinDays#<cfelse>0</cfif>,
+					Max_Duration				=	#Form.Max_Duration#,
+					Max_Duration_Length			= 	#Form.Max_Duration_Length#,
+					Min_Duration				= 	#Form.Min_Duration#,
+					Min_Duration_Length			= 	#Form.Min_Duration_Length#,
+					Max_Global_Volume			= 	#Form.Max_Global_Volume#,
+					Max_Global_Volume_Size_CS	=	#Form.Max_Global_Volume_Size_CS#,
+					Max_Global_Volume_Size_LBS	= 	#Form.Max_Global_Volume_Size_LBS#,
+					Min_Global_Volume			= 	#Form.Min_Global_Volume#,
+					Min_Global_Volume_Size_CS	= 	#Form.Min_Global_Volume_Size_CS#,
+					Min_Global_Volume_Size_LBS	= 	#Form.Min_Global_Volume_Size_LBS#,
+					Allow_Retro_Create			= 	#Form.Allow_Retro_Create#,
+					Adv_Spend					= 	#Form.Adv_Spend#,
+					Zero_Volume					= 	#Form.Zero_Volume#,
+					Auto_Renew_Option			= 	#Form.Auto_Renew_Option#,
+					Allow_AR_Modification		=	#Form.Allow_AR_Modification#,
+					Allow_Retro_Create_Max		= 	#Form.Allow_Retro_Create_Max#,
+					Billback_Date				= 	#Form.Billback_Date#,
+					Billback_Date_Span			= 	#Form.Billback_Date_Span#,
+					Controllable_Volume			=	#Form.Controllable_Volume#,
+					Specify_Distributors		= 	#Form.Specify_Distributors#,
+					Specify_Operators			= 	#Form.Specify_Operators#,
+					Specify_Brokers				= 	#Form.Specify_Brokers#,
+					Allow_Only_One_Broker = #Form.Allow_Only_One_Broker#,<!---D37702 :: Brokerage template type doesn't allow vendor select --->
+					Payable_To					=	#Form.Payable_To#,
+					Send_Payment_To				=	#Form.Send_Payment_To#,
+					Payable_To_Required			= 	#Form.Required_Payable_To#,
+					Send_Payment_To_Required	= 	#Form.Required_Send_Payment_To#,
+					Trade_Blurb					=	'#Form.Trade_Blurb#',
+					Broker_Trade_Question		=	#Form.Broker_Trade_Question#,
+					Customer_Acceptance			=	#Form.Customer_Acceptance#,
+					Deleted						= 	0,
+					Active						= 	#Form.Active#,
+					IsDominant					= 	1,
+					Updated_By					=	'#request.AccessStructure.User_ID#',
+					Revision_Not_Allowed		=	#form.Revision_Not_Allowed#,
+					Allow_Retro_Revision		=	#form.Allow_Retro_Revision#,
+					Allow_Retro_Revision_Span	=	#form.Allow_Retro_Revision_Span#,
+					Check_Duplicate_Program		=	#form.allow_dup_programs#,
+					Duplicate_Program_Action	= 	#form.dupAction#,
+					One_Distributor				= 	#form.One_Distributor#,
+					One_Operator				= 	#form.One_Operator#,
+					Require_Distributor			= 	#form.Require_Distributor#,
+					Require_Operator			= 	#form.Require_Operator#,
+					Min_Lump_Sum				= 	'#form.Min_Lump_Sum#',
+					Max_Lump_Sum				= 	'#form.Max_Lump_Sum#',
+					Lump_Sum_Cap				=	'#form.Lump_Sum_Cap#',
+					No_Negative_OI				= 	#form.No_Negative_OI#,
+					One_Discount_Mandated		=	#form.One_Discount_Mandated#,
+										Allow_Only_One_Discount = #form.Allow_Only_One_Discount#,
+					Equipment_Placement			=	#form.Equipment_Placement#,
+					Volume_Cap					=	#Form.Volume_Cap#,
+					Date_Exclusions_ON	= '#form.Date_Exclusions_ON#',
+					Sysco_Report_ON = '#form.Sysco_Report_ON#',
+					Sequential_Net_Sales_Operating_Margin = '#form.Sequential_Net_Sales_Operating_Margin#',
+					GroupLevelBB				=	'#FORM.GroupLevelBB#',
+					<!--- Allow_Add_All_Products		=	#Form.Allow_Add_All_Products#, ---><!--- 10406 --->
+					Include_In_Catalog			=	#Form.Include_In_Catalog#,
+					Catalog_Type				=	#Form.Catalog_Type#,
+					Show_Awarded_In_Catalog		=	#Show_Awarded_In_Catalog#,
+					Restrict_On_Approval_Group	=	#Form.Restrict_On_Approval_Group#,
+					Restrict_Product_Group_Level		=	#Form.Restrict_Product_Group_Level#,
+					Allow_Lower_Pricing_Level	=	#Form.Allow_Lower_Pricing_Level#
+					<!---insert for distributor groups if it's defined--->
+					<cfif isDefined("form.Specify_Distributor_Groups")>
+						,Specify_Distributor_Groups 	=	#Form.Specify_Distributor_Groups#
+					</cfif>
+					<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs START--->
+					<cfif isDefined("form.Specify_Individual_Distributors")>
+						,Specify_Individual_Distributors 	=	#Form.Specify_Individual_Distributors#
+					</cfif>
+					<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs END--->
+						,Specify_Operator_Groups 	= 	#Form.Specify_Operator_Groups# <!--- D31561: Operator Groups Search --->
+					<!---insert for groups if it's defined--->
+					<cfif isDefined("form.Group_Deal")>
+						,
+						Group_Deal 	=	#Form.Group_Deal#
+					</cfif>
+					<!---insert for dynamic groups if it's defined--->
+					<cfif isDefined("form.Dynamic_Static_Groups")>
+						,
+						Dynamic_Static_Groups = #Form.Dynamic_Static_Groups#
+					</cfif>
+					<!---insert for Program Date Type if it's defined--->
+					<cfif isDefined("form.Program_Date_Type")>
+						,
+						Program_Date_Type = #form.Program_Date_Type#
+					</cfif>
+					,Previous_Fiscal_Year_Volume = #form.Previous_Fiscal_Year_Volume#
+					<cfif isDefined("form.Days_Before_Auto_Renew")>
+						,Days_Before_Auto_Renew = '#form.Days_Before_Auto_Renew#'
+						</cfif>
+						,Expiring_Notification_Span = '#form.Expiring_Notification_Span#'
+						,Days_For_Reminder = '#form.Days_For_Reminder#'
+						,exclude_sig_products = #form.exclude_sig_products#
+						,price_protection_on =#form.price_protection_on#
+						,apply_rebate_rates =#form.apply_rebate_rates#
+						,mass_billback_pay = #form.mass_billback_pay#
+						,Competitive_Information_On = #form.Competitive_Information_On#
+					<!------ ,Group_Level_Distributor		=	#Form.Group_Level_Distributor# ----->
+						, Date_Updated = GetDate()
+						,Program_Start_Day = #form.Program_Start_Day#
+						,Program_End_Day = #form.Program_End_Day#
+						,Program_Min_Start_Date = <cfif isDate(form.Program_Min_Start_Date)>'#form.Program_Min_Start_Date#'<cfelse>NULL</cfif>
+						,Program_Max_End_Date = <cfif isDate(form.Program_Max_End_Date)>'#form.Program_Max_End_Date#'<cfelse>NULL</cfif>
+						,Pullbacks_On = #form.Pullbacks_On#
+						,Recapture_Pays_To_Id = #Form.Recapture_Pays_To_Id#
+						,default_pullback_rate = #form.default_pullback_rate#
+						,is_pullback_corporate_deal = #form.is_pullback_corporate_deal#
+						,pullback_from_corporate = #form.pullback_from_corporate#
+						,Pullback_Include_RediVolume = #form.Pullback_Include_RediVolume#
+						,pullback_redi_volume_percent = #form.pullback_redi_volume_percent#
+						,pullback_template_type = #form.pullback_template_type#
+						,Include_Open_Date = #form.Include_Open_Date#
+						,Include_Date_Needed_by = #form.Include_Date_Needed_by#
+						,Include_Reply_Date = #form.Include_Reply_Date#
+						,Include_Competitive_Data_Tracking = #form.Include_Competitive_Data_Tracking#
+						,display_basesales_Competitive_Data = #form.display_basesales_Competitive_Data#
+						,display_bid_info_page = #form.display_bid_info_page#
+						,line_number = #form.line_number#
+						,BidRequestStatusOn = #form.BidRequestStatusOn#
+						,BidRequestStatusChangePgmStatus = #form.BidRequestStatusChangePgmStatus#
+						<!---,Volume_Related_Message = '#Form.Volume_Related_Message#'--->
+						,Include_Template_In_Deals_IF = '#Form.Include_Template_In_Deals_IF#'
+						,Include_Treatment_Basis_Code = '#Form.Include_Treatment_Basis_Code#'
+						,Exclude_Same_Spending_Cat_From_TPA = '#Form.Exclude_Same_Spending_Cat_From_TPA#'
+						,ByPass_Margin_Evaluation = #Form.ByPass_Margin_Evaluation#
+						,ByPass_Margin_Evaluation_Options = #Form.ByPass_Margin_Evaluation_Options#
+						,EZButton_on = #Form.EZButton_on#
+												,BB_D_Template_Overrides_Deviation_Tolerances = #Form.BB_D_Template_Overrides_Deviation_Tolerances#
+						,BB_D_Purchase_Period_OverRide = <cfif trim(form.BB_D_Purchase_Period_OverRide) EQ "">0<cfelse>'#form.BB_D_Purchase_Period_OverRide#'</cfif>
+						,BB_D_Purchase_Period_OverRide_Rate = <cfif trim(form.BB_D_Purchase_Period_OverRide_Rate) EQ "">0<cfelse>'#form.BB_D_Purchase_Period_OverRide_Rate#'</cfif>
+						,BB_D_Aggregation_Period_OverRide = <cfif trim(form.BB_D_Aggregation_Period_OverRide) EQ "">0<cfelse>'#form.BB_D_Aggregation_Period_OverRide#'</cfif>
+						,Release_Settlement = #Form.ReleaseSettlement#
+						,RS_DaysToClaim = #Form.RS_DaysToClaim#
+						,RS_CreatedDaysFilter = #form.RS_CreatedDaysFilter#<!--- 68628 --->
+						,RS_CreatedDaysGreater = #Form.RS_CreatedDaysGreater#<!--- 68628 --->
+						,Retail_Performance_Dates = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Performance_Dates_On#" />
+						,Retail_Performance_Dates_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Performance_Dates_On_Required#" />
+						,Distribution_Channel = <cfqueryparam cfsqltype="cf_sql_varchar" value="#Form.Distribution_Channel#" />
+						,Division_Num = <cfqueryparam cfsqltype="cf_sql_varchar" value="#Form.Division#" />
+						,Interface_On_Approval = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Interface_On_Approval#" />
+												,Track_Price_Comp = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Track_Price_Comp#" />
+						,Retailer_Info_On = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Retailer_Info_On#" />
+						,Send_RFA_Email = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Send_RFA_Email#" />
+						,Distributor_Product_Integrity_Rule_ID = <cfqueryparam cfsqltype="cf_sql_int" value="#Form.Distributor_Product_Integrity_Rule_ID#" />
+						,Freight_Approval_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Freight_Approval_Reqd#" />
+						,Freight_accrual_considers_cash_discount = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Freight_accrual_considers_cash_discount#" />
+						,Use_Fixed_Price_As_Base_Sales = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Use_Fixed_Price_As_Base_Sales#" />
+						,Template_UPC_Display = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Template_UPC_Display#" />
+						<!--- 2013 oct 7, per Paul always include these 3 column (won by, rate, uom) » chris --->
+						,Won_By = <cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+						,Won_Rate = <cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+						,Won_UOM = <cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+						,Won_By_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Won_By_Required#" />
+						,Won_Rate_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Won_Rate_Required#" />
+						,Won_UOM_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Won_UOM_Required#" />
+						,Delivery_Type = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Delivery_Type#" />
+						,Category = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Category#" />
+						,Package = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Package#" />
+						,Shared = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Shared#" />
+						,Incremental = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Incremental#" />
+						,Source = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Source#" />
+						,Source_Type = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Source_Type#" />
+						,Date_Source_Received = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Date_Source_Received#" />
+						,Source_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Source_Required#" />
+						,Source_Type_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Source_Type_Required#" />
+						,Date_Source_Received_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Date_Source_Received_Required#" />
+						,Download_Comp_Data_History = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Download_Comp_Data_History#" />
+						,Specd = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Specd#" />
+						,Display_Reminder_Comp_Data_Page = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Display_Reminder_Comp_Data_Page#" />
+						,Opportunity_Volume = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Opportunity_Volume#" />
+						,Include_Time_Of_Open_Date = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Include_Time_Of_Open_Date#" />
+						,Pay_To_Distributor = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Pay_To_Distributor#">
+						,Single_Component_Per_Discount_Type = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Single_Component_Per_Discount_Type#" />
+						<!--- D29042: Auto Add Distributor Template Setting Not Saving Changes
+							Removed #Form.Single_Component_Per_Discount_Type# from cfquery param and added #Form.AutoAdd_Distributor_ThirdPartyClaims#--->
+						,AutoAdd_Distributor_ThirdPartyClaims = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.AutoAdd_Distributor_ThirdPartyClaims#" />
+						,Ignore_Billback_Volume_Deviation = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Ignore_Billback_Volume_Deviation#" />
+						,Ignore_Date_Overlap_Deviation = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Ignore_Date_Overlap_Deviation#" /><!---D36368 --->
+						,Ignore_Rate_Deviation = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Ignore_Rate_Deviation#" /><!---D71856 RETAIL-195 --->
+						,Auto_Volume  = <cfqueryparam cfsqltype="cf_sql_int" value="#Auto_Volume#" />
+						,Blackout_Periods  = <cfqueryparam cfsqltype="cf_sql_int" value="#FORM.Blackout_Periods#" /><!---  D38942 :: Program Blackout Period on Frontend --->
+						,Auto_Actual = <cfqueryparam cfsqltype="cf_sql_int" value="#Auto_Actual#" />
+						,Auto_Future = <cfqueryparam cfsqltype="cf_sql_int" value="#Auto_Future#" />
+						,Auto_Committed_Equal_Actual = <cfqueryparam cfsqltype="cf_sql_int" value="#Auto_Committed_Equal_Actual#" />
+						,Auto_Committed_Equal_Actual_ON = <cfqueryparam cfsqltype="cf_sql_int" value="#Auto_Committed_Equal_Actual_ON#" />
+						,Auto_Volume_Program_Equal_Actual_Weeks = <cfqueryparam cfsqltype="cf_sql_int" value="#Auto_Volume_Program_Equal_Actual_Weeks#" />
+						,Future_Zero = <cfqueryparam cfsqltype="cf_sql_int" value="#FORM.Future_Zero#" />
+						,Start_Zero = <cfqueryparam cfsqltype="cf_sql_int" value="#FORM.Start_Zero#" /><!--- D38942 :: Program Blackout Period on Frontend --->
+						,Clear_Lumpsum = <cfqueryparam cfsqltype="cf_sql_int" value="#Form.Clear_Lumpsum#" />
+						,Base_Sales_Equal_To_Lowest_Bracket = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Base_Sales_Equal_To_Lowest_Bracket#">
+						,Margin_Price_List_Header_ID = <cfif trim(form.Margin_Price_List_Header_ID) EQ "0">NULL<cfelse>'#form.Margin_Price_List_Header_ID#'</cfif>
+						,Base_Sales_based_on_Prg_Start_Date = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Base_Sales_based_on_Prg_Start_Date#">
+						,Select_Effective_Date_for_Price = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Select_Effective_Date_for_Price#">
+						,Item_Fixed_Rebate_Paid_To_Dup_Message = <cfqueryparam cfsqltype="cf_sql_tinyint" value="#Form.Item_Fixed_Rebate_Paid_To_Dup_Message#">
+						,BB_Tolerance_DVT = <cfif len(trim(form.BB_Tolerance_DVT)) eq 0> NULL <cfelse>	'#form.BB_Tolerance_DVT#'</cfif>
+						,BB_Tolerance_ERT = <cfif len(trim(form.BB_Tolerance_ERT)) eq 0> NULL <cfelse>	'#form.BB_Tolerance_ERT#'</cfif>
+						,Cannot_Exceed_Percent  = <cfif len(trim(Form.Cannot_Exceed_Percent)) eq 0> NULL <cfelse>'#Form.Cannot_Exceed_Percent#'</cfif>
+						,Cannot_Exceed_Dollar =<cfif len(trim(Form.Cannot_Exceed_Dollar)) eq 0> NULL <cfelse>'#Form.Cannot_Exceed_Dollar#'</cfif>
+						,Maximum_Dollar_Amount_Checked = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Maximum_Dollar_Amount_Checked#">
+						,Maximum_Dollar_Amount =<cfif len(trim(Form.Maximum_Dollar_Amount)) eq 0> NULL <cfelse> #Form.Maximum_Dollar_Amount#</cfif>
+						,Billback_Status_For_Max_Dollar_Amt =<cfqueryparam cfsqltype="cf_sql_int" value="#Form.Billback_Status_For_Max_Dollar_Amt#" />
+						,Auto_Deviation_Inc_Manual_BB = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Auto_Deviation_Inc_Manual_BB#">
+						,Currency_Conversion_Factor = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Currency_Conversion_Factor#">
+						<!--- ,growth_auto_pay = 		<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.growth_auto_pay#">		D35731 - Growth Auto Pay --->
+						,Default_rate_equal_to_zero = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Default_rate_equal_to_zero#">	<!---	36607--->
+						,Alternate_Payment_Recipient = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Alternate_Payment_Recipient#">	<!---	D37492 --->
+						<!---,Custom_Fixed_Price_Options = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Custom_Fixed_Price_Options#">--->
+						,Claim_Rates_ConFig_Id = <cfqueryparam cfsqltype="cf_sql_int" value="#Form.Claim_Rates_ConFig_Id#">
+						,ItemMarked_Lost_Program_Volume_Automation = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.ItemMarked_Lost_Program_Volume_Automation#">
+						,ItemMarked_Lost_Budget_Committed_Dollars = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.ItemMarked_Lost_Budget_Committed_Dollars#">
+						,Payment_Notification = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Payment_Notification#">
+						,Payment_Notification_Span = <cfif len(trim(form.Payment_Notification_Span)) eq 0>NULL<cfelse>'#form.Payment_Notification_Span#'</cfif>
+						,Billback_Sales_Tax = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Billback_Sales_Tax#">
+						,Document_Attachment_Required = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Document_Attachment_Required#"><!--- D42591:: Template setting - document attachment required --->
+						,Most_Favored_Nation =  <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Most_Favored_Nation#">
+						,Approval_Considerations_ID = <cfqueryparam cfsqltype="cf_sql_int" value="#Form.Approval_Considerations_ID#"> <!--- D43651 --->
+						,Price_List_Download = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Price_List_Download#"><!---  D47306 : Price List Download --->
+						,Manual_Selection_Of_Approvers = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Manual_Selection_Of_Approvers#"> <!---  D47065 : Change Order - Program Approvals --->
+						,BB_Dont_Count_Volume_Select = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.BB_Dont_Count_Volume_Select#">  <!--- D48049: Count / Dont Count Volume based on Program Component --->
+						,Include_In_Sales_Tracker_Dashboard = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Include_In_Sales_Tracker_Dashboard#">
+						,Manual_Committed_Equal_Actual = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Manual_Committed_Equal_Actual#"> <!--- D50326 :: Tru-up to Actuals Button in Program --->
+						,Hide_On_Create_Program = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Hide_On_Create_Program#">
+						,Percentage_Of_List_Price = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Percentage_Of_List_Price#">
+						,Price_List_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#Form.Price_List_ID#">
+						,Set_Billbacks_To_Paid_No_Interface = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Set_Billbacks_To_Paid_No_Interface#"> <!--- 55348 --->
+						,Retail_Planner = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Retail_Planner#"> <!--- 57305 --->
+						,Optional_Dates_Program = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Optional_Dates_Program#"> <!--- 60410 --->
+						,Show_Contract_Dates = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Show_Contract_Dates#"> <!--- 64090 --->
+						,allow_Best_Plan_Programs = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.allowBestPlanPrograms#"><!---60308 --->
+						,Pullback_Operator_Fixed_Price_Only = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Pullback_Operator_Fixed_Price_Only#">
+						,isBrokerage = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.isBrokerage#"><!---74641--->
+						,Template_In_Program_LH_Recapture_Link = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Template_In_Program_LH_Recapture_Link#">
+						,Template_In_Program_LH_Recapture_Link_Default = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Template_In_Program_LH_Recapture_Link_Default#">
+						,allow_Reference_2 = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.allowReference2#"><!---77539--->
+						,Allow_Vendor_Only = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Allow_Vendor_Only#">
+						,Ignore_Rebate_Volume = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Ignore_Rebate_Volume#"><!--- 79614 --->
+						,Display_Blanket_Bid = <cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Display_Blanket_Bid#">
+				WHERE 	ProgramControl_Panel_Options_ID = #ID#
+		</cfquery>
+
+		<!---30418 update Billback_Closing_Methods_Template :: start--->
+	<cfif Action neq "Copy">
+		<CFQUERY NAME="qDeleteClosingMethod" DATASOURCE="#Application.Datasource#">
+			delete from Billback_Closing_Methods_Template
+			where  	First_Parent_ID = '#getFisrParentID.First_Parent_ID#'
+		</CFQUERY>
+		<cfset FirstParentID = getFisrParentID.First_Parent_ID>
+	<cfelseif Action eq "Copy">
+		<cfset FirstParentID = ID>
+	</cfif>
+
+
+		<cfif len(trim(Form.Billback_Closing_Method_ID_List)) GT 0 AND Form.BB_D_Template_Overrides_Deviation_Tolerances eq 1>
+			<cfloop list="#form.Billback_Closing_Method_ID_List#" index="indxList">
+				<cfparam name="form.#indxList#_Auto_Dev_BB_Status_Below" default="0">
+				<cfparam name="form.#indxList#_Auto_Dev_BB_Status_Exceed" default="0">
+				<CFQUERY NAME="qUpdateClosingMethod" DATASOURCE="#Application.Datasource#">
+					INSERT INTO Billback_Closing_Methods_Template (First_Parent_ID,iBillback_Closing_Method_ID,Auto_Dev_BB_Status_Below,Auto_Dev_BB_Status_Exceed)
+					VALUES(#FirstParentID#,#indxList#,#evaluate("form.#indxList#_Auto_Dev_BB_Status_Below")#,#evaluate("form.#indxList#_Auto_Dev_BB_Status_Exceed")#)
+				</CFQUERY>
+			</cfloop>
+		</cfif>
+
+		<!---update Template Business Segment if it's enabled--->
+		<!---init BusinessSegmentManager to check if it's enabled--->
+		<cfset variables.businessSegmentManager = CreateObject("component", "components.programs.business_segment.BusinessSegmentManager") />
+		<cfif variables.businessSegmentManager.isEnabled() and appSettings.getFilterBusinessSegments()>
+			<cfset variables.businessSegmentManager.updateBusinessSegmentTemplateSettings(ID, form.Template_Business_Segment_ID) />
+		</cfif>
+
+		<!---30418 update Billback_Closing_Methods_Template :: end--->
+<!--- 		<cfif form.EZButton_on EQ 1>
+	<!------ Insert a dummy program ----->
+			<cfinclude template="/common_files/contracts/contract_number_generator.cfm">
+			<cfquery name="CreateEZButtonProgram" datasource="#application.datasource#">
+				SET NOCOUNT ON
+				INSERT INTO Contract_Main
+							(   Contract_Number,
+								ProgramType,
+								ProgramType_ID,
+								contract_EZButton_On	)
+				values ('TMP_#generator_contract_number#','#form.Created_Type#',#ID#,1)
+
+			update Program_Control_Panel_Options
+			set EZ_Contract_Id = (SELECT MAX(Contract_Main_ID) AS Contract_Main_ID FROM Contract_Main)
+			where ProgramControl_Panel_Options_ID = #ID#
+			SET NOCOUNT OFF
+			</cfquery>
+		</cfif> --->
+
+		<!------ *********************** Auto_Committed_Equal_Actualactiveley update old versions of the template *********************** ----->
+		<!------
+		Date: 03/22/2005 by Deepa Kunnath
+		Here is the logic to retroactively make the changes to all versions of this template.
+		Right now we are only adding few fields from the main table to this list, may be in future we need more....
+		If the fields you need to add are in the main table (Program_Control_Panel_Options), just add it to the array and will be taken care of
+		But if you need to do the same of a mapping table, you need to write the code for it,
+			anyway please try to code in a common way so that it can be reused if we want to add more items into that list,
+			but if it gets too complicated it can be done custom.
+		 ----->
+		<cfif Active IS 1><!------ Only if the template is active it will have multiple versions ----->
+
+			<!------ **** Update Master Table **** ----->
+			<cfscript>
+				MainTableFieldsToUpdate = arrayNew(2);
+
+				aTmp = ["Allow_Retro_Create", "#Allow_Retro_Create#"];           			                   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Allow_Retro_Create_Max", "#Allow_Retro_Create_Max#"]; 				                   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Allow_Retro_Revision", "#Allow_Retro_Revision#"];     				                   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Allow_Retro_Revision_Span", "#Allow_Retro_Revision_Span#"];		                 arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Include_Template_In_Deals_IF", "#Include_Template_In_Deals_IF#"];		           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Include_Treatment_Basis_Code", "#Include_Treatment_Basis_Code#"];		           arrayAppend(MainTableFieldsToUpdate, aTmp);
+					aTmp = ["Exclude_Same_Spending_Cat_From_TPA", "#Exclude_Same_Spending_Cat_From_TPA#"];   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Include_In_Catalog", "#Include_In_Catalog#"]; 				                           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Catalog_Type", "#Catalog_Type#"];				                                       arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Restrict_Product_Group_Level", "#Restrict_Product_Group_Level#"];		           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Allow_Lower_Pricing_Level", "#Allow_Lower_Pricing_Level#"];				             arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Restrict_On_Approval_Group", "#Restrict_On_Approval_Group#"];				           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Use_Fixed_Price_As_Base_Sales", "#Use_Fixed_Price_As_Base_Sales#"];	           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Template_UPC_Display", "#Template_UPC_Display#"];				                       arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["BB_D_Template_Overrides_Deviation_Tolerances",								"#BB_D_Template_Overrides_Deviation_Tolerances#"];	                             arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["BB_D_Purchase_Period_OverRide", "#BB_D_Purchase_Period_OverRide#"];	           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["BB_D_Purchase_Period_OverRide_Rate", "#BB_D_Purchase_Period_OverRide_Rate#"];	 arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["BB_D_Aggregation_Period_OverRide", "#BB_D_Aggregation_Period_OverRide#"];			 arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Freight_accrual_considers_cash_discount",
+								"#Freight_accrual_considers_cash_discount#"];	                                   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				if ( trim(Margin_Price_List_Header_ID) NEQ "0" ) {
+					aTmp = ["Margin_Price_List_Header_ID", "#Margin_Price_List_Header_ID#"];		           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				}
+				aTmp = ["Item_Fixed_Rebate_Paid_To_Dup_Message",
+								"#Item_Fixed_Rebate_Paid_To_Dup_Message#"];                                      arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Currency_Conversion_Factor", "#Currency_Conversion_Factor#"];				           arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Claim_Rates_ConFig_Id", "#Claim_Rates_ConFig_Id#"];				                     arrayAppend(MainTableFieldsToUpdate, aTmp);   // 38460
+				//D38942 :: Program Blackout Period on Frontend
+				if (Form.blackout_periods EQ 1) {
+				aTmp = ["Start_zero", "#Start_zero#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Future_Zero", "#Future_Zero#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				}
+				aTmp = ["blackout_periods", "#blackout_periods#"];	   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Auto_Volume", "#Auto_Volume#"];		   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Auto_Actual", "#Auto_Actual#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Auto_Future", "#Auto_Future#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Auto_Committed_Equal_Actual", "#Auto_Committed_Equal_Actual#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Auto_Committed_Equal_Actual_ON", "#Auto_Committed_Equal_Actual_ON#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Auto_Volume_Program_Equal_Actual_Weeks", "#Auto_Volume_Program_Equal_Actual_Weeks#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				//D38942 :: Program Blackout Period on Frontend
+
+				aTmp = ["Billback_Sales_Tax", "#Billback_Sales_Tax#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				// D42591: Template setting - document attachment required
+				aTmp = ["Document_Attachment_Required", "#Document_Attachment_Required#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Sequential_Net_Sales_Operating_Margin", "#Sequential_Net_Sales_Operating_Margin#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+
+				aTmp = ["Approval_Considerations_ID", "#Approval_Considerations_ID#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Manual_Committed_Equal_Actual", "#Manual_Committed_Equal_Actual#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);//D50236
+				if (Form.BB_D_Template_Overrides_Deviation_Tolerances EQ 1) {
+						aTmp = ["Maximum_Dollar_Amount_Checked", "#Maximum_Dollar_Amount_Checked#"];			   arrayAppend(MainTableFieldsToUpdate, aTmp);
+						aTmp = ["Auto_Deviation_Inc_Manual_BB", "#Auto_Deviation_Inc_Manual_BB#"];				   arrayAppend(MainTableFieldsToUpdate, aTmp);
+						if (len(trim(BB_Tolerance_DVT)) GT 0) { aTmp = ["BB_Tolerance_DVT", "#BB_Tolerance_DVT#"];	              arrayAppend(MainTableFieldsToUpdate, aTmp); }
+						if (len(trim(BB_Tolerance_ERT)) GT 0) {	aTmp = ["BB_Tolerance_ERT", "#BB_Tolerance_ERT#"];	              arrayAppend(MainTableFieldsToUpdate, aTmp); }
+						if (len(trim(Cannot_Exceed_Percent)) GT 0) { aTmp = ["Cannot_Exceed_Percent", "#Cannot_Exceed_Percent#"];	arrayAppend(MainTableFieldsToUpdate, aTmp); }
+						if (len(trim(Cannot_Exceed_Dollar)) GT 0)  { aTmp = ["Cannot_Exceed_Dollar", "#Cannot_Exceed_Dollar#"];		arrayAppend(MainTableFieldsToUpdate, aTmp); }
+						if (len(trim(Maximum_Dollar_Amount)) GT 0) { aTmp = ["Maximum_Dollar_Amount", "#Maximum_Dollar_Amount#"];	arrayAppend(MainTableFieldsToUpdate, aTmp); }
+				} // end of "if (Form.BB_D_Template_Overrides_Deviation_Tolerances EQ 1)"
+				aTmp = ["Percentage_Of_List_Price", "#Percentage_Of_List_Price#"];	arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Price_List_ID", "#Price_List_ID#"];						arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Show_Contract_Dates", "#Show_Contract_Dates#"];			arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Pullback_Operator_Fixed_Price_Only", "#Pullback_Operator_Fixed_Price_Only#"];			arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Template_In_Program_LH_Recapture_Link", "#Template_In_Program_LH_Recapture_Link#"];			arrayAppend(MainTableFieldsToUpdate, aTmp);
+				aTmp = ["Template_In_Program_LH_Recapture_Link_Default", "#Template_In_Program_LH_Recapture_Link_Default#"];			arrayAppend(MainTableFieldsToUpdate, aTmp);
+			</cfscript>
+
+			<cfinclude template ="rectroactive_update.cfm">
+			<!------ **** Update Master Table **** ----->
+		</cfif>
+		<!------ *********************** retroactiveley update old versions of the template *********************** ----->
+
+<cfelse>
+
+	<cfif appSettings.getMarginDisplaydefault() EQ 1>
+		<cfset default_margin_uom  = 1>
+	<cfelse>
+		<cfset default_margin_uom  = 2>
+	</cfif>
+
+	<cfquery name="CreateNewTemplate" datasource="#application.datasource#">
+		SET NOCOUNT ON
+		INSERT INTO Program_Control_Panel_Options
+		(
+			Company_Main_ID,
+			Generic_Type,
+			Created_Type,
+			Program_Description,
+			<cfif FORM.Use_Discount_ID IS 1 and len(trim(Form.Discount_Identifier_ID)) GT 0>
+			Discount_Identifier_ID,
+			</cfif>
+			Include_Trade,
+			<cfif application.ProgramPerformanceIndicatorLinksAvailable>
+			Include_Program,
+			</cfif>
+			Performace_Min_Claims,
+			Performace_Min_Days,
+			Max_Duration,
+			Max_Duration_Length,
+			Min_Duration,
+			Min_Duration_Length,
+			Max_Global_Volume,
+			Max_Global_Volume_Size_CS,
+			Max_Global_Volume_Size_LBS,
+			Min_Global_Volume,
+			Min_Global_Volume_Size_CS,
+			Min_Global_Volume_Size_LBS,
+			Allow_Retro_Create,
+			Allow_Retro_Create_Max,
+			Billback_Date,
+			Billback_Date_Span,
+			Adv_Spend,
+			Zero_Volume,
+			Auto_Renew_Option,
+			Allow_AR_Modification,
+			Controllable_Volume,
+			Specify_Distributors,
+			Specify_Operators,
+			Specify_Brokers,
+			Allow_Only_One_Broker,<!---D37702 :: Brokerage template type doesn't allow vendor select --->
+			Payable_To,
+			Send_Payment_To,
+			Payable_To_Required,
+			Send_Payment_To_Required,
+			Trade_Blurb,
+			Broker_Trade_Question,
+			Customer_Acceptance,
+			Deleted,
+			Active,
+			IsDominant,
+			Updated_By,
+			Revision_Not_Allowed,
+			Allow_Retro_Revision,
+			Allow_Retro_Revision_Span,
+			Check_Duplicate_Program,
+			Duplicate_Program_Action,
+			One_Distributor,
+			One_Operator,
+			Require_Distributor,
+			Require_Operator,
+			Min_Lump_Sum,
+			Max_Lump_Sum,
+			Lump_Sum_Cap,
+			No_Negative_OI,
+			One_Discount_Mandated,
+						Allow_Only_One_Discount,
+			Equipment_Placement,
+			Date_Exclusions_ON,
+			Sysco_Report_ON,
+			Sequential_Net_Sales_Operating_Margin,
+			GroupLevelBB,
+			Volume_Cap,
+			<!--- Allow_Add_All_Products, ---><!--- 10406 --->
+			Include_In_Catalog,
+			Catalog_Type,
+			Show_Awarded_In_Catalog,
+			Restrict_On_Approval_Group,
+			Restrict_Product_Group_Level,
+			Allow_Lower_Pricing_Level
+			<!---insert for distributor groups if it's defined--->
+			<cfif isDefined("form.Specify_Distributor_Groups")>
+				, Specify_Distributor_Groups
+			</cfif>
+			<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs START--->
+			<cfif isDefined("form.Specify_Individual_Distributors")>
+				, Specify_Individual_Distributors
+			</cfif>
+			<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs END--->
+			,Specify_Operator_Groups <!--- D31561: Operator Groups Search --->
+			<!---insert for groups if it's defined--->
+			<cfif isDefined("form.Group_Deal")>
+				, Group_Deal
+			</cfif>
+			<!---insert for dynamic groups if it's defined--->
+			<cfif isDefined("form.Dynamic_Static_Groups")>
+				, Dynamic_Static_Groups
+			</cfif>
+			<!---insert for Program Date Type if it's defined--->
+			<cfif isDefined("form.Program_Date_Type")>
+				, Program_Date_Type
+			</cfif>
+			,Previous_Fiscal_Year_Volume
+			<cfif isDefined("form.Days_Before_Auto_Renew")>
+			,Days_Before_Auto_Renew
+			</cfif>
+			,Expiring_Notification_Span
+			,Days_For_Reminder
+			,exclude_sig_products
+			,price_protection_on
+			,apply_rebate_rates
+			,mass_billback_pay
+			,Competitive_Information_On
+			,Date_Updated
+			,Program_Start_Day
+			,Program_End_Day
+			,Program_Min_Start_Date
+			,Program_Max_End_Date
+			,Pullbacks_On
+			,Recapture_Pays_To_Id
+			,default_pullback_rate
+			,is_pullback_corporate_deal
+			,pullback_from_corporate
+			,Pullback_Include_RediVolume
+			,pullback_redi_volume_percent
+			,pullback_template_type
+			,Include_Open_Date
+			,Include_Date_Needed_by
+			,Include_Reply_Date
+			,Include_Competitive_Data_Tracking
+			,display_basesales_Competitive_Data
+			,display_bid_info_page
+			,line_number
+			,BidRequestStatusOn
+			,BidRequestStatusChangePgmStatus
+			<!---,Volume_Related_Message--->
+			,Include_Template_In_Deals_IF
+			,Include_Treatment_Basis_Code
+			,Exclude_Same_Spending_Cat_From_TPA
+			,ByPass_Margin_Evaluation
+						,ByPass_Margin_Evaluation_Options
+			,EZButton_on
+			,EZprogram_editcomponent
+						,BB_D_Template_Overrides_Deviation_Tolerances
+			,BB_D_Purchase_Period_OverRide
+			,BB_D_Purchase_Period_OverRide_Rate
+			,BB_D_Aggregation_Period_OverRide
+						,Release_Settlement
+			,RS_DaysToClaim
+			,RS_CreatedDaysFilter<!--- 68628 --->
+			,RS_CreatedDaysGreater<!--- 68628 --->
+			,Retail_Performance_Dates
+			,Retail_Performance_Dates_Required
+			,Distribution_Channel
+			,Division_Num
+			,Interface_On_Approval
+						,Track_Price_Comp
+			,Retailer_Info_On
+			,Send_RFA_Email
+			,Distributor_Product_Integrity_Rule_ID
+			,Freight_Approval_Required
+			,Freight_accrual_considers_cash_discount
+			,Use_Fixed_Price_As_Base_Sales
+			,CurrencyDefaultOption
+			,include_freight_summary
+			,freight_uom
+			,Template_UPC_Display
+			,Pay_To_Distributor
+				,Won_By
+			,Won_Rate
+			,Won_UOM
+			,Won_By_Required
+			,Won_Rate_Required
+			,Won_UOM_Required
+			,Delivery_Type
+			,Category
+			,Package
+			,Shared
+			,Incremental
+			,Source
+			,Source_Type
+			,Date_Source_Received
+			,Source_Required
+			,Source_Type_Required
+			,Date_Source_Received_Required
+			,Download_Comp_Data_History
+			,Specd
+			,Display_Reminder_Comp_Data_Page
+			,Opportunity_Volume
+			,Include_Time_Of_Open_Date
+			,Single_Component_Per_Discount_Type
+			,AutoAdd_Distributor_ThirdPartyClaims
+			,Ignore_Billback_Volume_Deviation
+			,Auto_Volume
+			,Blackout_Periods<!---  D38942 :: Program Blackout Period on Frontend --->
+			,Auto_Actual
+			,Auto_Future
+			,Auto_Committed_Equal_Actual
+			,Auto_Committed_Equal_Actual_ON
+			,Auto_Volume_Program_Equal_Actual_Weeks
+			,Future_Zero
+			,Start_Zero<!---  D38942 :: Program Blackout Period on Frontend --->
+			,Clear_Lumpsum
+			,Base_Sales_Equal_To_Lowest_Bracket
+			,Margin_Price_List_Header_ID
+			,Base_Sales_based_on_Prg_Start_Date
+			,Select_Effective_Date_for_Price
+			,Item_Fixed_Rebate_Paid_To_Dup_Message
+			,BB_Tolerance_DVT
+			,BB_Tolerance_ERT
+			,Cannot_Exceed_Percent
+			,Cannot_Exceed_Dollar
+			,Maximum_Dollar_Amount_Checked
+			,Maximum_Dollar_Amount
+			,Billback_Status_For_Max_Dollar_Amt
+			,Auto_Deviation_Inc_Manual_BB
+			,Currency_Conversion_Factor
+			,growth_auto_pay <!---D35731 - Growth Auto Pay --->
+			,Ignore_Date_Overlap_Deviation <!---D36368 --->
+			,Ignore_Rate_Deviation <!---D71856 RETAIL-195 --->
+			,Alternate_Payment_Recipient<!--- D37492  --->
+			,Claim_Rates_ConFig_Id
+			,Payment_Notification
+			,Payment_Notification_Span
+			,Billback_Sales_Tax
+			,Document_Attachment_Required<!--- D42591 --->
+			,Most_Favored_Nation
+			,Price_List_Download <!---  D47306 : Price List Download --->
+			,Manual_Selection_Of_Approvers <!---  D47065 : Change Order - Program Approvals - Smucker --->
+			,Manual_Committed_Equal_Actual<!--- D50326 :: Tru-up to Actuals Button in Program --->
+			,Hide_On_Create_Program
+			,allow_Best_Plan_Programs<!---60308 --->
+			,Pullback_Operator_Fixed_Price_Only
+			,isBrokerage<!---74641--->
+			,Template_In_Program_LH_Recapture_Link
+			,Template_In_Program_LH_Recapture_Link_Default
+			,allow_Reference_2 <!---77539--->
+			,Allow_Vendor_Only
+			,Display_Blanket_Bid
+		)
+		VALUES
+		(
+			'#request.AccessStructure.Company_Main_ID#',
+			'#Form.Generic_Type#',
+			'#Form.Created_Type#',
+			'#Form.Program_Description#',
+			<cfif FORM.Use_Discount_ID IS 1 and len(trim(Form.Discount_Identifier_ID)) GT 0>
+			'#Form.Discount_Identifier_ID#',
+			</cfif>
+			#Form.Include_Trade#,
+			<cfif application.ProgramPerformanceIndicatorLinksAvailable>
+			#Form.Include_Program#,
+			</cfif>
+			#Form.perfIndMinClaims#,
+			#Form.perfIndMinDays#,
+			#Form.Max_Duration#,
+			#Form.Max_Duration_Length#,
+			#Form.Min_Duration#,
+			#Form.Min_Duration_Length#,
+			#Form.Max_Global_Volume#,
+			#Form.Max_Global_Volume_Size_CS#,
+			#Form.Max_Global_Volume_Size_LBS#,
+			#Form.Min_Global_Volume#,
+			#Form.Min_Global_Volume_Size_CS#,
+			#Form.Min_Global_Volume_Size_LBS#,
+			#Form.Allow_Retro_Create#,
+			#Form.Allow_Retro_Create_Max#,
+			#Form.Billback_Date#,
+			#Form.Billback_Date_Span#,
+			#Form.Adv_Spend#,
+			#Form.Zero_Volume#,
+			#Form.Auto_Renew_Option#,
+			#form.Allow_AR_Modification#,
+			#Form.Controllable_Volume#,
+			#Form.Specify_Distributors#,
+			#Form.Specify_Operators#,
+			#Form.Specify_Brokers#,
+			#Form.Allow_Only_One_Broker#,<!---D37702 :: Brokerage template type doesn't allow vendor select --->
+			#Form.Payable_To#,
+			#Form.Send_Payment_To#,
+			#Form.Required_Payable_To#,
+			#Form.Required_Send_Payment_To#,
+			'#Form.Trade_Blurb#',
+			#Form.Broker_Trade_Question#,
+			#Form.Customer_Acceptance#,
+			0,
+			NULL,
+			1,
+			'#request.AccessStructure.User_ID#',
+			#form.Revision_Not_Allowed#,
+			#form.Allow_Retro_Revision#,
+			#form.Allow_Retro_Revision_Span#,
+			#form.allow_dup_programs#,
+			#form.dupAction#,
+			#form.One_Distributor#,
+			#form.One_Operator#,
+			#form.Require_Distributor#,
+			#form.Require_Operator#,
+			'#form.Min_Lump_Sum#',
+			'#form.Max_Lump_Sum#',
+			'#form.Lump_Sum_Cap#',
+			#form.No_Negative_OI#,
+			#form.One_Discount_Mandated#,
+						#form.Allow_Only_One_Discount#,
+			#form.Equipment_Placement#,
+			'#form.Date_Exclusions_ON#',
+			'#form.Sysco_Report_ON#',
+			'#form.Sequential_Net_Sales_Operating_Margin#',
+			'#FORM.GroupLevelBB#',
+			#Form.Volume_Cap#,
+			<!--- #Form.Allow_Add_All_Products#, ---><!--- 10406 --->
+			#Form.Include_In_Catalog#,
+			#Form.Catalog_Type#,
+			#Form.Show_Awarded_In_Catalog#,
+			#Form.Restrict_On_Approval_Group#,
+			#Form.Restrict_Product_Group_Level#,
+			#Form.Allow_Lower_Pricing_Level#
+			<!---insert for distributor groups if it's defined--->
+			<cfif isDefined("form.Specify_Distributor_Groups")>
+				, #form.Specify_Distributor_Groups#
+			</cfif>
+			<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs START--->
+			<cfif isDefined("form.Specify_Individual_Distributors")>
+				, #form.Specify_Individual_Distributors#
+			</cfif>
+			<!---D55544 :: template settings:  allow distributors to be selected as group & ship to level on programs END--->
+			,#form.Specify_Operator_Groups#<!--- D31561: Operator Groups Search --->
+			<!---insert for groups if it's defined--->
+			<cfif isDefined("form.Group_Deal")>
+				, #form.Group_Deal#
+			</cfif>
+			<!---insert for dynamic groups if it's defined--->
+			<cfif isDefined("form.Dynamic_Static_Groups")>
+				, #form.Dynamic_Static_Groups#
+			</cfif>
+			<!---insert for Program Date Type if it's defined--->
+			<cfif isDefined("form.Program_Date_Type")>
+				, #form.Program_Date_Type#
+			</cfif>
+			,#form.Previous_Fiscal_Year_Volume#
+			<cfif isDefined("form.Days_Before_Auto_Renew")>
+			,#form.Days_Before_Auto_Renew#
+			</cfif>
+			,#form.Expiring_Notification_Span#
+			,#form.Days_For_Reminder#
+			,#form.exclude_sig_products#
+			,#form.price_protection_on#
+			,#form.apply_rebate_rates#
+			,#form.mass_billback_pay#
+			,#form.Competitive_Information_On#
+			,GetDate()
+			,#form.Program_Start_Day#
+			,#form.Program_End_Day#
+			,<cfif isDate(form.Program_Min_Start_Date)>'#form.Program_Min_Start_Date#'<cfelse>NULL</cfif>
+			,<cfif isDate(form.Program_Max_End_Date)>'#form.Program_Max_End_Date#'<cfelse>NULL</cfif>
+			,#form.Pullbacks_On#
+			,#form.Recapture_Pays_To_Id#
+			,#form.default_pullback_rate#
+			,#form.is_pullback_corporate_deal#
+			,#form.pullback_from_corporate#
+			,#form.Pullback_Include_RediVolume#
+			,#form.pullback_redi_volume_percent#
+			,#form.pullback_template_type#
+			,#form.Include_Open_Date#
+			,#form.Include_Date_Needed_by#
+			,#form.Include_Reply_Date#
+			,#form.Include_Competitive_Data_Tracking#
+			,#form.display_basesales_Competitive_Data#
+			,#form.display_bid_info_page#
+			,#form.line_number#
+			,#form.BidRequestStatusOn#
+			,#form.BidRequestStatusChangePgmStatus#
+			<!---,'#Form.Volume_Related_Message#'--->
+			,'#Form.Include_Template_In_Deals_IF#'
+			,'#Form.Include_Treatment_Basis_Code#'
+			,'#Form.Exclude_Same_Spending_Cat_From_TPA#'
+			,#Form.ByPass_Margin_Evaluation#
+						,#Form.ByPass_Margin_Evaluation_Options#
+			,#form.EZButton_on#
+			,#form.EZprogram_editcomponent#
+					,#form.BB_D_Template_Overrides_Deviation_Tolerances#
+			,#form.BB_D_Purchase_Period_OverRide#
+			,#form.BB_D_Purchase_Period_OverRide_Rate#
+			,#form.BB_D_Aggregation_Period_OverRide#
+						,#form.ReleaseSettlement#
+			,#Form.RS_DaysToClaim#
+			,#Form.RS_CreatedDaysFilter#<!--- 68628 --->
+			,#Form.RS_CreatedDaysGreater#<!--- 68628 --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Performance_Dates_On#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Performance_Dates_On_Required#" />
+			,<cfqueryparam cfsqltype="cf_sql_varchar" value="#Form.Distribution_Channel#" />
+			,<cfqueryparam cfsqltype="cf_sql_varchar" value="#Form.Division#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Interface_On_Approval#" />
+					,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Track_Price_Comp#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Retailer_Info_On#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Send_RFA_Email#" />
+			,<cfqueryparam cfsqltype="cf_sql_int" value="#Form.Distributor_Product_Integrity_Rule_ID#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Freight_Approval_Reqd#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Freight_accrual_considers_cash_discount#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Use_Fixed_Price_As_Base_Sales#" />
+			,<cfqueryparam cfsqltype="cf_sql_integer" value="#Form.CurrencyDefaultOption#" />
+						,<cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+							,<cfqueryparam cfsqltype="cf_sql_integer" value="#default_margin_uom#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Template_UPC_Display#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Pay_To_Distributor#">
+			<!--- 2013 oct 7, per Paul always include these 3 column (won by, rate, uom) » chris --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Delivery_Type#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Category#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Package#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Shared#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Incremental#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Source#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Source_Type#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Date_Source_Received#" />
+
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Download_Comp_Data_History#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Specd#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Display_Reminder_Comp_Data_Page#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Opportunity_Volume#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Include_Time_Of_Open_Date#" />
+			,'#Form.Single_Component_Per_Discount_Type#'
+			,'#Form.AutoAdd_Distributor_ThirdPartyClaims#'
+			,'#Form.Ignore_Billback_Volume_Deviation#'
+			,'#Form.Auto_Volume#'
+			,'#Form.Blackout_Periods#'<!--- D38942 :: Program Blackout Period on Frontend --->
+			,'#Form.Auto_Actual#'
+			,'#Form.Auto_Future#'
+			,'#Form.Auto_Committed_Equal_Actual#'
+			,'#Form.Auto_Committed_Equal_Actual_ON#'
+			,'#Form.Auto_Volume_Program_Equal_Actual_Weeks#'
+			,'#Form.Future_Zero#'
+			,'#Form.Start_Zero#'<!---  D38942 :: Program Blackout Period on Frontend --->
+			,'#Form.Clear_Lumpsum#'
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Base_Sales_Equal_To_Lowest_Bracket#" />
+			,<cfif trim(form.Margin_Price_List_Header_ID) EQ "0">NULL<cfelse>'#form.Margin_Price_List_Header_ID#'</cfif>
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Base_Sales_based_on_Prg_Start_Date#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Select_Effective_Date_for_Price#" />
+			,<cfqueryparam cfsqltype="cf_sql_tinyint" value="#Form.Item_Fixed_Rebate_Paid_To_Dup_Message#" />
+			,<cfif len(form.BB_Tolerance_DVT) eq 0> NULL <cfelse>'#form.BB_Tolerance_DVT#'</cfif>
+			,<cfif len(form.BB_Tolerance_ERT) eq 0> NULL <cfelse>'#form.BB_Tolerance_ERT#'</cfif>
+			, <cfif len(Form.Cannot_Exceed_Percent) eq 0> NULL <cfelse>'#Form.Cannot_Exceed_Percent#'</cfif>
+			,<cfif len(Form.Cannot_Exceed_Dollar) eq 0> NULL <cfelse>'#Form.Cannot_Exceed_Dollar#'</cfif>
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Maximum_Dollar_Amount_Checked#">
+			,<cfif len(Form.Maximum_Dollar_Amount) eq 0> NULL <cfelse> #Form.Maximum_Dollar_Amount#</cfif>
+			,<cfqueryparam cfsqltype="cf_sql_int" value="#Form.Billback_Status_For_Max_Dollar_Amt#" />
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Auto_Deviation_Inc_Manual_BB#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Currency_Conversion_Factor#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.growth_auto_pay#">
+			,'#Form.Ignore_Date_Overlap_Deviation#' <!---D36368 --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Ignore_Rate_Deviation#"><!---D71856 RETAIL-195 --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Alternate_Payment_Recipient#"><!--- D37492  --->
+			,<cfqueryparam cfsqltype="cf_sql_int" value="#Form.Claim_Rates_ConFig_Id#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Payment_Notification#">
+			,<cfif len(trim(form.Payment_Notification_Span)) eq 0>NULL<cfelse>'#form.Payment_Notification_Span#'</cfif>
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Billback_Sales_Tax#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Document_Attachment_Required#"><!--- D42591 --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Most_Favored_Nation#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Price_List_Download#"> <!---  D47306 : Price List Download --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Manual_Selection_Of_Approvers#"> <!---  D47065 : Change Order - Program Approvals --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Manual_Committed_Equal_Actual#"> <!--- D50326 :: Tru-up to Actuals Button in Program --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Hide_On_Create_Program#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.allowBestPlanPrograms#"><!---60308 --->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Pullback_Operator_Fixed_Price_Only#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.isBrokerage#"><!---74641--->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Template_In_Program_LH_Recapture_Link#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Template_In_Program_LH_Recapture_Link_Default#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.allowReference2#"><!---77539--->
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Allow_Vendor_Only#">
+			,<cfqueryparam cfsqltype="cf_sql_bit" value="#Form.Display_Blanket_Bid#">
+		)
+		SELECT ProgramControl_Panel_Options_ID = @@IDENTITY
+		SET NOCOUNT OFF
+	</cfquery>
+
+	<cfset ID = CreateNewTemplate.ProgramControl_Panel_Options_ID>
+		<!---30418 update Billback_Closing_Methods_Template :: start--->
+		<cfif len(trim(Form.Billback_Closing_Method_ID_List)) GT 0>
+			<cfloop list="#form.Billback_Closing_Method_ID_List#" index="indxList">
+				<cfparam name="form.#indxList#_Auto_Dev_BB_Status_Below" default="0">
+				<cfparam name="form.#indxList#_Auto_Dev_BB_Status_Exceed" default="0">
+				<CFQUERY NAME="qUpdateClosingMethod" DATASOURCE="#Application.Datasource#">
+					INSERT INTO Billback_Closing_Methods_Template (First_Parent_ID,iBillback_Closing_Method_ID,Auto_Dev_BB_Status_Below,Auto_Dev_BB_Status_Exceed)
+					VALUES(#ID#,#indxList#,#evaluate("form.#indxList#_Auto_Dev_BB_Status_Below")#,#evaluate("form.#indxList#_Auto_Dev_BB_Status_Exceed")#)
+				</CFQUERY>
+			</cfloop>
+		</cfif>
+		<!---30418 update Billback_Closing_Methods_Template :: end--->
+
+	<!--- Create new currency mapping to default to USD for new templates only --->
+	<cfquery name="InsertPaymentRecord" datasource="#application.datasource#">
+		INSERT INTO Currency_Mapping
+		(
+			Template_ID,
+			Currency_ID
+		)
+		VALUES
+		(
+			<cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">,
+			<cfqueryparam value="#FORM.CurrencyDefaultOption#" cfsqltype="cf_sql_integer">
+		)
+	</cfquery>
+
+<!---
+<cfif form.EZButton_on EQ 1>
+		<!------ Insert a dummy program ----->
+			<cfinclude template="/common_files/contracts/contract_number_generator.cfm">
+			<cfquery name="CreateEZButtonProgram" datasource="#application.datasource#">
+				SET NOCOUNT ON
+				INSERT INTO Contract_Main
+							(   Contract_Number,
+								ProgramType,
+								ProgramType_ID,
+								<!--- Dev Note: Drachala; D27580 : EZ button programs with null start/end dates START--->
+								Contract_Start_Date,
+								Contract_End_Date,
+								<!--- Dev Note: Drachala; D27580 : EZ button programs with null start/end dates END--->
+								contract_EZButton_On,
+								deleted	)
+				values (<cfqueryparam value="TMP_#generator_contract_number#" cfsqltype="cf_sql_varchar">,
+						<cfqueryparam value="#form.Created_Type#" cfsqltype="cf_sql_varchar">,
+						<cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">,
+						<!--- Dev Note: Drachala; D27580 : EZ button programs with null start/end dates START--->
+						CAST(CONVERT(CHAR(10), GETDATE(), 101) as datetime),
+						CAST(CONVERT(CHAR(10), GETDATE(), 101) as datetime),
+						<!--- Dev Note: Drachala; D27580 : EZ button programs with null start/end dates END--->
+						1,1)
+
+			update Program_Control_Panel_Options
+			set EZ_Contract_Id = (SELECT MAX(Contract_Main_ID) AS Contract_Main_ID FROM Contract_Main)
+			where ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			SET NOCOUNT OFF
+			</cfquery>
+	</cfif>
+	--->
+
+	<!------ Update First_Parent_ID ----->
+	<cfquery name="qUpdateFirstParentID" datasource="#application.datasource#">
+		UPDATE	Program_Control_Panel_Options
+		SET		First_Parent_ID = <cfqueryparam value="#ID#" cfsqltype="CF_SQL_INTEGER">
+		WHERE	ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="CF_SQL_INTEGER">
+	</cfquery>
+
+	<!------ Populate all the components as selected ----->
+	<cfif bTemplateLevelComponentFilter>
+		<cfset templateManager.addAllTemplateDiscountComponents(ID) />
+	</cfif>
+
+	<!---  Dev Note: KAL - D7952 : Lock/Unlock Template --->
+	<cfset temp = templateManager.LockTemplate(ID,request.AccessStructure.User_ID)>
+	<!---  Dev Note: KAL - D7952 : Lock/Unlock Template --->
+
+	<!---- save the default duplicate definition setting if allow_dup_programs is checked --->
+	<cfinclude template="importDupDefinition.cfm">
+<!---What action is/is not--->
+
+	<!--- 27341 - ChrisN 6/9/2011 --->
+	<!---Save Template Business Segment if it's enabled--->
+	<!---init BusinessSegmentManager to check if it's enabled--->
+	<cfset variables.businessSegmentManager = CreateObject("component", "components.programs.business_segment.BusinessSegmentManager")/>
+	<cfif variables.businessSegmentManager.isEnabled() and appSettings.getFilterBusinessSegments()>
+		<cfset variables.businessSegmentManager.addBusinessSegmentTemplateSettings(0, ID, form.Template_Business_Segment_ID)/>
+	</cfif>
+
+</cfif>
+
+
+<!---60410 : Fiscal Year Selection and Auto Renew START--->
+
+	<cfquery name="getFisrParentID" datasource="#application.datasource#">
+		SELECT	First_Parent_ID, Auto_Renew_Option
+		FROM	Program_Control_Panel_Options
+		WHERE ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="CF_SQL_INTEGER">
+	</cfquery>
+<cfif getFisrParentID.Auto_Renew_Option>
+	<cfquery name="getCurrentSelection" datasource="#application.datasource#">
+		SELECT	Auto_Renew_Option_ID
+		FROM	Template_Auto_Renew_Options
+		WHERE Template_First_Parent_ID = #getFisrParentID.First_Parent_ID#
+		AND Deleted = 0
+	</cfquery>
+	<cfset currentSelection = valuelist(getCurrentSelection.Auto_Renew_Option_ID)>
+	<cfloop from="1" to="4" index="Options">
+		<cfif listfind(currentSelection, Options) EQ 0>
+			<cfquery name="InsertNewSelection" datasource="#application.datasource#">
+				INSERT INTO Template_Auto_Renew_Options(Template_First_Parent_ID, Auto_Renew_Option_ID)
+				VALUES (#getFisrParentID.First_Parent_ID#, #Options#)
+			</cfquery>
+		</cfif>
+		<cfif listfind(form.Auto_Renew_Selected_Options, Options) EQ 0>
+			<cfquery name="UpdateSelection" datasource="#application.datasource#">
+				UPDATE Template_Auto_Renew_Options
+				SET Deleted = 1, Updated_date = getdate()
+				WHERE Template_First_Parent_ID = #getFisrParentID.First_Parent_ID#
+				AND Auto_Renew_Option_ID = #Options#
+				AND Deleted = 0
+			</cfquery>
+		</cfif>
+	</cfloop>
+<cfelse>
+	<cfquery name="updateTemplateAutoRenewOptions" datasource="#application.datasource#">
+		UPDATE Template_Auto_Renew_Options
+		SET Deleted = 1, Updated_date = getdate()
+		WHERE Template_First_Parent_ID = #getFisrParentID.First_Parent_ID#
+		AND Deleted = 0
+	</cfquery>
+</cfif>
+<!--- NEW --->
+<!--- Checks if template setting "Optional Dates for Program"  is ON we excute below code --->
+<cfif form.Optional_Dates_Program>
+	<!--- CHECK if this template has any optional date --->
+	<cfquery name="currentOptinalDate" datasource="#application.datasource#">
+		SELECT CONVERT(VARCHAR(24), start_date,101) AS Start_Date, CONVERT(VARCHAR(24), end_date,101) AS End_date
+		FROM Template_Optional_dates
+		WHERE first_parent_id = #getFisrParentID.First_Parent_ID#
+		AND Deleted = 0
+	</cfquery>
+
+	<!--- Make a comma delimited list (start and end date as one value) of existing records in the db --->
+	<cfset listExistingOptionalDates = "">
+	<cfloop query="currentOptinalDate">
+		<cfset listExistingOptionalDates = ListAppend(listExistingOptionalDates,Start_Date & "-" & End_Date)>
+	</cfloop>
+
+	<cfset listNewOptionalDates = "">
+	<cfset indexCounter = 0>
+	<cfset listNewOptionalDatesAndDescription = "">
+	<cfloop list="#form.OptionalStartDate#" index="i">
+	<cfset indexCounter = indexCounter + 1>
+		<!--- Make a comma delimited list (start and end date as one value) of records passed in the form --->
+		<cfset listNewOptionalDates = ListAppend(listNewOptionalDates, ListGetAt(form.OptionalStartDate,indexCounter) & "-" & ListGetAt(form.OptionalEndDate,indexCounter)) >
+		<!--- Make a comma delimited list (start and end date and description as one value) of records passed in the form --->
+		<cfset listNewOptionalDatesAndDescription = ListAppend(listNewOptionalDatesAndDescription, ListGetAt(form.OptionalStartDate,indexCounter) & "-" & ListGetAt(form.OptionalEndDate,indexCounter) & "-" & ListGetAt(form.OptionalDescription,indexCounter)) >
+	</cfloop>
+
+	<!--- Get a list of records which was in the db, but now has been deleted --->
+	<cfset DatesNotIN= baseSettings.listCompare(listExistingOptionalDates,listNewOptionalDates)>
+
+		<cfset currentStartDate = valuelist(currentOptinalDate.Start_Date)>
+		<cfset currentEndDate = valuelist(currentOptinalDate.End_Date)>
+		<!--- Check if form dates are in database if not we flag them deleted --->
+		<cfloop list="#DatesNotIN#" index="i">
+			<cfquery name="DeleteRecords" datasource="#application.datasource#">
+				UPDATE Template_Optional_dates
+				SET Deleted = 1, Updated_Date = getdate()
+				WHERE Start_Date = (<cfqueryparam value="#ListFirst(i,'-')#" cfsqltype="CF_SQL_DATE" />)
+				AND End_Date = (<cfqueryparam value="#ListLast(i,'-')#" cfsqltype="CF_SQL_DATE" />)
+				AND first_Parent_id = #getFisrParentID.First_Parent_ID#
+			</cfquery>
+		</cfloop>
+
+		<!--- Loop through the values passed in the form.
+		Note: On "create_edit.cfm", there is JS logic to make sure that "start" and 'end" date combination is always unique.
+		JS code will not allow duplicate "start" and 'end" date combinations.
+		--->
+		<cfloop list="#listNewOptionalDatesAndDescription#" index="i">
+			<cfquery name="checkRecord" datasource="#application.datasource#">
+				SELECT 1
+				FROM Template_Optional_dates
+				WHERE Start_Date = (<cfqueryparam value="#listgetat(i,1,'-')#" cfsqltype="CF_SQL_DATE" />)
+				AND End_Date = (<cfqueryparam value="#listgetat(i,2,'-')#" cfsqltype="CF_SQL_DATE" />)
+				AND first_Parent_id = #getFisrParentID.First_Parent_ID#
+				AND Deleted = 0
+			</cfquery>
+
+			<cfif checkRecord.recordCount eq 0>
+				<cfquery name="InsertOptionalDate" datasource="#application.datasource#">
+					INSERT INTO Template_Optional_dates(first_parent_id, Start_Date, End_Date, Description)
+					Values
+					(
+					#getFisrParentID.First_Parent_ID#, <cfqueryparam value="#listgetat(i,1,'-')#" cfsqltype="CF_SQL_DATE" />,
+					<cfqueryparam value="#listgetat(i,2,'-')#" cfsqltype="CF_SQL_DATE" />,
+					<!--- 3 pipes should be converted back to comma. On "create_edit.cfm", commas were converted into 3 pipes as
+					commas were causing an issue with the comma-delimited list.
+					--->
+					<cfqueryparam value="#Replace(listgetat(i,3,'-'),'|||',',','All')#" cfsqltype="CF_SQL_VARCHAR" />
+					)
+				</cfquery>
+			<cfelse>
+				<cfquery name="UpdateOptionalDate" datasource="#application.datasource#">
+					UPDATE Template_Optional_dates
+					<!--- 3 pipes should be converted back to comma. On "create_edit.cfm", commas were converted into 3 pipes as
+					commas were causing an issue with the comma-delimited list.
+					--->
+					SET Description = <cfqueryparam value="#Replace(listgetat(i,3,'-'),'|||',',','All')#" cfsqltype="CF_SQL_VARCHAR" />
+					WHERE Start_Date = <cfqueryparam value="#listgetat(i,1,'-')#" cfsqltype="CF_SQL_DATE" />
+					AND End_Date = <cfqueryparam value="#listgetat(i,2,'-')#" cfsqltype="CF_SQL_DATE" />
+					AND first_Parent_id = #getFisrParentID.First_Parent_ID#
+					AND Deleted = 0
+				</cfquery>
+			</cfif>
+		</cfloop>
+<!--- if template setting "Optional Dates for Program"  is OFF we excute below code --->
+<cfelse>
+	<cfquery name="updateOptinalDate" datasource="#application.datasource#">
+		UPDATE Template_Optional_dates
+		SET Deleted = 1, updated_date = getdate()
+		WHERE First_Parent_ID = #getFisrParentID.First_Parent_ID#
+		AND Deleted = 0
+	</cfquery>
+</cfif>
+<!---60410 : Fiscal Year Selection and Auto Renew END--->
+
+<!--- Label 36588: Auto Renew Schedule - If Apply_Lead_Time_To_All equals 1 then run script to apply the auto renew lead time to all programs --->
+<cfif form.Apply_Lead_Time_To_All eq 1>
+	<CFQUERY NAME="qApplyLeadTimeToAll" DATASOURCE="#Application.Datasource#">
+		UPDATE	A
+		SET		Renewal_Lead_Time = t.Days_Before_Auto_Renew,
+				AR_Notification_Date = DateAdd(d, -1 * t.Days_Before_Auto_Renew, A.AR_Start_Date)
+		FROM	Program_Control_Panel_Options t -- find all template versions
+				INNER JOIN Program_Control_Panel_Options tversions on tversions.First_Parent_ID = t.First_Parent_ID
+				INNER JOIN Contract_Main CM ON CM.ProgramType_ID = tversions.ProgramControl_Panel_Options_ID AND CM.Deleted = 0
+				INNER JOIN Program_Auto_Renew A ON A.Program_ID = CM.Contract_Main_ID AND A.Deleted = 0
+				AND A.Renewed = 0 -- Do not update if program already auto renewed
+		WHERE	t.IsDominant = 1
+		AND     t.Auto_Renew_Option = 1
+		AND     t.ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+		AND     t.Days_Before_Auto_Renew != A.Renewal_Lead_Time
+	</CFQUERY>
+</cfif>
+
+		<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
+		<!--- AR Insert --->
+		<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
+		<CFIF application.returned_customer_setting.Show_Fund_Settings EQ 1 AND application.returned_customer_setting.Upload_GL_Code EQ 1>
+			<CFQUERY NAME="DeletePreviousInsert" DATASOURCE="#Application.Datasource#">
+				DELETE FROM GL_Code_AR_For_ProgTemp WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			</CFQUERY>
+			<CFQUERY NAME="ActiveFiscalYear" DATASOURCE="#Application.Datasource#">
+				SELECT * FROM GL_Code_Fund_Setting WHERE AR_Status = 1 AND Deleted = 0 ORDER BY CAST(AR_From_Fiscal_Year AS numeric)
+			</CFQUERY>
+			<CFLOOP QUERY="ActiveFiscalYear">
+				<CFIF IsDefined("FORM.SelectedAR_#AR_From_Fiscal_Year#")>
+					<CFSET AROfThisFiscalYear = "">
+					<!--- <CFSET DeletedAR = ""> --->
+					<CFSET AROfThisFiscalYear = EVALUATE("FORM.SelectedAR_#AR_From_Fiscal_Year#")>
+					<!--- <CFSET DeletedAR = EVALUATE("FORM.DeletedAR_#AR_From_Fiscal_Year#")> --->
+					<CFIF AROfThisFiscalYear NEQ "">
+						<CFLOOP LIST="#AROfThisFiscalYear#" INDEX="ThisAR">
+							<CFSET AllocationForThisAR = EVALUATE("FORM.Allocation_Method_#AR_From_Fiscal_Year#_#ThisAR#")>
+							<CFQUERY NAME="InsData" DATASOURCE="#Application.Datasource#">
+								INSERT INTO
+								GL_Code_AR_For_ProgTemp (	Template_ID,
+															Fiscal_Year,
+															A_R,
+															Allocation_Method			)
+
+								VALUES					(	<cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">,
+															<cfqueryparam value="#AR_From_Fiscal_Year#" cfsqltype="cf_sql_varchar">,
+															<cfqueryparam value="#ThisAR#" cfsqltype="cf_sql_varchar">,
+															<cfqueryparam value="#AllocationForThisAR#" cfsqltype="cf_sql_integer">
+														)
+							</CFQUERY>
+							<!--- </CFIF> --->
+						</CFLOOP>
+					</CFIF>
+				</CFIF>
+			</CFLOOP>
+		</CFIF>
+
+		<!---- approval groups allowed in this template --->
+		<cfquery name="DeleteAnyPriorApprovalGroupRecords" datasource="#application.datasource#">
+			DELETE FROM Template_Allow_Approval_Group WHERE Program_Type_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+		</cfquery>
+		<cfloop list="#Form.Allow_Approval_group#" index="thisApprovalGroup">
+			<cfquery name="qInsertApprovalGroup" datasource="#application.datasource#">
+				INSERT INTO Template_Allow_Approval_Group
+				(
+					Group_ID,
+					Program_Type_ID
+				)
+				VALUES
+				(
+					<cfqueryparam value="#thisApprovalGroup#" cfsqltype="cf_sql_idstamp">,
+					<cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+				)
+			</cfquery>
+		</cfloop>
+
+		<!------ Save group levels allowed in this template Allow_Product_Group_Level  ----->
+		<cfset templateManager.saveTemplateAllowProductGroupLevelFromList(templateId = ID, groupLevelList = Form.Allow_Product_Group_Level) />
+
+
+		<!---- post-approval status included in this template --->
+		<cfif appSettings.getPgmPostApprovalStatus() EQ 1>
+		<cfset searchInputToken = "TemplateProgramPostApprovalStatus_">
+		<cfset LenInputToken = len(searchInputToken)>
+		<!------ Delete first ----->
+		<cfquery name="ForbiddenList" datasource="#application.datasource#">
+			UPDATE	Template_Post_Approval_Status
+			SET		Deleted = 1
+			WHERE	Deleted = 0
+			AND		Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+		</cfquery>
+		<cfloop collection = #Form# item = "FieldNames">
+			<cfset FieldName = FieldNames>
+			<cfif left(FieldName, LenInputToken) IS searchInputToken>
+				<cfset LenFieldName = len(FieldName)>
+				<cfset FieldValue = ListLast(FieldName, "_")>
+				<!------ Insert in loop ----->
+				<cfquery name="qInsertTemplatePostApprovalStatus" datasource="#application.datasource#">
+					INSERT INTO Template_Post_Approval_Status
+					(
+						Program_Post_Approval_Status_ID,
+						Template_ID
+					)
+					VALUES
+					(
+						<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#FieldValue#" />,
+						<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#ID#" />
+					)
+				</cfquery>
+			</cfif>
+		</cfloop>
+		</cfif>
+
+		<!---Accounting Program Types--->
+		<cfif appSettings.getUse_Accounting_Program_Type() EQ 1>
+		<cfquery name="AccountingProgramType" datasource="#application.datasource#">
+			DELETE FROM APT_Template_Mapping
+			WHERE	Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+		</cfquery>
+
+		<cfset searchInputToken = "Accounting_Program_Type_">
+		<cfset LenInputToken = len(searchInputToken)>
+		<cfloop collection = #Form# item = "FieldNames">
+			<cfset FieldName = FieldNames>
+			<cfif left(FieldName, LenInputToken) IS searchInputToken>
+				<cfset LenFieldName = len(FieldName)>
+				<cfset FieldValue = ListLast(FieldName, "_")>
+				<cfquery name="AccountingProgramType" datasource="#application.datasource#">
+					INSERT INTO APT_Template_Mapping
+					(
+						Accounting_Program_Type_ID,
+						Template_ID,
+						Created_By
+					)
+					VALUES
+					(
+						<cfqueryparam value="#FieldValue#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="cf_sql_varchar">
+					)
+				</cfquery>
+			</cfif>
+		</cfloop>
+		</cfif>
+
+	<!--- Dev Note: Milan 6321 --->
+		<!--- Program Categories--->
+		<cfif appSettings.getProgramCategory() EQ 1>
+			<cfquery name="ProgramCategory" datasource="#application.datasource#">
+					UPDATE Category_Template_Mapping
+					SET Deleted = 1
+					WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+				</cfquery>
+
+		<cfset searchInputToken = "Program_Category_">
+		<cfset LenInputToken = len(searchInputToken)>
+		<cfloop collection = #Form# item = "FieldNames">
+			<cfset FieldName = FieldNames>
+			<cfif left(FieldName, LenInputToken) IS searchInputToken>
+				<cfset LenFieldName = len(FieldName)>
+				<cfset FieldValue = ListLast(FieldName, "_")>
+				<cfquery name="ProgramCategory" datasource="#application.datasource#">
+					INSERT INTO Category_Template_Mapping
+					(
+						Program_Category_ID,
+						Template_ID,
+						Created_By
+					)
+					VALUES
+					(
+						<cfqueryparam value="#FieldValue#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">,
+						<cfqueryparam value="#request.AccessStructure.User_ID#" cfsqltype="cf_sql_varchar">
+					)
+				</cfquery>
+			</cfif>
+		</cfloop>
+		</cfif>
+		<!--- End Note: Milan 6321 --->
+
+		<!------ Operating Group ----->
+		<cfif appSettings.getOperatingGroupOn() EQ 1>
+			<cfset operatingGroupManager 			= CreateObject("component", "components.Operating_Group.OperatingGroupManager").init() />
+			<cfset templateMapLevel 				= operatingGroupManager.getTemplateMapLevel() />
+
+			<cfset operatingGroupManager.deleteOperatingGroupTemplateSettings(ID) />
+
+			<cfset qOperatingGroupTemplateSettings = operatingGroupManager.getOperatingGroupTemplateSettings(templateMapLevel, ID) />
+
+			<cfloop query="qOperatingGroupTemplateSettings">
+				<cfset thisFieldName = "Operating_Group_#Operating_Group_ID#" />
+				<cfparam name="Form.#thisFieldName#" 	default="0">
+				<cfif Evaluate("form.#thisFieldName#") EQ 1>
+					<cfset operatingGroupManager.addOperatingGroupTemplateSettings(Operating_Group_ID, ID) />
+				</cfif>
+			</cfloop>
+		</cfif>
+
+		<!--- 	stored procedure to change old template settings to new template settings for profiles approve and agree --->
+
+		<cfstoredproc procedure="SP_ADJUST_PROGRAM_TEMPLATE_PROFILE_SETTINGS" datasource="#application.datasource#">
+			<cfprocparam type = "In" CFSQLType ="CF_SQL_INTEGER" dbVarName = "@@CONTROL_PANEL_OPTIONS_ID" value="#ID#" null="no">
+		</cfstoredproc>
+
+
+
+		<!------ Search Sequence ----->
+		<cfif appSettings.getSearchSequenceOn() EQ 1>
+			<cfset SearchSequenceManager 			= CreateObject("component", "components.Search_Sequence.SearchSequenceManager").init() />
+
+			<cfset SearchSequenceManager.deleteSearchSequenceTemplateSettings(ID) />
+
+			<cfset qSearchSequenceTemplateSettings = SearchSequenceManager.getSearchSequenceTemplateSettings(ID) />
+
+			<cfloop query="qSearchSequenceTemplateSettings">
+				<cfset thisFieldName = "Search_Sequence_#Search_Sequence_ID#" />
+				<cfparam name="Form.#thisFieldName#" 	default="0">
+				<cfif Evaluate("form.#thisFieldName#") EQ 1>
+					<cfset SearchSequenceManager.addSearchSequenceTemplateSettings(Search_Sequence_ID, ID) />
+				</cfif>
+			</cfloop>
+		</cfif>
+
+<!---29808 Enable rebate on EZButton template--->
+<cfif form.EZButton_on eq 1>
+	<cfif not isDefined("tmp_oldInfo.EZButton_On") <!---new template--->
+				or tmp_oldInfo.EZButton_On eq 0>         <!---existing template that was NOT defined as EZ button before--->
+		<cfquery name="tmp.updateDefaults" datasource="#application.datasource#">
+			UPDATE Program_Control_Panel_Options
+				 SET Discount_Rebates = 1
+			WHERE ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+		</cfquery>
+	</cfif>
+</cfif>
+
+<cfif Form.Action IS "Edit" OR Form.Action IS "Copy">
+<!---
+		<cfquery name="checkifEZButton_On" datasource="#application.datasource#">
+			select EZButton_On,created_type,EZ_Contract_Id
+			 from Program_Control_Panel_Options
+			WHERE 	ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+
+	<cfif checkifEZButton_On.EZButton_on EQ 1>
+
+		<cfif checkifEZButton_On.EZ_Contract_Id NEQ "" and checkifEZButton_On.EZ_Contract_Id NEQ 0>
+			<!------ Copy program if ez program exists ----->
+			<CFSET Program_ID_To_Replicate = checkifEZButton_On.EZ_Contract_Id>
+			<!---D45270 : Template Wait Time for Updates -> don't copy because Group capture is too heavy.
+							Same EZ rates are valid across all version of a template
+							Renewed_Program_ID = Program_ID_To_Replicate		--->
+			<CFSET Renewed_Program_ID = checkifEZButton_On.EZ_Contract_Id>
+			<cfset IsRevisionOfExistingContract =  1>
+
+				<!--- Dev Note: Milan (24239). When copying the template, set "IsRevisionOfExistingContract" to 0 --->
+				<cfif Form.Action eq "Copy">
+						<cfset IsRevisionOfExistingContract =  0>
+				</cfif>
+
+			<!---
+			D22578: CAG - mass copy a program
+			We will be using the new routine USP_Copy_Program to copy program
+			instead of replicate_program.cfm
+			--->
+			<!---	D45270 : Template Wait Time for Updates -> don't copy because Group capture is too heavy.
+							Same EZ rates are valid across all version of a template
+
+				<CFSTOREDPROC PROCEDURE="USP_Copy_Program" datasource="#application.datasource#">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_INTEGER"	DBVARNAME="@Program_ID_To_Replicate"		VALUE="#Program_ID_To_Replicate#">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_VARCHAR"	DBVARNAME="@New_Contract_Number"			VALUE="">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_BIT"		DBVARNAME="@IsRevisionOfExistingContract"	VALUE="#IsRevisionOfExistingContract#">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_BIT"		DBVARNAME="@ISROLLOVER"						VALUE="0">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_BIT"		DBVARNAME="@ForceFreightOnAutoCopy"			VALUE="0">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_INTEGER"	DBVARNAME="@User_Position_ID"				VALUE="0" 	null="true">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_VARCHAR"	DBVARNAME="@Responsible_User_ID"			VALUE=""	null="true">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_VARCHAR"	DBVARNAME="@Current_User_ID"				VALUE="#request.AccessStructure.User_ID#">
+				<CFPROCPARAM TYPE="Out"	CFSQLTYPE="CF_SQL_INTEGER"	DBVARNAME="@Contract_Main_ID"				VARIABLE="Renewed_Program_ID">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_BIT"		DBVARNAME="@Is_Mass_Copy"					VALUE="0">
+				<CFPROCPARAM TYPE="Out"	CFSQLTYPE="CF_SQL_INTEGER"	DBVARNAME="@Is_Group_Deal"					VARIABLE="Is_Group_Deal">
+				<CFPROCPARAM TYPE="In" 	CFSQLTYPE="CF_SQL_BIT"		DBVARNAME="@From_EZ_Template"				VALUE="1">
+			</CFSTOREDPROC>--->
+
+			<cfquery name="qUpdateEZProgram" datasource="#application.datasource#">
+				update 	Contract_Main
+				set 	contract_EZButton_On = 1,
+							programtype_id = #ID#,     <!---27333--->
+						deleted = 1
+				where 	Contract_Main_ID = <cfqueryparam value="#Renewed_Program_ID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+
+			<cfquery name="qUpdateTemplateEZProgramID" datasource="#application.datasource#">
+				update 	Program_Control_Panel_Options
+				set 	EZ_Contract_Id = <cfqueryparam value="#Renewed_Program_ID#" cfsqltype="cf_sql_integer">
+				where 	ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+			</cfquery>
+		<cfelse>
+			<!------ Insert a new dummy program ----->
+			<cfinclude template="/common_files/contracts/contract_number_generator.cfm">
+
+			<cfquery name="CreateEZButtonProgram" datasource="#application.datasource#">
+				SET NOCOUNT ON
+				INSERT INTO Contract_Main
+							(   Contract_Number,
+								ProgramType,
+								ProgramType_ID,
+								contract_EZButton_On,
+								deleted	)
+					values (<cfqueryparam value="TMP_#generator_contract_number#" cfsqltype="cf_sql_varchar">,
+							<cfqueryparam value="#checkifEZButton_On.Created_Type#" cfsqltype="cf_sql_varchar">,
+							<cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">,
+							1,
+							1
+						)
+
+				update Program_Control_Panel_Options
+				set EZ_Contract_Id = (SELECT MAX(Contract_Main_ID) AS Contract_Main_ID FROM Contract_Main)
+				where ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+				SET NOCOUNT OFF
+			</cfquery>
+		</cfif>
+
+
+	<cfelse>
+
+		<cfquery name="updateEZContractId" datasource="#application.datasource#">
+			update Program_Control_Panel_Options
+			set EZ_Contract_Id = ''
+			where ProgramControl_Panel_Options_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
+		</cfquery>
+	</cfif>
+	--->
+<!--- ||||||||||||||| CREATE XML LOG OF CHANGES ||||||||||||||| --->
+<cfset NewId = Id>
+<cfif appSettings.getAuditTrailStorage() NEQ 0>
+	<cfset createLog.createXMLlog("Program_Control_Panel_Options",3,NewID)>
+</cfif>
+<!--- ||||||||||||||| CREATE XML LOG OF CHANGES ||||||||||||||| --->
+</cfif>
+
+<cfif Action eq "Copy">
+
+	<cfset templateManager.ReleaseLocks(request.AccessStructure.User_ID)>
+	<cfset templateManager.LockTemplate(ID,request.AccessStructure.User_ID)>
+	<cfset LockedBy_Current_User = 1 />
+	<cfset Lock_img = "Edit">
+	<cfset Action = "Edit" />
+	<!--- <cflocation url="index.cfm" /> --->
+
+</cfif>
+
+<!---Add default planner settings if planner was selected and an entry does not already exists --->
+<cfif form.Retail_Planner neq 0>
+
+	<cfset templateProgramPlanner = templateManager.getTemplateProgramPlanner(ID) />
+
+	<cfif ((NOT isDefined("templateProgramPlanner")) OR templateProgramPlanner.RecordCount EQ 0)>
+		<cfquery name="qSaveTemplateProgramPlanner" DATASOURCE="#application.datasource#">
+					INSERT INTO Template_Planner_Settings
+					(
+							First_Parent_ID,
+							Created_Date,
+							Created_By,
+							Budget,
+							Marketing_Event,
+							NUC_Target,
+							Retailer_Unit_Cost,
+							Merch_Unit_Price,
+							Retailer_Margin
+						)
+					VALUES
+					(
+						'#FirstParentID#',
+						GetDate(),
+						'#request.AccessStructure.user_id#',
+						<cfqueryparam value="0" cfsqltype="cf_sql_bit">,
+						<cfqueryparam value="0" cfsqltype="cf_sql_bit">,
+						<cfqueryparam value="0" cfsqltype="cf_sql_bit">,
+						<cfqueryparam value="0" cfsqltype="cf_sql_bit">,
+						<cfqueryparam value="0" cfsqltype="cf_sql_bit">,
+						<cfqueryparam value="0" cfsqltype="cf_sql_bit">
+					)
+			</cfquery>
+	</cfif>
+
+</cfif>
+
+<cfoutput>
+<form action="secondpage.cfm" method="post" name="NextPage">
+	<input type="hidden" name="Action" value="#Action#">
+	<input type="hidden" name="Generic_type" value="#Generic_type#">
+	<input type="hidden" name="Created_Type" value="#Created_Type#">
+	<input type="hidden" name="Group_Deal" value="#form.Group_Deal#">
+	<input type="hidden" name="ID" value="#ID#">
+	<input type="hidden" name="Active" value="#Active#">
+</form>
+</cfoutput>
+
+<script>
+	document.NextPage.submit();
+</script>
+
+<!---Action is defined--->
+</cfif>

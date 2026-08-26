@@ -1,0 +1,128 @@
+===== QUERY: qSave =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: checkItem =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForcheckItem>
+	<cftry>
+		<cfset checkItem = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"item" = "eq.#data.item#",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckItem>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkDC =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckDC = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForcheckDC>
+	<cftry>
+		<cfset checkDC = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"bs_var_2" = "eq.#data.Distribution_Channel#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckDC = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckDC>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertErrorReason =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateDocTable =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateDocTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload_doc_details")>
+<cfif useLakebaseForupdateDocTable>
+	<cftry>
+		<cfset application.oLakebase.updateRows("margin_targets_upload_doc_details",
+			{
+				"doc_id" = "eq.#docId#"
+			},
+			{
+				"success" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateDocTable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateDocTable>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateErrorReason =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateDocTable =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateDocTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload_doc_details")>
+<cfif useLakebaseForupdateDocTable>
+	<cftry>
+		<cfset application.oLakebase.updateRows("margin_targets_upload_doc_details",
+			{
+				"doc_id" = "eq.#docId#"
+			},
+			{
+				"success" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateDocTable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateDocTable>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkItemExist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckItemExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload")>
+<cfif useLakebaseForcheckItemExist>
+	<cftry>
+		<cfset checkItemExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_targets_upload", {
+				"item" = "eq.#item#",
+				"bsa_foodservice_items_master_id" = "eq.#getBSAID.BSA_Foodservice_Items_Master_ID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckItemExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckItemExist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateItem =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: insertItem =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

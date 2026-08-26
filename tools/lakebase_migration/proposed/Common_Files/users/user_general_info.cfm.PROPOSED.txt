@@ -1,0 +1,60 @@
+===== QUERY: GetUserLevels =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserLevels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_access_rights")>
+<cfif useLakebaseForGetUserLevels>
+	<cftry>
+		<cfset GetUserLevels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_access_rights", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLevels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLevels>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetAllCompanies =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetAllCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetAllCompanies>
+	<cftry>
+		<cfset GetAllCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"order" = "company_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllCompanies>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetUserInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#URL.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

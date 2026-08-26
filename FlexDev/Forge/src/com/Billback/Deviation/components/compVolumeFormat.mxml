@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+compVolumeFormat.mxml
+
+Format the rate columns in the Dev grid.
+
+-->
+
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+		   width="100%" 
+		   verticalScrollPolicy="off" 
+		   horizontalScrollPolicy="off"
+		   implements="mx.controls.listClasses.IDropInListItemRenderer">
+	<mx:NumberFormatter id="numberFormatter" precision="2"   />
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.dataGridClasses.DataGridListData;
+			import mx.controls.listClasses.BaseListData;
+			
+			
+			// Internal variable for the property value.
+			private var _listData:DataGridListData;
+			
+			// Make the listData property bindable.
+			[Bindable("dataChange")]
+			public function get listData():BaseListData
+			{
+				return _listData;
+			}
+			
+			// Define the setter method,
+			public function set listData(value:BaseListData):void
+			{
+				_listData = DataGridListData(value);
+			}
+			
+			public function fnFormatNumber2(item:String):String 
+			{
+				return numberFormatter.format(item);
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle"> 
+		<mx:Label text="{fnFormatNumber2(data[_listData.dataField])} {data.UOM_Short} " paddingLeft="2" 
+				  paddingTop="8"/>
+	</mx:HBox> 
+</mx:Canvas>

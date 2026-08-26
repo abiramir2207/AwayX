@@ -1,0 +1,74 @@
+<style>
+
+td.column_heading
+{
+	color:						#FFFFFF;
+	background-color:			#006600;
+	text-align:					center;
+	font-size:					10px;
+	font-weight:				bold;
+	padding:					3px 5px 3px 5px;
+	text-transform:				capitalize;
+}
+
+td.data_cell
+{
+	color:						#aaaaaa;
+	text-align:					right;
+	font-size:					10px;
+	padding:					3px 5px 3px 5px;
+}
+
+td.left, div.left
+{
+	text-align:					left;
+}
+
+td.right, div.right
+{
+	text-align:					right;
+}
+
+input
+{
+	width:						130px;
+	margin:						0px 0px 5px 0px;
+}
+
+
+td.subtotals_title
+{
+	color:						#FFCC00;
+	background-color:			#000000;
+	text-align:					left;
+	font-size:					12px;
+	font-weight:				bold;
+	padding:					5px 5px 5px 5px;
+	border-bottom:				2px #FFCC00 solid;
+}
+
+td.subtotals
+{
+	color:						#FFCC00;
+	background-color:			#000000;
+	text-align:					right;
+	font-size:					10px;
+	font-weight:				bold;
+	padding:					5px 5px 5px 5px;
+	border-top:					2px #FFCC00 solid;
+}
+
+
+td.grandtotals
+{
+	color:						#000000;
+	background-color:			#FFFFFF;
+	text-align:					right;
+	font-size:					10px;
+	font-weight:				bold;
+	padding:					5px 5px 5px 5px;
+	border-top:					2px #FFFFFF solid;
+}
+
+
+</style>

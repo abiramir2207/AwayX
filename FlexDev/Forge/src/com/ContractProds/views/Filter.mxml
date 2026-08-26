@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:ba="com.ContractProds.views.renderer.*" >
+	<mx:Script>
+        <![CDATA[
+        	import com.ContractProds.views.pm.FilterPM;
+        	import mx.utils.ObjectUtil;
+        	
+        	/* Presentation Model */
+            [Bindable] public var pModel:FilterPM;
+            
+            private function cboBoxReset():void {
+				this.cbBrand.selectedIndex = 0;
+		   		//this.cbDiscountTypeSearch.selectedIndex = 0;
+		   		this.cbItemStatusList.selectedIndex = 0;
+		   		this.cbQBrand.selectedIndex = 0;
+		   		this.cbTypeCode.selectedIndex = 0;
+		   		this.cbTypeGroup.selectedIndex = 0;
+	            }
+           
+        ]]>
+    </mx:Script>
+	<mx:HBox label="search items" borderStyle="solid" height="100%" styleName="bxBorder">
+		<mx:VBox>
+			<!--- Search Button in Seach tab: Filters items in datagrid based on currrent criteria-->
+			<ba:BaButton width="63" id="btnFilter" tabEnabled="true"
+				click="pModel.filter();" 
+				label="search" 
+				toolTip="search items" 
+				keyDown="pModel.enterSearchBox(event);" />
+			<!--- Reset Button in Seach tab: Clears all filters Filters and reloads all available items in the datagrid-->
+			<ba:BaButton tabEnabled="true" 
+				click="pModel.filterReset();this.cboBoxReset();" 
+				label="reset" width="63" />
+		</mx:VBox>
+		<mx:VBox width="100%">
+			<mx:TextInput tabEnabled="true" id="searchField" width="200" text="{pModel.oFilterParms.searchFieldText}" 
+					change="pModel.updateSearchFieldText(searchField.text)"
+					toolTip="Keyword search on any of the fields:&#13; item, description, {pModel.oSettings.brand}, {pModel.oSettings.qBrand}, {pModel.oSettings.typeCode}, {pModel.oSettings.typeGroup}." 
+					keyDown="pModel.enterSearchBox(event);" />
+
+			<mx:HBox>
+				<!---search invoice check box: When checked, only items from the 180 day table are displayed-->
+				<mx:CheckBox id="chFilterMiniItem" 
+					label="search invoice"
+					selected="{pModel.oFilterParms.bfilterMiniItem}"
+					click="pModel.updateBfilterMiniItem(chFilterMiniItem.selected);" 
+					toolTip="show items purchased by this customer in the past 180 days"
+					visible="{!this.pModel.oSettings.bMarketPrice}" 
+					includeInLayout="{!this.pModel.oSettings.bMarketPrice}" />
+				<!--- view selected check box: when checked, only selected items are displayed-->
+				<mx:CheckBox id="chFilterSelected" 
+					label="view selected" 
+					selected="{pModel.oFilterParms.bfilterSelected}"
+					click="pModel.updateBfilterSelected(chFilterSelected.selected);" 
+					toolTip="show only the currently selected items"
+					visible="{!this.pModel.oSettings.bMarketPrice}" 
+					includeInLayout="{!this.pModel.oSettings.bMarketPrice}"/>
+			</mx:HBox>
+			
+			<!--- view rates check box: when checked, only items with rates are displayed-->
+			<!--<mx:CheckBox id="chFilterRates" 
+				label="view rates" 
+				selected="{pModel.oFilterParms.bfilterRates}"
+				click="pModel.updateBfilterRates(chFilterRates.selected);" 
+				toolTip="show only the items with rates"/>-->
+			
+		</mx:VBox>
+		<mx:VBox id="vbxSearch" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+			<!--- Combo Box provides Filter Criteria to filterFunction-->
+			<ba:BaCombo toolTip="Filter: {pModel.oSettings.brand}" id="cbBrand"
+				selectedIndex="{pModel.cbBrand}"
+				dataProvider="{pModel.dpBrand}"
+				labelField="Brand_Name" 
+				change="pModel.updateBrand(cbBrand.selectedLabel)" 
+				width="175" tabEnabled="true"  rowCount="15"></ba:BaCombo>
+			
+			<!--- Combo Box provides Filter Criteria to filterFunction-->
+			<ba:BaCombo toolTip="Filter: {pModel.oSettings.qBrand}" id="cbQBrand" 
+				selectedIndex="{pModel.cbQBrand}"
+				dataProvider="{pModel.dpQBrand}" 
+				labelField="Q_Brand" 
+				change="pModel.updateqQBrand(cbQBrand.selectedLabel)" 
+				width="175"  tabEnabled="true"  rowCount="15"></ba:BaCombo>
+			</mx:VBox>
+			<mx:VBox id="vbxSearch2" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+			<!--- Combo Box provides Filter Criteria to filterFunction-->
+			<ba:BaCombo toolTip="Filter: {pModel.oSettings.typeCode}" id="cbTypeCode" 
+				selectedIndex="{pModel.cbTypeCode}"
+				dataProvider="{pModel.dpTypeCode}" 
+				labelField="Type_Code_Desc" 
+				change="pModel.updateTypeCode(cbTypeCode.selectedLabel)" 
+				width="175" tabEnabled="true" rowCount="15"></ba:BaCombo>
+			
+			<!--- Combo Box provides Filter Criteria to filterFunction-->
+			<ba:BaCombo toolTip="Filter: {pModel.oSettings.typeGroup}" id="cbTypeGroup" 
+				selectedIndex="{pModel.cbTypeGroup}"
+				dataProvider="{pModel.dpTypeGroup}" 
+				labelField="Type_Group_Desc" 
+				change="pModel.updateTypeGroup(cbTypeGroup.selectedLabel)" 
+				width="175"  tabEnabled="true" rowCount="15"></ba:BaCombo>
+			</mx:VBox>
+			<mx:VBox id="vbxSearch3" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+			<!--- Combo Box provides Filter Criteria to filterFunction-->
+			<!--<mx:ComboBox toolTip="Filter: Products selected in different discount types" id="cbDiscountTypeSearch" 
+				dataProvider="{pModel.dpPrgTypesDiscList}" 
+				labelField="Type_Group_Desc" 
+				change="pModel.updateProgramDiscountTypes(cbDiscountTypeSearch.selectedLabel)" 
+				width="175"  tabEnabled="true" rowCount="15" height="{pModel.iComboBoxHeight}"></mx:ComboBox>-->
+			
+			<!--- Combo Box provides Filter Criteria to filterFunction-->
+			<ba:BaCombo toolTip="Filter: Status" id="cbItemStatusList" 
+				selectedIndex="{pModel.cbItemStatusList}"
+				dataProvider="{pModel.dpItemStatusList}" 
+				labelField="Item_Status" 
+				change="pModel.updateLblStatus(cbItemStatusList.selectedLabel)" 
+				width="175" rowCount="15" 
+				visible="{pModel.statusFilterOn==1}" 
+				includeInLayout="{pModel.statusFilterOn==1}"></ba:BaCombo>
+		 	</mx:VBox>
+		<!--</mx:VBox>-->
+	</mx:HBox>
+</mx:Canvas>

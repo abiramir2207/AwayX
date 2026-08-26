@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for displaying the image based on the field DEVIATION_PROGRAM_DATES 
+ 	from the query result 
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.external.ExternalInterface
+			import com.asfusion.mate.events.Dispatcher;
+			import mx.events.CloseEvent;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			private var columnIndex:Number;
+			public var URLgeneratedDPD:String = "/billbacks/Deviation/Deviation_Program_Date_Mismatch.cfm?Billback_Program_ID=";
+		]]>
+</mx:Script>
+<!--
+			useHandCursor="{(data.Dummy_Program=='0')&amp;&amp;(data.UnKnown_Item=='0')}" 
+			buttonMode="{(data.Dummy_Program=='0')&amp;&amp;(data.UnKnown_Item=='0')}"  
+-->
+  <mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+			id="imgDPD"	
+			width="12"
+			height="12"
+			source="{getSource(data.DEVIATION_PROGRAM_DATES)}" 
+			useHandCursor="{((data.Third_Party_BB_Upload == '3' &amp;&amp; ((data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3') &amp;&amp; (data.UnKnown_Item=='0')))}" 
+			buttonMode="{((data.Third_Party_BB_Upload == '3' &amp;&amp; ((data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3') &amp;&amp; (data.UnKnown_Item=='0')))}" 
+			mouseChildren="false"
+			click="fnDPDClick()"
+			toolTip="{data.DEVIATION_PROGRAM_DATES_PERCENT}%"
+			>
+			<mx:Script>
+				<![CDATA[
+				/** 
+				 * This holds the image to be displayed basesd on the DEVIATION_PROGRAM_DATES 
+				 * field from the query result
+				 */
+					private  var imgDPDHolder:Class;
+					
+				/** 
+				 * This function determines which image has to be displayed for the 
+				 * Date Match Validation column in the grid.
+				 */
+				  private function getSource(recType:String):Object
+					{
+						/* 
+							21398:
+							These images were shown on scrolling breaking through the 
+							if condition, so this was removed, so that the images would
+							be shown for dummy program and unknown item rows also.
+						*/
+						/* if((data.Dummy_Program=='0') && (data.UnKnown_Item=='0'))
+						{ */
+							if (data.DEVIATION_PROGRAM_DATES == 1)   
+							{
+								[Embed(source="/assets/Images/no.gif")]
+							 	var imgNo:Class;
+								imgDPDHolder = imgNo; 
+							}
+							else if (data.DEVIATION_PROGRAM_DATES == 0)
+							{
+								[Embed(source="/assets/Images/yes.gif")]
+								var imgYes:Class;
+								imgDPDHolder = imgYes; 
+							}
+							else
+							{
+								imgDPDHolder:Class;
+							}
+						/* }
+						else
+						{
+							imgDPDHolder:Class;
+						}	 */
+
+
+						return imgDPDHolder;
+					}  
+					/**
+					*	This function will open a popup window with the link 
+					* "/billbacks/Deviation/Deviation_Program_Date_Mismatch.cfm" passing 
+					* the Billback_Program_ID to it. 
+					*	The data.* would not work in the initialization above as the data.* 
+					*	is not created and is available only later
+					*/					
+					private function fnDPDClick():void
+					{
+						/* 
+							This will disable the click for the highlighted rows for the 
+							Unknown_Item and Dummy_Program 
+						*/
+						//if ((data.Dummy_Program=='0')&&(data.UnKnown_Item=='0'))
+						if ((data.Third_Party_BB_Upload == '3' && ((data.Dummy_Program=='0') && (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3')&&(data.UnKnown_Item=='0')))
+						{				
+							var strRequestURL:String = URLgeneratedDPD + data.Billback_Program_ID;
+							ExternalInterface.call("f = function() { window.open('"+strRequestURL+"','win','toolbar=no,scrollbars=yes,resizable=1,width=780,height=650'); }");
+						}							
+					}								
+				]]>
+			</mx:Script>
+		 
+	</mx:Image>
+</mx:HBox> 			
+
+ 

@@ -1,0 +1,64 @@
+===== QUERY: this.original =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForthis_original = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForthis_original>
+	<cftry>
+		<cfset this.original = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthis_original = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthis_original>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetPriceListIds =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPriceListIds = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForqGetPriceListIds>
+	<cftry>
+		<cfset qGetPriceListIds = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_id.asc",
+				"select" = "price_list_id"
+			}), "price_list_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceListIds = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceListIds>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetDiscountTypes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qlistcategories =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqlistcategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_setting_setting_category")>
+<cfif useLakebaseForqlistcategories>
+	<cftry>
+		<cfset qlistcategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_setting_setting_category", {
+				"order" = "name.asc",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqlistcategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqlistcategories>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

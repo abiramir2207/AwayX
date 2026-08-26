@@ -1,0 +1,41 @@
+===== QUERY: saveCompany =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateCompany =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForupdateCompany>
+	<cftry>
+		<cfset application.oLakebase.updateRows("company_main",
+			{
+				"company_main_id" = "eq.#FORM.COMPANY_MAIN_ID#"
+			},
+			{
+				"company_name" = "#FORM.COMPANY_NAME#",
+				"address_1" = "#FORM.ADDRESS_1#",
+				"address_2" = "#FORM.ADDRESS_2#",
+				"address_city" = "#FORM.ADDRESS_CITY#",
+				"address_state" = "#FORM.ADDRESS_STATE#",
+				"address_zip" = "#FORM.ADDRESS_ZIP#",
+				"phone_1" = "#FORM.PHONE_1#",
+				"phone_2" = "#FORM.PHONE_2#",
+				"phone_3" = "#FORM.PHONE_3#",
+				"phone_ext" = "#FORM.PHONE_EXT#",
+				"fax_1" = "#FORM.FAX_1#",
+				"fax_2" = "#FORM.FAX_2#",
+				"fax_3" = "#FORM.FAX_3#",
+				"website" = "#FORM.WEBSITE#",
+				"primary_contact_email" = "#FORM.PRIMARY_CONTACT_EMAIL#",
+				"primary_contact_name" = "#FORM.PRIMARY_CONTACT_NAME#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCompany>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

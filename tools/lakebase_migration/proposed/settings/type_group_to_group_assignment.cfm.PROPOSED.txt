@@ -1,0 +1,45 @@
+===== QUERY: getMarginGroupTypeCodes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetMarginGroupTypeCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_type_groups")>
+<cfif useLakebaseForgetMarginGroupTypeCodes>
+	<cftry>
+		<cfset getMarginGroupTypeCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_type_groups", {
+				"margin_group_id" = "eq.#URL.Group_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarginGroupTypeCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarginGroupTypeCodes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getOccupiedMarginGroupTypeCodes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOccupiedMarginGroupTypeCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_type_groups")>
+<cfif useLakebaseForgetOccupiedMarginGroupTypeCodes>
+	<cftry>
+		<cfset getOccupiedMarginGroupTypeCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_type_groups", {
+				"margin_group_id" = "neq.#URL.Group_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOccupiedMarginGroupTypeCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOccupiedMarginGroupTypeCodes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAllTypeCodes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

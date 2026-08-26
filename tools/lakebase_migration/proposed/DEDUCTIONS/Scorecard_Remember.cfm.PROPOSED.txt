@@ -1,0 +1,113 @@
+===== QUERY: Get_SC_ID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_SC_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard")>
+<cfif useLakebaseForGet_SC_ID>
+	<cftry>
+		<cfset Get_SC_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("scorecard", {
+				"scorecard_name" = "eq.Deductions"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_SC_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_SC_ID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_SC_GP_ID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_SC_GP_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard_grouping")>
+<cfif useLakebaseForGet_SC_GP_ID>
+	<cftry>
+		<cfset Get_SC_GP_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("scorecard_grouping", {
+				"scorecard_grouping_name" = "eq.#URL.ScorecardToShow#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_SC_GP_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_SC_GP_ID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Disp_ID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Disp_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard_display")>
+<cfif useLakebaseForGet_Disp_ID>
+	<cftry>
+		<cfset Get_Disp_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("scorecard_display", {
+				"scorecard_display_name" = "eq.#URL.ScorecardToShow_basedon#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Disp_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Disp_ID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Check_Exist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheck_Exist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard_customize")>
+<cfif useLakebaseForCheck_Exist>
+	<cftry>
+		<cfset Check_Exist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("scorecard_customize", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"scorecard_id" = "eq.#Get_SC_ID.Scorecard_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Exist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Exist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_Data =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("scorecard_customize")>
+<cfif useLakebaseForUpdate_Data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("scorecard_customize",
+			{
+				"scorecard_customize_id" = "eq.#Check_Exist.Scorecard_Customize_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"scorecard_grouping_id" = "#Get_SC_GP_ID.Scorecard_Grouping_ID#",
+				"scorecard_display_id" = "#Get_Disp_ID.Scorecard_Display_ID#",
+				"shr_ship_to" = "#URL.SC_Shr_Ship_To#",
+				"broker_shard" = "#URL.SC_Broker_Shard#",
+				"chk_hide_parent" = "#URL.chkHideParent#",
+				"chk_refresh_view" = "#URL.chkRefreshView#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Data>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

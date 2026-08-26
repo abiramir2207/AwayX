@@ -1,0 +1,47 @@
+===== QUERY: qryUploadID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("upload_automation_log")>
+<cfif useLakebaseForqryUploadID>
+	<cftry>
+		<cfset qryUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("upload_automation_log", {
+				"upload_automation_log_id" = "eq.#FORM.deleteUploadID#",
+				"deleted" = "eq.0",
+				"select" = "upload_automation_log_id,upload_status"
+			}), "upload_automation_log_id,upload_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUploadID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetUAUploadID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetUAUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("upload_automation_log")>
+<cfif useLakebaseForqGetUAUploadID>
+	<cftry>
+		<cfset qGetUAUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("upload_automation_log", {
+				"upload_automation_log_id" = "eq.#FORM.deleteUploadID#",
+				"deleted" = "eq.0",
+				"select" = "upload_automation_log_id"
+			}), "upload_automation_log_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUAUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUAUploadID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdUAUploadLog =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

@@ -1,0 +1,61 @@
+===== QUERY: getCustomers =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getOperators =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getVendors =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: RebateStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: RebateCompStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetProgramUOMIDX =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramUOMIDX = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramUOMIDX>
+	<cftry>
+		<cfset qGetProgramUOMIDX = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "contract_quantity_uom_idx"
+			}), "contract_quantity_uom_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramUOMIDX = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramUOMIDX>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetContractSpan =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetDefaultUOT =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDefaultUOT = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqGetDefaultUOT>
+	<cftry>
+		<cfset qGetDefaultUOT = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultUOT = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultUOT>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

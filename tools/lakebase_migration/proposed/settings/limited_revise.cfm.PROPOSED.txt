@@ -1,0 +1,26 @@
+===== QUERY: Set_Deleted =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSet_Deleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("limited_revision_settings")>
+<cfif useLakebaseForSet_Deleted>
+	<cftry>
+		<cfset application.oLakebase.updateRows("limited_revision_settings",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSet_Deleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSet_Deleted>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Save_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

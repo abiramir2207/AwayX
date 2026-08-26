@@ -1,0 +1,935 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:rndr="com.shared.views.renderer.*"
+		 xmlns:ba="com.shared.components.*">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->	
+		<mx:DateValidator id="dateVal" inputFormat="mm/dd/yyyy"/>
+		<s:NumberFormatter id="claimedFormat"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Edit.events.BBEditEvent;
+			import com.Billback.Edit.views.pm.BBEditItemsPModel;
+			import com.Billback.Edit.views.pm.BBEditPModel;
+			import com.Billback.Edit.views.renderer.componentTileRenderer;
+			import com.Billback.Main.models.vos.Billback;
+			import com.Billback.Edit.models.vos.BBToolsLock;
+			import com.Billback.Main.models.vos.Payee;
+			import com.shared.components.StringUtils;
+			import com.shared.models.GridManager;
+			import com.shared.vos.AppFlex;
+			import com.shared.vos.Settings;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.core.mx_internal;
+			import mx.events.CalendarLayoutChangeEvent;
+			import mx.events.ListEvent;
+			import mx.events.MenuEvent;
+			import mx.events.StateChangeEvent;
+			import mx.events.ValidationResultEvent;
+			import mx.utils.ObjectUtil;
+			import mx.utils.StringUtil;
+			
+			import spark.components.supportClasses.Skin;
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			import com.shared.vos.Settings;
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBEditPModel; 
+			
+			[Bindable]
+			public var pModelEditItems:BBEditItemsPModel; 
+			
+			[Bindable]
+			public var oSettings:Settings = new Settings();
+			
+			private var _BBToolsLock:BBToolsLock = new BBToolsLock();
+			
+			/* WE NEED ACCESS TO THE LOCK OBJECT HERE TOO */
+			/*.................BB Tools.....................*/
+			[Bindable (event="objBBToolsBBHeaderLockChanged")]
+			public function get objBBToolsLock():BBToolsLock
+			{
+				return _BBToolsLock;
+			}
+			
+			public function set objBBToolsLock(objBBToolsLock:BBToolsLock):void
+			{
+				this._BBToolsLock = objBBToolsLock;
+				dispatchEvent(new Event('objBBToolsBBHeaderLockChanged'));
+				
+				/* Dev Note: Milan (41418) - When the status of the lock changes, update the "bEnabled" property 
+				on the itemremderer,so that the checkbox for the different components can be editable/non-editable 
+				based on lock.
+				*/
+				updComponentTileRenderer();
+			}
+			
+			/* Dev Note: Milan (41418) -  The way to pass a value to an item renderer if the itemrenderer is being called
+			from a list (<s:List), is to loop through the list and set the property for each instance of the renderer.
+			*/
+			private function updComponentTileRenderer():void{				
+				if (rndrComponentTileRenderer && rndrComponentTileRenderer.dataGroup) {
+					var i:int, numItems:int = rndrComponentTileRenderer.dataGroup.numElements;
+					for(i= 0;i < numItems; i++){
+						var itemRendererItem:componentTileRenderer = rndrComponentTileRenderer.dataGroup.getElementAt(i) as componentTileRenderer;
+						itemRendererItem.bEnabled = pModel.objBBToolsLock.bEditScreenEnabled;
+					} 
+				}			
+			}
+					
+			protected function tiBBNumberUpdate():void
+			{
+				// --- Make sure everyone is home D40300
+				if(pModel){
+					if(pModel.billback){
+						if(this.tiBBNumber && this.tiBBNumber.text){
+							pModel.billback.bbHeader.BBNumber = this.tiBBNumber.text;
+						}
+					}
+				}
+				//this.getDuplicateBillbacks();				
+			}
+			
+			protected function tiBBReferenceIDUpdate():void
+			{
+				pModel.billback.bbHeader.referenceNumber = this.tiBBReferenceID.text;				
+			}
+			
+			protected function dtBBDateUpdate():void
+			{
+				if (!this.dtBBDate.text.length)
+				{
+					pModel.billback.bbHeader.BBDate = new Date();
+				}
+				pModel.billback.bbHeader.BBDate = new Date(this.dtBBDate.text);
+			}
+			
+			protected function drpClosingMethodUpdate():void
+			{
+				pModel.billback.bbHeader.closingMethod = this.drpClosingMethod.selectedItem;
+			}
+			
+			
+			protected function dtDelStartDateUpdate():void
+			{
+				if (!this.dtDelStartDate.text.length)
+				{
+					pModel.billback.bbHeader.startDate = new Date();
+				}
+				pModel.billback.bbHeader.startDate = new Date(this.dtDelStartDate.text);
+			}
+			
+			protected function dtDelEndDateUpdate():void
+			{
+				if (!this.dtDelEndDate.text.length)
+				{
+					pModel.billback.bbHeader.endDate = new Date();	
+				}
+				pModel.billback.bbHeader.endDate = new Date(this.dtDelEndDate.text);
+			}
+			
+			protected function tiTitleUpdate():void
+			{
+				if(this.tiTitle.text.length > 100){
+					Alert.show('Title is longer than 100 characters!');
+				}else{
+					pModel.billback.bbHeader.title = this.tiTitle.text;
+				}
+			}
+			
+			protected function tiVendorUpdate():void
+			{
+				if(!this.tiVendor.text.length){
+					this.pModel.getVendor(StringUtil.trim(this.tiVendor.text));
+				}
+				//this.getDuplicateBillbacks();
+			}
+			
+			
+			// cbProgram Label Function
+			public function drpPayeeLabel(obj:Object):String{
+				var s:String = '';
+				if(obj){
+					s = obj.payeeId + ' - ' + obj.name;				
+				}
+				return s;
+			}
+			
+			protected function drpPayeeUpdate():void
+			{
+				if (this.drpPayee.selectedItem && this.drpPayee.selectedIndex > -1){
+					this.cbProgram.selectedIndex = -1;
+					pModel.getPayee(this.drpPayee.selectedItem);
+				}
+			}
+			
+			protected function dtPostDateUpdate():void
+			{
+				if (!this.dtPostDate.text.length)
+				{
+					pModel.billback.postDate = new Date();	
+				}
+				pModel.billback.postDate = new Date(this.dtPostDate.text);
+			}
+			
+			protected function dtReceivedDateUpdate():void
+			{
+				if (!this.dtReceivedDate.text.length)
+				{
+					pModel.billback.receivedDate = new Date();	
+				}
+				pModel.billback.receivedDate = new Date(this.dtReceivedDate.text);
+			}
+			
+			protected function tiClaimAmountUpdate():void
+			{
+				var strClaimAmt:String = this.tiClaimAmount.text;
+				strClaimAmt = strClaimAmt.replace('\,','');
+				pModel.billback.claimedAmount = parseFloat(strClaimAmt);
+			}
+			
+			protected function tiClaimCasesUpdate():void
+			{
+				var strClaimCS:String = this.tiClaimCases.text;
+				strClaimCS = strClaimCS.replace('\,','');
+				pModel.billback.claimedCS = parseFloat(strClaimCS);
+			}			
+			
+			protected function tiClaimPoundsUpdate():void
+			{
+				var strClaimLB:String = this.tiClaimPounds.text;
+				strClaimLB = strClaimLB.replace('\,','');
+				pModel.billback.claimedLB = parseFloat(strClaimLB);
+			}
+			
+			protected function taNotesUpdate():void
+			{
+				pModel.billback.bbNotes = this.taNotes.text;
+			}
+			
+			// program handlers
+			// user selects a program
+			protected function cbProgramUpdate(event:Event):void
+			{
+				cbDistributor.textInput.text = ''; 
+				cbDistributor.selectedIndex = -1;
+				if (event.currentTarget.selectedItem && !(event.currentTarget.selectedItem is String)){
+					pModel.getProgram(event.currentTarget.selectedItem.programId);
+				}
+			}
+			
+			// cbProgram Label Function
+			public function cbProgramLabel(obj:Object):String{
+				var s:String = '';
+				if(obj && obj.hasOwnProperty("number")){
+					s = obj.number + ' - ' + obj.title;				
+				}
+				return s;
+			}
+			
+			
+			// distributor handlers
+			protected function cbDistributorUpdate(event:Event):void
+			{
+				if(event.currentTarget.selectedIndex != -1){
+					if(event.currentTarget.selectedItem.hasOwnProperty("shipTo")){
+						pModel.getDistributor(event.currentTarget.selectedItem.shipTo);
+					}else{
+						pModel.getDistributor(event.currentTarget.selectedItem);
+					}
+				}
+			}
+			
+			// cbDistributor Label Function
+			public function cbDistributorLabel(obj:Object):String{
+				var s:String = '';
+				if(obj && obj.hasOwnProperty("shipTo")){
+					s = obj.shipTo + ' - ' + obj.name;
+				}
+				return s;
+			}
+			
+			protected function btnBBLock_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+			}
+			
+			private var vResult:ValidationResultEvent;
+			private function dateValid(fieldname:Object):void
+			{
+				vResult = dateVal.validate(fieldname.text);
+				
+				if (vResult.type!=ValidationResultEvent.VALID) 
+				{
+					Alert.show('Please enter a valid date');
+					/* When this field value is set to blank, the default date logic 
+					sets the date to the default date.
+					*/
+					fieldname.text = '';
+				}
+			}
+			
+			// getDuplicateBillbacks
+			public function getDuplicateBillbacks():void
+			{
+				if (this.tiBBNumber.text.length && this.tiVendor.text.length)
+				{
+					this.pModel.getDuplicateBillbacks(this.tiBBNumber.text, this.tiVendor.text)
+				}
+			}
+			
+			
+			protected function cbAnalystUpdate(event:Event):void
+			{
+				this.pModel.billback.bbHeader.analyst = event.currentTarget.selectedItem;
+			}
+			
+			public function setFocusTiVendor(e:BBEditEvent):void
+			{
+				// Only fire the text update when the user clicks cancel (bSetVendorText = true).  
+				// Otherwise bindings will update it after it comes from DB call [BBEditEvent.LOAD_VENDOR]
+				if(e.bSetVendorText){
+					this.tiVendor.text = this.pModel.selectedVendor.payeeId;
+				}
+				else{
+					this.tiVendor.setFocus();
+				}
+				
+			}
+		]]>
+	</fx:Script>
+	<ba:MinMaxPanel id="header" width="{this.pModel.nWidthContainer}"
+					height="{this.pModel.panelHeight}" borderStyle="none"
+					panelTitle="Billback Item Results: {this.pModelEditItems.acGridDataFlat.length} records"
+					showMaximize="false" showMinimize="true">
+		
+		<s:HGroup gap="0" paddingLeft="0">
+			<mx:ApplicationControlBar id="acb" width="{this.pModel.nWidthContainer}" color="#ffbf5f"
+									  contentBackgroundColor="#ffbf5f">
+				<mx:MenuBar id="mb" width="100%"							
+							click="pModel.menuHandler(event)" dataProvider="{pModel.acMenuData}"
+							itemClick="pModel.menuItemHandler(event)"
+							menuBarItemRenderer="com.Billback.Edit.views.renderer.MenuBarItemRendererBA"
+							mouseOver="pModel.menuOverHandler(event)"
+							backgroundSkin="com.shared.views.skins.GenericHeaderBackgroundSkinBa">
+				</mx:MenuBar>
+				<s:HGroup horizontalAlign="right" verticalAlign="middle">
+					<!-- Since "MenuBar" is using a skin, color:#000000 is required for <s:label> and color="#000000", contentBackgroundColor="#FFFFFF" 
+					is required for <rndr:BaDropDownList>, else it will be affected by the skin
+					-->
+					<s:Label id="lAnalyst" color="#000000"
+							 text="{this.pModel.oSettings.appFlex.bbLabels.Analyst} : "/>
+					<rndr:BaDropDownList id="cbAnalyst" width="200" change="cbAnalystUpdate(event)"
+										 color="#000000" contentBackgroundColor="#FFFFFF"
+										 currentSelection="{this.pModel.billback.bbHeader.analyst}"
+										 dataProvider="{this.pModel.acBBAnalysts}"
+										 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										 labelField="fullName"/>
+				</s:HGroup>
+			</mx:ApplicationControlBar>		
+		</s:HGroup>
+		
+		<s:VGroup id="vgHeader">
+			
+			<!--BASIC INFO-->	
+			<s:VGroup id="vgBasicInfo" gap="10" paddingBottom="5" paddingLeft="5" paddingRight="5"
+					  paddingTop="40"> <!--BASIC INFO-->
+				<s:VGroup gap="0" paddingLeft="10">
+					<!--lock and close buttons-->
+					<!--<s:Button click="this.pModel.toggleBBLock()" label="{this.pModel.btnBBLockLabel}"   id="btnBBLock"/>
+					<s:HGroup verticalAlign="middle">				
+					<s:Button click="this.pModel.closeBB()" label="close" />
+					<s:Button click="this.pModel.toggleBBLock()" label="{this.pModel.btnBBLockLabel}"   id="btnBBLock"/>
+					<s:Label text="{this.pModel.sBBLockMsgText}" id="sBBLockMsg"  fontSize="12"/>
+					<s:Button click="{this.pModel.showBizCon()}" label="business considerations"   id="btnBizCon"/>
+					<s:Button click="{this.pModel.copyBillback()}" label="copy"   id="btnCopy"/>
+					</s:HGroup>
+					-->
+					<!--header info display-->
+					<s:HGroup width="300" paddingTop="5" verticalAlign="middle">
+						<s:Label minWidth="200" fontSize="14"
+								 text="{this.pModel.oSettings.appFlex.bbLabels.Payable} #: {this.pModel.billback.bbHeader.BBCode}"/>
+						<s:Label minWidth="200" fontSize="14"
+								 text="{this.pModel.billback.bbHeader.status.description}"/>
+						<s:Label minWidth="200" fontSize="12" includeInLayout="{this.pModel.billback.bbHeader.UploadID == '' || this.pModel.billback.bbHeader.UploadID == 0}"
+								 visible="{this.pModel.billback.bbHeader.UploadID == '' || this.pModel.billback.bbHeader.UploadID == 0}"
+								 text="[{this.pModel.billback.bbHeader.BBtype.description}]"/>
+						<s:Label minWidth="200" fontSize="12" includeInLayout="{this.pModel.billback.bbHeader.UploadID != '' &amp;&amp; this.pModel.billback.bbHeader.UploadID != 0}"
+								 visible="{this.pModel.billback.bbHeader.UploadID != '' &amp;&amp; this.pModel.billback.bbHeader.UploadID != 0}"
+								 text="[{this.pModel.billback.bbHeader.BBtype.description} - ID: {this.pModel.billback.bbHeader.UploadID}]"/>
+						<s:Label minWidth="50" fontSize="12"
+								 text="Created By: {this.pModel.billback.bbHeader.creator.fullName}"/>
+						<s:Label text="[EDI Duplicate]" fontWeight="bold" color="#FF0000" textAlign="right"  minWidth="210"
+								 visible="{oSettings.appSettings.EnableBBDupCheck = true &amp;&amp; this.pModel.billback.bbHeader.BBUploadDupGroupID != 0}" 
+								 includeInLayout="{oSettings.appSettings.EnableBBDupCheck = true &amp;&amp; this.pModel.billback.bbHeader.BBUploadDupGroupID != 0}"/>
+					</s:HGroup>
+				</s:VGroup>
+				
+				<!--FIRST ROW-->
+				<s:VGroup gap="0" paddingLeft="10">
+					<s:HGroup verticalAlign="middle">			
+						<s:HGroup width="150">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Billback} #:"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Reference_Number} #:"/>				
+						</s:HGroup>
+						
+						<s:HGroup width="150">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Closing_Method}:"/>
+						</s:HGroup>
+						
+						<!--blank area in between to display payee info-->
+						<s:HGroup width="50">			
+							<s:Label text=""/>
+						</s:HGroup>					
+						
+						<s:HGroup width="150">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Billback} Date:"/>
+						</s:HGroup>
+						
+						<s:HGroup width="50">
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_Start}:"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_End}:"/>
+						</s:HGroup>
+					</s:HGroup>
+					
+					<s:HGroup verticalAlign="middle">
+						<s:HGroup width="150">
+							<s:TextInput id="tiBBNumber" width="140"
+										 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										 creationComplete="tiBBNumber.setFocus()" editable="true"
+										 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										 focusOut="tiBBNumberUpdate()"
+										 maxChars="{parseInt(this.pModel.oSettings.appSettings.BB_Ref_Num_Max_Length)}"
+										 tabEnabled="false"
+										 text="{this.pModel.billback.bbHeader.BBNumber}"
+										 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Billback} Number"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">				
+							<s:TextInput id="tiBBReferenceID" width="140"
+										 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										 focusOut="tiBBReferenceIDUpdate()"
+										 maxChars="{parseInt(this.pModel.oSettings.appSettings.BB_2Ref_Num_Max_Length)}"
+										 tabEnabled="true"
+										 text="{this.pModel.billback.bbHeader.referenceNumber}"
+										 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Reference_Number}"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">
+							<!-- If the billback has multiple closing methods and child billbacks are not displayed in the search results and the
+							billback is approved, then hide this dropdown."idList" is a list of closing methods for child billbacks. -->
+							<rndr:BaDropDownList id="drpClosingMethod"
+												 visible="{this.pModel.billback.bbHeader.closingMethod.idList.length == 0}"
+												 width="150"
+												 currentSelection="{pModel.billback.bbHeader.closingMethod}"
+												 dataProvider="{new ArrayList(pModel.closingMethodList)}"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 focusOut="drpClosingMethodUpdate()"
+												 includeInLayout="{this.pModel.billback.bbHeader.closingMethod.idList.length == 0}"
+												 labelField="description" requireSelection="false"
+												 tabEnabled="true"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Closing_Method}"/> 
+							
+							<!-- If the billback has multiple closing methods and child billbacks are not displayed in the search results and the
+							billback is approved, then display "MULTI". "idList" is a list of closing methods for child billbacks. -->
+							<s:RichText visible="{this.pModel.billback.bbHeader.closingMethod.idList.length &gt; 0 }"
+										textAlign="left">
+								<s:content>
+									<s:p>MULTI</s:p>	
+								</s:content>
+							</s:RichText>
+							
+						</s:HGroup>
+						
+						<!--blank area in between to display payee info-->
+						<s:HGroup width="50">			
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">				
+							<mx:DateField id="dtBBDate" width="140"
+										  height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										  editable="true"
+										  enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										  focusIn="dtBBDateUpdate()"
+										  focusOut="dtBBDateUpdate();dateValid(dtBBDate);"
+										  tabEnabled="true"
+										  text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.BBDate)}"
+										  toolTip="{this.pModel.oSettings.appFlex.bbLabels.Billback} Date"/>
+						</s:HGroup>
+						
+						<s:HGroup width="50">
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">
+							<mx:DateField id="dtDelStartDate" width="140"
+										  height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										  editable="true"
+										  enabled="{pModel.objBBToolsLock.bEditScreenDateSaveEnabled}"
+										  focusIn="dtDelStartDateUpdate()"
+										  focusOut="dtDelStartDateUpdate();dateValid(dtDelStartDate);"
+										  tabEnabled="true"
+										  text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.startDate)}"
+										  toolTip="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_Start} Date"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">
+							<mx:DateField id="dtDelEndDate" width="140"
+										  height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										  editable="true"
+										  enabled="{pModel.objBBToolsLock.bEditScreenDateSaveEnabled}"
+										  focusIn="dtDelEndDateUpdate()"
+										  focusOut="dtDelEndDateUpdate();dateValid(dtDelEndDate);"
+										  tabEnabled="true"
+										  text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.endDate)}"
+										  toolTip="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_End} Date"/>
+						</s:HGroup>
+						
+					</s:HGroup>
+				</s:VGroup>	<!--END OF ROW-->
+				
+				<!--SECOND ROW-->
+				<s:VGroup gap="0" paddingLeft="10">
+					<s:HGroup verticalAlign="top">			
+						<s:HGroup width="305">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Title}:"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Vendor} #:"/>
+						</s:HGroup>
+						
+						<!--blank area in between to display payee info-->
+						<s:HGroup width="50">			
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">			
+							<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Payee} #:"/>
+						</s:HGroup>
+						
+						<s:HGroup width="50">
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">			
+							<s:Label text="Received Date:"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">			
+							<s:Label text="Post Date:"/>
+						</s:HGroup>
+					</s:HGroup>
+					
+					<s:HGroup verticalAlign="top">
+						<s:HGroup width="305">
+							<s:TextInput id="tiTitle" width="300"
+										 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										 focusOut="tiTitleUpdate()" tabEnabled="true"
+										 text="{this.pModel.billback.bbHeader.title}"
+										 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Billback} Title"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">				
+							<s:TextInput id="tiVendor" width="135"
+										 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										 change="tiVendorUpdate()"
+										 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										 focusOut="this.pModel.getVendor(StringUtil.trim(this.tiVendor.text));this.getDuplicateBillbacks();"
+										 tabEnabled="true"
+										 text="{this.pModel.selectedVendor.payeeId}"
+										 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Vendor} #"/>
+							
+							<s:Image id="imgVendorSearch" buttonMode="true"
+									 click="this.pModel.getVendorSearch()"
+									 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+									 horizontalAlign="left" source="assets/Images/search.gif"
+									 tabEnabled="true" useHandCursor="true" verticalAlign="bottom"/>
+						</s:HGroup>
+						
+						<s:HGroup width="50">			
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">
+							<rndr:BaDropDownList id="drpPayee" width="140"
+												 height="{int(this.pModel.oSettings.cfApp_textInputHeight)}"
+												 currentSelection="{pModel.billback.bbHeader.payee}"
+												 dataProvider="{pModel.acPayee}"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 focusOut="drpPayeeUpdate()"
+												 horizontalScrollPolicy="off" labelField="name"
+												 tabEnabled="true"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Payee} #"/>  
+							<!--
+							Dev Note (64475):Remove this feature. It was added using WR 61393.
+							In fact it was never deployed.							
+							<s:Image id="imgPayeeSearch" buttonMode="true"
+									 click="this.pModel.getPayeeSearch()"
+									 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+									 horizontalAlign="left" source="assets/Images/search.gif"
+									 tabEnabled="true" useHandCursor="true" verticalAlign="bottom"/>
+							-->
+						</s:HGroup>
+						
+						<s:HGroup width="50">
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">
+							<mx:DateField id="dtReceivedDate" width="140"
+										  height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										  editable="true"
+										  enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										  focusIn="dtReceivedDateUpdate()"
+										  focusOut="dtReceivedDateUpdate();dateValid(dtReceivedDate);"
+										  tabEnabled="true"
+										  text="{StringUtils.getFormatDt(this.pModel.billback.receivedDate)}"
+										  toolTip="Received Date"/>
+						</s:HGroup>
+						
+						<s:HGroup width="150">
+							<mx:DateField id="dtPostDate" width="140"
+										  height="{this.pModel.oSettings.cfApp_textInputHeight}"
+										  editable="true"
+										  enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+										  focusIn="dtPostDateUpdate()"
+										  focusOut="dtPostDateUpdate();dateValid(dtPostDate);"
+										  tabEnabled="true"
+										  text="{StringUtils.getFormatDt(this.pModel.billback.postDate)}"
+										  toolTip="Post Date"/>
+						</s:HGroup>
+						
+					</s:HGroup>
+				</s:VGroup> <!--END OF ROW-->
+				
+				
+				<!-- CLAIM SUMMARY SECTION -->
+				<!--THIRD ROW-->
+				<s:VGroup gap="5" paddingLeft="10" paddingTop="5">
+					<s:HGroup> <!--3 SECTIONS [claim, address, notes]-->
+						<s:VGroup> <!-- 3 summary rows -->
+							<s:HGroup horizontalAlign="center" verticalAlign="middle">
+								<s:HGroup width="70">			
+									<s:Label text="Summary"/>
+								</s:HGroup>
+								
+								<s:HGroup width="70" horizontalAlign="center">			
+									<s:Label text="$ "/>
+								</s:HGroup>
+								
+								<s:HGroup width="75" horizontalAlign="center" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}" 
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">			
+									<s:Label text="Cs"/>
+								</s:HGroup>
+								
+								<s:HGroup width="75" horizontalAlign="center" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}"
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">			
+									<s:Label text="Lbs"/>
+								</s:HGroup>
+								<s:HGroup width="75" visible="false" includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2}">
+								</s:HGroup>
+							</s:HGroup>
+							
+							<!--claimed data row-->
+							<s:HGroup verticalAlign="middle">
+								<s:HGroup width="70">
+									<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Claimed}"/>
+								</s:HGroup>
+								
+								<s:HGroup width="70">				
+									<s:TextInput id="tiClaimAmount" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 focusOut="tiClaimAmountUpdate()" tabEnabled="true"
+												 text="{claimedFormat.format(this.pModel.billback.claimedAmount)}"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Claimed} Amount"/>
+								</s:HGroup>
+								
+								<s:HGroup width="70" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}"
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">				
+									<s:TextInput id="tiClaimCases" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 focusOut="tiClaimCasesUpdate()" tabEnabled="true"
+												 text="{claimedFormat.format(this.pModel.billback.claimedCS)}"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Claimed} Cases"/>								
+								</s:HGroup>
+								
+								<s:HGroup width="80" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}"
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">				
+									<s:TextInput id="tiClaimPounds" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 focusOut="tiClaimPoundsUpdate()" tabEnabled="true"
+												 text="{claimedFormat.format(this.pModel.billback.claimedLB)}"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Claimed} Pounds"/>
+								</s:HGroup>
+							</s:HGroup> <!--end claim data row-->
+							
+							<!--expected data row-->
+							<s:HGroup verticalAlign="middle">
+								<s:HGroup width="70">
+									<s:Label text="Itemized"/>
+								</s:HGroup>
+								
+								<s:HGroup width="70">				
+									<s:TextInput id="tiExpAmount" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 editable="false"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 tabEnabled="false"
+												 text="{StringUtils.getDecimal2(this.pModel.billback.expectedAmount)}"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Expected} Amount"/>
+								</s:HGroup>
+								
+								<s:HGroup width="70" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}"
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">				
+									<s:TextInput id="tiExpCases" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 editable="false"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 tabEnabled="false"
+												 text="{StringUtils.getDecimal2(this.pModel.billback.expectedCS)}"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Expected} Cases"/>
+								</s:HGroup>
+								
+								<s:HGroup width="80" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}"
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">				
+									<s:TextInput id="tiExpPounds" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 editable="false"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 tabEnabled="false"
+												 text="{StringUtils.getDecimal2(this.pModel.billback.expectedLB)}"
+												 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Expected} Pounds"/>
+								</s:HGroup>
+							</s:HGroup> <!--end expected data row-->
+							
+							<!--variation data row-->
+							<s:HGroup verticalAlign="middle">
+								<s:HGroup width="70">
+									<s:Label text="Variation"/>
+								</s:HGroup>
+								
+								<s:HGroup width="70">				
+									<s:TextInput id="tiVariationAmount" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 editable="false"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 tabEnabled="false"
+												 text="{StringUtils.getDecimal2(this.pModel.billback.variedAmount)}"
+												 toolTip="Variation Amount"/>
+								</s:HGroup>
+								
+								<s:HGroup width="70" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}"
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 1 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">				
+									<s:TextInput id="tiVariationCases" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 editable="false"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 tabEnabled="false"
+												 text="{StringUtils.getDecimal2(this.pModel.billback.variedCS)}"
+												 toolTip="Variation Cases"/>
+								</s:HGroup>
+								
+								<s:HGroup width="80" visible="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}"
+										  includeInLayout="{this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 2 || this.pModel.oSettings.appSettings.View_Program_Volume_UOM == 3}">				
+									<s:TextInput id="tiVariationPounds" width="70"
+												 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+												 editable="false"
+												 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												 tabEnabled="false"
+												 text="{StringUtils.getDecimal2(this.pModel.billback.variedLB)}"
+												 toolTip="Variation Pounds"/>
+								</s:HGroup>
+							</s:HGroup> <!--end variation data row--> 
+						</s:VGroup> <!-- end of 3 summary rows -->
+						
+						<s:HGroup width="150" horizontalAlign="left">
+							<s:RichText width="200" textAlign="left">
+								<s:content>
+									<s:p>{this.pModel.selectedVendor.name}</s:p>
+									<s:p>{this.pModel.selectedVendor.payeeId}</s:p>
+									<s:p>{this.pModel.selectedVendor.address.addressLine1}</s:p>
+									<!--<s:p>{this.pModel.selectedVendor.address.addressLine2}</s:p>-->								
+									<s:p>{this.pModel.selectedVendor.address.city}</s:p>
+									<s:p>{this.pModel.selectedVendor.address.state}  {this.pModel.selectedVendor.address.zipCode}</s:p>
+								</s:content>
+							</s:RichText>
+						</s:HGroup>
+						
+						<s:HGroup width="50">
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="150" horizontalAlign="left">
+							<s:RichText textAlign="left">
+								<s:content>
+									<s:p>{this.pModel.selectedPayee.name}</s:p>
+									<s:p>{this.pModel.selectedPayee.payeeId}</s:p>
+									<s:p>{this.pModel.selectedPayee.address.addressLine1}</s:p>
+									<!--<s:p>{this.pModel.selectedPayee.address.addressLine2}</s:p>-->
+									<s:p>{this.pModel.selectedPayee.address.city}</s:p>
+									<s:p>{this.pModel.selectedPayee.address.state}  {this.pModel.selectedPayee.address.zipCode}</s:p>
+								</s:content>
+							</s:RichText>
+						</s:HGroup>
+						
+						<s:HGroup width="50">
+							<s:Label text=""/>
+						</s:HGroup>
+						
+						<s:HGroup width="300" horizontalAlign="right">
+							<s:VGroup>			
+								<s:Label text="Notes:"/>
+								<s:TextArea id="taNotes" width="300" height="75"
+											enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+											focusOut="taNotesUpdate()"
+											text="{this.pModel.billback.bbNotes}"
+											toolTip="Enter any notes here"/>
+							</s:VGroup>	
+						</s:HGroup>
+						
+					</s:HGroup> <!--END OF 3 SECTIONS [claim, address, notes]-->
+				</s:VGroup> <!--END OF ROW-->
+				
+			</s:VGroup> <!--END OF BASIC INFO-->		
+			<!--END OF BASIC INFO-->
+			
+			<!--PROGRAM & DISTRIBUTOR SECTION-->
+			<s:VGroup id="vgProgramDistributor" gap="5" paddingLeft="10">
+				<s:HGroup>	<!--program and dist-->		
+					<!--PROGRAM-->
+					<s:HGroup>
+						<s:HGroup width="300">
+							<s:VGroup gap="0" verticalAlign="middle">
+								
+								<s:Label text="Program #:"/>
+								
+								<s:HGroup verticalAlign="top">								
+									
+									<s:ComboBox id="cbProgram" width="275"
+												change="cbProgramUpdate(event)"
+												dataProvider="{this.pModel.acProgram}"
+												enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												horizontalScrollPolicy="off" labelField="number"
+												labelFunction="cbProgramLabel"
+												selectedItem="{pModel.selectedProgram}"
+												toolTip="Program #"/>
+									<!--	
+									focusIn="cbProgramListUpdate()"
+									focusOut="this.pModel.getProgram(this.tiProgram.text)"
+									-->
+									
+									<s:Image id="imgProgramSearch" buttonMode="true"
+											 click="pModel.getProgramSearch()"
+											 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+											 horizontalAlign="left"
+											 source="assets/Images/search.gif" tabEnabled="true"
+											 useHandCursor="true" verticalAlign="bottom"/>
+								</s:HGroup>					
+							</s:VGroup>
+						</s:HGroup>
+						
+						<s:HGroup width="250">	
+							<s:RichText width="250" textAlign="left">
+								<s:content>
+									<s:p>[{this.pModel.selectedProgram.number}]</s:p>
+									<s:p>{this.pModel.selectedProgram.title}</s:p>
+									<s:p>{StringUtils.getFormatDt(this.pModel.selectedProgram.startDate)} - {StringUtils.getFormatDt(this.pModel.selectedProgram.endDate)}</s:p>								
+								</s:content>
+							</s:RichText>						
+						</s:HGroup>
+					</s:HGroup>
+					
+					
+					<!--DISTRIBUTOR-->
+					<s:HGroup>
+						<s:HGroup width="300">
+							<s:VGroup gap="0" verticalAlign="middle">
+								
+								<s:Label text="Distributor #:"/>
+								
+								<s:HGroup verticalAlign="top">
+									<s:ComboBox id="cbDistributor" width="275"
+												change="cbDistributorUpdate(event)"
+												dataProvider="{this.pModel.acDistributor}"
+												enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+												horizontalScrollPolicy="off" labelField="shipTo"
+												labelFunction="cbDistributorLabel"
+												selectedItem="{pModel.selectedDistributor}"
+												toolTip="Distributor #"/>								
+									<!--
+									focusIn="cbProgramListUpdate()"
+									this.pModel.getDistributor(this.tiDistributor.text)								
+									-->
+									
+									<s:Image id="imgDistributorSearch" buttonMode="true"
+											 click="pModel.getDistributorSearch()"
+											 enabled="{pModel.objBBToolsLock.bEditScreenEnabled}"
+											 horizontalAlign="left"
+											 source="assets/Images/search.gif" tabEnabled="true"
+											 useHandCursor="true" verticalAlign="bottom"/>
+								</s:HGroup>					
+							</s:VGroup>
+						</s:HGroup>
+						
+						<s:HGroup width="250">	
+							<s:RichText textAlign="left">
+								<s:content>
+									<s:p>{this.pModel.selectedDistributor.name}</s:p>
+									<s:p>[{this.pModel.selectedDistributor.shipTo}]</s:p>
+									<s:p>{this.pModel.selectedDistributor.address.addressLine1} {this.pModel.selectedDistributor.address.addressLine2}</s:p>
+									<s:p>{this.pModel.selectedDistributor.address.city} {this.pModel.selectedDistributor.address.state}  {this.pModel.selectedDistributor.address.zipCode}</s:p>																
+								</s:content>
+							</s:RichText>
+						</s:HGroup>
+					</s:HGroup>	
+					
+				</s:HGroup> <!--program, dist, operator-->
+				
+				<s:HGroup id="hgComps" visible="{pModel.acComponent.length &gt; 0}">	<!--components-->
+					
+					<s:List id="rndrComponentTileRenderer" width="100%" maxHeight="120"
+							dataProvider="{pModel.acComponent}"
+							itemRenderer="com.Billback.Edit.views.renderer.componentTileRenderer">
+						
+						<s:layout>
+							<s:TileLayout horizontalGap="15" requestedColumnCount="2" verticalGap="5"/>
+						</s:layout>
+					</s:List>
+					
+				</s:HGroup>	<!--components-->
+				
+			</s:VGroup>
+			<!--END: PROGRAM & DISTRIBUTOR SECTION-->
+		</s:VGroup>
+	</ba:MinMaxPanel>
+</s:Group>
+

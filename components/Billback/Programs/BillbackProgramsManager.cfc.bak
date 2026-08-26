@@ -1,0 +1,537 @@
+<cfcomponent hint="Billback Programs Manager" extends="components.Base">
+	
+	<cfproperty name="billbackProgramID" type="string" />
+	<cfset variables.billbackProgramID = "" />
+	<cfset variables.realBillbackProgramID = "" />
+	<cfset variables.billbackID = "" />
+
+	<cffunction name="init" output="false" returntype="components.billback.Programs.BillbackProgramsManager">
+		<!--- <cfargument name="billbackProgramID" required="true" type="string"/>
+		<cfset setBillbackProgramID(arguments.billbackProgramID) /> --->
+		<cfreturn this />
+	</cffunction>
+	<!--- getter ---->
+	<cffunction name="getBillbackProgramID" output="false" returntype="string" access="public">
+		<cfreturn variables.billbackProgramID />
+	</cffunction>
+	<cffunction name="getBillbackID" output="false" returntype="string" access="public">
+		<cfreturn variables.billbackID />
+	</cffunction>
+	<cffunction name="getRealBillbackProgramID" output="false" returntype="string" access="public">
+		<cfreturn variables.realBillbackProgramID />
+	</cffunction>
+	<!--- setter ---->
+	<cffunction name="setBillbackProgramID" output="false" returntype="void" access="public">
+		<cfargument name="billbackProgramID" required="true" type="string"/>
+		<cfset variables.billbackProgramID = arguments.billbackProgramID />
+	</cffunction>
+	<cffunction name="setRealBillbackProgramID" output="false" returntype="void" access="public">
+		<cfargument name="realBillbackProgramID" required="true" type="string"/>
+		<cfset variables.realBillbackProgramID = arguments.realBillbackProgramID />
+	</cffunction>
+	<cffunction name="setBillbackID" output="false" returntype="void" access="public">
+		<cfargument name="billbackID" required="true" type="string"/>
+		<cfset variables.billbackID = arguments.billbackID />
+	</cffunction>
+	<cffunction name="getBillbackProgramRebateComps" returntype="query" access="public">
+
+		<CFQUERY NAME="qryGetBillbackProgramRebateComps" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT 
+					Program_Rebates_Component_Name.Program_Rebates_Component_Name,
+					Program_Rebates_Component.Program_ID,
+					Program_Rebates_Component.Program_Rebates_Component_Name_ID,
+					Program_Rebates_Component.Component_Paid_To
+			FROM 	Program_Rebates_Component
+			inner join Program_Rebates_Component_Name
+					on Program_Rebates_Component.Program_Rebates_Component_Name_ID = Program_Rebates_Component_Name.Program_Rebates_Component_Name_ID
+			WHERE 
+			<cfif this.getBillbackProgramID() neq "">	
+					Program_Rebates_Component.Program_ID IN (#this.getBillbackProgramID()#)
+			<cfelse>
+					1 = 2
+			</cfif>			
+			AND		Program_Rebates_Component.Deleted = 0
+		</CFQUERY>
+		<cfreturn qryGetBillbackProgramRebateComps>
+	</cffunction>
+	<cffunction name="loadRebateCompsFromBillbackProgramRebateComponents" returntype="query" access="public">
+		<CFQUERY NAME="qryLoadRebateCompsFromBillbackProgramRebateComponents" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT *
+			FROM 	billback_program_rebate_component
+			WHERE 	Billback_Program_ID IN ('#this.getBillbackProgramID()#')
+			AND		Billback_ID = '#this.getBillbackID()#'					
+			AND		Deleted = 0
+		</CFQUERY>
+		<cfreturn qryLoadRebateCompsFromBillbackProgramRebateComponents>
+	</cffunction>
+	<cffunction name="loadRebateSavedComps" returntype="query" access="public">
+		<CFQUERY NAME="qryLoadRebateSavedComps" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT *
+			FROM 	billback_program_rebate_component
+			WHERE 	Billback_Program_ID IN ('#this.getBillbackProgramID()#')
+			AND		Billback_ID = '#this.getBillbackID()#'					
+			AND		Deleted = 1
+		</CFQUERY>
+		<cfreturn qryLoadRebateSavedComps >
+	</cffunction>
+	<cffunction name="hasPreSelectedComponent" returntype="boolean" access="public">
+		<CFQUERY NAME="qryHasPreSelectedComponent" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT 	*
+			FROM 	Billback_Program_Rebate_Component
+			WHERE 	deleted = 1			
+			AND		Billback_ID = '#this.getBillbackID()#'
+			and		Billback_Program_ID = '#this.getBillbackProgramID()#'
+		</CFQUERY>
+		<cfif qryHasPreSelectedComponent.recordCount gt 0>
+			<cfreturn true>
+		<cfelse>
+			<cfreturn false>
+		</cfif>
+	</cffunction>
+	<cffunction name="hasSavedSelectedComponent" returntype="boolean" access="public">
+		<CFQUERY NAME="qryHasSavedSelectedComponent" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT 	*
+			FROM 	Billback_Program_Rebate_Component
+			WHERE 	deleted = 0			
+			AND		Billback_ID = '#this.getBillbackID()#'
+			and		Billback_Program_ID = '#this.getBillbackProgramID()#'
+		</CFQUERY>
+		<cfif qryHasSavedSelectedComponent.recordCount gt 0>
+			<cfreturn true>
+		<cfelse>
+			<cfreturn false>
+		</cfif>
+	</cffunction>
+	<cffunction name="hasRebateCmp" returntype="boolean" access="public">
+		<CFQUERY NAME="qryHasRebateCmp" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT 	*
+			FROM 	Billback_Program_Rebate_Component
+			WHERE 	deleted = 0			
+			AND		Billback_ID = '#this.getBillbackID()#'
+			and		Billback_Program_ID = '#this.getBillbackProgramID()#'
+		</CFQUERY>
+		<cfif qryHasRebateCmp.recordCount gt 0>
+			<cfreturn true>
+		<cfelse>
+			<cfreturn false>
+		</cfif>
+	</cffunction>
+	
+	<cffunction name="loadRebateComps" returntype="query" access="public">
+		<CFQUERY NAME="qryLoadRebateComps" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT	distinct 
+					billback_program_rebate_component.Billback_id,
+					billback_program_rebate_component.Billback_Program_id,
+					billback_program_rebate_component.Program_Rebates_Component_Name,
+					billback_program_rebate_component.Program_Rebates_Component_Name_id,
+					billback_program_rebate_component.Checked,
+					isnull(Payment_type.Payment_type_Name, 'None') as rebate_claim_mechanics
+			FROM 	billback_program_rebate_component
+			left join Program_Rebates_Component
+					on Program_Rebates_Component.program_id = billback_program_rebate_component.Billback_Program_ID
+					and Program_Rebates_Component.program_rebates_component_name_id = billback_program_rebate_component.program_rebates_component_name_id
+					and Program_Rebates_Component.deleted = 0 
+			LEFT JOIN Payment_type
+					on Program_Rebates_Component.claim_mechanics = Payment_type.Payment_type_ID
+					and Payment_type.deleted = 0 
+			WHERE 	Billback_Program_ID IN ('#this.getBillbackProgramID()#')
+			AND		Billback_ID = '#this.getBillbackID()#'
+			AND		checked = 'true'					
+			AND		billback_program_rebate_component.Deleted = 0
+		</CFQUERY>
+		<cfreturn qryLoadRebateComps>
+	</cffunction>
+	
+	<cffunction name="hasLumpSumCmp" returntype="boolean" access="public">
+		<CFQUERY NAME="qryHasLumpSumCmp" DATASOURCE="#APPLICATION.DATASOURCE#">
+			select *
+			from 	Billback_Program_Lumpsum_Component
+			where 	deleted = 0
+<!--- 			and 	component_type_id = 1
+ --->			and 	Billback_Program_Lumpsum_Component.billback_id = '#this.getBillbackID()#'
+			and 	Billback_Program_Lumpsum_Component.Billback_Program_ID = '#this.getRealBillbackProgramID()#'
+		</CFQUERY>
+		<cfif qryHasLumpSumCmp.recordCount gt 0>
+			<cfreturn true>
+		<cfelse>
+			<cfreturn false>
+		</cfif>
+	</cffunction>
+	
+	<cffunction name="loadLumpSum" returntype="query" access="public">
+		<CFQUERY NAME="qryGetLumpSum" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT       
+					Billback_Program_Lumpsum_Component.Billback_Program_ID, 
+					Billback_Program_Lumpsum_Component_ID, 
+					Amount,
+					CASE 
+						WHEN Component_Type_ID = 1 THEN
+							Program_Lump_Sum_Name.Program_Lump_Sum_Name
+						WHEN Component_Type_ID = 3 THEN
+							Program_Growth_Components.Component_Name + ' Tier ' + Program_Growth_Component_Tiers.Tier_Number
+						ELSE
+							Billback_Program_Lumpsum_Component.Name
+					END AS Component_Name,
+					isnull(Payment_type.Payment_type_Name, 'None') as claim_mechanics				
+			FROM	Billback_Program_Lumpsum_Component
+			LEFT JOIN 	Program_Lump_Sums
+					ON (Program_Lump_Sums.Program_Lump_Sum_ID = Billback_Program_Lumpsum_Component.Program_Lump_Sum_ID)
+			LEFT JOIN Program_Lump_Sum_Name
+					ON Program_Lump_Sum_Name.Program_Lump_Sum_Name_ID = Program_Lump_Sums.Program_Lump_Sum_Name_ID
+			LEFT JOIN Program_Growth_Components
+					ON ( Program_Growth_Components.Program_Growth_Component_ID = Billback_Program_Lumpsum_Component.Program_Lump_Sum_ID )
+			LEFT JOIN Program_Growth_Component_Tiers
+					ON ( Program_Growth_Component_Tiers.Program_Growth_Component_Tier_ID = Billback_Program_Lumpsum_Component.Program_Growth_Component_Tier_ID)
+			LEFT JOIN Payment_type
+					on Program_Lump_Sums.claim_mechanics = Payment_type.Payment_type_ID
+					and Payment_type.deleted = 0 
+			WHERE 	(Billback_Program_Lumpsum_Component.Amount IS NOT NULL)
+			AND		(LEN(Billback_Program_Lumpsum_Component.Amount) > 0)
+			AND		(ISNUMERIC(Billback_Program_Lumpsum_Component.Amount) = 1)
+			AND		(CAST(Billback_Program_Lumpsum_Component.Amount AS Float) > 0)
+			AND		Billback_Program_Lumpsum_Component.Billback_ID 		= '#this.getBillbackID()#'
+			AND		Billback_Program_Lumpsum_Component.Billback_Program_ID ='#this.getRealBillbackProgramID()#'		
+			AND		Billback_Program_Lumpsum_Component.Deleted 			= 0
+			ORDER BY Billback_Program_Lumpsum_Component.Billback_Program_ID
+		</CFQUERY>
+		<cfreturn qryGetLumpSum>
+	</cffunction>
+	
+	<cffunction name="getLastDateToClaim" output="false" returntype="query">
+	
+		<!---return query--->
+		<cfset rQuery = QueryNew("Billback_Date, Billback_Date_Span, LastClaimDate") />
+		
+		<!---check to see if we have to validate the last date to claim for this programs template--->
+		<CFQUERY NAME="qGetLastDateToClaimInfo" DATASOURCE="#APPLICATION.DATASOURCE#">
+			SELECT	Program_Control_Panel_Options.Billback_Date,
+					Program_Control_Panel_Options.Billback_Date_Span,
+					CAST(DATEADD(d,Program_Control_Panel_Options.Billback_Date_Span, Contract_Main.Contract_End_Date) as datetime) as LastClaimDate
+			FROM    Contract_Main
+					INNER JOIN Program_Control_Panel_Options ON 
+					Contract_Main.ProgramType_ID = Program_Control_Panel_Options.ProgramControl_Panel_Options_ID
+			WHERE	Contract_Main.Contract_Main_ID = '#this.getBillbackProgramID()#'
+			AND		Program_Control_Panel_Options.Billback_Date = 1
+		</CFQUERY>
+		
+		<!---if we have to check last date to claim then verify that the billback date is less than the LastClaimDate--->
+		<cfif qGetLastDateToClaimInfo.RecordCount>
+		
+			<!---get billback date to validate against--->
+			<cfquery name="qGetBillBackDate" datasource="#application.datasource#">
+				SELECT 	BB_Date
+				FROM 	Billback
+				WHERE 	Billback_ID = '#this.getBillbackID()#'
+				AND		Deleted = 0
+				AND		BB_Date > <cfqueryparam value="#qGetLastDateToClaimInfo.LastClaimDate#" cfsqltype="CF_SQL_DATE" />
+			</cfquery>
+			
+			<!---if qGetBillBackDate returns a record set then we know the billback is after the last date to claim so return the qGetLastDateToClaimInfo query--->
+			<cfif qGetBillBackDate.RecordCount>
+				<cfset rQuery = qGetLastDateToClaimInfo />
+			</cfif>
+			
+		</cfif>
+		
+		<cfreturn rQuery>
+		
+	</cffunction>
+	
+	<cffunction name="getBillbackPrograms" returntype="query" access="public">
+		<cfargument name="billbackId" type="string" required="true">
+		<cfquery name="qgetBillbackPrograms" datasource="#Application.Datasource#">
+			SELECT	dbo.Billback_Program.Billback_Program_ID, 
+					dbo.Billback_Program.Program_ID, 
+					dbo.Billback_Program.BB_Program_Number, 
+			        dbo.Billback_Program.BB_Program_Title, 
+					dbo.Billback_Program.BB_Program_Notes, 
+					dbo.Billback_Program.Discount_List,
+					dbo.Contract_Main.Contract_Number, 
+			        dbo.Billback.BB_Start_Date, 
+					dbo.Billback.BB_End_Date,
+					dbo.Billback_Program.Display_Product_Hierarchy,
+					dbo.Billback.Scheduled_Auto_BB
+			FROM	dbo.Billback_Program 
+			LEFT JOIN 	dbo.Contract_Main 
+				ON 		dbo.Billback_Program.Program_ID = dbo.Contract_Main.Contract_Main_ID 
+			INNER JOIN	dbo.Billback 
+					ON 	dbo.Billback_Program.Billback_ID = dbo.Billback.Billback_ID
+			WHERE  	(dbo.Billback_Program.Billback_ID = '#arguments.billbackId#') 
+			AND 	(dbo.Billback_Program.Deleted = 0)
+		</cfquery>
+		<cfreturn qgetBillbackPrograms>
+	</cffunction>
+
+	<cffunction name="getProductsForBBProgram" returntype="query" access="public">
+		<cfargument name="billbackId" type="string" required="true">
+		<cfargument name="BillbackProgramID" type="string" required="true">
+		<cfargument name="Display_Product_Hierarchy" type="string" required="true">
+	
+		<CFIF Display_Product_Hierarchy EQ 1>
+			<CFQUERY NAME="qgetProductsForBBProgram" DATASOURCE="#Application.Datasource#">
+				SELECT	DISTINCT 	
+						Billback_Product.Product_Hierarchy_ID Billback_Product_ID,
+						Billback_Product.Product_Hierarchy_ID Product_ID,
+						Product_Type_ID,
+						--bb_product_Type_id, no go...group by blows it up
+						BB_Product_UOM,
+						--sum(cast(BB_Product_Quantity as float)) as BB_Product_Quantity,
+						sum(cast(D.Volume as float)) as BB_Product_Quantity,
+						Product_Hierarchy.Product_Hierarchy_Name,
+						CASE
+							WHEN Earned_From_Group = 0	THEN
+							d.Distributor_ID_Earned
+							ELSE
+							d.Customer_Group_ID
+							END AS Distributor_ID_Earned,
+						c.Name,
+						PH2.Product_Hierarchy_Name As Product_Group,
+						PH2.Product_Hierarchy_id As Product_Group_Id,
+						PH2.Product_Hierarchy As Product_Hierarchy,
+						sum(cast(Sales_Dollars as decimal(10,2))) as Sales_Dollars,
+						Discount_Offered,
+						Discount_UOM,
+						ISNULL(C.Ship_To, 0) AS Ship_To
+				FROM 	Billback_Product
+				Inner Join BillBack_product_detail D on 
+						D.Billback_ID = '#arguments.billbackId#'
+						and D.Billback_Product_id = Billback_Product.Billback_Product_id 
+				LEFT JOIN 	Product_Hierarchy ON Product_Hierarchy.Product_Hierarchy_ID = Billback_Product.Product_Hierarchy_ID
+					Left JOIN Product_Hierarchy PH3
+   						ON PH3.Product_Hierarchy_ID = Product_Hierarchy.Parent_Product_Hierarchy_ID
+					left JOIN Product_Hierarchy PH2
+   						ON PH2.Product_Hierarchy_ID = PH3.Parent_Product_Hierarchy_ID
+				Left join   BSA_Foodservice_customers C on C.BSA_Foodservice_Customers_ID =  CASE
+																WHEN Earned_From_Group = 0	THEN
+																	D.Distributor_ID_Earned
+																ELSE
+																	D.Customer_Group_ID
+																END
+				WHERE 	Billback_Product.Billback_ID = '#arguments.billbackId#' AND 
+						Billback_Program_ID = '#arguments.BillbackProgramID#' AND
+						Billback_Product.Deleted = 0
+						--AND Product_Hierarchy.Deleted = 0
+						AND D.Deleted = 0
+				group by	Billback_Product.Product_Hierarchy_ID,
+					 	BB_Product_UOM,
+						Product_Type_ID,Product_Hierarchy.Product_Hierarchy_Name,
+							CASE
+							WHEN Earned_From_Group = 0	THEN
+							d.Distributor_ID_Earned
+							ELSE
+							d.Customer_Group_ID
+							END
+							, Name
+							, PH2.Product_Hierarchy_Name
+							, PH2.Product_Hierarchy_id 
+							, PH2.Product_Hierarchy
+							, Discount_Offered
+							, Discount_UOM
+							, C.Ship_To
+					Having Discount_Offered > 0 and Discount_UOM > 0
+				order by Ship_To,
+				CASE
+							WHEN Earned_From_Group = 0	THEN
+							d.Distributor_ID_Earned
+							ELSE
+							d.Customer_Group_ID
+							END,
+							Product_group,
+							Product_Hierarchy.Product_Hierarchy_Name
+							
+							
+							/*INNER JOIN Product_Hierarchy PH4
+   	ON PH4.Product_Hierarchy_ID = bfim.Product_Hierarchy_ID
+		INNER JOIN Product_Hierarchy PH3
+   	ON PH3.Product_Hierarchy_ID = PH4.Parent_Product_Hierarchy_ID
+		INNER JOIN Product_Hierarchy PH2
+   	ON PH2.Product_Hierarchy_ID = PH3.Parent_Product_Hierarchy_ID*/
+			</CFQUERY>
+		<CFELSE>
+			<!--- begin loading products --->
+			<cfquery name="qgetProductsForBBProgram" datasource="#Application.Datasource#">
+				SELECT distinct Billback_Product.*,CASE
+							WHEN Earned_From_Group = 0	THEN
+								d.Distributor_ID_Earned
+							ELSE
+								d.Customer_Group_ID
+							END AS Distributor_ID_Earned,
+						BSA_Foodservice_Items_Master.Item,
+						ISNULL(C.Ship_To, 0) AS Ship_To
+				FROM 	Billback_Product
+						Inner Join BillBack_product_detail D on
+							D.Billback_ID 		= '#arguments.billbackId#' AND
+							D.Billback_Product_id = Billback_Product.Billback_Product_id 
+						LEFT JOIN 	BSA_Foodservice_Items_Master ON BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = Billback_Product.Product_ID
+						LEFT JOIN   BSA_Foodservice_Customers C on C.BSA_Foodservice_Customers_ID =  
+						CASE
+							WHEN Earned_From_Group = 0	
+								THEN 	D.Distributor_ID_Earned
+							ELSE		D.Customer_Group_ID
+						END
+				WHERE	Billback_Product.Billback_ID 		= '#arguments.billbackId#'
+				AND		Billback_Program_ID = '#arguments.BillbackProgramID#'
+				AND		Billback_Product.Deleted 			= 0
+				AND		D.deleted = 0
+				order by Ship_To,
+				CASE
+							WHEN Earned_From_Group = 0	THEN
+							d.Distributor_ID_Earned
+							ELSE
+							d.Customer_Group_ID
+							END,
+							Billback_Product.Product_Hierarchy_ID,
+							Billback_Product.Product_ID
+			</cfquery>
+		</CFIF>
+		
+		<cfreturn qgetProductsForBBProgram>
+	</cffunction>
+	<cffunction name="getProgramIDByName" access="public" returntype="string">
+		<cfargument name="contract_number" type="string" required="true">
+		<cfquery name="qGetProgramIDByName" datasource="#application.datasource#">
+			SELECT 	top 1 contract_main_id
+			FROM 	contract_main
+			WHERE 	contract_number like '%#arguments.contract_number#%'
+		</cfquery>
+		<cfreturn qGetProgramIDByName.contract_main_id />
+	</cffunction>
+	
+	<!---Function to return Payee_ID depending on payee type --->
+	
+<cffunction name="getPayeeID" access="public" returntype="string">
+	<cfargument name="Billback_ID" type="string" required="true">
+	<cfargument name="Billback_Payee_Type_ID" type="string" required="true">
+	
+	<CFSET getPayeeID = QueryNew("Payee_ID")>
+	
+	<cfswitch expression="#arguments.Billback_Payee_Type_ID#">
+		<cfcase value="1"><!--- Distributor --->
+			<cfquery name="getPayeeID" datasource="#Application.Datasource#">
+				SELECT Distributor_ID as Payee_ID
+				FROM Billback_Distributor
+				WHERE Billback_ID = '#arguments.Billback_ID#' AND Deleted = 0
+			</cfquery>
+		</cfcase>
+	
+		<cfcase value="2"><!--- Operator --->
+			<cfquery name="getPayeeID" datasource="#Application.Datasource#">
+				SELECT Operator_ID as Payee_ID
+				FROM Billback_Operator
+				WHERE Billback_ID = '#arguments.Billback_ID#' AND Deleted = 0
+			</cfquery>
+		</cfcase>
+	
+		<cfcase value="3"><!--- Broker --->
+			<cfquery name="getPayeeID" datasource="#Application.Datasource#">
+				SELECT Broker_ID as Payee_ID
+				FROM Billback_Broker
+				WHERE Billback_ID = '#arguments.Billback_ID#' AND Deleted = 0
+			</cfquery>
+		</cfcase>
+		
+		<cfcase value="4"><!--- Other --->
+			<cfquery name="getPayeeID" datasource="#Application.Datasource#">
+				SELECT 	Associated_Ship_To as Payee_ID
+				FROM 	Billback_Unidentified_Payee
+				WHERE 	Billback_ID = '#arguments.Billback_ID#' AND Deleted = 0
+			</cfquery>
+			
+		</cfcase>
+		</CFSWITCH>
+		
+		<cfreturn getPayeeID.Payee_ID />
+			
+	</cffunction>
+	
+	<cffunction name="deleteBBProgramInfo" access="public" output="false" returntype="void">
+	  <cfargument name="billback_id" type="string" required="true" />
+	  <cfargument name="billback_program_id" type="string" required="true" />
+	  <cfargument name="program_id" type="numeric" required="true" />
+	  
+	   <cfset var deletePrograms = "" />
+	   <cfset var deleteBillbackProductDetail = "" />
+	   <cfset var deleteBillbackProduct = "" />
+	   <cfset var deleteComponents = "" />
+	   <cfset var deleteRebateComponents = "" />
+	
+		<!--- BJF: check to make sure both billback ID and billback program ID are actually guids before proceeding ---->
+		<cfif len(arguments.billback_id) GT 1 AND len(arguments.billback_program_id) GT 1 and len(arguments.program_id) GT 1>
+		
+		<cfquery name="deletePrograms" datasource="#Application.Datasource#">
+			UPDATE Billback_Program
+			SET Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+			WHERE Billback_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_id#" />
+			And Billback_Program_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_program_id#"> 
+			And Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+		</cfquery>
+	
+		<cfquery name="deleteBillbackProductDetail" datasource="#Application.Datasource#">
+			UPDATE Billback_Product_Detail
+			SET Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+			From Billback_Product_Detail
+			Inner Join Billback_Product On
+			Billback_Product.Billback_Id = Billback_Product_Detail.Billback_Id
+			And Billback_Product.Billback_Product_Id = Billback_Product_Detail.Billback_Product_Id
+			And Billback_Product.Billback_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_id#" />
+			And Billback_Product.Billback_Program_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_program_id#"> 
+			And Billback_Product_Detail.Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+			And Billback_Product.Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+		</cfquery>
+		
+		<cfquery name="deleteBillbackProduct" datasource="#Application.Datasource#">
+			UPDATE Billback_Product
+			SET Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="1" />
+			WHERE Billback_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_id#" />
+			And Billback_Program_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_program_id#"> 
+			And Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+		</cfquery>
+	
+		<cfquery name="deleteComponents" datasource="#Application.Datasource#">
+			UPDATE Billback_Program_Lumpsum_Component
+			SET Deleted = 1
+			WHERE Billback_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_id#" />
+			And Billback_Program_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_program_id#"> 
+			And Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+		</cfquery>	
+		
+			<!---The rebate uses the program id so we get it from billback_program--->
+		<cfquery name="deleteRebateComponents" datasource="#Application.Datasource#">
+			UPDATE Billback_Program_Rebate_Component
+			SET Deleted = 1
+			WHERE 
+			Billback_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.billback_id#" />
+			And Billback_Program_ID = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.program_id#" />
+			And Deleted = <cfqueryparam cfsqltype="cf_sql_bit" value="0" />
+				
+		</cfquery>
+		<!--- arguments have lengths greater than 1 ---->
+		</cfif>
+	</cffunction>
+
+	<cffunction name="getTemplateApprovalRights" access="public" output="false" returntype="query">
+		<cfargument name="billback_id" type="string" required="true" />
+
+		<CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
+		SELECT ForbidAllowProfilesInTemplates 
+		FROM _Application_Settings
+		</CFQUERY>
+
+		<CFQUERY NAME="qryCheckTemplateApprovalRights" DATASOURCE="#Application.Datasource#">
+			SELECT 	PCPO.Billback_Sales_Tax
+			FROM 		Billback
+			INNER JOIN 	Billback_Program ON Billback_Program.Billback_ID = Billback.Billback_ID AND Billback_Program.Deleted = 0
+			INNER JOIN 	Contract_Main ON Contract_Main.Contract_Main_ID = Billback_Program.Program_ID 
+			INNER JOIN 	Program_Latest_Template_ID ON Program_Latest_Template_ID.ProgramControl_Panel_Options_ID = Contract_Main.ProgramType_ID
+			INNER JOIN  Program_Control_Panel_Options PCPO ON  PCPO.ProgramControl_Panel_Options_ID = Contract_Main.ProgramType_ID
+			INNER JOIN 	Profile_Forbidden_Template ON Profile_Forbidden_Template.template_id = Program_Latest_Template_ID.Latest AND Profile_Forbidden_Template.Profile_ID = #request.AccessStructure.Profiles_ID# AND
+						Profile_Forbidden_Template.Deleted = 0	
+						AND Forbid_Type = <cfqueryparam value="#GetFA_AppSetting.ForbidAllowProfilesInTemplates# " cfsqltype="CF_SQL_INTEGER">
+						AND Forbid_Access_Type = 4
+			WHERE Billback.Billback_ID = <cfqueryparam value="#arguments.billback_id#" cfsqltype="CF_SQL_VARCHAR">
+		</CFQUERY>
+
+			<cfreturn qryCheckTemplateApprovalRights>
+	</cffunction>
+
+</cfcomponent>

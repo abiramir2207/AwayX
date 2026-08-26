@@ -1,0 +1,22 @@
+===== QUERY: Prior_Entries =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPrior_Entries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("class_code_lump_sum_assoc")>
+<cfif useLakebaseForPrior_Entries>
+	<cftry>
+		<cfset Prior_Entries = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("class_code_lump_sum_assoc", {
+				"class_code_id" = "eq.#form.id#",
+				"deleted" = "eq.0",
+				"order" = "class_code_assoc_value.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPrior_Entries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPrior_Entries>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

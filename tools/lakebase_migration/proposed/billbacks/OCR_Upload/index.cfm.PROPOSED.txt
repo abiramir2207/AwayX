@@ -1,0 +1,50 @@
+===== QUERY: qryBBUploadID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryBBUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqryBBUploadID>
+	<cftry>
+		<cfset qryBBUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#FORM.deleteOCRUploadID#",
+				"deleted" = "eq.0",
+				"select" = "bb_upload_id,ocr_step"
+			}), "bb_upload_id,ocr_step"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryBBUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryBBUploadID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetBBUploadID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetBBUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqGetBBUploadID>
+	<cftry>
+		<cfset qGetBBUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#FORM.deleteOCRUploadID#",
+				"deleted" = "eq.0",
+				"select" = "bb_upload_id"
+			}), "bb_upload_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBBUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBBUploadID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdBBUploadLog =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qUpdOCRUploadLog =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

@@ -1,0 +1,20 @@
+===== QUERY: GetCompanyName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCompanyName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForGetCompanyName>
+	<cftry>
+		<cfset GetCompanyName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "company_name"
+			}), "company_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

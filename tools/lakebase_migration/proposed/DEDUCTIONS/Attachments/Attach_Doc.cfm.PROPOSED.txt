@@ -1,0 +1,29 @@
+===== QUERY: Deleted_All =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeleted_All = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForDeleted_All>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"deduction_id" = "eq.#Form.Deduction_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleted_All = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleted_All>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: todo_save =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

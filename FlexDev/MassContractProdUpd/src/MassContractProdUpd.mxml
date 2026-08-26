@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+	xmlns:view="com.shared.views.*" 
+	xmlns:viewComp="com.shared.components.*"
+	xmlns:maps="com.shared.maps.*" 
+	xmlns:vos="com.shared.vos.*" 
+	width="100%" height="100%"
+	preinitialize="applyRuntimeStyleSheet();" preloader="com.shared.components.baProgressBar" 
+	currentState="{ model.state }"  viewSourceURL="srcview/index.html">
+	
+	<mx:Script><![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import com.shared.events.*;
+			import mx.managers.HistoryManager;
+			//import com.models.*;
+		 	import mx.styles.StyleManager;
+		 	
+		 	import com.shared.views.MainUIPM;
+			[Bindable]
+			public var model:MainUIPM;
+        
+        	private var _historyManager:HistoryManager;
+        	
+        public function applyRuntimeStyleSheet():void {
+            StyleManager.loadStyleDeclarations("/flex/assets/styles/mainFx.swf")
+        }
+        
+        
+  		]]>
+	</mx:Script>
+	
+	<!-- Event Maps __________________________________________________ -->
+	<maps:MainEventMap />
+	<maps:ModelMap />
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox id="vMain" width="1000" height="680">
+		<view:MainPanel id="MainPanel" />
+	</mx:HBox>
+	<!-- States ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<mx:states>
+		<mx:State name="{ MainUIPM.ADMIN_STATE }"/>
+		<mx:State name="{ MainUIPM.ITEM_SEARCH_STATE }" basedOn="{ MainUIPM.ADMIN_STATE }">
+			<mx:AddChild id = "vItemSearch" 
+                relativeTo="{vMain}" creationPolicy="auto" >
+				<viewComp:ItemSearchComp width="100%" height="100%" />
+			</mx:AddChild>
+			<mx:RemoveChild target="{ MainPanel }"/>
+		</mx:State>
+	</mx:states>
+	
+</mx:Application>

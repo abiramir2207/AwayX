@@ -1,0 +1,367 @@
+===== QUERY: UpdatePNF =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdatePNF = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdatePNF>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#LoadBillbackID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"bb_pnf" = "#PNF#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePNF = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePNF>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getParentIDs =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: InsertProduct =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetSum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: MakeUpDiff =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: InsertProduct =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertProduct =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertProduct =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetDetailInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDetailInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForGetDetailInfo>
+	<cftry>
+		<cfset GetDetailInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"billback_product_id" = "eq.#BBProdID#",
+				"bb_product_type_id" = "eq.#tempRateData[2]#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "distributor_id_earned,customer_group_id,earned_from_group"
+			}), "distributor_id_earned,customer_group_id,earned_from_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDetailInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDetailInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertProductdet =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetRateSum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: MakeUpDiff =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: GetDetailInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDetailInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForGetDetailInfo>
+	<cftry>
+		<cfset GetDetailInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"billback_product_id" = "eq.#BBProdID#",
+				"bb_product_type_id" = "eq.#tempRateData[2]#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "distributor_id_earned,customer_group_id,earned_from_group"
+			}), "distributor_id_earned,customer_group_id,earned_from_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDetailInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDetailInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertProductdet2 =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertComponent =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertComponent =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateLSAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateLSAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForUpdateLSAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_program_lumpsum_component_id" = "eq.#Original_Component.Billback_Program_Lumpsum_Component_ID#"
+			},
+			{
+				"amount" = "#LSAmount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLSAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLSAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: deletePrograms =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deleteProgramProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deleteComponents =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deleteComponents =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: CheckProdHier =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: deleteProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deleteProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deleteProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: deleteProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: GetProdCount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetProdCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForGetProdCount>
+	<cftry>
+		<cfset GetProdCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"product_hierarchy_id" = "eq.#Product.Billback_Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProdCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProdCount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetProdCount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetProdCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForGetProdCount>
+	<cftry>
+		<cfset GetProdCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"product_hierarchy_id" = "eq.#Product.Billback_Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProdCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProdCount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: GetSum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: MakeUpDiff =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UpdateVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: checkProdRateExists =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetDetailInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDetailInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForGetDetailInfo>
+	<cftry>
+		<cfset GetDetailInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"billback_product_id" = "eq.#BBProdID#",
+				"bb_product_type_id" = "eq.#tempRateData[2]#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "distributor_id_earned,customer_group_id,earned_from_group"
+			}), "distributor_id_earned,customer_group_id,earned_from_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDetailInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDetailInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkProdRateExists2 =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetDetailInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDetailInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForGetDetailInfo>
+	<cftry>
+		<cfset GetDetailInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"billback_product_id" = "eq.#BBProdID#",
+				"bb_product_type_id" = "eq.#tempRateData[2]#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "distributor_id_earned,customer_group_id,earned_from_group"
+			}), "distributor_id_earned,customer_group_id,earned_from_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDetailInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDetailInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertnewrate =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetDetailInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDetailInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForGetDetailInfo>
+	<cftry>
+		<cfset GetDetailInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"billback_product_id" = "eq.#BBProdID#",
+				"bb_product_type_id" = "eq.#tempRateData[2]#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "distributor_id_earned,customer_group_id,earned_from_group"
+			}), "distributor_id_earned,customer_group_id,earned_from_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDetailInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDetailInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertNewRate =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateProducth =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: GetRateSum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: MakeUpDiff =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UpdateProductd =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UpdateProductDetail =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: CheckCopied =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckCopied = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckCopied>
+	<cftry>
+		<cfset CheckCopied = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckCopied = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckCopied>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateBit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"volumeratesaved" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

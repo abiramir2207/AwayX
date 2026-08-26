@@ -1,0 +1,438 @@
+<!----------------------------------------------------------------------------------
+Name         :  AwayX/billbacks/OCR_Upload/Scheduled/inc_PFG_OT11.cfm
+Copyright    :  (c) 2017 Blacksmith Applications, Inc.
+Created Date :  01-Jun-17
+Created By   :  Anand Rao
+Description  :  Include template for PFG OT1
+---------------------------------------------------------------------------------->
+
+<cfoutput>
+
+<cfset isCompletelyParsed = 1 />
+
+<cfset aryTotalRecLength = ArrayLen(structFileContent) />
+<!--- CHECK IF ALL THE PAGES IN THE UPLOADED FILE HAS BEEN PROCESSED OR NOT --->
+<cfloop index = "iLoop" from = "1" to = "#aryTotalRecLength#">
+	<cfif (StructKeyExists(structFileContent[iLoop], "item") AND StructKeyExists(structFileContent[iLoop],"processed_at") AND (structFileContent[iLoop].processed_at EQ "undefined" OR 
+	structFileContent[iLoop].processed_at EQ ""))>
+		<cfset isCompletelyParsed = 0 />
+		<cfbreak/>
+	<cfelseif 	(NOT StructKeyExists(structFileContent[iLoop],"processed_at"))>
+		<cfset isCompletelyParsed = 0 />
+		<cfbreak/>
+	</cfif>
+</cfloop>
+<cfif (isCompletelyParsed EQ 1)>	
+
+<cfif (NOT(ArrayIsEmpty(structFileContent)))>
+		<cfset aryTotalRecLength = ArrayLen(structFileContent) />
+		<cfset pageCount	= 0 />
+		
+		<cfloop index = "i" from = "1" to = "#aryTotalRecLength#">
+		
+	 		<cfset catchValue = 0 />
+			<cftry>
+				<cfif (StructKeyExists(structFileContent[i], "item") AND (NOT isArray(structFileContent[i].item)))>
+				 	<cfset structLineItems =  structFileContent[i].item />
+					<cfset structFileContent[i].line_itemsNew = Arraynew(1) />
+					<cfset structFileContent[i].line_itemsNew[1] = structLineItems />
+					<cfset aryItemLength = ArrayLen(structFileContent[i].line_itemsNew) />
+				<cfelse>	
+					<cfset structLineItems =  structFileContent[i].item />
+					<cfset structFileContent[i].line_itemsNew = Arraynew(1) />
+					<cfset structFileContent[i].line_itemsNew = structLineItems />
+					<cfset aryItemLength = ArrayLen(structFileContent[i].line_itemsNew) />
+				</cfif>
+				<cfcatch>
+					<cfset Amount = ""/>
+					<cfset Brand = ""/>
+					<cfset CaseRebate = ""/>
+					<cfset Cases = ""/>
+					<cfset Description = "" />
+					<cfset ItemNo = "" />
+					<cfset Row = "" />
+					<cfset colT = "" />
+					<cfset UPC = "" />
+					<cfset aryItemLength = 1 />
+					<cfset catchValue = 1 />
+					<!--- in inside catch <cfdump var="#cfcatch.detail#" /><cfdump var="#cfcatch.message#" /> --->
+				</cfcatch>				
+			</cftry>
+					
+		<cfquery name="qCreateTablePFGOT11" datasource="#application.datasource#">
+			IF object_id('tempdb..##tblPFGOT11FileData') IS NOT NULL
+				BEGIN	 
+	                 DROP TABLE ##tblPFGOT11FileData
+				END
+			
+			CREATE TABLE ##tblPFGOT11FileData
+			(
+				
+				[Distributor_Location_Key_0] 		[varchar](max),
+				[Document_ID] 						[varchar](max),			
+				[End_Date_Key_0]					[varchar](max),
+				[File_Name]							[varchar](max),
+				[ID]								[varchar](max),			
+				[Invoice_Date_Key_0]  				[varchar](max),
+				[Item_Amount]						[varchar](max),
+				[Item_Brand]						[varchar](max),
+				[Item_Case_Rebate]					[varchar](max),
+				[Item_Cases]						[varchar](max),			
+				[Item_Description]					[varchar](max),
+				[Item_Item_no]						[varchar](max),
+				[Item_Row]							[varchar](max),
+				[Item_T]							[varchar](max),
+				[Item_UPC]							[varchar](max),
+				[Media_Link]  						[varchar](max),
+				[Page_Count]	  					[varchar](max),
+				[Processed_At]  					[varchar](max),
+				[Remote_ID]  						[varchar](max),
+				[Start_Date_Key_0]					[varchar](max),
+				[Totals_Amount]						[varchar](max),
+				[Totals_Qty]						[varchar](max),
+				[Tracking]							[varchar](max),
+				[Uploaded_at]						[varchar](max),
+				[Vendor]							[varchar](max),			
+				
+				[OCR_Upload_ID]						[varchar](max),
+				[OCR_Input_FileName_Raw]			[varchar](max),
+				[DB_OCR_Source_Code_FileName]		[varchar](max),
+				[OCR_Source]						[varchar](max),
+				[BB_Claim_Source_XREF_ID]			[varchar](max),
+				[OCR_Template_Settings_ID]			[varchar](max),
+				[DB_OCR_Source_Code]				[varchar](max),
+				[OCR_Code]							[varchar](max)
+			)
+		</cfquery>					
+		<!--- <cfset aryItemLength = ArrayLen(structFileContent[1].item) /> --->
+		
+		<cfloop index = "j" from = "1" to = "#aryItemLength#">
+		
+ 				<cftry>
+					<cfif (StructKeyExists(structFileContent[i],"distributor_location") AND (structFileContent[i].distributor_location.key_0 NEQ "undefined"))>
+					 	<cfset DistributorLocation = structFileContent[i].distributor_location.key_0 />
+					<cfelse>
+						<cfset DistributorLocation = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset DistributorLocation = ""/>
+					</cfcatch>
+				</cftry>
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i],"end_date") AND (structFileContent[i].end_date.key_0 NEQ "undefined"))>
+					 	<cfset EndDate = structFileContent[i].end_date.key_0 />
+					<cfelse>
+						<cfset EndDate = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset EndDate = ""/>
+					</cfcatch>
+				</cftry>				
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i],"invoice_date") AND (structFileContent[i].invoice_date.key_0 NEQ "undefined"))>
+					 	<cfset InvoiceDate = structFileContent[i].invoice_date.key_0 />
+					<cfelse>
+						<cfset InvoiceDate = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset InvoiceDate = ""/>
+					</cfcatch>
+				</cftry>
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i],"start_date") AND (structFileContent[i].start_date.key_0 NEQ "undefined"))>
+					 	<cfset StartDate = structFileContent[i].start_date.key_0 />
+					<cfelse>
+						<cfset StartDate = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset StartDate = ""/>
+					</cfcatch>
+				</cftry>				
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"amount") AND (structFileContent[i].line_itemsNew[j].amount NEQ "undefined"))>
+					 	<cfset Amount = structFileContent[i].line_itemsNew[j].amount />
+					<cfelse>
+						<cfset Amount = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset Amount = ""/>
+					</cfcatch>
+				</cftry>
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"brand") AND (structFileContent[i].line_itemsNew[j].brand NEQ "undefined"))>
+					 	<cfset Brand = structFileContent[i].line_itemsNew[j].brand />
+					<cfelse>
+						<cfset Brand = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset Brand = ""/>
+					</cfcatch>
+				</cftry>															
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"case_Rebate") AND (structFileContent[i].line_itemsNew[j].case_Rebate NEQ "undefined"))>
+					 	<cfset CaseRebate = structFileContent[i].line_itemsNew[j].case_Rebate />
+					<cfelse>
+						<cfset CaseRebate = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset CaseRebate = ""/>
+					</cfcatch>
+				</cftry>	
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"cases") AND (structFileContent[i].line_itemsNew[j].cases NEQ "undefined"))>
+					 	<cfset Cases = structFileContent[i].line_itemsNew[j].cases />
+					<cfelse>
+						<cfset Cases = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset Cases = ""/>
+					</cfcatch>
+				</cftry>	
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"description") AND (structFileContent[i].line_itemsNew[j].description NEQ "undefined"))>
+					 	<cfset Description = structFileContent[i].line_itemsNew[j].description />
+					<cfelse>
+						<cfset Description = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset Description = ""/>
+					</cfcatch>
+				</cftry>
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"item_no") AND (structFileContent[i].line_itemsNew[j].item_no NEQ "undefined"))>
+					 	<cfset ItemNo = structFileContent[i].line_itemsNew[j].item_no />
+					<cfelse>
+						<cfset ItemNo = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset ItemNo = ""/>
+					</cfcatch>
+				</cftry>	
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"row") AND (structFileContent[i].line_itemsNew[j].row NEQ "undefined"))>
+					 	<cfset Row = structFileContent[i].line_itemsNew[j].row />
+					<cfelse>
+						<cfset Row = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset Row = ""/>
+					</cfcatch>
+				</cftry>	
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"t") AND (structFileContent[i].line_itemsNew[j].t NEQ "undefined"))>
+					 	<cfset colT = structFileContent[i].line_itemsNew[j].t />
+					<cfelse>
+						<cfset colT = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset colT = ""/>
+					</cfcatch>
+				</cftry>	
+				<cftry>
+					<cfif (StructKeyExists(structFileContent[i].line_itemsNew[j],"upc") AND (structFileContent[i].line_itemsNew[j].upc NEQ "undefined"))>
+					 	<cfset UPC = structFileContent[i].line_itemsNew[j].upc />
+					<cfelse>
+						<cfset UPC = ""/>
+					</cfif>
+					<cfcatch>
+						<cfset UPC = ""/>
+					</cfcatch>
+				</cftry>
+ 	
+			<cfquery name="qInsertTable" datasource="#application.datasource#">
+				INSERT INTO ##tblPFGOT11FileData (
+					Distributor_Location_Key_0,
+					Document_ID,			
+					End_Date_Key_0,
+					File_Name,
+					ID,			
+					Invoice_Date_Key_0,
+					Item_Amount,
+					Item_Brand,
+					Item_Case_Rebate,
+					Item_Cases,			
+					Item_Description,
+					Item_Item_no,
+					Item_Row,
+					Item_T,
+					Item_UPC,
+					Media_Link,
+					Page_Count,
+					Processed_At,
+					Remote_ID,
+					Start_Date_Key_0,
+					Tracking,
+					Uploaded_at,
+					Vendor,		
+				
+					OCR_Upload_ID,
+					OCR_Input_FileName_Raw,
+					DB_OCR_Source_Code_FileName,
+					OCR_Source,
+					BB_Claim_Source_XREF_ID,
+					OCR_Template_Settings_ID,
+					DB_OCR_Source_Code,
+					OCR_Code
+					)
+				VALUES
+					(
+						'#DistributorLocation#',
+						'#structFileContent[i].document_id#',
+						'#EndDate#',
+						'#structFileContent[i].file_name#',
+						'#structFileContent[i].id#',
+						'#InvoiceDate#',
+						'#Amount#',
+						'#Brand#',
+						'#CaseRebate#',
+						'#Cases#',						
+						'#Description#',
+						'#ItemNo#',
+						'#Row#',
+						'#colT#',
+						'#UPC#',
+						'#structFileContent[i].media_link#',
+						'#structFileContent[i].page_count#',
+						'#structFileContent[i].processed_at#',
+						'#structFileContent[i].remote_id#',
+						'#StartDate#',
+						'#structFileContent[i].tracking#',
+						'#structFileContent[i].uploaded_at#',
+						'#structFileContent[i].vendor#',
+						 
+						'#qGetOCRUploadExtracted.OCR_Upload_ID#', /* -- uploadID */
+						'#qGetOCRUploadExtracted.File_Name#', /* OCR_Input_FileName_Raw -- populate orignial uploaded file name from ocr_upload_log */
+						'#qGetOCRUploadExtracted.File_Name#', /* OCR_Input_FileName_Raw -- populate orignial uploaded file name from ocr_upload_log */
+						'#qGetOCRUploadExtracted.Source_Code#', /* 'PFG', OCR_Source, */
+						'#qGetOCRUploadExtracted.BB_Claim_Source_XREF_ID#', 	/* -- BB_Claim_Source_XREF_ID, */
+						'#qGetOCRUploadExtracted.OCR_Template_Settings_ID#',	/* -- OCR_Template_Settings_ID */
+						'Trackmax1', /* DB_OCR_Source_Code */
+						'#qGetOCRUploadExtracted.OCR_Code#'
+      				)	 
+			</cfquery>
+			</cfloop> <!--- LOOP j --->
+		 
+			<cfset pageCount = pageCount + structFileContent[i].page_count />	
+		</cfloop>	<!--- LOOP i --->	
+		<cfquery name="qUpdateFileName" datasource="#application.datasource#">
+			UPDATE OCR_Upload_Log SET DB_Input_FileName = '#qGetOCRUploadExtracted.File_Name#' WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
+		</cfquery>	
+		
+
+	
+		<cfquery name="qSelPFGOT11FileDataCheck" datasource="#application.datasource#">
+			SELECT * FROM ##tblPFGOT11FileData
+		</cfquery>
+		
+		<cfif (qSelPFGOT11FileDataCheck.RecordCount NEQ 0)>
+ 		   <cfquery name="qInsertPermTable" datasource="#application.datasource#">	
+		 		INSERT INTO OCR_Trackmax1_Excel_Format
+				(
+					Distributor_Location, 	-- Map it to Distributor_Location
+					End_Date, 				-- Map it to End_Date
+					Invoice_Date, 			-- Map it to Invoice_Date
+					Item_Amount, 			-- Map it to Item_Amount 
+					Item_Brand, 			-- Map it to Item_Brand
+					--Item_Amount, 			-- Map it to Item_Allowance
+					Item_Quantity, 			-- Map it to Item_Quantity                                  
+					Item_Description, 		-- Map it to Item_Description       
+					Item_DID, 				-- Map it to Item    
+					Item_Row_Number, 		-- Map it to Item_Row_ID    
+					Item_Product_ID, 		-- Map it to Item_T 
+					Item_UPC, 				-- Map it to Item_UPC
+					Page_Count, 			-- Map it to Page_Count
+					Start_Date, 			-- Map it to Start_Date
+					--Item_Amount, 			-- Map it to Total_Amount
+					--Item_Quantity, 			-- Map it to Total_Quantity
+					--Program_Information, 	-- Map it to Program_Info
+					Item_Customer_Name, 	-- Map it to MFG_Info               
+					
+					/* OCR SETTING FIELDS */
+					OCR_Upload_ID,
+					OCR_Input_FileName_Raw, 	-- Populate pdf filename
+					DB_OCR_Source_Code_FileName, -- Populate pdf filename
+					OCR_Source, 				-- 'PFG',
+					BB_Claim_Source_XREF_ID,
+					OCR_Template_Settings_ID,
+					DB_OCR_Source_Code,
+					OCR_Code
+				)
+				SELECT 	
+					Distributor_Location_Key_0, -- Map it to Distributor_Location
+					End_Date_Key_0, -- Map it to End_Date
+					Invoice_Date_Key_0, -- Map it to Invoice_Date
+					Item_Amount, -- Map it to Item_Amount 
+					Item_Brand, -- Map it to Item_Brand
+					--Item_Case_Rebate, -- Map it to Item_Allowance
+					Item_Cases, -- Map it to Item_Quantity                                  
+					Item_Description , -- Map it to Item_Description       
+					Item_Item_no, -- Map it to Item    
+					Item_Row, -- Map it to Item_Row_ID    
+					Item_T, -- Map it to Item_T 
+					Item_UPC, -- Map it to Item_UPC
+					Page_Count, -- Map it to Page_Count
+					Start_Date_Key_0, -- Map it to Start_Date
+					--Totals_Amount, -- Map it to Total_Amount
+					--Totals_Qty, -- Map it to Total_Quantity
+				--	Tracking, -- Map it to Program_Info
+					Vendor, -- Map it to MFG_Info
+		
+						
+					OCR_Upload_ID,
+					OCR_Input_FileName_Raw,
+					DB_OCR_Source_Code_FileName,
+					OCR_Source,
+					BB_Claim_Source_XREF_ID,
+					OCR_Template_Settings_ID,
+					DB_OCR_Source_Code,
+					OCR_Code
+				FROM
+					##tblPFGOT11FileData 
+			</cfquery>     
+ 
+			<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
+				UPDATE OCR_Upload_Log 
+					SET 
+					OCR_Step = '4',
+					OCR_Upload_Status = 'Transferred file to DB processing',
+					Debug_Dev_Status = 'Transferred file to DB processing. DBLocation "#DBDest#"',
+					Updated_Date = getDate()
+				WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
+			</cfquery>	 
+		<cfelse>
+			 	<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
+					UPDATE OCR_Upload_Log 
+						SET 
+							OCR_Step = '2.CF_Error',
+							OCR_Upload_Status = 'Data mismatch between the file and the Docparser template. ',
+							Debug_Dev_Status = 'The parser failed to return the data. The data location are not correct in the file and did not match the docparser template.',
+							Updated_Date = getDate(),
+							Error_Tool_Tip = 'Please try again with a different source type. The invoice file format did not match the format of the selected source type.'
+						WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
+				</cfquery> 
+		</cfif>		<!--- <cfif (qSelPFGOT11FileDataCheck.RecordCount NEQ 0)> --->
+	<cfelse>
+		<cfquery name="updateOCRUploadLogStatus5" datasource="#application.datasource#">
+			UPDATE OCR_Upload_Log 
+				SET 
+					OCR_Step = '2.CF_Error',
+					OCR_Upload_Status = 'Data mismatch between the file and the Docparser template. ',
+					Debug_Dev_Status = 'The parser failed to return the data. The data location are not correct in the file and did not match the docparser template.',
+					Updated_Date = getDate(),
+					Error_Tool_Tip = 'Please try again with a different source type. The invoice file format did not match the format of the selected source type.'
+				WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
+		</cfquery> 
+	</cfif> <!--- <cfif (StructKeyExists(structFileContent[1], "distributor_location")  AND  --->
+	
+<cfelse>
+	<cfquery name="updateOCRUploadLogUpdateTries" datasource="#application.datasource#">
+		UPDATE OCR_Upload_Log 
+				SET 
+					Debug_Dev_Status = 'Docparser is still processing the file and returning half the results.',
+					ProcessTries = ProcessTries + 1,
+					Updated_Date = getDate()
+			WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
+	</cfquery>	
+ </cfif> <!--- <cfif (isCompletelyParsed EQ 1)>	 --->
+ 	
+</cfoutput>

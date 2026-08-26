@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for displaying the image based on the field DEVIATION_RATE 
+ 	from the query result 
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.external.ExternalInterface
+			import com.asfusion.mate.events.Dispatcher;
+			import mx.events.CloseEvent;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			public var URLgeneratedUP:String = "/billbacks/Deviation/Authorized_Payee_List.cfm?Billback_Program_ID="; 
+		]]>
+</mx:Script>
+  <mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+			id="imgUP"	
+			width="12"
+			height="12"
+			source="{getSource(data.DEVIATION_UNAUTHORIZED_PAYEE)}" 
+			useHandCursor="{((data.Third_Party_BB_Upload == '3' &amp;&amp; ((data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3') &amp;&amp; (data.UnKnown_Item=='0')))}" 
+			buttonMode="{((data.Third_Party_BB_Upload == '3' &amp;&amp; ((data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3') &amp;&amp; (data.UnKnown_Item=='0')))}" 
+			mouseChildren="false"
+			click="fnUPClick()"
+			toolTip="{data.DEVIATION_UNAUTHORIZED_PAYEE_PERCENT}%"			
+			>   
+			<!-- 
+			useHandCursor="true" 
+			buttonMode="true" 
+			mouseChildren="false"
+			-->
+			<mx:Script>
+				<![CDATA[
+					/** 
+					* This holds the image to be displayed basesd on the DEVIATION_RATE 
+					* field from the query result
+					*/						
+					private var imgUPHolder:Class;
+					/** 
+				 	* This function determines which image has to be displayed for the 
+				 	* UnAuthorized Payee column in the grid.
+				 	*/						
+				  private function getSource(recType:String):Object
+					{
+						/* 
+							21398:
+							These images were shown on scrolling breaking through the 
+							if condition, so this was removed, so that the images would
+							be shown for dummy program and unknown item rows also.
+						*/ 						
+						/* if((data.Dummy_Program=='0')&&(data.UnKnown_Item=='0'))
+						{ */
+							if (data.DEVIATION_UNAUTHORIZED_PAYEE == 1)   
+							{
+								[Embed(source='/assets/Images/no.gif')]
+							 	var imgNo:Class;
+							 	imgUPHolder = imgNo;
+							}
+							else if (data.DEVIATION_UNAUTHORIZED_PAYEE == 0)
+							{
+								[Embed(source="/assets/Images/yes.gif")]
+							 	var imgYes:Class;
+								imgUPHolder = imgYes; 
+							}
+							else
+							{
+								imgUPHolder:Class;
+							}
+						/* }
+						else
+						{
+							imgUPHolder:Class;
+						} */
+						return imgUPHolder;
+					}  
+					/**
+					* This function will open a popup window with the link 
+					* "/billbacks/Deviation/Authorized_Payee_List.cfm".
+					*	The data.* would not work in the initialization above as the data.* 
+					*	is not created and is available only later
+					*/					
+					private function fnUPClick():void
+					{
+						/* 
+							This will disable the click for the highlighted rows for the 
+							Unknown_Item and Dummy_Program 
+						*/
+						// if ((data.Dummy_Program=='0')&&(data.UnKnown_Item=='0'))
+						//if (Third_Party_BB_Upload == 3  and (dummy_program is 0 and Unknown_ITem is 0))  OR (Third_Party_BB_Upload NEQ 3  AND Unknown_ITem is 0)
+						if ((data.Third_Party_BB_Upload == '3' && ((data.Dummy_Program=='0') && (data.UnKnown_Item=='0'))) || ((data.Third_Party_BB_Upload != '3')&&(data.UnKnown_Item=='0')))
+						{
+							var strRequestURL:String = URLgeneratedUP + data.Billback_Program_ID + "&Billback_ID=" + data.Billback_ID;
+							ExternalInterface.call("f = function() { window.open('"+strRequestURL+"','win','toolbar=no,scrollbars=yes,resizable=1,width=780,height=650'); }");
+						}						
+					}							
+				]]>
+			</mx:Script>
+	</mx:Image>
+</mx:HBox> 			
+
+ 

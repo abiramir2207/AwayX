@@ -1,0 +1,25 @@
+===== QUERY: qGetDist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForqGetDist>
+	<cftry>
+		<cfset qGetDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Distributor_List#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetItems =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

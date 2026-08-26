@@ -1,0 +1,24 @@
+<style>
+	DIV.claimCaption
+	{
+		background-color:gray;
+		font-size:12pt;
+		font-weight:bold;
+		height:#headerHeight#
+	}
+	TR.claimSummaryHeader TD 
+	{
+		background-color:gray;
+		color: white;
+		font-size:10pt;
+		font-weight:bold;
+		height:#headerHeight#
+	}
+	TR.claimSummaryData TD  
+	{
+		background-color:ffffff;
+		color: black;
+		font-size: 8pt;
+		border-right:1px solid Gray;
+	}
+</style>

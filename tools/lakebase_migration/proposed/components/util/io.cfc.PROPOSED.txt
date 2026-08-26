@@ -1,0 +1,21 @@
+===== QUERY: local.user =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_user = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForlocal_user>
+	<cftry>
+		<cfset local.user = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_user = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_user>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

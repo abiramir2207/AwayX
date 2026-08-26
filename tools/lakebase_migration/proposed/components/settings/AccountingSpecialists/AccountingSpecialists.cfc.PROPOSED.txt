@@ -1,0 +1,95 @@
+===== QUERY: qDeletePaymentTypeProcessor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqDeletePaymentTypeProcessor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type_payment_processor")>
+<cfif useLakebaseForqDeletePaymentTypeProcessor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("payment_type_payment_processor",
+			{
+				"deleted" = "eq.0",
+				"payment_type_id" = "eq.#arguments.paymentTypeId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeletePaymentTypeProcessor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeletePaymentTypeProcessor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertPaymentTypeProcessor =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_specialist_profile_access")>
+<cfif useLakebaseForqUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("accounting_specialist_profile_access",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsert =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetProfileList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProfileList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_specialist_profile_access")>
+<cfif useLakebaseForqGetProfileList>
+	<cftry>
+		<cfset qGetProfileList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_specialist_profile_access", {
+				"deleted" = "eq.0",
+				"select" = "profiles_id"
+			}), "profiles_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfileList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfileList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProfiles =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProfiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqGetProfiles>
+	<cftry>
+		<cfset qGetProfiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"select" = "profiles_id,profiles_desc"
+			}), "profiles_id,profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfiles>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

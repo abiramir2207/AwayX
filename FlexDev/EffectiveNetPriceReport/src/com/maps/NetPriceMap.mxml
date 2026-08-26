@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.maps.NetPriceEventMap;
+		]]>
+	</mx:Script>
+	
+	
+	<Injectors target="{NetPriceManager}">
+		<!-- Settings -->
+		<PropertyInjector targetKey="settings" source="{SettingsManager}" sourceKey="settings" />
+	</Injectors>
+	
+	<!-- MainPanel View __________________________________________________________________ -->
+	
+	<Injectors target="{NetPricePanel}">
+		
+		<!-- Settings -->
+		<PropertyInjector targetKey="settings" source="{SettingsManager}" sourceKey="settings" />
+		
+		<!-- Report data -->
+		<PropertyInjector targetKey="dpReportData" source="{NetPriceManager}" sourceKey="acReportData" />
+		<PropertyInjector targetKey="dpReportDataTotal" source="{NetPriceManager}" sourceKey="ReportDataTotal" />
+		
+		<!-- Drop down data -->
+		<PropertyInjector targetKey="dpAllBuyingGroup" source="{NetPriceManager}" sourceKey="arrAllBuyingGroup" />
+		<PropertyInjector targetKey="dpAllFamily" source="{NetPriceManager}" sourceKey="arrAllFamily" />
+		<PropertyInjector targetKey="dpAllRegion" source="{NetPriceManager}" sourceKey="arrAllRegion" />
+		<PropertyInjector targetKey="dpAllBroker" source="{NetPriceManager}" sourceKey="arrAllBroker" />
+		<PropertyInjector targetKey="dpAllTypeCode" source="{NetPriceManager}" sourceKey="arrAllTypeCode" />
+		
+		<!-- shared object / cache data -->
+		<!--
+		<PropertyInjector targetKey="sSODate" source="{MainManager}" sourceKey="getSOLastSavedDate" />
+		-->
+		
+		<!-- display dimension data -->
+		<PropertyInjector targetKey="ColumnWidthId" source="{NetPriceManager}" sourceKey="ColumnWidthId" />
+		<PropertyInjector targetKey="ColumnWidthDesc" source="{NetPriceManager}" sourceKey="ColumnWidthDesc" />
+		<PropertyInjector targetKey="ColumnWidthValues" source="{NetPriceManager}" sourceKey="ColumnWidthValues" />
+		
+	</Injectors>
+
+
+</EventMap>

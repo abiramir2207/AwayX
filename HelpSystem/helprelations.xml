@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<relations>
+	
+	<relationship  helpsystem_id="1" functionality_description="Home Page" source_url="/Manufacturers/home.cfm" help_url="Getting_Started_with_Blacksmith.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="2" functionality_description="Settings Control Panel" source_url="/settings/settings_frame_mainwindow.cfm" help_url="Control_Panel.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="3" functionality_description="List Territory" source_url="/settings/Access_Rights/brokers_search_form.cfm" help_url="Geography_from_Settings_page.htm#list_terr" deleted="0"/>
+	
+	<relationship  helpsystem_id="4" functionality_description="Division" source_url="/settings/zone_maintenance.cfm" help_url="Geography_from_Settings_page.htm#division" deleted="0"/>
+	
+	<relationship  helpsystem_id="5" functionality_description="Region" source_url="/settings/region_maintenance.cfm" help_url="Geography_from_Settings_page.htm#region" deleted="0"/>
+	
+	<relationship  helpsystem_id="6" functionality_description="Territory Area" source_url="/settings/Market_Area_Maintenance.cfm" help_url="Geography_from_Settings_page.htm#territory" deleted="0"/>
+	
+	<relationship  helpsystem_id="7" functionality_description="Operator Postal code tab" source_url="/settings/Operator_Tree/index.cfm" help_url="Geography_from_Settings_page.htm#operators" deleted="0"/>
+	
+	<relationship  helpsystem_id="8" functionality_description="Operator Position tab" source_url="/settings/Operator_Tree/index.cfm" help_url="Geography_from_Settings_page.htm#operators" deleted="0"/>
+	
+	<relationship  helpsystem_id="9" functionality_description="Operator Category tab" source_url="/settings/Operator_Tree/index.cfm" help_url="Geography_from_Settings_page.htm#operators" deleted="0"/>
+	
+	<relationship  helpsystem_id="10" functionality_description="Operator Priority Assign" source_url="/settings/Operator_Tree/index.cfm" help_url="Geography_from_Settings_page.htm#operators" deleted="0"/>
+	
+	<relationship  helpsystem_id="11" functionality_description="Status" source_url="/ReportWriter/pm/administration/status/create_status.cfm" help_url="Projects_from_Settings_page.htm#status" deleted="0"/>
+	
+	<relationship  helpsystem_id="12" functionality_description="Priority" source_url="/ReportWriter/pm/administration/Priority/create_Priority.cfm" help_url="Projects_from_Settings_page.htm#priorities" deleted="0"/>
+	
+	<relationship  helpsystem_id="13" functionality_description="Functional Areas" source_url="/ReportWriter/pm/administration/Functional_Area/create_far.cfm" help_url="Projects_from_Settings_page.htm#functional_areas" deleted="0"/>
+	
+	<relationship  helpsystem_id="14" functionality_description="Sponsors" source_url="/ReportWriter/pm/administration/Sponsor/create_Sponsor.cfm" help_url="Projects_from_Settings_page.htm#sponsors" deleted="0"/>
+	
+	<relationship  helpsystem_id="15" functionality_description="Deviation Tolerance" source_url="/billbacks/settings/expectations.cfm" help_url="Billback_Deviation_Tolerance_settings_from_Payables_Settings.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="16" functionality_description="Age Warning" source_url="/billbacks/settings/peril_age.cfm" help_url="Payables_from_Settings_page.htm#agewarning" deleted="0"/>
+	
+	<relationship  helpsystem_id="17" functionality_description="Holiday List" source_url="/billbacks/Check_Book/Bank_Tran/General_Ledger_Account/Create_Holidays.cfm" help_url="Payables_from_Settings_page.htm#holidaylist " deleted="0"/>
+	
+	<relationship  helpsystem_id="18" functionality_description="Fund" source_url="/GL_Code/GL_Code_In_Program/Fund_Management.cfm" help_url="Payables_from_Settings_page.htm#fund" deleted="0"/>
+	
+	<relationship  helpsystem_id="19" functionality_description="Manage GLCode" source_url="/GL_Code/Upload_Gl_Code/index.cfm" help_url="Payables_from_Settings_page.htm#manageglcode " deleted="0"/>
+	
+	<relationship  helpsystem_id="20" functionality_description="Upload Product Group" source_url="/GL_Code/Product_Grp/Upload_Product_Grp.cfm" help_url="Payables_from_Settings_page.htm#uploadproductgroup" deleted="0"/>
+	
+	<relationship  helpsystem_id="21" functionality_description="Vendor Management" source_url="/GL_Code/Vendor_management/vendor_Form.cfm" help_url="Payables_from_Settings_page.htm#vendormgmt" deleted="0"/>
+	
+	<relationship  helpsystem_id="22" functionality_description="Upload Payables" source_url="/billbacks/capture/Upload_Billback/index.cfm" help_url="Payables_from_Settings_page.htm#uploadpayables" deleted="0"/>
+	
+	<relationship  helpsystem_id="23" functionality_description="Claim Print" source_url="/settings/Billback_Batch_Print.cfm" help_url="Payables_from_Settings_page.htm#claimprint" deleted="0"/>
+	
+	<relationship  helpsystem_id="24" functionality_description="Actions" source_url="/Deductions/Settings/Stage/Create_Stage.cfm" help_url="Payables_from_Settings_page.htm#actions" deleted="0"/>
+	
+	<relationship  helpsystem_id="25" functionality_description="Aging" source_url="/Deductions/Settings/Aging/Create_Aging.cfm" help_url="Payables_from_Settings_page.htm#aging" deleted="0"/>
+	
+	<relationship  helpsystem_id="26" functionality_description="Assignment" source_url="/deductions/Assignment/index2.cfm" help_url="Payables_from_Settings_page.htm#assignment" deleted="0"/>
+	
+	<relationship  helpsystem_id="27" functionality_description="Auto Close" source_url="/deductions/Settings/Auto_Close.cfm" help_url="Payables_from_Settings_page.htm#autoclose" deleted="0"/>
+	
+	<relationship  helpsystem_id="28" functionality_description="Reminder Types" source_url="/Deductions/Settings/Reminder_Status_Create.cfm" help_url="Payables_from_Settings_page.htm#remindertypes" deleted="0"/>
+	
+	<relationship  helpsystem_id="29" functionality_description="Reason Codes" source_url="/Deductions/Settings/Reason_Code/Create_Reason_Code.cfm" help_url="Payables_from_Settings_page.htm#reasoncode" deleted="0"/>
+	
+	<relationship  helpsystem_id="30" functionality_description="Settings, Program Settings" source_url="/settings/contract_settings.cfm" help_url="Programs_from_Settings_page.htm#settings" deleted="0"/>
+	
+	<relationship  helpsystem_id="31" functionality_description="Program Wizard" source_url="/Program_Wizard/index.cfm" help_url="Programs_from_Settings_page.htm#program_wizard" deleted="0"/>
+	
+	<relationship  helpsystem_id="32" functionality_description="Formula Pricing" source_url="/settings/Formula_pricing/index.cfm" help_url="Programs_from_Settings_page.htm#formula_pricing" deleted="0"/>
+	
+	<relationship  helpsystem_id="33" functionality_description="Lump Sum Names" source_url="/settings/lump_sum_names/index.cfm" help_url="Programs_from_Settings_page.htm#lump_sum_na" deleted="0"/>
+	
+	<relationship  helpsystem_id="34" functionality_description="Discount Identifier" source_url="/settings/Discount_Identifier/index.cfm" help_url="Programs_from_Settings_page.htm#Disc_ID" deleted="0"/>
+	
+	<relationship  helpsystem_id="35" functionality_description="Manage Documents" source_url="/Common_Files/Documents/Create_Document_Details.cfm" help_url="Programs_from_Settings_page.htm#manage_docs" deleted="0"/>
+	
+	<relationship  helpsystem_id="36" functionality_description="Margin Targets" source_url="/settings/upload_margin_targets/index.cfm" help_url="Programs_from_Settings_page.htm#margin_targ" deleted="0"/>
+	
+	<relationship  helpsystem_id="37" functionality_description="Futures Pricing" source_url="/Futures_Pricing/settings/index.cfm" help_url="Programs_from_Settings_page.htm#futures_pric" deleted="0"/>
+	
+	<relationship  helpsystem_id="38" functionality_description="Performance Requirements" source_url="/Program_Wizard/performance_requirements.cfm" help_url="Programs_from_Settings_page.htm#perf_reqs" deleted="0"/>
+	
+	<relationship  helpsystem_id="39" functionality_description="Rebate Components" source_url="/settings/rebate_components/index.cfm" help_url="Programs_from_Settings_page.htm#rebate_comp" deleted="0"/>
+	
+	<relationship  helpsystem_id="40" functionality_description="Fixed Components" source_url="/settings/fixed_components/index.cfm" help_url="Programs_from_Settings_page.htm#fixed_comp" deleted="0"/>
+	
+	<relationship  helpsystem_id="41" functionality_description="Customer Types" source_url="/settings/Customer_Type/customer_type_list.cfm" help_url="Programs_from_Settings_page.htm#cust_types" deleted="0"/>
+	
+	<relationship  helpsystem_id="42" functionality_description="List Users" source_url="/settings/Access_Rights/users_search_form.cfm" help_url="List_Users_-_from_Settings,_Users.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="43" functionality_description="Add Users" source_url="/settings/Access_Rights/users_create_form.cfm" help_url="Add_Users_-_from_Settings,_Users.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="44" functionality_description="Unlock User" source_url="/settings/unlock_user.cfm" help_url="Users_-_from_Settings_page.htm#unlock_user" deleted="0"/>
+	
+	<relationship  helpsystem_id="45" functionality_description="Login Attempts" source_url="/settings/login_attempts.cfm" help_url="Users_-_from_Settings_page.htm#login_attempts" deleted="0"/>
+	
+	<relationship  helpsystem_id="46" functionality_description="User Profiles" source_url="/settings/Access_Rights/index.cfm" help_url="User_Profiles_-_from_Settings,_Users.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="47" functionality_description="Approval Groups" source_url="/settings/Group_details.cfm" help_url="Users_-_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="48" functionality_description="User Positions" source_url="/settings/position_tree/index.cfm" help_url="Users_-_from_Settings_page.htm#user_positions" deleted="0"/>
+	
+	<relationship  helpsystem_id="49" functionality_description="Authority Sequence" source_url="/settings/authority_sequence/index.cfm" help_url="Users_-_from_Settings_page.htm#authority_sequence" deleted="0"/>
+	
+	<relationship  helpsystem_id="50" functionality_description="Traffic Info" source_url="/administrivia/traffic_info.cfm" help_url="Users_-_from_Settings_page.htm#traffic_Settings" deleted="0"/>
+	
+	<relationship  helpsystem_id="51" functionality_description="Change Password" source_url="/settings/password_form.cfm" help_url="Password_-_Change_Password_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="52" functionality_description="Reports Central" source_url="/ReportWriter/index_main.cfm" help_url="Reports_Central_(Tools).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="53" functionality_description="Payables/Billbacks Reports" source_url="/ReportWriter/claimsIndex.cfm" help_url="Claim_Reports.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="54" functionality_description="Program Reports" source_url="/ReportWriter/index.cfm" help_url="Reports_Central_(Tools).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="55" functionality_description="Projects Reports" source_url="/ReportWriter/ContractApproval/Periodical_Reports.cfm" help_url="Contract_Approval_Reports.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="56" functionality_description="Perf. Reports - Perf." source_url="/Common_Files/Performance_Indicators/progPerfIndicator.cfm" help_url="Performance_Indicators_(Tools).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="57" functionality_description="Perf Reports - Volume Summary" source_url="/ReportWriter/reportInvoice.cfm" help_url="Volume_Reports_(Tools).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="58" functionality_description="Perf Reports - Contract Mgmt Perf. Metrics" source_url="/ReportWriter/Performance_Reports/performance_metrics_display.cfm" help_url="Contract_Management_Performance_Metrics_Report.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="59" functionality_description="Clause Library" source_url="/Clause_Library/index.cfm" help_url="Clause_Library_(Tools).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="60" functionality_description="Programs Scorecard" source_url="/scorecard/scorecard1.cfm" help_url="Programs_Scorecard_page_from_Home_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="61" functionality_description="Billbacks Scorecard" source_url="/billbacks/Scorecard/scorecard_main.cfm" help_url="Billbacks_Scorecard_page_from_Home_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="62" functionality_description="Projects Scorecard" source_url="/ReportWriter/PM/PM_display.cfm" help_url="Projects_Scorecard_page_from_Home_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="63" functionality_description="Select Program Type" source_url="/common_files/select_new_program_type.cfm" help_url="Program_functions_from_Home_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="64" functionality_description="Basic Info Page" source_url="/common_files/contracts/contract_create_1_form.cfm" help_url="Basic_Program_Information_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="65" functionality_description="Program Search Page" source_url="/Scorecard/program_Search.cfm" help_url="Search_Programs_from_programs_Scorecard.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="66" functionality_description="Trade Spending Planner" source_url="/ReportWriter/trade_plan/index.cfm" help_url="Trade_Planner.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="67" functionality_description="Reassign Programs" source_url="/Common_Files/Contracts/Reassign_Programs.cfm" help_url="Program_functions_from_Home_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="68" functionality_description="Create Billbacks" source_url="/billbacks/capture/basic_information_form.cfm" help_url="Create_Billback.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="69" functionality_description="Search Billbacks" source_url="/billbacks/Scorecard/billback_search.cfm" help_url="Search_Billback.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="70" functionality_description="Deduction Reporting" source_url="/deductions/Search_Screens/Ded_advanced_Search.cfm" help_url="Deduction_Reporting.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="71" functionality_description="Price List" source_url="/Common_Files/Price_List/Price_List_Scorecard_Main.cfm" help_url="Price_Lists_(Reports_Central,_Other).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="72" functionality_description="Program Summary Page" source_url="/common_files/contracts/contract_edit_menu.cfm" help_url="Program_Summary_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="73" functionality_description="Billbacks Payee " source_url="/billbacks/capture/payee_form.cfm" help_url="Create_Billback.htm#Create_Billback_page_2_Payee" deleted="0"/>
+	
+	<relationship  helpsystem_id="74" functionality_description="Billbacks Program page " source_url="/billbacks/capture/program_form.cfm" help_url="Create_Billback.htm#Create_Billback_page_3_Add_Program" deleted="0"/>
+	
+	<relationship  helpsystem_id="75" functionality_description="Billbacks Documents Attachments" source_url="/billbacks/capture/Attachments_Form.cfm" help_url="Billbacks_Attach_Documents.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="76" functionality_description="Billbacks Payment" source_url="/Billbacks/Approval/index.cfm" help_url="Billback-Submit_and_Approve.htm#continue" deleted="0"/>
+	
+	<relationship  helpsystem_id="77" functionality_description="Billbacks Route" source_url="/billbacks/common/bb_route.cfm" help_url="Billbacks_Summary_Pages.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="78" functionality_description="Billbacks Inbox" source_url="/billbacks/common/bb_route_inbox.cfm" help_url="Billbacks_Summary_Pages.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="79" functionality_description="Billbacks Summary page" source_url="/billbacks/capture/Billback_Summary.cfm" help_url="Billbacks_Summary_Pages.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="80" functionality_description="Settings, Administration" source_url="/settings/select_system_administrator_form.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="81" functionality_description="Settings, Admin, fiscal year" source_url="/settings/fiscal_year_settings.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="82" functionality_description="Settings, Admin, Dist Fiscal Year" source_url="/settings/Distributor_fiscal_year_settings.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="83" functionality_description="Settings, Admin, logoff timeout" source_url="/settings/session_management.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="84" functionality_description="Settings, Admin, Application Settings" source_url="/settings/app_settings.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="85" functionality_description="Settings, Admin, Deleted/Purged" source_url="/settings/deleted_programs.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="86" functionality_description="Settings, Admin, Reports" source_url="/reportwriter/performance_reports/management_reports.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="87" functionality_description="Settings, Admin, Approval Cost Variables" source_url="/settings/approval_costs/index.cfm" help_url="Administration_from_Settings_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="88" functionality_description="Billbacks, payment approval options" source_url="/Billbacks/Approval/index.cfm" help_url="Billbacks,_Claim_Variance.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="89" functionality_description="Billbacks Trade Checkbook" source_url="/billbacks/ledger/index.cfm" help_url="Trade_Checkbook_(Billbacks).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="90" functionality_description="Billbacks Distributor Search" source_url="/Billbacks/search_Screens/pm_select_distributors.cfm" help_url="Trade_Checkbook_(Billbacks).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="91" functionality_description="Billbacks Distributor Search Results page" source_url="/billbacks/ledger/program_list.cfm" help_url="Trade_Checkbook_(Billbacks).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="92" functionality_description="Billbacks Add a Reimbursement" source_url="/billbacks/reimbursements/index.cfm" help_url="Trade_Checkbook_(Billbacks).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="93" functionality_description="Auto Checkbook - Billbacks" source_url="/billbacks/ledger/auto_checkbook/index.cfm" help_url="Billbacks_Auto_Checkbook.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="94" functionality_description="Auto Checkbook Billbacks  - Add" source_url="/billbacks/ledger/auto_checkbook/add_edit.cfm" help_url="Billbacks_Auto_Checkbook.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="95" functionality_description="Auto Checkbook Billback Add Program  Search" source_url="/billbacks/search_screens/search_programs.cfm" help_url="Program_Search.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="96" functionality_description="Auto Checkbook Billbacks Add Dist Search" source_url="/Billbacks/search_Screens/pm_select_distributors.cfm" help_url="Billbacks_Auto_Checkbook.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="97" functionality_description="Deductions from Home page" source_url="/deductions/index.cfm" help_url="Deductions_from_Home_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="98" functionality_description="Deduction Search" source_url="/deductions/search_screens/deduction_search.cfm" help_url="Search_Deductions.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="99" functionality_description="Deductions, Single Ded View" source_url="/deductions/inc_deduction_details.cfm" help_url="Single_Deduction_View.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="100" functionality_description="Deduction Split" source_url="/deductions/split/Split_parent.cfm" help_url="Single_Deduction_View.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="101" functionality_description="Deduction Reassign" source_url="/deductions/Reassign/Single_DD_Reassign.cfm" help_url="Reassign_Deductions.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="102" functionality_description="Deductions Attach Documents" source_url="/deductions/Attachments/Attach_Doc.cfm" help_url="Deductions_Attach_Documents.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="103" functionality_description="Close Deduction" source_url="/deductions/closure/index.cfm" help_url="Single_Deduction_View.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="105" functionality_description="Deduction, Single Left Pane Menu" source_url="/deductions/deduction.cfm" help_url="single_deduction_view.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="106" functionality_description="Projects, Search" source_url="/ReportWriter/PM/index.cfm" help_url="Projects_icon,_Search_Projects.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="107" functionality_description="Create Project" source_url="/ReportWriter/PM/PM_create.cfm" help_url="Create_Project.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="108" functionality_description="Create Project" source_url="/ReportWriter/PM/PM_create.cfm" help_url="Create_Project.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="109" functionality_description="Projects, Select Type Groups" source_url="/ReportWriter/PM/pm_select_QBrands.cfm" help_url="Create_Project.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="110" functionality_description="Projects, Select Brokers" source_url="/Billbacks/search_screens/pm_select_brokers.cfm" help_url="Create_Project.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="111" functionality_description="Projects, Select Distributors" source_url="/Billbacks/search_screens/pm_select_distributors.cfm" help_url="Create_Project.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="112" functionality_description="Projects, Select End User Operator" source_url="/Billbacks/search_screens/pm_select_operators.cfm" help_url="Create_Project.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="113" functionality_description="Search/Select Program" source_url="/Search_Screens/Program_Search.cfm" help_url="Program_Search.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="114" functionality_description="Projects, Attach Documents" source_url="/common_files/Documents/Attach_Document.cfm" help_url="Attach_Documents.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="115" functionality_description="Projects, Reassign" source_url="/ReportWriter/PM/Reassign/PM_Reassign.cfm" help_url="Reassign_Projects.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="116" functionality_description="Projects, Invoice Search" source_url="/search_screens/invoice/search_invoices.cfm" help_url="Invoice_Search.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="117" functionality_description="Projects, Search End Users" source_url="/settings/operator_management/select_operators.cfm" help_url="Search_End_Users.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="118" functionality_description="Setting, Projects, Phases" source_url="/ReportWriter/pm/administration/Phase/create_Phase.cfm" help_url="Projects_from_Settings_page.htm#phases" deleted="0"/>
+	
+	<relationship  helpsystem_id="119" functionality_description="Reports, Payables, Billback App'vl" source_url="/ReportWriter/billbackapprovalmain.cfm" help_url="Billback_Approval_Report.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="120" functionality_description="Reports, Saved Reports" source_url="/ReportWriter/reportlist.cfm" help_url="Reports_Central_(Tools).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="121" functionality_description="Toolbar Icon, Todo List" source_url="/todo/todo_view.cfm" help_url="To_Do_List.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="122" functionality_description="Create Program, Select Cust/Distributors" source_url="/common_files/contracts/select_distributors.cfm" help_url="Select_Program_Customers_page_(create_program).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="123" functionality_description="Create Program, Select PgmTerritory or Broker" source_url="/common_files/contracts/select_brokers.cfm" help_url="Select_Program_Territory.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="124" functionality_description="Create Program, Fixed Component" source_url="/Common_Files/contracts/Contract_Discount_Fixed_Component.cfm" help_url="Product_Fixed_Component_Creation_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="125" functionality_description="Create Program, Rebate Entry" source_url="/Common_Files/contracts/Contract_Discount_Rebates.cfm" help_url="Product_Rebate_Entry_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="126" functionality_description="Pgm Reb. Select Product Groups" source_url="/Common_Files/contracts/Groups/index.cfm" help_url="Select_Product_Groups.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="127" functionality_description="Product Search" source_url="/Common_Files/contracts/product_select_V1.cfm" help_url="Product_Search_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="128" functionality_description="Program, Lump Sum Component" source_url="/Common_Files/contracts/Contract_Discount_Lump_Sums.cfm" help_url="Product_Lump_Sum_Component_Creation.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="129" functionality_description="Prog, Lump Sum, Select Distrib" source_url="/Common_Files/contracts/select_lumpsum_distributors.cfm" help_url="Product_Lump_Sum_Component_Creation.htm#Distributor_Customer" deleted="0"/>
+	
+	<relationship  helpsystem_id="130" functionality_description="Prog, Lump Sum, Select ProdGroups" source_url="/Common_Files/contracts/select_lumpsum_products.cfm" help_url="Product_Lump_Sum_Component_Creation.htm#ProdGroup" deleted="0"/>
+	
+	<relationship  helpsystem_id="131" functionality_description="Prog, Growth, Sel Growth Products" source_url="/Common_Files/contracts/contract_discount_Growth_add_component_products.cfm" help_url="Product_Growth_Entry_page.htm#SelGrowthProduct" deleted="0"/>
+	
+	<relationship  helpsystem_id="132" functionality_description="Prog Growth Add products" source_url="/Common_Files/contracts/contract_discount_Growth_add_component_products.cfm" help_url="Product_Growth_Entry_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="133" functionality_description="Prog, Growth X of Y" source_url="/Common_Files/contracts/Contract_Discount_Growth_Add_Target.cfm" help_url="Product_Growth_Entry_page.htm#X_of_Y" deleted="0"/>
+	
+	<relationship  helpsystem_id="134" functionality_description="Prog Date Exclusions" source_url="/Common_Files/contracts/contract_exclusions.cfm" help_url="Program_Date_Exclusion_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="135" functionality_description="Program Volume Applicator" source_url="/Common_Files/Volume/Volume_Applicator.cfm" help_url="Program_Volume_Applicator.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="136" functionality_description="Program Profit Analysis fr. View Margins" source_url="/Common_Files/Contracts/contract_profit_analysis.cfm" help_url="Program_Profit_Analysis_window.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="137" functionality_description="Programs, Fixed Price" source_url="/Common_Files/contracts/Contract_Discount_Fixed_Prices.cfm" help_url="Program_Fixed_Price_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="138" functionality_description="Program, Growth, Main page" source_url="/Common_Files/contracts/Contract_Discount_Growth.cfm" help_url="Product_Growth_Entry_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="139" functionality_description="Programs, Bid Request" source_url="/common_files/contracts/bid_request/bid_request.cfm" help_url="Programs_Bid_Request.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="140" functionality_description="Programs, Documents" source_url="/Common_Files/contracts/contract_attachments.cfm" help_url="Program_Documents_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="141" functionality_description="Home, Futures Pricing" source_url="/Futures_Pricing/scorecard/search_result.cfm" help_url="Futures_Pricing_Scorecard_Search.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="142" functionality_description="Futures Pricing Deal Sheet" source_url="/Futures_Pricing/handler.cfm" help_url="Create_new_futures_pricing_Home_Programs.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="143" functionality_description="Home, Pgms, Commodity Costs" source_url="/profits/index.cfm" help_url="Program_functions_from_Home_page.htm#Commodity_costs" deleted="0"/>
+	
+	<relationship  helpsystem_id="144" functionality_description="Settings, Programs, Edit Agreed Pgms" source_url="/settings/edit_agreed_program.cfm" help_url="Programs_from_Settings_page.htm#edit_agreed_program" deleted="0"/>
+	
+	<relationship  helpsystem_id="145" functionality_description="Settings, Payables, Deduction Settings" source_url="/deductions/settings/deduction_external_settings.cfm" help_url="Payables_from_Settings_page.htm#deduction_settings" deleted="0"/>
+	
+	<relationship  helpsystem_id="146" functionality_description="Program page, History" source_url="/Common_Files/contracts/view_contract_history.cfm" help_url="Program_page,_left_pane.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="147" functionality_description="Pgms product Growth-Component" source_url="/Common_Files/contracts/Contract_Discount_Growth_Main.cfm" help_url="Product_Growth_Entry_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="148" functionality_description="Prog Product Growth Add Component" source_url="/Common_Files/contracts/Contract_Discount_Growth_Add_Component.cfm" help_url="Product_Growth_Entry_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="149" functionality_description="Prog using Dist OI template" source_url="/contracts/off-invoice.cfm" help_url="Distributor_Off_Invoice_Program.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="150" functionality_description="Reports Central, Margin Anal Tab" source_url="/ReportWriter/margin_Analysis.cfm" help_url="Reports_Central_(Tools).htm#MarginAnal" deleted="0"/>
+	
+	<relationship  helpsystem_id="151" functionality_description="Reports Central, Programs, Program Revision Report" source_url="/ReportWriter/Performance_Reports/revisionreport.cfm" help_url="Program_Revision_Report_(Tools).htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="152" functionality_description="Reports Central, Generate Status Report" source_url="/anything_automated/ONLYPUBLICDIRECTORY/status_programs_emailer.cfm" help_url="Generate_Status_Report_-_Status_Notification.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="153" functionality_description="Reports Central, Generate RFA Report" source_url="/anything_automated/ONLYPUBLICDIRECTORY/email_programs_awaiting_action.cfm" help_url="Generate_RFA_Report.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="154" functionality_description="Reports Central,  Pay/BB, Gen Claim Excel Report" source_url="/ReportWriter/excelGeneration.cfm" help_url="Claim_Reports.htm#Generate_Excel_Document" deleted="0"/>
+	
+	<relationship  helpsystem_id="155" functionality_description="Reports Central, Pay/BB, Billback Approval Report" source_url="/ReportWriter/billbackapprovalmain.cfm" help_url="Claim_Reports.htm#Billback_Approval" deleted="0"/>
+	
+	<relationship  helpsystem_id="156" functionality_description="Pgm Wizard, Basic Pgm Info -Template" source_url="/Program_Wizard/create_edit.cfm" help_url="Distributor_Trade_Shelter_program_template.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="157" functionality_description="Pgm Wizard Template page 2" source_url="/Program_Wizard/secondpage.cfm" help_url="Distributor_Trade_Shelter_program_template_page_two.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="158" functionality_description="Pgm Wiz Template Approval Metrics tab" source_url="/Program_Wizard/Approval_Template_Add_Remove.cfm" help_url="Program_Template_fields__Approval_Metrics_Tab.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="159" functionality_description="Pgm Wiz Template page for Duplicates tab" source_url="/Program_Wizard/dup_program_def.cfm" help_url="Distributor_Trade_Shelter_program_template_page_3.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="160" functionality_description="Pgm Wiz, Templates page for Clause tab" source_url="/Program_Wizard/Clause_Template_Add_Remove.cfm" help_url="Distributor_Trade_Shelter_program_template_page_4.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="161" functionality_description="Pgm Wiz Template Summary Page" source_url="/Program_Wizard/summary.cfm" help_url="Program_Wizard_Template_Summary_Page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="162" functionality_description="Programs, Approval Matrix" source_url="/Common_Files/Margin_Matrix/index.cfm" help_url="Program_functions_from_Home_page.htm#Approval_matrix" deleted="0"/>
+	
+	<relationship  helpsystem_id="163" functionality_description="Futures Pricing" source_url="/Futures_Pricing/index.cfm" help_url="Futures_Pricing_Scorecard_Search.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="164" functionality_description="Futures Pricing Create New" source_url="/Futures_Pricing/view.cfm" help_url="create_new_futures_pricing_home_programs.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="165" functionality_description="Futures Pricing scorecard search" source_url="/Futures_Pricing/scorecard/search.cfm" help_url="futures_pricing_scorecard_search.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="166" functionality_description="Bid Request Reporting Search " source_url="/search_screens/bid_request/bid_request_search.cfm" help_url="Bid_Request_Reporting_search_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="167" functionality_description="Distributor Search" source_url="/Billbacks/search_Screens/pm_select_distributors.cfm" help_url="Distributor_Search_-_Select_Distributor.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="168" functionality_description="Home, Billbacks, Reimbursements" source_url="/billbacks/reimbursements/index.cfm" help_url="Reimbursements.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="169" functionality_description="Auto Checkbook, Add" source_url="/billbacks/ledger/auto_checkbook/add_edit.cfm" help_url="Add_Auto_Checkbook_page.htm" deleted="0"/>
+	
+	<relationship  helpsystem_id="170" functionality_description="Settings, Programs, Payment Types" source_url="/settings/payment_type/index.cfm" help_url="Programs_from_Settings_page.htm#Payment_Types" deleted="0"/>
+	
+	<relationship  helpsystem_id="171" functionality_description="Settings, Programs, Operating Grps" source_url="/Settings/Operating_group/index.cfm" help_url="Programs_from_Settings_page.htm#oper_Groups" deleted="0"/>
+	
+	<relationship  helpsystem_id="172" functionality_description="Settings, Programs, Program Labels" source_url="/settings/Accounting_Program_Types/index.cfm" help_url="Programs_from_Settings_page.htm#Account_pgm_types" deleted="0"/>
+	
+	<relationship  helpsystem_id="173" functionality_description="Settings, Programs, Manage End Users" source_url="/settings/operator_management/index.cfm" help_url="Programs_from_Settings_page.htm#end_user_management" deleted="0"/>
+	
+	<relationship  helpsystem_id="174" functionality_description="Programs, Settings, EUMgmt, Create End User" source_url="/profiles/operators/Operator_Creation_Entry_Form_Stripped.cfm" help_url="programs_from_settings_page.htm#end_user_management" deleted="0"/>
+	
+	<relationship  helpsystem_id="175" functionality_description="Work Request" source_url="/Settings/Work_Request/index.cfm" help_url="Work_request.htm" deleted="0"/>
+	
+</relations>
+

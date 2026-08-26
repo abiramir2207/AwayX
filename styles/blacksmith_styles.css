@@ -1,0 +1,85 @@
+body 
+{
+	background: #fff;
+}
+
+form 
+{
+  margin: 0;
+  padding: 0;
+}
+
+#main
+{
+	position: absolute;
+}
+
+.col
+{
+	float: left; 
+	margin: 0px 2px 0px 0px;  
+	height: 31px; 
+	text-align: left;
+	padding-left: 15px;
+}
+.col1
+{
+	float: left; 
+	margin: 0px 2px 0px 0px;  
+	height: 31px; 
+	text-align: left;
+}
+
+input, select
+{
+	font-size: 7.5pt;
+}
+
+form dt {
+	margin: 0.5em 0 0.25em 0 ;
+}
+
+form dt label
+{
+	font-size: 8pt;
+	font-weight: bold;
+}
+
+form dd {
+	margin:0 0 0 0.15em ;
+}
+
+.button
+{
+	top: 35px;
+	margin-left: 16em;
+}
+
+div.row {
+	clear: both; width: 335px
+}
+
+th
+{
+	font-size: 7pt;
+	text-align: justify;
+    	cursor: pointer; 
+   	background-position: left;
+	padding-right: 0px;
+}	
+
+.trHeader
+{
+	background: url('../images/orange_header.gif'); background-repeat: repeat-x;
+	height: 26px;	
+}
+
+.redBracket
+{
+	font-size: 9pt;
+	font-weight: bold;
+	color: red;	
+}
+
+
+

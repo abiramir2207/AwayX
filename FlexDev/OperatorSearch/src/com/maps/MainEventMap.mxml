@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" 
+	xmlns:mate="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.views.SearchPanel;
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.events.*;
+			import com.models.*;
+			//import com.vos.*;
+		]]>
+	</mx:Script>
+	
+	<!-- Debug On/Off -->
+	<!--<Debugger level="{Debugger.ALL}" />-->
+		
+	<!--- load up an instance of the remote objects -->
+	<!-- Remote Services  _________________________________________________________________________ -->
+	<!--- Search Service: mvc.Models.Operator.OperatorSearchService -->
+	<mx:RemoteObject id="roSearchService" 			destination="ColdFusion" 	source="mvc.Models.Operator.OperatorSearchService" />
+	<!--- Error Service: mvc.Models.ErrorService -->
+	<mx:RemoteObject id="roErrorService" 			destination="ColdFusion" 	source="mvc.Models.ErrorService" />
+	<!--- Operator List Service: mvc.Models.Operator.OperatorList; Deals with operations related to operator lists  -->
+	<mx:RemoteObject id="roOperatorListService" 	destination="ColdFusion" 	source="mvc.Models.Operator.OperatorList" />
+	
+	<!-- FlexEvent.PREINITIALIZE __________________________________________________________________ -->
+	<!--- 
+		- Pre-Initialize calls to define objects and load settings;
+		- @see com.models.SettingsManager#loadURLParameters()
+	-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE">
+		<ObjectBuilder generator="{SearchManager}" 		id="oSearchManager" 		cache="global" />
+		<ObjectBuilder generator="{SettingsManager}" 	id="oSettingsManager" 		cache="global" />
+		<ObjectBuilder generator="{ListManager}" 		id="oListManager" 			cache="global" />
+		<ObjectBuilder generator="{BAError}" 			id="oBAError" 				cache="global" />
+		<MethodInvoker generator="{SettingsManager}" 	method="loadURLParameters" 	cache="global" />
+		
+		<!-- call db for other settings-->
+		<EventAnnouncer type="{SearchEvent.LOAD_APP_SETTINGS}" generator="{SearchEvent}">
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+		
+		<!--call to the db for filters values -->
+		<EventAnnouncer type="{SearchEvent.LOAD_Filter_Values}" generator="{SearchEvent}" />
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE ___________________________________________________________ -->
+	<!--- Announce Creation complete Events -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE">
+		<!--Populate the Saved Lists -->
+		<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+
+	</EventHandlers>
+	
+	 <!-- SAVE SETTINGS _________________________________________________________-->
+	 <!--- Save Settings
+	 	- @see com.models.SettingsManager#SaveSettings()
+	 -->
+	<EventHandlers type="{SearchEvent.SAVE_SETTINGS}" id="eSAVE_SETTINGS">
+        <!--Store passed in values (flashvars)-->
+		<MethodInvoker 	generator="{SettingsManager}" method="SaveSettings" arguments="{event.settings}" />
+    </EventHandlers>
+
+	<!--GET Operators Event___________________________________________________________-->
+	<!--- Adds the necessary parameters and call the GET_OPERATORS event -->
+	<EventHandlers type="{SearchEvent.GET_OPERATORS_EVENT}" debug="false" id="eGET_OPERATORS_EVENT">
+		<!--Get Operators--> 
+		<EventAnnouncer type="{SearchEvent.GET_OPERATORS}" generator="{SearchEvent}" >
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.businessSegmentsOn" targetKey="businessSegmentsOn"/>
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.businessSegmentID" targetKey="businessSegmentID"/>
+			
+			<Properties	state="{event.state}" />
+			<Properties	operatorType="{event.operatorType}" />
+			<Properties	status="{event.status}" />
+			<Properties	searchFieldText="{event.searchFieldText}" />
+			
+		</EventAnnouncer>
+	</EventHandlers>
+    
+	<!--GET Operators from DB: Remote Call_____________________________________________-->
+	<!--- Gets the operators from remote call to the DB
+		- @see	#roSearchService
+		- RemoteInvoke: roSearchService.getOperatorsFT
+		- @see	com.models.SearchManager#operatorResults()
+		- Handler: SearchManager.operatorResults()
+	 -->
+	<EventHandlers type="{SearchEvent.GET_OPERATORS}" debug="false" id="eGET_OPERATORS">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getOperatorsFT" 
+			arguments="{[event.programId,event.businessSegmentsOn,event.businessSegmentID,event.state,event.operatorType,event.status,event.searchFieldText]}">
+			
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="operatorResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get operatorsFT)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+
+	<!--GET Saved Operators Event___________________________________________________________-->
+	<!--- Adds the necessary parameters and call the GET_SAVED_OPERATORS event -->
+	<EventHandlers type="{SearchEvent.GET_SAVED_OPERATORS_EVENT}" debug="false" id="eGET_SAVED_OPERATORS_EVENT">
+		<!--Get Operators--> 
+		<EventAnnouncer type="{SearchEvent.GET_SAVED_OPERATORS}" generator="{SearchEvent}" >
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.businessSegmentsOn" targetKey="businessSegmentsOn"/>
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.businessSegmentID" targetKey="businessSegmentID"/>			
+			<Properties	savedOperatorIDs="{event.savedOperatorIDs}" />			
+		</EventAnnouncer>
+	</EventHandlers>
+    
+	<!--GET Saved Operators from DB: Remote Call_____________________________________________-->
+	<!--- Gets the saved operators from remote call to the DB
+		- @see	#roSearchService
+		- RemoteInvoke: roSearchService.getSavedOperators()
+		- @see	com.models.SearchManager#operatorResults()
+		- Handler: SearchManager.operatorResults()
+	 -->
+	<EventHandlers type="{SearchEvent.GET_SAVED_OPERATORS}" debug="false" id="eGET_SAVED_OPERATORS">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getSavedOperators" 
+			arguments="{[event.programId,event.businessSegmentsOn,event.businessSegmentID,event.savedOperatorIDs]}">
+			
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="operatorResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get saved operators)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--Load Filter Values Event_________________________________________________________-->
+	<!--- Announces events to load filters -->
+	<EventHandlers type="{SearchEvent.LOAD_Filter_Values}" debug="false" id="eLOAD_Filter_Values">
+		<EventAnnouncer type="{SearchEvent.LOAD_State_Values}" generator="{SearchEvent}" />	
+		<EventAnnouncer type="{SearchEvent.LOAD_Operator_Type_Values}" generator="{SearchEvent}" />
+		<EventAnnouncer type="{SearchEvent.LOAD_Status_Values}" generator="{SearchEvent}" />
+	</EventHandlers>
+	
+	<!--Load State Filter Values Event_________________________________________________________-->
+	<!--- Loads the States dropdown from remote call to the DB
+		- @see	#roSearchService
+		- RemoteInvoke: roSearchService.getAllStates()
+		- @see	com.models.SearchManager#updStateFilter()
+		- Handler: SearchManager.updStateFilter()
+	 -->	
+	<EventHandlers type="{SearchEvent.LOAD_State_Values}" debug="false" id="eLOAD_State_Values">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getAllStates">
+			
+			<!--call the function to populate the states array from the query--> 
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="updStateFilter" arguments="{resultObject}" />
+			</resultHandlers>
+		
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get states)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+        </RemoteObjectInvoker>
+    </EventHandlers>
+	
+	<!--Load Operator Types Filter Values Event_________________________________________________________-->
+	<!--- Loads the Operator Type dropdown from remote call to the DB
+		- @see	#roSearchService
+		- RemoteInvoke: roSearchService.getAllOperatorTypes()
+		- @see	com.models.SearchManager#updOperatorTypeFilter()
+		- Handler: SearchManager.updOperatorTypeFilter()
+	 -->	
+	<EventHandlers type="{SearchEvent.LOAD_Operator_Type_Values}" debug="false">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getAllOperatorTypes">
+			
+			<!--call the function to populate the operator type array from the query--> 
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="updOperatorTypeFilter" arguments="{resultObject}" />
+			</resultHandlers>
+		
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get states)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+        </RemoteObjectInvoker>
+    </EventHandlers>
+	
+	<!--Load Operator Status Filter Values Event_________________________________________________________-->
+	<!--- Loads the Operator Status dropdown from remote call to the DB
+		- @see	#roSearchService
+		- RemoteInvokes: roSearchService.getAllStatus()
+		- @see	com.models.SearchManager#updStatusFilter()
+		- Handler: SearchManager.updStatusFilter()
+	 -->	
+	<EventHandlers type="{SearchEvent.LOAD_Status_Values}" debug="false">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getAllStatus">
+			
+			<!--call the function to populate the status array from the query--> 
+			<resultHandlers>
+				<MethodInvoker generator="{SearchManager}" method="updStatusFilter" arguments="{resultObject}" />
+			</resultHandlers>
+		
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get states)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+        </RemoteObjectInvoker>
+    </EventHandlers>
+    	
+
+    <!--FILTER  _________________________________________________________-->
+	<!--- Calls the Operator filter functon in Search Manager
+		- @see	com.models.SearchManager#updStatusFilter()
+		- Invokes: SearchManager.operatorFilter()
+	-->
+	<EventHandlers type="{SearchEvent.FILTER}" id="eFILTER">
+        <MethodInvoker 	generator="{SearchManager}" method="operatorFilter" 
+        				arguments="{[event.searchFieldText,event.state,event.operatorType,event.status]}" />
+    </EventHandlers>
+    
+     <!--RESET FILTER  _________________________________________________________-->
+	<!--- Reset filter -->
+	<EventHandlers type="{SearchEvent.RESET_FILTER}" id="eRESET_FILTER">
+        <MethodInvoker 	generator="{SearchManager}" method="operatorResults" arguments="{[event.operatorAC]}" />
+    </EventHandlers>
+    
+    <!--FILTER SELECTED  _________________________________________________________-->
+    <!--- Filter selected -->
+	<EventHandlers type="{SearchEvent.FILTER_SELECTED}" id="eFILTER_SELECTED">
+        <MethodInvoker 	generator="{SearchManager}" method="filterSelected" />
+    </EventHandlers>
+    
+    <!--FILTER DESELECTED  _________________________________________________________-->
+    <!--- Filter deselected -->
+	<EventHandlers type="{SearchEvent.FILTER_DESELECTED}" debug="false" id="eFILTER_DESELECTED">
+        <MethodInvoker 	generator="{SearchManager}" method="filterDeSelected" />
+    </EventHandlers>    
+
+    <!--TRACK SELECTED ITEMS _________________________________________________________-->
+    <!--- Track selected operators -->
+	<EventHandlers type="{SearchEvent.TRACK_OPERATORS}" id="eTRACK_OPERATORS">
+        <MethodInvoker 	generator="{SearchManager}" method="trackSelectedOperator" arguments="{[event.selectedOperator]}" />
+    </EventHandlers> 
+ 
+    <!--CREATE USER ITEM LIST  _________________________________________________________-->
+    <!--- Create user list of operators -->
+	<EventHandlers type="{SearchEvent.CREATE_LIST}" id="eCREATE_LIST">
+        <MethodInvoker 	generator="{SearchManager}" method="createList" arguments="{[event.iList]}" />
+    </EventHandlers>
+    
+    <!--DISPLAY USER ITEM LIST  _________________________________________________________-->
+    <!--- Display user item list -->
+	<EventHandlers type="{SearchEvent.GET_USERLIST_OPERATORS}" id="eGET_USERLIST_OPERATORS">
+       <MethodInvoker 	generator="{SearchManager}" method="displayList" arguments="{[event.arrUserListOperators]}" />
+    </EventHandlers>
+    
+	<!--GET SAVED USER ITEM LIST  _________________________________________________________-->
+	<EventHandlers type="{SearchEvent.GET_USERLIST}">
+        <RemoteObjectInvoker instance="{roOperatorListService}" showBusyCursor="true" method="getUserOperatorList" arguments="{event.userId}">		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ListManager}" method="userOperatorListResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (get)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+    
+    <!--SAVE NEW USER ITEM LIST  _________________________________________________________-->
+	<EventHandlers type="{SearchEvent.SAVE_USERLIST}">
+        <RemoteObjectInvoker instance="{roOperatorListService}" showBusyCursor="true" method="saveUserOperatorList" 
+        						arguments="{[event.userId,event.userListOperatorsName,event.arrUserListOperators]}">		 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{ListManager}" method="saveOperatorListResults" arguments="{resultObject}" />
+			</resultHandlers>
+			
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (save)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		<!--reload user list-->
+			<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+				<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+			</EventAnnouncer>
+    </EventHandlers>
+    
+	<!--DELETE USER ITEM LIST  ___________________________________________________________-->
+	<EventHandlers type="{SearchEvent.DELETE_USERLIST}">
+        <RemoteObjectInvoker instance="{roOperatorListService}" showBusyCursor="true" method="deleteUserOperatorList" arguments="{event.userListId}">	 
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!--reload user list after the delete-->
+				<EventAnnouncer type="{SearchEvent.GET_USERLIST}" generator="{SearchEvent}" >
+					<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+				</EventAnnouncer>
+				<!--<MethodInvoker generator="{ListManager}" method="deleteItemListResults" arguments="{data.tmpUserId}" />-->
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event-->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="USER LIST SERVICE (delete)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+    </EventHandlers>
+    
+    <!--IMPORT ITEMS _____________________________________________________________________-->
+	<EventHandlers type="{SearchEvent.IMPORT_OPERATORS}">
+        <MethodInvoker 	generator="{SearchManager}" method="importOperators" />
+    </EventHandlers>
+    
+    <!--LOAD APP SETTINGS ___________________________________________________________-->
+	<EventHandlers type="{SearchEvent.LOAD_APP_SETTINGS}">
+		<RemoteObjectInvoker instance="{roSearchService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker cache="global" generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{SearchEvent.BSA_ERROR}" generator="{SearchEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+    
+	<!--BSA CUSTOM ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{SearchEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{roErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+	</EventHandlers>
+	
+</EventMap>

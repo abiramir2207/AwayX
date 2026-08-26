@@ -1,0 +1,217 @@
+===== QUERY: qVendorOnlyBillback =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqVendorOnlyBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqVendorOnlyBillback>
+	<cftry>
+		<cfset qVendorOnlyBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "vendor_only_billback"
+			}), "vendor_only_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqVendorOnlyBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqVendorOnlyBillback>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getDistributorId =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: Get_Status =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: Get_Generic_Types =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetBrokers =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetFamilyNames =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetBuyingGroups =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDistName =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetPaymentTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPaymentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqGetPaymentTypes>
+	<cftry>
+		<cfset qGetPaymentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"restrict_from_billback" = "eq.0",
+				"off_invoice" = "eq.0",
+				"order" = "payment_type_name.asc",
+				"select" = "payment_type_name,payment_type_id"
+			}), "payment_type_name,payment_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPaymentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPaymentTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetPaymentCycle =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetTemplates =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetTemplates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetTemplates>
+	<cftry>
+		<cfset qGetTemplates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"isdominant" = "eq.1",
+				"order" = "created_type.asc",
+				"select" = "created_type as program_template_name"
+			}), "created_type as program_template_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplates>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getDistributorBusinessSegmentId =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getOperatorBusinessSegmentId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOperatorBusinessSegmentId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForgetOperatorBusinessSegmentId>
+	<cftry>
+		<cfset getOperatorBusinessSegmentId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.FilterDataList#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOperatorBusinessSegmentId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOperatorBusinessSegmentId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getBrokerBusinessSegmentId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetBrokerBusinessSegmentId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForgetBrokerBusinessSegmentId>
+	<cftry>
+		<cfset getBrokerBusinessSegmentId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"bsa_foodservice_brokers_id" = "eq.#FORM.FilterDataList#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBrokerBusinessSegmentId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBrokerBusinessSegmentId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPricingTemplateList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPricingTemplateList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetPricingTemplateList>
+	<cftry>
+		<cfset getPricingTemplateList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "pricing_template_list"
+			}), "pricing_template_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPricingTemplateList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPricingTemplateList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetAutoPayClaimMechanics =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAutoPayClaimMechanics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqGetAutoPayClaimMechanics>
+	<cftry>
+		<cfset qGetAutoPayClaimMechanics = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"is_auto_pay" = "eq.1",
+				"select" = "payment_type_id"
+			}), "payment_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAutoPayClaimMechanics = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAutoPayClaimMechanics>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

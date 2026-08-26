@@ -1,0 +1,228 @@
+===== QUERY: GetBBContractNumber =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBBContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetBBContractNumber>
+	<cftry>
+		<cfset GetBBContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"program_id" = "eq.#Contract_Main_ID#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"order" = "created_date.desc",
+				"limit" = "1",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBContractNumber>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: IsItARealItem =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: IsTheItemOnTheProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForIsTheItemOnTheProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForIsTheItemOnTheProgram>
+	<cftry>
+		<cfset IsTheItemOnTheProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#IsItARealItem.BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0",
+				"select" = "contract_products_id"
+			}), "contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsTheItemOnTheProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsTheItemOnTheProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ItemIsAlreadyThere =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: UpdateVolume =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForUpdateVolume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_product_id" = "eq.#ItemIsAlreadyThere.Billback_Product_ID#"
+			},
+			{
+				"bb_product_quantity" = "#NewProductVolume#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateVolume>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateConvertedVolume =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateConvertedVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForUpdateConvertedVolume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_product_id" = "eq.#ItemIsAlreadyThere.Billback_Product_ID#"
+			},
+			{
+				"bb_product_quantity" = "#NewConvertedVolume#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateConvertedVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateConvertedVolume>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertIntoBillbackProduct =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetPayeeType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPayeeType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetPayeeType>
+	<cftry>
+		<cfset GetPayeeType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "billback_payee_type_id"
+			}), "billback_payee_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ProductOnProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetFixedPayeeTo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetFixedPayeeTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForGetFixedPayeeTo>
+	<cftry>
+		<cfset GetFixedPayeeTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"fixed_component_paid_to" = "eq.#Payee_Type#",
+				"program_id" = "eq.#ProductOnProgram.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "fixed_component_paid_to"
+			}), "fixed_component_paid_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFixedPayeeTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFixedPayeeTo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRebatePayeeTo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetRebatePayeeTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForGetRebatePayeeTo>
+	<cftry>
+		<cfset GetRebatePayeeTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"component_paid_to" = "eq.#Payee_Type#",
+				"program_id" = "eq.#ProductOnProgram.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "component_paid_to"
+			}), "component_paid_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRebatePayeeTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRebatePayeeTo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AlreadyInBBProductData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAlreadyInBBProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForAlreadyInBBProductData>
+	<cftry>
+		<cfset AlreadyInBBProductData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_product_id" = "eq.#Billback_Product_ID#",
+				"bb_product_type_id" = "eq.#Product_Type_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlreadyInBBProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlreadyInBBProductData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateBBProductData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateBBProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForUpdateBBProductData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product_detail",
+			{
+				"billback_product_detail_id" = "eq.#AlreadyInBBProductData.Billback_Product_Detail_ID#"
+			},
+			{
+				"bb_rate" = "#NewAmountClaimed#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBBProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBBProductData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertBBProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertUnknownItem =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertBBProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

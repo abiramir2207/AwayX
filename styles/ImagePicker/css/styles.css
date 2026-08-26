@@ -1,0 +1,174 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,300,400,700);
+body, div, span, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 14px;
+    margin: 0px;
+    padding: 0px;
+}
+p {
+    color: #343540;
+    padding-left: 10px;
+    font-weight: 200;
+}
+h4 {
+    color: #343540;
+    padding-left: 10px;
+    font-weight: 200; 
+    font-size: 11px;
+    text-transform: capitalize; 
+}
+.bold{ 
+  font-weight: bold; 
+}
+.italic{ 
+  font-style: italic; 
+}
+.CONTAINER {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+.BANNER{}
+.NAVIGATION_PRIMARY {}
+.NAVIGATION_SECONDARY{}
+.MAIN {}
+.FOOTER{}
+.baseball-card {
+    border-radius: 5px;
+    padding-bottom: 10px;
+    padding-top: 15px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+.box{
+    min-height:40px;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0   rgba(0,0,0,.12);
+    border-radius: 3px;
+}
+.box-title{
+    text-align: left;
+    padding-top: 5px;
+    padding-left: 10px;
+    color: #297CBB;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: normal;
+}
+
+.baseball-section-xs {
+    min-height:40px;
+}
+.baseball-section-sm {
+    height:80px;
+}
+.baseball-section-md {
+    min-height:170px;
+}
+.baseball-section-lg {
+    min-height:260px;
+}
+
+
+
+.baseball-logo {
+    max-width:120px;
+    height: auto;
+    margin-left: 10px; margin-right: 10px; margin-top: 10px;
+}
+
+
+.baseball-company-group:after {
+    content:"";
+    display: table;
+    clear: both;
+}
+.baseball-company-left {
+    float: left;
+    width: 120px;
+}
+.baseball-company-right {
+    float: left;
+}
+.baseball-company {
+    font-size: 12px;
+    font-weight: bold; 
+}
+
+.color-box {
+    border-radius: 5px;
+    cursor: copy;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: bold;
+    text-align: center;
+    height: 20px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+}
+
+/**** Colors */
+.bg-zero {
+    background: #fff;
+}
+.bg-one {
+    background: #edeef2;
+}
+.bg-two {
+    background: #7c7c7c;
+}
+.bg-three {
+    background: #343540;
+}
+
+
+.color-zero {
+    color: #fff;
+}
+.color-one {
+    color: #edeef2;
+}
+.color-two {
+    color: #7c7c7c;
+}
+.color-three {
+    color: #343540;
+}
+.color-four {
+    color: #b1e3d8;
+}
+.color-five {
+    color: #72aaab;
+}
+.color-six {
+    color: #a2bdc4;
+}
+.color-seven {
+    color: #a5a6a9;
+}
+/* BA Colors --------------
+.color-zero {
+    color: #fff;
+}
+.color-one {
+    color: #edeef2;
+}
+.color-two {
+    color: #7c7c7c;
+}
+.color-three {
+    color: #343540;
+}
+.color-four {
+    color: #bf1d38;
+}
+.color-five {
+    color: #88272d;
+}
+.color-six {
+    color: #406be4;
+}
+.color-seven {
+    color: #1e4dd3;
+}
+------------------------- */

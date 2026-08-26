@@ -1,0 +1,42 @@
+===== QUERY: qGetPricingStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPricingStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_pricing_status")>
+<cfif useLakebaseForqGetPricingStatus>
+	<cftry>
+		<cfset qGetPricingStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_pricing_status", {
+				"deleted" = "eq.0",
+				"select" = "fp_pricing_status_id,fp_pricing_status_desc"
+			}), "fp_pricing_status_id,fp_pricing_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPricingStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPricingStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetPricingStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPricingStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_pricing_status")>
+<cfif useLakebaseForqGetPricingStatus>
+	<cftry>
+		<cfset qGetPricingStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_pricing_status", {
+				"deleted" = "eq.0",
+				"select" = "fp_pricing_status_id,fp_pricing_status_desc"
+			}), "fp_pricing_status_id,fp_pricing_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPricingStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPricingStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

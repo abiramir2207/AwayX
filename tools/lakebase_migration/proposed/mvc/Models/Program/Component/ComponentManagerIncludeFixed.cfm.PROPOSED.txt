@@ -1,0 +1,33 @@
+===== QUERY: qGetFixedVolOverrideTemp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFixedVolOverrideTemp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedvolumeoverrideselection")>
+<cfif useLakebaseForqGetFixedVolOverrideTemp>
+	<cftry>
+		<cfset qGetFixedVolOverrideTemp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedvolumeoverrideselection", {
+				"program_fixed_component_name_id" = "eq.#indx.componentId#",
+				"select" = "dont_count_volume"
+			}), "dont_count_volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedVolOverrideTemp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedVolOverrideTemp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertFixedComponent =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qAddFixedContractproducts =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAddFixedProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qAddFixedFreightData#qGetDistributors.Shr_Ship_To# =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

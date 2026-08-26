@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Shows the list of SAP referrence numbers -->
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	backgroundColor="0xffffff"
+	close="PopUpManager.removePopUp(this)"
+	color="0x333333"
+	creationComplete="init()"
+	headerColors="['0xffce84','0xffffff']"
+	layout="vertical"
+	name="SAP_References"
+	showCloseButton="true"
+	title="SAP References">
+		<mx:Script>		
+		<![CDATA[
+			import com.events.*;
+			import com.vos.*;
+			import com.models.*;
+			import flash.events.Event;
+			import mx.events.*;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+		    import mx.rpc.events.ResultEvent;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import mx.utils.ArrayUtil;
+			import mx.collections.ItemResponder;
+			
+			public var Program_ID:int;
+			
+			[Bindable] public var Program_SAP:ArrayCollection;
+			
+			private function init():void {				            
+	           var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_PROGRAM_SAP_INFO);
+	           event.eProgramSAPInfo = Program_ID; 
+	           dispatchEvent(event);
+           	}
+		]]>
+	</mx:Script>
+
+	<mx:VBox width="100%">
+	<mx:HBox width="100%">	
+		<mx:Label width="100%" text="SAP Reference Numbers" fontWeight="bold" textAlign="center" />	
+	</mx:HBox>
+	<mx:HBox width="100%" horizontalAlign="center">
+		<mx:DataGrid id="RebateInfo" textAlign="center" dataProvider="{Program_SAP}">
+			 <mx:columns>
+			    <mx:DataGridColumn dataField="BSA_Program_Id"  width="150" headerText="Blacksmith Rebate ID"/>	
+			    <mx:DataGridColumn dataField="pactiv_program_id"  width="150" headerText="Pactiv Rebate ID"/>
+			 </mx:columns>
+		</mx:DataGrid>
+	</mx:HBox>
+	</mx:VBox>
+</mx:TitleWindow>
+
+			

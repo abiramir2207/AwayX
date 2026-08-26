@@ -1,0 +1,52 @@
+===== QUERY: UnlockUser =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qGetUserCode =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: AddUserTransUnlock =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: ConfirmLogin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForConfirmLogin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForConfirmLogin>
+	<cftry>
+		<cfset ConfirmLogin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#url.User_ID#",
+				"deleted" = "eq.0",
+				"select" = "user_code,user_password,user_email"
+			}), "user_code,user_password,user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForConfirmLogin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForConfirmLogin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: LockedUsers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForLockedUsers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLockedUsers>
+	<cftry>
+		<cfset LockedUsers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_locked" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockedUsers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockedUsers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

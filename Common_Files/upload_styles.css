@@ -1,0 +1,71 @@
+.displayHeader{
+	font-weight:bold;
+	font-size:14px;
+	text-align:center;
+	text-decoration:none;
+	padding:5px;	
+}
+
+.Instructions{
+	font-weight:bold;
+	font-size:12px;
+	text-align:left;
+	text-decoration:none;
+	padding:2px;
+}
+
+.headerUser{
+	width:40%;
+	border-style:solid;
+	border-width:2px;
+	border-color:orange;
+	background-color:white;
+	text-align:center;
+	font-weight:bold;
+	font-size:13px;
+	padding:5px;
+}
+
+.displayMsg{
+	font-weight:bold;
+	font-size:16px;
+	text-align:center;
+	text-decoration:none;
+	padding:5px;	
+}
+
+.displayGridForm{
+	padding:5px;
+	padding-top:20px;
+}
+
+.helpinfo{
+	font-weight:normal;
+	font-size:12px;
+	color:blue;
+	text-decoration:none;
+	text-align:left;
+	padding:2px;
+}
+		
+.buttonText{
+	font-weight:bold;
+	font-size:12px;
+	color:blue;
+	text-decoration:none;
+	text-align:inherit;
+	padding:2px;	
+}
+
+.redBracket{
+	font-weight:bold;
+	font-size:12px;
+	color:red;
+	text-decoration:none;
+	text-align:inherit;
+	padding:2px;	
+}
+
+body{
+	padding-left:10px;	
+}

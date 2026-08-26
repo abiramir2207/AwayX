@@ -1,0 +1,20 @@
+===== QUERY: getReportDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetReportDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetReportDetails>
+	<cftry>
+		<cfset getReportDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "report_name,report_interval,report_start_date,report_end_date,report_start_time,send_report_to"
+			}), "report_name,report_interval,report_start_date,report_end_date,report_start_time,send_report_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetReportDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetReportDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

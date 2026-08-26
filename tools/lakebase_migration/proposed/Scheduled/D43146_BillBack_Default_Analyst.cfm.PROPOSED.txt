@@ -1,0 +1,20 @@
+===== QUERY: variables.qBillBacks =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvariables_qBillBacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForvariables_qBillBacks>
+	<cftry>
+		<cfset variables.qBillBacks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"analyst_user_id" = "is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qBillBacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qBillBacks>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

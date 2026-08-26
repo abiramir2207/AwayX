@@ -1,0 +1,54 @@
+/* 
+* ==================================================================================================== 
+*    @File: \styles\ag-grid-ba.css
+*  @Author: Chris Nguyen
+*    @Date: July 2020
+* 
+* @Remarks: Use these styles to automate the Ag-grid height with only CSS
+*
+* ====================================================================================================  
+*/
+
+* { 
+    box-sizing: border-box; 
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    height: 100%;
+}
+body {
+    min-height: 100%;
+    overflow: hidden;
+}
+iframe {
+    border: 0;
+    width: 100%;
+}
+
+/* this header overlays on the top most - need to assign height in parent file */
+.header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+}
+
+/* this ag-grid section is on the bottom most - need to assign padding-top in parent file, value should be greater than the above .header height  */
+.ag-grid {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    height: 90% !important;
+    z-index: 1;
+}
+
+
+.hidden {
+    display: none;
+}
+
+button:hover {
+    cursor: pointer;
+}

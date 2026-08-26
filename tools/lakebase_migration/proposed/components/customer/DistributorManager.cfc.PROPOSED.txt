@@ -1,0 +1,70 @@
+===== QUERY: GetIntegrityRuleType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetIntegrityRuleType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForGetIntegrityRuleType>
+	<cftry>
+		<cfset GetIntegrityRuleType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"distributor_product_integrity_rule_id" = "eq.#this.search.getSettings.Distributor_Product_Integrity_Rule_ID#",
+				"select" = "inclusive_restriction"
+			}), "inclusive_restriction"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetIntegrityRuleType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetIntegrityRuleType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetWarehouses =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetWarehouses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("warehouse_master")>
+<cfif useLakebaseForqrygetWarehouses>
+	<cftry>
+		<cfset qrygetWarehouses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("warehouse_master", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "#sort_by#.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetWarehouses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetWarehouses>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qget_Contract_number =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetProgramDistributorExceptions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramDistributorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors_exceptions")>
+<cfif useLakebaseForqGetProgramDistributorExceptions>
+	<cftry>
+		<cfset qGetProgramDistributorExceptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors_exceptions", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramDistributorExceptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramDistributorExceptions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qPopulateCustomerGroupMembers =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

@@ -1,0 +1,20 @@
+===== QUERY: getDataLabel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetDataLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForgetDataLabel>
+	<cftry>
+		<cfset getDataLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "generic_setting_id#"
+			}), "generic_setting_id#"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDataLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDataLabel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

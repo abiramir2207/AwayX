@@ -1,0 +1,72 @@
+===== QUERY: qGetScheduleOptions =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: qGetFormulaTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFormulaTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_formula_types")>
+<cfif useLakebaseForqGetFormulaTypes>
+	<cftry>
+		<cfset qGetFormulaTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_formula_types", {
+				"active" = "eq.1",
+				"order" = "formula_type_description.desc",
+				"select" = "fp_formula_type_id,fp_formula_type,formula_type_description,market_table,notes,calc_type,calc_days"
+			}), "fp_formula_type_id,fp_formula_type,formula_type_description,market_table,notes,calc_type,calc_days"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFormulaTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFormulaTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgram>
+	<cftry>
+		<cfset qGetProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Program_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Rule_Basic_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Update_Rule_Basic_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Rule_Basic_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForUpdate_Rule_Basic_Info>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_formula_pricing_rule_id" = "eq.#id#"
+			},
+			{
+				"program_fixed_component_id" = "#arguments.Program_Fixed_Component_Id#",
+				"program_fixed_component_name_id" = "#arguments.Program_Fixed_Component_Name_Id#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Rule_Basic_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Rule_Basic_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

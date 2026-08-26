@@ -1,0 +1,1 @@
+<!--- This file is just a placeholder. We do not want to run application.cfm for the Error Gateway --->

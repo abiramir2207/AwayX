@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%"
+		 xmlns:ba="com.shared.components.*">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Main.models.vos.BBHeader;
+			import com.Billback.Search.views.BBSearchFilters;
+			import com.Billback.Search.views.pm.BBSearchFiltersPModel;
+			import com.Billback.Search.views.pm.BBSearchGridPModel;
+
+			import mx.collections.IList;
+			import mx.collections.ListCollectionView;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBSearchGridPModel;
+			[Bindable]
+			public var pModelFilters:BBSearchFiltersPModel;
+			public var userId:String;			
+						
+			/* Setter to set ScrollToIndex to 0 for datagrid scrollbar to reset */
+			public function set scrollToIndex(iScrollToIndex:int):void
+			{
+				dgBBSearch.scrollToIndex(iScrollToIndex);
+			}
+		]]>
+	</fx:Script>
+	<!-- "pModel.listCollView" ("ListCollectionView") is the dataprovider and not "pModel.acdata" ("ArrayCollection") because "ListCollectionView" 
+	can maintain the data sort even when the grid data gets refreshed while resetting, reassigning, disagreeing, deleting a billback from either 
+	the bb search grid or the bb edit screen.
+	-->
+	<s:VGroup id="vgItemsGrid" height="100%" width="100%">
+		<mx:AdvancedDataGrid id="dgBBSearch" 
+							 selectionMode="singleRow"
+							 dataProvider="{pModel.listCollView}" 
+							 columns="{pModel.arrBBSearchDgCols}"
+							 width="{this.pModelFilters.nWidthContainer}"
+							 height="100%" 
+							 rowHeight="20"
+							 doubleClickEnabled="true"
+							 doubleClick="{pModel.selectBB(dgBBSearch.selectedItem as BBHeader,'EDIT')}"
+							 horizontalScrollPolicy="on"
+							 click="{pModel.selectBBHeader(dgBBSearch.selectedItem as BBHeader)}"
+							 headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+							 > 
+			<!-- We pass the above click event for the "details" link on the data grid. Once this header is passed, the details object
+			is added to it. The "details" object is used for showing information on the "details" pop up.
+			-->
+		</mx:AdvancedDataGrid>
+	</s:VGroup>
+</s:Group>

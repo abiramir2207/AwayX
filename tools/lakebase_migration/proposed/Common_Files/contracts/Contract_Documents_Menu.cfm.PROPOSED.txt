@@ -1,0 +1,21 @@
+===== QUERY: Attachment_Count =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAttachment_Count = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForAttachment_Count>
+	<cftry>
+		<cfset Attachment_Count = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAttachment_Count = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAttachment_Count>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

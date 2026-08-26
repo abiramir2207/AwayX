@@ -1,0 +1,738 @@
+<!-----------------------------------------------------------------------------------------------------------------------------------------
+Name         :  /Planners/Create/planner_approval.cfm
+Created Date :  2016 Oct
+Created By   :  Chris Nguyen
+Description  :  Display planner margin page
+
+Remarks      :
+----------------------------------------------------------------------------------------------------------------------------------------->
+<cfparam name="form.action" default="">
+<cf_layout-bare jQueryUI_widgets="tooltip" page_title="Planner Margin">
+	<cfif (form.action eq "approve") or (form.action eq "agree") or (form.action eq "disagree") or (form.action eq "agree_approve")>    <!--- user clicked the approve option --->
+
+		<cfscript>
+			plannerManager = createObject( "component", "mvc.Models.Planner.PlannerManager" );
+
+		    if (form.action neq "disagree") {
+				plannerManager.savePlannerApproval( form );
+            }
+		</cfscript>
+
+		<cfstoredproc procedure="Planner_Approval_Process" datasource="#application.datasource#">
+			<cfprocparam cfsqltype="cf_sql_integer" value="#form.plannerID#">
+			<cfprocparam cfsqltype="cf_sql_varchar" value="#request.AccessStructure.user_id#">
+			<cfprocparam cfsqltype="cf_sql_varchar" value="#form.action#">
+			<cfprocparam cfsqltype="cf_sql_varchar" value="#form.notes#">
+			<cfprocparam cfsqltype="cf_sql_varchar" value="#form.include_slotting#">
+			<cfprocresult name = "qProgramList" />
+		</cfstoredproc>
+
+		<cfscript>
+			plannerManager.updateProgramLockType(qProgramList);
+		</cfscript>
+
+		<cfif form.action eq "disagree">
+			<cfquery name="qPlanner" datasource="#application.datasource#">
+				SELECT 	_Users.User_Email,
+						_Users.Name_First + ' ' + _Users.Name_Last AS Creator_Name,
+						Planners.Planner_Title,
+						Planners.Planner_Number,
+						_Users2.Name_First + ' ' + _Users2.Name_Last AS Disagreed_Person
+				  FROM Planners
+				       INNER JOIN _Users
+				           ON _Users.User_ID = Planners.Created_By
+				       LEFT JOIN _Users _Users2 ON _Users2.User_ID = '#request.AccessStructure.user_id#'
+				 WHERE Planner_ID = <cfqueryparam value="#form.plannerID#">
+			</cfquery>
+			<cfquery name="qSystemAdmin" datasource="#application.datasource#">
+				SELECT	TOP 1 User_Email
+				  FROM  _Users
+				 WHERE 	Is_System_Administrator = 1
+						AND	Deleted = 0
+			</cfquery>
+			<!--- send notes/reasons in email to planner's creator --->
+			<cfif len(form.notes)
+					and qPlanner.recordCount and len(trim(qPlanner.User_Email))
+					and qSystemAdmin.recordCount and len(trim(qSystemAdmin.User_Email))>
+				<cfset mail_subject = "Blacksmith Applications - #Application.PlannerLabel# " & qPlanner.Planner_Title & "(" & qPlanner.Planner_Number & ") changed to WIP">
+				<cf_emailwrapper
+					to 			= "#trim(qPlanner.User_Email)#"
+					from		= "#trim(qSystemAdmin.User_Email)#"
+					subject		= "#mail_subject#"
+					type		= "html"
+					messagetype	= "1"
+					generatedby	= "1"
+					appArea		= "1"><cfoutput>
+<span style="color:##343540">Hi #qPlanner.Creator_Name#,</span>
+<br><br>
+You have received this email to let you know of a status change to a FORGE #Application.PlannerLabel# that you created.
+<br><br>
+The #Application.PlannerLabel#: <strong>#qPlanner.Planner_Title# (#qPlanner.Planner_Number#)</strong><br>
+New status: <strong>WIP</strong><br>
+By: <strong>#qPlanner.Disagreed_Person#</strong><br>
+Notes:<br>
+#form.notes#
+<br><br>
+To view this change, <cfoutput><a href="#application.HTTPVar##cgi.server_name#">login to FORGE.</a></cfoutput>
+<br><br>
+Thanks!</cfoutput>
+				</cf_emailwrapper>
+			</cfif>
+		</cfif>
+
+		<script>
+			$("form[name=topnav]", opener.document).submit();
+			window.close();
+		</script>
+	<cfelse>
+		<!--- <cfdump var="#form#"> --->
+		<cfinclude template="/planners/create/planner_volume_constants.cfm">
+		<cfparam name="form.filter_product_group_level_id" default="">
+		<cfparam name="form.filter_product_list" default="">
+		<cfparam name="form.include_slotting" default="1">
+
+		<cfoutput>
+		<cfscript>
+			approval_layerd_cost   = application.appSettingsGet.get_Setting('Approval_Layered_Costs');
+			plannerManager         = createObject( "component", "mvc.Models.Planner.PlannerManager" );
+
+			// lock applicable indirect planners
+			lock_indirect_success  = plannerManager.lockIndirects( form.plannerID );
+
+			getPlanner             = plannerManager.getPlanner( form.plannerID );
+			components.datamanager = createObject( "component", "components.products.Group.DataManager" );
+			queries.product_groups = components.datamanager.getProductGroupsData();
+			hide_programs_on_load  = true;      // set to false to display programs on page loading
+		</cfscript>
+		</cfoutput>
+
+		<cfsavecontent variable="head_content">
+		<cfset include_files = [	"/styles/ui.jqgrid.css"
+									,"/script/javascript/jqgrid/grid.locale-en.js"
+									,"/script/javascript/table2csv.js"
+									,"/styles/ionicons.min.css"
+									,"/styles/css-loader.css"
+									,"/common_files/dhx_message.cfm"
+								]>
+		<cf_include files=#arrayToList( include_files )#>
+		<style>
+			* { margin:0; padding:0; }
+			html, body{ height: 100%; }
+			div#hdr409 { text-align:center; font-weight:bold; font-size:11px; padding:6px; margin:0; color:#333; background-color:#c6e79c; height:28px;
+								background-image: -webkit-linear-gradient(#e9f6da, #c6e79c);
+								background-image: -o-linear-gradient(#e9f6da, #c6e79c);
+								background-image: linear-gradient(#e9f6da, #c6e79c);
+			}
+			div#hdr409 div { float: left; }
+			input[name=uom] { position: relative; top:2px; }
+			#hdr409 { margin: 0; font-size:11px; }
+			div#footer { text-align:center; position:fixed; bottom:8px; width:100%; z-index:9999; }
+			div#footer a { margin:5px 15px; display:inline-block; cursor:pointer; }
+			label { font-weight: bold; }
+			.left { text-align: left !important; }
+			.right { text-align: right !important; }
+			.center { text-align: center !important; }
+			/*#vp_grid tr, #vp_grid td, #vp_grid_frozen tr, #vp_grid_frozen td { border2:none; border: 1px dotted #CCC; }*/
+			.ui-th-column { border: none !important; }
+			.ui-th-div { margin: 0 !important; }
+			.ui-jqgrid-btable .ui-state-highlight { background-color: white !important; }
+			tr.divider { border-bottom: 1px solid #A9A9A9 !important; }
+			tr.odd2 { background-color: rgb(249, 249, 249) !important; }
+			input[type=checkbox] { position:relative; top:1px; }
+			.wait { letter-spacing: 0.85px; font-weight: bold; }
+			.disabled { visibility: hidden; }
+
+			a.pgm { padding-left:10px !important; font-style: normal; }
+
+			tr.PGM { background-color:#D9D9D9; <cfoutput>#(hide_programs_on_load ? "display:none;" : "")#</cfoutput> }
+				tr.PGM > td { -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=70)"; opacity:0.7; }
+			tr.PROD { background-color:#F2F2F2  }
+				tr.PROD > td { -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)"; opacity:0.9; }
+			tr.PLANNER { background-color:white; border-top: 1px solid #333 !important; border-bottom: 1px solid #333 !important; }
+				tr.PLANNER > td { font-weight: bold; color:indigo; text-shadow: 4px 4px 4px #aaa; }
+			tr.GROUP { background-color:#BDD7EE; border-top: 1px solid #333 !important; border-bottom: 1px solid #333 !important; }
+				tr.GROUP > td { text-shadow: 4px 4px 4px #aaa; }
+
+			tr.TC { background-color:#f3f3f3; }
+			tr.TC > td { font-weight: bold; color:indigo; text-shadow: 4px 4px 4px #aaa; }
+
+			i.summary { display:inline-block; text-align:center; width:100%; letter-spacing:0.75px; font-weight: bold; font-style:normal; }
+			i.group { font-weight: bold; font-style:normal; color:#333; }
+
+			.frozen-div th { text-align: left !important; }
+			#vp_grid_frozen { overflow: hidden; }
+			#vp_grid tr, #vp_grid td, #vp_grid_frozen tr, #vp_grid_frozen td { border:none; border-bottom: 1px dotted #CCC; }
+			#vp_grid_frozen td, #vp_grid td { vertical-align: middle; height:27px; font-size:10px; }
+
+			i.negative { color:red; font-style:normal; }
+			i.icon { font-size:16px; color:blue; font-weight:bold; position:relative; top:2px; }
+
+			th.ui-th-column {  text-align:right;
+							   background-color: #9BC2E6 !important;
+							   background-image: -webkit-linear-gradient(#9BC2E6, #d8e7f5) !important;
+							   background-image: -o-linear-gradient(#9BC2E6, #d8e7f5) !important;
+							   background-image: linear-gradient(#9BC2E6, #d8e7f5) !important;
+			}
+			i.dim { font-style: normal; opacity:0.5; }
+			input[type=checkbox] { height:11px; width:11px;	}
+			i.agree { cursor:pointer; }
+			i.agreed, i.approved { color:#5AB233; }
+			label.uom {
+				cursor: pointer;
+			}
+		</style>
+		</cfsavecontent>
+		<!--- load all secondary .css files here :: the primary main_style.css is loaded by the 1st cfhtmlhead in Application_Common.cfm --->
+		<cfhtmlhead text="#application.util.string.compress( head_content )#">
+		<!-------------------------------------------------------------------------------------------------------------------------------------------------------------->
+		<cfoutput>
+		<!--- export to csv form --->
+		<form action="/common_files/csv.cfm" method ="post" id="csv_form" name="csv">
+			<input type="hidden" name="csv_text" id="csv_text">
+			<input type="hidden" name="csv_file_name">
+		</form>
+		<!--- this form is used in "reset filter" option --->
+		<form name="filter_products" method="post">
+			<input type="hidden" name="filter_product_list" value="#form.filter_product_list#">
+			<input type="hidden" name="action" value="filter_products">
+			<cfset application.util.struct.convertToHiddenInput( form, "filter_product_list,action" )>
+		</form>
+		<!--- this form is used for cost popup --->
+		<form name="cost" method="post" action="/planners/view_cost.cfm" target="view_cost" onsubmit="popup_form(this, 'view_cost', 450, 500)">
+			<cfset application.util.struct.saveToHiddenInput( form, "uom,delivery_type,bsa_foodservice_items_master_id,plannerID" )>
+		</form>
+		<!--- this form is used in "add filter" option --->
+		<form name="add_filter" method="post" action="/Planners/Templates/ProductGroup_Search.cfm" onsubmit="popup_form(this, 'add_filter', 900, 800)">
+			<input type="hidden" name="product_group_level_id" value="#form.filter_product_group_level_id#">
+			<input type="hidden" name="parent_call_back" value="callback_filter_products()">
+			<input type="hidden" name="selection_input_name" value="filter_product_list">
+			<input type="hidden" name="filter_product_list" value="#form.filter_product_list#">
+		</form>
+		<form name="approval" method="post">
+		#application.util.struct.saveToHiddenInput(form, "plannerID,include_slotting")#
+		<input type="hidden" name="action">
+		<input type="hidden" name="notes">
+        <!--- bring get_UOM() in from udf.cfc --->
+        <cfset structAppend(url, createObject( "component", "components.udf" ))>
+        <cfset appSettings = application.appSettingsGet>
+		<div id="hdr409" class="clearfix">
+				<div style="width:20%;letter-spacing:0.65px;font-size:13px;" class="shadow">
+					<i class="dim">#getPlanner.Status_Description#</i> <br/> #getPlanner.Planner_Number#
+				</div>
+				<div style="width:23%;letter-spacing:0.5px;margin-top:1px;">
+					<i class="dim">#getPlanner.Ship_To#</i> <br/> #getPlanner.Name#
+				</div>
+				<div style="width:23%;">
+					<i class="dim">#getPlanner.Planner_Type#</i> <br/> #getPlanner.Planner_Description#
+				</div>
+				<div style="width:14%;margin-top:7px;">
+					#application.util.datetime.DateSpanFormat( getPlanner.Planner_Start_Date, getPlanner.Planner_End_Date )#
+				</div>
+				<div style="width:20%;margin:7px 0 0 0;">
+					<cfset csDisplay = "display:inline;" />
+					<cfif getPlanner.UOM_CS eq 0>
+						<cfset csDisplay = "display:none;" />
+					</cfif>
+					<cfset lbDisplay = "display:inline;" />
+					<cfif getPlanner.UOM_LB eq 0>
+						<cfset lbDisplay = "display:none;" />
+					</cfif>
+                    <cfif appsettings.getMarginDisplayCS()>
+					    <input type="radio" name="uom" #(form.uom eq constants.cases ? "checked" : "")# value="C" title="click to switch to physical case" id="uom_case" style="#csDisplay#"> <label class="uom" for="uom_case" style="#csDisplay#">#lCase(get_UOM( 1 ).Unit_Of_Measure_Desc)#</label> &nbsp;
+                    </cfif>
+                    <cfif appsettings.getMarginDisplayLB()>
+    					<input type="radio" name="uom" #(form.uom eq constants.cases ? "" : "checked")# value="L" title="click to switch to pounds" id="uom_lbs" style="#lbDisplay#"> <label class="uom" for="uom_lbs" style="#lbDisplay#">#lCase(get_UOM( 2 ).Unit_Of_Measure_Desc)#</label>
+                    </cfif>
+				</div>
+		</div>
+
+		<table id="vp_grid" class="gTable" style="width:100%;border-collapse:collapse;"></table>
+		</form>
+		<div id="footer">
+			<!--- <div style="float:left;margin-left:15px;">
+				<label class="opaque-m">filter products</label>
+				<select name="filter_product_group_level_id" style="width:150px;">
+					<option value="">none</option>
+					<cfloop query="queries.product_groups">
+						<cfif form.product_group_level_id neq queries.product_groups.product_group_level_id>
+							<option <cfif form.filter_product_group_level_id eq queries.product_groups.product_group_level_id>selected</cfif> value="#queries.product_groups.product_group_level_id#">#queries.product_groups.group_level_desc#</option>
+						</cfif>
+					</cfloop>
+				</select>
+				<a id="add_filter" class="opaque-m" title="click to add filter products">#application.util.string.linkFormat("add filter")#</a>
+				<a id="reset_filter" class="opaque-m" style="margin:0;" title="click to reset filter products">#application.util.string.linkFormat("reset filter")#</a>
+			</div> --->
+			<div>
+				<a id=message class="" style="display:none" title="click to view messages">#application.util.string.linkFormat("messages")#</a>
+				<a id=approve class="primary" style="display:none" title="click to approve #Application.PlannerLabel#">#application.util.string.linkFormat("approve", "", "ion-android-done-all")#</a>
+				<a id=agree class="primary" style="display:none" title="click to agree #Application.PlannerLabel#">#application.util.string.linkFormat("agree", "", "ion-android-cloud-done")#</a>
+				<a id=agree_approve class="primary" style="display:none" title="click to agree/approve some programs">#application.util.string.linkFormat("agree/approve", "", "ion-android-cloud-done")#</a>
+
+				<a id=disagree title="click to disagree #Application.PlannerLabel#">#application.util.string.linkFormat("disagree")#</a>
+				<a id=print class="secondary" title="click to print #Application.PlannerLabel#">#application.util.string.linkFormat("print")#</a>
+				<a id=export class="secondary" title="click to export #Application.PlannerLabel# in csv format">#application.util.string.linkFormat("export to csv")#</a>
+				<a id=close class="secondary" title="click to close this window">#application.util.string.linkFormat("close window")#</a>
+			</div>
+		</div>
+		</cfoutput>
+
+		<cfscript>
+			int_settings_obj                     = createObject( "component", "components.settings.internalSettings" );
+			form.approval_margin_type            = int_settings_obj.get_Setting( "Approval_Margin_Type" );
+			form.display_trade_percent_on_margin = int_settings_obj.get_Setting( "Display_Trade_Percent_on_Margin" );
+			// gather user permission to see margin columns
+			user_profile = ( () => { var q = queryExecute( " SELECT View_Cost,
+																	View_Operating_Income,
+																	View_Target_Margins,
+																	View_margin_percent,
+																	View_Target_NUC,
+																	View_NUC,
+																	View_Target_NUC_Var
+															FROM Profiles_Settings
+														   WHERE Profiles_ID = #request.AccessStructure.Profiles_ID#
+                                                    	",
+                                                        {}, { datasource: application.datasource } );
+                                	 return queryGetRow( q, 1 );
+                            	   } )();
+		</cfscript>
+
+		<!-------------------------------------------------------------------------------------------------------------------------------------------------------------->
+		<cfset request.noty_version = 3>
+		<cfset include_files = [	"/script/javascript/jqgrid/grid.base.js"
+									,"/script/javascript/jqgrid/grid.grouping.js"
+									,"/script/javascript/jqgrid/jquery.fmatter.js"
+									,"/script/javascript/numeral.min.js"
+									,"/script/javascript/jquery.cfjs.min.js"
+									,"/common_files/dhx_windows.cfm"
+									,"/common_files/noty.cfm"
+								]>
+		<cf_include files=#arrayToList( include_files )#>
+
+
+		<script>
+		//Takes css classes assigned to each column in the jqGrid colModel
+		//and applies them to the associated header.
+		var applyClassesToHeaders = function (grid) {
+			// Use the passed in grid as context,
+			// in case we have more than one table on the page.
+			var trHead = jQuery("thead:first tr", grid.hdiv);
+			var colModel = grid.getGridParam("colModel");
+
+			for (var iCol = 0; iCol < colModel.length; iCol++) {
+				var columnInfo = colModel[iCol];
+				if (columnInfo.classes) {
+					var headDiv = jQuery("th:eq(" + iCol + ")", trHead);
+					headDiv.addClass(columnInfo.classes);
+				}
+			}
+		};
+
+		var grid = $("#vp_grid");
+		var g_columns = { bsa_foodservice_items_master_id:0, row_type:1, delivery_type:2, contract_main_id:3, action_message:4, ez_message:5};
+
+		function numberFormat(cellvalue, options, rowObject) {
+			var value = ($.trim(cellvalue) === '' ? 0 : cellvalue),
+				result = (options.colModel.name === "trade_perc" ? value * 100 : value),
+				formatted_number = numeral(result).format( options.colModel.numeralFormat ) + options.colModel.suffix;
+			if (value < 0) {
+				formatted_number = "<i class=negative>" + formatted_number + "</i>";
+			}
+			if (options.colModel.name === "cost" && rowObject[ g_columns.row_type ] === "PROD") {
+				<cfif approval_layerd_cost neq 2>   /* not configured as multiple costs */
+					return formatted_number;
+				<cfelse>
+					/* data-dtype has delivery type :: data-pid has BSA_Foodservice_Items_Master_ID */
+					return "<a class=cost title='click to view cost calculation' data-dtype=" + rowObject[ g_columns.delivery_type ] + " data-pid=" + rowObject[ g_columns.bsa_foodservice_items_master_id ] + "><i class='ui-icon ui-icon-extlink'></i>" + formatted_number + "</a>";
+				</cfif>
+			}
+			else if (options.colModel.name === "tpa" && rowObject[ g_columns.row_type ] === "PROD") {
+				return "<a class=tpa title='click to view tpa calculation' data-pid=" + rowObject[ g_columns.bsa_foodservice_items_master_id ] + "><i class='ui-icon ui-icon-extlink'></i>" + formatted_number + "</a>";
+			}
+			else if (rowObject[ g_columns.row_type ] === "PGM") {
+				if ( options.colModel.name === "cost"
+						|| options.colModel.name === "trade_perc"
+						|| options.colModel.name === "net_sales"
+						|| options.colModel.name === "oper_income"
+						|| options.colModel.name === "sales"
+						|| options.colModel.name === "target_margin"
+					) {
+					return ( value === 0 ? '' : formatted_number );
+				}
+				if(options.colModel.name === "allowance"){
+					if(rowObject[ g_columns.ez_message ] != ""){
+						return '<b title="' + rowObject[ g_columns.ez_message ] + '" style="font-size:12px;color:red;font-weight:bold;cursor:pointer;" align="absmiddle">(!)</b>' + formatted_number;
+					}
+				}
+			}
+			else if (rowObject[ g_columns.row_type ] === "PROD") {
+				if ( options.colModel.name === "target_margin" ) {
+					return ( value === 0 ? '' : formatted_number );
+				}
+			}
+			return formatted_number;
+		}
+
+		function itemFormat(cellvalue, options, rowObject) {
+			//console.log(options.colModel.name);
+			if (rowObject[ g_columns.row_type ] === "PGM")
+				return "<a class=pgm title='click to view <cfoutput>#Application.PlannerPrgLabel#</cfoutput>' data-cid=" + rowObject[ g_columns.contract_main_id ] + "><i class='ui-icon ui-icon-extlink'></i> " + cellvalue + "</a>";
+			else if (rowObject[ g_columns.row_type ] === "PLANNER")
+				return "<i class=summary>" + cellvalue + "</i>";
+			else if (rowObject[ g_columns.row_type ] === "GROUP")
+				return "<i class=group>" + cellvalue + "</i>";
+			else
+				return cellvalue;
+		}
+
+		function actionFormat(cellvalue, options, rowObject) {
+			// replace single quotes with &apos; to avoid problems in embedding in title attribute
+			var message      = rowObject[ g_columns.action_message ].toString().replace(/'/g, "&apos;")
+				,hidden_name = rowObject[ g_columns.contract_main_id ] + "_" + rowObject[ g_columns.bsa_foodservice_items_master_id ];
+			if ( (cellvalue.toUpperCase() == "APPROVE") ) {
+				// any changes in the name attributes would REQUIRE changes in savePlannerApproval() in \mvc\Models\Planner\PlannerManager.cfc
+				var tooltip = " title='" + message + "'"
+					,hidden_input = "<input type=hidden class=approve name='approve_" + hidden_name + "'>";
+				return "<i class='approve icon ion-android-done-all'" + tooltip + "></i>" + hidden_input;
+			}
+			if ( (cellvalue.toUpperCase() == "AGREE") ) {
+				// any changes in the name attributes would REQUIRE changes in savePlannerApproval() in \mvc\Models\Planner\PlannerManager.cfc
+				var tooltip = " title='" + message + "'"
+					// save agreed reason into value attribute
+					,hidden_input = "<input type=hidden class=agree name='agree_" + hidden_name + "' value='" + message + "'>";
+				return "<i class='agree icon ion-android-cloud-done'" + tooltip + "></i>" + hidden_input;
+			}
+			if ( (cellvalue.toUpperCase() == "APPROVED") ) {
+				var tooltip = " title='Approved " + message + "'";
+				return "<i class='icon approved ion-android-done-all'" + tooltip + "></i>";
+			}
+			if ( (cellvalue.toUpperCase() == "AGREED") ) {
+				var tooltip = " title='Agreed " + message + "'";
+				return "<i class='icon agreed ion-android-cloud-done'" + tooltip + "></i>";
+			}
+			if ( (cellvalue.toUpperCase() == "NONE") ) {
+				var tooltip = " title='" + message + "'";
+				return "<i class='icon none ion-ios-locked'" + tooltip + "></i>";
+			}
+			return "";
+		}
+
+		<cfif hide_programs_on_load>
+			var expand_collapse = "<span class='expand_collapse' title='click to show programs'> <i class='icon ion-arrow-expand'></i> </span>";
+		<cfelse>
+			var expand_collapse = "<span class='expand_collapse' title='click to hide programs'> <i class='icon ion-arrow-shrink'></i> </span>";
+		</cfif>
+
+    	function grid_height() {
+    		return screen.width > window.innerWidth ? .80 : .85;
+    	}
+
+		var program_messages = '';
+		function display_messages() {
+			if (program_messages.length)
+				new Noty({ layout:"bottom", type:"warning", text:program_messages }).show();
+		}
+
+		grid.jqGrid({
+			beforeSelectRow: function(rowid, e) { return false; },   /* disable the selecting a row functionality */
+			cmTemplate: { sortable:false, resizable:false, search:false, title:false, classes:"right", suffix:''
+							,numeralFormat:<cfoutput>'#(form.uom eq constants.cases ? "(0,0.00)" :  "(0,0.0000)")#'</cfoutput>
+							,formatter: numberFormat
+							,zzz_width:65 },
+			colModel: [
+						{ name:"bsa_foodservice_items_master_id", hidden:true, formatter:"" },
+						{ name:"row_type", hidden:true, formatter:"" },
+						{ name:"delivery_type", hidden:true, formatter:"" },
+						{ name:"contract_main_id", hidden:true, formatter:"" },
+						{ name:"action_message", hidden:true, formatter:"" },
+						{ name:"ez_message", hidden:true, formatter:"" },
+
+						{ label:"Product/<cfoutput>#Application.PlannerPrgLabel#</cfoutput> &nbsp;" + expand_collapse, name:'item_description', zzz_width:201, frozen:false, classes:"left", formatter:itemFormat },
+						{ label:"<cfoutput>#request.planner_labels.delivery_plural# Start</cfoutput>", name:'del_start', zzz_width:70, classes: "left", formatter:"" },
+						{ label:"<cfoutput>#request.planner_labels.delivery_plural# End</cfoutput>", name:'del_end', zzz_width:70, classes: "left", formatter:"" },
+						{ label:"Status", name:'status', zzz_width:50, classes: "left", formatter:"" },
+						{ label:"Volume", name:"volume", numeralFormat:"(0,0)" },
+						{ label:"Sales", name:"sales" },
+						{ label:"Allow", name:"allowance" },
+						{ label:"TPA", name:"tpa" },
+						{ label:"Net Sales", name:"net_sales" },
+
+						{ label:"Cost", name:"cost", hidden:<cfif user_profile.view_cost> false <cfelse> true </cfif> },
+						{ label:"Oper Income", name:"oper_income", hidden:<cfif user_profile.view_operating_income> false <cfelse> true </cfif> },
+
+						<cfif form.approval_margin_type neq 3>
+							{ label:"Margin %", name:"margin_percent", suffix:"%", numeralFormat:"(0,0)", hidden:<cfif user_profile.View_margin_percent> false <cfelse> true </cfif> },
+						</cfif>
+
+						{ label:"Target Margin", name:"target_margin" , hidden:<cfif user_profile.view_target_margins> false <cfelse> true </cfif> },
+
+						<cfif form.approval_margin_type eq 1>
+							{ label:"Trade", name:"trade" },
+						</cfif>
+
+						<cfif form.approval_margin_type eq 1 or ( form.approval_margin_type eq 0 and form.Display_Trade_Percent_on_Margin eq 1 )>
+						 	{ label:"Trade %", name:"trade_perc", suffix:"%", numeralFormat:"(0,0)" },
+						</cfif>
+
+					 	{ label:"Target NUC", name:"target_nuc", hidden:<cfif user_profile.view_target_nuc> false <cfelse> true </cfif> },
+					 	{ label:"NUC", name:"nuc", hidden:<cfif user_profile.view_nuc> false <cfelse> true </cfif> },
+						{ label:"NUC Var", name:"nuc_var", hidden:<cfif user_profile.view_target_nuc_var> false <cfelse> true </cfif> },
+					 	{ label:"<i class='icon ion-android-done-all' title='Approve/Agree'></i><br><i class='icon ion-android-cloud-done' title='Approve/Agree'></i>", name:"action", formatter:actionFormat, classes:"", width:27 }
+
+					  ],
+			datatype: 'json',
+			fixed: true,
+			loadComplete: function(data) { program_messages = data.MESSAGES;
+				if(program_messages == undefined){
+					program_messages = '';
+				}
+								if (program_messages.length == 0) {
+									$("#message").hide();
+								}
+								else {
+									program_messages = "<b>" + program_messages + "</b><br><br>Please click anywhere in this box to close.";
+									$("#message").show();
+									$("#message").click(function(){ display_messages(); });
+								}
+								display_messages();
+			},
+			gridComplete: function() {
+								$("[title]").tooltip();
+								$("a.pgm").click(function(){
+									popupInCenter( "planner_program_create.cfm?programId=" + $(this).data("cid")
+													+ "&plannerID="
+													+ "&customerID="
+													+ "&templateId=0"
+													+ "&bLock=1"
+													+ "&bInit=1" );
+								});
+								<cfoutput>
+								$("a.cost").click(function(){
+									var url_params = "uom=#form.uom#"
+														+ "&delivery_type=" + $(this).data("dtype")
+														+ "&bsa_foodservice_items_master_id=" + $(this).data("pid")
+														+ "&plannerID=#form.plannerID#";
+									popupInCenter("/planners/view_cost.cfm?" + url_params, "Cost Calculation", 450, 500, "view_cost");
+								});
+								$("a.tpa").click(function(){
+									var url_params = "type=#(form.uom eq 'C' ? 'CS' : 'LB')#"
+														+ "&itemid=" + $(this).data("pid")
+														+ "&plannerID=#form.plannerID#";
+									popupInCenter("/common_files/contracts/Contract_Trade_Analysis.cfm?" + url_params, "TPA Calculation", 800, 600, "tpa_calc");
+								});
+								</cfoutput>
+
+								<cfif not getPlanner.Approved>
+									if ( $("i.agree").length ) {
+										$("a#agree").show();
+									}
+									else if ( $("i.approve").length && $("i.none").length) {
+										$("a#agree").show();
+									}
+									else if ( $("i.approve").length && $("i.none").length == 0 ) {
+										$("a#approve").show();
+									}
+								<cfelse>
+									/* If planner is approved, user can approve individual programs */
+									if ( $("i.approve").length && $("i.none").length) {
+										/* approve some programs */
+										$("a#agree_approve").show();
+									}
+									else if ( $("i.approve").length && $("i.agree").length) {
+										/* approve some programs */
+										$("a#agree_approve").show();
+									}
+									else if ( $("i.agree").length ) {
+										$("a#agree").show();
+									}
+									else if ( $("i.approve").length && $("i.none").length == 0 ) {
+										$("a#approve").show();
+									}
+								</cfif>
+							},
+			hoverrows: true,
+			jsonReader: {
+					id: "",
+					root: "ROWS",
+					page: "PAGE",
+					total: "TOTAL",
+					records: "RECORDS",
+					messages: "MESSAGES",
+					cell:""
+				},
+			mtype: "POST",
+			postData: { <cfoutput>#application.util.list.jsKeysValues( form )#</cfoutput> },
+			rowNum: 30000,
+			rowattr: function(data) {
+				return { "class": data.row_type };
+			},
+			shrinkToFit: false,  /* must be set with frozen columns, otherwise columns will be shrank to fit the grid width */
+			url:'/mvc/Models/Planner/PlannerManager.cfc?method=getPlannerApproval',
+			height: $(window).height() * grid_height(),
+			width: $(window).width() - 2
+			,autowidth: true
+			,shrinkToFit: true
+		});
+
+		$( window ).resize(function() {
+		   grid.setGridWidth( $(window).width() - 2, true );
+    	   grid.setGridHeight( $(window).height() * grid_height() );
+		});
+
+		/* applies the classes to the headers once the grid configuration is complete. */
+		applyClassesToHeaders(grid);
+		// grid.jqGrid("setFrozenColumns");
+
+		/* disable hovering columns on th */
+		$(".ui-jqgrid-labels th.ui-th-column").unbind("mouseenter").unbind("mouseleave");
+
+		$("input[name=uom]").change(function(){
+			$("input.approve, input.agree").attr("disabled", "disabled");
+			$("form[name=approval]").submit();
+		});
+
+		$("#print").click(function(){ window.print(); });
+		$("#close").click(function(){ window.close(); });
+
+		$("#export").click(function() {
+			$('input[name=csv_file_name]').val( "planner-margin-"
+												+ <cfoutput>"#getPlanner.Planner_Number#-"</cfoutput>
+			                                    + Math.random().toString(36).substring(7)    // append an arbitrary unique substring
+												+ ".csv");
+			// exclude rows with GROUP class, PLANNER class
+			var body_rows = $("#vp_grid tbody tr").filter(function() { return $(this).hasClass("GROUP") || $(this).hasClass("PLANNER")
+																					? 0
+																					: 1 }),
+				// pull headers from table created by jqGrid
+				header_row = $("div.ui-jqgrid-hbox thead tr"),
+				// needs to expand to parent 'gview_vp_grid' div created by jqGrid to get header and body content in 'vp_grid' table
+				csv_text   = $("#gview_vp_grid").table2CSV( { findTHEAD:header_row, findTBODY:body_rows } );
+			$("#csv_text").val(csv_text);
+			$("#csv_form").submit();
+		});
+
+		$("span.expand_collapse").click(function(){
+			if ($("tr.PGM:visible").length) {
+				$("tr.PGM").hide();
+				$(this).html(" <i class='icon ion-arrow-expand'></i> ").attr("title", "click to show programs");
+			}
+			else {
+				$("tr.PGM").show();
+				$(this).html(" <i class='icon ion-arrow-shrink'></i> ").attr("title", "click to hide programs");
+			}
+		});
+
+		$("#add_filter").click(function(){
+			var filter = $("select[name=filter_product_group_level_id]");
+			if ( filter.val() === "" ) {
+				alert( "Please select a group option in the filter products dropdown first." );
+				filter.focus();
+			}
+			else {
+				$("input[name=filter_product_group_level_id]").val( filter.val() );
+				/* update the product group level id used in add filter popup */
+				$("form[name=add_filter] input[name=product_group_level_id]").val( filter.val() );
+				$("form[name=add_filter]").submit();
+			}
+		});
+
+		$("#reset_filter").click(function(){
+			$("input[name=filter_product_list]").val( "" );
+			$("input[name=filter_product_group_level_id]").val( "" );
+			$("form[name=filter_products]").submit();
+		});
+
+		<cfif not lock_indirect_success>
+			var actions = $("#approve, #agree, #disagree", "#agree_approve");
+			actions.addClass( "opaque-l" );
+			actions.click(function(){
+				<cfoutput>dhx_alert( "#request.planner_labels.indirect_singular# planners are currently in use by others, please try this option again later." );</cfoutput>
+			});
+		<cfelse>
+			$("#approve").click(function(){
+				show_loader("APPROVING <CFOUTPUT>#Application.PlannerLabel#</CFOUTPUT>, PLEASE WAIT...");
+				$("input[name=action]").val( "approve" );
+				$("form[name=approval]").submit();
+			});
+
+			$("#agree").click(function(){
+				show_loader("AGREEING <CFOUTPUT>#Application.PlannerLabel#</CFOUTPUT>, PLEASE WAIT...");
+				$("input[name=action]").val( "agree" );
+				$("form[name=approval]").submit();
+			});
+
+			$("#agree_approve").click(function(){
+				show_loader("AGREEING/APPROVING PROGRAMS, PLEASE WAIT...");
+				$("input[name=action]").val( "agree_approve" );
+				$("form[name=approval]").submit();
+			});
+
+			$("#disagree").click(function(){
+				// prompt for reasons not approving plan
+				dhx_popupInCenter( "/planners/create/planner_notes.cfm"
+									,"Disagree with Plan"
+									,800
+									,500
+										);
+			});
+		</cfif>
+
+		// this function is called from planner_notes.cfm
+		function disagree() {
+			show_loader("DISAGREEING <CFOUTPUT>#Application.PlannerLabel#</CFOUTPUT>, PLEASE WAIT...");
+			$("input[name=action]").val( "disagree" );
+			$("form[name=approval]").submit();
+		};
+
+		$("select[name=filter_product_group_level_id]").change(function(){
+			/* clear out the previous selected list used in add filter popup */
+			$("input[name=filter_product_list]").val( "" );
+		});
+
+		/***********************************/
+		/* call back functions from popups */
+		/***********************************/
+		function callback_filter_products() {
+			$("form[name=filter_products]").submit();
+		}
+
+		<cfif lock_indirect_success>
+			window.addEventListener("beforeunload", function(){
+				$.ajax({
+					url: <cfoutput>"/mvc/Models/Planner/PlannerManager.cfc"
+								+ "?method=unLockIndirects"
+								+ "&parent_planner_id=#form.plannerID#"
+								+ "&user_id=#request.AccessStructure.user_id#"</cfoutput>
+				});
+			});
+		</cfif>
+
+		/*------------------*/
+		/*  PAYBACK PERIOD  */
+		/*----------------------------------------------------------------------------------------------------------------------------------------------------*/
+		<cfquery name="qSlottingExists" datasource="#application.datasource#">
+			SELECT TOP 1 1
+			FROM
+			    Planners p
+			    INNER JOIN Contract_Main cm ON p.Planner_ID = cm.Planner_ID
+												AND cm.Deleted = 0
+												AND cm.Manual_Cancel = 0
+												AND cm.Contract_Status_Type_IDX > 1
+			    INNER JOIN Planner_Perf_Types pt ON pt.Planner_Perf_Types_ID = cm.Planner_Perf_Type_ID
+													AND pt.Slotting = 1
+			WHERE
+			    p.Planner_ID = <cfqueryparam value=#form.plannerID#>
+		</cfquery>
+
+		<cfif qSlottingExists.recordCount and form.include_slotting eq 1>
+			<cfoutput>
+				dhx_popupInCenter( "/planners/create/payback.cfm"
+									+ "?plannerID=#form.plannerID#"
+									,"Payback"
+									,800
+									,615
+										);
+			</cfoutput>
+		</cfif>
+		</script>
+	</cfif>		<!--- <cfif (form.action eq "approve")> --->
+</cf_layout-bare>

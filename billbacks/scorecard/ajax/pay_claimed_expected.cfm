@@ -1,0 +1,185 @@
+<!----
+	Filename:	C:\Work\Code\62_Branch\AwayX\billbacks\scorecard\pay_claimed_expected.cfm
+	Created:	3/21/2012
+ 	Developer:	drachala
+	Copyright (c) 2012 Blacksmith Applications, Inc.
+
+	Description:
+		Used to Make a BillBack Approve or Agree based on user thershold limit.
+	Usage:
+	Billback Scorecard and bill back search.
+	D25219: SOW - Enable mass paying of payables.
+---->
+<cfsetting showDebugOutput="No">
+<cfsilent>
+<cfparam name="form.Last_Date_To_Claim"   			default="0">
+<cfparam name="ExpectedTotal"						default="0">
+<cfparam name="Adjustment_Created"					default="0">
+<cfparam name="ExclusionCreated"					default="0">
+<cfparam name="BBTotalNotInRangeAgreeReason"		default="">
+<cfparam name="BBDeviationNotInRangeAgreeReason"	default="">
+<cfparam name="ReasonInfo"							default="">
+
+<cfquery name="CheckBBLock" datasource="#Application.Datasource#">
+	SELECT 	BB_Is_Locked, BB_Locked_By_User_ID
+	FROM 	Billback_Allied
+	WHERE 	Billback_ID = <cfqueryparam value="#trim(url.bbid)#" cfsqltype="CF_SQL_VARCHAR">
+</cfquery>
+
+
+<cfif (CheckBBLock.recordcount) AND (CheckBBLock.BB_Is_Locked EQ 0 OR CheckBBLock.BB_Locked_By_User_ID EQ request.AccessStructure.User_ID)>
+
+
+
+<!---initialize BillbackProgramManager--->
+<cfset billbackProgramManager = CreateObject("component", "components.billback.Programs.BillbackProgramsManager").init() />
+<cfset billbackProgramManager.setBillbackID(url.bbid) >
+
+<cfquery name="qGetBillBackPrograms" datasource="#application.datasource#">
+	SELECT	Program_ID
+	FROM	Billback_Program
+	WHERE  	Billback_ID = <cfqueryparam value="#trim(url.bbid)#" cfsqltype="CF_SQL_VARCHAR">
+	AND 	Deleted = 0
+</cfquery>
+<cfloop query="qGetBillBackPrograms">
+	<cfset billbackProgramManager.setBillbackProgramID(Program_ID) >
+	<cfif billbackProgramManager.getLastDateToClaim().RecordCount>
+		<cfset form.Last_Date_To_Claim = 1 />
+		<cfbreak />
+	</cfif>
+</cfloop>
+
+<cfquery name="GetRealBBAmount" datasource="#application.datasource#">
+SELECT CAST(BB_Amount As Decimal(18,2)) As BB_Amount, BB_Closing_Method
+FROM Billback
+WHERE Billback_ID = <cfqueryparam value="#trim(url.bbid)#" cfsqltype="CF_SQL_VARCHAR">
+</cfquery>
+<cfset BB_Closing_Method = #GetRealBBAmount.BB_Closing_Method#>
+<cfset Billback_ID = #trim(url.bbid)#>
+<cfinclude template="/billbacks/approval/inc_expected_total.cfm">
+
+<!---Add Growth Amounts--->
+
+<cfquery name="GrowthTotal" datasource="#application.datasource#">
+SELECT 	Round(ISNull(Sum(Expected_Amount), 0), 2) AS Expected_Amount
+FROM 	Billback_Program
+	INNER JOIN BB_Growth_Program
+	ON
+	(
+		(BB_Growth_Program.Billback_Program_ID = Billback_Program.Billback_Program_ID)
+		AND
+		(BB_Growth_Program.Deleted = 0)
+	)
+
+WHERE Billback_Program.Billback_ID = <cfqueryparam value="#trim(url.bbid)#" cfsqltype="CF_SQL_VARCHAR">
+AND Billback_Program.Deleted = 0
+AND Exists
+( 	SELECT Billback_Program.Billback_Program_ID
+	FROM Billback_Program
+	WHERE (BB_Growth_Program.Billback_Program_ID = Billback_Program.Billback_Program_ID)
+	AND	(BB_Growth_Program.Deleted = 0)
+)
+</cfquery>
+
+
+<cfoutput>
+<cfif GrowthTotal.Recordcount GT 0>
+<cfset ExpectedTotal = ExpectedTotal + GrowthTotal.Expected_Amount>
+</cfif>
+</cfoutput>
+
+<!---Add Lump Sum Totals--->
+
+<cfquery name="GetLSTotals" datasource="#application.datasource#">
+SELECT 	Round(ISNull(Sum(LS_Expected_Amount), 0), 2) AS LS_Expected_Amount
+FROM BB_Lump_Sums
+WHERE BB_Lump_Sums.Billback_ID = <cfqueryparam value="#trim(url.bbid)#" cfsqltype="CF_SQL_VARCHAR">
+AND BB_Lump_Sums.Deleted = 0
+AND Exists
+(
+	SELECT  Billback_Program_Lumpsum_Component.Billback_Program_Lumpsum_Component_ID
+	FROM	Billback_Program_Lumpsum_Component
+	WHERE
+	Billback_Program_Lumpsum_Component.Billback_Program_ID = BB_Lump_Sums.Billback_Program_ID
+	AND
+	Billback_Program_Lumpsum_Component.Deleted = 0
+	AND
+	(Billback_Program_Lumpsum_Component.Amount IS NOT NULL)
+	AND
+	(LEN(Billback_Program_Lumpsum_Component.Amount) > 0)
+	AND
+	(ISNUMERIC(Billback_Program_Lumpsum_Component.Amount) = 1)
+	AND
+	(CAST(Billback_Program_Lumpsum_Component.Amount AS Float) > 0)
+)
+</cfquery>
+
+<cfset ExpectedTotal = ExpectedTotal + GetLSTotals.LS_Expected_Amount>
+
+<cfquery name="qIsCritical" datasource="#application.datasource#">
+SELECT BB_PNF, BB_UP, Scheduled_Auto_BB, Billback_Payee_Type_ID
+FROM Billback
+WHERE Billback_ID = <cfqueryparam value="#trim(url.bbid)#" cfsqltype="CF_SQL_VARCHAR">
+</cfquery>
+
+<cfset form.rate_paid_type 			= #trim(url.type)#><!--- paytype E = "Expected" and BB ="Claimed" --->
+<cfif form.rate_paid_type EQ "BB">
+	<cfset form.Payment_Amount			= #GetRealBBAmount.BB_Amount#>
+<cfelseif form.rate_paid_type EQ "E">
+	<cfset form.Payment_Amount			= #trim(ExpectedTotal)#>
+</cfif>
+<cfset form.E_Amount_Total			= #trim(ExpectedTotal)#>
+<cfset form.Billback_Amount_Total	= #GetRealBBAmount.BB_Amount#>
+<cfset form.Billback_ID 			= #trim(url.bbid)#>
+<cfset form.Last_Date_To_Claim 		= #trim(form.Last_Date_To_Claim)#>
+<cfset form.SCHEDULED_AUTO_BB		= #trim(qIsCritical.Scheduled_Auto_BB)#>
+<cfset url.BBID						= #trim(url.bbid)#><!--- Billback ID --->
+
+
+<cfset From_Quick_Pay = 1>
+<cfinclude template="/billbacks/APPROVAL/payment.cfm">
+
+
+<cfif AgreeOrApprove EQ "Agree">
+		<cfset FORM.AgreeThisBB  = 1>
+</cfif>
+
+<cfset form.BBSource				=	#variables.varFlexSource#>
+<cfset form.Approved_Amount_Type 	=	#Approved_Payment_Type#>
+<cfset form.Adjustment_Created 		= 	#trim(Adjustment_Created)#>
+<cfset form.ExclusionCreated		= 	#trim(ExclusionCreated)#>
+
+<cfif AgreeOrApprove NEQ "">
+	<cfinclude template="/billbacks/APPROVAL/payment_confirmation.cfm">
+</cfif>
+
+<cfif AgreeOrApprove EQ "Approve" AND BB_Closing_Method EQ 1>
+	<cfset Billback_ID = #trim(url.bbid)#>
+	<cfinclude template="/billbacks/Check_Book/Bank_Tran/bb_set_status_to_paid.cfm">
+</cfif>
+
+<cfif AgreeOrApprove EQ "" AND IsAgreed EQ 0>
+	<cfset ReasonInfo = "You don't have approval rights for this program template.">
+<cfelseif (AgreeOrApprove EQ "Agree") OR (AgreeOrApprove EQ "" AND IsAgreed EQ 1)>
+	<cfif len(BBTotalNotInRangeAgreeReason) AND len(BBDeviationNotInRangeAgreeReason) EQ 0>
+		<cfset ReasonInfo = 'This billback is set to Agreed.(#BBTotalNotInRangeAgreeReason#)'>
+	<cfelseif len(BBDeviationNotInRangeAgreeReason) AND len(BBTotalNotInRangeAgreeReason) EQ 0>
+		<cfset ReasonInfo = 'This billback is set to Agreed.(#BBDeviationNotInRangeAgreeReason#)'>
+	<cfelseif len(BBDeviationNotInRangeAgreeReason) AND len(BBTotalNotInRangeAgreeReason)>
+		<cfset ReasonInfo = 'This billback is set to Agreed.(Billback total & deviation not in range)'>
+	</cfif>
+<cfelseif AgreeOrApprove EQ "Approve" AND BB_Closing_Method EQ 1>
+	<cfset ReasonInfo = "This billback is set to Paid.">
+<cfelseif AgreeOrApprove EQ "Approve">
+	<cfset ReasonInfo = "This billback is set to Approved.">
+</cfif>
+
+
+<cfelse>
+	<cfset ReasonInfo = "This billback locked by other user.">
+</cfif>
+
+</cfsilent>
+<cfoutput>
+{"bbStatus": "#ReasonInfo#"}
+</cfoutput>

@@ -1,0 +1,34 @@
+===== QUERY: getCurrentStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getLockUser =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: lockBB =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: unlockBB =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForunlockBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForunlockBB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#bblock.bb_id#",
+				"bb_locked_by_match_central" = "eq.0"
+			},
+			{
+				"bb_is_locked" = "0",
+				"bb_locked_by_deviation_grid" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlockBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlockBB>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

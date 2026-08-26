@@ -1,0 +1,30 @@
+===== QUERY: qGetSearchSequenceInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: DeleteAllPriorSearchSequenceTemplateSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertSearchSequenceTemplateSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetSearchSequenceForProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSearchSequenceForProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetSearchSequenceForProgram>
+	<cftry>
+		<cfset qGetSearchSequenceForProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "search_sequence_id"
+			}), "search_sequence_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSearchSequenceForProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSearchSequenceForProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

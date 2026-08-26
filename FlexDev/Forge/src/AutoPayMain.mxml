@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   xmlns:maps="com.shared.maps.*"
+			   xmlns:mate="http://mate.asfusion.com/"
+			   minWidth="955" minHeight="600" > <!--creationComplete="loadMods()"-->
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}" />
+	</s:layout>
+	<fx:Declarations>
+		<maps:MainEventMap />
+		<!-- ** ListenerInjector (in eventmap) is better than Listner (in View) but Since the MainEventMap is used across applications
+		    		we do nopt want to refernce specific apps in MainEventMap.
+			** SettingsManager dispatches the LOAD_MODS_MAIN event after the appsettings are loaded.
+					That way Mods don't get loaded until Settings and User info are loaded.
+		-->
+		<mate:Listener type="{MainEvent.LOAD_MODS_MAIN}" method="loadMods" />
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.shared.events.MainEvent;
+			import com.shared.models.IModuleBa;
+			import com.shared.views.skins.FormItemSkinBa;
+			import com.shared.views.skins.FormSkinBa;
+			import com.shared.vos.Settings;
+			
+			import flash.system.ApplicationDomain;
+			import flash.system.SecurityDomain;
+			
+			import mx.managers.PopUpManager;PopUpManager;			
+			import mx.controls.Alert;	
+			import mx.utils.ObjectUtil;			
+			import mx.managers.IDragManager;
+			
+			/* Could have done "import mx.managers.IDragManager;IDragManager" too, instead of instantiating a variable */
+			private var iDragManager:IDragManager;
+			
+			/* Could have done "import mx.managers.IDragManager;Alert" too, instead of instantiating a variable */
+			private var iAlert:Alert;
+			
+			import mx.events.ModuleEvent;
+			
+			import spark.modules.ModuleLoader;
+			import com.shared.views.skins.FormItemSkinBa;
+			import com.shared.views.skins.FormSkinBa;
+			
+			[Bindable]
+			public var settings:Settings = new Settings();
+			[Bindable]
+			private var iPadding:Number = 3;
+			private var frmSkin:FormSkinBa;
+			private var frmItemSkin:FormItemSkinBa;
+			
+			private function applyRuntimeStyleSheet():void {
+				//styleManager.loadStyleDeclarations("/flex/assets/styles/mainFx45.swf") 
+			}
+			
+			
+			public function loadMods(e:MainEvent):void {
+				//event was firing twice
+				if(e.settings){
+					this.settings = e.settings;
+					var AutoPayMod:ModuleLoader;
+					AutoPayMod = new ModuleLoader();
+					var s:String =  '/flex/com/Admin/AutoPay/AutoPay.swf';
+					//var s:String =  'com/Admin/AutoPay/AutoPay.swf';
+					AutoPayMod.label = "AutoPay";
+					AutoPayMod.addEventListener(ModuleEvent.READY, AutoPayModReady,false,0,true);
+					AutoPayMod.loadModule(s);
+					grpAutoPayMain.addElementAt(AutoPayMod,0);
+					//grpAutoPayMain.addChild(AutoPayMod);
+				}	
+			}
+			
+			public function AutoPayModReady(e:Event):void {
+				var mod:ModuleLoader = new ModuleLoader();
+				mod = e.currentTarget as ModuleLoader;
+				var ichild:* = mod.child as IModuleBa;
+			//	mod.child.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR,errorHandler);
+			//	mod.child.addEventListener(ErrorEvent.ERROR,errorHandler);
+				if (mod.child != null) {                    
+					/* Call data getters in the module  */
+					ichild.setSettings(this.settings);
+				} else {                
+					trace("AutoPay Module could not load ()");                 
+				}
+				//clean up
+				mod.removeEventListener(ModuleEvent.READY,AutoPayModReady);
+			}
+		public function errorHandler(e:Event):void{
+			Alert.show('error!');
+		}
+		]]>
+	</fx:Script>
+	<!--<s:Label text="FlexDev/Forge/bin-debug/com/Admin/AutoPay/AutoPay.swf" fontSize="9"/>-->
+	<s:Group id="grpAutoPayMain" height="100%">
+
+	</s:Group>
+	
+</s:Application>

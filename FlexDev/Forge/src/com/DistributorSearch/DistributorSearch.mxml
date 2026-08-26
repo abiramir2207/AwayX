@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:s="library://ns.adobe.com/flex/spark"  
+	layout="vertical" 
+	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+	xmlns:view="com.DistributorSearch.views.*" 
+	xmlns:maps="com.DistributorSearch.maps.*" 
+	xmlns:vos="com.DistributorSearch.vos.*" 
+	width="100%" height="100%" minHeight="800" minWidth="1000"
+	implements="com.shared.models.IModuleInterface" creationComplete="applyRuntimeStyleSheet();" >
+	<!-- creationComplete="applyRuntimeStyleSheet();" preloader="com.components.baProgressBar"  preloader="com.DistributorSearch.components.baProgressBar"
+	implements="com.shared.IModuleInterface"  preinitialize="saveSettings();" -->
+	
+	<mx:Script><![CDATA[
+		import com.DistributorSearch.events.SearchEvent;
+		import com.shared.models.SettingsManager;
+		
+		import mx.core.mx_internal;
+		//import mx.controls.Alert;
+		//import mx.styles.StyleManager;
+		//import mx.utils.ObjectUtil;
+		
+        public function applyRuntimeStyleSheet():void {
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+			//styleManager.loadStyleDeclarations("/flex/mainFx410.swf") 
+        }
+        // interfaces don't support vars, only functions so have to convert to getter/setters
+		private var _programId:int;
+		public function get programId():int
+		{
+			return _programId;
+		}
+		public function set programId (value:int):void
+		{
+			_programId = value;
+		}
+	
+		private var _customerId:String;
+		public function get customerId():String
+		{
+			return _customerId;
+		}
+		public function set customerId(value:String):void
+		{
+			_customerId = value;
+		}
+		
+		private var _oneDistSelection:Boolean;
+		[Bindable (event="oneDistSelectionChanged")]
+		public function get oneDistSelection():Boolean
+		{
+			return _oneDistSelection;
+		}
+		public function set oneDistSelection(value:Boolean):void
+		{
+			_oneDistSelection = value;
+			dispatchEvent(new Event('oneDistSelectionChanged'));
+			this.saveSettings();
+		}
+		
+		public function saveSettings():void{
+			var e:SearchEvent = new SearchEvent(SearchEvent.SAVE_SETTINGS);
+			e.programId = this._programId;
+			e.oneDistSelection = this.oneDistSelection;
+			e.shipTo = this.customerId;
+			this.dispatchEvent(e);
+		}
+  		]]>
+	</mx:Script>
+	
+	<!-- Event Maps __________________________________________________ -->
+	<maps:MainEventMap dispatcher="{this}" />
+	<!--<maps:ModelMap />-->
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox width="100%" height="100%">
+		<view:SearchPanel />
+	</mx:HBox>
+</mx:Module>

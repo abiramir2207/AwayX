@@ -1,0 +1,103 @@
+===== QUERY: qGetFieldInfoParent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFieldInfoParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetFieldInfoParent>
+	<cftry>
+		<cfset qGetFieldInfoParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Parent_Contract_Main_ID#",
+				"select" = "fieldnametocheck#"
+			}), "fieldnametocheck#"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFieldInfoParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFieldInfoParent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetFieldInfoChild =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFieldInfoChild = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetFieldInfoChild>
+	<cftry>
+		<cfset qGetFieldInfoChild = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#",
+				"select" = "fieldnametocheck#"
+			}), "fieldnametocheck#"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFieldInfoChild = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFieldInfoChild>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateRevisionChanges =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdateRevisionChanges = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_revision_changes")>
+<cfif useLakebaseForqUpdateRevisionChanges>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_revision_changes",
+			{
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"fieldname#" = "#RevisionTypeNum#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateRevisionChanges = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateRevisionChanges>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateContractMainAux =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qPrgChanges =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqPrgChanges = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_revision_changes")>
+<cfif useLakebaseForqPrgChanges>
+	<cftry>
+		<cfset qPrgChanges = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_revision_changes", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"select" = "products_added,products_removed,distributors_removed,distributors_added,operators_added,operators_removed,start_date_changed,end_date_changed"
+			}), "products_added,products_removed,distributors_removed,distributors_added,operators_added,operators_removed,start_date_changed,end_date_changed"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPrgChanges = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPrgChanges>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDelFixedProductsRatesTbl =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetFixedProductsRatesUOMChangedFromTable =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qDelRebateProductsRatesTbl =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetRebateProductsRatesUOMChangedFromTable =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

@@ -1,0 +1,80 @@
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="85"
+	 paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+    implements="mx.controls.listClasses.IDropInListItemRenderer,mx.managers.IFocusManagerComponent">
+    <mx:Script>
+        <![CDATA[
+        	import com.shared.vos.Item;
+        	import com.ContractProds.events.ComponentEvent;
+        	import com.asfusion.mate.events.Dispatcher;
+        	import com.shared.vos.Uom;
+            import mx.controls.listClasses.ListData;
+            import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+            import mx.controls.listClasses.BaseListData;
+           	import mx.controls.advancedDataGridClasses.AdvancedDataGridItemRenderer
+            import mx.events.FlexEvent;
+
+            private var _listData:AdvancedDataGridListData;
+            // Define a property for returning the new value to the cell.
+			[Bindable]
+			public var itemSource:Object = new Object();
+            [Bindable]
+            public var value:Object;            
+
+            // Implement the drawFocus() method for the VBox.
+            override public function drawFocus(draw:Boolean):void {
+                cboUomMP.setFocus();
+            }
+             // Implement the setFocus() method for the VBox.
+            override public function setFocus():void {
+                cboUomMP.setFocus();
+            }
+
+            override public function get data():Object {
+                return super.data;
+            }
+            
+            override public function set data(value:Object):void {
+            	//var o:Object = value[_listData.dataField];
+            	var s:String = '';
+            	var i:int = 0; //counter
+				s = _listData.dataField;
+				s = s.replace('.prodRate.uomMP','');
+                cboUomMP.dataProvider = value[s]['uomDp'];
+                //cboUomMP.selectedItem = value[s]['prodRate']['uom'];
+				itemSource = _listData.item[s];
+                for each(var u:Uom in cboUomMP.dataProvider){
+                	if (u.uomId == value[s]['prodRate']['uomMP']['uomId']){
+                		cboUomMP.selectedIndex = i;
+                	}
+                	i++;
+                }
+				setUom(this.cboUomMP.selectedItem as Uom)
+                
+            } 
+            public function get listData():BaseListData
+            {
+                return _listData;
+            }
+
+            public function set listData(value:BaseListData):void
+            {
+                _listData = AdvancedDataGridListData(value);
+            } 
+          private function setUom(u:Uom):void{
+          		var s:String = '';
+				s = _listData.dataField;
+				s = s.replace('.prodRate.uomMP','');
+            	this._listData.item[s]['prodRate']['uomMP'] = u;
+				itemSource = _listData.item[s];
+            }
+
+        ]]>
+    </mx:Script>
+    <mx:Binding destination="value" source="itemSource"/>
+    
+    <mx:ComboBox id="cboUomMP" 
+    			editable="false" 
+    			width="75" 
+    			labelField="abbreviation" 
+    			change="setUom(this.cboUomMP.selectedItem as Uom);" />
+</mx:VBox>

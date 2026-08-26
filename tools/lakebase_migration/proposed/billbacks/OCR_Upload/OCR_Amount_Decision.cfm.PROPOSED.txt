@@ -1,0 +1,24 @@
+===== QUERY: qUpdOCRUploadLog =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: getOCRUploadLogRecord =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetOCRUploadLogRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForgetOCRUploadLogRecord>
+	<cftry>
+		<cfset getOCRUploadLogRecord = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#URL.OCRUploadID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOCRUploadLogRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOCRUploadLogRecord>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

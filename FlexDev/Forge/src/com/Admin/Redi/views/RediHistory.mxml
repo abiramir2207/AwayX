@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.Admin.Redi.views.*"
+		 xmlns:comps="com.Admin.Redi.components.*"
+		 xmlns:filters="com.shared.components.filters.*"
+		 xmlns:z="com.shared.components.spark.*"
+		 width="100%" height="100%">
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{pModel.iPadding}" paddingLeft="{pModel.iPadding}" paddingRight="{pModel.iPadding}" paddingTop="{pModel.iPadding}" />
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.views.pm.RediPModel;
+			import com.shared.views.skins.DataGridHeaderBackgroundSkinBa;
+			import com.shared.views.skins.DataGridHeaderSeparatorSkinBa;
+			
+			import mx.collections.ArrayList;
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:RediPModel;
+		]]>
+	</fx:Script>
+	<s:BorderContainer height="15%" width="{pModel.iWidth}">
+		<s:VGroup paddingBottom="{pModel.iPaddingfrm}" paddingLeft="{pModel.iPaddingfrm}" paddingRight="{pModel.iPaddingfrm}" paddingTop="{pModel.iPaddingfrm}">
+			<s:VGroup width="100%">
+				<z:BorderContainerLabel sText="Search History Corrections"
+										iHeight="{pModel.iHeight}" iWidth="{pModel.iWidth}" textAlign="center"/>
+			</s:VGroup>
+				
+			<s:HGroup>
+				<s:VGroup width="33%">
+					<s:Form width="100%" color="0x323232">
+						<s:layout>
+							<s:FormLayout id="frmLay3" gap="0" paddingTop="0" paddingBottom="0" />
+						</s:layout>
+						<s:Button label="refresh data" click="{this.pModel.loadRediHistory()}" />
+					</s:Form>
+				</s:VGroup>
+			</s:HGroup>
+			
+		</s:VGroup>
+	</s:BorderContainer>
+	
+	<s:Group width="100%" height="100%">
+		<filters:FilterAdvancedDatagrid dragEnabled="false" headerWordWrap="true" headerHeight="66"
+										oSettings="{pModel.oSettings}"
+										allowMultipleSelection="true"
+										liveScrolling="true" 
+										sortExpertMode="true"
+										horizontalScrollPolicy="on"
+										id="dgRediHistory"
+										dispatcher="{this}"
+										dataProvider="{pModel.acRediHistory}"
+										editable="true"
+										width="100%" height="100%" minHeight="200"
+										top="0" left="0" right="0" bottom="0"
+										doubleClickEnabled="true"
+										tabEnabled="true" tabChildren="true"
+										columns="{pModel.arrRediHistoryDgCols}"
+										sortableColumns="true" resize="true"
+										headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+										headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+										verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	/>
+		
+		<!--	filterInsert="{pModel.funcFilterInsert}" 
+		oFilterParms="{pModel.oFilterParms}" 
+		oSettings="{pModel.oSettings}"
+		itemEditEnd="pModel.itemEditEnd(event);"
+		allowMultipleSelection="true"
+		liveScrolling="true" 
+		sortExpertMode="true"
+		horizontalScrollPolicy="on"
+		id="dgItems" dispatcher="{this}"
+		dataProvider="{pModel.items}"
+		editable="true"
+		width="100%" height="100%" minHeight="200"
+		top="0" left="0" right="0" bottom="0"
+		doubleClickEnabled="true"
+		itemDoubleClick="pModel.selectRow(event);"
+		keyDown="pModel.enterRow(event);"
+		tabEnabled="true" tabChildren="true"
+		headerRelease="pModel.Call_Sort_Data(event);"
+		groupedColumns="{pModel.arrDgItemsCols}"
+		sortableColumns="true"> -->
+	</s:Group>
+	
+</s:Group>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:TextInput id="netPromoAmt" 
+				  text="{data.Net_Promo_Amt}" 
+				  alpha="0" 
+				  backgroundAlpha="0" 
+				  editable="false" 
+				  width="100%" 
+				  click="netPromoAmt.editable=true;netPromoAmt.alpha=1"/>
+	
+</mx:VBox>

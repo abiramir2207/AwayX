@@ -1,0 +1,100 @@
+===== QUERY: qCurrentCreditSelectedAlready =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCurrentCreditSelectedAlready = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("associatedcredit")>
+<cfif useLakebaseForqCurrentCreditSelectedAlready>
+	<cftry>
+		<cfset qCurrentCreditSelectedAlready = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("associatedcredit", {
+				"credit_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCurrentCreditSelectedAlready = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCurrentCreditSelectedAlready>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCurrentCreditSelectedAlready =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCurrentCreditSelectedAlready = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("associatedcredit")>
+<cfif useLakebaseForqCurrentCreditSelectedAlready>
+	<cftry>
+		<cfset qCurrentCreditSelectedAlready = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("associatedcredit", {
+				"credit_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCurrentCreditSelectedAlready = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCurrentCreditSelectedAlready>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCurrentCreditSelectedAlready =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCurrentCreditSelectedAlready = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("associatedcredit")>
+<cfif useLakebaseForqCurrentCreditSelectedAlready>
+	<cftry>
+		<cfset qCurrentCreditSelectedAlready = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("associatedcredit", {
+				"credit_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCurrentCreditSelectedAlready = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCurrentCreditSelectedAlready>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCurrentCreditSelectedAlready =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCurrentCreditSelectedAlready = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("associatedcredit")>
+<cfif useLakebaseForqCurrentCreditSelectedAlready>
+	<cftry>
+		<cfset qCurrentCreditSelectedAlready = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("associatedcredit", {
+				"credit_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCurrentCreditSelectedAlready = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCurrentCreditSelectedAlready>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCurrentCreditSelectedAlready =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCurrentCreditSelectedAlready = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("associatedcredit")>
+<cfif useLakebaseForqCurrentCreditSelectedAlready>
+	<cftry>
+		<cfset qCurrentCreditSelectedAlready = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("associatedcredit", {
+				"credit_id" = "eq.#Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCurrentCreditSelectedAlready = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCurrentCreditSelectedAlready>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

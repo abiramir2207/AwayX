@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+                xmlns:s="library://ns.adobe.com/flex/spark" 
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                autoDrawBackground="false" preinitialize="init()">
+	<fx:Script>
+		<![CDATA[
+			import com.shared.views.renderer.MultiSelectionDropDown;
+			
+			import mx.utils.ObjectUtil;
+			
+			import spark.skins.spark.CheckBoxSkin;
+			import spark.utils.TextFlowUtil;
+			
+			private var bSelected:Boolean;
+			
+			public function checkBoxSelect(event:*):void{
+				var e:* = event;
+				/* for each(var o:* in this.owner.selectedCheckBoxes){
+					if (o == this.data){
+						this.checkbox.selected = true;
+					}
+				} */
+			}
+			
+			override public function set data(value:Object):void {
+				super.data = value;
+				this.checkbox.selected = false;
+				var drpMulti:MultiSelectionDropDown = this.owner as MultiSelectionDropDown;
+
+				//simple data type: string,number...be carefull, an array is simple (but will break in either condition
+
+				for each(var o:* in drpMulti.currentlySelectedCheckBoxes){
+					var bSimpleType:Boolean = ObjectUtil.isSimple(o);
+					if(bSimpleType){
+						if (o == this.data){
+							this.checkbox.selected = true;
+							drpMulti.dataProvider.itemUpdated(o);
+						}
+					}
+					else{
+						if (o[drpMulti.labelField] == this.data[drpMulti.labelField]){
+							this.checkbox.selected = true;
+							drpMulti.dataProvider.itemUpdated(o);
+						}
+					}
+					
+				}
+			}
+			
+			private function init():void{
+				var multi:MultiSelectionDropDown = parentDocument.hostComponent as MultiSelectionDropDown;
+				checkbox.addEventListener(MouseEvent.MOUSE_DOWN, multi.mouseCheckBox, false, 0, true);
+				checkbox.addEventListener(MouseEvent.MOUSE_UP, multi.mouseCheckBox, false, 0, true);
+				checkbox.addEventListener(Event.CHANGE, multi.changeCheckBoxSelection, false, 0, true);
+			}
+			
+		]]>
+	</fx:Script>
+
+    <s:states>
+        <s:State name="normal" />
+        <s:State name="hovered" />
+        <s:State name="selected" />
+        <!--
+        <s:State name="normalAndCaret" />
+        <s:State name="normalAndShowsCaret" />
+        <s:State name="hoveredAndCaret" />
+        <s:State name="hoveredAndShowsCaret" />
+        <s:State name="selectedAndCaret" />
+        <s:State name="selectedAndShowsCaret" />-->
+    </s:states>
+
+    <s:Graphic width="100%" height="100%" left="0" right="0" top="0" bottom="0" x="0" y="0">
+        <s:Rect left="0" right="0" top="0" bottom="0" width="5" height="5">
+            <s:fill>
+                <s:LinearGradient rotation="-90">
+                    <!-- 
+                        color.normal="#5c5c5c"                 	
+                        color.hovered="#5c5c5c"
+                        color.selected="#5c5c5c"
+                     -->
+                    <s:GradientEntry
+                    	color.normal="#ffffff"
+                    	color.hovered="#e3e3e3" 
+                    	color.selected="#c02025"
+                        ratio="0"/>
+                    <!-- 
+                        color.normal="#bcbdbe"                      
+                        color.hovered="#bcbdbe"
+                        color.selected="#bcbdbe"
+                    -->
+                    <s:GradientEntry
+                    	color.normal="#ffffff"
+                    	color.hovered="#e3e3e3" 
+                    	color.selected="#c02025"
+                        ratio="0.110565"/>
+                    <!--                       
+                        color.hovered="#602C29"
+                        color.selected="#602C29"
+                    -->
+                    <s:GradientEntry
+                    	color.normal="#ffffff" 
+                    	color.hovered="#e3e3e3"
+                    	color.selected="#c02025"
+                        ratio="0.454545"/>
+                </s:LinearGradient>
+            </s:fill>
+        </s:Rect>
+    </s:Graphic>
+    
+    <!-- Removed text="{data}" from <s:RichText -->
+    <s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left">
+     	<mx:Spacer width=".1" />
+     	<s:CheckBox id="checkbox" change="checkBoxSelect(event);" skinClass="spark.skins.spark.CheckBoxSkin"/>
+		<!--  selected="{parentDocument.currentlySelectedCheckBoxes.indexOf(this.data)}" -->
+     	<!--<mx:Spacer width="100%" />-->
+        <s:RichText id="labelDisplay"             
+                    textAlign="left"
+                    styleName="listItem"
+                    verticalAlign="middle"
+                    lineBreak="toFit"
+                    paddingTop="10"
+                    paddingBottom="10"
+                    color.hovered ="0xffffff"
+                    color.selected="0xffffff"
+                    paddingLeft="0"
+                    paddingRight="0"
+                    horizontalCenter="0" verticalCenter="1">
+        </s:RichText>
+    </s:HGroup>    
+</s:ItemRenderer>

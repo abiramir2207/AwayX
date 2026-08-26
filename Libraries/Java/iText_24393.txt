@@ -1,0 +1,8 @@
+These instructions are valid for CF 8 only. If the environment has CF 9, then we do not need these steps.
+1) Stop CF
+2) Got to the following path on the web server (It could be different).
+C:\JRun4\servers\cfusion\cfusion-ear\cfusion-war\WEB-INF\cfusion\lib
+3) Rename the existing Itext.jar file in that location to something like Itext_8.0.jar
+4) Get the Itext.jar file which comes with this label.
+5) Copy the Itext.jar file to the location (path) mentioned above.
+6) Restart CF.

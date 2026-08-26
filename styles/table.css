@@ -1,0 +1,6 @@
+.datagrid{font-size:8pt;text-align:left;border:1px dotted #CCC;border-spacing:0;border-collapse:collapse;width:100%;clear:left;}
+.datagrid thead tr th{background-color:#ffce84;border:1px dotted #CCC;padding:4px;font-family:"Century Gothic",Verdana,Arial;font-size:1.05em;letter-spacing:0.2px;text-align:left;}
+.datagrid tfoot tr th{background:url('/images/gradback.png?4') repeat-x scroll 0 0 #B9C9FE;border:1px dotted #CCC;padding:4px}
+.datagrid tbody tr{border:1px dotted #CCC;border-collapse:collapse}
+.datagrid tbody td{color:#3D3D3D;border:1px dotted #CCC;border-collapse:collapse;vertical-align:center;padding:4px}
+.datagrid span.highlight { background-color: #FFFF88; font-weight:bold; }

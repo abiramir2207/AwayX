@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*"
+		 creationComplete="applyRuntimeStyleSheet();" 
+		 width= "100%" height="100%"
+		 xmlns:ba="com.shared.components.*"
+		 >
+	<s:layout>
+		<s:VerticalLayout paddingLeft="0" paddingRight="0" 
+						  paddingTop="0" paddingBottom="0" />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:Consumer id="cfMessageFromServer" destination="ColdFusionGateway" message="gotMessage( event )"  />
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Main.models.vos.BBHeader;
+			import com.Billback.Upload.events.BBUploadEvent;
+			import com.Billback.Upload.models.vos.BBUploadHeader;
+			import com.Billback.Upload.models.vos.BBUploadLog;
+			import com.Billback.Upload.views.pm.BBCorrectionsPModel;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			import com.shared.components.filters.FilterDatagrid;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.collections.ICollectionView;
+			import mx.collections.IList;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.core.ScrollPolicy;
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			import mx.events.ToolTipEvent;
+			import mx.managers.ToolTipManager;
+			import mx.messaging.events.MessageEvent;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBCorrectionsPModel;
+			[Bindable]
+			private var iPad:int = 3;
+			private var iOriginalHeaderHeight:int = 108;
+			private var iExpandedHeaderHeight:int = 158;
+			[Bindable]
+			private var iHeaderHeight:int = 108;
+			
+			private var bFirstMatchFound:Boolean = false;
+			
+			[Bindable] protected var acParseResult:ArrayCollection = new ArrayCollection();
+			[Bindable] protected var messageList:ArrayCollection = new ArrayCollection();
+			[Bindable] protected var sCurrentUploadMessage:String = '';			
+			[Bindable]
+			private var sToolTip:String = "<textformat leading='8'><b>Double click on the billback number in the list to open the billback.</b></textformat>";
+			
+			public function fnPositionToolTip(event:ToolTipEvent):void
+			{
+				var pt:Point = event.currentTarget.contentToGlobal(new Point(0,0));
+				ToolTipManager.currentToolTip.y = pt.y - 25; // 68
+				ToolTipManager.currentToolTip.x = pt.x - 20;
+				ToolTipManager.currentToolTip.height = 25;
+				
+			} 
+			protected function gotMessage(e:MessageEvent):void
+			{
+				var i:int = e.message.body.arrCorrections.length;
+				var obj:Object = new Object();
+				obj.message = '[' + e.message.body.user + ' @' + e.message.body.serial + '] ' + e.message.body.message;
+				obj.sFileName = e.message.body.sFileName;
+				obj.acParseResult = acParseResult = new ArrayCollection(e.message.body.arrParseResult);
+				messageList.addItemAt(obj,0);
+				lMessage.visible = true;
+				lMessage.includeInLayout = true;
+				clrLog.enabled = true;
+				this.iHeaderHeight = iExpandedHeaderHeight;
+				// this.lMessage.selectedIndex = 0;
+				sCurrentUploadMessage = e.message.body.message;
+				//display Parse messages
+				/* if(e.message.body.arrParseResult.length){
+				acParseResult = new ArrayCollection(e.message.body.arrParseResult);
+				}
+				else{
+				acParseResult = new ArrayCollection();
+				sCurrentUploadMessage = '';
+				} */
+				//append new corrections records to grid
+				// Commented as we do not want to add the record to the grid when the file is uploaded
+				/*	if(i){
+				//add to corrections list
+				var evt:BBUploadEvent = new BBUploadEvent ( BBUploadEvent.ADD_BB_CORRECTIONS );
+				evt.arrBBcorrrections = e.message.body.arrCorrections;
+				this.dispatchEvent( evt );
+				}
+				*/
+				//toNumber.text = e.message.body.fromNumber;
+			}
+			
+			public function clearLog():void{
+				this.messageList = new ArrayCollection();
+				this.clrLog.enabled = false;
+				this.clrLog.includeInLayout = false;
+				this.lMessage.visible = false;
+				this.lMessage.includeInLayout = false;
+				this.iHeaderHeight = iOriginalHeaderHeight;
+			}
+			
+			private function applyRuntimeStyleSheet():void {
+				//styleManager.loadStyleDeclarations("/flex/assets/styles/mainFx45.swf") 
+				cfMessageFromServer.subscribe();
+			}
+			private function searchFilter():void
+			{
+				this.bFirstMatchFound = false;
+				
+				if(searchBBCode.text !='' || searchBBNumber.text !='' || searchVendor.text != '')
+				{
+					//dgBBUploadHistory.filterFunction(searchBBCode.text);
+					(this.dgBBUploadHistory.dataProvider as  ICollectionView).filterFunction = filterFirst;
+					dgBBUploadHistory.dataProvider.refresh();
+					
+					/*  If no records were returned using the search criteria, then pass "null".
+					This will make sure that "this.pModel.bbUploadLog.uploadID = 0", which will hide the "view billbacks for x"
+					and the file link below the grid.
+					*/
+					if(this.dgBBUploadHistory.dataProvider.length == 0){
+						this.pModel.selectHistory(null as BBUploadLog);
+					}
+					
+					this.dgBBUploadHistory.validateNow();
+					(this.dgBBUploadHistory.dataProvider as  ICollectionView).filterFunction = dgBBUploadHistory.filterFunction;
+				}
+				else
+				{
+					searchBBCode.text = ''
+					searchBBNumber.text = ''
+					searchVendor.text = ''
+				}
+			}
+			
+			private function filterFirst(item:Object):Boolean
+			{
+				//return item.uploadStatus.match(new RegExp(searchBBCode.text, 'i'))
+				var isMatch:Boolean = false;				
+				
+				if (searchBBCode.text !=''	&& searchBBNumber.text !='' && searchVendor.text != '')
+				{
+					if(item.BBCodeSearchField.toLowerCase().search(searchBBCode.text.toLowerCase()) != -1 &&
+						item.BBTitleSearchField.toLowerCase().search(searchBBNumber.text.toLowerCase()) != -1 &&
+						item.VendorSearchField.toLowerCase().search(searchVendor.text.toLowerCase()) != -1)
+					{
+						isMatch = true;
+					}
+				}
+				else if (searchBBCode.text !=''	&& searchBBNumber.text !='' && searchVendor.text == '')
+				{
+					if(item.BBCodeSearchField.toLowerCase().search(searchBBCode.text.toLowerCase()) != -1 &&
+						item.BBTitleSearchField.toLowerCase().search(searchBBNumber.text.toLowerCase()) != -1)
+					{
+						isMatch = true;
+					}
+				}	
+				else if (searchBBCode.text !=''	&& searchBBNumber.text =='' && searchVendor.text != '')
+				{
+					if(item.BBCodeSearchField.toLowerCase().search(searchBBCode.text.toLowerCase()) != -1 &&
+						item.VendorSearchField.toLowerCase().search(searchVendor.text.toLowerCase()) != -1)
+					{
+						isMatch = true;
+					}
+				}	
+				else if (searchBBCode.text ==''	&& searchBBNumber.text !='' && searchVendor.text != '')
+				{
+					if(item.BBTitleSearchField.toLowerCase().search(searchBBNumber.text.toLowerCase()) != -1 &&
+						item.VendorSearchField.toLowerCase().search(searchVendor.text.toLowerCase()) != -1)
+					{
+						isMatch = true;
+					}
+				}					
+				else if (searchBBCode.text !='')
+				{
+					if(item.BBCodeSearchField.toLowerCase().search(searchBBCode.text.toLowerCase()) != -1)
+					{
+						isMatch = true;
+					}
+				}	
+				else if (searchBBNumber.text !='')
+				{
+					if(item.BBTitleSearchField.toLowerCase().search(searchBBNumber.text.toLowerCase()) != -1)
+					{
+						isMatch = true;
+					}
+				}
+				else if (searchVendor.text !='')
+				{
+					if(item.VendorSearchField.toLowerCase().search(searchVendor.text.toLowerCase()) != -1)
+					{
+						isMatch = true;
+					}
+				}
+				
+				/* 	If a match is found based on search criteria and it is the first match, then select that record.
+				If there are multiple records returned, the first record needs to be selected and if there is
+				only one record returned, then that record is selected. */ 
+				if(isMatch == true && this.bFirstMatchFound == false){
+					this.pModel.selectHistory(item as BBUploadLog);
+					this.bFirstMatchFound = true;
+				}
+				
+				
+				return isMatch;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup height="100%" width="100%" minWidth="800" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+		<ba:MinMaxPanel id="header" width="100%" minWidth="800" height="{this.iHeaderHeight}" borderStyle="none" panelTitle="BB Upload Results: {this.pModel.arrBBUploadHistory.length} records" showMaximize="false" showMinimize="true">
+			<s:VGroup>
+				<s:HGroup paddingTop="3">
+					<s:BorderContainer width="295" height="33">
+						<s:layout>
+							<s:HorizontalLayout paddingLeft="{iPad}" paddingRight="{iPad}" verticalAlign="middle"
+												paddingTop="{iPad}" paddingBottom="{iPad}" gap="{iPad}"/>
+						</s:layout>
+						<s:Button label="refresh data" 
+								  click="{pModel.refreshUploadHistoryData()}" 
+								  toolTip="refresh the list of corrections"
+								  id="btnRefreshHistory" enabled="{pModel.bBtnRefreshEnabled}" />
+						<s:Label id="dataAsOf" text=" Data as of: {pModel.bbUploadDate}" visible="{pModel.bbUploadDate != ''}" color="red" fontWeight="bold" toolTip="The time stamp for the data in the current view."/>						
+					</s:BorderContainer>
+					<s:BorderContainer width="195" height="33">
+						<s:layout>
+							<s:HorizontalLayout paddingLeft="{iPad}" paddingRight="{iPad}" verticalAlign="middle"
+												paddingTop="{iPad}" paddingBottom="{iPad}" gap="{iPad}"/>
+						</s:layout>
+						<s:Spacer width="5" />
+						<s:Button label="upload file" 
+								  click="pModel.uploadFile()"
+								  toolTip="Upload an excel spreadsheet of billbacks." />
+						<s:Spacer width="15" />
+						<s:Button id="clrLog" 
+								  label="clear log" 
+								  click="this.clearLog()"
+								  toolTip="clear results pane" 
+								  enabled="false"
+								  />
+					</s:BorderContainer>
+					<s:List id="lMessage" left="0" right="0" selectedIndex="0" 
+							dataProvider="{messageList}" 
+							labelField="message" 
+							height="75"
+							width="500"
+							toolTip="Upload activity since log-in.  Connected to Server : {cfMessageFromServer.subscribed}" 
+							visible="false" 
+							includeInLayout="false"
+							horizontalScrollPolicy="auto"
+							verticalScrollPolicy="auto"
+							
+							>
+						<s:itemRenderer>
+							<fx:Component >
+								<mx:Text htmlText="{data.message}" /> <!-- Removed the width and height as it was causing an issue in display -->
+							</fx:Component>
+						</s:itemRenderer>
+						
+					</s:List>		
+				</s:HGroup>
+				<!--<s:HGroup gap="25">-->
+				<s:HGroup>				
+					<s:BorderContainer width="300" height="33">
+						<s:layout>
+							<s:HorizontalLayout paddingLeft="{iPad}" paddingRight="{iPad}" verticalAlign="middle"
+												paddingTop="{iPad}" paddingBottom="{iPad}" gap="{iPad}"/>
+						</s:layout>
+						<s:Spacer width="5" />
+						<mx:DateField id="dtStart"  
+									  selectedDate="{this.pModel.startDate}" 
+									  change="this.pModel.dtStartHandler(this.dtStart.selectedDate)" 
+									  editable="true"
+									  width="120" />
+						<mx:DateField id="dtEnd" 
+									  selectedDate="{this.pModel.endDate}" 
+									  change="this.pModel.dtEndHandler(this.dtEnd.selectedDate)" 
+									  editable="true"
+									  width="120" />
+					</s:BorderContainer>
+					
+					<s:BorderContainer width="775" height="33" >
+						<s:layout>
+							<s:HorizontalLayout paddingLeft="{iPad}" paddingRight="{iPad}" verticalAlign="middle"
+												paddingTop="{iPad}" paddingBottom="{iPad}" gap="{iPad}"/>
+						</s:layout>
+						<s:Spacer width="5" />
+						<s:CheckBox label="filter" id="chkFilter" change="{dgBBUploadHistory.displayHeaderOptions(chkFilter.selected,chkEdit.selected)}" selected="true"/>
+						<s:Spacer width="10" />
+						<s:Label text="   {this.pModel.oSettings.appFlex.bbLabels.Payable} #" />
+						<s:TextInput id="searchBBCode" width="115"
+									 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									 editable="true"
+									 maxChars="{parseInt(this.pModel.oSettings.appSettings.BB_Ref_Num_Max_Length)}"
+									 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Billback} Number"
+									 />
+						<s:Spacer width="3" />
+						<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Billback} # "/>
+						<s:TextInput id="searchBBNumber" width="115"
+									 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									 editable="true"
+									 maxChars="{parseInt(this.pModel.oSettings.appSettings.BB_Ref_Num_Max_Length)}"
+									 toolTip="{this.pModel.oSettings.appFlex.bbLabels.Billback} Number"
+									 />
+						<s:Spacer width="3" />
+						<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Vendor} # "/>
+						<s:TextInput id="searchVendor" width="110"
+									 height="{this.pModel.oSettings.cfApp_textInputHeight}"
+									 toolTip="  {this.pModel.oSettings.appFlex.bbLabels.Vendor} "
+									 />
+						<s:Spacer width="3" />
+						<s:Button label="search" click="searchFilter();" />
+						<s:Button label="reset" click="{dgBBUploadHistory.resetFilters()};searchBBCode.text='';searchBBNumber.text='';searchVendor.text=''" />			
+						<!--grid is not editable....-->
+						<s:CheckBox label="edit" id="chkEdit" 
+									click="{dgBBUploadHistory.displayHeaderOptions(chkFilter.selected,chkEdit.selected)}" 
+									includeInLayout="false" visible="false"/>
+					</s:BorderContainer>
+					
+				</s:HGroup>
+				
+			</s:VGroup>
+		</ba:MinMaxPanel>
+		
+		
+		<filters:FilterDatagrid id="dgBBUploadHistory" editable="false"
+								columns="{pModel.arrBBUploadHistoryDgCols}"
+								dataProvider="{new ArrayCollection(this.pModel.arrBBUploadHistory)}"
+								change="{pModel.selectHistory(this.dgBBUploadHistory.selectedItem as BBUploadLog)}"
+								selectedItem="{pModel.bbUploadLog}"
+								width="100%" minHeight="175" height="100%"
+								horizontalScrollPolicy="{ScrollPolicy.AUTO}"
+								columnWidths="{['5%', '8%', '4%', '4%', '4%', '4%', '4%', '4%', '24%', '10%', '20%', '8%', '0%', '0%', '0%', '1%']}"
+								headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+								headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	
+								> 
+		</filters:FilterDatagrid>
+		
+		<s:Form width="100%">
+			<s:layout>
+				<s:FormLayout gap="0" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" verticalAlign="top" />
+			</s:layout>
+			<s:FormHeading height="0"/>
+			<s:HGroup paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"
+					  visible="{pModel.bbUploadLog != null}" verticalAlign="top">
+				
+				<s:Button label="view billbacks for id: {this.pModel.bbUploadLog.uploadID}" 
+						  click="{pModel.getCreatedBillbacks()}" 
+						  toolTip="get a list of billbacks generated by this upload file." />
+				<s:Image id="iconRatePrecisionInfo" 
+						 source="/flex/assets/Images/help.gif"
+						 toolTipShow="fnPositionToolTip(event);"
+						 width="14" height="14" 
+						 toolTip="{sToolTip}"
+						 />
+				<s:List id="lsBillbacks"
+						height="{this.pModel.iFrmHeight * 5}" 
+						dataProvider="{new ArrayList(this.pModel.bbUploadLog.bbUploadHeader)}"
+						width="175" 
+						labelFunction="{this.pModel.bbHeaderLabelFunc}" 
+						doubleClickEnabled="true" 
+						doubleClick="this.pModel.selectBB(this.lsBillbacks.selectedItem)" />
+				
+				<s:FormItem label="File">
+					<mx:LinkButton id="lnkFileDownload" 
+								   paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"
+								   label="{this.pModel.bbUploadLog.headerFileName}" 
+								   click="{pModel.downloadFile()}"
+								   includeInLayout="{pModel.bbUploadLog != null}" 
+								   visible="{pModel.bbUploadLog != null}" 
+								   toolTip="Download file: {this.pModel.bbUploadLog.headerFileName}"/>
+				</s:FormItem>
+			</s:HGroup>
+			<!--<s:HGroup paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
+			
+			<s:FormItem label="file data">
+			<s:TextArea id="taUploadData" height="{this.pModel.iFrmHeight * 8}"
+			text="{pModel.sFileData}"
+			width="800"/>
+			</s:FormItem>
+			</s:HGroup>-->
+			
+		</s:Form>
+	</s:VGroup>
+</s:Group>

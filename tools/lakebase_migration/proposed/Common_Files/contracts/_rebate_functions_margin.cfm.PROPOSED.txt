@@ -1,0 +1,20 @@
+===== QUERY: qComponentNames =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqComponentNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetactivecomps")>
+<cfif useLakebaseForqComponentNames>
+	<cftry>
+		<cfset qComponentNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetactivecomps", {
+				"select" = "program_rebates_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+			}), "program_rebates_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqComponentNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqComponentNames>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

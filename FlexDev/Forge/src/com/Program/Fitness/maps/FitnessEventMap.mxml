@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<fx:Script>
+		<![CDATA[
+			import com.ContractProds.events.SearchEvent;
+			import com.ContractProds.models.FilterManager;
+			import com.ContractProds.models.SearchManager;
+			import com.Program.Fitness.events.FitnessEvent;
+			import com.Program.Fitness.models.FitnessItemsGridManager;
+			import com.Program.Fitness.models.FitnessManager;
+			import com.Program.Fitness.views.FitnessHeaderForm;
+			import com.Program.Fitness.views.FitnessItemsGrid;
+			import com.Program.Fitness.views.pm.FitnessItemsPModel;
+			import com.Program.Fitness.views.pm.FitnessPModel;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import com.shared.events.MainEvent;
+			import com.shared.models.BAError;
+			import com.shared.models.SettingsManager;
+			
+			import mx.events.FlexEvent;
+			//import com.ContractProds.vos.*;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+	<mate:Debugger level="{Debugger.ALL}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  ***************************************************************************************** -->
+	<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.Models.Program.Fitness.FitnessManager" />
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+
+	<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+	<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+			Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" constructorArguments="{scope.dispatcher}"/>
+		<ObjectBuilder generator="{FilterManager}" id="oFilterManager" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{FitnessManager}" id="oFitnessManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{FitnessItemsGridManager}" id="oFitnessItemsGridManager" constructorArguments="{scope.dispatcher}"  />
+		<ObjectBuilder generator="{FitnessPModel}" id="oFitnessPModel" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{FitnessItemsPModel}" id="oFitnessItemsPModel" constructorArguments="{scope.dispatcher}" />
+		<ObjectBuilder generator="{BAError}" id="oBAError"  />
+		<MethodInvoker generator="{SettingsManager}" method="loadURLParameters"  />
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" useWeakReference="true" debug="true">
+		<!--call db for other settings-->
+		<EventAnnouncer type="{MainEvent.LOAD_APP_SETTINGS}" generator="{MainEvent}">
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+	<!--	<EventAnnouncer type="{FitnessEvent.LOAD_Fitness}" generator="{MainEvent}">
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>-->
+	</EventHandlers>
+	
+	<!--GET DATA ******** modify this event to get data from CF ************ -->
+	   
+	<EventHandlers type="{FitnessEvent.LOAD_Fitness}" id="eLOAD_Fitness">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getFitnessDetails" arguments="{event.fitnessSearchDef}">
+			<resultHandlers>
+				<MethodInvoker generator="{FitnessManager}" method="getFitnessResults" arguments="{resultObject}" />
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer type="{FitnessEvent.BSA_ERROR}" generator="{FitnessEvent}" >
+					<Properties sBaError="SEARCH SERVICE (getFitnessDetails data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+		
+	<EventHandlers type="{FitnessEvent.LOAD_HEADER_DATA}" id="eLOAD_HEADER_DATA">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getFitnessHeaderObj" arguments="{event.fitnessSearchDef}">
+			<resultHandlers>
+				<MethodInvoker generator="{FitnessManager}" method="getFitnessHeaderResults" arguments="{resultObject}" />
+			</resultHandlers>	
+			<faultHandlers>	
+				<EventAnnouncer type="{FitnessEvent.BSA_ERROR}" generator="{FitnessEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get getFitnessHeaderObj data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+		
+		
+	<EventHandlers type="{FitnessEvent.SET_HEADER_DATA}" id="eSet_HEADER_DATA">
+		<MethodInvoker generator="{FitnessManager}" method="getFitnessHeaderResults" arguments="{event.fitnessSearchDef}" />
+	</EventHandlers>
+	<!-- used to reset grid data after combobox update-->
+	<EventHandlers type="{FitnessEvent.SET_DETAIL_DATA}" id="eSET_DETAIL_DATA">
+		<MethodInvoker generator="{FitnessManager}" method="getFitnessResults" arguments="{event.a}" />
+	</EventHandlers>
+ 
+ 
+    <!-- ************************************************
+    	 ADD NEW EventHandlers Here   *******************
+         ************************************************-->
+
+    <!--LOAD APP SETTINGS *************************************************************************** -->
+   
+	<EventHandlers type="{MainEvent.LOAD_APP_SETTINGS}" useWeakReference="true" debug="true" >
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" debug="true" >
+			<resultHandlers>
+				<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}"  />
+			</resultHandlers>
+			
+			<faultHandlers>
+				
+				<EventAnnouncer type="{FitnessEvent.BSA_ERROR}" generator="{FitnessEvent}">
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+		
+	<EventHandlers type="{SearchEvent.SAVE_FILTER_PARMS}" id="eSAVE_FILTER_PARMS">
+		<MethodInvoker generator="{FilterManager}" method="setFilterParms" arguments="{event.oFilterParms}" />
+	</EventHandlers>
+		
+	<EventHandlers type="{SearchEvent.FILTER}" debug="true" id="eFILTER">
+		<MethodInvoker 	generator="{FitnessManager}" method="itemFilter" 
+						arguments="{event}" />
+	</EventHandlers>
+	
+	<!--............... SET_APP_SETTINGS ............................................-->
+	<EventHandlers type="{MainEvent.SET_LOCAL_APP_SETTINGS}" debug="true" id="eSET_LOCAL_APP_SETTINGS" useWeakReference="true">
+		<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+	</EventHandlers>
+
+
+	
+	<!--	*****************************************************************************************
+			***		BSA CUSTOM ERROR HANDLER 		*************************************************
+			***************************************************************************************** -->
+
+<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.ContractProds.models.BAError#showBAError()
+		** Invoke : com.ContractProds.models.BAError.showBAError()		
+		*			@see #roErrorService
+	    ** RemoteInvoke : roErrorService.logError()
+	    *		@see com.ContractProds.models.BAError#logError() 
+	    ** faultHandler : com.ContractProds.models.BAError.showBAError()   -->
+	<EventHandlers type="{FitnessEvent.BSA_ERROR}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<!--<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>-->
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}" useWeakReference="true">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+	
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+		<!-- FitnessPModel ....................................................... -->
+		<Injectors target="{FitnessPModel}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="fitnessSearchDef" source="{FitnessManager}" sourceKey="fitnessSearchDef"  softBinding="false" />
+			<PropertyInjector targetKey="acFitnessItems" source="{FitnessManager}" sourceKey="acFitnessItems"  softBinding="false" />
+		</Injectors>
+		
+		<!-- FitnessItemsPModel ....................................................... -->
+		<Injectors target="{FitnessItemsPModel}" debug="false">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<!--<PropertyInjector targetKey="bbHeader" source="{FitnessManager}" sourceKey="bbHeader"  softBinding="false" />-->
+			<PropertyInjector targetKey="arrFitnessItemsDgCols" source="{FitnessItemsGridManager}" sourceKey="arrFitnessItemsDgCols"  softBinding="false" />
+			<PropertyInjector targetKey="arrFitnessTotalsDgCols" source="{FitnessItemsGridManager}" sourceKey="arrFitnessTotalsDgCols"  softBinding="false" />
+			<PropertyInjector targetKey="acFitnessItems" source="{FitnessManager}" sourceKey="acFitnessItems"  softBinding="false" />
+			<PropertyInjector targetKey="oFilterParms" source="{ FilterManager }" sourceKey="oFilterParms" />
+			<PropertyInjector targetKey="funcFilterInsert" source="{FitnessManager}" sourceKey="funcFilterInsert" />
+			<PropertyInjector targetKey="fitnessSearchDef" source="{FitnessManager}" sourceKey="fitnessSearchDef"  softBinding="false" />
+			<ListenerInjector eventType="filterEvent" method="getSumresult"  useWeakReference="true" />
+		</Injectors>
+		
+		<!-- FitnessManager ....................................................... -->
+		<Injectors target="{FitnessManager}" debug="true">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+			<PropertyInjector targetKey="oFilterParms" source="{ FilterManager }" sourceKey="oFilterParms" />
+			<!--<ListenerInjector eventType="{com.shared.events.MainEvent.LOAD_MODS_MAIN}" method="getData" useWeakReference="true" />-->
+			<ListenerInjector eventType="{com.shared.events.MainEvent.LOAD_MODS_MAIN}" method="getHeaderData" useWeakReference="true" />
+		</Injectors>
+		<!-- FitnessManager ....................................................... -->
+		<Injectors target="{FitnessItemsGridManager}" debug="true">
+			<PropertyInjector targetKey="oSettings2" source="{SettingsManager}" sourceKey="settings"  softBinding="false" />
+		</Injectors>
+		
+		<!-- FitnessHeaderForm ....................................................... -->
+		<Injectors target="{FitnessHeaderForm}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{FitnessPModel}" softBinding="false"/>
+		</Injectors>
+		
+		<!-- FitnessItemsGrid ....................................................... -->
+		<Injectors target="{FitnessItemsGrid}" debug="false">
+			<PropertyInjector targetKey="pModel" source="{FitnessItemsPModel}" softBinding="false"/>
+		</Injectors>
+	</fx:Declarations>
+</LocalEventMap>

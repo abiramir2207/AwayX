@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+		   xmlns:s="library://ns.adobe.com/flex/spark"
+		   xmlns:m="com.shared.views.renderer.*"
+		xmlns:ba="com.ContractProds.views.renderer.*" 
+		xmlns:z="com.shared.components.spark.*">
+
+	<mx:Script>
+        <![CDATA[
+			import com.ContractProds.models.ComponentManager;
+			import com.ContractProds.views.pm.ComponentPM;
+			import com.ContractProds.views.pm.ProdUploadPM;
+			import com.shared.components.MultiSelectItemRenderer;
+			import com.shared.components.MultiSelectionDropDownListSkin;
+			import com.shared.views.renderer.MultiSelectionDropDown;
+			import com.shared.vos.Item;
+			import com.shared.vos.Uom;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+        	
+        	/* Presentation Model */
+            [Bindable] public var pModel:ComponentPM;
+            /* PM for the Upload Download logic */
+            [Bindable] public var pModelPrdUpld:ProdUploadPM;
+            [Bindable] public var iCompWidth:int = 225;
+			[Bindable] public var sLbaleColor:String = '0xDFDFDF';
+
+        ]]>
+    </mx:Script>
+    
+    <!--<mx:VBox width="100%" height="100%">-->
+		<mx:HBox width="100%" paddingTop="0">
+			<mx:VBox width="40%" 
+					 styleName="bxBorder" 
+					 paddingTop="0" paddingLeft="0">  <!-- -->
+				<mx:HBox>
+					<mx:VBox>
+						<mx:VBox visible="{!this.pModel.oSettings.bMarketPrice}" includeInLayout="{!this.pModel.oSettings.bMarketPrice}">
+							<!--............  Comp Type  ............-->
+							<z:BorderContainerLabel sText="Manage Components" iWidth="240"/>
+							<!--<s:BorderContainer id="bdrShowHide" borderWeight="0"
+											   backgroundColor="{this.pModel.sLbaleColor}"
+											   backgroundAlpha="{this.pModel.nBgAlpha}"
+											   borderVisible="false"
+											   borderColor="white"
+											   cornerRadius="4"
+											   height="{lmanageComps.height + 1}">
+								<s:Label id="lmanageComps" textAlign="center"
+										 text="Manage Components" width="240" 
+										 fontWeight="bold"
+										 paddingTop="2"
+										 paddingRight="2"
+										 paddingLeft="2"
+										 paddingBottom="2" />
+							</s:BorderContainer>-->
+
+							<mx:RadioButtonGroup id="rdoCompGroup"
+										change="pModel.setSelectComponentType(rdoCompGroup.selectedValue.valueOf())"/>
+							<mx:HBox>
+								<ba:BaRadio label="{ComponentManager.REBATE_NAME}" click="pModel.setSelectComponentType(ComponentManager.REBATE_TYPE_ID)"
+										visible="{pModel.program.componentType.indexOf(ComponentManager.REBATE_TYPE_ID.toString())!= -1}"
+										value="{ComponentManager.REBATE_TYPE_ID}" 
+										groupName="rdoCompGroup"
+										selected="{pModel.component.type == ComponentManager.REBATE_TYPE_ID}" toolTip="Select Rebate discount type components."/>
+								<ba:BaRadio label="{ComponentManager.FIXED_NAME}"
+										value="{ComponentManager.FIXED_TYPE_ID}" click="pModel.setSelectComponentType(ComponentManager.FIXED_TYPE_ID)"
+										visible="{pModel.program.componentType.indexOf(ComponentManager.FIXED_TYPE_ID.toString())!= -1}"
+										groupName="rdoCompGroup"
+										selected="{pModel.component.type == ComponentManager.FIXED_TYPE_ID}" toolTip="Select Fixed Price discount type components."/>
+							</mx:HBox>
+						</mx:VBox>
+						<mx:VBox>
+							<!--............  Comp Name  ............-->
+							<ba:BaLabel text="{pModel.title}" maxWidth="{iCompWidth}" color="red" />
+							<ba:BaCombo id="cboCompName" dataProvider="{pModel.acComponentDefs}"
+								labelField="name" width="{iCompWidth}"
+								change="pModel.setSelectedComponentDef(cboCompName.selectedItem)" 
+								selectedIndex="{pModel.componentDefIdx}">
+							</ba:BaCombo>
+							<!--............ Save/Delete  ............-->
+							<mx:HBox width="35%">
+								<ba:BaButton label="{pModel.submitLabel}" maxWidth="{iCompWidth}"
+											click="pModel.save()" 
+											enabled="{pModel.state!=ComponentPM.UNSELECTED}" 
+											visible="{(pModel.state!=ComponentPM.SELECTED) &amp;&amp; (!this.pModel.oSettings.bMarketPrice)}" 
+											includeInLayout="{(pModel.state!=ComponentPM.SELECTED) &amp;&amp; (!this.pModel.oSettings.bMarketPrice)}" />
+								<ba:BaButton label="{pModel.deleteLabel}" maxWidth="{iCompWidth}"
+											click="pModel.deleteComponent()" 
+											visible="{(pModel.state==ComponentPM.SELECTED &amp;&amp; !this.pModel.oSettings.bMarketPrice)}" 
+											includeInLayout="{(pModel.state==ComponentPM.SELECTED) &amp;&amp; (!this.pModel.oSettings.bMarketPrice)}" />
+							</mx:HBox>
+						</mx:VBox>
+					</mx:VBox>
+				<!--</mx:HBox>
+				<mx:HBox visible="{!this.pModel.oSettings.bMarketPrice}" includeInLayout="{!this.pModel.oSettings.bMarketPrice}">-->
+					<!--............  Paid To  ............-->
+					<mx:VBox width="100%" visible="{!this.pModel.oSettings.bMarketPrice}" includeInLayout="{!this.pModel.oSettings.bMarketPrice}">
+						<ba:BaLabel text="Paid To"/>
+						<ba:BaCombo id="cboPaidTo"
+							dataProvider="{pModel.componentDef.paidTo}" 
+							labelField="description"
+							selectedIndex="{pModel.paidToIdx}"
+							change="pModel.updatePaidTo(cboPaidTo.selectedItem);">
+						</ba:BaCombo>
+					<!--............  Pay Cycle  ............-->
+						<ba:BaLabel text="Payment Cycle"/>
+						<ba:BaCombo id="cboPaymentCycle" 
+							dataProvider="{pModel.componentDef.paymentCycle}" 
+							labelField="description" 
+							selectedIndex="{pModel.paymentCycleIdx}"
+							change="pModel.updatePaymentCycle(cboPaymentCycle.selectedItem);">
+						</ba:BaCombo>
+						<!--.........................  Upload  .........................-->
+					<ba:BaButton label="upload rates" 
+								enabled="{pModel.state==ComponentPM.SELECTED}"
+								click="pModelPrdUpld.onLoadFileClick();" 
+								toolTip="Import products and rates to the currently selected Component"/>	
+					</mx:VBox>
+					<!--............  Claim Mechanic  ............-->
+					<mx:VBox width="100%" visible="{!this.pModel.oSettings.bMarketPrice}" includeInLayout="{!this.pModel.oSettings.bMarketPrice}">
+						<ba:BaLabel text="Claim Mechanic"/>
+						<ba:BaCombo id="cboClaimMechanic" 
+							dataProvider="{pModel.componentDef.claimMechanic}" 
+							labelField="description" 
+							selectedIndex="{pModel.claimMechanicIdx}"
+							change="pModel.updateClaimMechanic(cboClaimMechanic.selectedItem)">
+						</ba:BaCombo>
+					<!--............  GL Account  ............-->
+						<ba:BaLabel text="GL Account"/>
+						<ba:BaCombo id="cboGlAccount"
+							enabled="{pModel.componentDef.glAccount.length > 0}"
+							dataProvider="{pModel.componentDef.glAccount}" 
+							labelField="description" 
+							selectedIndex="{pModel.glAccountIdx}"
+							change="pModel.updateGlAccount(cboGlAccount.selectedItem)">
+						</ba:BaCombo>
+						<!--............  Download  ............-->
+						<ba:BaButton label="download rates" 
+							enabled="{pModel.state==ComponentPM.SELECTED}"
+							click="pModelPrdUpld.onSaveClick();" 
+							toolTip='Export the currently visible products and rates.  If there are multiple components, the rates from the "Editing" componet will get exported.'/>
+					</mx:VBox>
+				</mx:HBox>
+					
+			</mx:VBox>
+			<!--............  Payee Option visible="{!this.pModel.oSettings.bMarketPrice &amp;&amp; cboClaimMechanic.selectedItem.payeeTypeId != 0}" 
+			includeInLayout="{!this.pModel.oSettings.bMarketPrice &amp;&amp; cboClaimMechanic.selectedItem.payeeTypeId != 0}" ............-->
+			<mx:VBox width="100%" includeInLayout="{this.pModel.bShowCustRate || (cboClaimMechanic.selectedItem &amp;&amp; cboClaimMechanic.selectedItem.payeeTypeId > 0)}" 
+					 visible="{this.pModel.bShowCustRate || cboClaimMechanic.selectedItem.payeeTypeId > 0}">
+				<mx:VBox width="100%" styleName="bxBorder" height="70" visible="{cboClaimMechanic.selectedItem &amp;&amp; cboClaimMechanic.selectedItem.payeeTypeId > 0}" 
+						 includeInLayout="{cboClaimMechanic.selectedItem &amp;&amp; cboClaimMechanic.selectedItem.payeeTypeId > 0}">
+					<mx:HBox>
+						<s:Label text="Payee Option" width="78" paddingLeft="0" paddingRight="0"/>
+						<s:Label visible="{rdoPayeeSingle.selected}" 
+								text=": {pModel.component.payee.name}" maxWidth="200" />
+					</mx:HBox>
+					
+					<mx:RadioButtonGroup enabled="{cboClaimMechanic.selectedItem.payeeTypeId > 0}"  
+								id="rdoPayeeOptGroup" 
+								change="pModel.updatePayee(rdoPayeeOptGroup.selection);" 
+								selectedValue="{pModel.component.payee.payeeTypeId}"/>
+					<mx:HBox>
+						<ba:BaRadio id="rdoPayeeSingle" 
+									label="Select A Single" click="pModel.updatePayee(rdoPayeeSingle);" 
+									value="{pModel.component.claimMechanic.payeeTypeId}" 
+									groupName="rdoPayeeOptGroup" selected="{pModel.component.payee.payeeTypeId > 0}"/>
+						<ba:BaRadio id="rdoPayeeEach" 
+									label="Pay Each"  click="pModel.updatePayee(rdoPayeeEach);" 
+									value="0" selected="{pModel.component.payee.payeeTypeId == 0}" 
+									groupName="rdoPayeeOptGroup"/>
+					</mx:HBox>
+					<ba:BaButton enabled="{cboClaimMechanic.selectedItem.payeeTypeId}" 
+								label="select payee" 
+								visible="{rdoPayeeSingle.selected}" 
+								click="pModel.selectPayee();"/>  <!-- {cboClaimMechanic.selectedItem.payeeTypeId} -->
+				</mx:VBox>
+					
+				<mx:VBox styleName="bxBorder" height="100%" visible="{this.pModel.bShowCustRate}" width="280"
+						 includeInLayout="{this.pModel.bShowCustRate}">
+					<s:VGroup visible="{this.pModel.bShowCustRate}" includeInLayout="{this.pModel.bShowCustRate}">
+						<z:BorderContainerLabel sText="Show/Hide {this.pModel.oSettings.appSettings.Distributor_Label_Singular} Rates" iWidth="240"/>
+						<!--<s:BorderContainer id="bdrShowHideCustRate" borderWeight="0"
+										   backgroundColor="{this.pModel.sLbaleColor}"
+										   backgroundAlpha="{this.pModel.nBgAlpha}"
+										   borderVisible="false"
+										   borderColor="white"
+										   cornerRadius="4"
+										   height="{lmanageComps.height + 1}">
+							<mx:Label text="Show/Hide {this.pModel.oSettings.appSettings.Distributor_Label_Singular} Rates"/>
+							<s:Label id="lmanageCustRates" textAlign="center"
+									 text="Show/Hide {this.pModel.oSettings.appSettings.Distributor_Label_Singular} Rates
+									 " width="240" 
+									 fontWeight="bold"
+									 paddingTop="2"
+									 paddingRight="2"
+									 paddingLeft="2"
+									 paddingBottom="2" />
+						</s:BorderContainer>   -->
+						<m:MultiSelectionDropDown id="drpSelectedCustomers" 
+								selectionChange="{this.pModel.arrSelectedCustomer = this.drpSelectedCustomers.arrSelectedItems}" 
+								dataProvider="{new ArrayCollection(this.pModel.program.distributors)}"
+								itemRenderer="com.shared.components.MultiSelectItemRenderer"
+								skinClass="com.shared.components.MultiSelectionDropDownListSkin" 
+								labelField="name"
+								currentSelection="{this.pModel.arrSelectedCustomer}"
+								width="250" 
+								/><!--  change=""  -->
+					</s:VGroup>
+				</mx:VBox>
+				
+				<mx:List id="lsResultsLog" dataProvider="{pModel.acResultsLog}"
+							width="275" height="40"
+							showDataTips="true" 
+							dataTipField="sResult"
+							labelField="sResult" 
+							visible="false" includeInLayout="false"
+							rowCount="2"
+							variableRowHeight="true" wordWrap="true"/> <!-- visible="{pModel.state==ComponentPM.SELECTED}"  -->
+			</mx:VBox>
+			<mx:VBox paddingBottom="0" paddingTop="0" verticalGap="3" 
+					 visible="{this.pModel.bShowCustomPrintQuotes}" 
+					 includeInLayout="{this.pModel.bShowCustomPrintQuotes}">
+				<s:ButtonBar dataProvider="{myViewStack}"/>
+				<mx:ViewStack id="myViewStack" paddingTop="0" paddingBottom="0" verticalGap="0"
+							  borderStyle="none" 
+							  width="100%">
+
+					<!--	<s:NavigatorContent label="rates">
+						...........................................................................................................
+						<mx:VBox width="200" height="100%" paddingLeft="15" styleName="bxBorder" paddingTop="5">
+						
+							<mx:Label text="Mass Apply Rates" fontWeight="bold" toolTip='Mass apply rates to items in the grid by selecting them (using the row level check boxes) and clicking "apply rate".  A row may be selected by clicking anywhere in the row to Highlight the row and then hitting the "Enter" key.  Multiple rows may be Highlighted by using the "Ctrl" and the Shift keys.  The "Enter" key will then Select or Deselect the checkboxes associtaed with the Highlighted rows.'/>
+							<mx:HBox>
+									<mx:TextInput id="tiRate" width="75" maxHeight="20"/>
+									<ba:BaCombo id="cboUom" width="75" 
+										enabled="{this.rdoUomActionGrp.selectedValue.valueOf()==0}" 
+										dataProvider="{pModel.componentDef.uom}"
+										labelField="abbreviation"
+										change="pModel.updateUom(cboUom.selectedItem)" 
+										selectedIndex="{this.pModel.selectedUomIdx}">
+									</ba:BaCombo>
+							</mx:HBox>
+							<mx:RadioButtonGroup enabled="{pModel.state==ComponentPM.SELECTED}"  
+												 id="rdoUomActionGrp" 
+												 selectedValue="0"/>
+							<mx:HBox>
+								<ba:BaRadio id="rdoUomAbs" 
+											label="abs" 
+											value="0" 
+											groupName="rdoUomActionGrp"
+											toolTip="mass apply an absolute rate to all selected (checked) items"/>
+								<ba:BaRadio id="rdoUomPerc" 
+											label="% chg" 
+											value="1" 
+											groupName="rdoUomActionGrp"
+											toolTip="mass apply a % of existing rate change to all selected (checked) items"/>
+								<ba:BaRadio id="rdoUomInc" 
+											label="inc" 
+											value="2" 
+											groupName="rdoUomActionGrp"
+											toolTip="mass apply an incremental of existing rate change to all selected (checked) items"/>
+							</mx:HBox>
+							<mx:HBox includeInLayout="{this.pModel.program.bMarketPriceTemplate &amp;&amp; pModel.component.type == ComponentManager.FIXED_TYPE_ID}" 
+											  visible="{this.pModel.program.bMarketPriceTemplate &amp;&amp; pModel.component.type == ComponentManager.FIXED_TYPE_ID}">
+								<ba:BaRadio id="rdoUomPercMp"
+											label="% MP Chg" 
+											value="3" 
+											groupName="rdoUomActionGrp"
+											toolTip="mass apply a % of market price rate change to all selected (checked) items"/>
+								<ba:BaRadio id="rdoUomIncMp" 
+											label="inc MP Chg" 
+											value="4" 
+											groupName="rdoUomActionGrp"
+											toolTip="mass apply an incremental of market price rate change to all selected (checked) items"/>
+							</mx:HBox> 
+							<mx:HBox includeInLayout="{this.pModel.program.bMarketPriceTemplate &amp;&amp; pModel.component.type == ComponentManager.FIXED_TYPE_ID}" 
+									 		  visible="{this.pModel.program.bMarketPriceTemplate &amp;&amp; pModel.component.type == ComponentManager.FIXED_TYPE_ID}">
+								<ba:BaRadio id="rdoUomEqMp"
+											label="eq MP rate" 
+											value="5" 
+											groupName="rdoUomActionGrp"
+											toolTip="mass apply market price rate to all selected items"/>
+								
+							</mx:HBox>
+							<ba:BaButton label="apply rate" 
+										 enabled="{pModel.state==ComponentPM.SELECTED &amp;&amp; (Number(this.tiRate.text) || this.tiRate.text == '0' || this.tiRate.text == '' || this.rdoUomActionGrp.selectedValue.valueOf() == 5)}"
+										 click="pModel.setRateUom(this.tiRate.text,this.cboUom.selectedItem as Uom,this.rdoUomActionGrp.selectedValue.valueOf());" 
+										 toolTip="Apply the selected rate to the currently selected products"/>
+						</mx:VBox>
+							................................................................................................  
+					</s:NavigatorContent>-->
+					
+					<s:NavigatorContent label="options">
+						<mx:VBox id="vbcCustPrint" width="200" height="100%" paddingLeft="15" styleName="bxBorder" paddingTop="0" click="this.pModel.clickBorderBox(event)"
+								 visible="{this.pModel.bShowCustomPrintQuotes}" 
+								 includeInLayout="{this.pModel.bShowCustomPrintQuotes}">
+						
+							<mx:RadioButtonGroup enabled="{pModel.state==ComponentPM.SELECTED}"  
+												 id="rdoComplexGrp" selectedValue="{this.pModel.component.customPrint.bDigital}"
+												 itemClick="this.pModel.updatePrintChargeDigital(rdoComplexGrp.selectedValue)"/>
+							<mx:HBox>
+							<mx:VBox>
+								<mx:Label text="# colors"/>
+								<ba:BaCombo id="cboColors" width="50" prompt="#" selectedItem="{this.pModel.component.customPrint.iColors}"
+											dataProvider="{pModel.arrColors}"
+											change="pModel.updatePrintChargeColors(cboColors.selectedItem as int)"/>
+							</mx:VBox>
+							<mx:VBox>
+								<mx:Label text="graphics complexity"/>
+								<ba:BaCombo id="cboGraphics" width="80" prompt="graphics" selectedItem="{this.pModel.component.customPrint.sGraphics}"
+											dataProvider="{pModel.arrGraphics}"
+											change="pModel.updatePrintChargeGraphics(cboGraphics.selectedItem as String)"/>
+							</mx:VBox>
+							</mx:HBox> 
+							<mx:HBox >
+								<mx:Label text="digital art"/>
+								<ba:BaRadio id="rdoComplexTrue"
+											label="yes" selected="{this.pModel.component.customPrint.bDigital == 1}"
+											value="1" 
+											groupName="rdoComplexGrp"
+											click="this.pModel.updatePrintChargeDigital(1)"
+											toolTip="Include Complex Digital Art"/>
+								<ba:BaRadio id="rdoComplexFalse" 
+											label="no" 
+											value="0"
+											selected="{this.pModel.component.customPrint.bDigital == 0}"
+											click="this.pModel.updatePrintChargeDigital(0)"
+											groupName="rdoComplexGrp"
+											toolTip="No Complex Digital Art"/>
+							</mx:HBox>
+							<mx:HBox horizontalAlign="center">
+								<ba:BaButton enabled="{pModel.state==ComponentPM.SELECTED}" 
+											 label="Calculate" 
+											 click="pModel.updatePrintCharge('Update');"/>
+							</mx:HBox>
+							
+						</mx:VBox>
+					</s:NavigatorContent>
+					
+					<s:NavigatorContent label="convert">
+						<mx:VBox id="vbcConvert" width="200" height="100%" paddingLeft="15" styleName="bxBorder" paddingTop="0" click="this.pModel.clickBorderBox(event)"
+								 visible="{this.pModel.bShowCustomPrintQuotes}" 
+								 includeInLayout="{this.pModel.bShowCustomPrintQuotes}">
+							<!--
+							visible="{this.pModel.component.fixedType != com.ContractProds.models.ComponentManager.FIXED_CUST_RATE_TYPE_ID &amp;&amp; 
+							this.pModel.oSettings.appSettings.Template_Multiple_Product_Attr_Groups  &amp;&amp; this.pModel.component.type == 1}" 
+							includeInLayout="{this.pModel.component.fixedType != com.ContractProds.models.ComponentManager.FIXED_CUST_RATE_TYPE_ID &amp;&amp; 
+							this.pModel.oSettings.appSettings.Template_Multiple_Product_Attr_Groups  &amp;&amp; this.pModel.component.type == 1}"-->
+							<mx:VBox>
+								<mx:Label text="from Print Group: NONE"/>
+								<!--<ba:BaCombo id="cboFromPrinGroup" width="50" prompt="#" selectedItem="{this.pModel.component.customPrint.iColors}"
+											dataProvider="{pModel.arrColors}"
+											change="pModel.updatePrintChargeColors(cboColors.selectedItem as int)"/>-->
+								<ba:BaButton label="get print groups" 
+											 enabled="{pModel.state==ComponentPM.SELECTED}"
+											 click="pModel.getPrintGroups();" 
+											 toolTip="get a list of possible print groups"/>
+							</mx:VBox>
+							<mx:VBox>
+								<mx:Label text="to"/>
+								<ba:BaCombo id="cboToPrinGroup" width="180" prompt="Print Group"
+											dataProvider="{pModel.arrPrintGroup}" labelField="Type_Group_desc"
+											change="pModel.convertPrintGroups(this.cboToPrinGroup.selectedItem as Item)"/>
+								<!-- selectedItem="{this.pModel.component.customPrint.sGraphics}" -->
+							</mx:VBox>
+						</mx:VBox>
+					</s:NavigatorContent>
+				</mx:ViewStack>
+			</mx:VBox>
+			<mx:VBox width="250" paddingLeft="15" styleName="bxBorder" height="70" visible="{this.pModel.oSettings.bMarketPrice}" includeInLayout="{this.pModel.oSettings.bMarketPrice}">
+				<!--............  Download  ............-->
+				<ba:BaButton label="download rates" 
+							 enabled="{this.pModel.oSettings.bMarketPrice}"
+							 click="pModelPrdUpld.onSaveClick();" 
+							 toolTip="Export products and rates from the price list"/>
+				<!--.........................  Upload  .........................-->
+				<ba:BaButton label="upload rates" 
+							 enabled="{this.pModel.oSettings.bMarketPrice}"
+							 click="pModelPrdUpld.onLoadFileClick();" 
+							 toolTip="Import products and rates to the price list"/>
+			</mx:VBox>
+			
+		</mx:HBox>
+		
+<!--	</mx:VBox>-->
+	
+	<!--<mx:NumberValidator
+    	precision="4" precisionError="The max precision is 4 deciamls."
+    	source="{tiRate}" 
+    	property="text" 
+    	required="false" 
+		invalidCharError="Please enter a valid number."
+		domain="real" 
+		invalid="tiRate.text=pModel.formatDecimal(tiRate.text)" 
+		allowNegative="false" 
+		negativeError="Please enter a positive number."/>-->
+</mx:Canvas>

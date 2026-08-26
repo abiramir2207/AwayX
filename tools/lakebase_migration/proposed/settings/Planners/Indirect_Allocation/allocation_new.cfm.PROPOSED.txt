@@ -1,0 +1,21 @@
+===== QUERY: qAllocation =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAllocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_indirect_allocation_header")>
+<cfif useLakebaseForqAllocation>
+	<cftry>
+		<cfset qAllocation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_indirect_allocation_header", {
+				"fiscal_year" = "eq.#form.fiscal_year#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAllocation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAllocation>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

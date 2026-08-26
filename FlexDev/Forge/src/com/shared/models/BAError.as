@@ -1,0 +1,31 @@
+package com.shared.models
+{
+	import mx.controls.Alert;
+	import mx.utils.ObjectUtil;
+	
+	public class BAError
+	{
+		/*-.........................................Properties..........................................*/
+		private var _BAError:String = "";
+		
+		public function BAError():void
+		{
+		}
+		/*-.........................................Setters and Getters..........................................*/
+		
+		public function get BAErrorString():String
+		{
+			return _BAError;
+		}
+		public function set BAErrorString(error:String):void
+		{
+			_BAError = error;
+		}
+		public function showBAError(event:Object):void//event:Object
+		{
+			var crlf:String = String.fromCharCode(13, 10);
+			Alert.show( BAErrorString + crlf + event.faultDetail+ crlf + event.faultString,"Application Error");//+ event.result	+ event.toString()
+		}
+
+	}
+}

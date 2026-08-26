@@ -1,0 +1,74 @@
+===== QUERY: removeProductFromBillback =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForremoveProductFromBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForremoveProductFromBillback>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_product_id" = "eq.#form.Billback_Product_ID#",
+				"billback_id" = "eq.#form.Billback_ID#",
+				"billback_program_id" = "eq.#form.Billback_Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForremoveProductFromBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForremoveProductFromBillback>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: removeProgramFromBillback =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForremoveProgramFromBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForremoveProgramFromBillback>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program",
+			{
+				"billback_id" = "eq.#form.Billback_ID#",
+				"billback_program_id" = "eq.#form.Billback_Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForremoveProgramFromBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForremoveProgramFromBillback>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: removeProductFromBillback =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForremoveProductFromBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForremoveProductFromBillback>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_product_id" = "eq.#form.Billback_Product_ID#",
+				"billback_id" = "eq.#form.Billback_ID#",
+				"billback_program_id" = "eq.#form.Billback_Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForremoveProductFromBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForremoveProductFromBillback>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

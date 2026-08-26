@@ -1,0 +1,38 @@
+===== QUERY: HowManyBUs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForHowManyBUs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getinfo")>
+<cfif useLakebaseForHowManyBUs>
+	<cftry>
+		<cfset HowManyBUs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getinfo", {
+				"select" = "business_segment_id,business_unit_desc"
+			}), "business_segment_id,business_unit_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHowManyBUs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHowManyBUs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: BU_Won =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: BU_Pending =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetPending =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetCommitted =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: Total_Won =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: Total_Pending =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

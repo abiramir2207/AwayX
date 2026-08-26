@@ -1,0 +1,20 @@
+===== QUERY: GetOperatorAdmin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetOperatorAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGetOperatorAdmin>
+	<cftry>
+		<cfset GetOperatorAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "operator_admin_id,pricing_admin_id"
+			}), "operator_admin_id,pricing_admin_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatorAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatorAdmin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

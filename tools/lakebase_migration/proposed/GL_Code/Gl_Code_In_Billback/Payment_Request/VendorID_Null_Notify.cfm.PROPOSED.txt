@@ -1,0 +1,23 @@
+===== QUERY: PendingVendor =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPendingVendor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForPendingVendor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "7"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPendingVendor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPendingVendor>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,431 @@
+===== QUERY: gettemplateparent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgettemplateparent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgettemplateparent>
+	<cftry>
+		<cfset gettemplateparent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#this.ProgramType_ID#",
+				"select" = "template_parent_id,ez_contract_id"
+			}), "template_parent_id,ez_contract_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgettemplateparent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgettemplateparent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getContractTemplateDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractTemplateDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractTemplateDetails>
+	<cftry>
+		<cfset getContractTemplateDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"template_parent_id" = "eq.#gettemplateparent.template_parent_id#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractTemplateDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractTemplateDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getContractTemplateDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractTemplateDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractTemplateDetails>
+	<cftry>
+		<cfset getContractTemplateDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"template_parent_id" = "eq.#gettemplateparent.template_parent_id#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractTemplateDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractTemplateDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getContractTemplateDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractTemplateDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractTemplateDetails>
+	<cftry>
+		<cfset getContractTemplateDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"template_parent_id" = "eq.#gettemplateparent.template_parent_id#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractTemplateDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractTemplateDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getContractTemplateDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractTemplateDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractTemplateDetails>
+	<cftry>
+		<cfset getContractTemplateDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"template_parent_id" = "eq.#gettemplateparent.template_parent_id#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractTemplateDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractTemplateDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getContractAccountingSpecialist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractAccountingSpecialist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_accounting_specialist")>
+<cfif useLakebaseForgetContractAccountingSpecialist>
+	<cftry>
+		<cfset getContractAccountingSpecialist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_accounting_specialist", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractAccountingSpecialist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractAccountingSpecialist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getContractBrokers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseForgetContractBrokers>
+	<cftry>
+		<cfset getContractBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_brokers", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractBrokers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getDistributorCounts =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getContractAttachments =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetContractAttachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForgetContractAttachments>
+	<cftry>
+		<cfset getContractAttachments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractAttachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractAttachments>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAutoRenew =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAutoRenew = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForgetAutoRenew>
+	<cftry>
+		<cfset getAutoRenew = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_auto_renew", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAutoRenew = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAutoRenew>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSyscoDealSheets =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSyscoDealSheets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sysco_deal_sheet_programs")>
+<cfif useLakebaseForqSyscoDealSheets>
+	<cftry>
+		<cfset qSyscoDealSheets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("sysco_deal_sheet_programs", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSyscoDealSheets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSyscoDealSheets>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getProgramDistributorFreight =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramDistributorFreight = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_distributor_freight")>
+<cfif useLakebaseForgetProgramDistributorFreight>
+	<cftry>
+		<cfset getProgramDistributorFreight = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_distributor_freight", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramDistributorFreight = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramDistributorFreight>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_Fixed_Price_Components =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: get_OffInvoice_Components =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_OffInvoice_Components = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_offinvoice_component")>
+<cfif useLakebaseForget_OffInvoice_Components>
+	<cftry>
+		<cfset get_OffInvoice_Components = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_offinvoice_component", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_OffInvoice_Components = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_OffInvoice_Components>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_Lump_Sum_Components =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: get_Lump_Sum_Component_Distributors =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_Lump_Sum_Component_Distributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_distributor")>
+<cfif useLakebaseForget_Lump_Sum_Component_Distributors>
+	<cftry>
+		<cfset get_Lump_Sum_Component_Distributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_distributor", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Lump_Sum_Component_Distributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Lump_Sum_Component_Distributors>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_Growth_Components =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: get_Growth_Component_Tiers =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: get_Growth_Component_Tier_Product_Tier_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: get_Program_Formula_Pricing_Periods =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: get_Program_Formula_Pricing_Rule_Mapped =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_Program_Formula_Pricing_Rule_Mapped = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_mapped")>
+<cfif useLakebaseForget_Program_Formula_Pricing_Rule_Mapped>
+	<cftry>
+		<cfset get_Program_Formula_Pricing_Rule_Mapped = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_mapped", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Program_Formula_Pricing_Rule_Mapped = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Program_Formula_Pricing_Rule_Mapped>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_BidRequest_Components =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_BidRequest_Components = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bidrequest_component")>
+<cfif useLakebaseForget_BidRequest_Components>
+	<cftry>
+		<cfset get_BidRequest_Components = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bidrequest_component", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_BidRequest_Components = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_BidRequest_Components>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPullbacksDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPullbacksDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pullback_details")>
+<cfif useLakebaseForgetPullbacksDetails>
+	<cftry>
+		<cfset getPullbacksDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pullback_details", {
+				"opr_program_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbacksDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbacksDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPullbackLevelsDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPullbackLevelsDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pullbacks_levels")>
+<cfif useLakebaseForgetPullbackLevelsDetails>
+	<cftry>
+		<cfset getPullbackLevelsDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pullbacks_levels", {
+				"pullback_program_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbackLevelsDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbackLevelsDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPullbackDisDefaults =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPullbackDisDefaults = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pullbacks_distributors_defaults")>
+<cfif useLakebaseForgetPullbackDisDefaults>
+	<cftry>
+		<cfset getPullbackDisDefaults = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pullbacks_distributors_defaults", {
+				"pullback_program_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbackDisDefaults = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbackDisDefaults>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPullbacksProgramDefaults =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPullbacksProgramDefaults = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_pullback_program_defaults")>
+<cfif useLakebaseForgetPullbacksProgramDefaults>
+	<cftry>
+		<cfset getPullbacksProgramDefaults = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_pullback_program_defaults", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbacksProgramDefaults = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbacksProgramDefaults>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

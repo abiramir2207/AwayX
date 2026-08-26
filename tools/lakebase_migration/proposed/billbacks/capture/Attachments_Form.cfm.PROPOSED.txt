@@ -1,0 +1,65 @@
+===== QUERY: New_Attachments =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: User_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Document_Selected =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Document_Selected = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("new_attachments")>
+<cfif useLakebaseForGet_Document_Selected>
+	<cftry>
+		<cfset Get_Document_Selected = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("new_attachments", {
+				"doc_id" = "eq.#Item#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Document_Selected = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Document_Selected>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: User_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

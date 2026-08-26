@@ -1,0 +1,27 @@
+===== QUERY: Insert_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Update_Data =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForUpdate_Data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users_settings",
+			{
+				"user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"email_message" = "#Email_Message#",
+				"email_message_date_updated" = "#Date_Updated#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Data>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

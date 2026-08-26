@@ -1,0 +1,51 @@
+===== QUERY: qGetPriceListHeaderID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPriceListHeaderID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForqGetPriceListHeaderID>
+	<cftry>
+		<cfset qGetPriceListHeaderID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"price_list_id" = "eq.#priceListId#",
+				"select" = "price_list_header_id"
+			}), "price_list_header_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceListHeaderID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceListHeaderID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetCompetitiveData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetCompetitiveData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_competitive_data")>
+<cfif useLakebaseForqgetCompetitiveData>
+	<cftry>
+		<cfset qgetCompetitiveData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_competitive_data", {
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "previous_won_by,previous_won_price,previous_won_uom,previous_won_delivery_type,created_by,product_id"
+			}), "previous_won_by,previous_won_price,previous_won_uom,previous_won_delivery_type,created_by,product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetCompetitiveData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetCompetitiveData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetbidrequestproductprice =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetpreviousinfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qgetbidrequestbaseprice =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

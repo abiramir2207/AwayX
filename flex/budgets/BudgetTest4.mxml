@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	backgroundColor="#FFFFFF" alpha="1.0"
+	layout="absolute" 
+	width="100%" 
+	creationComplete="initApp();" 
+	horizontalAlign="center" cornerRadius="15" backgroundGradientAlphas="[1.0, 1.0]" currentState="UpdateAllocation">
+	
+	<!-- View State Code -->
+		<mx:states>
+			<mx:State name="UpdateAllocation">
+				<mx:SetProperty name="width" value="100%"/>
+	
+				<!-- Reset Button - Update Allocation Data -->
+				<mx:SetProperty target="{btnReset}" name="y" value="549"/>
+				<mx:SetProperty target="{btnReset}" name="x" value="824"/>
+				<mx:SetProperty target="{btnReset}" name="width" value="70"/>
+				<mx:SetProperty target="{btnReset}" name="height" value="22"/>
+				<mx:RemoveChild target="{btnReset}"/>
+				<mx:AddChild position="lastChild" target="{btnReset}"/>
+	
+				<!-- Save Button - Update Allocation Data -->
+				<mx:SetProperty target="{btnSAVE}" name="y" value="549"/>
+	
+				<!-- Apply Button - Update Allocation Data -->
+				<mx:SetProperty target="{btnApply}" name="y" value="549"/>									
+				<mx:SetProperty target="{btnApply}" name="x" value="902"/>			
+				<mx:SetProperty target="{btnApply}" name="width" value="70"/>
+				<mx:SetProperty target="{btnApply}" name="height" value="22"/>			
+				<mx:RemoveChild target="{btnApply}"/>
+				<mx:AddChild position="lastChild" target="{btnApply}"/>
+		
+				<!-- Save WIP Button - Update Allocation Data -->
+				<mx:SetProperty target="{btnSaveWIP}" name="y" value="549"/>								
+				<mx:SetProperty target="{btnSaveWIP}" name="x" value="731"/>
+				<mx:SetProperty target="{btnSaveWIP}" name="width" value="85"/>
+				<mx:SetProperty target="{btnSaveWIP}" name="height" value="22"/>			
+				<mx:RemoveChild target="{btnSaveWIP}"/>
+				<mx:AddChild position="lastChild" target="{btnSaveWIP}"/>
+	
+				<!-- Debug Button - Update Allocation Data -->
+				<mx:SetProperty target="{btnDebug}" name="y" value="549"/>								
+				<mx:SetProperty target="{btnDebug}" name="x" value="617"/>
+				<mx:SetProperty target="{btnDebug}" name="width" value="106"/>
+				<mx:SetProperty target="{btnDebug}" name="height" value="22"/>			
+				<mx:RemoveChild target="{btnDebug}"/>
+				<mx:AddChild position="lastChild" target="{btnDebug}"/>
+	
+				<!-- Add Master Data Button - Update Allocation Data -->
+				<mx:SetProperty target="{btnAddMasterData}" name="y" value="549"/>
+	
+				<!-- Allocation Grid Button - Update Allocation Data -->			 
+				<mx:SetStyle target="{allocationGrid}" name="cornerRadius" value="20"/>
+				
+				<!-- State Child Objects -->
+				<mx:AddChild position="lastChild">
+					<mx:Panel x="10" y="389" id="debugWindow" visible="true" width="962.5" height="124" layout="absolute" title="Application Logging" borderColor="#6fc8fd">
+						<mx:TextArea id="txtAppSettings" x="0" y="0" width="820.5" height="84" text="" />
+						<mx:Button x="828.5" y="32" label="Close Window" click="debugWindow.visible=false" />
+					</mx:Panel>
+				</mx:AddChild>
+				
+				<mx:AddChild position="lastChild">
+					<mx:Panel x="10" y="275" width="962.5" height="106" layout="absolute" title="Manual Changes" id="panel1" borderColor="#00e600" fontSize="10">
+						<mx:Button x="862.5" y="36" label="SUBMIT" click="applyManualInputs(txtManQuantity.text,txtManPercentage.value,txtManComments.text)" />
+						<mx:FormItem label="Comments" width="462.5" id="formitem1" fontWeight="bold" cornerRadius="20" x="392" y="36" height="22">
+							<mx:TextArea id="txtManComments" height="21" text="" width="382"/>
+						</mx:FormItem>
+						<mx:FormItem label="Quantity +/-" fontWeight="bold" cornerRadius="20" x="10" y="36">
+							<mx:TextInput id="txtManQuantity" text="0" width="82"/>
+						</mx:FormItem>
+						<mx:FormItem label="Percentage +/-" fontWeight="bold" cornerRadius="20" x="193" y="36">
+							<mx:NumericStepper id="txtManPercentage" width="82" stepSize="0.01" 
+											   maximum="100" minimum="-100" />
+						</mx:FormItem>
+						<mx:Label text="LEVEL: {allocationGrid.selectedItem.Control_Level_1_Name}" width="217" x="10" y="10" fontWeight="bold"/>
+						<mx:Label x="235" y="10" text="TOTAL: {allocationGrid.selectedItem.Parent_Value}" width="332" fontWeight="bold"/>
+					</mx:Panel>
+				</mx:AddChild>			
+				<mx:AddChild position="lastChild">
+					<mx:HRule x="10" y="521" width="960" height="20"/>
+				</mx:AddChild>
+				<mx:RemoveChild target="{hrule1}"/>
+				<mx:SetProperty target="{panel2}" name="y" value="10"/>
+			</mx:State>
+			
+			<mx:State name="firstLevel" basedOn="UpdateAllocation">
+				<mx:RemoveChild target="{allocationGrid}"/>
+				<mx:AddChild relativeTo="{panel2}" position="lastChild">
+				<mx:DataGrid height="210" dataProvider="{budgetDetailsROAC}" 
+						 id="allocationGrid2" 
+						 alternatingItemColors="[#efefef, #ffffff]" 
+						 borderColor="#FFFFFF" 
+						 alpha="1.0" 
+						 draggableColumns="false" 
+						 sortableColumns="true" 
+						 cornerRadius="17"
+						 editable="false" 
+						 themeColor="#0080ff" 
+						 fontSize="10" width="942.5">
+						<mx:columns>
+							<mx:DataGridColumn dataField="Budget_Detail_Allocation_ID" visible="false" />
+							<mx:DataGridColumn dataField="Budget_ID" visible="false" />
+							<mx:DataGridColumn dataField="Budget_Value" visible="false" />
+							<mx:DataGridColumn dataField="Control_Level_1_Name" 
+								headerText="LEVEL 1" sortable="true" wordWrap="true"
+								width="175" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="Level_Value" 
+								headerText="HISTORICAL DATA" textAlign="right" sortable="false" 
+								width="90" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="Level_Value_Percentage" 
+								headerText="LEVEL %" textAlign="right" sortable="false"
+								width="60" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="New_Level_Value" 
+								headerText="NEW QTY" textAlign="right" sortable="false"
+								width="80" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="New_Level_Value_Percentage" 
+								headerText="NEW %" textAlign="right" sortable="false"
+								width="60" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="Budget_Adjustment_Change" 
+								headerText="BUDGET ADJ CHG %" textAlign="right" sortable="false"
+								width="70" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="Manual_Qty"
+								headerText="MANUAL QTY" textAlign="right" sortable="false"
+								width="70" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="Manual_Percentage"  
+								headerText="MANUAL %" textAlign="right" sortable="false" 
+								width="70" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="Manual_Comments" 
+								headerText="MANUAL COMMENTS" textAlign="right" sortable="false"
+								width="120" headerWordWrap="true" />
+							<mx:DataGridColumn dataField="Budget_Detail_Allocation_ID" visible="false"/>
+						</mx:columns>
+				</mx:DataGrid>
+				</mx:AddChild>
+				<mx:SetProperty target="{panel2}" name="title">
+					<mx:value>{budgetBasicInfoROAC.getItemAt(0).Budget_Name} (Top-Down Allocation: First Level)</mx:value>
+				</mx:SetProperty>
+			</mx:State>
+			<mx:State name="secondLevel" basedOn="UpdateAllocation">
+				<mx:SetProperty target="{panel2}" name="title">
+					<mx:value>{budgetBasicInfoROAC.getItemAt(0).Budget_Name} (Top-Down Allocation: Second Level)</mx:value>
+				</mx:SetProperty>
+			</mx:State>
+			<mx:State name="bothLevels" basedOn="UpdateAllocation">
+			</mx:State>
+		</mx:states>
+	
+	<!-- General Functions --> 
+		<mx:Script source="src/com/blacksmithapps/GeneralFunction.as" />
+
+	<!-- Data Access -->
+		<mx:Script source="src/com/blacksmithapps/Budget.as" />
+
+	<!-- User Interface Code -->
+		<mx:Script source="src/com/blacksmithapps/BudgetsUI.as" />
+
+	<!-- budgetDetails RemoteObject Code -->
+	<mx:RemoteObject
+		id="budgetDetailsRO"
+		showBusyCursor="true"
+		destination="ColdFusion"
+		source="flex.budgets.components.Budget_Detail_FinalGateway"
+		fault="popUp(event.fault.faultString)">
+			<mx:method name="getAllAsQuery" result="budgetDetailsReceived(event)"/>
+			<mx:method name="getBudgetBasicInfo" result="budgetBasicInfoReceived(event)"/>
+			<mx:method name="saveManualAdjustment" />
+			<mx:method name="saveWIP" />
+			<mx:method name="save" />
+	</mx:RemoteObject>
+	
+	<!-- Dev Note:	I don't use the arrayCollection of the returned RemoteObject values 
+		If not used by end of project, the arraycollection portions can be removed.
+		If used, the datagrid dataprovider should be budgetDetailsRoAC.getAllAsQuery.lastResults.source. -->
+
+	<!-- End RemoteObject Code -->
+
+	<!-- Action Buttons for the Page -->
+		<mx:Button 
+			x="693.5" y="302" label="SAVE WIP" fillColors="[#0080ff, #0080ff]" 
+			color="#ffffff" id="btnSaveWIP" fillAlphas="[1.0, 1.0]" click="saveWIP()" />
+		<mx:Button 
+			x="11" y="302" label="SAVE" width="74" fillColors="[#0080ff, #0080ff]" color="#ffffff" 
+			id="btnSAVE" fillAlphas="[1.0, 1.0]" click="save()"/>
+		<mx:Button 
+			x="898.5" y="302" label="RESET" width="75" fillColors="[#0080ff, #0080ff]" color="#ffffff" 
+			id="btnReset" fillAlphas="[1.0, 1.0]" click="resetData()" />
+		<mx:Button 
+			x="592.5" y="302" label="DEBUG" width="93" fillColors="[#0080ff, #0080ff]" color="#ffffff" 
+			id="btnDebug" fillAlphas="[1.0, 1.0]" click="printApplicationVars()" />
+		<mx:Button 
+			x="800.5" y="302" label="APPLY" width="75" fillColors="[#0080ff, #0080ff]"
+			color="#ffffff" id="btnApply" fillAlphas="[1.0, 1.0]" click="popUp(allocationGrid.selectedItem.Budget_Detail_Allocation_ID)"/>
+		<mx:Button 
+			x="102.5" y="302" label="ADD MASTER DATA" id="btnAddMasterData" 
+			fillColors="[#0080ff, #0080ff]" color="#ffffff" fillAlphas="[1.0, 1.0]" />
+	<!-- End Action Buttons -->	
+	
+	<!-- DataGrid Output -->
+		<mx:Panel 	x="10" y="23" width="962.5" height="257" layout="absolute" 
+					cornerRadius="20" title="{budgetBasicInfoROAC.getItemAt(0).Budget_Name} (Top-Down Allocation: Both Levels)" 
+					themeColor="#80ffff" backgroundColor="#e3ffca" backgroundAlpha="1.0" 
+					borderColor="#00e600" fontSize="14"  id="panel2"  >	
+	
+			<mx:DataGrid height="210" dataProvider="{budgetDetailsROAC}" 
+						 id="allocationGrid" 
+						 alternatingItemColors="[#efefef, #ffffff]" 
+						 borderColor="#FFFFFF" 
+						 alpha="1.0" 
+						 draggableColumns="false" 
+						 liveScrolling="false"
+						 sortableColumns="true" 
+						 cornerRadius="17"
+						 editable="false" 
+						 themeColor="#0080ff" 
+						 fontSize="10" width="942.5">
+				<mx:columns>
+					<mx:DataGridColumn dataField="Budget_Detail_Allocation_ID" visible="false" />
+					<mx:DataGridColumn dataField="Budget_ID" visible="false" />
+					<mx:DataGridColumn dataField="Budget_Value" visible="false" />
+					<mx:DataGridColumn dataField="Parent_Value" visible="false" />
+					<mx:DataGridColumn dataField="Control_Level_1_Name" 
+						headerText="LEVEL 1" sortable="true" wordWrap="true"
+						width="175" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Control_Level_2_Name" 
+						headerText="LEVEL 2" sortable="true" visible="true" wordWrap="true"
+						width="175" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Level_Value" 
+						headerText="HISTORICAL DATA" textAlign="right" sortable="false" 
+						width="90" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Level_Value_Percentage" 
+						headerText="LEVEL %" textAlign="right" sortable="false"
+						width="60" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="New_Level_Value" 
+						headerText="NEW QTY" textAlign="right" sortable="false"
+						width="80" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="New_Level_Value_Percentage" 
+						headerText="NEW %" textAlign="right" sortable="false"
+						width="60" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Budget_Adjustment_Change" 
+						headerText="BUDGET ADJ CHG %" textAlign="right" sortable="false"
+						width="70" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Manual_Qty"
+						headerText="MANUAL QTY" textAlign="right" sortable="false"
+						width="70" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Manual_Percentage"  
+						headerText="MANUAL %" textAlign="right" sortable="false" 
+						width="70" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Manual_Comments" 
+						headerText="MANUAL COMMENTS" textAlign="right" sortable="false"
+						width="120" headerWordWrap="true" />
+					<mx:DataGridColumn dataField="Budget_Detail_Allocation_ID" visible="false"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:Panel>
+	
+	<mx:HRule x="11.5" y="292" width="960" id="hrule1"/>
+	
+	<!-- Bind BudgetDetails to Array Collection -->
+	<mx:ArrayCollection
+       	id="budgetBasicInfoROAC"
+       	source="{ArrayUtil.toArray(budgetDetailsRO.getBudgetBasicInfo.lastResult.source)}"/>
+        	
+    <mx:ArrayCollection
+       	id="budgetDetailsROAC"
+       	source="{ArrayUtil.toArray(budgetDetailsRO.getAllAsQuery.lastResult.source)}"/>
+
+</mx:Application>

@@ -1,0 +1,71 @@
+===== QUERY: qGetClauseCategory =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetAll =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_category")>
+<cfif useLakebaseForqGetAll>
+	<cftry>
+		<cfset qGetAll = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("clause_category", {
+				"deleted" = "eq.0",
+				"order" = "clause_category_id.asc",
+				"select" = "clause_category_id,clause_category_name,require_approval,default_clause_library_id"
+			}), "clause_category_id,clause_category_name,require_approval,default_clause_library_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAll = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAll>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDeleteCat =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqDeleteCat = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_category")>
+<cfif useLakebaseForqDeleteCat>
+	<cftry>
+		<cfset application.oLakebase.updateRows("clause_category",
+			{
+				"deleted" = "eq.0",
+				"clause_category_id" = "eq.#arguments.categoryId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteCat = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteCat>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetClause =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetClause = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_library")>
+<cfif useLakebaseForqGetClause>
+	<cftry>
+		<cfset qGetClause = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("clause_library", {
+				"deleted" = "eq.0",
+				"clause_category_id" = "eq.#arguments.catId#",
+				"select" = "clause_library_id"
+			}), "clause_library_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClause = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClause>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

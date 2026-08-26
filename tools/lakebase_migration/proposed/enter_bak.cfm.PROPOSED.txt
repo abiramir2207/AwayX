@@ -1,0 +1,94 @@
+===== QUERY: GetUserData =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Get_Login_Status =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Login_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_Login_Status>
+	<cftry>
+		<cfset Get_Login_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetUserData.User_ID#",
+				"select" = "login_status"
+			}), "login_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Login_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Login_Status>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Session_Status =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
+<cfif useLakebaseForGet_Session_Status>
+	<cftry>
+		<cfset Get_Session_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("session_tracker", {
+				"session_user_id" = "eq.#GetUserData.User_ID#",
+				"select" = "session_id"
+			}), "session_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Status>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_Session_Status =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
+<cfif useLakebaseForUpdate_Session_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("session_tracker",
+			{
+				"session_user_id" = "eq.#GetUserData.User_ID#"
+			},
+			{
+				"session_id" = "#thisSessionID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Session_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Session_Status>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Session_Status =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Set_Login_Status =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSet_Login_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForSet_Login_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#GetUserData.User_ID#"
+			},
+			{
+				"login_status" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSet_Login_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSet_Login_Status>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

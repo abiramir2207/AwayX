@@ -1,0 +1,27 @@
+===== QUERY: qDelSPAModule =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetSPAModule =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSPAModule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_panel_access_modules")>
+<cfif useLakebaseForqGetSPAModule>
+	<cftry>
+		<cfset qGetSPAModule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("settings_panel_access_modules", {
+				"module_name" = "eq.#fName#",
+				"select" = "settings_panel_access_modules_id"
+			}), "settings_panel_access_modules_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSPAModule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSPAModule>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsSPAModule =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

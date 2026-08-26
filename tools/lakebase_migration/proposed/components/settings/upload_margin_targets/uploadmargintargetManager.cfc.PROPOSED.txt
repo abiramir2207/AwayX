@@ -1,0 +1,178 @@
+===== QUERY: qGetGDW4Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetGDW4Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("type_code_desc")>
+<cfif useLakebaseForqGetGDW4Info>
+	<cftry>
+		<cfset qGetGDW4Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("type_code_desc", {
+				"deleted" = "eq.0",
+				"order" = "type_code_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGDW4Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGDW4Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetItemInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyAliveProcess =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetLogDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetLogDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_files_upload_log")>
+<cfif useLakebaseForqGetLogDetails>
+	<cftry>
+		<cfset qGetLogDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_files_upload_log", {
+				"generic_files_upload_log_id" = "eq.#arguments.Generic_Files_Upload_Log_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLogDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLogDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetItemNotfoundDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetItemNotfoundDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gdwl4_margin_targets_valid_temp")>
+<cfif useLakebaseForqGetItemNotfoundDetails>
+	<cftry>
+		<cfset qGetItemNotfoundDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gdwl4_margin_targets_valid_temp", {
+				"gdwl4_margin_target_temp_valid_id" = "eq.#arguments.Margin_Target_Temp_Valid_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetItemNotfoundDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetItemNotfoundDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetItemNotfoundDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetItemNotfoundDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gdwl4_margin_targets_valid_temp")>
+<cfif useLakebaseForqGetItemNotfoundDetails>
+	<cftry>
+		<cfset qGetItemNotfoundDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gdwl4_margin_targets_valid_temp", {
+				"gdwl4_margin_target_temp_valid_id" = "eq.#arguments.Margin_Target_Temp_Valid_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetItemNotfoundDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetItemNotfoundDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckForLog =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckForLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_files_upload_log")>
+<cfif useLakebaseForqCheckForLog>
+	<cftry>
+		<cfset qCheckForLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_files_upload_log", {
+				"generic_files_upload_id" = "eq.#arguments.Generic_Files_Upload_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckForLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckForLog>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qupdatedefaultitemsettings =====
+STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
+
+===== QUERY: qupdatedefaultGDW4settings =====
+STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
+
+===== QUERY: qgetdefaultitemsettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetdefaultitemsettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqgetdefaultitemsettings>
+	<cftry>
+		<cfset qgetdefaultitemsettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "default_item_margin_target_fob,default_item_margin_target_del,default_item_delivery_type,default_fob_price,default_del_price,default_fob_cash_discount,default_del_cash_discount"
+			}), "default_item_margin_target_fob,default_item_margin_target_del,default_item_delivery_type,default_fob_price,default_del_price,default_fob_cash_discount,default_del_cash_discount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetdefaultitemsettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetdefaultitemsettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetdefaultGDW4settings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetdefaultGDW4settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqgetdefaultGDW4settings>
+	<cftry>
+		<cfset qgetdefaultGDW4settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "default_gdw4_margin_target"
+			}), "default_gdw4_margin_target"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetdefaultGDW4settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetdefaultGDW4settings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qresetUpload =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqresetUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_files_upload")>
+<cfif useLakebaseForqresetUpload>
+	<cftry>
+		<cfset application.oLakebase.updateRows("generic_files_upload",
+			{
+				"generic_files_upload_id" = "eq.#arguments.Generic_Files_Upload_ID#"
+			},
+			{
+				"deleted" = "1",
+				"generic_files_upload_process_status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqresetUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqresetUpload>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

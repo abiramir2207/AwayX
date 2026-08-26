@@ -1,0 +1,57 @@
+===== QUERY: qGetOCRSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetValidSources =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetOCRSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetActiveNames =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetSourceCode =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSourceCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_claim_source_xref")>
+<cfif useLakebaseForqGetSourceCode>
+	<cftry>
+		<cfset qGetSourceCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_claim_source_xref", {
+				"bb_claim_source_xref_id" = "eq.#arguments.BB_Claim_Source_XREF_ID#",
+				"select" = "bb_claim_source_xref_id,source_type,source_type_description,source_code"
+			}), "bb_claim_source_xref_id,source_type,source_type_description,source_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSourceCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSourceCode>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertSetting =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdateSetting =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updSelOCRSetting =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updSelOCRSetting =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: Create_Data_Table =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: selSuccessFailureStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetOCRSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetOCRSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

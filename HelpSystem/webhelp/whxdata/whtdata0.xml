@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='windows-1252' ?>
+<tocdata>
+<book name="Introduction" >
+  <item name="Overview" url="Overview.htm" />
+  <item name="General Conventions" url="General_Conventions.htm" />
+  <item name="Workflow Diagrams" url="Workflow_Diagrams.htm" />
+</book>
+<book name="Home page: Getting Started" >
+  <item name="Home page: Getting Started" url="Getting_Started_with_Blacksmith.htm" />
+  <item name="Please Send Us a Question" url="Please_Send_Us_a_Question.htm" />
+  <item name="Deployment functions from Home page" url="Deployment_functions_from_Home_page.htm" />
+  <item name="Tools functions from Home page" url="Tools_functions_from_Home_page.htm" />
+  <item name="Programs Scorecard page from Home page" url="Programs_Scorecard_page_from_Home_page.htm" />
+  <item name="Projects Scorecard page from Home page" url="Projects_Scorecard_page_from_Home_page.htm" />
+  <item name="Billbacks Scorecard page from Home page" url="Billbacks_Scorecard_page_from_Home_page.htm" />
+  <item name="Deductions from Home page" url="Deductions_from_Home_page.htm" />
+</book>
+<book name="Settings Control Panel" >
+  <item name="Settings Control Panel" url="Control_Panel.htm" />
+  <book name="Geography from Settings page" >
+    <item name="Geography from Settings page" url="Geography_from_Settings_page.htm" />
+    <book name="Operators" >
+      <item name="Operators: postal code assign page" url="Operators_zip_code_assign_page.htm" />
+      <item name="Operator Search page from Operators" url="Operator_Search_page_from_Operators.htm" />
+      <item name="Operators: category assign page" url="Operators_category_assign_page.htm" />
+      <item name="Operators: position assign page" url="Operators_position_assign_page.htm" />
+      <item name="Operators: priority assign page" url="Operators_priority_assign_page.htm" />
+    </book>
+  </book>
+  <book name="Programs from Settings page" >
+    <item name="Programs from Settings page" url="Programs_from_Settings_page.htm" />
+    <book name="Program Wizard from Settings, Programs" >
+      <item name="Program Wizard from Settings, Programs" url="Program_Wizard_from_Settings,_Programs.htm" />
+      <item name="Program Template Fields page one" url="Distributor_Trade_Shelter_program_template.htm" />
+      <item name="Program Template fields page two" url="Distributor_Trade_Shelter_program_template_page_two.htm" />
+      <item name="Program Template fields page three" url="Distributor_Trade_Shelter_program_template_page_3.htm" />
+      <item name="Program Template fields page four" url="Distributor_Trade_Shelter_program_template_page_4.htm" />
+    </book>
+  </book>
+  <book name="Payables from Settings page" >
+    <item name="Payables from Settings page" url="Payables_from_Settings_page.htm" />
+    <item name="Billback Deviation Tolerance settings from Payables Settings" url="Billback_Deviation_Tolerance_settings_from_Payables_Settings.htm" />
+    <item name="Holiday List from Billbacks Payables settings" url="Holiday_List_from_Billbacks_Payables_settings.htm" />
+    <item name="Upload GL Code settings (Payables, Settings)" url="Upload_GL_Code_settings_(Payables,_Settings).htm" />
+    <item name="Vendor Management, from Payables settings" url="Vendor_Management,_from_Payables_settings.htm" />
+  </book>
+  <book name="Projects from Settings page" >
+    <item name="Projects from Settings page" url="Projects_from_Settings_page.htm" />
+  </book>
+  <book name="Users - Settings" >
+    <item name="Users - from Settings page" url="Users_-_from_Settings_page.htm" />
+    <item name="User Profiles - from Settings, Users" url="User_Profiles_-_from_Settings,_Users.htm" />
+    <item name="Program-related User Profile Approval Rights" url="Program-related_User_Profile_Approval_Rights.htm" />
+    <item name="Add Users - from Settings, Users" url="Add_Users_-_from_Settings,_Users.htm" />
+    <item name="List Users - from Settings, Users" url="List_Users_-_from_Settings,_Users.htm" />
+  </book>
+  <item name="Administration from Settings page" url="Administration_from_Settings_page.htm" />
+  <item name="Password - from Settings page" url="Password_-_Change_Password_from_Settings_page.htm" />
+</book>
+<book name="Programs" >
+  <item name="Program functions from Home page" url="Program_functions_from_Home_page.htm" />
+  <item name="Program Wizard from Settings, Programs" url="Program_Wizard_from_Settings,_Programs.htm" />
+  <item name="Basic Program Information page" url="Basic_Program_Information_page.htm" />
+  <item name="Select Program Customers page (create program)" url="Select_Program_Customers_page_(create_program).htm" />
+  <item name="Select Program Territory" url="Select_Program_Territory.htm" />
+  <item name="Product Rebate Entry page" url="Product_Rebate_Entry_page.htm" />
+  <item name="Product Lump Sum Component Creation" url="Product_Lump_Sum_Component_Creation.htm" />
+  <item name="Product Growth Entry page" url="Product_Growth_Entry_page.htm" />
+  <item name="Trade Planner" url="Trade_Planner.htm" />
+  <item name="Create new futures pricing (Home, Programs)" url="Create_new_futures_pricing_(Home,_Programs).htm" />
+  <item name="Active Program options" url="Active_Program_options.htm" />
+  <item name="Approve Programs" url="Approve_Programs.htm" />
+</book>
+<book name="Billbacks" >
+  <item name="Billbacks functions from Home page" url="Billbacks_functions_from_Home_page.htm" />
+  <item name="Create Billback" url="Create_Billback.htm" />
+  <item name="Trade Checkbook (Billbacks)" url="Trade_Checkbook_(Billbacks).htm" />
+</book>
+<book name="Projects/Deployment" >
+  <item name="Deployment functions from Home page" url="Deployment_functions_from_Home_page.htm" />
+  <item name="Projects Scorecard page from Home page" url="Projects_Scorecard_page_from_Home_page.htm" />
+  <item name="Create/Edit Project" url="Create_Project_.htm" />
+  <item name="Invoice Search" url="Invoice_Search.htm" />
+</book>
+<book name="Reports Central" >
+  <item name="Reports Central (Tools)" url="Reports_Central_(Tools).htm" />
+  <item name="Performance Indicators (Tools)" url="Performance_Indicators_(Tools).htm" />
+  <item name="Volume Reports (Tools)" url="Volume_Reports_(Tools).htm" />
+  <item name="Claim Reports" url="Claim_Reports.htm" />
+</book>
+
+</tocdata>

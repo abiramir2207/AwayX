@@ -1,0 +1,94 @@
+===== QUERY: qGetCategory =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetCategoryFilters =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetCategoryFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_category_filter")>
+<cfif useLakebaseForqGetCategoryFilters>
+	<cftry>
+		<cfset qGetCategoryFilters = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_category_filter", {
+				"deleted" = "eq.0",
+				"programcontrol_panel_options_id" = "eq.#arguments.controlPanelOptionId#",
+				"select" = "category_id"
+			}), "category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCategoryFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCategoryFilters>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetControlPanelId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetControlPanelId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetControlPanelId>
+	<cftry>
+		<cfset qGetControlPanelId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetControlPanelId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetControlPanelId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertFilters =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForinsertFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_category_filter")>
+<cfif useLakebaseForinsertFilters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("product_category_filter",
+			{
+				"deleted" = "eq.0",
+				"programcontrol_panel_options_id" = "eq.#controlPanelId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertFilters>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertFilters =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForinsertFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_category_filter")>
+<cfif useLakebaseForinsertFilters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("product_category_filter",
+			{
+				"deleted" = "eq.0",
+				"programcontrol_panel_options_id" = "eq.#controlPanelId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertFilters>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

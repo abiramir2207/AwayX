@@ -1,0 +1,12 @@
+===== QUERY: updateOCRUploadLogDocumentID =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatusError1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogSubStep1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateOCRUploadLogStatus5 =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

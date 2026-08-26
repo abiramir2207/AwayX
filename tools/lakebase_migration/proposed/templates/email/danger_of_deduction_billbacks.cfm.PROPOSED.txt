@@ -1,0 +1,6 @@
+===== QUERY: getBillbackInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getBBAgedate =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

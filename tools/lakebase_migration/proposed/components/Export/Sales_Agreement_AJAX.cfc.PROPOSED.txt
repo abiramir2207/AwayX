@@ -1,0 +1,383 @@
+===== QUERY: get_Named_Place_Type_ID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_Named_Place_Type_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_terms_of_sale")>
+<cfif useLakebaseForget_Named_Place_Type_ID>
+	<cftry>
+		<cfset get_Named_Place_Type_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_terms_of_sale", {
+				"export_lookup_terms_of_sale_id" = "eq.#arguments.TOS#",
+				"order" = "export_lookup_terms_of_sale_desc.asc",
+				"select" = "export_lookup_named_place_type_id"
+			}), "export_lookup_named_place_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Named_Place_Type_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Named_Place_Type_ID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_Named_Place_Type_ID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_Named_Place_Type_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_terms_of_sale")>
+<cfif useLakebaseForget_Named_Place_Type_ID>
+	<cftry>
+		<cfset get_Named_Place_Type_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_terms_of_sale", {
+				"export_lookup_terms_of_sale_id" = "eq.#arguments.TOS#",
+				"order" = "export_lookup_terms_of_sale_desc.asc",
+				"select" = "export_lookup_named_place_type_id"
+			}), "export_lookup_named_place_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Named_Place_Type_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Named_Place_Type_ID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetNamedPlace =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetNamedPlace = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_ports")>
+<cfif useLakebaseForqrygetNamedPlace>
+	<cftry>
+		<cfset qrygetNamedPlace = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_ports", {
+				"export_lookup_named_place_type_id" = "eq.#Export_Lookup_Named_Place_Type_ID#",
+				"order" = "export_lookup_destination_port_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetNamedPlace = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetNamedPlace>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: List_Mexico_Destinations =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForList_Mexico_Destinations = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_ports")>
+<cfif useLakebaseForList_Mexico_Destinations>
+	<cftry>
+		<cfset List_Mexico_Destinations = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_ports", {
+				"export_lookup_named_place_type_id" = "eq.4",
+				"order" = "export_lookup_destination_port_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForList_Mexico_Destinations = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForList_Mexico_Destinations>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetPalletIndicator =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetPalletIndicator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_country")>
+<cfif useLakebaseForqrygetPalletIndicator>
+	<cftry>
+		<cfset qrygetPalletIndicator = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_country", {
+				"export_lookup_destination_country_id" = "eq.#arguments.Destination#",
+				"select" = "export_lookup_allow_pallets"
+			}), "export_lookup_allow_pallets"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetPalletIndicator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetPalletIndicator>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetInvoiceTerms =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetInvoiceTerms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoice_terms")>
+<cfif useLakebaseForqrygetInvoiceTerms>
+	<cftry>
+		<cfset qrygetInvoiceTerms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoice_terms", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetInvoiceTerms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetInvoiceTerms>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetDestination =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetDestination = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_country")>
+<cfif useLakebaseForqrygetDestination>
+	<cftry>
+		<cfset qrygetDestination = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_country", {
+				"show_country" = "eq.1",
+				"order" = "export_lookup_destination_country_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetDestination = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetDestination>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetCost =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qrygetMiscCost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetMiscCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_misc_cost")>
+<cfif useLakebaseForqrygetMiscCost>
+	<cftry>
+		<cfset qrygetMiscCost = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_misc_cost", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"export_misc_cost" = "neq.0",
+				"order" = "show_order_sequence.asc",
+				"select" = "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+			}), "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetMiscCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetMiscCost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetAllStickeringCosts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetAllStickeringCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_stickering_cost")>
+<cfif useLakebaseForqrygetAllStickeringCosts>
+	<cftry>
+		<cfset qrygetAllStickeringCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_stickering_cost", {
+				"select" = "export_stickering_cost_id,export_stickering_cost_desc,export_stickering_cost_lb"
+			}), "export_stickering_cost_id,export_stickering_cost_desc,export_stickering_cost_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetAllStickeringCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetAllStickeringCosts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetStickeringCost =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qrygetStickeringCost =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: updateStickeringType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateStickeringType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForupdateStickeringType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_stickering_cost_id" = "#arguments.ExportStickeringType#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateStickeringType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateStickeringType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DelExistingMiscCost =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertExportMiscCost =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: DelExistingExportCost =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertExportCost =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qryUpdateStandardCosts =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qryGetProductDetails =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: updateCost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForupdateCost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_products",
+			{
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_target_net_sales_price" = "#Target_NSP[i]#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateCost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForupdateCost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_products",
+			{
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_target_net_sales_price" = "#Target_NSP[i]#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateCost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForupdateCost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_products",
+			{
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_target_net_sales_price" = "#Target_NSP[i]#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateCost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForupdateCost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_products",
+			{
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_target_net_sales_price" = "#Target_NSP[i]#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateCost =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForupdateCost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_products",
+			{
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_target_net_sales_price" = "#Target_NSP[i]#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCost>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetCustomerStatusTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetCustomerStatusTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_customer_status_types")>
+<cfif useLakebaseForqrygetCustomerStatusTypes>
+	<cftry>
+		<cfset qrygetCustomerStatusTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_customer_status_types", {
+				"export_lookup_customer_status_type_id" = "eq.#arguments.StatusAllowed#",
+				"deleted" = "eq.0",
+				"select" = "export_lookup_customer_status_type_id,export_lookup_customer_status_type_desc"
+			}), "export_lookup_customer_status_type_id,export_lookup_customer_status_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetCustomerStatusTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetCustomerStatusTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

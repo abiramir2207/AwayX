@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+	xmlns:view="com.ItemSearch.views.*" xmlns:maps="com.ItemSearch.maps.*" xmlns:vos="com.ItemSearch.vos.*" 
+	width="100%" height="100%"
+	preinitialize="applyRuntimeStyleSheet();" preloader="com.shared.components.baProgressBar">
+<!--	 preloader="com.shared.components.baProgressBar"-->
+	<mx:Script><![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil; 
+			import com.ItemSearch.events.*;
+			//import com.models.*;
+		import mx.styles.StyleManager;
+        
+        public function applyRuntimeStyleSheet():void {
+            StyleManager.loadStyleDeclarations("/flex/assets/styles/mainFx.swf") 
+        }
+  		]]>
+	</mx:Script>
+
+	<!-- Event Maps __________________________________________________ -->
+	<maps:ItemSearchEventMap  dispatcher="{ this }" />
+	<!--<maps:ItemSearchModelMap  dispatcher="{ this }" />-->
+	
+	<!-- Views _______________________________________________________ -->
+	
+	<mx:HBox width="1000" height="620">
+		<view:SearchPanel />
+	</mx:HBox>
+</mx:Module>

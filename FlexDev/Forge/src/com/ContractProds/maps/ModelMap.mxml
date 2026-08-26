@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap xmlns:mx="http://www.adobe.com/2006/mxml" 
+				xmlns="http://mate.asfusion.com/"
+				xmlns:mate="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.shared.vos.Settings;
+			import com.ContractProds.models.*;
+			import com.ContractProds.views.*;
+			import com.ContractProds.views.pm.*;
+			import com.shared.models.SettingsManager;
+			import com.ContractProds.events.*;
+			import com.ContractProds.maps.ContractProdsEventMap;
+			import com.ContractProds.events.*;
+		]]>
+	</mx:Script>
+	
+	
+     <!-- SearchPanel View __________________________________________________________________ -->
+     <Injectors target="{SearchPanel}" debug="true">
+		<PropertyInjector id="items" targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector id="sRecordMessage" targetKey="sRecordMessage" source="{SearchManager}" sourceKey="sRecordMessage" />
+		<PropertyInjector id="oSettings" sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector id="iButtonHeight" sourceCache="global" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight" />
+		<PropertyInjector id="iComboBoxHeight" sourceCache="global" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight" />
+		<PropertyInjector id="iTextInputHeight" sourceCache="global" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight" />
+	</Injectors>
+	
+	<!-- Components PModel __________________________________________________________________ -->
+     <Injectors target="{ComponentPM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="componentDef" source="{ComponentManager}" sourceKey="componentDef" />
+	</Injectors>
+	
+	<!-- Components View __________________________________________________________________ -->
+     <Injectors target="{ComponentUI}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ ComponentPM }"/>
+	</Injectors>
+	
+	<!-- Filter PModel 	______________________________________________________________________ -->
+     <Injectors target="{FilterPM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<!--<PropertyInjector targetKey="componentDef" source="{ComponentManager}" sourceKey="componentDef" />-->
+		<PropertyInjector targetKey="dpBrand" source="{SearchManager}" sourceKey="arrBrand" />
+		<PropertyInjector targetKey="dpQBrand" source="{SearchManager}" sourceKey="arrQBrand" />
+		<PropertyInjector targetKey="dpTypeCode" source="{SearchManager}" sourceKey="arrTypeCode" />
+		<PropertyInjector targetKey="dpTypeGroup" source="{SearchManager}" sourceKey="arrTypeGroup" />
+		<PropertyInjector targetKey="dpPrgTypesDiscList" source="{SearchManager}" sourceKey="arrProgramDiscountTypesList" />
+		<PropertyInjector targetKey="dpItemStatusList" source="{SearchManager}" sourceKey="arrItemStatusList" />
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector sourceCache="global"  targetKey="statusFilterOn" source="{SettingsManager}" sourceKey="settings.statusFilterOn" />
+		<PropertyInjector sourceCache="global" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight" />
+		<PropertyInjector sourceCache="global" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight" />
+		<PropertyInjector sourceCache="global" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight" />
+	</Injectors>
+	<!-- Filter View 	______________________________________________________________________ -->
+     <Injectors target="{Filter}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ FilterPM }"/>
+	</Injectors>
+
+	<!-- Favorite PModel __________________________________________________________________ -->
+     <Injectors target="{FavoritePM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector id="arrUserList" targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" />
+		<PropertyInjector targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+	</Injectors>
+	<!-- Favorite View __________________________________________________________________ -->
+     <Injectors target="{Favorite}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ FavoritePM }"/>
+	</Injectors>
+	
+	<!-- GridData PModel __________________________________________________________________ -->
+     <Injectors target="{GridDataPM}" debug="true">
+		<PropertyInjector sourceCache="global" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector id="statusFilterOn" sourceCache="global"  targetKey="statusFilterOn" source="{SettingsManager}" sourceKey="settings.statusFilterOn" />
+	</Injectors>
+	<!-- GridData View __________________________________________________________________ -->
+     <Injectors target="{GridData}" debug="true">
+		<PropertyInjector targetKey="pModel" source="{ GridDataPM }"/>
+		<!--<ListenerInjector eventType="{SearchEvent.FILTER_MINI_ITEMS}" method="filterEventHandler" />-->
+		<ListenerInjector eventType="{SearchEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+	</Injectors>
+
+	<!-- SearchManager  __________________________________________________________________ -->
+     <Injectors target="{SearchManager}" debug="true">
+		<PropertyInjector targetKey="oFilterParms" source="{FilterPM}" sourceKey="oFilterParms" />
+	</Injectors>
+</LocalEventMap>

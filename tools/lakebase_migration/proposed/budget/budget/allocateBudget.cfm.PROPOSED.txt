@@ -1,0 +1,6 @@
+===== QUERY: qAllocationDataTotal =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qAllocationDataSummary =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

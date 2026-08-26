@@ -1,0 +1,41 @@
+A:hover {
+	COLOR: Red; TEXT-DECORATION: none
+}
+BODY {
+	BACKGROUND-ATTACHMENT: fixed; BACKGROUND-COLOR: #ffffff; FONT-FAMILY: verdana,arial; FONT-SIZE: 10px; text: #000000
+}
+IMG {
+	BORDER-BOTTOM: 0px; BORDER-LEFT: 0px; BORDER-RIGHT: 0px; BORDER-TOP: 0px
+}
+.head {
+	FONT-SIZE: 30px
+}
+.norm {
+	FONT-SIZE: 10px
+}
+TABLE {
+	FONT-SIZE: 10px; cell-spacing: 0px; cell-padding: 0px
+}
+.sub {
+	COLOR: #ffffff; FONT-SIZE: 18px
+}
+#mainMenu {
+	LEFT: 0px; TEXT-DECORATION: none; TOP: 0px; Z-INDEX: 10
+}
+#specialMenu {
+	LEFT: 175px; POSITION: absolute; TOP: 39px; VISIBILITY: hidden; Z-INDEX: 1
+}
+.menus {
+	COLOR: #0000ff; FONT-FAMILY: helvetica, arial, sans-serif; FONT-SIZE: 8pt; TEXT-DECORATION: none
+}
+.skin0 {
+	BACKGROUND-COLOR: menu; BORDER-BOTTOM: black 2px solid; BORDER-LEFT: black 2px solid; BORDER-RIGHT: black 2px solid; BORDER-TOP: black 2px solid; CURSOR: default; FONT-FAMILY: Arial; LINE-HEIGHT: 20px; POSITION: absolute; VISIBILITY: hidden; WIDTH: 200px
+}
+.skin1 {
+	BACKGROUND-COLOR: menu; BORDER-BOTTOM: buttonhighlight 2px outset; BORDER-LEFT: buttonhighlight 2px outset; BORDER-RIGHT: buttonhighlight 2px outset; BORDER-TOP: buttonhighlight 2px outset; COLOR: black; CURSOR: default; FONT-FAMILY: sans-serif; FONT-SIZE: 8pt; POSITION: absolute; VISIBILITY: hidden; WIDTH: 140px
+}
+.menuitems {
+	padding:1px 10px;
+	margin-top:2px;
+	margin-bottom:2px;
+}

@@ -1,0 +1,43 @@
+===== QUERY: qGetForecastData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetForecastData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("forecast")>
+<cfif useLakebaseForqGetForecastData>
+	<cftry>
+		<cfset qGetForecastData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("forecast", {
+				"forecast_id" = "eq.#arguments.forecastId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetForecastData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetForecastData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckProdInFC =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetForecastDist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetForecastDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("forecast_distributor")>
+<cfif useLakebaseForqGetForecastDist>
+	<cftry>
+		<cfset qGetForecastDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("forecast_distributor", {
+				"forecast_id" = "eq.#arguments.forecastId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetForecastDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetForecastDist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,208 @@
+===== QUERY: qGetActiveComps =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetComp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#arguments.compId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActiveComps =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetActiveComps =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: InsertGLs =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: DeleteExpectedRateTemplate =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckCompNames =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qCheckIfCurrentcomponent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckIfCurrentcomponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalltemplatediscountcomponents")>
+<cfif useLakebaseForqCheckIfCurrentcomponent>
+	<cftry>
+		<cfset qCheckIfCurrentcomponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalltemplatediscountcomponents", {
+				"allowance_code_id" = "eq.#arguments.allowanceCodeId#",
+				"component_id" = "eq.#arguments.compId#",
+				"select" = "component_id"
+			}), "component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfCurrentcomponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfCurrentcomponent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeletefromMapping =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetTempTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetExpectedRateTemplate =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckCompName =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCheckBusRules =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetProgFixCompProd =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qFREIGHTRATESAPPLIED =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: doesComponentExist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordoesComponentExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_freight_rates")>
+<cfif useLakebaseFordoesComponentExist>
+	<cftry>
+		<cfset doesComponentExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_freight_rates", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.ProgramID#",
+				"component_name_id" = "eq.#arguments.componentId#",
+				"paid_to" = "eq.#paidToArgs#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordoesComponentExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordoesComponentExist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: delComponent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordelComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_freight_rates")>
+<cfif useLakebaseFordelComponent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_freight_rates",
+			{
+				"component_name_id" = "eq.#arguments.componentId#",
+				"program_id" = "eq.#arguments.programId#",
+				"paid_to" = "eq.#paidToArgs#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelComponent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qrygetFixedComponentType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrygetFixedComponentType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("delivery_type")>
+<cfif useLakebaseForqrygetFixedComponentType>
+	<cftry>
+		<cfset qrygetFixedComponentType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("delivery_type", {
+				"deleted" = "eq.0",
+				"order" = "delivery_type_desc.asc",
+				"select" = "delivery_type_id,delivery_type_desc"
+			}), "delivery_type_id,delivery_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetFixedComponentType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetFixedComponentType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qryIsFreightProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetFreightComponentType =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetFreightComponentType =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qrySetIsFreightProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqrySetIsFreightProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqrySetIsFreightProgram>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#arguments.ProgramControl_Panel_Options_ID#"
+			},
+			{
+				"freight_program" = "#arguments.IsFreightProgram#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrySetIsFreightProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrySetIsFreightProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: dropTempTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetFixedComponentData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetFixedComponentData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_expected_rate_template_list")>
+<cfif useLakebaseForqGetFixedComponentData>
+	<cftry>
+		<cfset qGetFixedComponentData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_expected_rate_template_list", {
+				"discount_type_id" = "eq.1",
+				"program_component_name_id" = "eq.#arguments.CompID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedComponentData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedComponentData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

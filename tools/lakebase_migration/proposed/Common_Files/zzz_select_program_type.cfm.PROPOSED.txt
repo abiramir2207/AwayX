@@ -1,0 +1,22 @@
+===== QUERY: getCreatedTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCreatedTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetCreatedTypes>
+	<cftry>
+		<cfset getCreatedTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"generic_type" = "neq.Operator-deviated Pricing",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCreatedTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCreatedTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

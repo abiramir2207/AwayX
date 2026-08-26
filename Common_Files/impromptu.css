@@ -1,0 +1,52 @@
+﻿div.jqi{width:400px;font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;position:absolute;background-color:#fff;font-size:11px;text-align:left;border:solid 1px #eee;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;padding:7px;}
+div.jqi .jqiclose{position:absolute;top:4px;right:-2px;width:18px;cursor:default;color:#bbb;font-weight:700;}
+.impromptuwarning .impromptu{background-color:#aaa;}
+div.impromptu{position:absolute;background-color:#ccc;width:300px;text-align:left;padding:10px;}
+div.impromptu .impromptuclose{float:right;cursor:pointer;color:#213e80;margin:-35px -10px 0 0;}
+div.impromptu .impromptucontainer{background-color:#213e80;color:#fff;font-weight:700;padding:5px;}
+div.impromptu .impromptumessage{background-color:#415ea0;padding:10px;}
+div.impromptu button{margin:0 10px;padding:3px 10px;}
+.colsJqifadewarning .colsJqi{background-color:#b0be96;}
+div.colsJqi{position:absolute;background-color:#d0dEb6;width:400px;text-align:left;padding:10px;}
+div.colsJqi .colsJqiclose{float:right;cursor:pointer;color:#bbb;margin:-35px -10px 0 0;}
+div.colsJqi .colsJqicontainer{background-color:#e0eEc6;color:#fff;font-weight:700;height:160px;padding:5px;}
+div.colsJqi .colsJqimessage{background-color:#c0cEa6;width:280px;height:140px;float:left;padding:10px;}
+div.colsJqi button{background:url(../images/button_bg.jpg) top left repeat-x #fff;border:solid #777 1px;font-size:12px;width:75px;margin:5px 5px 5px 10px;padding:3px 10px;}
+.brownJqiwarning .brownJqi{background-color:#ccc;}
+div.brownJqi{position:absolute;background-color:transparent;width:300px;text-align:left;padding:10px;}
+div.brownJqi .brownJqiclose{float:right;cursor:pointer;color:#777;font-size:11px;margin:-20px 0 0;}
+div.brownJqi .brownJqicontainer{position:relative;background-color:transparent;border:solid 1px #5F5D5A;color:#fff;font-weight:700;}
+div.brownJqi .brownJqimessage{position:relative;background-color:#F7F6F2;border-top:solid 1px #C6B8AE;border-bottom:solid 1px #C6B8AE;}
+div.brownJqi .brownJqimessage h3{background:url(../images/brown_theme_gradient.jpg) top left repeat-x #fff;color:#4D4A47;margin:0;padding:7px 0 7px 15px;}
+div.brownJqi .brownJqimessage p{color:#777;padding:10px;}
+div.brownJqi .brownJqimessage img.helpImg{position:absolute;bottom:-25px;left:10px;}
+div.brownJqi .brownJqibuttons{text-align:right;}
+div.brownJqi button{background:url(../images/brown_theme_gradient.jpg) top left repeat-x #fff;border:solid #777 1px;font-size:12px;margin:5px 5px 5px 10px;padding:3px 10px;}
+.cleanbluewarning .cleanblue{background-color:#acb4c4;}
+div.cleanblue{font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;position:absolute;background-color:#fff;width:300px;font-size:11px;text-align:left;border:solid 1px #213e80;}
+div.cleanblue .cleanbluecontainer{background-color:#fff;border-top:solid 14px #213e80;font-weight:700;padding:5px;}
+div.cleanblue .cleanblueclose{float:right;width:18px;cursor:default;color:#fff;font-weight:700;margin:-19px -12px 0 0;}
+div.cleanblue .cleanbluemessage{line-height:20px;font-size:11px;color:#333;padding:10px;}
+div.cleanblue button{background-color:#314e90;border:solid 1px #f4f4f4;color:#fff;font-weight:700;font-size:12px;margin:0 10px;padding:3px 10px;}
+div.cleanblue button:hover{border:solid 1px #d4d4d4;}
+.extbluewarning .extblue{border:1px red solid;}
+div.extblue{border:1px #6289B6 solid;position:absolute;background-color:#CAD8EA;width:300px;text-align:left;padding:0;}
+div.extblue .extblueclose{background-color:#CAD8EA;cursor:pointer;color:red;text-align:right;margin:2px -2px 0 0;}
+div.extblue .extbluecontainer{background-color:#CAD8EA;color:#000;font:normal 11px Verdana;padding:0 5px 5px;}
+div.extblue .extbluemessage{background-color:#CAD8EA;margin:0 15px 15px;padding:0;}
+div.extblue .extbluebuttons{text-align:center;padding:0;}
+div.extblue button{background-color:#ccc;font-weight:400;font-family:Verdana;font-size:10px;margin:0 10px;padding:1px 4px;}
+.jqismoothfade{position:absolute;background-color:#333;}
+div.jqismooth{width:350px;font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;position:absolute;background-color:#fff;font-size:11px;text-align:left;border:solid 3px #e2e8e6;-moz-border-radius:10px;-webkit-border-radius:10px;padding:7px;}
+div.jqismooth .jqismoothclose{position:absolute;top:0;right:0;width:18px;cursor:default;text-align:center;color:#727876;font-weight:700;background-color:#e2e8e6;-moz-border-radius-bottomleft:5px;-webkit-border-bottom-left-radius:5px;border-left:solid 1px #e2e8e6;border-bottom:solid 1px #e2e8e6;padding:2px 0 4px;}
+div.jqismooth .jqismoothbuttons{text-align:right;border:solid 1px #e2e8e6;background-color:#f2f8f6;padding:5px 0;}
+.jqifade,.cleanbluefade{position:absolute;background-color:#aaa;}
+div.jqi .jqicontainer,div.jqismooth .jqismoothcontainer{font-weight:700;}
+div.jqi .jqimessage,div.jqismooth .jqismoothmessage{line-height:20px;color:#444;padding:10px;}
+div.jqi .jqibuttons,div.cleanblue .cleanbluebuttons{text-align:right;border:solid 1px #eee;background-color:#f4f4f4;padding:5px 0;}
+div.jqi button,div.jqismooth button{background-color:#2F6073;border:solid 1px #f4f4f4;color:#fff;font-weight:700;font-size:12px;margin:0 10px;padding:3px 10px;}
+div.jqi button:hover,div.jqismooth button:hover{background-color:#728A8C;}
+div.jqi button.jqidefaultbutton,.jqiwarning .jqi .jqibuttons,div.jqismooth button.jqismoothdefaultbutton,.jqismoothwarning .jqismooth .jqismoothbuttons{background-color:#BF5E26;}
+.impromptufade,.colsJqifade,.brownJqifade,.extbluefade{position:absolute;background-color:#fff;}
+div.impromptu .impromptubuttons,div.colsJqi .jqibuttons{text-align:center;padding:5px 0 0;}
+div.colsJqi button:hover,div.brownJqi button:hover{border:solid #aaa 1px;}

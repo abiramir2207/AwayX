@@ -1,0 +1,84 @@
+===== QUERY: saveNewProgramVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: getProductCategoryID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProductCategoryID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_categories")>
+<cfif useLakebaseForgetProductCategoryID>
+	<cftry>
+		<cfset getProductCategoryID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_categories", {
+				"typegroup_desc_id" = "eq.#TypeGroup_ID#",
+				"qbrand_desc_id" = "eq.#QBrand_ID#",
+				"typecode_desc_id" = "eq.#TypeCode_ID#",
+				"brand_id" = "eq.#Brand_ID#",
+				"program_id" = "eq.#FORM.Program_ID#",
+				"iscontract" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_product_category_id"
+			}), "program_product_category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductCategoryID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductCategoryID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkForThisCombo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckForThisCombo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_category_product_rates_volumes")>
+<cfif useLakebaseForcheckForThisCombo>
+	<cftry>
+		<cfset checkForThisCombo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_category_product_rates_volumes", {
+				"program_id" = "eq.#FORM.Program_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#product_BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_product_category_id"
+			}), "program_product_category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForThisCombo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForThisCombo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: insertProductData =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateProductData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_category_product_rates_volumes")>
+<cfif useLakebaseForupdateProductData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_product_category_product_rates_volumes",
+			{
+				"program_id" = "eq.#FORM.Program_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#product_BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"volume" = "#product_Volume#",
+				"volume_uom" = "#product_Volume_UOM#",
+				"rate" = "#product_Rate#",
+				"rate_uom" = "#product_Rate_UOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateProductData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

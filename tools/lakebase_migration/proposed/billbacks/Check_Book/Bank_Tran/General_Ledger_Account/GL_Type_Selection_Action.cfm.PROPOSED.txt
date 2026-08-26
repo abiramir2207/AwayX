@@ -1,0 +1,59 @@
+===== QUERY: Get_GUID =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Delete_Old_Entry =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Delete_Old_Entry =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetPayeeInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_transaction")>
+<cfif useLakebaseForGetPayeeInfo>
+	<cftry>
+		<cfset GetPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_transaction", {
+				"payment_trans_id" = "eq.#FORM.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Get_GUID_to_Insert =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GLDesc =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGLDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_type")>
+<cfif useLakebaseForGLDesc>
+	<cftry>
+		<cfset GLDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_type", {
+				"gl_type_id" = "eq.#GL_Type_ID#",
+				"select" = "gl_type_desc"
+			}), "gl_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGLDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGLDesc>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.events.*;
+			import com.models.*;
+			//import com.vos.*;
+		]]>
+	</mx:Script>
+	<mate:Debugger level="{Debugger.ALL}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  _________________________________________________________________________ -->
+	<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.models.reports.EffectiveNetPriceReport.EffectiveNetPriceReport" />
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+	<mx:HTTPService  id="MainReportService" method="GET" resultFormat="text" showBusyCursor="true"/>
+	
+	<!-- FlexEvent.PREINITIALIZE __________________________________________________________________ -->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}">
+		<ObjectBuilder generator="{NetPriceManager}" id="oManager" cache="global" />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" cache="global" />
+		<ObjectBuilder generator="{BAError}" id="oBAError" cache="global" />
+		<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" cache="global" />
+		<!--call db for other settings-->
+		<EventAnnouncer type="{NetPriceEvent.LOAD_APP_SETTINGS}" generator="{NetPriceEvent}" >
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+		
+		<!-- Get Data for market and report ************-->
+		<EventAnnouncer type="{NetPriceEvent.GET_USER_MARKET_DATA}" generator="{NetPriceEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+		
+		<!-- Get Data for drop downs from server ************-->
+		<EventAnnouncer  type="{NetPriceEvent.GET_AUX_DATA}" generator="{NetPriceEvent}">
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+				
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE ___________________________________________________________ -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}">
+						
+	</EventHandlers>
+	
+	
+	<!-- GET_USER_MARKET_DATA: get user market list, then call get report -->
+	<EventHandlers type="{NetPriceEvent.GET_USER_MARKET_DATA}">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBelowMarketIDList" arguments="{[event.userId]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{NetPriceManager}" method="fnLoadMarketIdList" arguments="{resultObject}" />
+				
+				<!-- Get Data for report ************-->
+				<EventAnnouncer type="{NetPriceEvent.GET_REPORT}" generator="{NetPriceEvent}" >
+					<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+				</EventAnnouncer>
+				
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{NetPriceEvent.BSA_ERROR}" generator="{NetPriceEvent}" >
+					<Properties sBaError="GET_USER_MARKET_DATA ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		
+	</EventHandlers>
+	
+	
+	<!-- GET_REPORT: get data for the report from the server -->
+	<EventHandlers type="{NetPriceEvent.GET_REPORT}">
+			
+		<HTTPServiceInvoker  instance="{MainReportService}" url="/flex/HTTPService/Report/get_effective_spending_rate_extract_item.cfm">
+		<!--		
+		<HTTPServiceInvoker  instance="{MainReportService}" url="/common_documents/Data_Files/Created/ReportWriter/Effective_Spending_Rate_Extract_Item.csv">
+		-->
+			<resultHandlers>
+				<MethodInvoker generator="{NetPriceManager}" method="fnLoadReport" arguments="{[resultObject, event.userId]}" />	
+			</resultHandlers>			
+					
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{NetPriceEvent.BSA_ERROR}" generator="{NetPriceEvent}" >
+					<Properties sBaError="GET_REPORT ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</HTTPServiceInvoker>
+		
+	</EventHandlers>
+	
+	<!-- GET_REPORT_FROM_CACHE: get data for the shared object -->
+	<EventHandlers type="{NetPriceEvent.GET_REPORT_FROM_CACHE}">
+			
+		<MethodInvoker generator="{NetPriceManager}" method="fnLoadFromSharedObject" arguments="{[event.userId]}" />	
+		
+	</EventHandlers>
+	
+	<!-- STORE_REPORT_TO_CACHE: store data to the shared object -->
+	<EventHandlers type="{NetPriceEvent.STORE_REPORT_TO_CACHE}">
+			
+		<MethodInvoker generator="{NetPriceManager}" method="saveToSharedObject" arguments="{[event.userId]}" />	
+		
+	</EventHandlers>
+	
+	<!-- GET_REPORT_REFRESH_DATA: call get report -->
+	<EventHandlers type="{NetPriceEvent.GET_REPORT_REFRESH_DATA}">
+		
+		<!-- Get Data for report ************-->
+		<EventAnnouncer type="{NetPriceEvent.GET_REPORT}" generator="{NetPriceEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+				
+		
+	</EventHandlers>
+	
+ 	
+	<!-- GET_AUX_DATA: get data for drop down and settings  -->
+	<EventHandlers type="{NetPriceEvent.GET_AUX_DATA}">				
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getAllAuxiliaryData" arguments="{[event.userId]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{NetPriceManager}" method="fnSetDropDownData" arguments="{resultObject}" />
+				<!--<MethodInvoker cache="global" generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject.SETTINGS}" />-->
+				<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject.SETTINGS}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!-- announce error event -->
+				<EventAnnouncer type="{NetPriceEvent.BSA_ERROR}" generator="{NetPriceEvent}" >
+					<Properties sBaError="GET_AUX_DATA ERROR" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+		
+	</EventHandlers>
+	
+	<!-- FILTER_RESULTS: filter the report based on selections -->
+	<EventHandlers type="{NetPriceEvent.FILTER_RESULTS}">
+	 	<MethodInvoker generator="{NetPriceManager}" method = "fnFilterResults"
+		 arguments="{[event]}" />
+	</EventHandlers>
+	
+	<!-- reset filter -->
+	<EventHandlers type="{NetPriceEvent.RESET_FILTER}">
+	 	<MethodInvoker generator="{NetPriceManager}" method = "fnResetFilter" />
+	</EventHandlers>
+	
+	<!-- print page -->
+	<EventHandlers type="{NetPriceEvent.PRINT_PAGE}">
+	 	<MethodInvoker generator="{NetPriceManager}" method = "fnPrintPage"
+		 arguments="{[event]}" />
+	</EventHandlers>
+	
+	<!-- export csv -->
+	<EventHandlers type="{NetPriceEvent.EXPORT_CSV}">
+		<MethodInvoker generator="{NetPriceManager}" method = "fnExportCSV"
+		 arguments="{[event]}" />
+	</EventHandlers>
+
+    <!-- LOAD_APP_SETTINGS: -->
+	<EventHandlers type="{NetPriceEvent.LOAD_APP_SETTINGS}">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker cache="global" generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{NetPriceEvent.BSA_ERROR}" generator="{NetPriceEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+	
+	<!--BSA CUSTOM ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{NetPriceEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+	
+</EventMap>

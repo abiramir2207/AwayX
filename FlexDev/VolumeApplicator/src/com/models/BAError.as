@@ -1,0 +1,32 @@
+package com.models
+{
+	import mx.controls.Alert;
+	import mx.utils.ObjectUtil;
+	/**
+	* This class alerts any error message that was captured.
+	*/  
+	public class BAError
+	{
+		/*-.........................................Properties..........................................*/
+		private var _BAError:String = "";
+		
+		public function BAError():void
+		{
+		}
+		/*-.........................................Setters and Getters..........................................*/
+		
+		public function get BAErrorString():String
+		{
+			return _BAError;
+		}
+		public function set BAErrorString(error:String):void
+		{
+			_BAError = error;
+		}
+		public function showBAError(event:Object):void//event:Object
+		{
+			Alert.show( ObjectUtil.toString("Application Error: " + _BAError + "  ::  " + event.faultString + "  ::  " + event.faultDetail));//+ event.result	+ event.toString()
+		}
+
+	}
+}

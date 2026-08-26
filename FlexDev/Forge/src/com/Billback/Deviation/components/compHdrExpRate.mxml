@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--- 
+This is the check box in the column header of the datagrid used to "Select All" or "de-Select All"
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"    paddingLeft="2"  paddingTop="2"> 
+<!--  implements="mx.controls.listClasses.IDropInListItemRenderer" creationComplete="onComplete()" -->
+   	
+	<mx:Script> 
+    		<![CDATA[
+       		import mx.controls.Alert;
+					import mx.utils.ObjectUtil;
+          import mx.events.CollectionEvent;
+          import mx.controls.dataGridClasses.DataGridListData;
+          import mx.collections.ArrayCollection;
+	        import mx.controls.AdvancedDataGrid;
+	        import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+	        import mx.controls.listClasses.BaseListData;
+            
+          private var _listData:BaseListData;
+          private var _dataGrid:AdvancedDataGrid;
+          private var _dataField:String;
+          [Bindable] private var _CBselected:Boolean = false;
+          [Bindable] private var _headerLabel:String;
+            
+            private function onRdoChange(evtObj:Event):void 
+            {
+              var nCounter:Number = 0;
+							var nTotal:Number =0;
+							// parentDocument.fnRateChanged(evtObj,"2");
+							parentDocument.fnCallRecalculate(evtObj,'fnRateExpClicked','2');	
+							parentDocument.dgData.dataProvider.refresh();
+							parentDocument.dgData.invalidateList();
+        }
+        ]]> 
+    </mx:Script>
+
+     <mx:Button  click="onRdoChange(event)" width="18" height="18" fontGridFitType="none"   toolTip="Click to select all Expected Rate"
+     	  useHandCursor="true" letterSpacing="0"  paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+     	label="E" id="rdoHdrRateExp" enabled="{parentDocument.sProfileBBExpected =='1' || parentDocument.sProfileBBSelected =='1'}" />
+ 
+ </mx:HBox> 

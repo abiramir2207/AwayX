@@ -1,0 +1,27 @@
+===== QUERY: qBudget =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_units_of_measure")>
+<cfif useLakebaseForqUOM>
+	<cftry>
+		<cfset qUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_units_of_measure", {
+				"deleted" = "eq.0",
+				"select" = "budget_units_of_measure_id,unit_of_measure_abbreviation"
+			}), "budget_units_of_measure_id,unit_of_measure_abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: vars.groups =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

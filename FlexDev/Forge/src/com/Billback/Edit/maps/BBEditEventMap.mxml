@@ -1,0 +1,974 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalEventMap 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/"
+	xmlns:maps="com.Billback.Edit.maps.*">
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Edit.BBEdit;
+			import com.Billback.Edit.events.*;
+			import com.Billback.Main.events.*;
+			import com.Billback.Edit.models.*;
+			import com.Billback.Edit.views.*;
+			import com.Billback.Edit.views.pm.*;
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import com.shared.events.MainEvent;
+			import com.shared.models.*;
+			
+			import mx.events.*;
+			//import com.ContractProds.vos.*;
+			[Bindable]
+			private var bDebug:Boolean = false;
+			[Bindable]
+			private var bSoftBinding:Boolean = false;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!--<mate:Debugger level="{Debugger.ALL}" />-->
+		<!-- load up an instance of the remote objects -->
+		<!-- Remote Services  ***************************************************************************************** -->
+		<mx:RemoteObject id="MainService" 			destination="ColdFusion"	source="mvc.Models.Billback.BillbackManager"  />
+		<mx:RemoteObject id="MainEditService" 		destination="ColdFusion"	source="mvc.Models.Billback.BillbackEditManager" />
+		<mx:RemoteObject id="EditSearchService" 	destination="ColdFusion"	source="mvc.Models.Billback.BillbackEditSearchManager" />
+		<mx:RemoteObject id="ProgramService" 		destination="ColdFusion"	source="mvc.Models.Program.ProgramManager" />
+		<mx:RemoteObject id="LoadService" 			destination="ColdFusion"	source="mvc.Models.Billback.BillbackLoadManager" />
+		<mx:RemoteObject id="SettlementService" 	destination="ColdFusion"	source="mvc.Models.Billback.BillbackSettlementManager" />
+		<mx:RemoteObject id="ErrorService"			destination="ColdFusion"	source="mvc.models.ErrorService" />
+		<mx:RemoteObject id="DeductionService" 		destination="ColdFusion" source="mvc.Models.Deduction.DeductionManager" />
+		<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+		<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+		
+		<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+		<!---@see com.ContractProds.models.SettingsManager#loadURLParameters()
+		Invoke : com.ContractProds.models.SettingsManager.loadURLParameters()-->
+		<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" useWeakReference="true">
+			<ObjectBuilder generator="{BBEditManager}" id="oBBEditManager" constructorArguments="{scope.dispatcher}"  />
+			<ObjectBuilder generator="{BBEditItemsGridManager}" id="oBBEditItemsGridManager" constructorArguments="{scope.dispatcher}"  />
+			<ObjectBuilder generator="{BBClosingDetailGridManager}" id="oBBClosingDetailGridManager" constructorArguments="{scope.dispatcher}"  />
+			<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager"  />
+			<ObjectBuilder generator="{BBEditPModel}" id="oBBEditPModel" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BBEditItemsPModel}" id="oBBEditItemsPModel" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BBSettlementPModel}" id="oBBSettlementPModel" constructorArguments="{scope.dispatcher}" />
+			<ObjectBuilder generator="{BAError}" id="oBAError"  />
+			<!--<MethodInvoker generator="{SettingsManager}" method="loadURLParameters"  />-->
+		</EventHandlers>
+		
+		<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+		<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE" useWeakReference="true" debug="{bDebug}">
+			<!--call db for other settings  sourceCache="global"-->
+			<!--  CALLED ON LOAD WHEN USER_ID IS PASSED IN
+			<EventAnnouncer type="{BBEditEvent.BB_LOAD_APP_SETTINGS}" generator="{BBEditEvent}" >
+			<Property source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId" />
+			</EventAnnouncer>-->
+			<!--Get Data ********  modify the property tag to send to the get GET ************-->
+			<!--<EventAnnouncer type="{BBEditEvent.GET}" generator="{BBEditEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+			</EventAnnouncer>-->
+			<!--<EventAnnouncer type="{BBEditEvent.LOAD_ITEM_LIST}" generator="{BBEditEvent}" />-->
+			<EventAnnouncer type="{BBEditEvent.LOAD_ITEM_LIST_SO}" generator="{BBEditEvent}" />
+			<EventAnnouncer type="{BBEditEvent.LOAD_UOM_DP}" generator="{BBEditEvent}"  />
+		</EventHandlers>
+		
+		<!--LOAD BILLBACK DATA	******** MODULE CALL FROM BB SEARCH TO LOAD BB DATA FROM CF  ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_BB_EDIT}" id="eLOAD_BB_EDIT" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBillback" arguments="{[event.bbHeader.billbackIDInt,event.bbHeader.copyAction]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getBillbackResults" arguments="{resultObject}" />						
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB EDIT SERVICE (getBillbackResults)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--CREATE NEW BILLBACK **************************************************** -->
+		<EventHandlers type="{BBEditEvent.CREATE_NEW_BB}" id="eCREATE_NEW_BB" debug="{bDebug}" useWeakReference="true">
+			<ObjectBuilder generator="{BBEditManager}" constructorArguments="{scope.dispatcher}"  />
+			<EventAnnouncer type="{BBEditEvent.LOAD_UOM_DP}" generator="{BBEditEvent}" />
+			<MethodInvoker generator="{BBEditManager}" method="createNewBillback" arguments="{event.billback}" />
+		</EventHandlers>
+		
+		<!--LOAD UOM DP DATA	******** LOAD UOM's INTO A NEW BILLBACK ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_UOM_DP}" id="eLOAD_UOM_DP" debug="{bDebug}" useWeakReference="true">
+			<ObjectBuilder generator="{BBEditManager}" constructorArguments="{scope.dispatcher}"  />
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getUomDp">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getUomDp" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="UOM DP SERVICE (getUomDp)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--BILLBACK VALIDATE COMPONENETS ******** before save validate compnents ************ -->
+		<!-- <EventHandlers type="{BBEditEvent.VALIDATE_BB_EDIT_COMP}" id="eVALIDATE_BB_EDIT_COMP" debug="{bDebug}" useWeakReference="true">
+		<MethodInvoker generator="{BBEditManager}" method="validateComponents" />
+		</EventHandlers> -->
+		
+		<!--SAVE BILLBACK VALIDATE HEADER ******** before save validate, then call save ************ -->
+		<EventHandlers type="{BBEditEvent.VALIDATE_BB_EDIT_HDR}" id="eVALIDATE_BB_EDIT_HDR" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="validateBBDates"/>
+		</EventHandlers>
+		
+		<!--SAVE BILLBACK VALIDATE DETAIL ******** before save validate, then call save ************ -->
+		<EventHandlers type="{BBEditEvent.VALIDATE_BB_EDIT_DTL}" id="eVALIDATE_BB_EDIT_DTL" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="validateBBDetail"/>
+		</EventHandlers>
+		
+		
+		<!--SAVE BILLBACK ******** modify this event to save billback data ************ -->
+		<EventHandlers type="{BBEditEvent.SAVE_BB_EDIT}" id="eSAVE_BB_EDIT" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainEditService}" showBusyCursor="true" method="saveBillback" arguments="{event.billback}" debug="{bDebug}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setSaveCompleted" arguments="{resultObject}" />
+					<!--<MethodInvoker generator="{BBEditManager}" method="getBillbackResults" arguments="{resultObject}" />-->
+					<!-- Whenver the edit page gets billback data, update the search bbheader -->
+					<EventAnnouncer type="{BBMainEvent.UPDATE_SEARCH_BBHEADER}" generator="{BBMainEvent}" dispatcherType="global">
+						<Properties bbHeader="{resultObject}" />
+					</EventAnnouncer>					
+				</resultHandlers>	
+				<faultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="clearSaveMessage" arguments="{fault}" />
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB SAVE SERVICE (saveBillbackData)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>					
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<EventHandlers type="{BBEditEvent.SAVE_BB_EDIT_SETTLE}" id="eSAVE_BB_EDIT_SETTLE" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainEditService}" showBusyCursor="true" method="saveBillback" arguments="{event.billback}">
+				<resultHandlers>
+					<!--  This method SAVES THE RETURNED bb AND dispatches the RUN_DEVIATIONS event (if BB is wip) [handled below] ******************** -->
+					<MethodInvoker generator="{BBEditManager}" method="runDeviations" arguments="{resultObject}" />
+					<!-- Whenver the edit page gets billback data, update the search bbheader -->
+					<EventAnnouncer type="{BBMainEvent.UPDATE_SEARCH_BBHEADER}" generator="{BBMainEvent}" dispatcherType="global">
+						<Properties bbHeader="{resultObject}" />
+					</EventAnnouncer>
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB SAVE SERVICE (saveBillbackData)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		
+		<!-- RUN DEVIATIONS ******************** -->
+		<EventHandlers type="{BBEditEvent.RUN_DEVIATIONS}" id="eRUN_DEVIATIONS" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainEditService}" showBusyCursor="true" method="runBillbackDeviation" arguments="{[event.bbIdInt, event.userId]}">
+				<resultHandlers>
+					<!-- THIS METHOD CHECKS PERMISSIONS AND THEN DISPATCHES BBMainEvent.LOAD_DEVIATIONS [HANDLED IN BBMainEvent] ******************** -->
+					<MethodInvoker generator="{BBEditManager}" method="loadDeviations" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB SAVE SERVICE (saveBillbackData)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--INSERT NEW ROW **************************************************** -->
+		<EventHandlers type="{MainEvent.INSERT_ROW}" id="eINSERT_ROW" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="dgBBEditItemInsertRow" arguments="{event.currentRow}" />
+		</EventHandlers>
+		
+		<!--SELECT ROW **************************************************** -->
+		<EventHandlers type="{MainEvent.SELECT_ROW}" id="eSELECT_ROW" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="dgBBEditItemSelectRow" arguments="{event.objRowData}" />
+		</EventHandlers>	
+		
+		<!--UPDATE COMPONENT **************************************************** -->
+		<EventHandlers type="{MainEvent.COMPONENT_UPDATE}" id="eCOMPONENT_UPDATE" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="bbComponentUpdate" arguments="{event.component}" />
+		</EventHandlers>		
+		
+		<!-- Program Section -->
+		<!--GET PROGRAM DATA ******** modify this event to get data from CF for a program ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PROGRAM}" id="eLOAD_PROGRAM" debug="{bDebug}" useWeakReference="true" >
+			<RemoteObjectInvoker instance="{ProgramService}" showBusyCursor="true" method="getProgram" arguments="{[event.programId, 0, 0, 1, event.payeeTypeId, 1]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setProgramInfo" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PROGRAM SERVICE (getProgram)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET PROGRAM LIST ******** modify this event to get data from CF for a program ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PROGRAM_LIST}" id="eLOAD_PROGRAM_LIST" debug="{bDebug}" useWeakReference="true">
+			<!--<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="testProgramList" >-->
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getProgramList" 
+								 arguments="{[event.userId, event.billback.bbHeader.startDate, event.billback.bbHeader.endDate, event.payee, event.programNumber]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setProgramList" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PROGRAM LIST SERVICE (getProgramList)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET PROGRAM SEARCH ******** modify this event to get PROGRAM SEARCH ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PROGRAM_SEARCH}" id="eLOAD_PROGRAM_SEARCH" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showProgramSearch" />
+		</EventHandlers>
+		
+		
+		<!-- Vendor Section -->
+		<!--GET VENDOR DATA ******** modify this event to get data from CF for a vendor ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_VENDOR}" id="eLOAD_VENDOR" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getVendorData" arguments="{event.vendorId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setVendorInfo" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="VENDOR  SERVICE (setVendorInfo)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--VENDOR INPUT CHANGE ******************** -->
+		<EventHandlers type="{BBEditEvent.SET_VENDOR_INPUT_CHANGE}" id="eSET_VENDOR_INPUT_CHANGE" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="setVendorInputChange" arguments="{event.vendorId}" />
+		</EventHandlers>
+		
+		<!--CLEAR VENDOR SELECTED ******************** -->
+		<EventHandlers type="{BBEditEvent.CLEAR_SELECTED_VENDOR}" id="eCLEAR_SELECTED_VENDOR" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="setVendorInfo" arguments="{event.vendor}" />
+		</EventHandlers>
+		
+		<!--CLEAR PROGRAM, COMPONENT ITEMS SELECTED [Called after a User changes Vendor]  This Will Then Call BBEditEvent.LOAD_VENDOR ******************** -->
+		<EventHandlers type="{BBEditEvent.CLEAR_PROG_COMP_ITEMS}" id="eCLEAR_PROG_COMP_ITEMS" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="clearBBProgCompItems" arguments="{event.vendorId}" />
+		</EventHandlers>
+		
+		<!--GET VENDOR SEARCH ******** modify this event to get vendor search ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_VENDOR_SEARCH}" id="eLOAD_VENDOR_SEARCH" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showVendorSearch" arguments="{event.vendorSearchType}" />
+		</EventHandlers>
+		
+		<!-- Payee Section -->
+		<!--GET PAYEE DATA ******************** -->
+		<EventHandlers type="{BBEditEvent.LOAD_PAYEE}" id="eLOAD_PAYEE" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="setPayeeInfo" arguments="{event.payee}" />
+		</EventHandlers>
+		
+		<!--GET PAYEE LIST ******** modify this event to get data from CF for a payee list ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PAYEE_LIST}" id="eLOAD_PAYEE_LIST" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getPayeeList" arguments="{event.vendorId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setPayeeList" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PAYEE SERVICE (setPayeeInfo)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--SET PAYEE LIST ******** modify this event to set payee list ************ -->
+		<EventHandlers type="{BBEditEvent.SET_PAYEE_LIST}" id="eSET_PAYEE_LIST" debug="{bDebug}" useWeakReference="true">
+			<ObjectBuilder generator="{BBEditManager}" constructorArguments="{scope.dispatcher}"  />
+			<MethodInvoker generator="{BBEditManager}" method="setPayeeList" arguments="{event.payeeList}" />
+		</EventHandlers>
+		
+		<!--GET PAYEE DISTRIBUTOR DATA ******** modify this event to get data from CF for a Distributor AS Payee ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PAYEE_DISTRIBUTOR}" id="eLOAD_PAYEE_DISTRIBUTOR" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getDistributorData" arguments="{event.distributorId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setPayeeDistributorInfo" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PAYEE DISTRIBUTOR SERVICE (setPayeeDistributorInfo)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>		
+		
+		<!--GET Payee SEARCH ******** modify this event to get payee search ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PAYEE_SEARCH}" id="eLOAD_PAYEE_SEARCH" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showPayeeSearch" />
+		</EventHandlers>	
+		
+		
+		<!-- Distributor Section -->
+		<!--GET DISTRIBUTOR DATA ******** modify this event to get data from CF for a Distributor ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_DISTRIBUTOR}" id="eLOAD_DISTRIBUTOR" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getDistributorData" arguments="{event.distributorId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setDistributorInfo" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="DISTRIBUTOR SERVICE (setDistributorInfo)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET DISTRIBUTOR SEARCH ******** modify this event to get payee SEARCH ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_DISTRIBUTOR_SEARCH}" id="eLOAD_DISTRIBUTOR_SEARCH" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showDistributorSearch" />
+		</EventHandlers>
+		
+		<!--GET DISTRIBUTOR SELECTED ******** modify this event to get payee SEARCH ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_DISTRIBUTOR_SELECTED}" id="eLOAD_DISTRIBUTOR_SELECTED" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="setSelectedDistributorInfo" arguments="{event.distributorId}" />
+		</EventHandlers>
+		
+		
+		<!-- Operator Section -->		
+		<!--GET Operator DATA ******** modify this event to get data from CF for a Operator ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_OPERATOR}" id="eLOAD_OPERATOR" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getOperatorData" arguments="{event.operatorId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setOperatorInfo" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="OPERATOR SERVICE (setOperatorInfo)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET Operator SEARCH ******** modify this event to get payee SEARCH ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_OPERATOR_SEARCH}" id="eLOAD_OPERATOR_SEARCH" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showOperatorSearch" />
+		</EventHandlers>
+		
+		<!--EMAIL BILLBACK******************** -->
+		<EventHandlers type="{BBEditEvent.OPEN_EMAIL_PAGE}" id="eOPEN_EMAIL_PAGE" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="openEmailPage" />
+		</EventHandlers>
+		
+		<!--PRINT BILLBACK******************** -->
+		<EventHandlers type="{BBEditEvent.OPEN_PRINT_PAGE}" id="eOPEN_PRINT_PAGE" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="openPrintPage" />
+		</EventHandlers>
+		
+		<!--BILLBACK WORKFLOW******************** -->
+		<EventHandlers type="{BBEditEvent.BILLBACK_WORKFLOW}" id="eBILLBACK_WORKFLOW" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBillbackDetails" arguments="{[event.bbIdInt,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="openBBWorkflow" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BILLBACK DETAILS (getBillbackDetails)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>			
+		</EventHandlers>
+		
+		<!--BILLBACK STATEMENT******************** -->
+		<EventHandlers type="{BBEditEvent.OPEN_BB_STATEMENT}" id="eOPEN_BB_STATEMENT" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="openBBStatement" />
+		</EventHandlers>
+		
+		<!--BILLBACK DISCREPANCY******************** -->
+		<EventHandlers type="{BBEditEvent.SHOW_BB_DEVIATION_REPORT}" id="eSHOW_BB_DEVIATION_REPORT" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="openBBDiscrepancyReport" />
+		</EventHandlers>
+		
+		<!--SHOW BIZ CONSIDERATIONS******************** -->
+		<EventHandlers type="{BBEditEvent.SHOW_BIZ_CONSIDERATIONS}" id="eSHOW_BIZ_CONSIDERATIONS" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showBizCon" arguments="{event.bizConMode}" />
+		</EventHandlers>
+		
+		<!--SHOW HISTORY******************** -->
+		<EventHandlers type="{BBEditEvent.SHOW_HISTORY}" id="eSHOW_HISTORY" debug="{bDebug}">
+			<MethodInvoker generator="{BBEditManager}" method="showHistory" />
+		</EventHandlers>
+		
+		<!--SHOW ADJUST BIZ CONSIDERATIONS******************** -->
+		<EventHandlers type="{BBEditEvent.SHOW_ADJUST_BIZ_CONSIDERATIONS}" id="eSHOW_ADJUST_BIZ_CONSIDERATIONS" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showAdjustBizCon" />
+		</EventHandlers>
+		
+		<!--SHOW PROGRAM SUMMARY******************** -->
+		<EventHandlers type="{BBEditEvent.SHOW_PROGRAM_SUMMARY}" id="eSHOW_PROGRAM_SUMMARY" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showProgramSummary" arguments="{event.programId}"  />
+		</EventHandlers>
+		
+		<!--GET PRODUCT LIST ******** get all the products from item master ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_ITEM_LIST}" id="eLOAD_ITEM_LIST" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getProductList" >
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getProductList" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PRODUCTS SERVICE (getProductList)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET PRODUCT LIST SO ******** get all the products from item shared object ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_ITEM_LIST_SO}" id="eLOAD_ITEM_LIST_SO" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="loadSOitems" />
+		</EventHandlers>
+		
+		<!--GET PROGRAM RATES ******** get rates from the program ************ -->
+		<EventHandlers type="{BBEditEvent.GET_PROGRAM_RATES}" id="eGET_PROGRAM_RATES" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getProgramRates" arguments="{[event.billback.bbPrgDistItemRate,event.billback.bbComponent]}" >
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setProgramRates" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PROGRAM RATE SERVICE (getProgramRates)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET BILLBACK LOCK ******** modify this event to get lock data from cf for a billback ************ -->
+		<EventHandlers type="{BBEditEvent.LOCK_BB_EDIT}" id="eLOCK_BB_EDIT" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="lockUnlockBB" arguments="{[event.bbId, event.userId, event.lockIt,event.bbtoggle,event.bbUnlockExistingLockedByUser,event.bbClose]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getLockBB" arguments="{[resultObject,event.bbClose]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB LOCK SERVICE (checkBBLocked)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- DEDUCTIONS ******************** -->
+		<EventHandlers type="{BBEditEvent.LOAD_BB_DEDUCTIONS}" id="eLOAD_BB_DEDUCTIONS" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{DeductionService}" showBusyCursor="true" method="getDeductions" arguments="{event.bbDeductionFilterParms}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getDeductionsResults" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB EDIT SERVICE (getBillbackDeductions :: LOAD_BB_DEDUCTIONS)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- SETTLEMENT ******************** -->
+		<EventHandlers type="{BBEditEvent.LOAD_BB_CLOSING_DETAILS}" id="eLOAD_BB_CLOSING_DETAILS" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getClosingMethodDetails" arguments="{event.bbHeader}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getClosingMethodDetailsResults" arguments="{resultObject}"/>
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB MAIN SERVICE (geClosingMethodDetails :: LOAD_BB_CLOSING_DETAILS)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<EventHandlers type="{BBEditEvent.SAVE_SETTLEMENT}" id="eSAVE_SETTLEMENT" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{SettlementService}" showBusyCursor="true" method="approveBillbackSettlement" arguments="{[event.bbHeader,event.bbSettlementAction]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="saveSettlementResults" arguments="{resultObject}" />
+					<EventAnnouncer type="{BBMainEvent.UPDATE_SEARCH_BBHEADER}" generator="{BBMainEvent}" dispatcherType="global">
+						<Properties bbHeader="{resultObject}" />
+					</EventAnnouncer>
+				</resultHandlers>				
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB SETTLEMENT SERVICE (saveSettlement :: SAVE_SETTLEMENT)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<EventHandlers type="{BBEditEvent.LOCK_DEDUCTION}" id="eLOCK_DEDUCTION" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{SettlementService}" showBusyCursor="true" method="lockDeduction" arguments="{[event.arrDeduction,event.bLock]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBSettlementPModel}" method="applyDeductions" arguments="{[resultObject,event.bLock]}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB SETTLEMENT SERVICE (lock deduction :: LOCK_DEDUCTION)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--............... DOWNLOAD_FILE  Discrepancy report in settlement ............................................-->
+		<!--<EventHandlers type="{MainEvent.DOWNLOAD_FILE}" debug="{bDebug}" id="eDOWNLOAD_FILE" useWeakReference="true">
+		<MethodInvoker generator="{DownloadManager}" method="downloadFile" arguments="{event}" />
+		</EventHandlers>-->
+		
+		
+		<!--Load Closing Methods ******** modify this event to get closing Methods ************ -->	   
+		<EventHandlers type="{BBEditEvent.LOAD_BBEDIT_CLOSINGMETHODS}" id="eLOAD_BBEDIT_CLOSINGMETHODS" debug="{bDebug}" useWeakReference="true">
+			<!-- This is a hack to build the BBManager so when the  closingMethods dropdown; populates; edit manager exists -->
+			<ObjectBuilder generator="{BBEditManager}" constructorArguments="{scope.dispatcher}"  />
+			<MethodInvoker generator="{BBEditManager}" method="getClosingMethods" arguments="{event.closingMethodList}" />
+		</EventHandlers>
+		
+		<!--LOAD BB ANALYSTS ******************** -->	   
+		<EventHandlers type="{BBEditEvent.LOAD_BBEDIT_ANALYSTS}" id="eLOAD_BBEDIT_ANALYSTS" debug="{bDebug}" useWeakReference="true">
+			<!-- This is a hack to build the BBManager so when the  analysts dropdown; populates; edit manager exists -->
+			<ObjectBuilder generator="{BBEditManager}" constructorArguments="{scope.dispatcher}"  />
+			<MethodInvoker generator="{BBEditManager}" method="getBBAnalysts" arguments="{event.bbAnalysts}" />
+		</EventHandlers>
+		
+		<!--SET BB ANALYST ******************** -->	   
+		<EventHandlers type="{BBEditEvent.SET_BB_ANALYST}" id="eSET_BB_ANALYST" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBBAnalyst" arguments="{event.payee}" debug="{bDebug}" >
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setBBAnalyst" arguments="{resultObject}"  />
+				</resultHandlers>
+				
+				<faultHandlers>
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}">
+						<Properties sBaError="BILLBACK ANALYST (getBBAnalyst)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		
+		<!--............... SET_APP_SETTINGS ............................................-->
+		<EventHandlers type="{MainEvent.SET_LOCAL_APP_SETTINGS}" debug="{bDebug}" id="eSET_APP_SETTINGS" useWeakReference="true">
+			<MethodInvoker generator="{SettingsManager}" method="setLocalAppSettings" arguments="{event}" />
+		</EventHandlers>
+		
+		
+		<!--SAVE_CLOSING_DETAIL ******************** -->	   
+		<EventHandlers type="{BBEditEvent.SAVE_CLOSING_DETAIL}" id="eSAVE_CLOSING_DETAIL" debug="{bDebug}" useWeakReference="true">
+			
+			<MethodInvoker generator="{BBEditManager}" method="setBBClosingDetail" arguments="{event.bbClosingDetail}" />
+			<!--<MethodInvoker generator="{BBClosingDetailGridManager}" method="buildGridCols" arguments="{event.closingMethodList}" />-->
+		</EventHandlers>
+		
+		<!--............... DELETE_ROW Closing Method ............................................-->
+		<EventHandlers type="{MainEvent.DELETE_ROW}" debug="{bDebug}" id="eDELETE_ROW" useWeakReference="true">
+			<MethodInvoker generator="{BBSettlementPModel}" method="callTallyFromDelete" arguments="{event}" />
+		</EventHandlers>
+		
+		<!--............... CLEAR_ROW Closing Method ............................................-->
+		<EventHandlers type="{MainEvent.CLEAR_ROW}" debug="{bDebug}" id="eCLEAR_ROW" useWeakReference="true">
+			<MethodInvoker generator="{BBSettlementPModel}" method="clearRow" arguments="{event}" />
+		</EventHandlers>
+		
+		<EventHandlers type="{BBEditEvent.GET_DUPLICATE_BILLBACK}" id="eGET_DUPLICATE_BILLBACK" useWeakReference="true" debug="{bDebug}" >
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getDuplicateBillbacks" arguments="{[event.bbHeader.billbackIDInt,event.bbHeader.BBNumber,event.vendorId]}" debug="{bDebug}" >
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getBillbackDuplicate" arguments="{resultObject}"  />
+				</resultHandlers>
+				
+				<faultHandlers>
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}">
+						<Properties sBaError="DUPLICATE BILLBACK SERVICE (get duplicate billbacks event = GET_DUPLICATE_BILLBACK)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- COPY_BILLBACK *************************************************************************** --> 
+		<EventHandlers type="{BBEditEvent.COPY_BILLBACK}" id="eCOPY_BILLBACK" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainEditService}" showBusyCursor="true" method="copyBillback" arguments="{[event.bbIdInt,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="copyBillbackHandler" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB COPY BILLBACK" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- REVERSE_BILLBACK *************************************************************************** --> 
+		<EventHandlers type="{BBEditEvent.REVERSE_BILLBACK}" id="eREVERSE_BILLBACK" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="reverseBillback" arguments="{[event.bbIdInt,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getBillbackResults" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB REVERSE BILLBACK" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- BILLBACK_RESET *************************************************************************** --> 
+		<EventHandlers type="{BBEditEvent.BILLBACK_RESET}" id="eBILLBACK_RESET" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method = "bbReset" />
+		</EventHandlers>
+		
+		<!-- BILLBACK_SUMBY *************************************************************************** --> 
+		<EventHandlers type="{BBEditEvent.BILLBACK_SUMBY}" id="eBILLBACK_SUMBY" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method = "bbSumBy" />
+		</EventHandlers>
+		
+		<!-- BILLBACK_DELETE *************************************************************************** --> 
+		<EventHandlers type="{BBEditEvent.BB_DELETE}" id="eBILLBACKDELETE" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="checkBBEligibleForDelete" arguments="{[event.userId,event.bbIdInt]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method = "closeonDelete" arguments="{[resultObject]}" />
+					<EventAnnouncer type="{BBMainEvent.DELETE_SEARCH_BBHEADER}" generator="{BBMainEvent}" dispatcherType="global">
+						<Properties bbHeader="{resultObject.BBHEADER}" />
+					</EventAnnouncer>
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB DELETE ERROR EDIT BB" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- BILLBACK_REINTERFACE *************************************************************************** --> 
+		<EventHandlers type="{BBEditEvent.BILLBACK_REINTERFACE}" id="eBILLBACK_REINTERFACE" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="setBBForReinterface" arguments="{event.bbIdInt}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setBBForReinterfaceResult" arguments="{resultObject}" />
+					<EventAnnouncer type="{BBMainEvent.UPDATE_SEARCH_BBHEADER}" generator="{BBMainEvent}" dispatcherType="global">
+						<Properties bbHeader="{resultObject}" />
+					</EventAnnouncer>
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BILLBACK_REINTERFACE" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!-- GET DOCUMENT ATTACHMENTS *************************************************************************** --> 
+		<EventHandlers type="{BBEditEvent.GET_DOCUMENTS}" id="eGET_DOCUMENTS" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBillbackAttachmentList" arguments="{[event.bbIdInt,event.userId]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="BBAttachmentHandler" arguments="{resultObject}" />
+				</resultHandlers>
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB GET ATTACHED DOCUMENTS" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET PRODUCT SEARCH ******** modify this event to get PRODUCT SEARCH ************ -->
+		<EventHandlers type="{BBEditEvent.GET_PRODUCT_SEARCH}" id="eGET_PRODUCT_SEARCH" debug="true" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="showProductSearch" />
+		</EventHandlers>
+		
+		<!--GET PRODUCT DATA ******** get products from the product search ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PRODUCTS}" id="eLOAD_PRODUCTS" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getProductData" arguments="{event.lProducts}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getProductData" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PRODUCTS SERVICE (getProductData)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--VALIDATE MASS UPDATE **************************************************** -->
+		<EventHandlers type="{MainEvent.VALIDATE_MASS_UPDATE}" id="eVALIDATE_MASS_UPDATE" debug="{bDebug}" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="validateMassUpdate" arguments="{event}" />
+		</EventHandlers>
+		
+		<!--GET BILLBACK LOCK ******** modify this event to get lock data from cf for a billback ************ -->
+		<EventHandlers type="{BBEditEvent.GET_LOCK_BB_EDIT}" id="eGET_LOCK_BB_EDIT" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getLockUnlockBB" arguments="{[event.bbId,event.bbUnlockExistingLockedByUser]}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="getLockBB" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BB LOCK SERVICE (checkBBLocked)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--SET GRID LOCK ******** modify this event to get PRODUCT SEARCH ************ -->
+		<EventHandlers type="{BBEditEvent.SET_GRID_LOCK_UNLOCK}" id="eSET_GRID_LOCK_UNLOCK" debug="true" useWeakReference="true">
+			<MethodInvoker generator="{BBEditItemsGridManager}" method="setGridLockUnlock" />
+		</EventHandlers>		
+		
+		<!--UNLOCK_OTHER_LOCKED_USER ******** modify this event to unlock all existing billbacks locked by a user (except the one requested lock on) ************ -->
+		<EventHandlers type="{BBEditEvent.UNLOCK_OTHER_LOCKED_USER}" id="eUNLOCK_OTHER_LOCKED_USER" debug="true" useWeakReference="true">
+			<MethodInvoker generator="{BBEditManager}" method="unlockOtherLockedUser" arguments="{event.bbHeader}" />
+		</EventHandlers>
+		
+		<!--GET BILL TO LIST ******** modify this event to get data from CF for a bill to list ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_BILL_TO_LIST}" id="eLOAD_BILL_TO_LIST" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getBillToData" arguments="{event.distributorId}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setBillToList" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="BILL TO SERVICE (setBillToList)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET UPDATED BB HEADER ******** Get updated bbheader data ************ -->
+		<EventHandlers type="{BBEditEvent.GET_UPDATED_BB_HEADER}" id="eGET_UPDATED_BB_HEADER" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getBBHeader" arguments="{event.bbIdInt}">
+				<resultHandlers>
+					<!-- When the edit page gets the updated bb header, update the search bbheader -->
+					<EventAnnouncer type="{BBMainEvent.UPDATE_SEARCH_BBHEADER}" generator="{BBMainEvent}" dispatcherType="global">
+						<Properties bbHeader="{resultObject}" />
+					</EventAnnouncer>
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="UPDATE BB HEADER (FROM BB EDIT)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		
+		<!--GET PROGRAM PRODUCT LIST ******** Get program product list ************ -->
+		<EventHandlers type="{BBEditEvent.LOAD_PROGRAM_PRODUCT_LIST}" id="eLOAD_PROGRAM_PRODUCT_LIST" debug="{bDebug}" useWeakReference="true">
+			<RemoteObjectInvoker instance="{EditSearchService}" showBusyCursor="true" method="getProgramProductList" arguments="{event.bbIdInt}">
+				<resultHandlers>
+					<MethodInvoker generator="{BBEditManager}" method="setProgramProductList" arguments="{resultObject}" />
+				</resultHandlers>	
+				<faultHandlers>	
+					<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}" >
+						<Properties sBaError="PROGRAM PRODUCT LIST SERVICE (setProgramProductList)" />
+						<Properties oBaError="{fault}" />
+					</EventAnnouncer>
+				</faultHandlers>
+			</RemoteObjectInvoker>
+		</EventHandlers>
+		<!-- ************************************************
+		ADD NEW EventHandlers Here   *******************
+		************************************************-->
+		
+		<!--<EventHandlers type="{BBEditEvent.BB_LOAD_APP_SETTINGS}" useWeakReference="true" debug="{bDebug}" >
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" debug="{bDebug}" >
+		
+		<resultHandlers>
+		<MethodInvoker generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}"  />
+		</resultHandlers>
+		
+		<faultHandlers>
+		
+		<EventAnnouncer type="{BBEditEvent.BSA_ERROR}" generator="{BBEditEvent}">
+		<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+		<Properties oBaError="{fault}" />
+		</EventAnnouncer>
+		</faultHandlers>
+		</RemoteObjectInvoker>
+		</EventHandlers>-->
+		
+		<!--SET STATE FOR SEARCH ITEMS *************************************************************************** -->
+		
+		
+		
+		<!--	*****************************************************************************************
+		***		BSA CUSTOM ERROR HANDLER 		*************************************************
+		***************************************************************************************** -->
+		
+		<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.ContractProds.models.BAError#showBAError()
+		** Invoke : com.ContractProds.models.BAError.showBAError()		
+		*			@see #roErrorService
+		** RemoteInvoke : roErrorService.logError()
+		*		@see com.ContractProds.models.BAError#logError() 
+		** faultHandler : com.ContractProds.models.BAError.showBAError()   -->
+		<EventHandlers type="{BBEditEvent.BSA_ERROR}" useWeakReference="true">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="local">
+				<Properties BAErrorString="{event.sBaError}" />
+			</MethodInvoker>
+			<!--log error on server-->	
+			<!--<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+			<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+			</MethodInvoker>
+			</faultHandlers>
+			</RemoteObjectInvoker>-->
+		</EventHandlers>
+		
+		<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+		<EventHandlers type="{UnhandledFaultEvent.FAULT}" useWeakReference="true">
+			<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="local" >
+				<Properties BAErrorString="UNHANDLED" />
+			</MethodInvoker>
+			
+			<!--<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>-->
+		</EventHandlers>
+		
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--........................................................................... INJECTORS ............................................................................-->
+		<!--..................................................................................................................................................................-->
+		<!--..................................................................................................................................................................-->
+		
+		<!-- BBEditManager ....................................................... -->
+		<Injectors target="{BBEditManager}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="{bSoftBinding}"/>
+			<!--<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings.sBBDeviationSource"  softBinding="{bSoftBinding}"/>-->
+		</Injectors>
+		
+		<!-- BBClosingDetailGridManager ....................................................... -->
+		<Injectors target="{BBClosingDetailGridManager}" debug="{bDebug}">
+			<PropertyInjector targetKey="arrClosingMethod" source="{BBEditManager}" sourceKey="closingMethodList"  softBinding="{bSoftBinding}" />
+		</Injectors>
+		
+		<!-- BBEditItemsGridManager ....................................................... -->
+		<Injectors target="{BBEditItemsGridManager}" debug="{bDebug}">
+			<PropertyInjector targetKey="objBBToolsLock" source="{BBEditManager}" sourceKey="objBBToolsLock"  softBinding="{bSoftBinding}" />
+		</Injectors>
+		
+		<!-- BBEditPModel ....................................................... -->
+		<Injectors target="{BBEditPModel}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="closingMethodList" source="{BBEditManager}" sourceKey="closingMethodList"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="billback" source="{BBEditManager}" sourceKey="billback"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="BBLock" source="{BBEditManager}" sourceKey="BBLock"  softBinding="{bSoftBinding}"  />
+			<PropertyInjector targetKey="selectedProgram" source="{BBEditManager}" sourceKey="selectedProgram"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="selectedVendor" source="{BBEditManager}" sourceKey="selectedVendor"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="selectedPayee" source="{BBEditManager}" sourceKey="selectedPayee"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="selectedDistributor" source="{BBEditManager}" sourceKey="selectedDistributor"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="selectedOperator" source="{BBEditManager}" sourceKey="selectedOperator"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acPayee" source="{BBEditManager}" sourceKey="acPayee"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acProgram" source="{BBEditManager}" sourceKey="acProgram"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acDistributor" source="{BBEditManager}" sourceKey="acDistributor"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acComponent" source="{BBEditManager}" sourceKey="acComponent"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acMenuData" source="{BBEditManager}" sourceKey="acMenuData"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="modifyMenu" source="{BBEditManager}" sourceKey="modifyMenu"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="billbackHeaderDetail" source="{BBEditManager}" sourceKey="billbackHeaderDetail"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acBBAnalysts" source="{BBEditManager}" sourceKey="acBBAnalysts"  softBinding="{bSoftBinding}" />
+			<!-- <PropertyInjector targetKey="reDirector" source="{BBEditManager}" sourceKey="reDirector"  softBinding="{bSoftBinding}" /> -->
+			<PropertyInjector targetKey="objBBToolsLock" source="{BBEditManager}" sourceKey="objBBToolsLock"  softBinding="{bSoftBinding}" />
+			<!--<PropertyInjector targetKey="acOperator" source="{BBEditManager}" sourceKey="acOperator"  softBinding="{bSoftBinding}" />-->
+			<PropertyInjector targetKey="panelHeight" source="{BBEditManager}" sourceKey="panelHeight"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acProgramProduct" source="{BBEditManager}" sourceKey="acProgramProduct"  softBinding="{bSoftBinding}" />
+		</Injectors>
+		
+		<!-- BBEditItemsPModel ....................................................... -->
+		
+		<Injectors target="{BBEditItemsPModel}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="billback" source="{BBEditManager}" sourceKey="billback"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="arrBBEditItemsDgCols" source="{BBEditItemsGridManager}" sourceKey="arrBBEditItemsDgCols"  softBinding="{bSoftBinding}" />		
+			<PropertyInjector targetKey="selectedProgram" source="{BBEditManager}" sourceKey="selectedProgram"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="selectedDistributor" source="{BBEditManager}" sourceKey="selectedDistributor"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="bbPrgDistItemRate" source="{BBEditManager}" sourceKey="bbPrgDistItemRate"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acProducts" source="{BBEditManager}" sourceKey="acProducts"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acComponent" source="{BBEditManager}" sourceKey="acComponent"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="uomDp" source="{BBEditManager}" sourceKey="uomDp"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="bbCompExists" source="{BBEditManager}" sourceKey="bbCompExists"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="objBBToolsLock" source="{BBEditManager}" sourceKey="objBBToolsLock"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acProgram" source="{BBEditManager}" sourceKey="acProgram"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acProgramProduct" source="{BBEditManager}" sourceKey="acProgramProduct"  softBinding="{bSoftBinding}" />
+		</Injectors>
+		
+		<!-- BBSettlementPModel ....................................................... -->
+		<Injectors target="{BBSettlementPModel}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="billback" source="{BBEditManager}" sourceKey="billback"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="closingMethodList" source="{BBEditManager}" sourceKey="closingMethodList"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="arrBBClosingDetailDgCols" source="{BBClosingDetailGridManager}" sourceKey="arrBBClosingDetailDgCols"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="arrBBDeductionDgCols" source="{BBClosingDetailGridManager}" sourceKey="arrBBDeductionDgCols"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acBBDeductions" source="{BBEditManager}" sourceKey="acBBDeductions"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acBBClosingDetail" source="{BBEditManager}" sourceKey="acBBClosingDetail"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="objBBToolsLock" source="{BBEditManager}" sourceKey="objBBToolsLock"  softBinding="{bSoftBinding}" />
+			<PropertyInjector targetKey="acBillTo" source="{BBEditManager}" sourceKey="acBillTo"  softBinding="{bSoftBinding}" />
+		</Injectors>
+		
+		<!-- BBEdit ....................................................... -->
+		<Injectors target="{BBEdit}" debug="{bDebug}">
+			<PropertyInjector targetKey="pModel" source="{BBSettlementPModel}" softBinding="{bSoftBinding}"/>
+			<PropertyInjector targetKey="pModelItems" source="{BBEditItemsPModel}" softBinding="{bSoftBinding}"/>
+			<ListenerInjector eventType="{BBEditEvent.SELECT_TAB}" method="setSelectedTabEvent" useWeakReference="true" />
+		</Injectors>
+		
+		<!-- BBHeaderForm ....................................................... -->
+		<Injectors target="{BBHeaderForm}" debug="{bDebug}">
+			<PropertyInjector targetKey="pModel" source="{BBEditPModel}" softBinding="{bSoftBinding}"/>
+			<PropertyInjector targetKey="pModelEditItems" source="{BBEditItemsPModel}" softBinding="{bSoftBinding}"/>
+			<!-- Put focus In BBHeaderForm.tiVendor Input Box -->
+			<ListenerInjector eventType="{BBEditEvent.SET_FOCUS_VENDOR_INPUT}" method="setFocusTiVendor" useWeakReference="true" />
+			<PropertyInjector targetKey="objBBToolsLock" source="{BBEditManager}" sourceKey="objBBToolsLock"  softBinding="{bSoftBinding}" />
+		</Injectors>
+		
+		<!-- BBEditItemsGrid ....................................................... -->
+		<Injectors target="{BBEditItemsGrid}" debug="{bDebug}">
+			<PropertyInjector targetKey="pModel" source="{BBEditItemsPModel}" softBinding="{bSoftBinding}"/>
+			<ListenerInjector eventType="{MainEvent.FOCUS_ROW}" method="focusRow" useWeakReference="true" />
+		</Injectors>
+		
+		<!-- BBSettlement ....................................................... -->
+		<Injectors target="{BBSettlementView}" debug="{bDebug}">
+			<PropertyInjector targetKey="pModel" source="{BBSettlementPModel}" softBinding="{bSoftBinding}"/>
+		</Injectors>
+		
+		<!-- BBEditItemsGridManager ....................................................... -->
+		<Injectors target="{BBEditItemsGridManager}" debug="{bDebug}">
+			<PropertyInjector targetKey="oSettings" source="{SettingsManager}" sourceKey="settings"  softBinding="{bSoftBinding}" />
+		</Injectors>	
+		
+	</fx:Declarations>
+</LocalEventMap>

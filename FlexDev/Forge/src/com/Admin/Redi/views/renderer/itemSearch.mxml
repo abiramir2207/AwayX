@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXAdvancedDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+								  xmlns:s="library://ns.adobe.com/flex/spark" 
+								  xmlns:mx="library://ns.adobe.com/flex/mx" 
+								  focusEnabled="true" height="300" width="350"
+								  implements="mx.managers.IFocusManagerComponent">
+	<s:layout >
+		<s:VerticalLayout paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" />
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.events.RediEvent;
+			import com.Admin.Redi.models.vos.RediCorrectionDetail;
+			import com.Admin.Redi.models.vos.RediCorrectionHeader;
+			import com.shared.components.filters.FilterAdvancedDatagrid;
+			import com.shared.vos.Item;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.controls.AdvancedDataGrid;
+			import mx.events.CollectionEvent;
+			import mx.events.CollectionEventKind;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			/*[Bindable]
+			public var retVal:String = '';*/
+			
+			/*.................retVal.....................*/
+			private var _retVal:String = '';
+			[Bindable (event="retValChanged")]
+			public function get retVal():String
+			{
+				return _retVal;
+			}
+			public function set retVal(s:String):void
+			{			
+				this._retVal = s;
+				dispatchEvent(new Event('retValChanged'));	
+			}
+			
+			override public function set data(d:Object):void
+			{
+				if(d){
+					super.data = d;
+					retVal = d['item'];
+					var x:RediCorrectionDetail;
+					this.cbItems.textInput.text = d['item'];
+					trace('set data: ' + d['item']);
+					if(retVal != ''){
+						lookupItems(retVal);
+					}
+				}
+			}
+			
+			override public function drawFocus(isFocused:Boolean):void{
+				this.cbItems.setFocus();
+			}
+			override public function setFocus():void {
+				this.cbItems.setFocus();
+			}
+					
+			private function listLabelFunc(o:Object):String{
+				var s:String = '';
+				var i:Item = o as Item
+				if(i){
+					s = i.baItem.toString() + ' ' + i.Description;
+				}
+				
+				return s;
+			}
+			
+			protected function lsItems_changeHandler(event:IndexChangeEvent):void
+			{
+				var i:Item = this.cbItems.selectedItem as Item;
+				if(i){
+					retVal = i.baItem;
+					data['item'] = i.baItem;
+					data['itemDesc'] = i.Description;
+					trace('change: ' + retVal);
+				}
+			}
+			protected function tiItem_changeHandler(event:TextEvent):void
+			{
+				var s:String = cbItems.textInput.text;
+				trace('tiText: ' + s);
+				if(s.length > 15){
+					trace('tiText2: ' + s);
+				}
+				else{
+					trace('tiText3: ' + s);
+					lookupItems(s);
+				}
+				
+			}
+			
+			protected function cbItems_pasteHandler(event:Event):void
+			{
+				retVal = cbItems.textInput.text;
+				trace('paste: ' + retVal);
+				lookupItems(retVal);
+	
+			}
+			
+			protected function cbItems_caretChangeHandler(event:IndexChangeEvent):void
+			{
+				var i:Item = this.parentDocument.pModel.arrItemSearch[event.newIndex] as Item;
+				trace('caret : ' + this.cbItems.caretIndex.toString() + ' ::old  ' + event.oldIndex +  ' ::new  ' + event.newIndex);
+				if(i && (event.newIndex > -1)){
+					trace('caret upd:  ' + i.baItem);
+					//retVal = i.baItem;
+					//data['item'] = i.baItem;
+					this.cbItems.selectedItem = i;
+				}
+				
+			}
+			
+			protected function cbItems_valueCommitHandler(event:FlexEvent):void
+			{
+				var i:Item = this.cbItems.selectedItem as Item;
+				trace('Val Commit ');
+				if(this.parentDocument.pModel.lock.bEditMode){
+					if(i){
+						trace('Val Commit: ' + i.baItem + ' :: ' + cbItems.textInput.text);	
+						retVal = i.baItem;
+						data['item'] = i.baItem;
+						data['itemDesc'] = i.Description;
+					}
+					else{
+						trace('Val Commit: ' + ' text: ' + ' :: ' + cbItems.textInput.text);
+						//prevent the item description from getting saved as the Item...some timing issue? Hack Fix!
+						//descriptions have spaces so don't save if spaces
+						if(cbItems.textInput.text.indexOf(' ') < 0){
+							retVal = cbItems.textInput.text;
+							data['item'] = cbItems.textInput.text;
+							var a:ArrayList = cbItems.dataProvider as ArrayList;
+							if(a.source.length && a.source.length == 1 && a.source[0].baItem ==  cbItems.textInput.text){
+								data['itemDesc'] = a.source[0].Description;
+							}
+							
+						}
+						
+					}
+					super.data = data;
+					var dg:FilterAdvancedDatagrid = this.listData.owner as FilterAdvancedDatagrid;
+					var ac:ArrayCollection = dg.dataProvider as ArrayCollection;
+					var colEvent:CollectionEvent = new CollectionEvent(CollectionEvent.COLLECTION_CHANGE,true,false, CollectionEventKind.UPDATE);
+					colEvent.items = [data];
+					colEvent.location =  dg.selectedIndex;
+					ac.dispatchEvent(colEvent);
+				}
+			}
+			
+			private function lookupItems(s:String):void{
+				if(this.parentDocument.pModel.lock.bEditMode){
+					trace('Look Up Items: ' + s);
+					var evt:RediEvent = new RediEvent(RediEvent.LOOKUP_ITEMS);
+					evt.sItem = s;
+					this.dispatchEvent(evt);
+				}	
+			}
+			
+		]]>
+	</fx:Script>
+	<!--<s:VGroup height="300" width="450">-->
+		<!--<s:Label id="lblData" top="0" left="0" right="0" bottom="0" text="{data['item']}" />-->
+		<!--<s:TextInput id="tiItem" 
+					 text="{data['item']}" 
+					 change="tiItem_changeHandler(event)" />-->
+	
+		<s:ComboBox dataProvider="{new ArrayList(this.parentDocument.pModel.arrItemSearch)}"  
+					labelFunction="listLabelFunc"
+					change="lsItems_changeHandler(event)"
+					textInput="tiItem_changeHandler(event)" 
+					doubleClickEnabled="true"
+					tabEnabled="true" 
+					width="100%" 
+					id="cbItems"
+					paste="cbItems_pasteHandler(event)" 
+					caretChange="cbItems_caretChangeHandler(event)" 
+					enabled="{this.parentDocument.pModel.lock.bEditMode}"
+					skinClass="com.Admin.Redi.views.renderer.baComboBoxSkin"
+					valueCommit="cbItems_valueCommitHandler(event)"/>
+	
+	<!--	
+			
+	<s:List id="lsItems" dataProvider="{new ArrayList(this.parentDocument.pModel.arrItemSearch)}" 
+				height="250" 
+				width="350" 
+				labelFunction="listLabelFunc" 
+				change="lsItems_changeHandler(event)" 
+				doubleClickEnabled="true" 
+				doubleClick="lsItems_doubleClickHandler(event)" tabEnabled="true" > </s:List> -->
+			
+		
+	<!--</s:VGroup>-->
+</s:MXAdvancedDataGridItemRenderer>

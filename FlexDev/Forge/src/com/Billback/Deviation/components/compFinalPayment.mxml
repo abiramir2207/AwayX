@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for calculating and displaying the column Final Payment in the DataGrid
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="right" verticalAlign="middle">
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.external.ExternalInterface
+			import com.Billback.Deviation.asfusion.mate.events.Dispatcher;
+			import mx.events.CloseEvent;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+		]]>
+</mx:Script>
+	<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml" textAlign="right"
+		text="{parentDocument.fnFormatDollars2(getSource(data.Selected_Rate_Type,data.Selected_Vol_Type,
+		data.E_Rate,data.Claimed_Rate,data.E_Volume,data.Claimed_Volume,data.BB_Product_Type_ID,data.Selected_Invoice_Price_Type,
+		data.Expected_Invoice_Price,data.Claim_Invoice_Price,data.Manual_Invoice_Price,data.Selected_Program_Price_Type,data.Expected_Program_Price,
+		data.Claimed_Program_Price,data.Editable_Rate))}" >
+				   
+			<mx:Script>
+				<![CDATA[
+					[Bindable] public var imgHolder:String;
+				  private function getSource(compSelected_Rate_Type:String,compSelected_Vol_Type:String,compE_Rate:Number,
+				  													 compClaimed_Rate:Number,compE_Volume:Number,compClaimed_Volume:Number,compBB_Product_Type_ID:Number,
+				  													 compSelected_Invoice_Price_Type:Number,compExpected_Invoice_Price:Number,
+				  													 compClaim_Invoice_Price:Number,compManual_Invoice_Price:Number,compSelected_Program_Price_Type:Number,
+																		 compExpected_Program_Price:Number,compClaimed_Program_Price:Number,compEditable_Rate:Number):String
+					{
+						var nSelRate:Number;
+						var nSelVolume:Number;
+						var nSelInvoicePrice:Number;
+						var nSelProgramPrice:Number;
+						var txtFinalPayment:Number;
+						var bExecNextIf:Number = 1;
+						var nCompTotalApproved:Number = 0;
+ 				 
+						if(compSelected_Vol_Type=="2")
+						{
+							nSelVolume = compE_Volume;
+						} 
+						else
+						{ 
+							// Volume type is claimed
+							nSelVolume = compClaimed_Volume;
+						}
+						
+			 			if (compBB_Product_Type_ID == 1 && compEditable_Rate == 0)
+						{
+							if(((compSelected_Invoice_Price_Type ==1) || (compSelected_Invoice_Price_Type ==2) || 
+								(compSelected_Invoice_Price_Type ==3)) && ((compSelected_Program_Price_Type == 1) || (compSelected_Program_Price_Type ==2)))
+								{
+									if (compSelected_Invoice_Price_Type ==1)
+									{
+										nSelInvoicePrice = compClaim_Invoice_Price;
+									}
+									else if(compSelected_Invoice_Price_Type == 2)
+									{
+										nSelInvoicePrice = compExpected_Invoice_Price;
+									}
+									else if (compSelected_Invoice_Price_Type == 3)
+									{
+										nSelInvoicePrice = compManual_Invoice_Price;
+									}
+									
+									if (compSelected_Program_Price_Type == 2)
+									{
+										nSelProgramPrice = compExpected_Program_Price;
+									}
+									else if (compSelected_Program_Price_Type == 1)
+									{
+										nSelProgramPrice = compClaimed_Program_Price;
+									}
+									
+									txtFinalPayment = (nSelInvoicePrice - nSelProgramPrice) * nSelVolume;
+									bExecNextIf = 0;
+								}
+						}   
+					  /* 
+					  	if the bExecNextIf is set to 0 then this won't get executed and the
+					  	txtFinalPayment value set in the earlier if will be returned
+					  	back to the datagrid
+					  */ 
+					  
+						if (bExecNextIf == 1)
+						{
+							// if(compExpected_Rate_Selected=="YES" || compExpected_Rate_Selected=="1" || compExpected_Rate_Selected=="true")
+							if(compSelected_Rate_Type == "2")
+							{
+								nSelRate = compE_Rate;
+							} 
+							else
+							{
+								nSelRate = compClaimed_Rate;
+							}
+							txtFinalPayment = nSelRate * nSelVolume;
+						}	
+					/* 
+						Encountered an issue where 
+					*/
+					if (parentDocument.nInitialLoadDone == 0)
+					{ 
+						if (parentDocument.nTotalInitialzed != 1)
+						{
+							parentDocument.nTotalApproved += txtFinalPayment;
+						}
+						else
+						{
+							parentDocument.nInitialLoadDone = 1;
+						}
+						parentDocument.nTotalInitialzed += 1;
+					}
+					else
+					{
+						parentDocument.nTotalApproved += txtFinalPayment;
+					}
+		  		data.Final_Payment = txtFinalPayment;
+						return txtFinalPayment.toString();
+						}  
+ 				]]>
+			</mx:Script>
+		 
+	</mx:Label>
+</mx:HBox> 			
+
+ 

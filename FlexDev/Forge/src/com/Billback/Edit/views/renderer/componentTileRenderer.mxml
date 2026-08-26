@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true" toolTip="{data.name} {(data.type == 3) ? '- ' + data.compDescription + '  ' + StringUtils.getDollarDec3(data.compRate) : ''} [{data.programNumber}]"
+				>
+	<fx:Declarations>
+		<s:NumberFormatter id="amountNumberFormat"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Edit.events.BBEditEvent;
+			import com.shared.components.StringUtils;
+			import com.shared.events.MainEvent;
+			import com.shared.vos.Component;
+			
+			import mx.controls.Alert;
+			
+			/* The default value should be "true", so that for new billbacks,
+			(billbacks for which record has not been saved), the components
+			are editable, i.e. can be selected.
+			*/
+			[Bindable] public var bEnabled:Boolean = true;
+		
+
+			protected function compUpdate():void
+			{
+				var evt:MainEvent = new MainEvent(MainEvent.COMPONENT_UPDATE);
+				var strAmt:String = this.tiAmt.text;
+				this.data.isSelected = this.chbComp.selected;
+				strAmt = strAmt.replace('\,','');
+				if(isNaN(parseFloat(strAmt)) || !this.chbComp.selected ){
+					this.tiAmt.text = '0'; 
+				}
+				this.data.amount = parseFloat(strAmt);
+				evt.component = this.data as Component;
+				this.dispatchEvent(evt);	
+			}
+
+			protected function programSummary():void
+			{
+				var e:BBEditEvent = new BBEditEvent(BBEditEvent.SHOW_PROGRAM_SUMMARY);
+				e.programId = this.data.programId;
+				this.dispatchEvent(e);
+			}
+			
+		]]>
+	</fx:Script>
+		
+	
+	<s:layout>
+		<s:HorizontalLayout horizontalAlign="left" verticalAlign="baseline"   />
+	</s:layout>
+	
+	<s:CheckBox id="chbComp" selected="{data.isSelected}" change="compUpdate()" enabled="{bEnabled}"  />
+	<s:Label id="lCompName" width="{data.name.lenght + data.paidTo.description.length + data.programNumber.length}"
+			 text="{data.name} [{data.paidTo.description}] [{data.programNumber}]" 
+			 click="programSummary()"
+			 useHandCursor="true" 
+			 mouseChildren="false" 
+			 buttonMode="true"
+			 toolTip="{data.name} {(data.type == 3) ? '- ' + data.compDescription + '  ' + StringUtils.getDollarDec3(data.compRate) : ''} [{data.paidTo.description}] [{data.programNumber}]" 
+			 />
+	
+	<s:TextInput id="tiAmt" visible="{(data.type == 3) ? true : false}" text="{amountNumberFormat.format(data.amount)}"  focusOut="compUpdate()" enabled="{bEnabled}" />
+	
+</s:ItemRenderer>

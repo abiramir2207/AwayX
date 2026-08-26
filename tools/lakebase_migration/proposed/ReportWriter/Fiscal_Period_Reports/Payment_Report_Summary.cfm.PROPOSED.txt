@@ -1,0 +1,108 @@
+===== QUERY: DeletePrior =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: dataforPaymentReportSummary =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordataforPaymentReportSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_mapping_table")>
+<cfif useLakebaseFordataforPaymentReportSummary>
+	<cftry>
+		<cfset dataforPaymentReportSummary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_mapping_table", {
+				"fp_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fp_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"select" = "legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,invoice_detail_id,item_number,buying_group,upc"
+			}), "legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,invoice_detail_id,item_number,buying_group,upc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordataforPaymentReportSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordataforPaymentReportSummary>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDistributorProgramSum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetBGProgramSum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetCorpProgramSum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: InsertValue =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetAllPaymentvalues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetAllPaymentvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_payment_report_summary")>
+<cfif useLakebaseForGetAllPaymentvalues>
+	<cftry>
+		<cfset GetAllPaymentvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_payment_report_summary", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllPaymentvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllPaymentvalues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetSumofBillbacks =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSumofBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_table")>
+<cfif useLakebaseForGetSumofBillbacks>
+	<cftry>
+		<cfset GetSumofBillbacks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_billback_table", {
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"select" = "legacy_ship_to,shared_ship_to,qbrand_id,item_number"
+			}), "legacy_ship_to,shared_ship_to,qbrand_id,item_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSumofBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSumofBillbacks>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDistributor =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetBuyingGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: InsertBBs =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: WriteReport =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForWriteReport = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_payment_report_summary")>
+<cfif useLakebaseForWriteReport>
+	<cftry>
+		<cfset WriteReport = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_payment_report_summary", {
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"select" = "fiscal_period_end_date,fiscal_period_start_date,legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,total_bg_dollars,total_dist_dollars,total_corp_dollars,record_type,item_number,upc,buying_group"
+			}), "fiscal_period_end_date,fiscal_period_start_date,legacy_ship_to,shared_ship_to,shared_invoice_number,invoice_line_number,qbrand_id,total_bg_dollars,total_dist_dollars,total_corp_dollars,record_type,item_number,upc,buying_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForWriteReport = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForWriteReport>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

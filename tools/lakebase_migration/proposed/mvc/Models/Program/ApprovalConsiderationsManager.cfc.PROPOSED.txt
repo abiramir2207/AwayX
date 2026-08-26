@@ -1,0 +1,26 @@
+===== QUERY: local.query =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_query = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("approval_considerations")>
+<cfif useLakebaseForlocal_query>
+	<cftry>
+		<cfset local.query = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("approval_considerations", {
+				"deleted" = "eq.0",
+				"display_on_whatif_generic" = "eq.1",
+				"order" = "approval_considerations_name.asc",
+				"select" = "approval_considerations_text"
+			}), "approval_considerations_text"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_query = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_query>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetApprovalConsiderations =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

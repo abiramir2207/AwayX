@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- components\chBoxIsSelected.mxml -->
+<!--- 
+This is the check box displayed in the datagrid itemrenderer (row level) that a user selects the row with
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" backgroundAlpha="0" backgroundColor="white" 
+		horizontalAlign="center" width="3">
+    <mx:Script>
+        <![CDATA[
+            [Bindable]
+            public var varCbSelected:Boolean;            
+        ]]>
+    </mx:Script>
+   
+    <mx:CheckBox id="cbIsSelected" 
+        height="100%" width="50%" 
+        selected="{data.isSelected}" 
+        click="varCbSelected=cbIsSelected.selected" />
+</mx:VBox>
+  

@@ -1,0 +1,95 @@
+/*
+<SCRIPT SRC="/Script/javascript/string_validations.js"></SCRIPT>
+checkEmail(email);
+*/
+
+function Valid_Key_On_Email_Object()
+{
+	var returnValue = false;
+	var charVal = String.fromCharCode(event.keyCode);
+	
+	if(/[A-Za-z0-9-_'@\. ,;]/.test(charVal))
+	{
+    	returnValue = true;
+	}
+	
+	return returnValue;
+}
+
+function replaceInvalidEmailCharsAndValidate(Email_Obj)
+{
+	//get email address string
+	var sEmail_Address 	= Email_Obj.value;
+	//replace trailing or leading spaces
+	sEmail_Address = sEmail_Address.replace(/^[ \n\r]*/ig, "").replace(/[ \n\r]*$/ig, "");
+	//replace invalid chars with semi colon
+	sEmail_Address 		= sEmail_Address.replace(/[^A-Za-z0-9-_'@\.]/g, ";"); //trim all other chars
+	//replace multiple semi colon with semi colon
+	sEmail_Address 		= sEmail_Address.replace(/;+/g, ";"); //replace multiple ;
+	//reset the value
+	Email_Obj.value 	= sEmail_Address;
+	//validate the value
+	var ValidEmail 		= checkMultipleEmail(sEmail_Address);
+	return ValidEmail;
+}
+
+function checkEmail(email) {
+  if (/^[\w']+([\.-]?[\w']+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)){
+    return (true)
+  }
+  return (false)
+}
+
+
+function checkMultipleEmail(emailString) 
+{
+  var separator = ";";
+  var emails2 = emailString.split(separator);
+  var anyEmail = false;
+	for(var i=0; i<emails2.length; i++) 
+	{
+		//emails2[i] = emails2[i].replace(/(^ *)|( *$)/g, ""); //trim spaces
+		emails2[i] = emails2[i].replace(/(^[ \n\r]*)|([ \n\r]*$)/g, ""); //trim spaces
+		tempEmail = checkEmail(emails2[i])
+		if(!tempEmail) {return emails2[i]} 		
+	}
+	return true
+ }
+ 
+ function isSpace(sStr)
+{
+	var re = /^[\s\t]*$/ig;
+	if (re.test(sStr))
+		return true;
+	else
+		return false;
+}
+
+function isFloat(sVal, aNoMinus)
+{		
+	var sValTemp = parseFloat(sVal);
+	var noMinus = false;
+	if(aNoMinus)
+	{
+		noMinus = aNoMinus;
+	}
+	if(!isNaN(sValTemp) && (/^[+-]?\d*(\.(\d)+)?$/.test(sVal)))
+	{
+		if(noMinus) return /^\d*(\.(\d)+)?$/.test(sVal);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+	
+}
+
+function isInt(sVal)
+{	
+	var sValTemp = parseInt(sVal);
+	if((!isNaN(sValTemp) && sValTemp+"" == sVal))
+		return true;
+	else
+		return false;
+}

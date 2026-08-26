@@ -1,0 +1,23 @@
+===== QUERY: UpdateData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForUpdateData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bsa_foodservice_customers",
+			{
+				"bsa_foodservice_customers_id" = "eq.#Distrib_ID#"
+			},
+			{
+				"op_dev_pricing" = "#Op_Dev_Pricing_Setting#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

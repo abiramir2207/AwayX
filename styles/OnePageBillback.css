@@ -1,0 +1,330 @@
+/*
+* ====================================================================================================
+*    @File: \billbacks\OnePageBillback\OnePageBillback.css
+*  @Author: Sharon Harris
+*    @Date: June 2019
+*
+* @Remarks: OnePageBillback Settlements page - Styles
+*
+* ====================================================================================================
+*/
+/* Shared styles */
+#page-container {
+	display: flex;
+	border: 0;
+	height: 99vh;
+}
+#left-pane {
+	flex: 0 0 350px;
+	min-width: 300px;
+	transition: margin 0.3s ease;
+}
+#right-pane {
+	flex: 10 1 auto;
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+}
+
+fieldset {
+	border: 1px solid #d8d9dd;
+	border-radius: 8px;
+}
+
+.header-box {
+	background-color: #ffedd2;
+	border-radius: 8px 8px 0px 0px;
+	font-size: 12px;
+	height: 25px;
+	margin: -1px;       /* overwrite border */
+	padding: 5px;      /* padding+contents = height of header */
+	padding-left: 10px;
+}
+
+#left-pane .header-box {
+	border-bottom: 1px solid #d8d9dd;
+}
+
+#hide-left-button {
+	background-color: #ffe5bf;
+	border-radius: 0px 8px 0px 0px;
+	color : #406BE4;
+	text-decoration : none;
+	cursor: pointer;
+	float: right;
+	margin: -5px;   /* override header-box padding to make it flush */
+	padding-right: 10px;
+}
+
+#options-button {
+	background-color: #ffe5bf;
+	border-radius: 8px 0px 0px 0px;
+	color : #406BE4;
+	text-decoration : none;
+	float: left;
+	margin: -5px 25px -5px -10px;	/* override header-box padding to make it flush */
+	padding-left: 10px;
+	padding-right: 10px;
+	display: none;
+	cursor: default;
+}
+
+.btn-icon {
+	color: #406be4;
+}
+.btn-icon-enlarged {
+	color: #406be4;
+	font-size: 1.2em;
+	/* position: relative; */
+	/* top: -1px; */
+}
+label {
+	position: relative;
+	top: -2px;
+}
+input[type="checkbox"] {
+	vertical-align: middle;
+}
+
+/* Tabs */
+a.navi, a.edit {
+	background: #c4c5c7;
+	border: 1px solid #C4C5C7;
+	border-radius: 3px 3px 0 0;
+	color: #343540;
+	cursor: pointer;
+	font-size: 12px;
+	height: 30px;
+	line-height: 30px;
+	padding: 4px 10px 4px 10px;
+	text-decoration: none;
+	text-align: center;
+}
+a.active{
+	font-weight: bold;
+	background: #f5f6fa;
+}
+i.closeEdit {
+	color: green;
+	font-style: normal;
+	padding-left: 5px;
+}
+
+/* "create" Tab */
+.create {
+	display: block;
+}
+
+/* "Matches" tab */
+.process {
+	display: none;
+}
+
+/* Details cards */
+.details-card {
+	margin: 5px 2px 5px 0;
+}
+.card-header {
+	background-color: #222a97;
+	border-radius: 5px 5px 0px 0px;
+	color: #FFF;
+	font-size: 11px;
+	font-weight: 600;
+	height: 20px;
+	padding: 5px 5px 5px 10px;
+}
+.card-main {
+	background-color: #f5f6fa;
+	border-color: #d8d9dd;
+	border-radius: 0 0 5px 5px;
+	border-style: solid;
+	border-width: 0px 1px 1px 1px;
+	min-height: 25px;
+	padding-top:5px;
+	padding-left:4px;
+	padding-right:4px;
+	width: 100%;
+}
+.card-main input,
+.card-main select {
+	border: solid 1px #c4c5c7;
+	border-radius: 3px;
+	height: 14px;
+}
+
+.matchgrid tbody {
+    display:block;
+    max-height:100px;
+    overflow-y:scroll;
+}
+.matchgrid tbody tr {
+    display:table;
+    width:100%;
+    table-layout:fixed;
+}
+.matchgrid thead {
+    display:table;
+    width:100%;
+    table-layout:fixed;
+}
+
+/* ******************************************* */
+/*    settlements_search_filters.cfm */
+
+div.filter {
+	margin-bottom: 2px;
+	width: 100%;
+}
+div.filter > i.label {
+	font-style: normal;
+	display: inline-block;
+	margin-left: 4px;
+	width: 35%;
+}
+div.filter > input {
+	border: solid 1px #c4c5c7;
+	border-radius: 3px;
+	height: 16px;
+	width: 60%;
+}
+div.filter > input.date {
+	padding-left: 3px;
+	width: 61px;
+}
+select[multiple] {
+	height: 12px;
+	width: 100%;
+}
+/* Customize the multiple select style */
+.ms-drop ul {
+	padding: 0px 8px;	/* default padding: 5px 8px; */
+}
+.ms-choice {
+	height: 20px;		/* default 26px */
+	line-height: 20px;	/* default 26px */
+	color: #343540;
+	font-size: 8pt;
+}
+.ms-choice > div {
+	height: 19px;		/* default 25px */
+	top: -3px;			/* center arrow vertically */
+}
+.ms-choice > span {
+	top: 1px;
+}
+.ms-choice > span.placeholder {
+	font-size: 8pt;
+	color: #343540;
+	opacity: 0.5;
+}
+input[type="checkbox"] {
+	margin: 3px 3px 3px 4px;
+}
+
+
+/* ******************************************* */
+/*    create.cfm */
+.cardmain {
+	min-width: 1100px;
+	background-color: #f5f6fa;
+	border-color: #d8d9dd;
+	border-radius: 0 0 5px 5px;
+	border-style: solid;
+	border-width: 0px 1px 1px 1px;
+	height: 75px;
+}
+.leftcardmain {
+	width: 730px;
+	padding-top:5px;
+	padding-left:4px;
+	/*padding-right:4px;
+	width:69%;*/
+	float:left;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+}
+
+.rightcardmain {
+	width: 360px;
+	padding-top:5px;
+	/*padding-left:4px;
+	padding-right:4px;
+	width:30%;*/
+	float:right;
+}
+.cardmain input,
+.cardmain select {
+	border: solid 1px #c4c5c7;
+	border-radius: 3px;
+	height: 14px;
+	width:110px;
+}
+.cardmain textarea {
+	border: solid 1px #c4c5c7;
+	border-radius: 3px;
+	height: 20px;
+	width:110px;
+}
+.customHeaderMenuButton {
+	color: cornflowerblue;
+}
+
+.ag-theme-balham {
+	font-size: 11px;
+}
+.ag-header {
+	font-size: 11px !important;
+	text-align: center;
+}
+.ag-theme-balham .ag-header-cell-label {
+	width: 100%;	/* work around ag-grid bug #2328 which leaves space for menu icon */
+}
+.ag-theme-balham .ag-row-selected {
+	border-top-color: #b5b5b5; /* don't hide lines when selected */
+}
+.ag-theme-balham .ag-selection-checkbox span {
+	left: 1px; /* center the checkbox */
+}
+.fullwidthheight{
+	width:100%;
+	height:100%;
+}
+
+.matchgrid{
+	text-align:left;
+	border:1px solid #CCC;
+	border-spacing:0;
+	border-collapse:collapse;
+	width:100%;
+	clear:left;
+}
+.matchgrid thead tr th{
+	background-color:#ffce84;
+	border:1px solid #CCC;
+	padding:4px;
+	letter-spacing:0.2px;
+	text-align:left;
+}
+.matchgrid tfoot tr th{
+	background:url('/images/gradback.png?4') repeat-x scroll 0 0 #B9C9FE;
+	border:1px solid #CCC;
+	padding:4px
+}
+.matchgrid tbody tr{
+	border:1px solid #CCC;
+	border-collapse:collapse
+}
+.matchgrid tbody td{
+	color:#3D3D3D;
+	border:1px solid #CCC;
+	border-collapse:collapse;
+	vertical-align:center;
+}
+.yes-clear{
+	background: url(/Images/delete.gif) no-repeat center;
+}
+button.button {
+	margin: 0px 5px;
+}

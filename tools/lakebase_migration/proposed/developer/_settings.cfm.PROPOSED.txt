@@ -1,0 +1,21 @@
+===== QUERY: qSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qApp_Settings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqApp_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqApp_Settings>
+	<cftry>
+		<cfset qApp_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqApp_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqApp_Settings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

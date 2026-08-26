@@ -1,0 +1,1048 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	This is the main display page which has all the display components in it.
+-->
+	<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+		xmlns:mate="http://mate.asfusion.com/"
+		xmlns:ba="com.components.*" 
+		paddingBottom="5" 
+		paddingLeft="5" 
+		paddingRight="5" 
+		paddingTop="5"
+		resizeEffect="Resize" 
+		resize="true"   
+		width="100%" height="100%" 
+		creationComplete="this.fnInitListeners();" 
+		fontSize="9"
+  	fontSharpness="100"
+		fontThickness="100"
+		fontGridFitType="pixel"
+ 		fontFamily="Arial"
+		>
+ 
+	<mx:Script>
+		<![CDATA[
+			import mx.events.AdvancedDataGridEvent;
+			import com.events.*;
+			import com.models.*;
+			import com.vos.*;
+			import mx.collections.ArrayCollection;
+			import flash.events.*;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			
+			/* **********************************************************************
+			 * Variable declaration - Different variables that are used in this 
+			 * display page 
+			 ************************************************************************/
+			[Bindable] public var dpBBData:ArrayCollection = null;
+			[Bindable] public var oSettings:Settings 			 = new Settings();
+			[Bindable] public var oUser:Object 						 = new Object();
+			[Bindable] public var sBBID:String 						 = ""; 	
+			[Bindable] public var sBBTitle:String 				 = "";
+			[Bindable] public var sBBStartDate:String 		 = "";
+			[Bindable] public var sBBEndDate:String 			 = "";
+			[Bindable] public var sBBAmount:String 				 = "";
+			[Bindable] public var sBBCode:String 					 = "";
+			[Bindable] public var sBBDate:String 					 = "";
+			[Bindable] public var sPayeeName:String 			 = "";		
+			[Bindable] public var sBBDevOvPrice:String 		 = "";	
+			[Bindable] public var sBBStatusID:String 		 	 = "2";
+			[Bindable] public var sUserID:String 					 = "";
+			[Bindable] public var nTotalExpected:Number		 = 0;
+			[Bindable] public var nTotalClaimed:Number		 = 0;
+			[Bindable] public var nTotalApproved:Number		 = 0;
+			[Bindable] public var nTotalInitialzed:Number	 = 0;
+			[Bindable] public var nInitialLoadDone:Number	 = 0;
+ 			
+ 			public var _dataField:String;
+			
+			/**
+			 * This function gets called on the creationComplete of the btnApprove
+			 * which is the last button element and it adds the eventListeners for 
+			 * all the buttons.  It adds the eventListeners of type MouseEvent.Click 
+			 * and KeyboardEvent.KEY_DOWN 
+			 */
+			public function fnInitListeners():void  
+			{ 
+				// Event Listener for the "Volume Override" Button
+				this.btnVolOverride.addEventListener(MouseEvent.CLICK,fnVolOverride,false,0,true)
+			 	this.btnVolOverride.addEventListener(KeyboardEvent.KEY_DOWN,fnEnterButton,false,0,true);
+				
+				// Event Listener for the "Rate Override" Button
+				this.btnRateOverride.addEventListener(MouseEvent.CLICK,fnRateOverride,false,0,true)
+			 	this.btnRateOverride.addEventListener(KeyboardEvent.KEY_DOWN,fnEnterButton,false,0,true);
+				
+				// Event Listener for the "Save" Button 
+				this.btnSave.addEventListener(MouseEvent.CLICK,fnDoActions,false,0,true)
+			 	this.btnSave.addEventListener(KeyboardEvent.KEY_DOWN,fnEnterButton,false,0,true);
+			
+				// Event Listener for the "Approve" Button
+				this.btnApprove.addEventListener(MouseEvent.CLICK,fnDoActions,false,0,true)
+			 	this.btnApprove.addEventListener(KeyboardEvent.KEY_DOWN,fnEnterButton,false,0,true);
+			  
+			  // Event Listener for the "Recalc" Button
+				this.btnRecalc.addEventListener(MouseEvent.CLICK,fnDoActions,false,0,true)
+				this.btnRecalc.addEventListener(KeyboardEvent.KEY_DOWN,fnEnterButton,false,0,true);
+			 	
+			 	// Event Listener for the "Approve Claimed Amount" Button
+				this.btnClaimedAmt.addEventListener(MouseEvent.CLICK,fnClaimedAmountClicked,false,0,true)
+				this.btnClaimedAmt.addEventListener(KeyboardEvent.KEY_DOWN,fnEnterButton,false,0,true);
+				
+				// Event Listener for the "Approve Expected Amount" Button	
+				this.btnExpectedAmt.addEventListener(MouseEvent.CLICK,fnExpectedAmountClicked,false,0,true)
+				this.btnExpectedAmt.addEventListener(KeyboardEvent.KEY_DOWN,fnEnterButton,false,0,true);  
+			}
+ 			
+ 			/**
+ 			* This function is called when the user hits enter key on a form element 
+ 			* and it inturn dispatch a MouseEvent.CLICK for the same element.
+ 			*/ 
+			private function fnEnterButton(event:KeyboardEvent):void 
+			{                
+				if (event.keyCode == Keyboard.ENTER)
+			 	{
+					// Create new event object.
+			    var evtMouseClick:MouseEvent = new MouseEvent(MouseEvent.CLICK);
+			    // Dispatch click event to the target of original keydown event.
+			    event.currentTarget.dispatchEvent(evtMouseClick);                 
+				}
+			}
+
+ 
+			/**
+	 		* This function gets called when the Approve button is clicked
+	 		*/	
+			public function fnApprove() : void 
+			{
+				var winjscommand:String="/Billbacks/Approval/payment.cfm?BBID=" + this.sBBID + "&source=flexBB"; 
+			  var url:URLRequest= new URLRequest(winjscommand);   
+			 	navigateToURL(url, "_self"); 
+			} 
+			
+			/**
+	 		* This function returns the date after formatting 
+	 		*/				
+			private function fnDateFormat(item:Object, column:AdvancedDataGridColumn):String 
+			{
+      	return dateFormat1.format(item[column.dataField]);
+      }
+
+			/* ****************************************************** 
+				Function to display the Toop tip on the Header of the 
+				datagrid
+			*******************************************************/
+			/**
+	 	 	* This function returns the tip to be displayed when the user mouse overs 
+	 	 	* one of the following column headers: <strong>UP, DT, OL, AU, VL, RT</strong>
+	 	 	* 
+	 	 	* @return A tooltip of String type is returned   
+	 		*/				
+			
+ 			private function fnAdvDGDataTipFunction(object:Object):String
+    	{
+    		if(object.hasOwnProperty("dataField")) 
+    		{
+        	switch(object.dataField)
+        	{
+						case "DEVIATION_UNAUTHORIZED_PAYEE":
+							return "Unauthorized Payee";
+							break;
+	        	case "DEVIATION_PROGRAM_DATES":
+            	return "Date match validation";
+            	break;
+        		case "DEVIATION_BILLBACK_OVERLAP":
+            	return "Date overlap validation";
+            	break;
+	        	case "DEVIATION_UNAUTHORIZED_PRODUCT":
+            	return "Authorization validation";
+            	break;
+  	      	case "DEVIATION_VOLUME":
+            	return "Volume validation";
+            	break;
+    	    	case "DEVIATION_RATE":
+            	return "Rate validation";
+            	break;
+            case "Count_Flag":
+            	return "Count Flag";
+            	break;
+            case "E_Volume":
+            	return "Expected Volume";
+            	break;
+            case "Expected_Invoice_Price":
+            	return "Expected Invoice Price";
+            	break;
+            case "Claim_Invoice_Price":
+            	return " Claimed Invoice Price";
+            	break;	
+            case "Variation_Claim_Expected":
+            	return "Total Deviation";
+            	break;	
+        	}
+  			}
+    		return "";
+    	}
+
+			/** 
+		 	* This function is called when the radio button on the volume column is clicked.
+		 	* This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function which checks to see, if there are any other 
+		 	* rows that have the same <em>Billback_Product_ID</em> as the clicked 
+		 	* record and changes them to be the same as the radio of the selected row.
+		 	*/	
+			public function fnRdoVolChange(evtObj:Object):void
+			{
+			 	fnCallRecalculate(evtObj,"fnRdoVolChange","0");
+			 	dgData.dataProvider.refresh();
+			}
+		
+			/**
+		 	* This function is called when the radio button on the Invoice Price column is clicked.
+		 	* This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function which checks to see, if there are any other 
+		 	* rows that have the same <em>SrNo</em> as the clicked record and changes 
+		 	* them to be the same as the radio of the selected row.
+		 	*/			
+		 	public function fnRdoInvChange(evtObj:Object,selVal:String):void
+			{	
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnRdoInvChange",selVal);
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}		
+
+			/**
+		 	* This function is called when the radio button on the Program Price column is clicked.
+		 	* This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function which checks to see, if there are any other rows that 
+		 	* have the same <em>SrNo</em> as the clicked record and changes them 
+		 	* to be the same as the radio of the selected row.
+		 	*/			
+			public function fnRdoPgmChange(evtObj:Object):void
+			{	
+		 		nTotalApproved = 0;
+		 		fnCallRecalculate(evtObj,"fnRdoPgmChange","0"); 
+		 		dgData.dataProvider.refresh();
+		 		dgData.invalidateList();
+			}		
+		
+			/**
+		 	* This function is called when the check box on the count column is clicked.
+		  * This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function which checks to see, if there are any other 
+		 	* rows that have the same <em>Billback_Product_ID</em> as the clicked record 
+		 	* and changes them to be the same as the check box of the selected row.
+		  * 
+		  * @param evtObj This holds each row in the datagrid as an Object
+		  */			
+			public function fnCountChange(evtObj:Object):void
+			{
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnCountChange","0"); 
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}
+		
+			/**
+	 	 	* This function is called when the radio button on the Rate column is clicked.
+	 	  * This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function which checks to see, if there are any other rows 
+		 	* that have the same <em>SrNo</em> as the clicked record and changes them to 
+		 	* be the same as the radio of the selected row.
+	 	 	* 
+	 	 	* @param evtObj This holds each row in the datagrid as an Object
+	 	 	*/	
+			public function fnRateChanged(evtObj:Object):void
+			{
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnRateChanged","0"); 
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}		
+		
+			/**
+			 * This function is called when the button "btnClaimedAmt" is clicked. 
+			 * This function calls the function fnCallRecalculate and passes the evtObj
+			 * and name of this function which sets all the radio buttons to Claimed and 
+			 * recalculates the valuesrefreshes the datagrid and 
+			 * dispatches the CLICK event for the btnApprove.
+			 */ 
+			public function fnClaimedAmountClicked(evtObj:Object):void
+			{
+				var nCounter:Number = 0;
+				var nTotal:Number =0;
+				nTotal = dgData.dataProvider.length;
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnClaimedAmountClicked","0");	
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+				
+				// I am calling the dispatch Event on the btnApprove 
+				// which is similar as if the user clicked on the approve button	
+				//	if (nCounter == nTotal)
+				//{ 			
+				btnApprove.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+				//}
+			}
+		
+			/**
+			 * This function is called when the button "btnExpectedAmt" is clicked. 
+			 * This function calls the function fnCallRecalculate and passes the evtObj
+			 * and name of this function which sets all the radio buttons to Expected, 
+			 * refreshes the datagrid and dispatches the CLICK event for the btnApprove.
+			 */     
+			public function fnExpectedAmountClicked(evtObj:Object):void
+			{
+				/* for each(var item:Object in dgData.dataProvider)
+				{
+					// select the radio buttons for the Expected
+					item.Selected_Vol_Type  				= 2; 
+					item.Selected_Rate_Type 					= 2;
+					item.Selected_Invoice_Price_Type 	= 2;
+					item.Selected_Program_Price_Type 	= 2;			
+				} */
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnExpectedAmountClicked","0");	
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+				// I am calling the dispatch Event on the btnApprove 
+				// which is similar as if the user clicked on the approve button
+				btnApprove.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+			}			
+
+			/**
+		 	* This function returns the dollar amount after formatting with the dollar sign.
+		 	*/	    
+			public function fnFormatDollars(item:Object, column:AdvancedDataGridColumn):String 
+	    {
+	      return dollarFormatter.format(item[column.dataField]);
+	    }
+	    
+			/**
+		 	* This function returns the dollar amount after formatting with the dollar sign.
+		 	*/	    
+			public function fnFormatDollars2(item:String):String 
+	    {
+	      return dollarFormatter.format(item);
+	    }
+	  
+			/**
+		 	* This function returns the number after formatting which is used for Cases and Pounds
+		 	*/	
+		 	public function fnFormatNumber(item:Object, column:AdvancedDataGridColumn):String 
+	    {
+	    	return numberFormatter.format(item[column.dataField]);
+	    }
+	    
+			/**
+		 	* This function returns the number after formatting 
+		 	*/     
+	    public function fnFormatNumber2(item:String):String 
+	    {
+	    	return numberFormatter.format(item);
+	    }
+
+			/**
+			* This function determines based on the data values whether the Rate 
+			* column gets displayed or not
+			*/     
+	    [Bindable (event="evtRateVis")]
+	    public function fnRateVisibility():Boolean
+	    {
+	    	if((data.BB_Product_Type_ID=='2'||data.BB_Product_Type_ID=='3'||data.BB_Product_Type_ID=='4')||
+							    					 (data.BB_Product_Type_ID=='1' && sBBDevOvPrice=='0'))
+				{	
+					//Alert.show("returning true");
+					return true;
+				}
+				else
+				{
+					//Alert.show("returning false");
+					return false;
+				} 
+	    } 
+
+			/**
+			* This function takes the Event parameter and assigns the strAction variable 
+			* accordingly and based on the strAction does an approval and takes the user to a 
+			* different page or saves and runs the deviation.
+			* strAction: This variable holds the value <strong>"doSaveApprove"</strong> 
+			* or <strong>"doSaveRecalc"</strong> so if the value is 
+			* <strong>"doSaveApprove"</strong> then the page is saved and then 
+			* redirected to the Approve cfm page.  If the value is 
+			* <strong>"doSaveRecalc"</strong> then the page is saved and 
+			* Deviation is run.
+			*   
+			* @param e This param holds the event that called this function 
+			* 
+			*/
+			public function fnDoActions(e:Event):void
+			{
+				var strAction:String = "";
+				switch (e.currentTarget.id)
+				{
+					case "btnSave":
+						strAction = "doSave"
+						break;
+					case "btnApprove":
+						btnClaimedAmt.enabled = false;
+						btnApprove.enabled = false;
+						btnExpectedAmt.enabled = false;
+						strAction = "doSaveApprove"
+						break;	
+					case "btnRecalc":
+						strAction = "doSaveRecalc"
+						break;
+				}
+				
+				var eventSaveChanges:MainEvent = new MainEvent(MainEvent.SAVE_CHANGES);
+				eventSaveChanges.Billback_ID 	 = this.sBBID;
+				eventSaveChanges.sUserId 		 	 = this.sUserID;
+				eventSaveChanges.dgEditedSet 	 = this.dpBBData.source;
+				eventSaveChanges.doAction			 = strAction;
+				this.dispatchEvent(eventSaveChanges);
+				 
+				if (strAction =='doSaveRecalc')
+				{
+					// for deviation recalculation
+					var eventReloadGrid:MainEvent = new MainEvent(MainEvent.GET_BILLBACK_DETAILS);
+					eventReloadGrid.sBBID 	 			= this.sBBID;
+					this.dispatchEvent(eventReloadGrid);
+					nTotalApproved = 0;
+					dgData.dataProvider.refresh();
+					dgData.invalidateList();
+				}
+			} 
+	
+			/**
+			 * This function gets called by the event MainEvent.APPROVE which checks
+			 * to see if the parameter has a value of "doSaveApprove" and redirects 
+			 * to the approval page if it is true.
+			 */
+			public function fnApprovePageRedirector(strAct:String):void
+			{
+				if (strAct == 'doSaveApprove')
+						{
+						// call the save function before calling the approval
+							var winjscommand:String="/Billbacks/Approval/payment.cfm?BBID=" + this.sBBID + "&source=flexBB"; 
+							var url:URLRequest= new URLRequest(winjscommand);   
+						 	navigateToURL(url, "_self"); 
+				}
+			}
+	
+
+			/**
+			* This function gets called on the focus out from the manual text entry box and it sets the 
+			* <em>Manual_Invoice_Price</em> field in the dgData arraycollection to the entered value and refresh
+			* the datagrid
+			* 
+			* @param evtObj This holds each row in the datagrid as an Object
+			*/	
+	 		public function fnSetInvManual(evtObj:Object):void
+			{
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnSetInvManual","0"); 
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}		
+		 	
+			/**
+		 	* This function returns the Program data of the particular cell on the mouse over. 
+		  */ 	 	
+			public function fnDgToolTipProgram(item:Object):String 
+		 	{
+		 		try
+		 		{
+		 	 	 	return (item.Program).toString();
+				} catch(err:Error){ return "";}
+	      return "";
+	    }
+
+			/**
+	 		* This function returns the Distributor data of the particular cell on the mouse over. 
+	 		*/ 
+			public function fnDgToolTipDist(item:Object):String 
+	 		{
+	 			try
+	 			{
+	 	 	 		return (item.Distributor).toString();
+				} catch(err:Error){ return "";}  
+      	return "";
+    	}
+    
+			/**
+			* This function returns the Item data of the particular cell on the mouse over. 
+			*/ 
+			public function fnDgToolTipItem(item:Object):String 
+	 		{
+	 			try
+	 			{
+	 	 	 		return (item.Item).toString();
+				} catch(err:Error){ return "";}  
+      	return "";
+   		}   
+   		
+			/**
+			* This function returns the Discount Type Desc data of the particular cell on the mouse over. 
+			*/ 
+			public function fnDgToolTipType(item:Object):String 
+	 		{
+	 			try
+	 			{
+	 	 	 		return (item.Discount_Type_Desc).toString();
+				} catch(err:Error){ return "";}  
+      	return "";
+   		} 
+   		   		
+   		public function fnLoadDG():void
+   		{
+   		}
+   		
+   		/**
+   		 * This function gets called on every change of the radio button within
+   		 * the datagrid and recalculates the value by passes the
+   		 * event Object as a parameter to the RECALCULATE event. 
+   		*/
+   		public function fnCallRecalculate(evtObj:Object,fnName:String,sOptionalVal:String):void
+   		{
+   			var eventReloadGrid:MainEvent = new MainEvent(MainEvent.RECALCULATE);
+   			eventReloadGrid.evtObj 	 			= evtObj;
+				eventReloadGrid.sCaller 			= fnName;
+				eventReloadGrid.sOptionalVal 	= sOptionalVal;    			
+				this.dispatchEvent(eventReloadGrid);
+   		 
+   		}
+   		
+   		/* creationComplete="fnUpdateTotal(dpBBData);" */
+   	/*	public function fnUpdateTotal(arrData:Object):void
+   		{
+   			var nApprovedTotal:Number = 0.0; 
+   			var nClaimedTotal:Number 	= 0.0;
+   			var nExpectedTotal:Number = 0.0;
+   			
+   			// Alert.show(ObjectUtil.toString(arrData));
+   			
+   			for each(var item:Object in arrData)
+				{
+					// Alert.show(item.Claimed_Amount.toString());
+					nClaimedTotal  = nClaimedTotal  + parseFloat(item.Claimed_Amount);
+						// Alert.show(parseFloat(item.Claimed_Amount).toString());
+				}
+   			this.txtTotalApproved.text = nClaimedTotal.toString();
+   			// Alert.show("nClaimedTotal: " + nClaimedTotal.toString());
+   		}   
+   		*/
+   		
+   		
+   		/**
+   		* This function refreshes the datagrid whenever a pop window is opened from the
+   		* datagrid.  This is done to maintain the value in the Manual Invoice
+   		* price text box, which loses all its contents and goes blank, whenever a popup 
+   		* is opened. 
+   		*/ 	
+			public function fnFocusInDG():void
+			{
+				nTotalApproved = 0; 
+				fnCallRecalculate(null, "fnFocusInDG","0");
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}   
+			
+			/**
+			* This function captures which column header was clicked and set it to 
+			* the curDateField  
+			*/  
+			private function headerReleaseFunc(event:AdvancedDataGridEvent):void
+			{
+				curDataField = event.dataField;
+			} 		
+	
+			/**
+			* This function compares and sorts the rows in the datagrid 
+			*/ 
+			private function sortCompareFunc(Obj1:Object, Obj2:Object):int
+			{
+					//nTotalApproved = 0; 
+				return ObjectUtil.numericCompare(Obj1[curDataField],Obj2[curDataField]);
+			}
+			
+			private function set curDataField(dataField:String):void
+			{
+				this._dataField = dataField;
+			}
+				
+			private function get curDataField():String
+			{
+				return this._dataField;
+			}		
+		
+			/**
+	 	 	* This function is called whenever a check box under the 
+	 	 	* check box icon clicked.
+	 	  * This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function, basically it flips the value of the data.iDone
+		 	* and also refreshes the grid so that the checked rows will appear in 
+		 	* Black font and unchecked row will appear in the red font.
+	 	 	* 
+	 	 	* @param evtObj This holds each row in the datagrid as an Object
+	 	 	*/	
+	 
+			public function fniDoneChanged(evtObj:Object):void
+			{
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fniDoneChanged","0"); 
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}		
+	 		
+	 		/**
+	 		* This function is a styleFunction that is called by the AdvancedDataGrid styleFunction property.
+	 		* This sets the style of each row based on the Dummy_Program, UnKnown_Item and iDone values.
+	 		*/
+			public function fnBBFixed(data:Object,col:AdvancedDataGridColumn):Object
+	    {
+	  		var sPropertyList:String;
+	  		var bColorRed:Number = 0;
+	  		var bBgRed:Number = 0;
+	  		// Expected_Amount was Final_Payment earlier.  This was changed after the discussion with
+	  		// Paul on  22-Oct-09
+	  			//if ((data.iDone=='0') || ((data.iDone=='1') && (data["Expected_Amount"] <= data["Claimed_Amount"])))
+	     	// if ((data.iDone=='0') || ((data.iDone=='1') && (data["Expected_Amount"] < data["Claimed_Amount"])))
+	     	if (data.iDone=='0')
+	    	{ 
+	    		bColorRed = 1;
+	     	}
+	  		if (data.Dummy_Program == "1" || data.UnKnown_Item =="1")
+	  		{
+	  			bBgRed = 1;
+	  		}
+	  		if (bColorRed == 1 && bBgRed == 1)
+	  		{
+	  			return {color:0xFF0000, backgroundColor:"0xFFC184"}
+	  		}
+	  		else if(bColorRed == 1 && bBgRed == 0)
+	  		{
+	  			return {color:0xFF0000}
+	  		}
+	  		else if(bColorRed == 0 && bBgRed == 1)
+	  		{
+	  			return {color:0x00000000, backgroundColor:"0xFFC184"}
+	  		} 
+	  		else
+	  		{
+	  		 	return {color:0x00000000}
+	  		}
+			}
+	 
+	 		
+	/*  		public function fnDGBorder(data:Object,col:AdvancedDataGridColumn):Object
+	    {
+	    	return {borderThickness:20};
+	    }
+	 */    
+	 		/**
+		 	* This function is called when the "Volume Override" button is clicked.
+		  * This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function which sets the Expected Volume to be the 
+		 	* Claimed volume and set the Volume_Override to 1. 
+			* 
+			* @param evtObj This holds each row in the datagrid as an Object
+		  */	
+			public function fnVolOverride(evtObj:Object):void
+			{
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnVolOverride","0");	
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}
+			
+	 		/**
+		 	* This function is called when the "Volume Override" button is clicked.
+		  * This function calls the function fnCallRecalculate and passes the evtObj 
+		 	* and name of this function which sets the Expected Rate to be the 
+		 	* Claimed Rate and set the Rate_Override to 1. 
+			* 
+			* @param evtObj This holds each row in the datagrid as an Object
+		  */			
+			public function fnRateOverride(evtObj:Object):void
+			{
+				nTotalApproved = 0;
+				fnCallRecalculate(evtObj,"fnRateOverride","0");	
+				dgData.dataProvider.refresh();
+				dgData.invalidateList();
+			}
+			
+		]]>
+	</mx:Script>
+  
+		<mx:DateFormatter id="dateFormat1" formatString="MM/DD/YYYY" />
+		<mx:CurrencyFormatter id="dollarFormatter" precision="3"  useNegativeSign="true" />
+		<mx:CurrencyFormatter id="dollarFormatter2" precision="2"  useNegativeSign="true" />
+		<mx:NumberFormatter id="numberFormatter" precision="2" />
+		<mx:NumberValidator id="numValidator" minValue="0" maxValue="999999" domain="real" />
+
+	<!--*******************************	Some UI Stuff	***************************************************************-->
+			 
+		<mx:Panel id="pnlAll" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333"
+			  height="100%"  width="95%" right="2" top="2"   fontSize="9" fontWeight="normal" 
+			name="Main Panel" title="Billback Deviations   |   {sBBCode}   {sPayeeName}   {sBBTitle}" scroll="false" horizontalScrollPolicy="off" > 
+			<mx:VBox height="100%" width="100%" horizontalAlign="left" ><!-- creationPolicy="queued" -->
+			<!--*******************************	Some UI Stuff	***************************************************************-->
+<!--			<mx:HBox width="100%" height="2.5%" verticalAlign="top" borderThickness="2" borderColor="#949599" 
+				backgroundColor="#FFEFD7" horizontalScrollPolicy="off">
+					<mx:Text text=" {sBBCode}   {sPayeeName}   {sBBTitle}" 
+						fontWeight="bold" fontSize="11"/>
+					 
+				</mx:HBox>-->
+				<mx:HBox width="100%" height="2.5%" verticalAlign="top" borderThickness="2" borderColor="#949599" backgroundColor="#FFEFD7" 
+					horizontalScrollPolicy="off"><!-- #99FF99 -->
+					 
+					<mx:Text text="Delivery Period: {sBBStartDate} to {sBBEndDate}" fontWeight="normal" fontSize="10"/>
+					<mx:Spacer width="260" />
+					<mx:Text  id="txtTotalExpected"  text="Total Expected : {dollarFormatter2.format(nTotalExpected).toString()}" fontWeight="normal" fontSize="10"/>
+					<mx:Spacer width="15" />
+					<mx:Text  id="txtTotalClaimed"  text="Total Claimed : {dollarFormatter2.format(nTotalClaimed).toString()}" fontWeight="normal" fontSize="10"/>
+					<mx:Spacer width="15" />
+					<mx:Text  id="txtTotalApproved"  text="Total Approved : {dollarFormatter2.format(nTotalApproved).toString()}" fontWeight="normal" fontSize="10"/>
+					<!--<mx:Text text="" fontWeight="bold" fontSize="11"/>-->
+				</mx:HBox>	
+			<mx:HBox width="100%" horizontalScrollPolicy="off">
+				<mx:Button id="btnVolOverride" label="Volume Override"  toolTip="Volume Override" enabled="{sBBStatusID=='2'}"/>
+				<mx:Button id="btnRateOverride" label="Rate Override"  toolTip="Rate Override" 
+					enabled="{sBBStatusID=='2'}"  visible="{sBBDevOvPrice!='1'}" />
+ 				<mx:Button id="btnRecalc"  label="Save &amp; Recalc Deviations"  visible="{sBBDevOvPrice=='1'}" 
+ 						 toolTip="Recalculate Deviations"  enabled="{sBBStatusID=='2'}"/>                 
+				<mx:Button id="btnSave" label="Save Changes"  toolTip="Save changes made to the Grid" enabled="{sBBStatusID=='2'}"/> 
+				<mx:Spacer width="25"/>
+	      <mx:Button id="btnExpectedAmt" label="Approve Expected $"  
+	      		toolTip="Select the Expected amount, Save and Approve" enabled="{sBBStatusID=='2'}"/>
+	      <mx:Spacer width="10"/>		 
+	      <mx:Button id="btnClaimedAmt" label="Approve Claimed $"  
+	      		toolTip="Select the Claimed amount, Save and Approve" enabled="{sBBStatusID=='2'}"/>
+	      <mx:Spacer width="10"/>		 
+	      <!-- 
+	      	Tried to add the creationComplete on the top level Canvas but it threw a Object null exception
+	      	so I have added it in the creationComplete of thiis btnApprove 
+	      -->		
+	      <mx:Button id="btnApprove" label="Approve Selected $"  
+	      		toolTip="Save and Approve"  enabled="{sBBStatusID=='2'}"/> <!-- click="fnDoActions('doSaveApprove')"  -->
+	    </mx:HBox> 
+ 			<mx:HBox width="100%" height="95%" scroll="false" horizontalScrollPolicy="off">
+ 			<!-- 
+ 				focusOut="fnFocusInDG()" this code is in place as the manual invoice 
+ 				text value gets reset to blank value when the window loses focus, 
+ 				although it is in the dataset. So we refresh the datagrid when we lose 
+ 				focus so that the text value in the text box is retained.
+ 			 -->
+				<mx:AdvancedDataGrid
+ 						id="dgData"  
+ 						allowMultipleSelection="true"    
+ 						editable="true" 
+ 						horizontalScrollPolicy="on" 
+ 						draggableColumns="false"  
+ 						dataProvider="{dpBBData}"    
+ 						sortExpertMode="true"  
+ 						dataTipFunction="fnAdvDGDataTipFunction"  
+ 						lockedColumnCount="3"   
+ 						width="100%" height="100%"
+ 						focusOut="fnFocusInDG()"
+ 						headerRelease="headerReleaseFunc(event)" 
+ 						styleFunction="fnBBFixed"
+ 						>
+ 					 
+ 							<!-- 	
+ 							 variableRowHeight="true"-  this causes each Item renderers to be called twice --> 
+						<mx:groupedColumns>
+							 <!-- <mx:AdvancedDataGridColumn id="adgColSrNo"  editable="false" 
+								  showDataTips="true" visible="true" width="5" dataField="SrNo" />-->
+							<mx:AdvancedDataGridColumn id="adgColProgram" dataField="Program" headerText="Program" 
+								editable="false"  dataTipFunction="fnDgToolTipProgram" showDataTips="true" width="75"/>
+							<mx:AdvancedDataGridColumn id="adgColDist" dataField="Distributor" headerText="Distributor"   
+								editable="false" dataTipFunction="fnDgToolTipDist"  showDataTips="true" width="75"/>
+							<mx:AdvancedDataGridColumn id="adgColItem" dataField="Item" headerText="Item"   
+								editable="false" dataTipFunction="fnDgToolTipItem" showDataTips="true" width="75"/>
+							<mx:AdvancedDataGridColumn id="adgColDiscTypeDesc" dataField="Discount_Type_Desc" headerText="Type" 
+								editable="false" dataTipFunction="fnDgToolTipType"  width="50" showDataTips="true">
+								<mx:itemRenderer>          
+						    	<mx:Component>
+										<mx:HBox textAlign="left" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+											<mx:Label text="{data.Discount_Type_Desc}" paddingLeft="0"/>
+										</mx:HBox>		          
+						    	</mx:Component>
+								</mx:itemRenderer>  
+						</mx:AdvancedDataGridColumn>	
+								
+					  	<mx:AdvancedDataGridColumnGroup headerText="Deviations" sortable="false">
+					  		<mx:AdvancedDataGridColumn  dataField="DEVIATION_UNAUTHORIZED_PAYEE" showDataTips="true"
+					  				headerText="UP" width="25" id="adgIconUp" headerWordWrap="false" 
+					        	itemRenderer="com.components.compUnauthorizedPayee"  editable="false" 
+					        	visible="true"  sortable="false" />
+					  		<mx:AdvancedDataGridColumn  dataField="DEVIATION_PROGRAM_DATES" showDataTips="true"
+					  				headerText="DT" width="25" id="adgIconDt" headerWordWrap="false" 
+					        	itemRenderer="com.components.compDeviationProgramDates"  editable="false" 
+					        	visible="true"  sortable="false" /><!-- headerRenderer="com.components.VDGHeader" -->
+					   		<mx:AdvancedDataGridColumn  dataField="DEVIATION_BILLBACK_OVERLAP"  showDataTips="true"
+					   			headerText="OL"   id="adgColIconOL" width="25" headerWordWrap="true"
+					        itemRenderer="com.components.compDeviationBillbackOverlap"	 editable="false" visible="true"  sortable="false" /> 
+								<mx:AdvancedDataGridColumn  dataField="DEVIATION_UNAUTHORIZED_PRODUCT" headerText="AU"   
+									id="adgIconAuth" width="25" showDataTips="true"
+					        itemRenderer="com.components.compDeviationUnauthorizedProducts" editable="false" visible="true" sortable="false" />		
+								<mx:AdvancedDataGridColumn  dataField="DEVIATION_VOLUME" headerText="VL"   
+									showDataTips="true" id="adgColIconVol" width="25"
+					        itemRenderer="com.components.compDeviationVolume"	 editable="false" visible="true" sortable="false" />							        	
+					    	<mx:AdvancedDataGridColumn  dataField="DEVIATION_RATE" headerText="RT"    
+					    		id="adgColIconRate" width="25" showDataTips="true"
+					        itemRenderer="com.components.compDeviationRate"	editable="false" visible="true" sortable="false" />	 					        	
+					  	</mx:AdvancedDataGridColumnGroup> 
+							<!--  <mx:AdvancedDataGridColumn id="adgColBBProdID" dataField="Billback_Product_ID" headerText="BB PROD ID"   editable="false" width="10" visible="false" /> -->
+							
+							<!--<mx:AdvancedDataGridColumn id="adgColVarClaimExp" dataField="Variation_Claim_Expected" headerText="Total Deviation" sortCompareFunction="sortCompareFunc"  editable="false" width="60"  labelFunction="fnFormatDollars" showDataTips="true" />-->
+					  <mx:AdvancedDataGridColumn id="adgColVarClaimExp" dataField="Variation_Claim_Expected" sortCompareFunction="sortCompareFunc" width="60" labelFunction="fnFormatDollars" showDataTips="true"
+					  	headerText="Total Deviation" textAlign="right"  editable="false"  visible="true">
+					  	<mx:itemRenderer>          
+						    	<mx:Component >
+										<mx:HBox textAlign="right" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+											<mx:Label text="{outerDocument.fnFormatDollars2(data.Variation_Claim_Expected)}" paddingLeft="0" textAlign="right" width="100%"/>
+										</mx:HBox>		          
+						    	</mx:Component>
+								</mx:itemRenderer>  
+						</mx:AdvancedDataGridColumn>								
+											     
+						  <!--<mx:AdvancedDataGridColumn id="adgColBBprod1" dataField="BB_Product_Type_ID" headerText="BPTypID"   editable="false"  visible="false"/>-->
+						  <mx:AdvancedDataGridColumnGroup headerText="Rate">
+					  	<mx:AdvancedDataGridColumn headerText="Exp." editable="false" rendererIsEditor="true" width="90" dataField="E_Rate">
+					  		<mx:itemRenderer>          
+						    	<mx:Component>  
+						    		<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+						    			<mx:RadioButton selected="{data.Selected_Rate_Type=='2'}" groupName="rdoRate{data.SrNo}" value="{data.E_Rate}" 
+						    					paddingLeft="6"   
+						    					visible="{data.Editable_Rate=='1'}"
+						    					change="outerDocument.fnRateChanged(this);"
+						    					enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}"
+						    					/>
+						    					<!-- change="outerDocument.fnRateChanged(this);"  visible="{data.BB_Product_Type_ID=='2'||data.BB_Product_Type_ID=='3'||data.BB_Product_Type_ID=='4'||(data.BB_Product_Type_ID=='1' &amp;&amp; outerDocument.sBBDevOvPrice=='0')}" -->
+											<mx:Label text="{outerDocument.fnFormatDollars2(data.E_Rate)}/{data.UOM_Short}" paddingLeft="0"/> 
+						    		</mx:HBox> 
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+							<mx:AdvancedDataGridColumn headerText="Claim" editable="false" rendererIsEditor="true" width="90" dataField="Claimed_Rate">
+								<mx:itemRenderer>          
+						    	<mx:Component>
+						    	 <mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">     
+						    		 <mx:RadioButton selected="{data.Selected_Rate_Type=='1'}" groupName="rdoRate{data.SrNo}" value="{data.Claimed_Rate}" 
+						    			  paddingLeft="6" 
+						    			visible="{data.Editable_Rate=='1'}"
+						    			change="outerDocument.fnRateChanged(this);"
+						    			enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}"/><!--
+						    			change="outerDocument.fnRateChanged(this);" 
+						    			visible="{data.BB_Product_Type_ID=='2'||data.BB_Product_Type_ID=='3'||data.BB_Product_Type_ID=='4'||(data.BB_Product_Type_ID=='1' &amp;&amp; outerDocument.sBBDevOvPrice=='0')}"-->
+						    			<mx:Label text="{outerDocument.fnFormatDollars2(data.Claimed_Rate)}/{data.UOM_Short} " paddingLeft="0"/> 
+						    		</mx:HBox>	
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+					  </mx:AdvancedDataGridColumnGroup>
+					  <mx:AdvancedDataGridColumnGroup headerText="Volume"  ><!-- styleFunction="fnDGBorder" -->
+					  	<mx:AdvancedDataGridColumn headerText="Exp." editable="false" width="90" dataField="E_Volume" >
+								<mx:itemRenderer>          
+						    	<mx:Component>            
+						    		<!--<mx:RadioButton selected="{data.Selected_Vol_Type=='1'}" groupName="rdoVol{data.SrNo}" value="{data.E_Volume}"  
+						    			label="{outerDocument.fnFormatNumber2(data.E_Volume)}/{data.UOM_Short}" paddingLeft="6" 
+						    			change="outerDocument.fnRdoVolChange(this);" />-->
+						    			<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+						    				<mx:RadioButton selected="{data.Selected_Vol_Type=='2'}" groupName="rdoVol{data.SrNo}" value="{data.E_Volume}"  
+						    			 paddingLeft="6" 
+						    			change="outerDocument.fnRdoVolChange(this);" 
+						    			enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}" /><!-- change="outerDocument.fnRdoVolChange(this);"  -->
+						    			<mx:Label text="{outerDocument.fnFormatNumber2(data.E_Volume)}/{data.UOM_Short} " paddingLeft="0"/>
+						    			</mx:HBox> 
+						    			
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+							<mx:AdvancedDataGridColumn headerText="Claimed" editable="false" width="90" dataField="Claimed_Volume">
+								<mx:itemRenderer>          
+						    	<mx:Component>            
+						    			<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+						    				<mx:RadioButton  selected="{data.Selected_Vol_Type=='1'}" change="outerDocument.fnRdoVolChange(this);" 
+						    						groupName="rdoVol{data.SrNo}" value="{data.Claimed_Volume}" 
+						    						paddingLeft="6" 
+						    						enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}" /><!-- change="outerDocument.fnRdoVolChange(this);"  -->
+						    				<mx:Label text="{outerDocument.fnFormatNumber2(data.Claimed_Volume)}/{data.UOM_Short} " paddingLeft="0"/>
+						    			</mx:HBox>
+						    			
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+					  </mx:AdvancedDataGridColumnGroup>
+					  
+					  <!--<mx:AdvancedDataGridColumn id="adgColVarClaim" dataField="Variation_Claim_Expected" headerText="Variation Claim" 
+					  	visible="false"  editable="true" width="100"/>
+					  -->
+					  <mx:AdvancedDataGridColumnGroup headerText="Invoice Price" >
+					  	<mx:AdvancedDataGridColumn headerText="Exp." editable="false" visible="{sBBDevOvPrice=='1'}" width="90" 
+					  		showDataTips="true" id="adgColExpInvoicePrice" dataField="Expected_Invoice_Price" >
+								<mx:itemRenderer>          
+						    	<mx:Component> 
+						    		<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">              
+						    			<mx:RadioButton selected="{data.Selected_Invoice_Price_Type=='2'}" groupName="rdoInv{data.SrNo}" value="2"  
+						    					paddingLeft="6" change="outerDocument.fnRdoInvChange(this,'2');"   
+						    						visible="{data.Editable_Rate=='0'}"
+						    						enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}"/><!-- visible="{data.BB_Product_Type_ID=='1'}" -->
+						    				<mx:Label text="{outerDocument.fnFormatDollars2(data.Expected_Invoice_Price)}/{data.UOM_Short} " paddingLeft="0"/>	
+						    		</mx:HBox>	
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+							<mx:AdvancedDataGridColumn headerText="Claimed" editable="false"  visible="{sBBDevOvPrice=='1'}" 
+								width="90" id="adgColClaimInvoicePrice" dataField="Claim_Invoice_Price">
+								<mx:itemRenderer>          
+						    	<mx:Component>            
+							    	<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">   
+							    		<mx:RadioButton selected="{data.Selected_Invoice_Price_Type=='1'}" groupName="rdoInv{data.SrNo}" value="1"  
+							    			paddingLeft="6" change="outerDocument.fnRdoInvChange(this,'1');" 
+							    				visible="{data.Editable_Rate=='0'}"
+							    				enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}" /><!-- visible="{data.BB_Product_Type_ID=='1'}" -->
+							    		<mx:Label text="{outerDocument.fnFormatDollars2(data.Claim_Invoice_Price)}/{data.UOM_Short} " paddingLeft="0"/>
+							    		</mx:HBox>	
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+							<mx:AdvancedDataGridColumn headerText="Manual" editable="false" textAlign="center"  
+								 itemRenderer="com.components.compManInvPrice"  
+								 dataField="Manual_Invoice_Price" visible="{sBBDevOvPrice=='1'}" width="100" />
+<!--								 editorDataField="newManPrice" 
+rendererIsEditor="true" 
+<mx:itemRenderer>          
+						    	<mx:Component>        
+						    	<mx:HBox textAlign="center" horizontalScrollPolicy="off" verticalScrollPolicy="off" width="100%"  verticalAlign="middle">
+						    		<mx:RadioButton selected="{data.Selected_Invoice_Price_Type=='3'}" groupName="rdoInv{data.SrNo}" value="3"  
+						    			paddingLeft="6" click="outerDocument.fnRdoInvChange(this,'3');" paddingRight="0" 
+						    			 deactivate="txtMan.text=''"  enabled="{outerDocument.sBBStatusID=='2'}"
+						    			visible="{data.Editable_Rate=='0'}"/> 
+						    			<mx:TextInput  id="txtMan" restrict="0-9.,-" maxChars="9"   
+						    				textAlign="right" width="70" paddingLeft="0" toolTip="" height="20" 
+						    		 	 enabled="{data.Selected_Invoice_Price_Type=='3'}" 
+						    		 	 text="{data.Manual_Invoice_Price}" 
+						    		 change="outerDocument.fnSetInvManual(this)"
+						    		 	visible="{data.Editable_Rate=='0'}"/>
+						    	</mx:HBox>		
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>-->
+							<!-- change="outerDocument.fnSetInvManual(this)" change="outerDocument.fnSetInvManual(this)"  dataChange="validateNow()" dataChange="validateNow()" visible="{data.BB_Product_Type_ID=='1'}" -->
+					  </mx:AdvancedDataGridColumnGroup>
+						<!--<mx:AdvancedDataGridColumn id="adgColEditableRate" dataField="Editable_Rate" headerText="Editable_Rate"   editable="false"  visible="false" />-->				 
+					  <mx:AdvancedDataGridColumnGroup headerText="Program Price" >
+					  	<mx:AdvancedDataGridColumn headerText="Exp." editable="false" visible="{sBBDevOvPrice=='1'}" width="90" dataField="Expected_Program_Price">
+								<mx:itemRenderer>          
+						    	<mx:Component>
+						    		<mx:HBox textAlign="center" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">            
+						    			<mx:RadioButton selected="{data.Selected_Program_Price_Type=='2'}" groupName="rdoPgm{data.SrNo}" value="{data.Expected_Program_Price}"  
+						    					paddingLeft="6" change="outerDocument.fnRdoPgmChange(this);" 
+						    					visible="{data.Editable_Rate=='0'}" 
+						    					enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}"/>
+						    					<!-- change="outerDocument.fnRdoPgmChange(this);" -->
+						    			<mx:Label text="{outerDocument.fnFormatDollars2(data.Expected_Program_Price)}/{data.UOM_Short} " paddingLeft="0"/>
+						    		</mx:HBox> 			
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+							<mx:AdvancedDataGridColumn headerText="Claimed" editable="false" visible="{sBBDevOvPrice=='1'}" width="90" dataField="Claimed_Program_Price">
+								<mx:itemRenderer>          
+						    	<mx:Component>
+						    		<mx:HBox textAlign="center" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">                
+						    			<mx:RadioButton  selected="{data.Selected_Program_Price_Type=='1'}" groupName="rdoPgm{data.SrNo}" value="{data.Claimed_Program_Price}"  
+						    					  paddingLeft="6" change="outerDocument.fnRdoPgmChange(this);" 
+						    					  visible="{data.Editable_Rate=='0'}" 
+						    					  enabled="{((outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0'))}"/>
+						    			<mx:Label text="{outerDocument.fnFormatDollars2(data.Claimed_Program_Price)}/{data.UOM_Short}" />
+						    		</mx:HBox> 			
+						    	</mx:Component>
+								</mx:itemRenderer>
+							</mx:AdvancedDataGridColumn>
+							
+					  </mx:AdvancedDataGridColumnGroup>
+<!--						<mx:AdvancedDataGridColumn id="adgColClaimedAmt" dataField="Claimed_Amount" headerText="Claimed Amt." textAlign="right" 
+							editable="false"  visible="true" labelFunction="fnFormatDollars" >
+								<mx:itemRenderer>          
+						    	<mx:Component>
+										<mx:HBox textAlign="right" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle" width="100%" backgroundColor="#343434" >
+											<mx:Label text="{outerDocument.fnFormatDollars2(data.Claimed_Amount)}" paddingLeft="0"  textAlign="right"/>
+										</mx:HBox>		          
+						    	</mx:Component>
+								</mx:itemRenderer>  
+						</mx:AdvancedDataGridColumn>	-->
+							
+					  <mx:AdvancedDataGridColumn id="adgColExpectedAmt" dataField="Expected_Amount" 
+					  	headerText="Expected Amt." textAlign="right"  editable="false"  visible="true" labelFunction="fnFormatDollars">
+					  	<mx:itemRenderer>          
+						    	<mx:Component >
+										<mx:HBox textAlign="right" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+											<mx:Label text="{outerDocument.fnFormatDollars2(data.Expected_Amount)}" paddingLeft="0" textAlign="right" width="100%"/>
+										</mx:HBox>		          
+						    	</mx:Component>
+								</mx:itemRenderer>  
+						</mx:AdvancedDataGridColumn>	
+						<mx:AdvancedDataGridColumn id="adgColClaimedAmt" dataField="Claimed_Amount" 
+					  	headerText="Claimed Amt." textAlign="right"  editable="false"  visible="true" labelFunction="fnFormatDollars">
+					  	<mx:itemRenderer>          
+						    	<mx:Component >
+										<mx:HBox textAlign="right" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+											<mx:Label text="{outerDocument.fnFormatDollars2(data.Claimed_Amount)}" paddingLeft="0" textAlign="right" width="100%"/>
+										</mx:HBox>		          
+						    	</mx:Component>
+								</mx:itemRenderer>  
+						</mx:AdvancedDataGridColumn>						
+ 		<!--<mx:AdvancedDataGridColumn id="adgColExpectedAmt2" dataField="Expected_Amount"       
+					  	headerText="Expected Amt." textAlign="right"  editable="false"  visible="true" labelFunction="fnFormatDollars"/>
+						-->
+					 	<mx:AdvancedDataGridColumn id="adgColERate" dataField="E_Rate" headerText="Exp. Rate"   editable="false"  visible="false" />
+					  <mx:AdvancedDataGridColumn id="adgColClaimedRate" dataField="Claimed_Rate" headerText="Claimed Rate"   editable="false" visible="false" />
+					  <mx:AdvancedDataGridColumn id="adgColEVolume" dataField="E_Volume" headerText="Exp. Volume"   editable="false" visible="false" />
+					  <mx:AdvancedDataGridColumn id="adgColClaimedVol" dataField="Claimed_Volume" headerText="Claimed Volume"   editable="false" visible="false" />
+					  <mx:AdvancedDataGridColumn id="adgColClaimedVolUOM" dataField="Claimed_Volume_UOM" headerText="Claimed Volume UOM"   editable="false" visible="false" /> 					 
+					  <mx:AdvancedDataGridColumn id="adgColFinalPayment" headerText="Final Payment $" editable="false"  visible="true" 
+					      textAlign="right" sortCompareFunction="sortCompareFunc" dataField="Final_Payment">
+					   <mx:itemRenderer>          
+						    	<mx:Component >
+										<mx:HBox textAlign="right" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle">
+											<mx:Label text="{outerDocument.fnFormatDollars2(data.Final_Payment)}" paddingLeft="0" textAlign="right" width="100%"/>
+										</mx:HBox>		          
+						    	</mx:Component>
+								</mx:itemRenderer>  
+					  	
+					  </mx:AdvancedDataGridColumn>   <!-- dataField="Final_Payment"  --> 
+					   <!-- itemRenderer="com.components.compFinalPayment" -->
+ 					  <mx:AdvancedDataGridColumn id="adgColdDone" 
+					  	editable="false" width="30" textAlign="center" showDataTips="true" dataField="iDone"
+					  	headerRenderer="com.components.VDGHeader"><!-- headerText="Checked?"  -->
+					  	<mx:itemRenderer>          
+						    	<mx:Component>
+						    		<mx:HBox textAlign="center" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle" width="100%">            
+						    		<mx:CheckBox  textAlign="center" selected="{(((data.iDone=='1')&amp;&amp;(data.Expected_Amount &lt;= data.Claimed_Amount)) ||(data.iDone=='2'))}"   change="outerDocument.fniDoneChanged(this);"
+						    			paddingLeft="6" enabled="{(outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0')}"/><!--  -->
+						    		</mx:HBox>		
+						    	</mx:Component>
+								</mx:itemRenderer>
+					  </mx:AdvancedDataGridColumn>
+					  <mx:AdvancedDataGridColumn id="adgColCountFlag" headerText="Count" editable="false" width="20" textAlign="center" showDataTips="true" dataField="Count_Flag" >
+					  	<mx:itemRenderer>          
+						    	<mx:Component>
+						    	<mx:HBox textAlign="center" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle" width="100%">            
+						    		<mx:CheckBox textAlign="center" selected="{data.Count_Flag=='1'}"  change="outerDocument.fnCountChange(this);" 
+						    			paddingLeft="6" enabled="{(outerDocument.sBBStatusID=='2') &amp;&amp; (data.Dummy_Program=='0') &amp;&amp; (data.UnKnown_Item=='0')}"/>
+						    	</mx:HBox>
+						    	</mx:Component>
+								</mx:itemRenderer>
+					  </mx:AdvancedDataGridColumn>
+					   
+					</mx:groupedColumns>
+				</mx:AdvancedDataGrid>
+				</mx:HBox>
+			</mx:VBox>
+		</mx:Panel>
+<!--	</mx:HDividedBox>-->
+	<!--*********************************	BOTTOM PANEL (Import Button) ************************************************************-->
+</mx:Canvas>

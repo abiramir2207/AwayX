@@ -1,0 +1,268 @@
+===== QUERY: GETSITE =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGETSITE = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("site_table")>
+<cfif useLakebaseForGETSITE>
+	<cftry>
+		<cfset GETSITE = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("site_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGETSITE = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGETSITE>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetEvent =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetRecur =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCat =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCat = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetCat>
+	<cftry>
+		<cfset GetCat = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"id" = "eq.#attributes.categories#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCat = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCat>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRecur =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetEvent =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetCalColors =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCalColors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("site_table")>
+<cfif useLakebaseForGetCalColors>
+	<cftry>
+		<cfset GetCalColors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("site_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCalColors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCalColors>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Getcategories =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetcategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetcategories>
+	<cftry>
+		<cfset Getcategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcategories>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRecurType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetRecurType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("recurtype_table")>
+<cfif useLakebaseForGetRecurType>
+	<cftry>
+		<cfset GetRecurType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("recurtype_table", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRecurType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRecurType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkdupe =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: insertevent =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getmax =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetRecurTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetRecurTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("recurtype_table")>
+<cfif useLakebaseForGetRecurTypes>
+	<cftry>
+		<cfset GetRecurTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("recurtype_table", {
+				"recurtypeid" = "eq.#RECURTYPE#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRecurTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRecurTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertRecurrance =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertRecurrance =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getevent =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetAdmin =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: GetCalColors =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCalColors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("site_table")>
+<cfif useLakebaseForGetCalColors>
+	<cftry>
+		<cfset GetCalColors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("site_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCalColors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCalColors>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Getcategories =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetcategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetcategories>
+	<cftry>
+		<cfset Getcategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcategories>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetSelectedType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSelectedType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetSelectedType>
+	<cftry>
+		<cfset GetSelectedType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"id" = "eq.#attributes.categories#",
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSelectedType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSelectedType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Getcategories =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetcategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetcategories>
+	<cftry>
+		<cfset Getcategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcategories>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getMonthsEvents =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetNoGreet =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetNoGreet = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("greeting")>
+<cfif useLakebaseForGetNoGreet>
+	<cftry>
+		<cfset GetNoGreet = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("greeting", {
+				"greeting_date" = "eq.00/00",
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNoGreet = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNoGreet>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetWeekRecur =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetGreeting =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetRecur =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: GetGreeting =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

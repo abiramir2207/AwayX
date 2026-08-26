@@ -1,0 +1,26 @@
+===== QUERY: GetExistingComponent =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetExistingComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForGetExistingComponent>
+	<cftry>
+		<cfset GetExistingComponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"distributor_product_integrity_rule_id" = "eq.#compID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetExistingComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetExistingComponent>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRuleProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetRuleDistributors =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

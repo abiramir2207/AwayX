@@ -1,0 +1,182 @@
+===== QUERY: Query_#CompID# =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForQuery_#CompID# = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
+<cfif useLakebaseForQuery_#CompID#>
+	<cftry>
+		<cfset Query_#CompID# = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_products_restricted", {
+				"discount_type_id" = "eq.2 --Rebate",
+				"component_id" = "eq.#CompID#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForQuery_#CompID# = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForQuery_#CompID#>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetAllowanceCodeNumber =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAllowanceCodeNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetactivecomps")>
+<cfif useLakebaseForqGetAllowanceCodeNumber>
+	<cftry>
+		<cfset qGetAllowanceCodeNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetactivecomps", {
+				"allowance_code_id" = "eq.#thisTmpAllowanceCode#",
+				"select" = "allowance_code_number"
+			}), "allowance_code_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllowanceCodeNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllowanceCodeNumber>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AlternateRateSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAlternateRateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForAlternateRateSettings>
+	<cftry>
+		<cfset AlternateRateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#qCompName.Program_Rebates_Component_Name_ID#",
+				"status" = "eq.0",
+				"select" = "alternate_recapture_rate_label"
+			}), "alternate_recapture_rate_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlternateRateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlternateRateSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AlternateRateSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAlternateRateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForAlternateRateSettings>
+	<cftry>
+		<cfset AlternateRateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#qCompName.Program_Rebates_Component_Name_ID#",
+				"status" = "eq.0",
+				"select" = "alternate_recapture_rate_label"
+			}), "alternate_recapture_rate_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlternateRateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlternateRateSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getcompetitiveinfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetcompetitiveinfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcompetitiveproductsinfo")>
+<cfif useLakebaseForgetcompetitiveinfo>
+	<cftry>
+		<cfset getcompetitiveinfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcompetitiveproductsinfo", {
+				"product_id" = "eq.#desRebateData.aProd[i].masterItemId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcompetitiveinfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcompetitiveinfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetEZSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetEZSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getezbuttondefaultrates")>
+<cfif useLakebaseForGetEZSettings>
+	<cftry>
+		<cfset GetEZSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getezbuttondefaultrates", {
+				"bsa_foodservice_items_master_id" = "eq.#desRebateData.aProd[i].masterItemId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetEZSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetEZSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ProductInForbiddenlist =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: BRVolume =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: AR_Index =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Pull_Alternate_Rate_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Pull_other_comp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPull_other_comp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForPull_other_comp>
+	<cftry>
+		<cfset Pull_other_comp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_id" = "eq.#desRebateData.aProd[i].Competitor_Name_ID#",
+				"select" = "program_bid_won_by_description"
+			}), "program_bid_won_by_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPull_other_comp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPull_other_comp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: AlternateRateSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForAlternateRateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForAlternateRateSettings>
+	<cftry>
+		<cfset AlternateRateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#qCompName.Program_Rebates_Component_Name_ID#",
+				"status" = "eq.0",
+				"select" = "alternate_recapture_rate_label"
+			}), "alternate_recapture_rate_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlternateRateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlternateRateSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

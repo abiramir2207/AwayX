@@ -1,0 +1,69 @@
+===== QUERY: get_metric =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_metric = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dashboards_sales_metric_lookup")>
+<cfif useLakebaseForget_metric>
+	<cftry>
+		<cfset get_metric = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dashboards_sales_metric_lookup", {
+				"dashboards_sales_metric_lookup_id" = "eq.#form.metric#",
+				"select" = "metric_description,metric_abreviation"
+			}), "metric_description,metric_abreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_metric = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_metric>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_month =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_month = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dashboards_sales_month_lookup")>
+<cfif useLakebaseForget_month>
+	<cftry>
+		<cfset get_month = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dashboards_sales_month_lookup", {
+				"dashboards_sales_month_lookup_id" = "eq.#latest_month#",
+				"select" = "month_description"
+			}), "month_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_month = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_month>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_level =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_level = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dashboards_sales_level_lookup")>
+<cfif useLakebaseForget_level>
+	<cftry>
+		<cfset get_level = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dashboards_sales_level_lookup", {
+				"dashboards_sales_level_lookup_id" = "eq.#form.level#",
+				"select" = "level_description"
+			}), "level_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_level = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_level>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: get_data_1 =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: get_data_2 =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

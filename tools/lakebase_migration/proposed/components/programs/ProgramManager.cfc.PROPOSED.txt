@@ -1,0 +1,412 @@
+===== QUERY: updateUsersagreedcount =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: temp_Table_Drop =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckProgramAgreed =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCheckContractGroups =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCheckContractDist =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qgetDateExclusionDates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qgetagreedtprogramsettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetagreedtprogramsettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqgetagreedtprogramsettings>
+	<cftry>
+		<cfset qgetagreedtprogramsettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "edit_basic_info,edit_operators,edit_opr_basinfo"
+			}), "edit_basic_info,edit_operators,edit_opr_basinfo"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetagreedtprogramsettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetagreedtprogramsettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qsaveEditAgreedProgramSettings =====
+STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
+
+===== QUERY: qgetmodifyinguser =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetmodifyinguser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqgetmodifyinguser>
+	<cftry>
+		<cfset qgetmodifyinguser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.user_id#",
+				"select" = "name_first + ' ' + name_last as user_name"
+			}), "name_first + ' ' + name_last as user_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetmodifyinguser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetmodifyinguser>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetStartDateDates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qgetParentProgramInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetParentProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqgetParentProgramInfo>
+	<cftry>
+		<cfset qgetParentProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.ProgramID#",
+				"select" = "revision_of_contract_main_id"
+			}), "revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetParentProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetParentProgramInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetFav =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetFav = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_favorites")>
+<cfif useLakebaseForqgetFav>
+	<cftry>
+		<cfset qgetFav = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_favorites", {
+				"user_id" = "eq.#arguments.user_id#",
+				"program_id" = "eq.#items[i].data#",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetFav = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetFav>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsFav =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetFav =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetFav = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_favorites")>
+<cfif useLakebaseForqgetFav>
+	<cftry>
+		<cfset qgetFav = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_favorites", {
+				"user_id" = "eq.#arguments.user_id#",
+				"program_id" = "eq.#items[i].data#",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetFav = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetFav>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDelFav =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetFavs =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetFavs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_favorites")>
+<cfif useLakebaseForqgetFavs>
+	<cftry>
+		<cfset qgetFavs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_favorites", {
+				"user_id" = "eq.#arguments.User_ID#",
+				"select" = "program_id,program_number"
+			}), "program_id,program_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetFavs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetFavs>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgramFreightComponentType =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qSetProgramFreightComponentType =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateProgramLockTypeID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdateProgramLockTypeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqUpdateProgramLockTypeID>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main_aux_data",
+			{
+				"contract_main_id" = "eq.#programId#"
+			},
+			{
+				"program_lock_type_id" = "#val#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateProgramLockTypeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateProgramLockTypeID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetParentProgramInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetParentProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetParentProgramInfo>
+	<cftry>
+		<cfset qGetParentProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.ProgramID#",
+				"select" = "revision_of_contract_main_id"
+			}), "revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetParentProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetParentProgramInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetRevisions =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetCompetitorList =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetCompetitorSource =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetCompetitorSource = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_source")>
+<cfif useLakebaseForqGetCompetitorSource>
+	<cftry>
+		<cfset qGetCompetitorSource = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_source", {
+				"deleted" = "eq.0",
+				"active" = "eq.#arguments.Active#",
+				"order" = "program_bid_source_description.asc",
+				"select" = "program_bid_source_id,program_bid_source_code,program_bid_source_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_source_id,program_bid_source_code,program_bid_source_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCompetitorSource = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCompetitorSource>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetCompetitorSourceType =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetCompetitorSourceType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_source_type")>
+<cfif useLakebaseForqGetCompetitorSourceType>
+	<cftry>
+		<cfset qGetCompetitorSourceType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_source_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_source_type_description.asc",
+				"select" = "program_bid_source_type_id,program_bid_source_type_code,program_bid_source_type_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_source_type_id,program_bid_source_type_code,program_bid_source_type_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCompetitorSourceType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCompetitorSourceType>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetPriceListBracketForProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetPriceListBracketForProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqGetPriceListBracketForProgram>
+	<cftry>
+		<cfset qGetPriceListBracketForProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "price_list_id,pricebracket_update,pricebracket_update_by,pricebracket_update_date"
+			}), "price_list_id,pricebracket_update,pricebracket_update_by,pricebracket_update_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceListBracketForProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceListBracketForProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetAllPriceListBrackets =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetAllPriceListBrackets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("v_price_list_bracket")>
+<cfif useLakebaseForqGetAllPriceListBrackets>
+	<cftry>
+		<cfset qGetAllPriceListBrackets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("v_price_list_bracket", {
+				"order" = "bracket.asc",
+				"select" = "bracket"
+			}), "bracket"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllPriceListBrackets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllPriceListBrackets>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qIsPriceListBracketOverridden =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqIsPriceListBracketOverridden = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqIsPriceListBracketOverridden>
+	<cftry>
+		<cfset qIsPriceListBracketOverridden = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "pricebracket_update"
+			}), "pricebracket_update"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsPriceListBracketOverridden = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsPriceListBracketOverridden>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qIsPriceListBracketOverridden =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqIsPriceListBracketOverridden = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqIsPriceListBracketOverridden>
+	<cftry>
+		<cfset qIsPriceListBracketOverridden = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "pricebracket_update"
+			}), "pricebracket_update"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsPriceListBracketOverridden = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsPriceListBracketOverridden>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetItemCustPriceTemplatePS =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qApprovedMargin =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qIsBidTemplate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqIsBidTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqIsBidTemplate>
+	<cftry>
+		<cfset qIsBidTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"isdominant" = "eq.1",
+				"bidrequeststatuson" = "eq.1",
+				"limit" = "1",
+				"select" = "programcontrol_panel_options_id"
+			}), "programcontrol_panel_options_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsBidTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsBidTemplate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qIsBidProgram =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: ProgramEZRates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: delProgramEZRates =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insProgramEZRates =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetProgramEffectiveDateSpan =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qCheckProductGroupExistsOnProgram =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckProductGroupExistsOnProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqCheckProductGroupExistsOnProgram>
+	<cftry>
+		<cfset qCheckProductGroupExistsOnProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.1",
+				"limit" = "1",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckProductGroupExistsOnProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckProductGroupExistsOnProgram>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

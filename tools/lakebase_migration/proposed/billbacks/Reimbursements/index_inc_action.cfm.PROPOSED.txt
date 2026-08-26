@@ -1,0 +1,50 @@
+===== QUERY: EditValues =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForEditValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement")>
+<cfif useLakebaseForEditValues>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_reimbursement",
+			{
+				"bb_reimbursement_id" = "eq.#BB_Reimbursement_ID#"
+			},
+			{
+				"distributor_id" = "#Distributor_ID#",
+				"contract_main_id" = "#Contract_Main_ID#",
+				"reimbursement_type" = "#ReimbursementType#",
+				"reimbursement_amount" = "#ReimbursementAmount#",
+				"reimbursement_number" = "#ReimbursementNumber#",
+				"reimbursement_date" = "#ReimbursementDate#",
+				"reimbursement_comments" = "#ReimbursementComments#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEditValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEditValues>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: InsertintoDatabase =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetEntries =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetEntries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement")>
+<cfif useLakebaseForGetEntries>
+	<cftry>
+		<cfset GetEntries = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_reimbursement", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetEntries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetEntries>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

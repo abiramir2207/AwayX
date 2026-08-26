@@ -1,0 +1,9 @@
+===== QUERY: deleteBBCM =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: INSERTBPCM =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateGeneralInformation =====
+STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
+

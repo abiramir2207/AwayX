@@ -1,0 +1,40 @@
+// Customize the look and feel of the grid with Sass variables
+// Up-to-date list of variables is available in the source code: https://github.com/ag-grid/ag-grid/blob/latest/src/styles/theme-fresh.scss
+
+// Temporary, due to bug in 17.0.0. should use only $icons-path:  "~ag-grid/src/styles/material-icons/"
+// $icons-path: "../../ag-grid/src/styles/icons/";
+// $ag-mat-icons-path: "../../ag-grid/src/styles/material-icons/";
+$icons-path: "../../ag-grid/src/styles/ag-theme-balham/icons/";
+
+// This section contains changes for the Blacksmith Applications style
+$border-color: #9B9B9C;
+$foreground-color: #343540;
+$foreground-opacity: 0.60;
+$header-background-color: #FFCE84;
+$header-background-image: none;
+$hover-color: #e6f0ff;
+$odd-row-background-color: #F5F6FA;
+$secondary-foreground-color-opacity: 1.0;
+$secondary-foreground-color: black;
+$selected-color: #bfd9ff;
+
+
+// this next group of settings make the grid dense:
+$row-height: 20px;  // The row height - if you change this, you also have to change the value of the 'rowHeight' in the grid options.
+$header-height: 22px; // The header row height - if you change this, you also have to change the value of the `headerHeight` in the grid options. 
+$grid-size: 3px;  // default 4px
+$cell-horizontal-padding: 4px;
+$icon-size: 14px;
+$font-size: 12px;
+
+// Changes the font family
+// $font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+
+
+// changes the selected checkbox color
+$accent-color: #406BE4;
+
+@import "../../ag-grid/src/styles/ag-grid.scss";
+// with v23, this moves to legacy support, see https://www.ag-grid.com/javascript-grid-themes-v23-migration/
+//@import "../../ag-grid/src/styles/ag-theme-balham/sass/ag-theme-balham.scss";
+@import "../../ag-grid/src/styles/ag-theme-balham/sass/legacy/ag-theme-balham-v22-compat.scss";

@@ -1,0 +1,20 @@
+===== QUERY: var_returnVal =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvar_returnVal = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_group")>
+<cfif useLakebaseForvar_returnVal>
+	<cftry>
+		<cfset var_returnVal = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_group", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_returnVal = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_returnVal>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

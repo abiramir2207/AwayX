@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<!--- This is the check box displayed in the datagrid itemrenderer (row level) that a user selects distributors with-->
+<!-- components\chBoxIsSelected.mxml -->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	backgroundAlpha="0" backgroundColor="white" horizontalAlign="center" width="3"
+	implements="mx.controls.listClasses.IDropInListItemRenderer,mx.managers.IFocusManagerComponent" remove="cleanUp()">
+    <!--<mx:Script>
+        <![CDATA[
+           /*  import mx.controls.listClasses.ListData;
+            import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+            import mx.controls.listClasses.BaseListData;
+           	import mx.controls.advancedDataGridClasses.AdvancedDataGridItemRenderer
+            import mx.events.FlexEvent; */
+            
+             // Implement the drawFocus() method for the VBox.
+            override public function drawFocus(draw:Boolean):void {
+                cbIsSelected.setFocus();
+            }
+            
+            [Bindable]
+            public var varCbSelected:Boolean;            
+        ]]>
+    </mx:Script>-->
+   	<mx:Script>
+        <![CDATA[
+			import com.shared.models.Destroy;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ListCollectionView;
+			import mx.controls.AdvancedDataGrid;
+			import mx.controls.DataGrid;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			import mx.controls.dataGridClasses.DataGridListData;
+			import mx.controls.listClasses.BaseListData;
+			import mx.events.FlexEvent;
+			
+			import spark.components.DataGrid;
+			
+			private var adg:AdvancedDataGrid;
+			private var ac:ArrayCollection;
+			
+			private function cleanUp():void{
+				Destroy.cleanUp(this,mx_internal);
+			}
+
+            private var _listData:AdvancedDataGridListData;
+            // Define a property for returning the new value to the cell.
+            [Bindable]
+            public var varCbSelected:Boolean;
+           // public var value:Object;            
+
+            // Implement the drawFocus() method for the VBox.
+            override public function drawFocus(draw:Boolean):void {
+                this.cbIsSelected.setFocus();
+            }
+             // Implement the setFocus() method for the VBox.
+            override public function setFocus():void {
+                cbIsSelected.setFocus();
+            }
+			[Bindable]
+            override public function get data():Object {
+                return super.data;
+            }
+           
+            override public function set data(value:Object):void {
+				super.data = value;
+				if(_listData && value)
+				{
+					cbIsSelected.selected = value[_listData.dataField];
+				}	
+            }
+			[Bindable]
+            public function get listData():BaseListData
+            {
+                return _listData;
+            }
+
+            public function set listData(value:BaseListData):void
+            {
+                _listData = AdvancedDataGridListData(value);
+				if(_listData && value)
+				{
+					if(value.owner as AdvancedDataGrid){
+						adg = value.owner as AdvancedDataGrid;
+					}
+					ac = adg.dataProvider as ArrayCollection;
+					if(!ac && adg.dataProvider is ListCollectionView){
+						ac = adg.dataProvider.list as ArrayCollection;
+					}
+				}
+				
+            } 
+     		private function setSelected(b:Boolean):void{
+      			/* dataField = isSelected */
+				if(ac){
+					ac.disableAutoUpdate();
+				}
+            	this._listData.item[_listData.dataField] = b;
+            	varCbSelected = b;
+            }
+
+        ]]>
+    </mx:Script>
+ <!--   <mx:Binding destination="varCbSelected" source="cbIsSelected.selected"/>-->
+    <mx:CheckBox id="cbIsSelected" tabEnabled="true" focusEnabled="true"
+		change="setSelected(this.cbIsSelected.selected)"
+        height="100%" width="50%"
+        selected="{data.isSelected}"
+         /><!--click="varCbSelected=cbIsSelected.selected"   selected="{data.isSelected}"  change="setSelected(this.cbIsSelected.selected)"  -->
+</mx:VBox>

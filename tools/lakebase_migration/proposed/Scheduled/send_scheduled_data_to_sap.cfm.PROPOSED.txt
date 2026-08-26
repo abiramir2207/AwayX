@@ -1,0 +1,493 @@
+===== QUERY: getlumpvolsum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getZeroProductgroups =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetZeroProductgroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getexcludedprogramrates")>
+<cfif useLakebaseForgetZeroProductgroups>
+	<cftry>
+		<cfset getZeroProductgroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getexcludedprogramrates", {
+				"rate" = "eq.0",
+				"select" = "product_group"
+			}), "product_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetZeroProductgroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetZeroProductgroups>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getDiscountTypeRates =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getDiscountTypeRates =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: deleteprogramperiods =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertprogramperiods =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: itemcount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForitemcount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForitemcount>
+	<cftry>
+		<cfset itemcount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemcount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemcount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getfamilylumpvol =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetfamilylumpvol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getlumpprodvolume")>
+<cfif useLakebaseForgetfamilylumpvol>
+	<cftry>
+		<cfset getfamilylumpvol = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getlumpprodvolume", {
+				"product_group_id" = "eq.#product_family#",
+				"select" = "volume_cs as family_volume"
+			}), "volume_cs as family_volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetfamilylumpvol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetfamilylumpvol>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: familycount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForfamilycount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForfamilycount>
+	<cftry>
+		<cfset familycount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#",
+				"select" = "product_group"
+			}), "product_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfamilycount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfamilycount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getmaxpricinglevel =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getgrouprate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetgrouprate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getexcludedprogramrates")>
+<cfif useLakebaseForgetgrouprate>
+	<cftry>
+		<cfset getgrouprate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getexcludedprogramrates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#",
+				"product_group" = "eq.#getDiscountTypeRates.product_group#",
+				"pricing_level_id" = "eq.#getmaxpricinglevel.pricing_level#",
+				"select" = "rate"
+			}), "rate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetgrouprate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetgrouprate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: gettestCount =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: getprogramsettlementdetails =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getprogramerrordetails =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getprogramdetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetprogramdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForgetprogramdetails>
+	<cftry>
+		<cfset getprogramdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"bsa_program_id" = "eq.#RebateID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetprogramdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetprogramdetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updateprogramwebservicesdetails =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: insertprogramwebservicesdetails =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: insertwebserviceserrordetails =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updateSettledRecord =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdateSettledRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForupdateSettledRecord>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_webservices_detail",
+			{
+				"bsa_program_id" = "eq.#component[i].BlackSmithRebateNumber.XmlText#"
+			},
+			{
+				"program_status" = "D"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateSettledRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateSettledRecord>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: selectSettledRecord =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForselectSettledRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForselectSettledRecord>
+	<cftry>
+		<cfset selectSettledRecord = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"bsa_program_id" = "eq.#component[i].BlackSmithRebateNumber.XmlText#",
+				"program_status" = "eq.D",
+				"select" = "program_status"
+			}), "program_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselectSettledRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselectSettledRecord>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Program_Detail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForProgram_Detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForProgram_Detail>
+	<cftry>
+		<cfset Program_Detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#program_id#",
+				"select" = "contract_number,is_a_revision"
+			}), "contract_number,is_a_revision"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Detail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetRevisionVersion =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Getcompany =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ApproveContract =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

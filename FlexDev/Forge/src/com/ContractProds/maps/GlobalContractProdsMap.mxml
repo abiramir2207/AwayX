@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Holds all event handlers registered with Mate : SearchEvent and native : FlexEvent -->
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.ContractProds.events.*;
+			import com.ContractProds.models.*;
+			import com.ContractProds.views.pm.*;
+			import com.shared.models.SettingsManager;
+			import com.shared.vos.Settings;
+			//import com.ContractProds.vos.*;
+		]]>
+	</mx:Script>
+ 	<mate:Debugger level="{Debugger.ALL}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  ....................................................... -->
+
+	<!-- FlexEvent.PREINITIALIZE ....................................................... -->
+
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE" debug="true">
+		<ObjectBuilder generator="{SettingsManager}" cache="global" />
+		<ObjectBuilder generator="{ComponentManager}" id="oComponentManager" cache="global" />
+		<ObjectBuilder generator="{BAError}" id="oBAError" />
+	</EventHandlers>
+	
+	<!---............... SET_PAYEE ................ -->
+    <EventHandlers type="{ComponentEvent.SET_PAYEE}" debug="true" id="eSET_PAYEE">
+        <MethodInvoker 	generator="{ComponentManager}" method="setPayee" />
+    </EventHandlers>
+	
+</EventMap>

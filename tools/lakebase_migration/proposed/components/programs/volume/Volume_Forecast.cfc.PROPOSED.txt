@@ -1,0 +1,153 @@
+===== QUERY: qGetVFClass =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetVFClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_class")>
+<cfif useLakebaseForqGetVFClass>
+	<cftry>
+		<cfset qGetVFClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_class", {
+				"deleted" = "eq.0",
+				"order" = "vf_class_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVFClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVFClass>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qOneVFClass =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qDeleteVFClass =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateVFClass =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertVFClass =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qPopulateVFPeriod =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetFiscalYears =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetVFGroups =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetVFGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_group")>
+<cfif useLakebaseForqGetVFGroups>
+	<cftry>
+		<cfset qGetVFGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_group", {
+				"deleted" = "eq.0",
+				"order" = "vf_group_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVFGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVFGroups>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertVFGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteVFGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qOneVFGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateVFGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertVFPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeleteVFPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCopyVFPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qUpdCopyVFPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qOneVFPlan =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateVFGroup =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Pg_groups_info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForPg_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_planning_groups")>
+<cfif useLakebaseForPg_groups_info>
+	<cftry>
+		<cfset Pg_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_planning_groups", {
+				"vf_plan_id" = "eq.#arguments.edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPg_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPg_groups_info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Pg_products =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Pg_products =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Pg_products =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Dist_groups_info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDist_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_distributor_planning_groups")>
+<cfif useLakebaseForDist_groups_info>
+	<cftry>
+		<cfset Dist_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_distributor_planning_groups", {
+				"vf_plan_id" = "eq.#arguments.edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_groups_info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Dist_products =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Dist_products =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Dist_products =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: qInsertVFDistibutorPG =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

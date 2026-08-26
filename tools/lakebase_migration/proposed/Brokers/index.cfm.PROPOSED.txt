@@ -1,0 +1,63 @@
+===== QUERY: Get_Broker_Plans =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Broker_Plans = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_action_plan")>
+<cfif useLakebaseForGet_Broker_Plans>
+	<cftry>
+		<cfset Get_Broker_Plans = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("broker_action_plan", {
+				"order" = "date_created_on.desc",
+				"select" = "broker_action_plan_id,bsa_operator_id,date_created_on,user_id"
+			}), "broker_action_plan_id,bsa_operator_id,date_created_on,user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Broker_Plans = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Broker_Plans>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Operator_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Operator_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Name>
+	<cftry>
+		<cfset Get_Operator_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#BSA_Operator_ID#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_User_Name =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_User_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_User_Name>
+	<cftry>
+		<cfset Get_User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_User_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_User_Name>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

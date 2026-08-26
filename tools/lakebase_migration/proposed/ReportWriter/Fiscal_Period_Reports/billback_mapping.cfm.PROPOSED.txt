@@ -1,0 +1,27 @@
+===== QUERY: DeletePrior =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: BillbackSummary =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: InsertIntoBillbackSummary =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetAll =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_summary")>
+<cfif useLakebaseForGetAll>
+	<cftry>
+		<cfset GetAll = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_billback_summary", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAll = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAll>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,18 @@
+===== QUERY: GetTradePrograms =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetTradePrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("trade_programs")>
+<cfif useLakebaseForGetTradePrograms>
+	<cftry>
+		<cfset GetTradePrograms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("trade_programs", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTradePrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTradePrograms>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

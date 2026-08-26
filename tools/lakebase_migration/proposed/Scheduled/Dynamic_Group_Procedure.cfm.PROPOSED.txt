@@ -1,0 +1,112 @@
+===== QUERY: EnterLog =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdatedBitInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: ProductCapture =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetParam =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetParam = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGetParam>
+	<cftry>
+		<cfset GetParam = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#Program_ID_Var#",
+				"is_group" = "eq.1",
+				"dynamic_static_groups" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id,program_weight,distributor_group_level_id,distributor_group_id"
+			}), "contract_main_id,program_weight,distributor_group_level_id,distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetParam = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetParam>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CustomerCapture =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: SetProcessed =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForSetProcessed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dynamic_group_processed_program")>
+<cfif useLakebaseForSetProcessed>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dynamic_group_processed_program",
+			{
+				"is_processed" = "eq.0",
+				"contract_main_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_processed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSetProcessed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSetProcessed>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ResetUpdatedBit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForResetUpdatedBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_members")>
+<cfif useLakebaseForResetUpdatedBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("group_members",
+			{
+				"updated_bit" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"updated_bit" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetUpdatedBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetUpdatedBit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ResetUpdatedBit =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForResetUpdatedBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_members")>
+<cfif useLakebaseForResetUpdatedBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("group_members",
+			{
+				"updated_bit" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"updated_bit" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetUpdatedBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetUpdatedBit>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: EnterLog =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

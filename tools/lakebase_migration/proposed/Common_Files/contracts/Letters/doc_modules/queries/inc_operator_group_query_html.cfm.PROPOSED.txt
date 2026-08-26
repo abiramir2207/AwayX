@@ -1,0 +1,6 @@
+===== QUERY: thisTag.qOperatorDetails =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: thisTag.qOperatorSecondaryDetails =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

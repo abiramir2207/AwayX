@@ -1,0 +1,109 @@
+.gray	{background-color: #dfdfe1;}
+.green	{background-color: #dddddd;}  <!---C8FBC9--->
+.white	{background-color: #FFFFFF;}
+.ltgreen	{background-color: #C8FBC9;}  <!---EAFFEA--->
+.txt {
+	font-size: 10px;
+	font-weight: normal;
+}
+.txtRed {
+	font-size: 11px;
+	font-weight: bold;
+	color: #990000;
+}
+.colHead {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	
+}
+.rowHead {
+	font-family: Geneva, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000099;
+	text-align: left;
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	border-bottom-color: #990000;
+	background-color: #ffce84;
+}
+.baTd {
+	<!---border-color:black;--->
+	border-top-width: 1px;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-left-width: 1px;
+	border-top-style: none;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: none;
+}
+.baTable {
+	<!---border-color:black;--->
+	border-top-width: 1px;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-left-width: 1px;
+	border-top-style:none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: solid; 
+}
+
+.NoBorder {
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+.Grayed
+{
+	color: 				gray;
+	font-family:		Arial;
+	font-size :			11px;
+} 
+.rounded_corners {
+	/*background-color: COLOR;           if needed */
+	border: 1px solid #990000;   /* if needed */
+	border-radius: 20px;
+	font-weight: bold;
+	width: 25%;
+	height: 25px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+TD.filterheadernotselected
+{
+	background-color 	: dddddd;
+	border-bottom		: solid 2px black;
+	background-color 	: FFE083;
+	cursor				: hand;	
+}
+TD.filterheaderselected
+{
+	border-left			: solid 2px black;
+	border-top			: solid 2px black;
+	border-right			: solid 2px black;
+	background-color 	: 800000;
+	color				: white;
+	cursor				: hand;	
+	TEXT-TRANSFORM		: uppercase;
+}
+A.filtertablink, A:Hover.filtertablink
+{
+	color: 				white;
+	font-family:		Arial;
+	font-size :			11px; 
+	font-weight:		bold;
+	text-decoration:	none;
+}
+A:visited.filtertablink
+{
+	color: 				white;
+	font-family:		Arial;
+	font-size :			11px; 
+	font-weight:		bold;
+	text-decoration:	none;
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	 	This is a ItemRenderer for displaying Datagrid Header labels vertically
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="0" paddingTop="0" paddingRight="0" paddingBottom="0" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+		[Embed(systemFont='Verdana', fontName='myVerdana', mimeType='application/x-font', unicodeRange='U+0020-U+007E')] 
+	
+		public var myVerdana:Class;
+	  import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+		import mx.managers.SystemManager;
+		
+		[Bindable] private var _text:String;
+		[Bindable] private var src:String;
+	
+		]]>
+	</mx:Script>
+			<mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" 
+					id="imgDUP"	
+					width="22"
+					height="22"
+					source="/flex/assets/Images/yes_big.gif" 
+					useHandCursor="false" 
+					buttonMode="true" 
+					mouseChildren="false"
+					/><!-- 	toolTip="Have you reviewed this record?" -->
+</mx:HBox>   

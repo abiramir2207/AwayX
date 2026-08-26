@@ -1,0 +1,97 @@
+===== QUERY: get_profile_lock_info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForget_profile_lock_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForget_profile_lock_info>
+	<cftry>
+		<cfset get_profile_lock_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"is_locked" = "eq.1",
+				"select" = "locked_by_user_id"
+			}), "locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_profile_lock_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_profile_lock_info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_profile_lock =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_profile_lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForUpdate_profile_lock>
+	<cftry>
+		<cfset application.oLakebase.updateRows("profiles",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by_user_id" = javaCast("null",""),
+				"lock_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_profile_lock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_profile_lock>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_profile_lock =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_profile_lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForUpdate_profile_lock>
+	<cftry>
+		<cfset application.oLakebase.updateRows("profiles",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by_user_id" = javaCast("null",""),
+				"lock_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_profile_lock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_profile_lock>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_profile_lock =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_profile_lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForUpdate_profile_lock>
+	<cftry>
+		<cfset application.oLakebase.updateRows("profiles",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by_user_id" = javaCast("null",""),
+				"lock_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_profile_lock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_profile_lock>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

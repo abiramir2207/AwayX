@@ -1,0 +1,40 @@
+===== QUERY: qGetActiveComps =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetallcompfixedprice")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetallcompfixedprice", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GLQuery =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGLQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForGLQuery>
+	<cftry>
+		<cfset GLQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"deleted" = "eq.0",
+				"is_active" = "eq.1",
+				"select" = "gl_account,gl_account_desc,gl_account_id"
+			}), "gl_account,gl_account_desc,gl_account_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGLQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGLQuery>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

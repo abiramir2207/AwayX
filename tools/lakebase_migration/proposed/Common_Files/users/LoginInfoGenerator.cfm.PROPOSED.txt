@@ -1,0 +1,40 @@
+===== QUERY: GetUserInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#LoginGenerator.User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CheckForDuplicateUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckForDuplicateUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCheckForDuplicateUserName>
+	<cftry>
+		<cfset CheckForDuplicateUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_code" = "eq.#tempusername#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForDuplicateUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForDuplicateUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

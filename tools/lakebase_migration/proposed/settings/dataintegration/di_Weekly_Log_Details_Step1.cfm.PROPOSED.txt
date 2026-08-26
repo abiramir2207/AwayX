@@ -1,0 +1,3 @@
+===== QUERY: Q_Weekly_log_Entries =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

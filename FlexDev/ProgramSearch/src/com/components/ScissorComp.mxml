@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This handles the program delete logic. -->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="20" horizontalGap="1" horizontalAlign="center" verticalAlign="middle">
+ <mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+	<![CDATA[
+		import com.events.SearchProgramEvent;
+ 		
+		import mx.controls.Alert;
+		import mx.utils.ObjectUtil;
+		import flash.external.ExternalInterface
+		import com.asfusion.mate.events.Dispatcher;
+		import mx.events.CloseEvent;
+
+  	/* Call this event when the user clicks on "yes" to delete a program */
+ 	[Bindable]
+  	private function btnEvent(eventObj:CloseEvent):void
+  	{
+			if (eventObj.detail == Alert.YES)
+			{	
+				var e:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SC_SCISSOR_CLICKED);
+				e.programId = data.contract_main_id;
+				e.userId = parentDocument.iUserID;
+				var e_Dispatcher:Dispatcher = new Dispatcher();
+				e_Dispatcher.dispatchEvent(e); 
+	 		} 
+		}
+  	/* Call this function when the user clicks on the scissors */
+  	private function DeleteProgram():void
+  	{
+			var alertResult:Alert; 
+			var strMessage:String = "";
+			var strDeleteProgramMessage:String = "";
+			if (parseInt(parentDocument.sDeleteIsCancelAutoRenew) >= 1)
+			{ 
+				strDeleteProgramMessage = parentDocument.sDeleteProgramMessage;
+				if(parentDocument.sDeleteProgramMessage.length >= 1)
+				{
+					strDeleteProgramMessage = strDeleteProgramMessage + "\n";
+				}
+			}  
+			strMessage = strDeleteProgramMessage + "Are you sure you want to delete this program?";					
+			alertResult = Alert.show(strMessage	, "Delete Confirmation!", Alert.YES | Alert.NO, this, btnEvent);  	
+		}
+   		[Embed(source='/assets/images/scissor.gif')]
+   		[Bindable]
+   		public var imgCl:Class;
+	]]>
+</mx:Script>
+
+<mx:Button xmlns:mx="http://www.adobe.com/2006/mxml" 
+	id="btnScissor"	
+	icon="{getSource(data.status_id)}" 
+	click="DeleteProgram()"
+	toolTip="Delete program {data.contract_number}"> 
+	<mx:Script>
+	<![CDATA[
+		[Bindable]
+		private function getSource(pymntInfo:int):Class
+		{	
+			return imgCl;
+		}	 
+	]]>
+	</mx:Script>
+</mx:Button>
+</mx:HBox>

@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Main View Page holds Search Options and Datagrid panel -->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	 xmlns:ba="com.components.*" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"
+	resizeEffect="Resize" resize="true"  horizontalScrollPolicy="off" verticalScrollPolicy="off" 
+	width="100%" height="100%"><!--title="Product Selection Utility" initialize="initTimer();"-->
+
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.listClasses.ListBase;
+			import com.events.*;
+			import com.models.*;
+			import com.vos.*;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.collections.ArrayCollection;
+			import flash.events.*;
+			import mx.events.DataGridEvent;
+			import mx.controls.listClasses.IDropInListItemRenderer;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			/** dataprovider for dgItems dataGrid*/
+			[Bindable] public var items:ArrayCollection = null;
+			/** Holds a copy of Settings object from SetttingsManager. Contains Labels and userid used in view*/
+			[Bindable] public var oSettings:Settings = new Settings();
+			/** dataprovider for cbo1 combobox*/
+			[Bindable] public var dp1:Array = new Array();
+			/** dataprovider for cbo2 combobox*/
+			[Bindable] public var dp2:Array = new Array();
+			/** dataprovider for cbo3 combobox*/
+			[Bindable] public var dp3:Array = new Array();
+			/** dataprovider for cbo4 combobox*/
+			[Bindable] public var dp4:Array = new Array();
+			/** dataprovider for cbo5 combobox*/
+			[Bindable] public var dp5:Array = new Array();
+			/** dataprovider for cbo6 combobox*/
+			[Bindable] public var dp6:Array = new Array();
+			[Bindable] public var arrSavedItems:Array = new Array();
+			[Bindable] public var arrUserList:Array = new Array();
+			/** descriptor for cbo1 comboBox and dgCol1 datagrid column*/
+			[Bindable] public var lblCol1:String = "";
+			/** descriptor for cbo2 comboBox and dgCol2 datagrid column*/
+			[Bindable] public var lblCol2:String = "";
+			/** descriptor for cbo3 comboBox and dgCol3 datagrid column*/
+			[Bindable] public var lblCol3:String = "";
+			/** descriptor for cbo4 comboBox and dgCol4 datagrid column*/
+			[Bindable] public var lblCol4:String = "";
+			/** descriptor for cbo5 comboBox and dgCol5 datagrid column*/
+			[Bindable] public var lblCol5:String = "";
+			/** descriptor for cbo6 comboBox and dgCol6 datagrid column*/
+			[Bindable] public var lblCol6:String = "";
+			[Bindable] public var brokerLabel:String = "";
+			
+			/* Variables for UI attributes */
+			[Bindable]	public var iButtonHeight:int;
+			[Bindable]	public var iComboBoxHeight:int;
+			[Bindable]	public var iTextInputHeight:int;
+
+			/* private var sm:SearchManager = new SearchManager(); */
+			private var searchStrLen:int = 0;
+			/*  WIP for MULTISELECT
+			private var _cbo1Items:Array = new Array;
+			private var _cbo2Items:Array = new Array;
+			private var _cbo3Items:Array = new Array;
+			private var _cbo4Items:Array = new Array; */
+			
+			/* this goes to the server for data...not used at the moment */
+			private function search() : void 
+			{
+				var event:SearchEvent = new SearchEvent(SearchEvent.GET);
+				this.dispatchEvent(event);
+			}
+
+		/* 	******************************************************************************* */
+		/* SEARCH filter() -> calls setFilter() -> goes to model.searchManager.itemFilterFunc */ 	
+			private function filter():void
+				{
+					/* Alert.show("USER ACCESSSTRUCTURE:: " + ObjectUtil.toString(oSettings.user.stAccessStructure));
+					Alert.show("USER PROFILE:: " + ObjectUtil.toString(oSettings.user.stProfileSettings));
+					Alert.show("APPFLEX :: " + ObjectUtil.toString(oSettings.appFlex));
+					Alert.show("APPSETTINGS :: " + ObjectUtil.toString(oSettings.appSettings)); */
+					//var s:int = getTimer();
+					/* clear the check boxes */
+					this.chBoxReset();
+					/* check if there is any criteria to filter on */
+					if(searchField.text.length > 0 || 
+								cbo1.selectedIndex != 0 || 
+								cbo2.selectedIndex != 0 || 
+								cbo3.selectedIndex != 0 || 
+								cbo4.selectedIndex != 0 ||
+								cbo5.selectedIndex != 0 ||
+								cbo6.selectedIndex != 0)
+					{
+						/* if the user is removing letters from searchstring, deselect combo box filters */
+						if (searchField.text.length < searchStrLen)
+							{
+								this.cboBoxReset();
+							}
+						/* now apply the filters to dp -> dispath FILTER event */
+						setFilter();
+						searchStrLen = searchField.text.length
+					}
+					else if(searchField.text == '') /* there is no criteria to filter on so reload the dp */
+					{
+						filterReset();
+					}
+					/* trace("filter time: "+(getTimer()-s)); */
+					//var t:int = (getTimer()-s)/1000;
+				}
+			
+			/* Reset scrollbar to the top */   
+	        public function resetScrollbarPosition(e:Event):void{
+				dgItems.scrollToIndex(0);
+				}
+				
+			private function setFilter():void {
+					var arrCboSelection:Array = new Array();
+					var n:String;
+					var c:ComboBox;
+					/* keep track of current combo box selections */
+					for (var i:Number = 1; i < 7; i++) 
+							{  /* if combo box does not have "all..." then it is selected add to array */
+								n = "cbo" + i;
+								c = this.vbxFilter.getChildByName(n) as ComboBox;
+								if (c.selectedLabel.indexOf("All ") == -1)
+									{ arrCboSelection.push("cbo" + i)}
+							}
+ 
+					/* set the data we need to pass to Filter Function Event */
+					//var cbo1Indx:int = cbo1.selectedIndices.length;
+					//Alert.show(cbo1Indx + " AA " +ObjectUtil.toString(cbo1.selectedItems) + " items :: \r" + ObjectUtil.toString(cbo1.selectedIndices) + " indexes :: ")
+					var event:SearchEvent = new SearchEvent(SearchEvent.FILTER);
+						event.searchFieldText =  searchField.text;
+						event.f1	=  cbo1.selectedLabel;
+						event.f2	=  cbo2.selectedLabel;
+						event.f3	=  cbo3.selectedLabel;
+						event.f4	=  cbo4.selectedLabel;
+						event.f5	=  cbo5.selectedLabel;
+						event.f6	=  cbo6.selectedLabel;
+						/* dispatch the event */
+	               		this.dispatchEvent(event);
+	               		//cboBoxReset();
+	               	/* update filter selections 
+	               	if (arrCboSelection.indexOf("cbo1") > -1){cbo1.selectedIndex = 1;}
+					if (arrCboSelection.indexOf("cbo2") > -1){cbo2.selectedIndex = 1;}
+					if (arrCboSelection.indexOf("cbo3") > -1){cbo3.selectedIndex = 1;}
+					if (arrCboSelection.indexOf("cbo4") > -1){cbo4.selectedIndex = 1;}
+					if (arrCboSelection.indexOf("cbo5") > -1){cbo5.selectedIndex = 1;}
+					if (arrCboSelection.indexOf("cbo6") > -1){cbo6.selectedIndex = 1;}
+		            */   
+	            }
+	            
+			private function filterReset():void {
+		           	var event:SearchEvent = new SearchEvent(SearchEvent.RESET_FILTER);
+	               		this.dispatchEvent(event);
+		   			this.cboBoxReset();
+		   			this.chBoxReset();
+		   			/* make datagrid look empty for user 
+		   			this.items = new ArrayCollection(); */
+	            }
+	       /* 	******************************************************************************* */
+	           
+	        /* Reset all of the Combo Boxes to have nothing selected */
+	        private function cboBoxReset():void {
+					cbo1.selectedIndex = 0;
+		   			cbo2.selectedIndex = 0;
+		   			cbo3.selectedIndex = 0;
+		   			cbo4.selectedIndex = 0;
+		   			cbo5.selectedIndex = 0;
+		   			cbo6.selectedIndex = 0;
+	            }
+	            
+	 		/* Clear the Check Boxes for use again */
+	         private function chBoxReset():void {
+					this.chFilterSelected.selected = false;
+					//this.chSelectAll.selected = false;
+	            }
+	            
+			/* Handle chFilterSelected checkBox click -> Display on the selected items (filter on isSelected) */
+	        private function filterSelected():void 
+			 	{
+					
+					if (chFilterSelected.selected == 1) /*  display selected items */
+						{	
+							var event:SearchEvent = new SearchEvent(SearchEvent.FILTER_SELECTED);
+							this.dispatchEvent(event);	
+						}
+					else /* bring us back to the last state of filtering */
+						{
+						 filter();
+						}
+				}
+				
+	        /* Handle datagrid row double click (or enter key) -> toggle isSelected value for All selected Rows */
+	         private function selectRow(event:ListEvent):void
+					{
+						/* Loop over selectedItems array (mx.controls.listClasses.ListBase) */
+					   var arrSelectedRows:Array = event.currentTarget.selectedItems;
+					   for each(var item:Object in arrSelectedRows)
+					   	{
+					   		item.isSelected = !item.isSelected;
+					    }
+					    dgItems.invalidateList();
+					}
+					
+			/*  handler for when a user presses enter on a DG row */
+			 private function enterRow(event:KeyboardEvent):void 
+			 	{                
+			 		if (event.keyCode == Keyboard.ENTER) 
+			 		/* ITEM_DOUBLE_CLICK calls selectRow()   */                   
+			 		dgItems.dispatchEvent(new ListEvent(ListEvent.ITEM_DOUBLE_CLICK));
+			 	}
+			 	
+			 /* Handle when user hits enter key in seach box -> call the filter() method */
+			 private function enterSearchBox(event:KeyboardEvent):void 
+			 	{                
+			 		if (event.keyCode == Keyboard.ENTER)
+			 		/* call main filter method */                       
+			 		this.filter();
+			 	}
+
+			/* Handle the Import Items Button Click ****************************** */
+			private function callImportItems():void
+				{
+					/* Dispatch Event */
+					var event:SearchEvent = new SearchEvent(SearchEvent.IMPORT_ITEMS);
+					this.dispatchEvent(event);
+				}
+			/* ******************************************************************* */
+			/* *****	USER LIST FUNCTIONS	************************************** */
+			/* ******************************************************************* */
+			/* Handle the Create List Button click */
+			private function callCreateList(txt:String):void
+				{
+					/* Dispatch Event */
+					var event:SearchEvent = new SearchEvent(SearchEvent.CREATE_LIST);
+					event.iList = txt;
+					this.dispatchEvent(event);
+					/* clear the Filter Selected checkbox */
+					this.chBoxReset();
+				}
+				
+			/* Handle the Get List Items Button Click (btnGetListItems)  or (lsUserList) DOUBLE_CLICK */
+			private function getUserListItems():void
+				{
+					if(this.lsUserList.selectedItems.length == 0)
+					{
+						Alert.show("Please select a list to display");
+					}
+					else
+					{
+						/* Dispatch Event */
+						var event:SearchEvent = new SearchEvent(SearchEvent.GET_USERLIST_ITEMS);
+						event.arrUserListItems = this.lsUserList.selectedItem.DATA;
+						this.dispatchEvent(event);
+						this.chBoxReset();
+						/* flag the items as selected */
+						//this.chSelectAll.selected = true;
+						//this.selectAll();
+					}
+				}
+			/*  handler for when a user presses enter on a Saved user List row (lsUserList)*/
+			 private function enterUserListRow(event:KeyboardEvent):void 
+			 	{                
+			 		if (event.keyCode == Keyboard.ENTER) 
+			 		/* ITEM_DOUBLE_CLICK calls getUserList()   */                   
+			 		lsUserList.dispatchEvent(new ListEvent(ListEvent.ITEM_DOUBLE_CLICK));
+			 	}
+
+			/* Handle the Save My Lists Button Click (btnSaveUserList)*/
+			private function saveUserList():void
+				{
+					if(tListName.text.length == 0)
+					{
+						Alert.show("Please enter a name for your saved list");
+					}
+					else
+					{
+						/* Limit the favorites entries to 25 */
+						if(arrUserList.length == 25){
+							Alert.show("The limit for the favorites list is 25. Either delete one or edit an existing one.");
+						}
+						else
+						{
+							/* First filter so we only see selected items */
+							var fEvent:SearchEvent = new SearchEvent(SearchEvent.FILTER_SELECTED);
+							this.dispatchEvent(fEvent);
+							/* create an array of the selected items */
+							var tmpArrItems:Array = new Array();
+							for each(var oItem:Object in this.items)
+									{
+										if(oItem['isSelected'] == 1 && tmpArrItems.indexOf(oItem['baItem']) == -1)
+											{tmpArrItems.push(oItem['baItem'])}
+									}
+							/* Dispatch Event */
+							var event:SearchEvent = new SearchEvent(SearchEvent.SAVE_USERLIST);
+							event.userId = this.oSettings.userId;
+							event.arrUserListItems = tmpArrItems;
+							event.userListItemsName = tListName.text;
+							this.dispatchEvent(event);
+							}
+						}
+				}
+			/* Handle the Get My Lists Button Click (btnGetLists)*/
+			private function deleteUserList():void
+				{
+					/* update the dp */
+					if(this.lsUserList.selectedItems.length == 0)
+					{
+						Alert.show("Please select a list to delete");
+					}
+					else
+					{
+						/* Dispatch Event */
+						var event:SearchEvent = new SearchEvent(SearchEvent.DELETE_USERLIST);
+						event.userListId = lsUserList.selectedItem.USER_ITEM_LIST_ID;
+						this.dispatchEvent(event);
+					}
+				}
+			/* Handle user clicking on panel icons to hide or show list panel */
+			private function toggleState(state:String):void
+				{
+					if(state == "fullRight")
+					{
+						this.currentState = "fullRight";
+						iconRight.visible = false;
+						iconAllR.visible = true;
+						iconRight.includeInLayout = false;
+						iconAllR.includeInLayout = true;
+					}
+					else if(state == "fullAll")
+					{
+						this.currentState = "";
+						iconAllR.visible = false;
+						iconRight.visible = true;
+						iconAllR.includeInLayout = false;
+						iconRight.includeInLayout = true;
+					}
+				}
+			
+			private function Call_Sort_Data(evt:DataGridEvent):void {
+               	/* Reset the scrollbar position to the top. */
+				var e:SearchEvent = new SearchEvent(SearchEvent.RESET_SCROLLBAR_POSITION);
+       			this.dispatchEvent(e);
+            }
+ 
+			private function showHide(col:String,appKey:String):void
+				{
+					this[col].visible = !this[col].visible
+					this[col].headerText = this.oSettings.appFlex[appKey]
+					//Alert.show(this.oSettings.appFlex[appKey] + col);
+				}
+			/* FOR TESTING ONLY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+			 	import flash.utils.Timer;
+		        import flash.events.TimerEvent;
+		        [Bindable]
+		        public var time:Number = 0;
+		        [Bindable]
+		        public var totmem:Number = 0;
+		        [Bindable]
+		        public var maxmem:Number = 0;
+		        public function initTimer():void {
+		            // The first parameter is the interval (in milliseconds). The second parameter is number of times to run (0 means infinity).
+		            var myTimer:Timer = new Timer(1000, 0);
+		            myTimer.addEventListener("timer", timerHandler);
+		            myTimer.start();
+		        }
+		        public function timerHandler(event:TimerEvent):void {
+		            time = getTimer()
+		            totmem = flash.system.System.totalMemory/1000000;
+		            maxmem = Math.max(maxmem, totmem);
+		        }
+			FOR TESTING ONLY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
+
+		]]>
+	</mx:Script>
+
+	<!-- States _______________________________________________________ -->
+	<mx:states>
+		<mx:State name="fullRight">
+			<mx:SetProperty target="{pnlSelected}" name="x" value="-210" />
+			<mx:RemoveChild target="{pnlSelected}" />
+			<mx:SetProperty target="{col1}" name="width" value="0%" />
+			<mx:SetProperty target="{col2}" name="width" value="100%" />
+			<mx:SetProperty target="{fullBox}" name="height" value="100%" />
+			<mx:SetProperty target="{pnlAll}" name="height" value="100%" />
+			<mx:SetProperty target="{pnlAll}" name="width" value="100%" />
+		</mx:State>
+	</mx:states>
+	
+	<mx:transitions>
+		<mx:Transition id="showAll" fromState="fullRight" toState="">
+			<mx:Sequence>
+				<mx:Move duration="300" target="{pnlSelected}" />
+				<mx:Resize duration="300" target="{pnlAll}" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition id="showRight" fromState="" toState="fullRight">
+			<mx:Parallel>
+				<mx:Fade duration="300" target="{pnlSelected}" alphaFrom="0" alphaTo="1"/>
+				<mx:Resize duration="300" target="{pnlAll}" />
+			</mx:Parallel>
+		</mx:Transition>
+	</mx:transitions>
+
+	<mx:constraintColumns>
+		<mx:ConstraintColumn id="col1" width="40%"/>
+		<mx:ConstraintColumn id="col2" width="60%"/>
+	</mx:constraintColumns>
+	
+	<mx:constraintRows>
+		<mx:ConstraintRow id="row1" height="60%"/>
+		<mx:ConstraintRow id="row2" height="40%"/>
+	</mx:constraintRows>
+
+
+	<!-- Views _______________________________________________________ -->
+<mx:HDividedBox id="fullBox" height="100%" width="100%" paddingTop="0" paddingRight="0" paddingBottom="0" paddingLeft="0" top="2" right="2" bottom="2" left="2">
+
+	<!--*******************************	LIST UTILITY (LEFT NAV)	*********************************************-->
+	<mx:Panel id="pnlSelected" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333" minWidth="228" minHeight="600"
+			 name="selectedProducts" title="{this.brokerLabel} Search Options" top="2" right="col1:2" bottom="row1:2" left="2">
+		<mx:VBox height="100%" width="100%">
+			<!--<mx:VBox width="100%" height="20" creationPolicy="queued" creationIndex="3">
+				<mx:Text text="[ Record Count: {this.dgItems.dataProvider.length} ]" />
+			</mx:VBox>
+			-->
+			<mx:VBox width="100%" height="100%" creationPolicy="queued" creationIndex="0">
+
+				<mx:TabNavigator id="tbNavList" width="100%" height="100%" creationComplete="this.tbNavList.selectedIndex = 0">
+					<mx:Canvas label="search" width="100%" height="100%">
+						<mx:VBox  id="vbxSearch" label="search {this.brokerLabel}s" width="100%" height="100%" paddingLeft="5" paddingRight="5">
+							
+							<mx:TextInput tabEnabled="true" text="" id="searchField" width="200" height="{iTextInputHeight}"
+								toolTip="Keyword search on any of the fields:&#13;{this.brokerLabel} Id, {this.brokerLabel} name, {this.lblCol1}, {this.lblCol2}, {this.lblCol3}, {this.lblCol4}." 
+								keyDown="enterSearchBox(event);"/>
+							
+							<mx:HBox width="100%">
+								<!--- Search Button in Seach tab: Filters brokers in datagrid based on currrent criteria-->
+								<mx:Button height="{iButtonHeight}" id="btnFilter" label="search" width="63" tabEnabled="true"  click="filter();" keyDown="enterSearchBox(event);" toolTip="search"  />
+								<!--- Reset Button in Seach tab: Clears all filters and reloads all available brokers in the datagrid-->
+								<mx:Button height="{iButtonHeight}" id="btnReset" label="reset" width="63" tabEnabled="true" click="searchField.text='';filterReset()" />
+							</mx:HBox>
+							<!--- view selected check box: when checked, only selected items are displayed-->
+							<mx:CheckBox id="chFilterSelected" label="view selected" click="filterSelected();" toolTip="show only the currently selected items"/>
+							<mx:VBox id="vbxFilter" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+							<!--- Combo Box provides Filter Criteria to filterFunction-->
+							<mx:ComboBox toolTip="Filter: {this.lblCol1}" id="cbo1" dataProvider="{dp1}" change="filter()" width="175" height="{iComboBoxHeight}"	tabEnabled="true" rowCount="15"></mx:ComboBox>
+							<!--- Combo Box provides Filter Criteria to filterFunction-->
+							<mx:ComboBox toolTip="Filter: {this.lblCol2}" id="cbo2" dataProvider="{dp2}" change="filter()" width="175" height="{iComboBoxHeight}" tabEnabled="true" rowCount="15"></mx:ComboBox>
+							<!--- Combo Box provides Filter Criteria to filterFunction-->
+							<mx:ComboBox toolTip="Filter: {this.lblCol3}" id="cbo3" dataProvider="{dp3}" change="filter()" width="175" height="{iComboBoxHeight}" tabEnabled="true" rowCount="15"></mx:ComboBox>
+							<!--- Combo Box provides Filter Criteria to filterFunction-->
+							<mx:ComboBox toolTip="Filter: {this.lblCol4}" id="cbo4" dataProvider="{dp4}" change="filter()" width="175" height="{iComboBoxHeight}" tabEnabled="true" rowCount="15"></mx:ComboBox>
+							<!--- Combo Box provides Filter Criteria to filterFunction-->
+							<mx:ComboBox toolTip="Filter: {this.lblCol5}" id="cbo5" dataProvider="{dp5}" change="filter()" width="175" height="{iComboBoxHeight}" tabEnabled="true" rowCount="15"></mx:ComboBox>
+							<!--- Combo Box provides Filter Criteria to filterFunction-->
+							<mx:ComboBox toolTip="Filter: {this.lblCol6}" id="cbo6" dataProvider="{dp6}" change="filter()" width="175" height="{iComboBoxHeight}" tabEnabled="true" rowCount="15" includeInLayout="false" visible="false"></mx:ComboBox>
+							</mx:VBox>
+						</mx:VBox>
+					</mx:Canvas>
+					<mx:Canvas label="create list" width="100%" height="100%">
+						<mx:VBox  id="crList" label="create list" width="100%" height="100%" paddingLeft="5">
+							<mx:TextArea height="300" width="95%" id="txtCrList"
+								 toolTip="To search for a list of {this.brokerLabel}s:&#13;Type or paste in a list of {this.brokerLabel} numbers.  Separate each {this.brokerLabel} number by the enter key. Click search."
+								 wordWrap="false" editable="true" enabled="true">
+								<mx:text></mx:text>
+							</mx:TextArea>
+							<!--- Search Button in create list tab determines valid and invalid items and displays them-->
+							<mx:Button height="{iButtonHeight}" id="btnCreateList" label="search" click="callCreateList(this.txtCrList.text);"/>
+						</mx:VBox>
+					</mx:Canvas>
+					<mx:Canvas label="favorites" width="100%" height="100%">
+						<mx:VBox id="svSearch" label="saved list" width="100%" height="100%" paddingLeft="5">
+							<mx:List id="lsUserList" dataProvider="{arrUserList}" 
+									labelField="LIST_NAME" height="300" width="95%"
+									doubleClickEnabled="true" itemDoubleClick="this.getUserListItems();"
+									keyDown="enterUserListRow(event);" 
+									toolTip="To save a list of your favorite {this.brokerLabel}s:&#13;Place a checkmark next to the {this.brokerLabel}s you want to save.  Give your list of favorite {this.brokerLabel}s a name in the field called 'Favorites Name'. Click save.&#13;&#13;To see one of your favorites:&#13;Double click on the Favorites Name.&#13;The Favorites list will appear on the right hand side." />
+							<mx:HBox>
+								<!--- Search button in favorites tab displays valid items from the selected saved list-->
+								<mx:Button height="{iButtonHeight}" id="btnGetListItems" label="search" click="getUserListItems();" toolTip="Display the items in the selected list"/>
+								<!--- Delete button in favorites tab deletes selected saved list-->
+								<mx:Button height="{iButtonHeight}" id="btnDeleteList" label="delete" click="deleteUserList();" toolTip="Delete the selected list"/>
+							</mx:HBox>
+							<!--- Save button in favorites tab saves all the currently checked items to a new list (if a name is specified in the list name textbox)-->
+							<mx:Button height="{iButtonHeight}" id="btnSaveUserList" label="save selected" click="saveUserList();" toolTip="Save selected {this.brokerLabel}s"/>
+							<mx:Text text="list name:"/>
+							<mx:TextInput id="tListName" height="{iTextInputHeight}" maxChars="20" width="150"/>
+						</mx:VBox>
+					</mx:Canvas>
+				</mx:TabNavigator>
+			</mx:VBox>
+		</mx:VBox> 
+		</mx:Panel>
+		<mx:Panel id="pnlAll" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333"
+			bottom="row2:2" height="100%" left="col2:2" right="2" top="2"
+			name="productSelectionUtility" title="{this.brokerLabel} Search Results: {this.dgItems.dataProvider.length} records">  <!-- Program: {this.oSettings.appFlex.ProgramId}-->
+		<mx:VBox height="100%" width="100%" horizontalAlign="left" creationPolicy="queued" creationIndex="3">
+		
+		<!--*******************************	FILTER FIELDS	***************************************************************-->
+			<mx:HBox width="100%" height="20" verticalAlign="middle"  creationPolicy="queued" creationIndex="1">
+				<mx:VBox height="100%">
+					<mx:HBox width="100%">
+						<mx:Image id="iconRight" 
+							source="/Flex/assets/images/fullScreen.png"
+							width="20" height="20" click="toggleState('fullRight')" toolTip="Click for Right Panel Full Screen"/>
+						<mx:Image id="iconAllR" 
+							source="/Flex/assets/images/sharedScreen.png"
+							width="20" height="20" click="toggleState('fullAll')" toolTip="Click for both Panels Shared Screen" visible="false" includeInLayout="false" />
+						
+					</mx:HBox>
+					<!--<mx:CheckBox id="chSelectAll" label="select all" click="selectAll();" toolTip="select all {this.brokerLabel}s" includeInLayout="false" />-->
+				</mx:VBox>
+				<mx:Spacer width="20" />
+				<mx:CheckBox id="chShowcol1" label="{this.lblCol1}" click="showHide('dgCol1','col1');" toolTip="show or hide {this.lblCol1}"/>
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowcol2" label="{this.lblCol2}" click="showHide('dgCol2','col2');" toolTip="show or hide {this.lblCol2}" />
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowcol3" label="{this.lblCol3}" click="showHide('dgCol3','col3');" toolTip="show or hide {this.lblCol3}" />
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowcol4" label="{this.lblCol4}" click="showHide('dgCol4','col4');" toolTip="show or hide {this.lblCol4}" />
+				<!--- Check Box to Show Hide datagrid Column-->
+				<mx:CheckBox id="chShowcol5" label="{this.lblCol5}" click="showHide('dgCol5','col5');" toolTip="show or hide {this.lblCol5}" />
+				<!--- Check Box to Show Hide datagrid Column-->
+				<!--<mx:CheckBox id="chShowcol6" label="{this.lblCol6}" click="showHide('dgCol6','col6');" toolTip="show or hide {this.lblCol6}" />-->
+			</mx:HBox>
+			
+			<!--*********************************	DATA GRID ********************************************************************-->
+			<mx:DataGrid dragEnabled="false" allowMultipleSelection="true" liveScrolling="true"
+				id="dgItems" dataProvider="{items}" editable="true"
+				width="100%" height="100%" top="0" left="0" right="0" bottom="0" doubleClickEnabled="true" 
+				itemDoubleClick="selectRow(event);" keyDown="enterRow(event);"  tabEnabled="true"
+				toolTip="Select a row by:&#13;clicking the check box or&#13;double clicking a Row or &#13;highlighting the row(s) and pressing ENTER"
+				headerRelease="Call_Sort_Data(event)">
+				<mx:columns>
+					<mx:DataGridColumn width="20" dataField="isSelected" rendererIsEditor="true"
+						headerRenderer="com.components.chBoxSelectAll"
+						itemRenderer="com.components.chBoxIsSelected" 
+                		editorDataField="varCbSelected"/>
+			     
+					<mx:DataGridColumn dataField="baItem" headerText="{this.brokerLabel} ID" width="100" editable="false" />
+					<mx:DataGridColumn dataField="Description" headerText="{this.brokerLabel} Name" width="200" editable="false" />
+					<mx:DataGridColumn dataField="Address" headerText="Address" width="300" editable="false" />
+					<mx:DataGridColumn id="dgCol1" dataField="col1" headerText="{this.lblCol1}" width="100" editable="false" visible="false" />
+					<mx:DataGridColumn id="dgCol2" dataField="col2" headerText="{this.lblCol2}" width="100" editable="false" visible="false" />
+					<mx:DataGridColumn id="dgCol3" dataField="col3" headerText="{this.lblCol3}" width="100" editable="false" visible="false" />
+					<mx:DataGridColumn id="dgCol4" dataField="col4" headerText="{this.lblCol4}" width="100" editable="false" visible="false" />
+					<mx:DataGridColumn id="dgCol5" dataField="col5" headerText="{this.lblCol5}" width="100" editable="false" visible="false" />
+					<mx:DataGridColumn id="dgCol6" dataField="col6" headerText="{this.lblCol6}" width="100" editable="false" visible="false" />
+				</mx:columns>
+			</mx:DataGrid>
+		
+		</mx:VBox>
+			<!--- "import selected" Button : returns all checked items to wrapper javascript which then passes them to the calling page via a form submit-->
+			<mx:Button height="{iButtonHeight}" label="import selected" click="callImportItems();"  tabEnabled="true"/>
+			<!--<mx:Text height="30" text="Memory Usage: Tot= {totmem.toFixed(2)} MB | Max= {maxmem.toFixed(2)} MB"/>-->
+
+		</mx:Panel>
+		
+		</mx:HDividedBox>
+	<!--</mx:HBox>-->
+	<!--*********************************	BOTTOM PANEL (Import Button) ************************************************************-->
+	
+
+</mx:Canvas>

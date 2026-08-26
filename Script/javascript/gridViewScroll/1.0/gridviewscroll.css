@@ -1,0 +1,48 @@
+﻿body {
+    height: 100%;
+}
+.GridViewScrollHeader th, .GridViewScrollHeader td {
+    padding: 4px;
+    font-weight: bold;
+    white-space: nowrap;
+    border-right: 1px solid #e6e6e6;
+    border-bottom: 1px solid #e6e6e6;
+    /* background-color: #F4F4F4; */
+    background-color: #FFCE84;
+    /* color: #999999; */
+    text-align: left;
+    vertical-align: top;
+}
+
+.GridViewScrollItem td {
+    padding: 4px;
+    white-space: nowrap;
+    border-right: 1px solid #e6e6e6;
+    border-bottom: 1px solid #e6e6e6;
+    background-color: #FFFFFF;
+    color: #444444;
+}
+
+tr.GridViewScrollItem:hover td {
+    background-color: #e6f0ff !important;
+}
+
+.GridViewScrollItemFreeze td {
+    padding: 4px;
+    white-space: nowrap;
+    border-right: 1px solid #e6e6e6;
+    border-bottom: 1px solid #e6e6e6;
+    background-color: #FAFAFA;
+    color: #444444;
+}
+
+.GridViewScrollFooterFreeze td {
+    padding: 4px;
+    white-space: nowrap;
+    border-right: 1px solid #e6e6e6;
+    border-top: 1px solid #e6e6e6;
+    border-bottom: 1px solid #e6e6e6;
+    /* background-color: #F4F4F4; */
+    background-color: #FFCE84;
+    color: #444444;
+}

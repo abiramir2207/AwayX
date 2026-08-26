@@ -1,0 +1,48 @@
+===== QUERY: doesProgramHasFixedPrice =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordoesProgramHasFixedPrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseFordoesProgramHasFixedPrice>
+	<cftry>
+		<cfset doesProgramHasFixedPrice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordoesProgramHasFixedPrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordoesProgramHasFixedPrice>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: doesProgramHasLumpSum =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFordoesProgramHasLumpSum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseFordoesProgramHasLumpSum>
+	<cftry>
+		<cfset doesProgramHasLumpSum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordoesProgramHasLumpSum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordoesProgramHasLumpSum>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ProgramEZRates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qProgramEZRates =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

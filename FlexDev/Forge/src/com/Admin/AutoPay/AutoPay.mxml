@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  xmlns:view="com.Admin.AutoPay.views.*" 
+		  xmlns:maps="com.Admin.AutoPay.maps.*" 
+		  xmlns:vos="com.Admin.AutoPay.vos.*" 
+		  creationComplete="applyRuntimeStyleSheet();" 
+		  implements="com.shared.models.IModuleBa" >
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:AutoPayEventMap dispatcher="{this}" cache="local" />
+		<s:Consumer id="cfMessageFromServer" destination="ColdFusionGateway" message="gotMessage( event )"  />
+	</fx:Declarations>
+	<fx:Script><![CDATA[
+		import com.Admin.AutoPay.events.AutoPayEvent;
+		import com.shared.events.MainEvent;
+		import com.shared.models.IModuleBa;
+		import com.shared.models.entity.vos.Lock;
+		import com.shared.vos.Settings;
+		
+		import mx.controls.Alert;
+		import mx.messaging.events.MessageEvent;
+		import mx.utils.ObjectUtil;
+		[Bindable]
+		private var sBBId:String;
+
+		
+		private function applyRuntimeStyleSheet():void {
+			styleManager.loadStyleDeclarations("/flex/mainFx46.swf")
+			cfMessageFromServer.subscribe();
+		}
+		
+		public function setSettings(settings:Settings):void{
+			var event:MainEvent = new MainEvent ( MainEvent.SET_LOCAL_APP_SETTINGS );
+			event.settings = settings;
+			this.dispatchEvent( event );
+		}
+		
+		protected function gotMessage(e:MessageEvent):void
+		{
+			
+			var lock:Lock = e.message.body.lock
+			var evt:AutoPayEvent = new AutoPayEvent(AutoPayEvent.SET_REPORT_LOCK);
+			evt.lock = lock;
+			this.dispatchEvent(evt);
+			
+			//this.dispatchEvent(new UncaughtErrorEvent(UncaughtErrorEvent.UNCAUGHT_ERROR))
+			
+			var ape:AutoPayEvent = new AutoPayEvent(AutoPayEvent.UPDATE_REPORT_BY_ID);
+			ape.arr = e.message.body.arr;
+			ape.reportId = e.message.body.ReportId;
+			this.dispatchEvent(ape);
+		}
+		
+	]]>
+	</fx:Script>
+	
+	<!-- Views _______________________________________________________ -->
+	<s:VGroup width="100%" height="100%">
+		<view:AutoPayHeaderForm />
+		<view:AutoPayItemsGrid />
+	</s:VGroup>
+</s:Module>

@@ -1,0 +1,25 @@
+===== QUERY: vars.qShipToInvoice =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qDisplayClauses =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqDisplayClauses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqDisplayClauses>
+	<cftry>
+		<cfset qDisplayClauses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"programcontrol_panel_options_id" = "eq.#vars.qProgram.ProgramType_ID#",
+				"select" = "operator_customer_acceptance_block,distributor_customer_acceptance_block,*"
+			}), "operator_customer_acceptance_block,distributor_customer_acceptance_block,*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDisplayClauses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDisplayClauses>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

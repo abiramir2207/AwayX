@@ -1,0 +1,98 @@
+===== QUERY: qgetProgramSettngs =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qgetApprovalSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetApprovalSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_template")>
+<cfif useLakebaseForqgetApprovalSettings>
+	<cftry>
+		<cfset qgetApprovalSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_template", {
+				"deleted" = "eq.0",
+				"template_id" = "eq.#arguments.ProgramType_ID#",
+				"forbid_type" = "eq.#arguments.forbidType#",
+				"forbid_access_type" = "eq.#arguments.forbidaccesstype#",
+				"profile_id" = "eq.#arguments.profile_ID#",
+				"select" = "template_id"
+			}), "template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetApprovalSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetApprovalSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qcheckParentStats =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqcheckParentStats = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqcheckParentStats>
+	<cftry>
+		<cfset qcheckParentStats = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Revision_Of_Contract_Main_ID#",
+				"select" = "contract_main_id,contract_status_type_idx"
+			}), "contract_main_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqcheckParentStats = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqcheckParentStats>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetProgramMargins =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qgetProgramLumpsum =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qgetGrowthproducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetGrowthproducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqgetGrowthproducts>
+	<cftry>
+		<cfset qgetGrowthproducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.program_id#",
+				"product_type_id" = "eq.4",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetGrowthproducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetGrowthproducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetThisProgramsStatus =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetThisProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqgetThisProgramsStatus>
+	<cftry>
+		<cfset qgetThisProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.program_id#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+			}), "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetThisProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetThisProgramsStatus>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

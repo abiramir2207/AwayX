@@ -1,0 +1,12 @@
+===== QUERY: delete_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: update_All =====
+STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
+
+===== QUERY: Save_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Save_Data =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

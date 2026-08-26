@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Script>
+        <![CDATA[
+        	import com.ContractProds.views.pm.FavoritePM;
+        	import mx.utils.ObjectUtil;
+        	
+        	/* Presentation Model */
+            [Bindable] public var pModel:FavoritePM;
+           
+        ]]>
+    </mx:Script>
+	<mx:HBox  id="crList" label="create list" width="100%" height="100%" paddingLeft="5">
+		<mx:VBox height="100%">
+			<mx:TextArea height="105" width="125" id="txtCrList"
+				 toolTip="To search for a list of items:&#13;Type or paste in a list of item numbers.  Separate each item number by the enter key. Click search."
+				 wordWrap="false" editable="true" enabled="true">
+				<mx:text></mx:text>
+			</mx:TextArea>
+			<!--- Search Button increate list tab determines valid and invalid items and displays them-->
+			<mx:Button id="btnCreateList" label="search" click="pModel.callCreateList(this.txtCrList.text);"/>	
+		</mx:VBox>
+		<mx:VBox height="100%">
+		<mx:List id="lsUserList" dataProvider="{pModel.arrUserList}" 
+				labelField="LIST_NAME" height="105" width="125"
+				doubleClickEnabled="true" itemDoubleClick="pModel.getUserListItems();"
+				keyDown="pModel.enterUserListRow(event);" 
+				change="pModel.setSelectedItem(lsUserList.selectedItem);"
+				toolTip="To save a list of your favorite item number:&#13;Place a checkmark next to the items you want to save.Give your list of favorite items a name in the field called 'Favorites Name'. Click save.&#13;&#13;To see one of your favorites:&#13;Double click on the Favorites Name.&#13;The Favorites list will appear on the right hand side." />
+		<mx:HBox>
+			<!--- Search button in favorites tab displays valid items from the selected saved list-->
+			<mx:Button id="btnGetListItems" label="search" click="pModel.getUserListItems();" toolTip="Display the items in the selected list" height="{pModel.oSettings.UIAttributes.iButtonHeight}"/>
+			<!--- Delete button in favorites tab deletes selected saved list-->
+			<mx:Button id="btnDeleteList" label="delete" click="pModel.deleteUserList();" toolTip="Delete the selected list" height="{pModel.oSettings.UIAttributes.uttonHeight}"/>
+		</mx:HBox>
+
+		</mx:VBox>
+		
+		<mx:VBox height="100%">
+			<!--- Save button in favorites tab saves all the currently checked items to a new list (if a name is specified in the list name textbox)-->
+			<mx:Button id="btnSaveUserList" label="save selected" click="pModel.saveUserList();" toolTip="Save selected items for later use"/>
+			<mx:Text text="list name:"/>
+			<mx:TextInput id="tListName" maxChars="20" width="150" change="pModel.updatetListName(tListName.text);"/>
+		</mx:VBox>
+	</mx:HBox>
+</mx:Canvas>

@@ -1,0 +1,69 @@
+===== QUERY: qGetData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_search_grid_column_size")>
+<cfif useLakebaseForqGetData>
+	<cftry>
+		<cfset qGetData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_search_grid_column_size", {
+				"user_id" = "eq.#arguments.userId#",
+				"select" = "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+			}), "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_search_grid_column_size")>
+<cfif useLakebaseForqGetData>
+	<cftry>
+		<cfset qGetData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_search_grid_column_size", {
+				"user_id" = "eq.#arguments.userId#",
+				"select" = "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+			}), "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_search_grid_column_size")>
+<cfif useLakebaseForqGetData>
+	<cftry>
+		<cfset qGetData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_search_grid_column_size", {
+				"user_id" = "eq.#arguments.userId#",
+				"select" = "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+			}), "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSaveColumnSize =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qSaveColumnSize =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

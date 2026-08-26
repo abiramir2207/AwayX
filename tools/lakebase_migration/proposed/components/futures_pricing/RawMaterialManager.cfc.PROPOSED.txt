@@ -1,0 +1,75 @@
+===== QUERY: qGetRawMaterial =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetRawMaterial = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_raw_material")>
+<cfif useLakebaseForqGetRawMaterial>
+	<cftry>
+		<cfset qGetRawMaterial = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_raw_material", {
+				"deleted" = "eq.0",
+				"fp_raw_material_id" = "eq.#arguments.id#",
+				"select" = "fp_raw_material_id,raw_material_number,raw_material_desc"
+			}), "fp_raw_material_id,raw_material_number,raw_material_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRawMaterial = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRawMaterial>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateRawMaterial =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertRawMaterial =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeactivate =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetRawMaterials =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetRawMaterials = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_raw_material")>
+<cfif useLakebaseForqGetRawMaterials>
+	<cftry>
+		<cfset qGetRawMaterials = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_raw_material", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "fp_raw_material_id,raw_material_number,raw_material_desc"
+			}), "fp_raw_material_id,raw_material_number,raw_material_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRawMaterials = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRawMaterials>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetRawMaterials =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetRawMaterials = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_raw_material")>
+<cfif useLakebaseForqGetRawMaterials>
+	<cftry>
+		<cfset qGetRawMaterials = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_raw_material", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "fp_raw_material_id,raw_material_number,raw_material_desc"
+			}), "fp_raw_material_id,raw_material_number,raw_material_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRawMaterials = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRawMaterials>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

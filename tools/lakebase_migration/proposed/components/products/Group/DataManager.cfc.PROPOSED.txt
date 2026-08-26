@@ -1,0 +1,305 @@
+===== QUERY: qGetProductGroupTypesNoPG =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProductGroupTypesNoPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductgrouptypesmain")>
+<cfif useLakebaseForqGetProductGroupTypesNoPG>
+	<cftry>
+		<cfset qGetProductGroupTypesNoPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductgrouptypesmain", {
+				"is_pg" = "eq.0",
+				"order" = "list_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductGroupTypesNoPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductGroupTypesNoPG>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetRespseUserId =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetClassCodes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetPricingLevel =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetParentHierarchy =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetParentHierarchy =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qGetDummyProductId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetDummyProductId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_product")>
+<cfif useLakebaseForqGetDummyProductId>
+	<cftry>
+		<cfset qGetDummyProductId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_product", {
+				"deleted" = "eq.0",
+				"product_group_level_id" = "eq.#arguments.grpLevelId#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDummyProductId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDummyProductId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetMultiAttrItems =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qCheckDynamic =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckDynamic = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqCheckDynamic>
+	<cftry>
+		<cfset qCheckDynamic = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"is_group" = "eq.1",
+				"dynamic_static_groups" = "eq.1",
+				"limit" = "1",
+				"select" = "contract_products_id"
+			}), "contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckDynamic = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckDynamic>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgramLob =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramLob = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramLob>
+	<cftry>
+		<cfset qGetProgramLob = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "line_of_business_id"
+			}), "line_of_business_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLob = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLob>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgramBusSegId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramBusSegId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramBusSegId>
+	<cftry>
+		<cfset qGetProgramBusSegId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramBusSegId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramBusSegId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCheckDynamic =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckDynamic = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqCheckDynamic>
+	<cftry>
+		<cfset qCheckDynamic = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"is_group" = "eq.1",
+				"dynamic_static_groups" = "eq.1",
+				"limit" = "1",
+				"select" = "contract_products_id"
+			}), "contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckDynamic = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckDynamic>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgramLob =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramLob = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramLob>
+	<cftry>
+		<cfset qGetProgramLob = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "line_of_business_id"
+			}), "line_of_business_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLob = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLob>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgramBusSegId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramBusSegId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramBusSegId>
+	<cftry>
+		<cfset qGetProgramBusSegId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramBusSegId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramBusSegId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetHierarchyLevel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetHierarchyLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqGetHierarchyLevel>
+	<cftry>
+		<cfset qGetHierarchyLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"deleted" = "eq.0",
+				"product_group_level_id" = "eq.#arguments.groupLevelId#",
+				"select" = "hierarchy_level"
+			}), "hierarchy_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetHierarchyLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetHierarchyLevel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetGroupLevelId =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetGroupLevelId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqGetGroupLevelId>
+	<cftry>
+		<cfset qGetGroupLevelId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"deleted" = "eq.0",
+				"hierarchy_level" = "eq.#hierarchyLevel#",
+				"select" = "product_group_level_id"
+			}), "product_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupLevelId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupLevelId>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetHierarchyLevel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetHierarchyLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqGetHierarchyLevel>
+	<cftry>
+		<cfset qGetHierarchyLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"deleted" = "eq.0",
+				"product_group_level_id" = "eq.#arguments.groupLevelId#",
+				"select" = "hierarchy_level"
+			}), "hierarchy_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetHierarchyLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetHierarchyLevel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetAllParentGroupLevelId =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qGetNumberOfHierarchyLevels =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: qGetExistingData =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qUpdateAllRecs =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qUpdateAllRecs =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qryChkISPG =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqryChkISPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqryChkISPG>
+	<cftry>
+		<cfset qryChkISPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"product_group_level_id" = "eq.#arguments.stForm.GroupLevelID#",
+				"limit" = "1",
+				"select" = "is_pg"
+			}), "is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryChkISPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryChkISPG>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateAllRecs =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

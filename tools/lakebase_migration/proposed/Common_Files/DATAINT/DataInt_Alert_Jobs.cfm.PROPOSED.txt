@@ -1,0 +1,21 @@
+===== QUERY: qGetContacts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetContacts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_contacts")>
+<cfif useLakebaseForqGetContacts>
+	<cftry>
+		<cfset qGetContacts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_integration_contacts", {
+				"intra_id" = "eq.#qGetAlerts.intra_id#",
+				"select" = "email"
+			}), "email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetContacts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetContacts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,56 @@
+The licensee's,  henceforth referred to as the "CUSTOMER" right to use ActivSoftware, via CFDev.com, henceforth referred to as "the Software", is subject to the terms set forth herein. Installing or downloading the Software signifies your agreement to the terms herein and that you understand that this agreement is a complete and exclusive statement of the rights and liabilities of you, the licensee and CFDev, the licenser.
+
+The CUSTOMER should carefully read the following terms and conditions before using the Software. Downloading and/or using the Software or copying the Software onto CUSTOMER'S computer hard drive indicates CUSTOMER'S acceptance of these terms and conditions. If CUSTOMER does not agree with the terms of this agreement, CUSTOMER should not download.  CFDev grants, and the CUSTOMER accepts, a nontransferable and nonexclusive License to use the Software on the following terms and conditions: 
+
+
+I) Usage Rights
+
+The Encrypted, or Closed Source, Software is licensed for use only in delivered code form. Each copy of the Software is licensed for use for a single server/customer solution/URL/third party commercial login. See the Licensing Scenarios below for further clarification with regard to the Software licenses. In summary, if there are ten people paying you to use, access or in any way interact with the Software, you require a multiple licensing scenario. Please visit cfdev.com/about/ if you are not sure. Typically, the Pricing Questionnaire will ensure you have the correct number of licenses for your particular scenario. 
+
+Scenarios all requiring TEN licenses: 
+
+
+A)
+( 10 servers
+( 1 domain
+( Usage: Your corporate Intranet for employees to manage. 
+
+B)
+
+( 1 server
+( 10 domains
+( Usage: Only one customer logs in, or you only use it for your Intranet or Web site. 
+
+C)
+( 1 server
+( 1 domain
+( Usage: Ten customers log into your site, for a fee or as a value-add, to manage account, web site, intranet, etc. 
+
+
+
+II) Duration
+
+This License shall continue so long as CUSTOMER uses the Software in compliance with this License. Should CUSTOMER breach any of its obligations hereunder, CUSTOMER agrees to return the Software and this License upon demand by CFDev.
+
+
+III) Copyright
+
+The Software and accompanying written materials is owned by CFDev and is protected by United States copyright laws and international treaties, and contain trade secrets. CUSTOMER agrees to protect the confidentiality of all material provided by CFDev. CUSTOMER agrees that it will not provide a copy of this Software or Documentation nor divulge any proprietary information of CFDev to any person, other than its employees, without the prior consent of CFDev to include reselling or bundling of Software into third party solutions or ASP/Login services.
+
+IV) Limited Warranty
+
+CFDev warrants solely that the medium upon which the Software is delivered will be free from defects in material and workmanship under normal, proper and intended usage for a period of thirty (30) days  from the date of receipt. CFDev does not warrant the use of the Software will be uninterrupted or error free, nor that program errors will be corrected. This limited warranty shall not apply to any error or failure resulting from machine error, failure to follow instructions, negligence, nor modifications to the Software. In the event of a breach of warranty, Customer's sole and exclusive remedy, is repair of all or any portion of the Software. If such remedy fails of its essential purpose, Customer's sole remedy and CFDev's maximum liability shall be a refund of the paid purchase price for the defective Product. This limited warranty is only valid if CFDev receives written notice within thirty days after the software purchase and an agreement to destroy the Software.
+
+V) Limitation of Warranties and Liability
+
+No warranty for particular purposes are offered. Except as set forth in section four (IV), above in this agreement, all warranties are disclaimed. Neither CFDev nor suppliers thereof shall be liable for any loss of Profits, Business of any type, goodwill, Data nor ANY OTHER losses incurred via the use of the Software.  
+
+VI) Non-assignment & Jurisdiction of Disputes
+
+This Software License Agreement, the License granted hereunder, and the Software may not be assigned or in any way transferred without the prior written consent of CFDev. This Agreement and its performance and all claims arising from the relationship between the parties contemplated herein shall be governed by, construed and enforced in accordance with the laws of the State of New York without regard to conflict of laws principles thereof. The parties agree that any action brought in connection with this Agreement shall be maintained only in a court of competent subject matter jurisdiction located in the State of New York or in any court to which appeal therefrom may be taken. The parties hereby consent to the exclusive personal jurisdiction of such courts in the State of New York for all such purposes. The United Nations Convention on Contracts for the International Sale of Goods is specifically excluded from governing this License. If any provision of this License is to be held unenforceable, such holding will not affect the validity of the other provisions hereof. Failure of a party to enforce any provision of this Agreement shall not constitute or be construed as a waiver of such provision or of the right to enforce such provision. If you fail to comply with any term of this License, the right to use the Software is terminated. This License represents the entire understanding between the parties with respect to its subject matter.
+
+VII) Agreement Fundamentals 
+
+If you download and/or install any of our Software you are thereby stating that you read, understand and agree with the terms of this license agreement and that you understand that this agreement is a complete and exclusive statement of the rights and liabilities of you, the licensee and CFDev, the licenser. 
+
+

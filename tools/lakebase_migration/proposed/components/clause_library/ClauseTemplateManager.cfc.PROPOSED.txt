@@ -1,0 +1,27 @@
+===== QUERY: qImportClause =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qgetClauseAllProgramsSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetClauseAllProgramsSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqgetClauseAllProgramsSettings>
+	<cftry>
+		<cfset qgetClauseAllProgramsSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.templateId#",
+				"select" = "apply_clause_all_programs"
+			}), "apply_clause_all_programs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetClauseAllProgramsSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetClauseAllProgramsSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertClause =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

@@ -1,0 +1,45 @@
+===== QUERY: getCustomerTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForgetCustomerTypes>
+	<cftry>
+		<cfset getCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0",
+				"customer_type_id" = "eq.#arguments.custtypeId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCustomerTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getCustomerTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForgetCustomerTypes>
+	<cftry>
+		<cfset getCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0",
+				"customer_type_id" = "eq.#arguments.custtypeId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCustomerTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateCustomerType =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

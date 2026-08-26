@@ -1,0 +1,6 @@
+===== QUERY: getInvoiceLogDistributorColumn =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getInvoiceLogItemColumn =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

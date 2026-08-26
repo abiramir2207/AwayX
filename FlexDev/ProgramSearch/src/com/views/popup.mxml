@@ -1,0 +1,544 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--- This is the popup for program details. -->
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+				backgroundColor="0xffffff"
+				close="PopUpManager.removePopUp(this);"
+				color="0x333333"
+				headerColors="['0xffce84','0xffffff']"
+				layout="vertical"
+				creationComplete="init()"
+				name="Program Details"
+				showCloseButton="true"
+				title="Program Details">
+	<mx:Script>
+		<![CDATA[
+			import com.events.*;
+			import com.maps.*;
+			import com.models.*;
+			import com.views.*;
+			import com.vos.*;
+			
+			import flash.display.DisplayObject;
+			import flash.events.Event;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ItemResponder;
+			import mx.controls.Alert;
+			import mx.core.Application;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.*;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.AbstractEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ArrayUtil;
+			import mx.utils.ObjectUtil;
+			
+			public var Program_ID:int;
+			public var Status_ID:int = 0;
+			private var Revision_Message :String;
+			private var Revision_Msg :String;
+			
+			[Bindable] public   var Contract_Quantity : String;
+			[Bindable] public 	var Program_Spend: String;
+			[Bindable] public 	var Abbreviation : String;
+			[Bindable] public 	var Approver_User : String;
+			[Bindable] public 	var Approval_Date : String;
+			[Bindable] public 	var RFA_User : String;
+			[Bindable] public 	var Broker_Approved_Date : String;
+			[Bindable] public 	var Contract_reference_number : String;
+			[Bindable] public 	var Locked_By :String;
+			[Bindable] public 	var Contract_Is_Locked : Number;
+			[Bindable] public 	var Business_Unit_Desc : String;
+			[Bindable] public 	var Modifying_program : Number;
+			[Bindable] public 	var Modifying_User : String;
+			[Bindable] public 	var Cancelled_By : String;
+			[Bindable] public 	var Cancelled_Date :String;
+			
+			[Bindable] public 	var Renewal_Info :String;
+			[Bindable] public 	var Business_Segment_Setting :Boolean;
+			[Bindable] public 	var Interface_Info :String;
+			[Bindable] public 	var Attachment_Info :String;
+			[Bindable] public 	var Program_Details :ArrayCollection;
+			[Bindable] public 	var CRA_Details :ArrayCollection;
+			[Bindable] public 	var WorkFlowData :ArrayCollection;
+			[Bindable] public 	var NRAData :ArrayCollection;
+			[Bindable] public 	var Program_Revision_Count :String;
+			[Bindable] public 	var sApprovalStandardOn:String = "";
+			[Bindable] public 	var ShowCRAInfo:Boolean = true;
+			[Bindable] public 	var sSendToSAP:String;
+			[Bindable] public 	var sStatus:String = "";
+			[Bindable] public 	var bQuoteLetters:Boolean = false;
+			[Bindable] public 	var sQuoteLetters:String;
+			[Bindable] public 	var sGLAccount:String;
+			[Bindable] public 	var ShowNRAInfo:Boolean = true;
+			
+			private function init():void
+			{
+				var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_PROGRAM_DETAILS);
+				event.eProgramDetailsInfo = Program_ID;
+				dispatchEvent(event);
+				
+				var event1:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_PROGRAM_AUTORENEW_INFO);
+				event1.eAutoRenewInfo = Program_ID;
+				dispatchEvent(event1);
+				
+				var event2:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_INTERFACE_INFO);
+				event2.eInterfaceInfo = Program_ID;
+				dispatchEvent(event2);
+				
+				var event3:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_ATTACHMENT_INFO);
+				event3.eAttachmentInfo = Program_ID;
+				dispatchEvent(event3);
+				
+				var event4:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_PROGRAM_REVISION_COUNT);
+				event4.eProgramRevisionCountInfo = Program_ID;
+				dispatchEvent(event4);
+				
+				var event5:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_GL_ACCOUNT_INFO);
+				event5.eGLAccountInfo = Program_ID;
+				dispatchEvent(event5);
+				
+				var event6:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_BUSINESS_SEGMENT_SETTING);
+				dispatchEvent(event6);
+				
+				var event7:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_WORKFLOW_DATA);
+				event7.eWorkflowData = Program_ID
+				dispatchEvent(event7);
+				
+				/* value being passed to the popup page. Replace all spaces
+				with a new line
+				*/
+				var pattern:RegExp = /[" "]/gi;
+				sGLAccount = sGLAccount.replace(pattern,"\n");
+				
+				/* For RFA, we fire the "GET_CRA_DETAILS" event after "Program_Details"
+				ArrayCollection is populated from the "GET_PROGRAM_DETAILS" event.
+				*/
+				if(Status_ID == 2){
+					ShowCRAInfo = true;
+				}
+				//(sStatus == 'Catalog') &&
+				if((sQuoteLetters == '1')){
+					bQuoteLetters = true;
+				}
+				CursorManager.removeBusyCursor();
+			}
+			
+			[Bindable]
+			private function ShowRevision():String{
+				Revision_Message = '';
+				if(Program_Revision_Count > '0'){
+					Revision_Message = 'This program has been Revised'
+				}
+				else if(Program_Details.getItemAt(0).Revision_of_Contract_Main_ID != ''
+					&& Program_Details.getItemAt(0).Is_A_Revision == 1
+				){
+					Revision_Message = 'This is a Revision'
+					
+				}
+				
+				return Revision_Message;
+			}
+			
+			[Bindable]
+			private function IsARevision():String{
+				Revision_Msg = '';
+				if(Program_Details.getItemAt(0).Revision_of_Contract_Main_ID != ''
+					&& Program_Details.getItemAt(0).Is_A_Revision == 1
+				){
+					Revision_Msg = 'This is a Revision'
+						
+				}
+						
+				return Revision_Msg;;
+			}			
+			
+			public var ShowSAPReferences:show_sap_references;
+			private function openSAPDetails(Program_ID:int):void{
+				if(sSendToSAP == '1')
+				{
+					ShowSAPReferences = show_sap_references(PopUpManager.createPopUp(Application.application as DisplayObject,show_sap_references,true));
+					ShowSAPReferences.Program_ID = Program_ID;
+					ShowSAPReferences.height=400;
+					ShowSAPReferences.width=400;
+					PopUpManager.centerPopUp(ShowSAPReferences);
+				}
+			}
+			
+			private function showRevisionDetails(Program_ID:int,status:int) : void{
+				var winjscommand:String ='/reportwriter/performance_reports/revisionreport.cfm?Contract_main_id='+Program_ID+'&Contract_Status='+status;
+				var jscommand:String = "window.open('"+winjscommand+"','win','height=550,width=1200,toolbar=no,scrollbars=yes,resizable=yes');"
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");
+				navigateToURL(url, "_self");
+			}
+			
+			/* Print/Email function */
+			private function openPrintEmailPage(Program_ID:int,Action:String) : void{
+				var winjscommand:String ="/CID_Wrapper.cfm?ID="+Program_ID+"&Page_Relocate=/common_files/contracts/email_fax_handler.cfm&Action="+Action;
+				var jscommand:String = "window.open('"+winjscommand+"','winPrint','height=2000,width=2000,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=no');"
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");
+				navigateToURL(url, "_self");
+			}
+			
+			/* Copy function which calls "CopyProgram" function */
+			private function openCopyProgramPage(Program_ID:int):void{
+				Alert.show("Are you sure you want to copy this program?", "Confirm Copy!", Alert.YES | Alert.NO, this, CopyProgram);
+			}
+			
+			/* openLetters function */
+			private function openLetters(Program_ID:int) : void{
+				var winjscommand:String ="/CID_Wrapper.cfm?ID="+Program_ID+"&Page_Relocate=/common_files/contracts/letters/distributors.cfm&Action=quoteletters";
+				var jscommand:String = "window.open('"+winjscommand+"','winPrint','height=800,width=800,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=no');"
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");
+				navigateToURL(url, "_self");
+			}
+			
+			private function CopyProgram(CloseEvent:Object):void{
+				/* CloseEvent.detail is 1 for "yes" and 2 for "no" */
+				if(CloseEvent.detail == 1){
+					var winjscommand:String ="/CID_Wrapper.cfm?ID="+Program_ID+"&Page_Relocate=/common_files/contracts/email_fax_handler.cfm&Action=copy";
+					var jscommand:String = "window.open('"+winjscommand+"','winPrint','height=2000,width=2000,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=yes');"
+					var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");
+					navigateToURL(url, "_self");
+				}
+			}
+		
+			private function showPriorVersionDetails(Program_ID:int) : void{
+				var winjscommand:String ='/common_files/contracts/prior_version_interface_info.cfm?Contract_main_id='+Program_ID;
+				var jscommand:String = "window.open('"+winjscommand+"','win','height=450,width=1050,toolbar=no,scrollbars=yes,resizable=yes');"
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");
+				navigateToURL(url, "_self");
+			}		
+			
+			/* Convert the datagridcolumn into date format. Call the <mx:DateFormatter>
+			for that purpose
+			*/
+			private function dateLabel(item:Object, column:DataGridColumn):String
+			{
+				return DisplayDateFormat.format(item[column.dataField]);
+			}
+			
+			private function buildToolTip(item:Object):String
+			{
+				var myString:String = "";
+				if(item != null && item.Agree_Reasons.length)
+				{
+					myString = "AGREE REASONS:\n";
+					myString = myString + item.Agree_Reasons.join("\n");
+				}
+				return myString;
+			}
+			
+
+			private function getWidthPositionWorkflow(item:Object,column:DataGridColumn):String 
+			{ 
+				var colText:String = item[column.dataField]; 
+
+				var nPositionDatalength:int;
+				nPositionDatalength = 0;
+				
+				for each(var oItem:Object in WorkFlowData)
+				{
+					if(nPositionDatalength < oItem['Position'].toString().length)
+					{
+						/* The value is the length of the "position" data content. */
+						nPositionDatalength = oItem['Position'].toString().length;
+					}
+				}
+				resetWidthWorkflow(nPositionDatalength,column,colText);
+				
+				return colText; 
+			}
+			
+			private function getWidthPositionCRA(item:Object,column:DataGridColumn):String 
+			{ 
+				var colText:String = item[column.dataField]; 
+				
+				var nPositionDatalength:int;
+				nPositionDatalength = 0;
+				
+				for each(var oItem:Object in CRA_Details)
+				{
+					if(nPositionDatalength < oItem['Position_Label'].toString().length)
+					{
+						/* The value is the length of the "position" data content. */
+						nPositionDatalength = oItem['Position_Label'].toString().length;
+					}
+				}
+				resetWidthCRAandNRA(nPositionDatalength,column,colText);				
+				return colText; 
+			}
+			
+			private function getWidthPositionNRA(item:Object,column:DataGridColumn):String 
+			{ 
+				var colText:String = item[column.dataField]; 
+				
+				var nPositionDatalength:int;
+				nPositionDatalength = 0;
+				
+				for each(var oItem:Object in NRAData)
+				{
+					if(nPositionDatalength < oItem['Position_Label'].toString().length)
+					{
+						/* The value is the length of the "position" data content. */
+						nPositionDatalength = oItem['Position_Label'].toString().length;
+					}
+				}
+				resetWidthCRAandNRA(nPositionDatalength,column,colText);				
+				return colText; 
+			}			
+			
+			private function resetWidthWorkflow(nPositionDatalength:int,column:DataGridColumn,colText:String):void 
+			{ 
+				/* The data grid width should be the column's content. 
+				The column width of 100 can fit about 15 characters,
+				so, the text length should be multiplied by 6.6 (100/15)
+				*/
+				column.width = nPositionDatalength * 6.6;
+			
+				/* We do not want the width of one column to take up the whole 
+				datagrid's width and so we need to set up max width.
+				240 is the best guess at this point and can be changed. It is the max width.
+				*/
+				if(column.width > 240)
+				{
+					column.width = 240;			
+				}
+			}
+			
+			private function resetWidthCRAandNRA(nPositionDatalength:int,column:DataGridColumn,colText:String):void 
+			{ 
+				/* The data grid width should be the column's content. 
+				The column width of 100 can fit about 15 characters,
+				so, the text length should be multiplied by 6.6 (100/15)
+				*/
+				column.width = nPositionDatalength * 6.6;
+				
+				/* We do not want the width of one column to take up the whole 
+				datagrid's width and so we need to set up max width.
+				300 is the best guess at this point and can be changed. It is the max width.
+				*/
+				if(column.width > 300)
+				{
+					column.width = 300;			
+				}
+			}
+			/* The issue was that when a user manually increased the column size, then the labelfunction restricted 
+			the width to what was defined as max width in the function (resetWidthWorkflow or resetWidthCRAandNRA). 
+			To get rid of that restriction,calling the removeLabelFunction to set labelFunction to null.
+			*/
+			private function removeLabelFunction():void 
+			{ 
+				/* position */
+				/* Resetting it to NULL */
+				dgWorkflow.columns[2].labelFunction=null;
+				dgCRA.columns[1].labelFunction=null;
+				dgNRA.columns[1].labelFunction=null;
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:NumberFormatter id="DisplayFormat"
+						thousandsSeparatorTo=","
+						useThousandsSeparator="true"
+						/>
+	
+	
+	<mx:DateFormatter id="DisplayDateFormat" formatString="MM/DD/YYYY L:NN A"/>
+	
+	<mx:VBox width="100%">
+		<mx:HBox width="100%">
+			<mx:HBox horizontalGap="5" horizontalAlign="left">
+				<mx:Label text="Print" fontWeight="bold" color="blue" textAlign="right" click="openPrintEmailPage(Program_ID,'print')" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+				<mx:Label text="Email" fontWeight="bold" color="blue" textAlign="right" click="openPrintEmailPage(Program_ID,'email')" useHandCursor="true" mouseChildren="false" buttonMode="true" visible="{!bQuoteLetters}" includeInLayout="{!bQuoteLetters}"/>
+				<mx:Label text="Copy"  fontWeight="bold" color="blue" textAlign="right" click="openCopyProgramPage(Program_ID)" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+				<mx:Label text="Quote Letter"  fontWeight="bold" color="blue" textAlign="right" click="openLetters(Program_ID)" useHandCursor="true" mouseChildren="false" buttonMode="true" visible="{bQuoteLetters}" includeInLayout="{bQuoteLetters}"/>
+			</mx:HBox>
+		</mx:HBox>
+		<mx:HBox width="100%">
+			<mx:VBox verticalGap="1" width="25%">
+				<mx:Label text="Program" fontWeight="bold" textAlign="left" />
+				<mx:Text id="Program"  textAlign="left"  data="{Program_Details.getItemAt(0).contract_number}"/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%">
+				<mx:Label text="RSP" fontWeight="bold" textAlign="left" />
+				<mx:Text id="RSP"  textAlign="left" data="{Program_Details.getItemAt(0).Responsible_Sales_Person} ({Program_Details.getItemAt(0).RSP_Position_Label})"/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%">
+				<mx:Label text="Version Date" fontWeight="bold" textAlign="left" />
+				<mx:Text id="DateSpan"  textAlign="left" data="{Program_Details.getItemAt(0).date_span} "/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%" visible="{Program_Details.getItemAt(0).delivery_period_date_span != ''}" includeInLayout="{Program_Details.getItemAt(0).delivery_period_date_span != ''}">
+				<mx:Label text="Delivery Period" fontWeight="bold" textAlign="left" />
+				<mx:Text id="DeliveryPeriodDateSpan"  textAlign="left" data="{Program_Details.getItemAt(0).delivery_period_date_span} "/>
+			</mx:VBox>
+		</mx:HBox>
+		
+		<mx:HBox width="100%">
+			<mx:VBox verticalGap="1" width="75%">
+				<mx:Label text="Title" fontWeight="bold" textAlign="left" />
+				<mx:Text id="Title"  textAlign="left"  data="{Program_Details.getItemAt(0).contract_title}"/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%" visible="{Program_Details.getItemAt(0).Locked_By != ''}" includeInLayout="{Program_Details.getItemAt(0).Locked_By != ''}">
+				<mx:Label text="Locked By" fontWeight="bold" textAlign="left" />
+				<mx:Text id="LockedBy"  textAlign="left"  data="{Program_Details.getItemAt(0).Locked_By}"/>
+			</mx:VBox>
+		</mx:HBox>
+		
+		<!--
+		<mx:HBox width="100%">
+		<mx:VBox verticalGap="1" width="33%" visible="{Program_Details.getItemAt(0).Locked_By != ''}" includeInLayout="{Program_Details.getItemAt(0).Locked_By != ''}">
+		<mx:Label text="Locked By" fontWeight="bold" textAlign="left" />
+		<mx:Text id="LockedBy"  textAlign="left"  data="{Program_Details.getItemAt(0).Locked_By}"/>
+		</mx:VBox>
+		<mx:VBox verticalGap="1" width="33%"  visible="{Program_Details.getItemAt(0).Modifying_User != ''}" includeInLayout="{Program_Details.getItemAt(0).Modifying_User != ''}">
+		<mx:Label text="Modified Agreed By " fontWeight="bold" textAlign="left" />
+		<mx:Text id="ModifyingUser"  textAlign="left" data="{Program_Details.getItemAt(0).Modifying_User}"/>
+		</mx:VBox>
+		<mx:VBox width="33%" visible="{Program_Details.getItemAt(0).Modifying_User != ''}" includeInLayout="{Program_Details.getItemAt(0).Modifying_User != ''}">
+		</mx:VBox>
+		</mx:HBox>
+		-->
+		<mx:HBox width="100%">
+			<mx:VBox verticalGap="1" width="25%">
+				<mx:Label text="Version volume" fontWeight="bold" textAlign="left" />
+				<mx:Text id="Quantity"  width="33%" textAlign="left" data="{DisplayFormat.format(Program_Details.getItemAt(0).Contract_Quantity)  + ' ' + Program_Details.getItemAt(0).Abbreviation}" />
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%">
+				<mx:Label text="Total volume" fontWeight="bold" textAlign="left" />
+				<mx:Text id="TotalQuantity"  width="33%" textAlign="left" data="{DisplayFormat.format(Program_Details.getItemAt(0).Total_Contract_Quantity)  + ' ' + Program_Details.getItemAt(0).Abbreviation}" />
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%" visible="{sApprovalStandardOn=='1'}" includeInLayout="{sApprovalStandardOn=='1'}">
+				<mx:Label  text="Amount" fontWeight="bold" textAlign="left" />
+				<mx:Text id="Amount"  textAlign="left" data="{Program_Details.getItemAt(0).Program_Spend}"/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%" visible="{Program_Details.getItemAt(0).contract_reference_number}" includeInLayout="{Program_Details.getItemAt(0).contract_reference_number}">
+				<mx:Label text="Reference Number" fontWeight="bold" textAlign="left" />
+				<mx:Text id="Reference_Number"  textAlign="left"  data="{Program_Details.getItemAt(0).contract_reference_number}"/>
+			</mx:VBox>
+		</mx:HBox>
+		
+		<mx:HBox width="100%">
+			<!--
+			<mx:VBox verticalGap="1" width="33%" visible="{Program_Details.getItemAt(0).Cancelled_By != ''}" includeInLayout="{Program_Details.getItemAt(0).Cancelled_By != ''}">
+			<mx:Label text="Cancelled By"  fontWeight="bold" textAlign="left" />
+			<mx:Text id="CancelledBy"  textAlign="left" data="{Program_Details.getItemAt(0).Cancelled_By}"/>
+			</mx:VBox>
+			-->
+			<mx:VBox verticalGap="1" width="25%" visible="{Business_Segment_Setting == 1}" includeInLayout="{Business_Segment_Setting == 1}">
+				<mx:Label text="Segment" fontWeight="bold" textAlign="left" />
+				<mx:Text id="BusinessUnitDesc" textAlign="left" data="{Program_Details.getItemAt(0).Business_Unit_Desc}"/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1" width="25%" visible="{Renewal_Info != ''}" includeInLayout="{Renewal_Info != ''}">
+				<mx:Label text="Auto Renew" fontWeight="bold" textAlign="left" />
+				<mx:Text id="RenewalInfo" textAlign="left" data="{Renewal_Info}" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1"  width="25%" visible="{ShowRevision() != ''}" includeInLayout="{ShowRevision() != ''}">
+				<mx:Label text="Revision" color="blue"  fontWeight="bold" textAlign="left" click="showRevisionDetails(Program_ID,Status_ID)" useHandCursor="true" mouseChildren="false" buttonMode="true" />
+				<mx:Text id="RevisionInfo" textAlign="left" data="{ShowRevision()}"/>
+			</mx:VBox>
+			<mx:VBox width="25%">
+			</mx:VBox>
+		</mx:HBox>
+		
+		<mx:HBox width="100%">
+			<mx:VBox verticalGap="1"  width="25%" visible="{Attachment_Info != ''}" includeInLayout="{Attachment_Info != ''}">
+				<mx:Label text="Document Attachment" fontWeight="bold" textAlign="left" />
+				<mx:Text id="AttachmentInfo" textAlign="left" data="{Attachment_Info}" />
+			</mx:VBox>
+			<mx:VBox width="33%" visible="{Attachment_Info != ''}}" includeInLayout="{Attachment_Info != ''}}">
+			</mx:VBox>
+			<mx:VBox verticalGap="1"  width="25%" visible="{sGLAccount != ''}" includeInLayout="{sGLAccount != ''}">
+				<mx:Label text="GL Code" fontWeight="bold" textAlign="left" />
+				<mx:Text id="GLCode" textAlign="left" data="{sGLAccount}"/>
+			</mx:VBox>
+			<mx:VBox verticalGap="1"  width="25%" visible="{Interface_Info != ''}" includeInLayout="{Interface_Info != ''}">
+				<!-- If 'sSendToSAP' is '1',create a clickable link for the SAP details -->
+				<mx:Label text="Interface Info" color="blue" fontWeight="bold" textAlign="left"  visible="{sSendToSAP=='1'}" includeInLayout="{sSendToSAP=='1'}" useHandCursor="{sSendToSAP=='1'}" mouseChildren="false" buttonMode="true" click="openSAPDetails(Program_ID)" />
+				<!-- If 'sSendToSAP' is '0',there is no link for SAP details -->
+				<mx:Label text="Interface Info" fontWeight="bold" textAlign="left"  visible="{sSendToSAP=='0'}" includeInLayout="{sSendToSAP=='0'}" />
+				<!-- We have to use useHandCursor, mouseChildren and buttonMode properties to turn on the Handcursor. -->
+				<mx:Text id="InterfaceInfo" textAlign="left" data="{Interface_Info}"/>
+				<mx:Label text=" prior version interface info" color="blue" top="5" visible="{Interface_Info.indexOf('Ack ID') != -1 &amp;&amp; IsARevision() != ''}" includeInLayout="{Interface_Info.indexOf('Ack ID') != -1 &amp;&amp; IsARevision() != ''}" fontWeight="bold" textAlign="left" click="showPriorVersionDetails(Program_ID)" useHandCursor="true" mouseChildren="false" buttonMode="true" />
+			</mx:VBox>
+			<mx:VBox width="25%">
+			</mx:VBox>
+		</mx:HBox>
+		<!--
+		<mx:HBox width="100%">
+		<mx:VBox verticalGap="1"  width="33%" visible="{Program_Details.getItemAt(0).Contract_Status_Type_IDX > 2}" includeInLayout="{Program_Details.getItemAt(0).Contract_Status_Type_IDX > 2}">
+		<mx:Label text="Approver" fontWeight="bold" textAlign="left" />
+		If 'Position_Approved_Label' is not blank
+		<mx:Text visible="{Program_Details.getItemAt(0).Position_Approved_Label != ''}" includeInLayout="{Program_Details.getItemAt(0).Position_Approved_Label != ''}" textAlign="left" data="{Program_Details.getItemAt(0).Approver_User + ', ' + Program_Details.getItemAt(0).Position_Approved_Label + ', ' + Program_Details.getItemAt(0).Approval_Date}"/>
+		If 'Position_Approved_Label' is blank
+		<mx:Text visible="{Program_Details.getItemAt(0).Position_Approved_Label == ''}" includeInLayout="{Program_Details.getItemAt(0).Position_Approved_Label == ''}" textAlign="left" data="{Program_Details.getItemAt(0).Approver_User + ', ' + Program_Details.getItemAt(0).Approval_Date}"/>
+		</mx:VBox>
+		<mx:VBox verticalGap="1"  width="33%" visible="{Program_Details.getItemAt(0).Contract_Status_Type_IDX == 2}" includeInLayout="{Program_Details.getItemAt(0).Contract_Status_Type_IDX == 2}">
+		<mx:Label text="Requesting Approval" fontWeight="bold" textAlign="left" />
+		<mx:Text id="Requesting_Approval" textAlign="left"  data="{Program_Details.getItemAt(0).RFA_User + ', ' + Program_Details.getItemAt(0).Broker_Approved_Date}"/>
+		</mx:VBox>
+		<mx:VBox width="33%" visible="{Program_Details.getItemAt(0).Contract_Status_Type_IDX == 2}" includeInLayout="{Program_Details.getItemAt(0).Contract_Status_Type_IDX == 2}">
+		</mx:VBox>
+		</mx:HBox>
+		-->
+		
+		
+		<mx:HBox width="100%">
+			<mx:Label text="Workflow" fontWeight="bold" textAlign="left"/>
+		</mx:HBox>
+		<mx:HBox width="100%">
+			<!-- Using labelFunction for the "position" column to get the size of the column. This is utimately used to set the width of the column.
+			Also using columnStretch below.
+			-->
+			<mx:DataGrid id="dgWorkflow" columnStretch="removeLabelFunction()" textAlign="left" dataProvider="{WorkFlowData}" rowCount="{WorkFlowData.length &lt; 10 ? WorkFlowData.length : 10}" width="100%" dataTipFunction="buildToolTip">
+				<mx:columns>
+					<mx:DataGridColumn dataField="Action" width="50" headerText="Action" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Name" width="110" headerText="Name" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Position" width="120"  headerText="Position" showDataTips="true"/><!--labelFunction="getWidthPositionWorkflow"-->
+					<mx:DataGridColumn dataField="Profiles_Desc" width="110" headerText="Profile" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="120" headerText="Authority Sequence" showDataTips="true"/>
+					<mx:DataGridColumn dataField="Action_Date"  width="90" headerText="Date"  showDataTips="true" labelFunction="dateLabel" />
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:HBox>
+		<mx:HBox visible="{CRA_Details.length &lt; 1 ? false : true}" includeInLayout="{CRA_Details.length &lt; 1 ? false : true}" width="100%">
+			<mx:Label text="CRA" fontWeight="bold" textAlign="left"/>
+			<mx:Label text="[currently responsible for approval]" textAlign="left"/>
+		</mx:HBox>
+		<mx:HBox visible="{CRA_Details.length &lt; 1 ? false : true}" includeInLayout="{CRA_Details.length &lt; 1 ? false : true}" width="100%">
+			<!-- Using labelFunction for the "position" column to get the size of the column. This is utimately used to set the width of the column.
+			Also using columnStretch below.
+			-->
+			<mx:DataGrid id="dgCRA" columnStretch="removeLabelFunction()" textAlign="left" dataProvider="{CRA_Details}" rowCount="{CRA_Details.length &lt; 10 ? CRA_Details.length : 10}" width="100%">
+				<mx:columns>
+					<mx:DataGridColumn dataField="User_Full_Name"  width="100" headerText="Name"/>
+					<mx:DataGridColumn dataField="Position_Label" width="110"  headerText="Position"/><!--labelFunction="getWidthPositionCRA"-->
+					<mx:DataGridColumn dataField="Profiles_Desc"  width="110" headerText="Profile"/>
+					<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="140" headerText="Authority Sequence"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:HBox>
+		
+		<mx:HBox visible="{NRAData.length &lt; 1 ? false : true}" includeInLayout="{NRAData.length &lt; 1 ? false : true}" width="100%">
+			<mx:Label text="NRA" fontWeight="bold" textAlign="left"/>
+			<mx:Label text="- after the above person(s) take action, below is a list of person(s) that may need to take approval action." textAlign="left"/>
+		</mx:HBox>
+		<mx:HBox visible="{NRAData.length &lt; 1 ? false : true}" includeInLayout="{NRAData.length &lt; 1 ? false : true}" width="100%">
+			<!-- Using labelFunction for the "position" column to get the size of the column. This is utimately used to set the width of the column.
+			Also using columnStretch below.
+			-->
+			<mx:DataGrid id="dgNRA" columnStretch="removeLabelFunction()" textAlign="left" dataProvider="{NRAData}"  rowCount="{NRAData.length &lt; 4 ? NRAData.length : 4}" width="100%">
+				<mx:columns>
+					<mx:DataGridColumn dataField="User_Full_Name"  width="100" headerText="Name" />
+					<mx:DataGridColumn dataField="Position_Label" width="110"  headerText="Position"/><!--labelFunction="getWidthPositionNRA"-->
+					<mx:DataGridColumn dataField="Profiles_Desc"  width="110" headerText="Profile"/>
+					<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="140" headerText="Authority Sequence" />
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:HBox>
+		
+	</mx:VBox>
+</mx:TitleWindow>

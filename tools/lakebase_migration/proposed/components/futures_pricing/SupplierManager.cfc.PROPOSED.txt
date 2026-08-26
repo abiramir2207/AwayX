@@ -1,0 +1,75 @@
+===== QUERY: qGetSupplier =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSupplier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_supplier")>
+<cfif useLakebaseForqGetSupplier>
+	<cftry>
+		<cfset qGetSupplier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_supplier", {
+				"deleted" = "eq.0",
+				"fp_supplier_id" = "eq.#arguments.id#",
+				"select" = "fp_supplier_id,supplier_name"
+			}), "fp_supplier_id,supplier_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSupplier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSupplier>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdateRawMaterial =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertRawMaterial =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDeactivate =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetSuppliers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSuppliers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_supplier")>
+<cfif useLakebaseForqGetSuppliers>
+	<cftry>
+		<cfset qGetSuppliers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_supplier", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "fp_supplier_id,supplier_name"
+			}), "fp_supplier_id,supplier_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSuppliers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSuppliers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetSupplier =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetSupplier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_supplier")>
+<cfif useLakebaseForqGetSupplier>
+	<cftry>
+		<cfset qGetSupplier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_supplier", {
+				"deleted" = "eq.0",
+				"fp_supplier_id" = "eq.#arguments.id#",
+				"select" = "fp_supplier_id,supplier_name"
+			}), "fp_supplier_id,supplier_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSupplier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSupplier>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

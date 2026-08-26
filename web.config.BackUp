@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <staticContent>
+            <mimeMap fileExtension=".air" mimeType="application/vnd.adobe.air-application-installer-package+zip" />
+            <mimeMap fileExtension=".msg" mimeType="application/vnd.ms-outlook" />
+        </staticContent>
+        <defaultDocument>
+            <files>
+                <remove value="index.cfm" />
+            </files>
+        </defaultDocument>
+    </system.webServer>
+</configuration>

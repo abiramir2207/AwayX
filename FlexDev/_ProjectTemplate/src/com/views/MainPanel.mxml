@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	 xmlns:ba="com.components.*" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"
+	resizeEffect="Resize" resize="true"  horizontalScrollPolicy="off" verticalScrollPolicy="off" 
+	width="100%" height="100%">
+
+	<mx:Script>
+		<![CDATA[
+			import com.events.*;
+			import com.models.*;
+			import com.vos.*;
+			import mx.collections.ArrayCollection;
+			import flash.events.*;
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+/* demo start 	******************************************************************************* */
+			[Bindable] public var oSettings:Settings = new Settings();
+			[Bindable] public var oUser:Object = new Object();
+			[Bindable] public var var1:String = "";
+			[Bindable] public var var2:String = "";
+			[Bindable] public var acData:ArrayCollection = new ArrayCollection();
+					  // public var oGridData:GridData = new GridData();
+
+			private function showUser() : void 
+				{
+					this.txtArea.text = "User:  " + ObjectUtil.toString(this.oUser);
+				}
+				
+			private function showApp() : void 
+				{
+					this.txtArea.text = "AppSettings:  " + ObjectUtil.toString(oSettings.appSettings) ;
+				}
+			
+			private function showCustomApp() : void 
+				{
+					this.txtArea.text = "Custom App:  " + ObjectUtil.toString(oSettings.appFlex);
+				}
+				
+			private function showAC() : void 
+				{
+					this.txtArea.text = "ArrayCollection:  " + ObjectUtil.toString(this.acData);
+				}
+/* 	demo end ******************************************************************************* */
+
+
+		]]>
+	</mx:Script>
+
+	<!-- Views _______________________________________________________ -->
+<mx:HDividedBox id="fullBox" height="100%" width="100%" paddingTop="0" paddingRight="0" paddingBottom="0" paddingLeft="0" top="2" right="2" bottom="2" left="2">
+
+	<!--******************************* (Left Options Panel)	*********************************************-->
+	<mx:Panel id="pnlSelected" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333" minWidth="185" minHeight="603"
+			 name="Left Panel" title="Options" top="2" right="col1:2" bottom="row1:2" left="2">
+		<mx:VBox height="100%" width="100%">
+		<!--******************************* START	Left Options Panel	***************************************************************-->
+			<mx:Text text="{this.var2}" />
+			<mx:Button label="Show User Info" click="showUser();" />
+			<mx:Button label="Show App Info" click="showApp();" />
+			<mx:Button label="Show Custom App Info" click="showCustomApp();" />
+			<mx:Button label="Show ArrayCollection" click="showAC();" />
+	
+		<!--******************************* END		Left Options Panel	***************************************************************-->		
+		</mx:VBox>
+	</mx:Panel>
+	
+	<!--******************************* (Main Panel)	*********************************************-->
+	<mx:Panel id="pnlAll" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333"
+			bottom="row2:2" height="100%" left="col2:2" right="2" top="2"
+			name="Main Panel" title="Title">
+		<mx:VBox height="100%" width="100%" horizontalAlign="left" creationPolicy="queued" creationIndex="4">
+		<!--******************************* START	Main Panel UI	***************************************************************-->
+		
+			<mx:TextArea id="txtArea" width="400" height="300" text="{ObjectUtil.toString(this.acData)}" />
+			
+			
+		<!--*******************************	END		Main Panel UI	***************************************************************-->
+		</mx:VBox>
+
+			
+
+	</mx:Panel>
+		
+</mx:HDividedBox>
+
+	<!--*********************************	BOTTOM PANEL  ************************************************************-->
+	
+
+</mx:Canvas>

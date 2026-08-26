@@ -1,0 +1,16 @@
+﻿Read Me
+
+This folder has the files needed to re-build the Blacksmith version of the ag-grid balham theme css file ba-ag-theme-balham.css.
+The latest instructions are on the Blacksmith Confluence wiki:
+https://confluence.awayx.com/display/PD/Ag-Grid+Theme+Customization+Process
+
+Short version:
+From CVS, get a copy of this folder “build-ag-grid-theme”.
+(If updating the ag-grid version, get zip from here, it has the styles: https://github.com/ag-grid/ag-grid)
+Make any changes to our customization file: src\sass\ba-ag-theme-balham.scss
+Open a command prompt
+CD to your folder build-ag-grid-theme
+Run “npm install”.  This will install all dependencies locally.  You only need to do this the first time.
+Run “webpack”.  This will create the css file in the folder above.
+You can test your update by loading “example.html”
+Reload FORGE and test

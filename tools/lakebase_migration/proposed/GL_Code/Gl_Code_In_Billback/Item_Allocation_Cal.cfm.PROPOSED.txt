@@ -1,0 +1,161 @@
+===== QUERY: UpdateAllocation =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Insert_QB_Calculated_Amount =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Get_Component_Volume =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Insert_Growth_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Insert_Growth_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Get_Lumpsum_Program =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Insert_Growth_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Insert_Growth_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: Insert_Growth_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: RoundAmount =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: DispRound =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: ItemAllocationCal =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: CheckLump =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: UpdateProgs_Sum_Amt =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: GetParentPaidAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetParentPaidAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForGetParentPaidAmount>
+	<cftry>
+		<cfset GetParentPaidAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approved", {
+				"billback_id" = "eq.#CheckIsChild.BB_Parent_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetParentPaidAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetParentPaidAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateAmount =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: ItemAllocationCal =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetProTemplate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetProTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetProTemplate>
+	<cftry>
+		<cfset GetProTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Item#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProTemplate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetARFY =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetARFY = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetARFY>
+	<cftry>
+		<cfset GetARFY = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#item#",
+				"deleted" = "eq.0",
+				"select" = "ar_from_fiscal_year,a_r"
+			}), "ar_from_fiscal_year,a_r"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetARFY = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetARFY>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetARFY =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetARFY = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetARFY>
+	<cftry>
+		<cfset GetARFY = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#item#",
+				"deleted" = "eq.0",
+				"select" = "ar_from_fiscal_year,a_r"
+			}), "ar_from_fiscal_year,a_r"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetARFY = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetARFY>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateFYA_R =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateFYA_R = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_item_allocation_cal")>
+<cfif useLakebaseForUpdateFYA_R>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_item_allocation_cal",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#item#",
+				"deleted" = "eq.0"
+			},
+			{
+				"fiscal_year" = "#GetARFY.AR_From_Fiscal_Year#",
+				"a_r" = "#GetARFY.A_R#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateFYA_R = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateFYA_R>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

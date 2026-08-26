@@ -1,0 +1,9 @@
+===== QUERY: getServiceZones =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getServiceRegions =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: getServiceMarkets =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

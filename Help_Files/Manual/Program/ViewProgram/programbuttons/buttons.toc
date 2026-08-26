@@ -1,0 +1,32 @@
+
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<!--- Generates the header/toc that is used in the contract creation help files						 --->
+<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+
+
+<TABLE CELLSPACING="3" BORDER="0" WIDTH="100%">
+<TR>
+
+<CFIF templatename EQ 'index.cfm'>
+	<TD BGCOLOR="Orange" WIDTH="18" HEIGHT="18" ALIGN="center" STYLE="cursor: hand;"><FONT COLOR="White" SIZE="2"><B>1</B></FONT></TD>
+<CFELSE>
+	<A HREF="index.cfm"><TD BGCOLOR="Blue" WIDTH="18" HEIGHT="18" ALIGN="center" STYLE="cursor: hand;"><FONT COLOR="White" SIZE="2"><B>1</B></FONT></TD></A>
+</CFIF>
+
+<CFIF templatename EQ 'page2.cfm'>
+	<TD BGCOLOR="Orange" WIDTH="18" HEIGHT="18" ALIGN="center" STYLE="cursor: hand;"><FONT COLOR="White" SIZE="2"><B>2</B></FONT></TD>
+<CFELSE>
+	<A HREF="page2.cfm"><TD BGCOLOR="Blue" WIDTH="18" HEIGHT="18" ALIGN="center" STYLE="cursor: hand;"><FONT COLOR="White" SIZE="2"><B>2</B></FONT></TD></A>
+</CFIF>
+
+
+<TD NOWRAP>
+
+<IMG SRC="/images/fill.gif" BORDER="0" ALT="" WIDTH="350" HEIGHT="1">
+<B><FONT COLOR="Red">[</FONT> <A HREF="##" ONCLICK="window.close();">close this window</A> <FONT COLOR="Red">]</FONT> </B>
+
+
+</TD>
+
+</TR>
+</TABLE>

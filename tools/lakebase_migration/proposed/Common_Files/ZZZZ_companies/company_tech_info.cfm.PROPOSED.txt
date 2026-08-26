@@ -1,0 +1,100 @@
+===== QUERY: GetCompanyTechnologyInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCompanyTechnologyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_technology")>
+<cfif useLakebaseForGetCompanyTechnologyInfo>
+	<cftry>
+		<cfset GetCompanyTechnologyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_technology", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyTechnologyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyTechnologyInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetCompanyInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCompanyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetCompanyInfo>
+	<cftry>
+		<cfset GetCompanyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDataSamplingRates =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDataSamplingRates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_sampliing_rates")>
+<cfif useLakebaseForGetDataSamplingRates>
+	<cftry>
+		<cfset GetDataSamplingRates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_sampliing_rates", {
+				"order" = "display_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDataSamplingRates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDataSamplingRates>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetDatabasePlatforms =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDatabasePlatforms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("database_platforms")>
+<cfif useLakebaseForGetDatabasePlatforms>
+	<cftry>
+		<cfset GetDatabasePlatforms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("database_platforms", {
+				"order" = "display_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDatabasePlatforms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDatabasePlatforms>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetOperatingSystems =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetOperatingSystems = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operating_systems")>
+<cfif useLakebaseForGetOperatingSystems>
+	<cftry>
+		<cfset GetOperatingSystems = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operating_systems", {
+				"order" = "display_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatingSystems = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatingSystems>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

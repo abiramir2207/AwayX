@@ -1,0 +1,84 @@
+===== QUERY: GetTypeGroupDesc =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetTypeGroupDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetTypeGroupDesc>
+	<cftry>
+		<cfset GetTypeGroupDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"deleted" = "eq.0",
+				"select" = "type_group_desc"
+			}), "type_group_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeGroupDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeGroupDesc>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetQBrands =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetQBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetQBrands>
+	<cftry>
+		<cfset GetQBrands = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"deleted" = "eq.0",
+				"select" = "q_brand_desc"
+			}), "q_brand_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetQBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetQBrands>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetTypeCodeDesc =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetTypeCodeDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetTypeCodeDesc>
+	<cftry>
+		<cfset GetTypeCodeDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"deleted" = "eq.0",
+				"select" = "type_code_desc"
+			}), "type_code_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeCodeDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeCodeDesc>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetBrands =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetBrands>
+	<cftry>
+		<cfset GetBrands = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"deleted" = "eq.0",
+				"select" = "brand"
+			}), "brand"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrands>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

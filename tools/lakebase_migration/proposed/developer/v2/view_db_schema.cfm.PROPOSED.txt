@@ -1,0 +1,6 @@
+===== QUERY: qTables =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qTables =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

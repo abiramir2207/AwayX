@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   xmlns:maps="com.Admin.Redi.maps.*"
+			   xmlns:sharedMaps="com.shared.maps.*"
+			   xmlns:view="com.Admin.Redi.views.*" 
+			   xmlns:vos="com.Admin.Redi.Models.vos.*" 
+			   xmlns:mate="http://mate.asfusion.com/"
+			   minWidth="955" minHeight="500" height="100%"
+			   creationComplete="applyRuntimeStyleSheet();">
+	
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}" />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:RediEventMap />
+		<!--<mate:Listener type="{com.shared.events.MainEvent.LOAD_MODS_MAIN}" method="loadAlias" />-->
+	</fx:Declarations>
+	<fx:Script><![CDATA[
+		import com.Admin.Redi.views.pm.RediPModel;
+		import com.shared.events.MainEvent;
+		import com.shared.models.IModuleBa;
+		import com.shared.vos.Settings;
+		import com.DistributorSearch.events.SearchEvent;
+		import com.shared.models.SettingsManager;
+
+		import mx.events.ModuleEvent;
+		
+		import spark.modules.ModuleLoader;
+		
+		/* Presentation Model */
+		[Bindable]
+		public var pModel:RediPModel;
+		[Bindable]
+		private var sBBId:String;
+		[Bindable]
+		public var settings:Settings = new Settings();
+		[Bindable]
+		private var iPadding:Number = 0;
+
+		private function applyRuntimeStyleSheet():void {
+			SettingsManager.applyRuntimeStyleSheet(mx_internal::VERSION,this);
+			//styleManager.loadStyleDeclarations("/flex/mainFx410.swf"); 
+			//loadAlias();
+		}
+		
+		public function loadAlias(e:com.shared.events.MainEvent):void {
+			var AliasMain:ModuleLoader;
+			AliasMain = new ModuleLoader();
+			var s:String = 'com/Admin/Alias/Alias.swf';
+			AliasMain.label = 'Alias';
+			AliasMain.addEventListener(ModuleEvent.READY, aliasModReady,false,0,true);
+			AliasMain.loadModule(s);
+			tn.addChildAt(AliasMain as DisplayObject,1)
+		}
+		public function aliasModReady(e:Event):void {
+			var mod:ModuleLoader = new ModuleLoader();
+			mod = e.currentTarget as ModuleLoader;
+			//var ichild:* = mod.child as IBBSearch;
+			var ichild:* = mod.child as IModuleBa;
+			if (ichild != null) {                    
+				/* Call setters in the module  */
+				ichild.setSettings(this.pModel.oSettings);
+				
+			} else {                
+				trace("Alias Module could not load ()");                 
+			}
+			//clean up
+			mod.removeEventListener(ModuleEvent.READY,aliasModReady);
+			//select
+			//tnavHome.selectedChild = mod;
+		}
+		
+	]]>
+	</fx:Script>
+	
+	<!-- Views _______________________________________________________ -->
+	<mx:TabNavigator id="tn"  width="100%" height="100%" tabStyleName="tab" selectedTabTextStyleName="tab"
+					 paddingBottom="{iPadding}" paddingLeft="{iPadding}" paddingRight="{iPadding}" paddingTop="{iPadding}">
+        <!-- Define each panel using a VBox container. -->
+        
+        <s:NavigatorContent label="Corrections">
+           <view:RediCorrections height="100%" />
+        </s:NavigatorContent>
+        <s:NavigatorContent label="Settings">
+           <view:RediSettingsForm />
+        </s:NavigatorContent>
+	<!--	<s:NavigatorContent label="Dashboard">
+            <view:RediDashboard />
+        </s:NavigatorContent> -->
+	</mx:TabNavigator>
+
+</s:Application>

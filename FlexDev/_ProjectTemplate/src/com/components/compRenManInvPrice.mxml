@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ 	This is a ItemRenderer for calculating and displaying the column Final Payment in the DataGrid
+-->
+
+	<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" textAlign="center" horizontalScrollPolicy="off" verticalScrollPolicy="off" width="100%"  verticalAlign="middle">
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.utils.ObjectUtil;
+			import flash.external.ExternalInterface
+			import com.asfusion.mate.events.Dispatcher;
+			import mx.events.CloseEvent;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+			[Bindable]
+			public var newManPrice:String;
+
+		]]>
+</mx:Script>
+										<!-- deactivate="txtMan.text=''" -->
+						    		<mx:RadioButton selected="{data.Selected_Invoice_Price_Type=='3'}" groupName="rdoInv{data.SrNo}" value="3"  
+						    			paddingLeft="6" click="parentDocument.fnRdoInvChange(this,'3');" paddingRight="0" 
+						    			   enabled="{parentDocument.sBBStatusID=='2'}"
+						    			visible="{data.Editable_Rate=='0'}"/> 
+						    			<mx:Label id="lblMan"   
+						    				textAlign="right" width="70" paddingLeft="0" toolTip="" height="20" 
+						    		 	 text="{data.Manual_Invoice_Price}" 
+						    		 	visible="{data.Editable_Rate=='0'}"
+						    		 	/><!-- change="parentDocument.fnSetInvManual(this)" change="newManPrice=txtMan.text;"-->
+						    	</mx:HBox>					
+
+ 

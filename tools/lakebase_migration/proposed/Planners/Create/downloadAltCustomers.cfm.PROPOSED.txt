@@ -1,0 +1,40 @@
+===== QUERY: qoqInd =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqoqInd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getinddists")>
+<cfif useLakebaseForqoqInd>
+	<cftry>
+		<cfset qoqInd = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getinddists", {
+				"select" = "customer_description,customer_group_number,customer_number,customer_name"
+			}), "customer_description,customer_group_number,customer_number,customer_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqoqInd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqoqInd>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qoqGrp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqoqGrp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getgroups")>
+<cfif useLakebaseForqoqGrp>
+	<cftry>
+		<cfset qoqGrp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getgroups", {
+				"select" = "customer_group_type_description,customer_group_number,customer_group_description"
+			}), "customer_group_type_description,customer_group_number,customer_group_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqoqGrp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqoqGrp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:ba="com.shared.components.*">
+	<s:layout>
+		<s:VerticalLayout paddingLeft="5" paddingRight="5" 
+						  paddingTop="5" paddingBottom="5"/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:NumberFormatter id="numberFormatter2" precision="2" useThousandsSeparator="true"     />
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Upload.views.pm.BBUploadPModel;
+			import com.Billback.Upload.views.pm.BBUploadItemsPModel;
+			import com.Billback.Edit.views.pm.BBEditPModel;
+			
+			import mx.collections.ArrayList;
+			import mx.collections.IList;
+			import mx.controls.DateField;
+			import mx.utils.ObjectUtil;
+			
+			import spark.formatters.DateTimeFormatter;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBUploadPModel;
+			
+			[Bindable]
+			public var pModelBBUploadItems:BBUploadItemsPModel;
+			
+			public function fnFormatNumber2(item:String):String 
+			{
+				return numberFormatter2.format(item);
+			}
+		]]>
+	</fx:Script>
+	<!-- Panel -->
+	<ba:MinMaxPanel id="header" width="{this.pModel.nWidthContainer}" height="{this.pModel.nHeightContainer}" borderStyle="none" panelTitle="BB Corrections Results: {this.pModelBBUploadItems.bbUploadHeader.bbUploadDetail.length} records" showMaximize="false" showMinimize="true">
+	<!--	<s:HGroup>
+	<s:Button click="{pModel.closeBB()}" label="cancel" />
+	</s:HGroup>-->
+	<!--<s:TextArea text="{isNaN(Date.parse('abc')) > 25}"/>-->
+	<!--<s:TextArea text="{ObjectUtil.toString(pModel.bbHeader)}"/>
+	height="{this.pModel.iFrmHeight}"
+	-->
+	<s:VGroup id="vgHeader" width="100%">	
+		<!-- Menu Bar -->
+		<s:HGroup gap="0" paddingLeft="0"> 
+			<mx:ApplicationControlBar id="acb" width="1020">
+				<mx:MenuBar id="mb" width="100%" click="pModel.menuHandler(event)"
+							dataProvider="{pModel.acMenuData}" itemClick="pModel.menuItemHandler(event)"
+							backgroundSkin="com.shared.views.skins.GenericHeaderBackgroundSkinBa">
+				</mx:MenuBar>
+			</mx:ApplicationControlBar>
+		</s:HGroup>
+	<s:BorderContainer width="1024" >
+		<s:layout>
+			<s:HorizontalLayout 
+				paddingLeft="0" paddingRight="0" 
+				paddingTop="0" paddingBottom="0" gap="0"/>
+		</s:layout>
+		
+		<s:Form width="290">
+			<s:layout>
+				<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+			</s:layout>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Vendor} Id" >
+				<s:HGroup verticalAlign="top">
+				<s:TextInput id="tiVendorId"  
+							 text="{this.pModel.bbUploadHeader.vendorId}" 
+							 change="{pModel.tiTextInputChange(this.tiVendorId.text,'vendorId')}"
+							 errorString="{pModel.bbUploadHeader.errObj.vendorId}"
+							 width="150"
+							 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+							 />
+				<s:Image id="imgVendorSearch" buttonMode="true"
+						 click="this.pModel.getVendorSearch()" horizontalAlign="left"
+						 source="assets/Images/search.gif" tabEnabled="true"
+						 useHandCursor="true" verticalAlign="bottom"
+						 enabled="{pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"/>
+				</s:HGroup>
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Vendor} Name" >
+				<s:TextInput id="tiVendorName"  
+							 text="{this.pModel.bbUploadHeader.vendorName}" 
+							 change="{pModel.tiTextInputChange(this.tiVendorName.text,'vendorName')}"
+							 errorString="{pModel.bbUploadHeader.errObj.vendorName}"
+							 width="175"
+							 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+							 />
+								
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appSettings.Shard_Ship_To_Label}"  ><!-- Ship To -->
+				<s:HGroup verticalAlign="top">
+				<s:TextInput id="tiShipTo"
+							 text="{this.pModel.bbUploadHeader.shipTo}"
+							 change="{pModel.tiTextInputChange(this.tiShipTo.text,'shipTo')}"
+							 errorString="{pModel.bbUploadHeader.errObj.shipTo}"
+							 width="150"
+							 enabled="{(this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled) &amp;&amp; this.pModel.bbUploadHeader.shipTo != 'OPER'}"
+							 />
+					<s:Image id="imgDistributorSearch" buttonMode="true"
+							 click="this.pModel.getDistributorSearch()" horizontalAlign="left"
+							 source="assets/Images/search.gif" tabEnabled="true"
+							 useHandCursor="true" verticalAlign="bottom"
+							 enabled="{pModel.objBBToolsLock.bBBUploadEditScreenEnabled &amp;&amp; this.pModel.bbUploadHeader.shipTo != 'OPER'}"
+							 visible = "{this.pModel.bbUploadHeader.shipTo != 'OPER'}"
+							 /> <!--visible = "{this.pModel.bbUploadHeader.shipTo != 'OPER'}"-->
+				</s:HGroup>					
+			</s:FormItem>
+			
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Claimed} Amount" >
+				<s:TextInput id="tiBBAmount" editable="false"
+							 text="{pModel.getDecimal2(this.pModel.bbUploadHeader.BBAmount)}"
+							 change="{pModel.tiTextInputChange(this.tiBBAmount.text,'BBAmount')}"
+							 errorString="{pModel.bbUploadHeader.errObj.BBAmount}"
+							 width="150"
+							 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+							 /> 
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Claimed} Volume" >
+				<s:TextInput id="tiBBVolume" editable="false"
+							 text="{fnFormatNumber2(this.pModel.bbUploadHeader.TotalVolume)}"
+							 change="{pModel.tiTextInputChange(this.tiBBVolume.text,'BBAmount')}"
+							 errorString="{pModel.bbUploadHeader.errObj.BBAmount}"
+							 width="150"
+							 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+							 /> <!--  text="{fnFormatNumber2(this.pModel.nVolume)}" -->
+			</s:FormItem>
+			
+			<!--<s:FormItem label="BB Header">
+			<s:TextArea id="bbHeader" 
+			text="{ObjectUtil.toString(this.pModel.bbUploadHeader)}" 
+			height="25" width="200" focusIn="this.bbHeader.height=300" focusOut="this.bbHeader.height=35" />
+			</s:FormItem>-->
+		</s:Form>
+		<s:VGroup paddingLeft="0" paddingRight="0" 
+				  paddingTop="0" paddingBottom="2" gap="7">
+			<s:HGroup paddingLeft="0" paddingRight="0" 
+					  paddingTop="0" paddingBottom="2" gap="0">
+				<s:Form width="275" >
+					<s:layout>
+						<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+					</s:layout>
+					<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Billback} Title" >
+						<s:TextInput id="tiBillbackTitle"
+									 text="{this.pModel.bbUploadHeader.billbackTitle}"
+									 change="{pModel.tiTextInputChange(this.tiBillbackTitle.text,'billbackTitle')}"								 
+									 width="150"
+									 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									 /> <!--errorString="{pModel.bbUploadHeader.errObj.billbackTitle}"-->
+					</s:FormItem>
+					
+					<!--<s:FormItem label="Claimed Amount" >
+					<s:TextInput id="tiBBAmount"
+					text="{this.pModel.bbUploadHeader.BBAmount}"
+					change="{pModel.tiTextInputChange(this.tiBBAmount.text,'BBAmount')}"
+					errorString="{pModel.bbUploadHeader.errObj.BBAmount}"
+					width="150"
+					/> 
+					</s:FormItem>-->
+					<s:FormItem label="{this.pModel.oSettings.appSettings.Operator_Label_Singular} Id"  >
+						<s:HGroup verticalAlign="top">
+						<s:TextInput id="tiOperator"
+									 text="{this.pModel.bbUploadHeader.operatorLegacyID}"
+									 change="{pModel.tiTextInputChange(this.tiOperator.text,'operatorLegacyID')}"
+									 errorString="{pModel.bbUploadHeader.errObj.operatorLegacyID}"
+									 width="150"
+									 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									 />
+							<s:Image id="imgOperatorSearch" buttonMode="true"
+									 click="this.pModel.getOperatorSearch()" horizontalAlign="left"
+									 source="assets/Images/search.gif" tabEnabled="true"
+									 useHandCursor="true" verticalAlign="bottom"
+									 enabled="{pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									 
+									 /> <!--visible = "{this.pModel.bbUploadHeader.shipTo != 'OPER'}"-->
+						</s:HGroup>		
+					</s:FormItem>
+					
+					<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Billback}" > <!-- Cust Invoice Number -->
+						<s:TextInput id="tiBBReference" editable="false"
+									 text="{this.pModel.bbUploadHeader.BBReference}"
+									 change="{pModel.tiTextInputChange(this.tiBBReference.text,'BBReference')}"
+									 errorString="{pModel.bbUploadHeader.errObj.BBReference}"
+									 width="150"
+									 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									 /> 
+					</s:FormItem>
+					
+				</s:Form>
+				
+				<s:Form width="200" > <!--  color="0x323232" -->
+					<s:layout>
+						<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+					</s:layout>
+					
+					<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Billback} Date" >
+						<mx:DateField id="dtBBDate" name="BBDate"
+									  selectedDate="{DateField.stringToDate(this.pModel.bbUploadHeader.BBDate,pModel.formatString)}"
+									  text="{this.pModel.bbUploadHeader.BBDate}"
+									  change="{pModel.dtFieldDateChange(this.dtBBDate,'BBDate')}" 
+									  focusOut="{pModel.dtFieldDateChange(this.dtBBDate,'BBDate')}"
+									  errorString="{pModel.bbUploadHeader.errObj.BBDate}"
+									  width="125"
+									  editable="true"
+									  enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									  />  <!--this.pModel.bbUploadHeader.-->
+					</s:FormItem>
+					
+					<s:FormItem label="Start Date" >
+						<mx:DateField id="dtStartDate" name="startDate" 
+									  selectedDate="{DateField.stringToDate(this.pModel.bbUploadHeader.startDate,pModel.formatString)}"
+									  text="{this.pModel.bbUploadHeader.startDate}"
+									  change="{pModel.dtFieldDateChange(this.dtStartDate,'startDate')}" 
+									  focusOut="{pModel.dtFieldDateChange(this.dtStartDate,'startDate')}"
+									  errorString="{pModel.bbUploadHeader.errObj.startDate}"
+									  editable="true"
+									  width="125"
+									  enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									  />
+					</s:FormItem>
+					
+					<s:FormItem label="End Date" >
+						<mx:DateField id="dtEndDate" name="endDate"
+									  selectedDate="{DateField.stringToDate(this.pModel.bbUploadHeader.endDate,pModel.formatString)}"
+									  text="{this.pModel.bbUploadHeader.endDate}"
+									  change="{pModel.dtFieldDateChange(this.dtEndDate,'endDate')}" 
+									  focusOut="{pModel.dtFieldDateChange(this.dtEndDate,'endDate')}"
+									  errorString="{pModel.bbUploadHeader.errObj.endDate}"
+									  width="125"
+									  editable="true"
+									  enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"/>
+					</s:FormItem>
+				</s:Form>
+				
+				<s:Form width="200" > <!--  color="0x323232" -->
+					<s:layout>
+						<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+					</s:layout>
+					<s:FormItem label="EDI Remit To Id" visible = "{this.pModel.bbUploadHeader.uploadType == '3rd Party'}">
+						<s:TextInput id="tiRemitToID"
+									 text="{this.pModel.bbUploadHeader.agreementNum}"
+									 width="115"
+									 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									 visible = "{this.pModel.bbUploadHeader.uploadType == '3rd Party'}"
+									 change="{pModel.tiTextInputChange(this.tiRemitToID.text,'agreementNum')}"
+									 /> <!--change="{pModel.tiTextInputChange(this.tiBillbackTitle.text,'billbackTitle')}"-->
+					</s:FormItem>
+					<s:FormItem label="EDI Remit To Name" visible = "{this.pModel.bbUploadHeader.uploadType == '3rd Party'}">
+						<s:TextInput id="tiRemitToName"
+									 text="{this.pModel.bbUploadHeader.agreementName}"
+									 width="115"
+									 enabled="{this.pModel.objBBToolsLock.bBBUploadEditScreenEnabled}"
+									 visible = "{this.pModel.bbUploadHeader.uploadType == '3rd Party'}"
+									 change="{pModel.tiTextInputChange(this.tiRemitToName.text,'agreementName')}"
+									 /> <!-- change="{pModel.tiTextInputChange(this.tiBillbackTitle.text,'billbackTitle')}"	-->
+					</s:FormItem>					
+					
+				</s:Form>
+				
+				
+			</s:HGroup>
+			<s:List height="60" width="510" color="red"
+					dataProvider="{new ArrayList(this.pModel.arrHeaderError)}"
+					/>
+		</s:VGroup>
+		
+		
+		<!--<s:TextArea text="{ObjectUtil.toString(pModel.bbUploadHeader.errObj)}"
+		height="125" 
+		width="200"/>-->
+		<!--<s:Form width="295" color="0x323232" >
+		<s:layout>
+		<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+		</s:layout>
+		
+		<s:FormItem label="Amount" >
+		<s:TextInput id="tiAmount"
+		text="{this.pModel.bbUploadHeader.totalAmount}"
+		editable="false"
+		width="75" />
+		</s:FormItem>
+		
+		<s:FormItem label="Title" >
+		<s:TextInput id="tiTitle" width="175" 
+		text="{this.pModel.bbUploadHeader.billbackTitle}"
+		change="{pModel.tiTextInputChange(this.tiTitle.text,'billbackTitle')}"
+		errorString="{pModel.bbUploadHeader.errObj.billbackTitle}"/>
+		</s:FormItem>
+		
+		<s:FormItem label="Receipt Date" >
+		<mx:DateField id="dtReceiptDate" name="receiptDate"
+		formatString="{pModel.formatString}"
+		selectedDate="{DateField.stringToDate(this.pModel.bbUploadHeader.receiptDate,pModel.formatString)}"
+		text="{this.pModel.bbUploadHeader.receiptDate}"
+		change="{pModel.dtFieldDateChange(this.dtReceiptDate,'receiptDate')}" 
+		focusOut="{pModel.dtFieldDateChange(this.dtReceiptDate,'receiptDate')}"
+		errorString="{pModel.bbUploadHeader.errObj.receiptDate}"
+		width="125"
+		editable="true"/>  
+		</s:FormItem>
+		
+		<s:FormItem label="Postmark Date" >
+		<mx:DateField id="dtPostMarkDate" name="postmarkDate"
+		formatString="{pModel.formatString}"
+		selectedDate="{DateField.stringToDate(this.pModel.bbUploadHeader.postmarkDate,pModel.formatString)}"
+		text="{this.pModel.bbUploadHeader.postmarkDate}"
+		change="{pModel.dtFieldDateChange(this.dtPostMarkDate,'postmarkDate')}" 
+		focusOut="{pModel.dtFieldDateChange(this.dtPostMarkDate,'postmarkDate')}"
+		errorString="{pModel.bbUploadHeader.errObj.postmarkDate}"
+		width="125"
+		editable="true"/>  
+		</s:FormItem>
+		</s:Form>-->
+		
+		<!--<s:Form width="280" color="0x323232" >
+		<s:layout>
+		<s:FormLayout gap="2" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+		</s:layout>
+		
+		<s:FormItem label="Volume" >
+		<s:TextInput id="tiVolume" editable="false"
+		text="{this.pModel.bbUploadHeader.volumeQty}" width="75" />
+		</s:FormItem>
+		
+		<s:FormItem label="Ref #" >
+		<s:TextInput id="tiRefNum" 
+		text="{this.pModel.bbUploadHeader.referenceNum}"
+		change="{pModel.tiTextInputChange(this.tiRefNum.text,'referenceNum')}"
+		errorString="{pModel.bbUploadHeader.errObj.referenceNum}"
+		width="150" />
+		</s:FormItem>
+		</s:Form>-->
+		
+	</s:BorderContainer>
+	</s:VGroup>
+	</ba:MinMaxPanel>
+</s:Group>

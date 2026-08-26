@@ -1,0 +1,89 @@
+/********************************************************************************************************************************************
+      Template: \common_files\tabnav.css
+          Date:  2016 August
+        Author:  Chris Nguyen
+       Purpose:  Styles for horizontal tab menu
+
+       Example:
+                <div class="nav">
+                    <ul class="nav">
+                        <li <cfif attributes.selectedIndex eq 0>class="active"</cfif>>
+                            <a class="topnav" href="/planners/create/planner_scorecard.cfm?#variables.query_string#">scorecard</a>
+                        </li>
+                        <li <cfif attributes.selectedIndex eq 1>class="active"</cfif>>
+                            <a class="topnav" href="/planners/create/planner_calendar.cfm?#variables.query_string#">planner calendar</a>
+                        </li>
+                        <li <cfif attributes.selectedIndex eq 2>class="active"</cfif>>
+                            <a class="topnav" href="/planners/create/planner_volume_plan.cfm?#variables.query_string#">volume plan</a>
+                        </li>
+                        <li <cfif attributes.selectedIndex eq 3>class="active"</cfif>>
+                            <a class="topnav" href="/planners/create/planner_profile.cfm?#variables.query_string#">profile</a>
+                        </li>
+                        <li <cfif attributes.selectedIndex eq 4>class="active"</cfif>>
+                            <a class="topnav" href="/planners/create/planner_alerts.cfm?#variables.query_string#">alerts</a>
+                        </li>
+                    </ul>
+                </div>
+
+       			:: /common_files/layout_planner.cfm
+********************************************************************************************************************************************/
+div.nav {
+  border-bottom: 1px solid #CCC;
+  height: 34px;
+  margin: 0px 0 5px 0;
+  background-color2: #F2F3F5;
+}
+ul.nav {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 10px;
+}
+ul.nav a {
+  display: block;
+  text-decoration: none;
+  opacity:0.7;
+  border-top: #CCC;
+  border-top-style: solid;
+  border-top-width: thin;
+  border-left-color: #CCC;
+  border-left-style: solid;
+  border-left-width: thin;
+  border-right-color: #CCC;
+  border-right-style: solid;
+  border-right-width: thin;
+}
+ul.nav > li {
+  float: left;
+  margin: 10px 7px 0 0;
+}
+ul.nav > li > a {
+  background: #EDEEF2;
+  border-radius: 3px 3px 0 0;
+  color: blue;
+  font-size: 11px;
+  font-weight: bold;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 12px;
+  text-decoration: none;
+}
+ul.nav > li > a:hover {
+  background: #85a6b8;
+  color: white;
+  text-decoration: none;
+}
+ul.nav > li.active > a, ul.nav > li > a:active > a {
+  background: #406be4;
+  border: 1px solid #CCC;
+  border-bottom: none;
+  color: white;
+  font-size: 12px;
+  height: 30px;
+  letter-spacing: 0.5px;
+  line-height: 30px;
+  /* text-shadow: 4px 4px 4px #aaa; */
+  opacity:1;
+}
+ul.nav > li.active {
+	margin-top: 4px;
+}

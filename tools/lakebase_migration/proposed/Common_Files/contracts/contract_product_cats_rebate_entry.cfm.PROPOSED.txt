@@ -1,0 +1,68 @@
+===== QUERY: getProgramInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramInfo>
+	<cftry>
+		<cfset getProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Program_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAllCategoryProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getProgramUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetProgramUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getuom")>
+<cfif useLakebaseForgetProgramUOM>
+	<cftry>
+		<cfset getProgramUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getuom", {
+				"unit_of_measure_id" = "eq.#getProgramInfo.Contract_Quantity_UOM_IDX#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAllCategoryProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: getThisProductInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetThisProductInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_category_product_rates_volumes")>
+<cfif useLakebaseForgetThisProductInfo>
+	<cftry>
+		<cfset getThisProductInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_category_product_rates_volumes", {
+				"program_id" = "eq.#FORM.Program_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#getAllCategoryProducts.BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProductInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProductInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

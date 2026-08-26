@@ -1,0 +1,20 @@
+===== QUERY: getdistinctcustomers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetdistinctcustomers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetdistinctcustomers>
+	<cftry>
+		<cfset getdistinctcustomers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetdistinctcustomers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetdistinctcustomers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

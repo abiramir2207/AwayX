@@ -1,0 +1,18 @@
+===== QUERY: thisTag.qGetLumpSumPaymentFrequency =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetLumpSumPaymentFrequency =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetLumpSumClaimMechanism =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetLumpSumClaimMechanism =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetLumpSumClaimMechanism =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: thisTag.qGetLumpSumExternalID =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

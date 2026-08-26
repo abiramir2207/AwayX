@@ -1,0 +1,116 @@
+===== QUERY: TableExists =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: BB_Preferences =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForBB_Preferences = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForBB_Preferences>
+	<cftry>
+		<cfset BB_Preferences = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "bb_tolerance_tet"
+			}), "bb_tolerance_tet"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Preferences = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Preferences>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetContractNumber =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_info")>
+<cfif useLakebaseForGetContractNumber>
+	<cftry>
+		<cfset GetContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_program_info", {
+				"contract_main_id" = "eq.#ContractID#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractNumber>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetContractMain =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_info")>
+<cfif useLakebaseForGetContractMain>
+	<cftry>
+		<cfset GetContractMain = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_program_info", {
+				"contract_number" = "eq.#Contract_Number#",
+				"select" = "contract_main_id,approval_start_date,approval_end_date"
+			}), "contract_main_id,approval_start_date,approval_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractMain>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: PopulateTables1 =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: PopulateTCTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetDistributorName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetDistributorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistributorName>
+	<cftry>
+		<cfset GetDistributorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#DistributorNumber#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetProgramNumbers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetProgramNumbers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetProgramNumbers>
+	<cftry>
+		<cfset GetProgramNumbers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#GetProgramNumber.Contract_Number#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProgramNumbers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProgramNumbers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetProgramDates =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+

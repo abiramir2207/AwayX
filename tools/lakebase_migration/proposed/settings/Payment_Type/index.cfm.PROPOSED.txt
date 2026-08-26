@@ -1,0 +1,23 @@
+===== QUERY: getClosingMethods =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetClosingMethods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForgetClosingMethods>
+	<cftry>
+		<cfset getClosingMethods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"deleted" = "eq.0",
+				"benabled" = "eq.1",
+				"order" = "vchbillback_closing_method_desc.asc",
+				"select" = "ibillback_closing_method_id,vchbillback_closing_method_desc,benabled,tiautopay_bb_status,deleted,abbreviation"
+			}), "ibillback_closing_method_id,vchbillback_closing_method_desc,benabled,tiautopay_bb_status,deleted,abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetClosingMethods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetClosingMethods>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

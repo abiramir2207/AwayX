@@ -1,0 +1,123 @@
+===== QUERY: zone_free =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForzone_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForzone_free>
+	<cftry>
+		<cfset zone_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.4"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForzone_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForzone_free>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: region_free =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForregion_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForregion_free>
+	<cftry>
+		<cfset region_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.5"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForregion_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForregion_free>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: market_free =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFormarket_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseFormarket_free>
+	<cftry>
+		<cfset market_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.6"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormarket_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormarket_free>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getAdmin =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetAdmin>
+	<cftry>
+		<cfset getAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "is_system_administrator"
+			}), "is_system_administrator"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAdmin>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFoodserviceLOBID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getFoodserviceActiveZones =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getZones =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getRegions =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getMarkets =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: getBrokers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForgetBrokers>
+	<cftry>
+		<cfset getBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"active_code" = "eq.A",
+				"deleted" = "eq.0",
+				"service_market_id" = "eq.#getMarkets.Service_Market_ID#",
+				"order" = "broker_name.asc",
+				"select" = "broker_name,bsa_foodservice_brokers_id,broker_shard"
+			}), "broker_name,bsa_foodservice_brokers_id,broker_shard"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBrokers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,305 @@
+===== QUERY: qGetAllowedPlannerTemplates =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetPlannerTemplates =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: local.query =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qPlannerFilters =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qPlannerFiltersCustomers =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqPlannerFiltersCustomers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_customers")>
+<cfif useLakebaseForqPlannerFiltersCustomers>
+	<cftry>
+		<cfset qPlannerFiltersCustomers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_customers", {
+				"planner_template_id" = "eq.#nId#",
+				"select" = "planner_template_id,distributor_group_level_id,distributor_group_id"
+			}), "planner_template_id,distributor_group_level_id,distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPlannerFiltersCustomers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPlannerFiltersCustomers>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qPlannerFiltersProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqPlannerFiltersProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_products")>
+<cfif useLakebaseForqPlannerFiltersProducts>
+	<cftry>
+		<cfset qPlannerFiltersProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_products", {
+				"planner_template_id" = "eq.#nId#",
+				"select" = "planner_template_id,product_group_level_id,product_group_id"
+			}), "planner_template_id,product_group_level_id,product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPlannerFiltersProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPlannerFiltersProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qPlannerFiltersOperators =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqPlannerFiltersOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_operators")>
+<cfif useLakebaseForqPlannerFiltersOperators>
+	<cftry>
+		<cfset qPlannerFiltersOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_operators", {
+				"planner_template_id" = "eq.#nId#",
+				"select" = "planner_template_id,operator_group_level_id,operator_group_id"
+			}), "planner_template_id,operator_group_level_id,operator_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPlannerFiltersOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPlannerFiltersOperators>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.query =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: variables.qOriginal =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvariables_qOriginal = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template")>
+<cfif useLakebaseForvariables_qOriginal>
+	<cftry>
+		<cfset variables.qOriginal = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template", {
+				"planner_template_id" = "eq.#arguments.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qOriginal = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qOriginal>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.query =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: variables.qUpdated =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForvariables_qUpdated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template")>
+<cfif useLakebaseForvariables_qUpdated>
+	<cftry>
+		<cfset variables.qUpdated = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template", {
+				"planner_template_id" = "eq.#arguments.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qUpdated = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qUpdated>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertPlannerCalendar =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qInsertPlannerPerfTypes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qCheckIfExists =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCheckIfExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters")>
+<cfif useLakebaseForqCheckIfExists>
+	<cftry>
+		<cfset qCheckIfExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters", {
+				"planner_template_id" = "eq.#nId#",
+				"group_level_id" = "eq.#strGroupLevelID#",
+				"pg_group_type" = "eq.#strGroupType#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfExists>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qUpdatePlannerTemplateFilters =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqUpdatePlannerTemplateFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters")>
+<cfif useLakebaseForqUpdatePlannerTemplateFilters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_template_filters",
+			{
+				"planner_template_id" = "eq.#nId#",
+				"group_level_id" = "eq.#strGroupLevelID#",
+				"pg_group_type" = "eq.#strGroupType#"
+			},
+			{
+				"allow_in_search" = "#bAllowInSearch#",
+				"allow_in_group_search" = "#bAllowInGroupSearch#",
+				"allow_filter" = "#bAllowFilter#",
+				"default_view" = "#arguments.default_view#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdatePlannerTemplateFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdatePlannerTemplateFilters>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAddPlannerTemplateFilters =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qAddCustomerFilters =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qAddOperatorFilters =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qAddCustomerFilters =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetFirstParentIds =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qSetDeleted =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSetDeleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_program_templates")>
+<cfif useLakebaseForqSetDeleted>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_program_templates",
+			{
+				"planner_template_id" = "eq.#nId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetDeleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetDeleted>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAddPlannerProgramTemplate =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qSetDeletedAccrual =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSetDeletedAccrual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_program_templates_accrual")>
+<cfif useLakebaseForqSetDeletedAccrual>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_program_templates_accrual",
+			{
+				"planner_template_id" = "eq.#nId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetDeletedAccrual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetDeletedAccrual>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetFirstParentIdsAccrual =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: qAddPlannerProgramTemplateAccrual =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: local.qDropTables =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: local.updateTemplateStatus =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: local.qAccess =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_qAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_planner")>
+<cfif useLakebaseForlocal_qAccess>
+	<cftry>
+		<cfset local.qAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_planner", {
+				"profile_id" = "eq.#arguments.user_profile_id#",
+				"access_is_forbidden" = "eq.0",
+				"deleted" = "eq.0",
+				"select" = "planner_template_id"
+			}), "planner_template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qAccess>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: local.qAccess =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForlocal_qAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_planner")>
+<cfif useLakebaseForlocal_qAccess>
+	<cftry>
+		<cfset local.qAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_planner", {
+				"profile_id" = "eq.#arguments.user_profile_id#",
+				"access_is_forbidden" = "eq.0",
+				"deleted" = "eq.0",
+				"select" = "planner_template_id"
+			}), "planner_template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qAccess>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qLock =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qLock =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

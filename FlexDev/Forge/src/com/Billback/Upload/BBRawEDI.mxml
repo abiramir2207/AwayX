@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  xmlns:view="com.Billback.Upload.views.*" 
+		  xmlns:maps="com.Billback.Upload.maps.*" 
+		  xmlns:vos="com.Billback.Upload.vos.*" 
+		  creationComplete="applyRuntimeStyleSheet();" 
+		  implements="com.Billback.Main.models.IBBRawEDI"  
+		  width="100%"
+		  height="100%">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:BBRawEDIEventMap dispatcher="{this}" cache="local" />
+		
+	</fx:Declarations>
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		s|Label#labelDisplay {
+			textAlign: left;
+		}
+	</fx:Style>
+	<fx:Script><![CDATA[
+		import com.Billback.Main.models.IBBRawEDI;
+		import com.Billback.Upload.events.BBUploadEvent;
+		import com.Billback.Upload.models.vos.BBRawEDIHeader;
+		import com.Billback.Upload.models.vos.BBRawEDIDetail;
+	 	import com.Billback.Upload.views.pm.BBRawEDIPModel;
+		import com.shared.events.MainEvent;
+		import com.shared.vos.Settings;
+		
+		import mx.collections.ArrayCollection;
+		[Bindable]
+		private var bbRawEDIHeader:BBRawEDIHeader;
+		private var bbRawEDIDetail:BBRawEDIDetail = new BBRawEDIDetail();
+		
+		/* Presentation Model */
+  		[Bindable]
+		public var pModelRawEDI:BBRawEDIPModel;
+		 
+		
+		private function applyRuntimeStyleSheet():void {
+			styleManager.loadStyleDeclarations("/flex/mainFx410.swf")
+		}
+		
+		public function setSettings(settings:Settings):void{
+			var event:MainEvent = new MainEvent ( MainEvent.SET_LOCAL_APP_SETTINGS );
+			event.settings = settings;
+			this.dispatchEvent( event );
+		}
+		
+		public function setBBRawEDI(bbREH:BBRawEDIHeader):void{
+			if(bbREH){
+				var event:BBUploadEvent = new BBUploadEvent ( BBUploadEvent.LOAD_BB_RAW_EDI_DETAIL );
+				event.bbRawEDIHeader = bbREH;
+				this.bbRawEDIHeader = bbREH
+				this.dispatchEvent( event );
+			}
+			
+		}
+		public function getBBRawEDI():BBRawEDIHeader{
+			return this.bbRawEDIHeader;
+		}
+
+	]]>
+	</fx:Script>
+	
+	<!-- ****************************** Views ****************************** -->
+	<s:VGroup width="100%" height="100%" >
+		<view:BBRawEDIDetailsGrid id="BBRawEDIDetailsGrid" width="100%" />
+	</s:VGroup>
+</s:Module>

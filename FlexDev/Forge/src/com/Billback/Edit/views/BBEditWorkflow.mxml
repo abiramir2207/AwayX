@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Popup that shows this bilback workflow. -->
+<s:TitleWindow
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:s="library://ns.adobe.com/flex/spark" 
+	xmlns:mx="library://ns.adobe.com/flex/mx" 
+	xmlns:local="com.shared.views.renderer.*"
+	backgroundColor="0xffffff"
+	close="PopUpManager.removePopUp(this)"
+	color="0x333333"
+	name="Billback Workflow"
+	title="Billback Workflow">
+		
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Main.models.vos.BBDetails;
+			import com.shared.components.StringUtils;
+			import com.shared.vos.Settings;
+			
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import mx.utils.ObjectUtil;
+			
+			public var dDispatcher:IEventDispatcher;
+	
+			[Bindable] public var oBBDetails:BBDetails;
+			[Bindable] public var oSettings:Settings;
+			/* Show the "Billback Agree" reasons */
+			private function buildToolTip(item:Object):String
+			{
+				var myString:String = "";
+				if(item != null && item.Agree_Reasons)
+				{
+					myString = "AGREE REASONS:\n";
+					/*myString = myString + item.Agree_Reasons.toArray().join("\n");*/
+					myString = myString + item.Agree_Reasons.toString().replace(",","\n");
+				}
+				return myString;
+			}			
+			
+			/* Billback Preview */
+			private function openCRAAnalysisReport() : void{  
+				var jsURL:String ="/workflow/Billback/BB_CRA_Analysis_Report.cfm?Billback_ID="+ this.oBBDetails.billbackIDInt + "&caller=FLEX"; // +this.data.billbackID;
+				var jscommand:String = "window.open('"+jsURL+"','winPreview','height=640,width=815,toolbar=no,scrollbars=yes,resizable=yes');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self"); 
+			}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup width="100%">
+		<s:HGroup width="100%" horizontalAlign="right">
+			<s:Label text="[" color="0x7F0000" fontWeight="bold" mouseChildren="false" paddingRight="0" visible="{true}" />
+			<s:Label text="CRA analysis report" color="0x0000FF" fontWeight="bold" useHandCursor="true" click="openCRAAnalysisReport()" mouseChildren="false" buttonMode="true" paddingRight="0" paddingLeft="0" visible="{true}"/>
+			<s:Label text="] " color="0x7F0000" fontWeight="bold" mouseChildren="false" paddingLeft="0" visible="{true}"/>
+		</s:HGroup>	
+
+
+		<s:VGroup width="100%">
+			<s:HGroup width="100%">	
+				<s:Label text="Workflow" fontWeight="bold" textAlign="left"/>
+			</s:HGroup>
+			<s:HGroup width="100%">
+				<mx:DataGrid textAlign="left" dataProvider="{oBBDetails.workflowAction}" 
+							 rowCount="{oBBDetails.workflowAction.length &lt; 4 ? oBBDetails.workflowAction.length : 4}" 
+							 width="100%" dataTipFunction="buildToolTip">
+					<mx:columns>
+						<mx:DataGridColumn dataField="Action"  width="75" headerText="Action" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Name"  width="110" headerText="Name" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Position"  width="110" headerText="Position" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Profiles_Desc"  width="110" headerText="Profile" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="120" headerText="Authority Sequence" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Action_Date"  width="150" headerText="Date" labelFunction="StringUtils.formatDateTime" showDataTips="true"/>
+					</mx:columns>
+				</mx:DataGrid>
+			</s:HGroup>
+			
+		</s:VGroup>
+
+		<s:VGroup width="100%" visible="{oBBDetails.CRADetails.length &lt; 1 ? false : true}" includeInLayout="{oBBDetails.CRADetails.length &lt; 1 ? false : true}">
+			<s:HGroup width="100%">	
+				<s:Label text="CRA" fontWeight="bold" textAlign="left"/>
+				<s:Label text="[currently responsible for approval]" textAlign="left"/>
+			</s:HGroup>
+			<s:HGroup width="100%">
+				<mx:DataGrid textAlign="left" dataProvider="{oBBDetails.CRADetails}" 
+							 rowCount="{oBBDetails.CRADetails.length &lt; 4 ? oBBDetails.CRADetails.length : 4}" 
+							 width="100%" dataTipFunction="buildToolTip">
+					<mx:columns>
+						<mx:DataGridColumn dataField="User_Full_Name"  width="110" headerText="Name" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Position_Label"  width="110" headerText="Position" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Profiles_Desc"  width="110" headerText="Profile" showDataTips="true"/>
+						<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="120" headerText="Authority Sequence" showDataTips="true"/>
+						</mx:columns>
+				</mx:DataGrid>
+			</s:HGroup>
+			
+		</s:VGroup>
+	
+		<s:VGroup width="100%" visible="{oBBDetails.NRADetails.length &lt; 1 ? false : true}" includeInLayout="{oBBDetails.NRADetails.length &lt; 1 ? false : true}">
+				<s:HGroup width="100%">	
+					<s:Label text="NRA" fontWeight="bold" textAlign="left"/>
+					<s:Label text="- after the above person(s) take action, below is a list of person(s) that may need to take approval action." textAlign="left"/>
+				</s:HGroup>
+				<s:HGroup width="100%">
+					<mx:DataGrid textAlign="left" dataProvider="{oBBDetails.NRADetails}" 
+								 rowCount="{oBBDetails.NRADetails.length &lt; 4 ? oBBDetails.NRADetails.length : 4}" 
+								 width="100%" dataTipFunction="buildToolTip">
+						<mx:columns>
+							<mx:DataGridColumn dataField="User_Full_Name"  width="110" headerText="Name" showDataTips="true"/>
+							<mx:DataGridColumn dataField="Position_Label"  width="110" headerText="Position" showDataTips="true"/>
+							<mx:DataGridColumn dataField="Profiles_Desc"  width="110" headerText="Profile" showDataTips="true"/>
+							<mx:DataGridColumn dataField="Authority_Sequence_Name"  width="120" headerText="Authority Sequence" showDataTips="true"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:HGroup>			
+		</s:VGroup>
+	</s:VGroup>
+</s:TitleWindow>

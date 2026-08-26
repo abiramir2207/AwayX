@@ -1,0 +1,138 @@
+===== QUERY: getPositionID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPositionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetPositionID>
+	<cftry>
+		<cfset getPositionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"service_zone_id" = "eq.#DB_ServiceZone_ID#",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPositionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPositionID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPositionHolders =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getRegions =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRegions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_regions")>
+<cfif useLakebaseForgetRegions>
+	<cftry>
+		<cfset getRegions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("service_regions", {
+				"service_zone_id" = "eq.#DB_ServiceZone_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRegions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRegions>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPositionID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPositionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetPositionID>
+	<cftry>
+		<cfset getPositionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"service_zone_id" = "eq.#DB_ServiceZone_ID#",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPositionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPositionID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPositionHolders =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getMarkets =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetMarkets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_markets")>
+<cfif useLakebaseForgetMarkets>
+	<cftry>
+		<cfset getMarkets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("service_markets", {
+				"service_region_id" = "eq.#DB_ServiceRegion_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarkets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarkets>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPositionID =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetPositionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetPositionID>
+	<cftry>
+		<cfset getPositionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"service_zone_id" = "eq.#DB_ServiceZone_ID#",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPositionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPositionID>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getPositionHolders =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#getPositionHolders.User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

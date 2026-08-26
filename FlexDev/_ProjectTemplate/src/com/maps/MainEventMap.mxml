@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.events.*;
+			import com.models.*;
+			//import com.vos.*;
+		]]>
+	</mx:Script>
+	<mate:Debugger level="{Debugger.ALL}" />
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  ***************************************************************************************** -->
+	<mx:RemoteObject id="MainService" destination="ColdFusion" source="mvc.models._ProjectTemplate._ProjectTemplateService" />
+	<!--- Search functionality including initial dataload <p>roSearchService : <strong>mvc.models.Distributor.DistributorSearchService</strong></p> -->
+	<!--- roErrorService : <strong>mvc.models.ErrorService</strong> -->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.models.ErrorService" />
+
+	<!-- FlexEvent.PREINITIALIZE   ******************************************************************************** -->
+	<!---@see com.models.SettingsManager#loadURLParameters()
+			Invoke : com.models.SettingsManager.loadURLParameters()-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" id="ePREINITIALIZE">
+		<ObjectBuilder generator="{MainManager}" id="oManager" cache="global" />
+		<ObjectBuilder generator="{SettingsManager}" id="oSettingsManager" cache="global" />
+		<ObjectBuilder generator="{BAError}" id="oBAError" cache="global" />
+		<MethodInvoker generator="{SettingsManager}" method="loadURLParameters" cache="global" />
+	</EventHandlers>
+	
+	<!-- FlexEvent.APPLICATION_COMPLETE     ************************************************************************* -->
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE">
+		<!--call db for other settings-->
+		<EventAnnouncer type="{MainEvent.LOAD_APP_SETTINGS}" generator="{MainEvent}" >
+			<Property sourceCache="global" source="{SettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>
+		<!--Get Data ********  modify the property tag to send to the get GET ************-->
+		<EventAnnouncer type="{MainEvent.GET}" generator="{MainEvent}" >
+			<Property sourceCache="inherit" source="{SettingsManager}" sourceKey="settings.programId" targetKey="programId"/>
+		</EventAnnouncer>
+	</EventHandlers>
+	
+	<!--GET DATA ******** modify this event to get data from CF ************ -->
+	    <!---	The main GET Event Should call a wrapper function in CF that will get ALL Data needed (complex Object possibly) for the initial load of the app.
+	    		We should not see 10 remote calls to load up the app.		
+	    			@see #roMainService
+	    ** RemoteInvoke : roMainService.getDistributors()
+	    		@see com.models.SearchManager#getMyData() 
+	    ** Handler : com.models.SearchManager.getMyData()   -->
+	<EventHandlers type="{MainEvent.GET}" id="eGET">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getMyData" arguments="{event.programId}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{MainManager}" method="dataResults" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="SEARCH SERVICE (get data)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+ 
+ 
+    <!-- ************************************************
+    	 ADD NEW EventHandlers Here   *******************
+         ************************************************-->
+
+
+    <!--LOAD APP SETTINGS *************************************************************************** -->
+     <!--- 			@see #roMainService
+	    ** RemoteInvoke : roMainService.getSettingsObject()
+	    		@see com.models.SettingsManager#setAppSettings() 
+	    ** Handler : com.models.SettingsManager.setAppSettings()   -->
+	<EventHandlers type="{MainEvent.LOAD_APP_SETTINGS}">
+		<RemoteObjectInvoker instance="{MainService}" showBusyCursor="true" method="getSettingsObject" arguments="{event.userId}" >
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker cache="global" generator="{SettingsManager}" method="setAppSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{MainEvent.BSA_ERROR}" generator="{MainEvent}" >
+					<Properties sBaError="SEARCH SETTINGS SERVICE (load app settings event = LOAD_APP_SETTINGS)" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+
+	
+	<!--	*****************************************************************************************
+			***		BSA CUSTOM ERROR HANDLER 		*************************************************
+			***************************************************************************************** -->
+
+<!---  	<p>First display the error to the user</p>
+		<p>Then Try to log the error on the cf server</p> 
+		<p>there is a fault Logging the error on the server show the "ERROR SERVICE" Message</p>
+		<p>*********************************************************************************</p>
+		*      @see com.models.BAError#showBAError()
+		** Invoke : com.models.BAError.showBAError()		
+		*			@see #roErrorService
+	    ** RemoteInvoke : roErrorService.logError()
+	    *		@see com.models.BAError#logError() 
+	    ** faultHandler : com.models.BAError.showBAError()   -->
+	<EventHandlers type="{MainEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  *********************************************************************** -->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+     </EventHandlers>
+	
+</EventMap>

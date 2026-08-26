@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:filters="com.shared.components.filters.*" width="100%" height="100%"
+		 xmlns:ba="com.shared.components.*"
+		 minWidth="1260">
+	<!-- "MinWidth" above, has been added for the "EDI Viewer" link, from the setting panel. -->
+	<s:layout>
+		<s:VerticalLayout paddingLeft="0" paddingRight="0" 
+						  paddingTop="0" paddingBottom="0" />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Upload.views.pm.BBCorrectionsPModel;
+			import com.Billback.Upload.views.pm.BBRawEDIPModel;
+			import com.Billback.Upload.views.pm.BBUploadPModel;
+			import com.shared.components.filters.DataGridFilterColumn;
+			import com.shared.components.filters.DataGridFilterColumnMultiSelect;
+			import com.shared.vos.Settings;
+			import com.Billback.Upload.models.vos.BBRawEDIFilterParams;
+			import com.Billback.Upload.events.BBUploadEvent;
+			import com.Billback.Upload.models.vos.BBRawEDIHeader;
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.controls.Alert;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.core.ScrollPolicy;
+			import mx.events.FlexEvent;
+			
+			import mx.utils.ObjectUtil;
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModelCorrections:BBCorrectionsPModel;
+			[Bindable]
+			public var pModelUpload:BBUploadPModel;
+			[Bindable]
+			public var pModelRawEDI:BBRawEDIPModel;
+			[Bindable]
+			private var iPad:int = 3;
+			[Bindable]
+			public var objBBFilterParams:BBRawEDIFilterParams = new BBRawEDIFilterParams();
+			
+			private function resetSearch():void
+			{
+				this.btnSearch.enabled=true;
+				this.tiPayableNumber.text='';
+				this.dtPayableDate.text='';
+				this.tiVendorId.text='';
+				this.tiVendorName.text='';
+				this.tiAccountNumber.text='';
+				this.tiAccountName.text='';
+				this.tiCustPromoCode.text='';
+				this.tiCustPromoDesc.text='';
+				this.pModelCorrections.updatePayableNumber("");
+				this.pModelCorrections.updatePayableDate(null);
+				this.pModelCorrections.updateVendorId("");
+				this.pModelCorrections.updateVendorName("");
+				this.pModelCorrections.updatePayeeNumber("");
+				this.pModelCorrections.updatePayeeName("");
+				this.pModelCorrections.updateAgreementNumber("");
+				this.pModelCorrections.updateAgreementName("");
+				this.pModelCorrections.arrBBRawEDI = null;
+			}
+			private function enterSearchBox(event:KeyboardEvent):void 
+			{        
+				if (event.keyCode == Keyboard.ENTER)
+				{
+					/* call search method */       
+					this.pModelCorrections.searchBBRawEDIData();
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup height="100%" width="90%" minWidth="800" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+		<ba:MinMaxPanel id="header" width="100%" minWidth="800"   borderStyle="none" panelTitle="Raw EDI Results: {this.pModelCorrections.arrBBRawEDI.length} records" showMaximize="false" showMinimize="true"><!-- {pModel.arrBBCorrections.length} -->
+			<s:VGroup paddingTop="3">
+				<s:BorderContainer width="100%">
+					<s:VGroup top="5" left="5" bottom="5">
+						<!-- 1st ROW --> 
+						<s:HGroup width="100%">
+							<s:HGroup verticalAlign="middle" width="265">
+								<!--*****************************  INV # / Billback # *********************************-->
+								<s:Label text="   {this.pModelCorrections.oSettings.appFlex.bbLabels.Billback} #" width="100"/>
+								<s:TextInput tabEnabled="true"			  	
+											 id="tiPayableNumber" 
+											 change="this.pModelCorrections.updatePayableNumber(this.tiPayableNumber.text)"
+											 toolTip="Keyword search on field:&#13; {this.pModelCorrections.oSettings.appFlex.bbLabels.Billback} #"			
+											 height="{this.pModelUpload.oSettings.cfApp_textInputHeight}"
+											 width="155"
+											 keyDown="enterSearchBox(event)"
+																		/>
+							</s:HGroup> 
+							<s:HGroup verticalAlign="middle" width="265">
+								<!--***************************** INV DATE / BILLBACK DATE *********************************-->
+								<s:Label text="{this.pModelCorrections.oSettings.appFlex.bbLabels.Billback} Date" width="100"/>
+								<mx:DateField id="dtPayableDate" 
+											  toolTip="Date Search on selected Date Condition" 
+											  editable="true" 
+											  width="150"
+											  change="this.pModelCorrections.updatePayableDate(this.dtPayableDate.selectedDate)"		  
+											  keyDown="enterSearchBox(event)"/>
+							</s:HGroup>	
+							<s:HGroup verticalAlign="middle" width="265">
+								<!--***************************** PAYEE NUMBER *********************************-->
+								<s:Label text="{this.pModelCorrections.oSettings.appFlex.bbLabels.Vendor} Number" width="90" />
+								<s:TextInput id="tiVendorId"  
+											 toolTip="Keyword search on field:&#13; {this.pModelCorrections.oSettings.appFlex.bbLabels.Vendor} Number"			 
+											 change="this.pModelCorrections.updateVendorId(this.tiVendorId.text)"
+											 width="155"
+											 keyDown="enterSearchBox(event)"
+									/> 
+								<!--text="{this.pModelUpload.bbUploadHeader.vendorId}" -->
+							</s:HGroup>
+						</s:HGroup>
+						<!-- END: 1ST ROW -->
+						<!-- START: 2ND ROW -->
+						<s:HGroup width="100%">
+							<s:HGroup verticalAlign="middle" width="265">
+								<!--***************************** PAYEE NAME *********************************-->
+								<s:Label text="{this.pModelCorrections.oSettings.appFlex.bbLabels.Vendor} Name" width="100"/>
+								<s:TextInput id="tiVendorName"  
+								   			 text="{this.pModelCorrections.objBBFilterParams.vendorName}"
+								   			 change="this.pModelCorrections.updateVendorName(this.tiVendorName.text)"
+								   			 width="130"
+								   			 enabled="{this.pModelCorrections.objBBToolsLock.bBBUploadEditScreenEnabled}"
+								   			 toolTip="Keyword search on field:&#13; {this.pModelCorrections.oSettings.appFlex.bbLabels.Vendor} Name"
+											 keyDown="enterSearchBox(event)"
+								/> 												  
+								<s:Image id="imgVendorSearch" buttonMode="true"
+										 source="/flex/assets/Images/search.gif" tabEnabled="true"
+										 useHandCursor="true" verticalAlign="bottom"
+										 click="this.pModelCorrections.showEDIVendorSearch()"
+								/> 
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="265">
+								<!--***************************** ACCOUNT NUMBER *********************************-->
+								<s:Label text="{this.pModelCorrections.oSettings.appSettings.Shard_Ship_To_Label} Number" width="100"/>
+								<s:TextInput id="tiAccountNumber"  
+											 width="155"
+											 change="this.pModelCorrections.updatePayeeNumber(this.tiAccountNumber.text)"
+											 enabled="{this.pModelCorrections.objBBToolsLock.bBBUploadEditScreenEnabled}"
+											 toolTip="Keyword search on field:&#13; {this.pModelCorrections.oSettings.appSettings.Shard_Ship_To_Label} Number"
+											 keyDown="enterSearchBox(event)"
+								/> 
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="265">
+								<!--***************************** ACCOUNT NAME *********************************-->
+								<s:Label text="{this.pModelCorrections.oSettings.appSettings.Shard_Ship_To_Label} Name" width="90"/>
+								<s:TextInput id="tiAccountName"  
+											 width="155"
+											 enabled="{this.pModelCorrections.objBBToolsLock.bBBUploadEditScreenEnabled}"
+											 change="this.pModelCorrections.updatePayeeName(this.tiAccountName.text)"
+											 toolTip="Keyword search on field:&#13; {this.pModelCorrections.oSettings.appSettings.Shard_Ship_To_Label} Name"
+											 keyDown="enterSearchBox(event)"
+								/>
+							</s:HGroup>
+						</s:HGroup>
+						<!-- END: 2ND ROW -->
+						<!-- START: 3RD ROW -->
+						<s:HGroup width="100%">
+							<s:HGroup verticalAlign="middle" width="265">
+								<!--***************************** CUST PROMO CODE ******************************-->
+								<s:Label text="Cust Promo Code" width="100"  />
+								<s:TextInput id="tiCustPromoCode"  
+											 width="155"
+											 change="this.pModelCorrections.updateAgreementNumber(this.tiCustPromoCode.text)"
+											 enabled="{this.pModelCorrections.objBBToolsLock.bBBUploadEditScreenEnabled}"
+											 toolTip="Keyword search on field:&#13; Cust Promo Code"
+											 keyDown="enterSearchBox(event)"
+											 />  
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle">
+								<!--***************************** CUST PROMO Desc ******************************-->
+								<s:Label text="Cust Promo Desc" width="100" />
+								<s:TextInput id="tiCustPromoDesc"  
+											 text="{this.pModelCorrections.bbUploadHeader.vendorName}"
+											 change="this.pModelCorrections.updateAgreementName(this.tiCustPromoDesc.text)"
+											 width="155"
+											 enabled="{this.pModelCorrections.objBBToolsLock.bBBUploadEditScreenEnabled}"
+											 toolTip="Keyword search on field:&#13; Cust Promo Desc"
+											 keyDown="enterSearchBox(event)"
+											 />  
+							</s:HGroup>
+							<s:HGroup verticalAlign="middle" width="265" horizontalAlign="right">
+								<s:Spacer width="30"/>
+								<s:Button label="search" 
+										  click="{this.pModelCorrections.searchBBRawEDIData();}"
+										  id = "btnSearch"
+										  enabled="{this.pModelCorrections.bBtnSearchEnabled}"
+										  />
+								<s:Spacer width="3"/>
+								<s:Button label="reset" 
+										  click="this.resetSearch();"
+										  /><!-- click="{dgBBUploadHistory.resetFilters()};searchBBCode.text='';searchBBNumber.text='';searchVendor.text=''" -->
+								<s:Spacer width="5"/>
+							</s:HGroup>	
+						</s:HGroup>
+					</s:VGroup>	
+				</s:BorderContainer>
+			</s:VGroup>
+		</ba:MinMaxPanel>
+	
+		<filters:FilterDatagrid id="dgBBRawEDI" editable="false"
+								columns="{this.pModelCorrections.arrBBRawEDIDgCols}"
+								dataProvider="{this.pModelCorrections.arrBBRawEDI}"
+								doubleClickEnabled="true"
+								doubleClick="{pModelCorrections.selectEDIRow(this.dgBBRawEDI.selectedItem as Object)}"
+								minWidth="800" width="100%" minHeight="175" height="100%"
+								horizontalScrollPolicy="{ScrollPolicy.AUTO}"
+								resize="true"
+								columnWidths="{['1%', '6%', '6%', '8%',  '6%', 
+												'8%', '12%', '8%', '12%','7%', 
+												'7%', '12%','6%','1%']}"
+								headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+								headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	
+								>  
+		</filters:FilterDatagrid>
+	</s:VGroup>
+</s:Group>

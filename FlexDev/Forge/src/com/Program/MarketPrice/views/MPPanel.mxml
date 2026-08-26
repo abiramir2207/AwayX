@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:view="com.Program.MarketPrice.views.*"
+		 xmlns:ba="com.shared.views.renderer.*"
+		 width="100%" height="100%">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace view "com.Program.MarketPrice.views.*";
+		@namespace ba "com.shared.views.renderer.*";
+		
+		.redItealic { 
+			/* fontSize: 15; */
+			fontStyle: italic;
+			color: red
+		}
+	</fx:Style>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.shared.vos.Settings;
+			import com.Program.MarketPrice.views.pm.GridDataPModel;
+			
+			import flash.external.ExternalInterface;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.controls.Label;
+			import mx.utils.ObjectUtil;
+		
+		[Embed(source="/assets/Images/plus.gif")]
+		private var _imgPlus:Class;
+		[Embed(source="/assets/Images/minus.gif")]
+		private var _imgMinus:Class;
+		[Bindable]
+		private var _iPadding:uint = 5;
+
+		/* Presentation Model */
+		[Bindable] public var pModel:GridDataPModel;
+		
+		]]>
+	</fx:Script>
+	
+	<s:Panel id="pnlAll"   color="0x333333" 
+			  width="100%" height="100%"
+			  name="marketPriceUtility"
+			  title="Market Price Approval :: {pModel.program.title} {pModel.program.number}  [{pModel.acItems.length} items]"> 
+		<!--headerColors="['0xffce84','0xffffff']" Program: {this.oSettings.ProgramId} backgroundColor="0xffffff"-->
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		<!--<mx:VBox height="100%" width="100%" horizontalAlign="left" paddingTop="5" > -->
+		<s:VGroup width="100%"
+				  paddingLeft="{_iPadding}" 
+				  paddingBottom="{_iPadding}" 
+				  paddingRight="{_iPadding}" 
+				  paddingTop="{_iPadding}">
+			
+			<!--.......................................		DATA GRID .......................................	-->
+
+			<view:GridDataMP width="100%" tabEnabled="false" />
+			
+			<!--.......................................		DATA GRID .......................................	-->
+		</s:VGroup>
+		
+		
+		<!--</mx:VBox>-->
+		<!--- "import selected" Button : returns all checked items to wrapper javascript which then passes them to the calling page via a form submit-->
+		<s:HGroup paddingLeft="{_iPadding}" paddingBottom="{_iPadding}" paddingRight="{_iPadding}" paddingTop="{_iPadding}">
+			<ba:BaButton label="{pModel.actionLabel}" click="pModel.actionClick()"  tabEnabled="false" />  <!-- toolTip="{pModel.actionToolTip}" -->
+			<ba:BaButton label="cancel" click="pModel.cancelClick()"  tabEnabled="false" toolTip="quit the aproval process"/>
+			<s:Label width="350" height="125"
+						text="{pModel.actionToolTip}" color="red" styleName="redItealic"
+					 includeInLayout="{pModel.showMessage}" visible="{pModel.showMessage}"/>
+		</s:HGroup>
+	</s:Panel>
+</s:Group>

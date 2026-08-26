@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+compRateFormat.mxml
+
+Format the rate columns in the Dev grid.
+
+-->
+
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+		   width="100%" 
+		   verticalScrollPolicy="off" 
+		   horizontalScrollPolicy="off"
+		   implements="mx.controls.listClasses.IDropInListItemRenderer">
+	<mx:CurrencyFormatter id="dollarFormatterRate" precision="4"  useNegativeSign="true" rounding="nearest" />
+	<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import mx.controls.dataGridClasses.DataGridListData;
+			import mx.controls.listClasses.BaseListData;
+			
+			
+			// Internal variable for the property value.
+			private var _listData:DataGridListData;
+			
+			// Make the listData property bindable.
+			[Bindable("dataChange")]
+			public function get listData():BaseListData
+			{
+				return _listData;
+			}
+			
+			// Define the setter method,
+			public function set listData(value:BaseListData):void
+			{
+				_listData = DataGridListData(value);
+			}
+			
+			public function fnFormatRate(item:String):String 
+			{
+				return dollarFormatterRate.format(item);
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off"> 
+		<mx:Label text="{fnFormatRate(parseFloat(data[_listData.dataField]).toString())}/{data.UOM_Short}" 
+				  paddingLeft="2" paddingTop="8"/> 
+	</mx:HBox> 
+</mx:Canvas>

@@ -1,0 +1,49 @@
+<SPAN CLASS="title2">Creating email and fax packages</SPAN>
+
+
+
+
+<p>Electing to create a fax or
+email packed will automatically send copies to the brokers, sales personnel, or
+<cfoutput>#lcase(application.returned_customer_setting.distributor_label_plural)#</cfoutput> associated with it&nbsp; The application will &quot;preload&quot;
+the addresses or fax numbers of the brokers associated.&nbsp; For email
+packages, the sender will receive a copy of the message in their inbox that can
+then be forwarded to others or saved and
+filed.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<CENTER>
+<table border="0" cellspacing="0" cellpadding="5">
+  <tr>
+    <td valign="top">
+      <p align="right" style="margin-right: 0; margin-bottom: 4"><B><FONT color="#008000">subject
+      and message body:</FONT></B></td>
+    <td valign="top">
+      <p align="left" style="margin-bottom: 4">To
+      override the system default subject, simply move your cursor to the box
+      and type in the subject heading you would prefer.&nbsp; In the settings
+      area of the application, you can create your own personal default subject
+      headings and messages.</td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <p align="right" style="margin-right: 0; margin-bottom: 4"><B><FONT color="#008000">attachments:</FONT></B></td>
+    <td valign="top">For
+      email packages, this allows you to provide additional information to the
+      recipient by attaching other files in addition to the <CFOUTPUT>#application.CompanyName#</CFOUTPUT>
+      document.&nbsp; Click on browse, find the file you are looking for, and
+      attach it.&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <p align="right" style="margin-right: 0; margin-bottom: 4"><B><FONT color="#008000">Adding
+      recipients:</FONT></B></td>
+    <td valign="top">If
+      you need to send the fax or email to additional recipients, add their
+      address or fax number in the &quot;other recipients&quot; box, following
+      the format established.&nbsp; Be sure to separate each additional
+      recipient with a &quot;,&quot;.&nbsp;</td>
+  </tr>
+</table>
+
+
+</CENTER>
+

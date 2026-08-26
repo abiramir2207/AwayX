@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:ba="com.shared.views.renderer.*"
+		 xmlns:filters="com.shared.components.filters.*"
+		 height="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Edit.models.vos.BBProdRate;
+			import com.Billback.Edit.views.pm.BBEditItemsPModel;
+			import com.Billback.Main.models.vos.BBPrgDistItemRate;
+			import com.Billback.Main.models.vos.BBProgram;
+			import com.shared.events.MainEvent;
+			import com.shared.models.entity.vos.Customer;
+			import com.shared.vos.Uom;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.events.ListEvent;
+			
+			/* Presentation Model */
+			[Bindable] 
+			public var pModel:BBEditItemsPModel;
+			
+			public function focusRow(event:MainEvent) : void
+			{
+				// make a delayed call to set focus
+				this.callLater(focusRow2);
+			}
+			
+			public function focusRow2() : void
+			{
+				dgBBEditItem.editedItemPosition = { rowIndex: ArrayCollection(dgBBEditItem.dataProvider).length - 1 , columnIndex: 4 };
+			}
+			import com.shared.models.Destroy;
+			private function cleanUp():void{
+				Destroy.cleanUp(this,mx_internal);
+			}
+		]]>
+	</fx:Script>
+	<s:VGroup paddingLeft="2" id="vgItemsGrid" height="100%"> <!-- borderThickness="1" -->
+		<filters:FilterAdvancedDatagrid
+			id="dgBBEditItem"
+			selectionMode="singleRow"
+			editable="true"
+			groupedColumns="{pModel.arrBBEditItemsDgCols}"
+			dataProvider="{pModel.acGridDataFlat}"
+			width="100%" height="80%"
+			itemEditEnd="{pModel.itemEditEnd(event)}"
+			sortExpertMode="true"
+			borderStyle="solid"
+			selectedItem="{pModel.bbPrgDistItemRate}"
+			change="pModel.dgBBEditItemChangeHandler(event)">
+			
+		</filters:FilterAdvancedDatagrid>
+		<!--  {pModel.acGridDataFlat} verticalScrollPosition="{pModel.iVerticalScrollPosition}"  ::  {new ArrayCollection(pModel.billback.bbPrgDistItemRate)}-->
+		
+		<!--buttons at the bottom of the grid-->
+		<s:HGroup paddingLeft="2" paddingRight="2" id="hgBottom">
+			<!--left aligned buttons-->
+			<s:HGroup>
+				<s:Button label="products from prog" tabEnabled="true" toolTip="get all products from the program" click="{pModel.addProgramItems()}" enabled="{pModel.objBBToolsLock.bEditScreenEnabled}" />
+				<s:Button label="prog rates" tabEnabled="true" toolTip="get rates from the program" click="{pModel.getProgramRates()}" enabled="{pModel.objBBToolsLock.bEditScreenEnabled}" />
+				<s:Button label="search products" tabEnabled="true" toolTip="search all products" click="{pModel.getProductSearch()}" enabled="{pModel.objBBToolsLock.bEditScreenEnabled}" />
+				<s:Button label="update prog version" tabEnabled="true" toolTip="update to latest program version" click="{pModel.getLatestProgramVersion()}" enabled="{pModel.objBBToolsLock.bEditScreenEnabled}" />
+			</s:HGroup>
+			<s:HGroup>
+				<s:Label width="500" />
+			</s:HGroup>
+			<!--right aligned buttons-->
+			<s:HGroup>
+				<s:Button label="save" tabEnabled="true" toolTip="save the billback" click="{pModel.validateBillback()}" enabled="{pModel.objBBToolsLock.bEditScreenDateSaveEnabled}"/>
+				<s:Button id="btnContinue"
+						  visible="{pModel.btnContinueVisible}" 
+						  label="{pModel.btnContinueLabel}" 
+						  tabEnabled="true" toolTip="continue" 
+						  click="{pModel.loadDeviations()}"
+						  enabled="{pModel.objBBToolsLock.bDeviationEnabled}"/>
+			</s:HGroup>
+		</s:HGroup>
+	</s:VGroup>
+</s:Group>

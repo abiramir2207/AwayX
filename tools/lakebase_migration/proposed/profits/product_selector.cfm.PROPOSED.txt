@@ -1,0 +1,97 @@
+===== QUERY: GetTypeGroupDesc =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetQBrands =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetTypeCodeDesc =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetBrands =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetLinesOfBiz =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetLinesOfBiz = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLinesOfBiz>
+	<cftry>
+		<cfset GetLinesOfBiz = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLinesOfBiz = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLinesOfBiz>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getFoodserviceLOBID =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getLOBCharacter =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetLOBCharacter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getlinesofbiz")>
+<cfif useLakebaseForgetLOBCharacter>
+	<cftry>
+		<cfset getLOBCharacter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getlinesofbiz", {
+				"line_of_business_id" = "eq.#FORM.Line_Of_Biz#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLOBCharacter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLOBCharacter>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getCategories =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: Exclude_List =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: MainsearchProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: searchProducts =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Q_All_List =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Get_All_Pricing_Rule_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: Check_for_Products =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Get_Pricing_Rule_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Pricing_Rule_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_pricing_rule_details")>
+<cfif useLakebaseForGet_Pricing_Rule_Details>
+	<cftry>
+		<cfset Get_Pricing_Rule_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_pricing_rule_details", {
+				"pricing_rule_id" = "eq.#Check_for_Products.Pricing_Rule_ID#",
+				"select" = "pricing_rule_name,pricing_rule_date,pricing_rule_author,user_id,name_first,name_last"
+			}), "pricing_rule_name,pricing_rule_date,pricing_rule_author,user_id,name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Pricing_Rule_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Pricing_Rule_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,29 @@
+===== QUERY: GetExistingProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetExistingProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetExistingProducts>
+	<cftry>
+		<cfset GetExistingProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetExistingProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetExistingProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: UpdateContractProductsRebate =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UpdateContractProductsRebate =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: UpdateContractProductsRebate =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

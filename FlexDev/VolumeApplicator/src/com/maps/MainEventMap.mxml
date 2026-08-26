@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+	All the events that are called in the application are placed in this class. 
+-->
+<EventMap 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://mate.asfusion.com/" 
+	xmlns:mate="http://mate.asfusion.com/">
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.core.*;
+			import com.asfusion.mate.events.UnhandledFaultEvent;
+			import mx.events.*;
+			import com.events.*;
+			import com.models.*;
+			import com.views.*;
+			import com.vos.*;
+		]]>
+	</mx:Script>
+	
+	<!-- load up an instance of the remote objects -->
+	<!-- Remote Services  _________________________________________________________________________ -->
+	
+	<mate:Debugger level="{Debugger.ALL}" />
+	
+	<!---
+		Remote Objects are declared in this section
+	-->
+	<mx:RemoteObject  
+		id="VolumeApplicator" 
+		destination="ColdFusion" 
+		source="mvc.Models.Program.Volume.VolumeApplicator" />
+	 
+	<!--
+		Remote Objects for error handling are declared in this section
+	-->
+	<mx:RemoteObject id="ErrorService" destination="ColdFusion" source="mvc.Models.ErrorService" />
+	
+
+	<!-- FlexEvent.PREINITIALIZE ____________________________________________ -->
+	<!---
+		FlexEvent Preinitialize initializes the various ObjectBuilders used 	
+	-->
+	<EventHandlers type="{FlexEvent.PREINITIALIZE}" >
+		<ObjectBuilder generator="{VolumeApplicatorManager}" id="oVolumeApplicatorManager" cache="global" />
+		<ObjectBuilder generator="{VolumeSettingsManager}" constructorArguments="{scope.dispatcher}" id="oSettingsManager" cache="global" />		
+		<ObjectBuilder generator="{BAError}" id="oBAError" cache="global" />
+		<MethodInvoker generator="{VolumeSettingsManager}" method="loadParameters" />
+	</EventHandlers>	
+  
+	<!-- FlexEvent.CREATION_COMPLETE ________________________________________ -->
+	<!--
+		FlexEvent Creation_Complete: It Announces the events and does the following:
+		GET_SETTINGS: Gets all the settings
+		GET_PROGRAM_DETAILS:  Gets the Details about the Program
+		GET_VOLUME_EDIT: Gets the records for editing 
+		GET_VOLUME_DETAILS: Gets the records for the Details tab
+	-->
+
+	<EventHandlers type="{FlexEvent.CREATION_COMPLETE}" id="eCREATION_COMPLETE">
+		<!--load flash Vars ()-->
+		<!--Get Items -->
+ 		
+ 		<EventAnnouncer type="{VolumeApplicatorEvent.GET_SETTINGS}" generator="{VolumeApplicatorEvent}" >
+			<Property sourceCache="inherit" source="{VolumeSettingsManager}"  sourceKey="settings.appProgramID" targetKey="appProgramID"/>
+		</EventAnnouncer>	
+		
+		<EventAnnouncer type="{VolumeApplicatorEvent.GET_PROGRAM_DETAILS}" generator="{VolumeApplicatorEvent}" >
+			<Property sourceCache="inherit" source="{VolumeSettingsManager}" sourceKey="settings.appProgramID" targetKey="appProgramID"/>
+			<Property sourceCache="inherit" source="{VolumeSettingsManager}" sourceKey="settings.userId" targetKey="userId"/>
+		</EventAnnouncer>	
+				
+		<EventAnnouncer type="{VolumeApplicatorEvent.GET_VOLUME_EDIT}" generator="{VolumeApplicatorEvent}" >
+			<Property sourceCache="inherit" source="{VolumeSettingsManager}" sourceKey="settings.appProgramID" targetKey="appProgramID"/>
+		</EventAnnouncer>		
+		
+		<EventAnnouncer type="{VolumeApplicatorEvent.GET_VOLUME_DETAILS}" generator="{VolumeApplicatorEvent}" >
+			<Property sourceCache="inherit" source="{VolumeSettingsManager}" sourceKey="settings.appProgramID" targetKey="appProgramID"/>
+		</EventAnnouncer>
+		
+		<EventAnnouncer type="{VolumeApplicatorEvent.GET_PRODUCT_GROUP_TYPES}" generator="{VolumeApplicatorEvent}">
+			<Property sourceCache="inherit" source="{VolumeSettingsManager}" sourceKey="settings.appProgramID" targetKey="appProgramID"/>
+		</EventAnnouncer>
+		
+		<EventAnnouncer type="{VolumeApplicatorEvent.GET_APPLY_TO_UOM}" generator="{VolumeApplicatorEvent}">
+			<Property sourceCache="inherit" source="{VolumeSettingsManager}" sourceKey="settings.appProgramID" targetKey="appProgramID"/>
+		</EventAnnouncer>
+  			
+	</EventHandlers>
+
+
+<!---
+  This event handler gets the data that is used for the volume edit, which is a different 
+  record set than the details tab.
+-->		
+	<EventHandlers type="{VolumeApplicatorEvent.GET_VOLUME_EDIT}"  id="eGET_VOLUME_EDIT">
+		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="getVolumeDetails" arguments="{[event.appProgramID,event.appEditMode,'', event.nProductGroupLevel]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!-- MethodInvoker generator="{VolumeApplicatorManager}" method="Alerter" arguments="{resultObject}" / -->
+				<MethodInvoker generator="{VolumeApplicatorManager}" method="onResultEdit" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}" >
+					<Properties sBaError="Error In Get Volume Edit Data" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!---
+  This event handler gets the data that is used for the volume details, which is a different 
+  record set than the edit tab.
+-->	
+	
+	<EventHandlers type="{VolumeApplicatorEvent.GET_VOLUME_DETAILS}" id="eGET_VOLUME_DETAILS">
+		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="getVolumeDetails" arguments="{[event.appProgramID,event.appPrgMode,event.appGroupA]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!-- MethodInvoker generator="{VolumeApplicatorManager}" method="Alerter" arguments="{resultObject}" / -->
+				<MethodInvoker generator="{VolumeApplicatorManager}" method="onResult" arguments="{resultObject}" />
+					  <EventAnnouncer type="{VolumeApplicatorEvent.FILTER_RESULTS}" generator="{VolumeApplicatorEvent}">
+						
+					</EventAnnouncer>  
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}">
+					<Properties sBaError="Error In Get Volume Details" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+		<!---
+	This event handler passes the programID and userID as event arguments and 
+	get the details about the program from the DB through coldfusion  
+	-->
+	<EventHandlers type="{VolumeApplicatorEvent.GET_PROGRAM_DETAILS}" id="eGET_PROGRAM_DETAILS">
+		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="getProgramDetails" arguments="{[event.appProgramID,event.userId]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!-- MethodInvoker generator="{VolumeApplicatorManager}" method="Alerter" arguments="{resultObject}" / -->
+				<MethodInvoker generator="{VolumeSettingsManager}" method="setProgramAttributes" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}" >
+					<Properties sBaError="Error In Get Program Details" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!---
+	This event handler passes the ProgramID as the event argument and gets the settings   
+	-->
+	<EventHandlers type="{VolumeApplicatorEvent.GET_SETTINGS}" id="eGET_SETTINGS">
+		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="getSettingsObject" arguments="{event.appProgramID}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<!-- MethodInvoker generator="{VolumeApplicatorManager}" method="Alerter" arguments="{resultObject}" / -->
+				<MethodInvoker generator="{VolumeSettingsManager}" method="getProgramSettings" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}">
+					<Properties sBaError="Error In Get Program Details" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!---
+	This event handler gets the data for the product group types for a fiven template
+	-->		
+	<EventHandlers type="{VolumeApplicatorEvent.GET_PRODUCT_GROUP_TYPES}"  id="eGET_PRODUCT_GROUP_TYPES">
+		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="getVolumeProductGroupTypes" arguments="{event.appProgramID}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{VolumeApplicatorManager}" method="onResultProductGroupType" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}" >
+					<Properties sBaError="Error In Get Product Group Types" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!---
+	This event handler gets uom apply to data for a given template
+	-->		
+	<EventHandlers type="{VolumeApplicatorEvent.GET_APPLY_TO_UOM}"  id="eGET_APPLY_TO_UOM">
+		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="getVolumeApplyToUOM" arguments="{event.appProgramID}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{VolumeSettingsManager}" method="getApplyToUOM" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}" >
+					<Properties sBaError="Error In Get Volume Apply To UOM" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--- 
+	This event handler saves the datagrid changes to the database 
+	-->
+	<EventHandlers type="{VolumeApplicatorEvent.SAVE_CHANGES}" id="eSAVE_CHANGES">
+	  		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="updateVolumeDetails" arguments="{[event.appProgramID,event.dgVolumeDataEditSet,event.userId,'', event.nProductGroupLevel, event.excludeAutoVolumeUpdates]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{VolumeSettingsManager}" method="saveAlerter" arguments="{[resultObject,'Save Status!', event.saveType]}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}" >
+					<Properties sBaError="Error In Save_changes" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!--- This Event Handler forces the forcast values into the datagrid records -->
+	<EventHandlers type="{VolumeApplicatorEvent.FORCE_FORECAST}" id="eFORCE_FORECAST">
+		<MethodInvoker generator="{VolumeApplicatorManager}" method="Alerter" arguments="{event.dgVolumeDataEditSet}" />
+		<RemoteObjectInvoker instance="{VolumeApplicator}" showBusyCursor="true" method="updateVolumeDetails" arguments="{[event.appProgramID,event.dgVolumeDataEditSet]}">
+			<!-- result sequence gets executed when service returns with a result -->
+			<resultHandlers>
+				<MethodInvoker generator="{VolumeSettingsManager}" method="getUpdateStatus" arguments="{resultObject}" />
+			</resultHandlers>
+			<!-- server fault -->
+			<faultHandlers>
+				<!--announce error event -->
+				<EventAnnouncer type="{VolumeApplicatorEvent.BSA_ERROR}" generator="{VolumeApplicatorEvent}" >
+					<Properties sBaError="Error In Get Program Details" />
+					<Properties oBaError="{fault}" />
+				</EventAnnouncer>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+	</EventHandlers>
+	
+	<!-- 
+		This EventHandler is not used and we are making use of the ListenerInjector
+		declared at the bottom.  This is because this EventHandler uses VolumeApplicatorPanel
+		as the generator and this inturn creates a new template and the Group B is not
+		recognizable and throws a null reference error. Thx to Mark for coming up with
+		a solution to fix this problem with ListenerInjector. 	
+		<EventHandlers type="{VolumeApplicatorEvent.FILTER_RESULTS}">
+			<MethodInvoker generator="{VolumeApplicatorPanel}" method = "fnFilterVolume"  />
+		</EventHandlers>
+	-->
+	 
+	<!--BSA CUSTOM ERROR HANDLER  ___________________________________________________-->
+	<!---
+		This event handler is used for diplaying error that may occur inn the application
+	-->
+	<EventHandlers type="{VolumeApplicatorEvent.BSA_ERROR}">
+     	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.oBaError}" cache="none" >
+			<Properties BAErrorString="{event.sBaError}" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.oBaError.faultDetail, event.oBaError.faultString]}">
+			<faultHandlers>
+			<!--If the server notification (log error on cf server) fails throw a simple pop-up error-->
+				<!--call method -->
+				<MethodInvoker generator="{BAError}" method="showBAError" arguments="{fault}" cache="none" >
+					<Properties BAErrorString="ERROR SERVICE: The server is not responding.  Please contact support." />
+				</MethodInvoker>
+			</faultHandlers>
+		</RemoteObjectInvoker>
+     </EventHandlers>
+
+	<!--GLOBAL ERROR HANDLER  ______________________________________________________________-->
+	<EventHandlers type="{UnhandledFaultEvent.FAULT}">
+  	<MethodInvoker generator="{BAError}" method="showBAError" arguments="{event.fault}" cache="none" >
+			<Properties BAErrorString="UNHANDLED" />
+		</MethodInvoker>
+		<!--log error on server-->	
+		<RemoteObjectInvoker instance="{ErrorService}" method="logError" arguments="{[event.fault.faultDetail, event.fault.faultString]}"/>
+  </EventHandlers>
+		<!-- **********************************************************************
+			Some of the properties that are set using the "get" methods does 
+			not seem to be working as intended therefore we are setting the 
+			values here using the below PropertyInjectors
+			- Anand Rao/27-APR-09	
+	********************************************************************** -->
+	<Injectors target="{VolumeApplicatorPanel}">
+		<PropertyInjector targetKey="dgVolumeData" source="{VolumeApplicatorManager}" sourceKey="acVolumeData" />
+		<PropertyInjector targetKey="dgVolumeDataEdit" source="{VolumeApplicatorManager}" sourceKey="acVolumeDataEdit" />	
+		<PropertyInjector targetKey="bOprShowSetting" source="{VolumeSettingsManager}" sourceKey="settings.bOpType" /> 	
+		<PropertyInjector targetKey="bDirectShipmentShowSetting" source="{VolumeSettingsManager}" sourceKey="settings.bDirectShipmentShow" />
+		<PropertyInjector targetKey="bBillbackShowSetting" source="{VolumeSettingsManager}" sourceKey="settings.bBillbackShow" />
+		<PropertyInjector targetKey="bCreditsShowSetting" source="{VolumeSettingsManager}" sourceKey="settings.bCreditsShow" />
+		<PropertyInjector targetKey="programTitle" source="{VolumeSettingsManager}" sourceKey="settings.appAreaTitle" />
+		<PropertyInjector targetKey="programQtyUOMIDX" source="{VolumeSettingsManager}" sourceKey="settings.appQtyUOMIDX" />
+		<PropertyInjector targetKey="programUOMType" source="{VolumeSettingsManager}" sourceKey="settings.appUOMType" />
+		<PropertyInjector targetKey="programNumber" source="{VolumeSettingsManager}" sourceKey="settings.appAreaContractNumber" />	
+		<PropertyInjector targetKey="programKeyword" source="{VolumeSettingsManager}" sourceKey="settings.appAreaKeyword" />
+		<PropertyInjector targetKey="prgAreaStartDate" source="{VolumeSettingsManager}" sourceKey="settings.appAreaStartDate" />
+		<PropertyInjector targetKey="prgAreaEndDate" source="{VolumeSettingsManager}" sourceKey="settings.appAreaEndDate" />
+		<PropertyInjector targetKey="prgAreaSpanDays" source="{VolumeSettingsManager}" sourceKey="settings.appAreaSpanDays" />
+		<PropertyInjector targetKey="prgProgramID" source="{VolumeSettingsManager}" sourceKey="settings.appProgramID" />
+		<PropertyInjector targetKey="prgUserID" source="{VolumeSettingsManager}" sourceKey="settings.userId" />
+		<PropertyInjector targetKey="usrProfileID" source="{VolumeSettingsManager}" sourceKey="settings.profileID" />
+		<PropertyInjector targetKey="bPanDetailsDisplay" source="{VolumeSettingsManager}" sourceKey="settings.bDetailsDisplay" />
+		<PropertyInjector targetKey="strPanVolumeHelpText" source="{VolumeSettingsManager}" sourceKey="settings.strVolumeHelpText" />
+		<PropertyInjector targetKey="prgProgramType" source="{VolumeSettingsManager}" sourceKey="settings.appProgramType" />
+		<PropertyInjector targetKey="minGlobalVolume" source="{VolumeSettingsManager}" sourceKey="settings.appMinGlobalVolume" />
+		<PropertyInjector targetKey="minGlobalVolumeSizeCS" source="{VolumeSettingsManager}" sourceKey="settings.appMinGlobalVolumeSizeCS" />
+		<PropertyInjector targetKey="minGlobalVolumeSizeLB" source="{VolumeSettingsManager}" sourceKey="settings.appMinGlobalVolumeSizeLB" />
+		<PropertyInjector targetKey="maxGlobalVolume" source="{VolumeSettingsManager}" sourceKey="settings.appMaxGlobalVolume" />
+		<PropertyInjector targetKey="maxGlobalVolumeSizeCS" source="{VolumeSettingsManager}" sourceKey="settings.appMaxGlobalVolumeSizeCS" />
+		<PropertyInjector targetKey="maxGlobalVolumeSizeLB" source="{VolumeSettingsManager}" sourceKey="settings.appMaxGlobalVolumeSizeLB" />
+		<PropertyInjector targetKey="GroupADefault" source="{VolumeSettingsManager}" sourceKey="settings.appGroupADefault" />
+		<PropertyInjector targetKey="GroupBDefault" source="{VolumeSettingsManager}" sourceKey="settings.appGroupBDefault" />
+		<PropertyInjector targetKey="sCustomerLabel" source="{VolumeSettingsManager}" sourceKey="settings.customer_Label" />
+		<PropertyInjector targetKey="sItemLabel" source="{VolumeSettingsManager}" sourceKey="settings.item_Label" />
+		<PropertyInjector targetKey="sPoundLabel" source="{VolumeSettingsManager}" sourceKey="settings.pound_Label" />
+		<PropertyInjector targetKey="sOperatorLabel" source="{VolumeSettingsManager}" sourceKey="settings.operator_Label" />
+		<PropertyInjector targetKey="nRebatePercentageOnNetSales" source="{VolumeSettingsManager}" sourceKey="settings.rebatePercentageOnNetSales" />
+		<PropertyInjector targetKey="bOpportunityVolumeShow" source="{VolumeSettingsManager}" sourceKey="settings.bOpportunityVolumeShow" />
+		<PropertyInjector targetKey="bCasesVolumeShow" source="{VolumeSettingsManager}" sourceKey="settings.bCasesVolumeShow" />
+		<PropertyInjector targetKey="bPoundsVolumeShow" source="{VolumeSettingsManager}" sourceKey="settings.bPoundsVolumeShow" />
+		<PropertyInjector targetKey="bOpportunityCasesVolumeShow" source="{VolumeSettingsManager}" sourceKey="settings.bOpportunityCasesVolumeShow" />
+		<PropertyInjector targetKey="bOpportunityPoundsVolumeShow" source="{VolumeSettingsManager}" sourceKey="settings.bOpportunityPoundsVolumeShow" />
+		<PropertyInjector targetKey="dpProductGroupType" source="{VolumeApplicatorManager}" sourceKey="acProductGroupType" />
+		<PropertyInjector targetKey="dpUOM" source="{VolumeSettingsManager}" sourceKey="acUOM" />
+		<PropertyInjector targetKey="dpApplyAction" source="{VolumeSettingsManager}" sourceKey="acApplyAction" />
+		<PropertyInjector targetKey="bExcludeAutoVolumeUpdates" source="{VolumeSettingsManager}" sourceKey="settings.excludeAutoVolumeUpdates" />
+		<PropertyInjector targetKey="volumePageUOMCS" source="{VolumeSettingsManager}" sourceKey="settings.volumePageUOMCS" />
+		<PropertyInjector targetKey="volumePageUOMLB" source="{VolumeSettingsManager}" sourceKey="settings.volumePageUOMLB" />
+		<PropertyInjector targetKey="autoVolumeExcludeUpdatedData" source="{VolumeSettingsManager}" sourceKey="settings.autoVolumeExcludeUpdatedData" />
+		<PropertyInjector targetKey="bEachVolumeShow" source="{VolumeSettingsManager}" sourceKey="settings.bEachVolumeShow" />
+		<PropertyInjector targetKey="bSleeveVolumeShow" source="{VolumeSettingsManager}" sourceKey="settings.bSleeveVolumeShow" />
+		<ListenerInjector method="fnFilterVolume" eventType="{VolumeApplicatorEvent.FILTER_RESULTS}"/>
+		<ListenerInjector method="fnEnableSave" eventType="{VolumeApplicatorEvent.ENABLE_SAVE}"/>
+		
+
+	 </Injectors>
+ 
+	</EventMap>

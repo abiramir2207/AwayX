@@ -1,0 +1,41 @@
+===== QUERY: GetCurrentProductCategories =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetCurrentProductCategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_categories")>
+<cfif useLakebaseForGetCurrentProductCategories>
+	<cftry>
+		<cfset GetCurrentProductCategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_categories", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"order" = "category_title.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentProductCategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentProductCategories>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetSpecifiedCategoryInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSpecifiedCategoryInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_categories")>
+<cfif useLakebaseForGetSpecifiedCategoryInfo>
+	<cftry>
+		<cfset GetSpecifiedCategoryInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_categories", {
+				"product_category_id" = "eq.#Form.Product_Category_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSpecifiedCategoryInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSpecifiedCategoryInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

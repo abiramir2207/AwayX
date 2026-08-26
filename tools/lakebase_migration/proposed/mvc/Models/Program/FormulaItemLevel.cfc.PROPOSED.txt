@@ -1,0 +1,382 @@
+===== QUERY: qDropTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qGetExisting =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetExisting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_program_bracket_data")>
+<cfif useLakebaseForqGetExisting>
+	<cftry>
+		<cfset qGetExisting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_program_bracket_data", {
+				"contract_main_id" = "eq.#arguments.contractId#",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id,formula_program_bracket_data_id"
+			}), "contract_main_id,formula_program_bracket_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetExisting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetExisting>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qDropTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: qDropTable =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: updBracket =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdBracket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fpbd")>
+<cfif useLakebaseForupdBracket>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fpbd",
+			{
+				"formula_program_bracket_data_id" = "eq.#a.BracketId#"
+			},
+			{
+				"rate" = "OFR.OBF_Rate",
+				"is_over_ride" = "0
+            FROM Formula_Program_Bracket_Data FPBD
+            INNER JOIN Freight_Lookup_Bracket_Settings F ON
+                F.Freight_Bracket_Code = FPBD.Bracket_Number
+            INNER JOIn Outbound_Freight_Rate OFR ON
+                OFR.Freight_Bracket_Setting_ID = F.Freight_Bracket_Setting_ID
+                and ofr.deleted = 0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBracket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBracket>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updBracket =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdBracket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fpbd")>
+<cfif useLakebaseForupdBracket>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fpbd",
+			{
+				"formula_program_bracket_data_id" = "eq.#a.BracketId#"
+			},
+			{
+				"rate" = "OFR.OBF_Rate",
+				"is_over_ride" = "0
+            FROM Formula_Program_Bracket_Data FPBD
+            INNER JOIN Freight_Lookup_Bracket_Settings F ON
+                F.Freight_Bracket_Code = FPBD.Bracket_Number
+            INNER JOIn Outbound_Freight_Rate OFR ON
+                OFR.Freight_Bracket_Setting_ID = F.Freight_Bracket_Setting_ID
+                and ofr.deleted = 0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBracket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBracket>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: updBracket =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForupdBracket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fpbd")>
+<cfif useLakebaseForupdBracket>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fpbd",
+			{
+				"formula_program_bracket_data_id" = "eq.#a.BracketId#"
+			},
+			{
+				"rate" = "OFR.OBF_Rate",
+				"is_over_ride" = "0
+            FROM Formula_Program_Bracket_Data FPBD
+            INNER JOIN Freight_Lookup_Bracket_Settings F ON
+                F.Freight_Bracket_Code = FPBD.Bracket_Number
+            INNER JOIn Outbound_Freight_Rate OFR ON
+                OFR.Freight_Bracket_Setting_ID = F.Freight_Bracket_Setting_ID
+                and ofr.deleted = 0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBracket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBracket>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSaveSchedule =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSaveSchedule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqSaveSchedule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#a.contractId#"
+			},
+			{
+				"formula_price_rebate_type" = "#a.optionId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveSchedule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveSchedule>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSaveScheduleRules =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSaveScheduleRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqSaveScheduleRules>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_id" = "eq.#a.contractId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"fp_schedule_option_id" = "#a.optionId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveScheduleRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveScheduleRules>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSaveScheduleRules =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSaveScheduleRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqSaveScheduleRules>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_id" = "eq.#a.contractId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"fp_schedule_option_id" = "#a.optionId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveScheduleRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveScheduleRules>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qgetSavedFormula =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqgetSavedFormula = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqgetSavedFormula>
+	<cftry>
+		<cfset qgetSavedFormula = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"saved" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_formula_pricing_rule_id,program_id,rule_name,number_of_comms,created_date,formula_price"
+			}), "program_formula_pricing_rule_id,program_id,rule_name,number_of_comms,created_date,formula_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetSavedFormula = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetSavedFormula>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qremoveFromSaved =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqremoveFromSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqremoveFromSaved>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_formula_pricing_rule_id" = "eq.#arguments.Program_Formula_Pricing_Rule_ID#"
+			},
+			{
+				"saved" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqremoveFromSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqremoveFromSaved>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetContractStart =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetContractStart = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetContractStart>
+	<cftry>
+		<cfset qGetContractStart = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#a.contractId#",
+				"select" = "contract_start_date,formula_price_rebate_type as schedule_id"
+			}), "contract_start_date,formula_price_rebate_type as schedule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetContractStart = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetContractStart>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCreateFromSavedDel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCreateFromSavedDel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqCreateFromSavedDel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"contract_products_id" = "eq.#a.contractProductsId#'
+
+                UPDATE Program_Formula_Pricing_Rules
+                SET deleted = 1
+                WHERE Contract_Products_Id = '#a.contractProductsId#",
+				"saved" = "eq.0"
+			},
+			{
+				"contract_products_id" = "0",
+				"program_id" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCreateFromSavedDel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCreateFromSavedDel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qCreateFromSavedDel =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqCreateFromSavedDel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqCreateFromSavedDel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"contract_products_id" = "eq.#a.contractProductsId#'
+
+                UPDATE Program_Formula_Pricing_Rules
+                SET deleted = 1
+                WHERE Contract_Products_Id = '#a.contractProductsId#",
+				"saved" = "eq.0"
+			},
+			{
+				"contract_products_id" = "0",
+				"program_id" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCreateFromSavedDel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCreateFromSavedDel>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qSaveInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqSaveInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqSaveInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component",
+			{
+				"program_id" = "eq.#a.contractId#",
+				"program_fixed_component_id" = "eq.#compId#"
+			},
+			{
+				"claim_mechanics" = "#cmId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgramStartDate =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetProgramStartDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramStartDate>
+	<cftry>
+		<cfset qGetProgramStartDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.contractId#",
+				"select" = "contract_start_date"
+			}), "contract_start_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramStartDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramStartDate>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetContractStart =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetContractStart = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetContractStart>
+	<cftry>
+		<cfset qGetContractStart = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#a.contractId#",
+				"select" = "contract_start_date,formula_price_rebate_type as schedule_id"
+			}), "contract_start_date,formula_price_rebate_type as schedule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetContractStart = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetContractStart>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

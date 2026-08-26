@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.Admin.Redi.views.*" 
+		 xmlns:comps="com.Admin.Redi.components.*" 
+		 xmlns:filters="com.shared.components.filters.*"
+		 xmlns:ba="com.shared.views.renderer.*"
+		 xmlns:z="com.shared.components.spark.*"
+		 width="100%" height="100%">
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{pModel.iPadding}" paddingLeft="{pModel.iPadding}" paddingRight="{pModel.iPadding}" paddingTop="{pModel.iPadding}" />
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.models.vos.RediSettings;
+			import com.Admin.Redi.views.pm.RediPModel;
+			
+			import mx.collections.ArrayList;
+			
+			import spark.events.IndexChangeEvent;
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:RediPModel;
+			
+			[Bindable]
+			private var iFrmWidth:Number = 225;
+			
+			protected function chkRediSource_clickHandler(event:MouseEvent):void{
+				this.pModel.rediSettings.bEnabled = event.target.selected;
+				if (event.target.selected == false){
+					this.pModel.rediSettings.bAliasItem = false;
+					this.pModel.rediSettings.bAliasDistributor = false;
+					this.pModel.rediSettings.bAliasOriginalBuyer = false;
+					this.pModel.rediSettings.sFOBPricInd = '';
+					this.pModel.rediSettings.iInvoicePrice = 0;
+					this.pModel.rediSettings.iInvoiceNumber = 0;
+				}
+			}
+			
+			protected function chkRediProduct_clickHandler(event:MouseEvent):void{
+				this.pModel.rediSettings.bAliasItem = event.target.selected;
+			}
+			
+			protected function chkRediDistributor_clickHandler(event:MouseEvent):void{
+				this.pModel.rediSettings.bAliasDistributor = event.target.selected;
+			}
+			
+			protected function chkRediOrigBuyer_clickHandler(event:MouseEvent):void{
+				this.pModel.rediSettings.bAliasOriginalBuyer = event.target.selected;
+			}
+			
+			protected function drpRediFOB_changeHandler(event:IndexChangeEvent):void{
+				this.pModel.rediSettings.sFOBPricInd = drpRediFOB.selectedItem.id;
+			}
+			
+			protected function drpRediInvPrice_changeHandler(event:IndexChangeEvent):void{
+				this.pModel.rediSettings.iInvoicePrice = drpRediInvPrice.selectedItem.id;	
+			}
+			
+			protected function drpRediInvNumber_changeHandler(event:IndexChangeEvent):void{
+				this.pModel.rediSettings.iInvoiceNumber = drpRediInvNumber.selectedItem.id;	
+			}
+			
+			protected function saveSettings():void{
+				this.pModel.saveRediSettings();
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<mx:EmailValidator id="emV" 
+						   source="{tiEmail}" 
+						   property="text" 
+						   required="false"/>
+	</fx:Declarations>
+	<s:BorderContainer height="100%" width="{pModel.iWidth}">
+		<s:VGroup paddingBottom="{pModel.iPaddingfrm}" paddingLeft="{pModel.iPaddingfrm}" paddingRight="{pModel.iPaddingfrm}" paddingTop="{pModel.iPaddingfrm}">
+			<s:VGroup width="100%">
+				<z:BorderContainerLabel sText="Manage Redistribution Settings"
+										iHeight="{pModel.iHeight}" iWidth="{pModel.iWidth}" textAlign="center"/>
+			</s:VGroup>
+			<!--	<s:VGroup width="33%">
+				<s:Form width="100%" color="0x323232">
+					<s:layout>
+						<s:FormLayout id="frmLay2" gap="0" paddingTop="0" paddingBottom="0"  />
+					</s:layout>
+						
+				</s:Form>
+			</s:VGroup>
+			<s:VGroup width="33%">
+				<s:Form width="100%" color="0x323232">
+					<s:layout>
+						<s:FormLayout id="frmLay3" gap="{pModel.iPaddingfrm}" paddingTop="{pModel.iPaddingfrm}" paddingBottom="{pModel.iPaddingfrm}" />
+					</s:layout>
+				</s:Form>
+			</s:VGroup> -->
+			<s:VGroup width="33%">
+				<s:Form width="100%" color="0x323232">
+					<s:layout>
+						<s:FormLayout id="frmLay" gap="{pModel.iPaddingfrm}" paddingTop="{pModel.iPaddingfrm}" paddingBottom="{pModel.iPaddingfrm}"  />
+					</s:layout>
+					<s:FormItem label="Source Type">				
+						<ba:BaDropDownList
+							id="drpOpenSourceType"
+							toolTip="filter:Source Type"					
+							width="150"		
+							dataProvider="{this.pModel.acRediSettings}"
+							labelField="sourceCode"
+							change="this.pModel.updateOpenSourceType(this.drpOpenSourceType.selectedItem)"
+							tabFocusEnabled="false"	
+							/>
+					</s:FormItem>
+					
+					<s:FormItem label="Enable" >
+						<s:CheckBox id="chkRediSource" selected="{this.pModel.rediSettings.bEnabled}" click="chkRediSource_clickHandler(event)" />
+					</s:FormItem>
+					
+					<s:FormItem label="Alias Product"  enabled="{this.chkRediSource.selected}">
+						<s:CheckBox id="chkRediProduct" selected="{this.pModel.rediSettings.bAliasItem}" click="chkRediProduct_clickHandler(event)"/>
+					</s:FormItem>
+					
+					<s:FormItem label="Alias {this.pModel.oSettings.appSettings.Distributor_Label_Singular}"  enabled="{this.chkRediSource.selected}">
+						<s:CheckBox id="chkRediDistributor" selected="{this.pModel.rediSettings.bAliasDistributor}" click="chkRediDistributor_clickHandler(event)" />
+					</s:FormItem>
+					
+					<s:FormItem label="Alias {this.pModel.oSettings.appSettings.Original_Buyer_Label}"  enabled="{this.chkRediSource.selected}">
+						<s:CheckBox id="chkRediOrigBuyer" selected="{this.pModel.rediSettings.bAliasOriginalBuyer}" click="chkRediOrigBuyer_clickHandler(event)" />
+					</s:FormItem>
+					
+					<s:FormItem label="FOB Price IND" enabled="{this.chkRediSource.selected}" >
+						<ba:BaDropDownList id="drpRediFOB" width="{iFrmWidth}" 
+										   dataProvider="{RediSettings.FOB_OPTIONS_ARRAY}"
+										   sIdField="id" 
+										   currentSelection="{this.pModel.rediSettings.sFOBPricInd}"
+										   change="drpRediFOB_changeHandler(event)" />
+					</s:FormItem>
+					
+					<s:FormItem label="Invoice Price"  enabled="{this.chkRediSource.selected}">
+						<ba:BaDropDownList id="drpRediInvPrice" width="{iFrmWidth}" 
+										   dataProvider="{RediSettings.INVOICE_OPTIONS_ARRAY}"
+										   sIdField="id"
+										   currentSelection="{this.pModel.rediSettings.iInvoicePrice}"
+										   change="drpRediInvPrice_changeHandler(event)" />
+					</s:FormItem>
+					
+					<s:FormItem label="Invoice Number"  enabled="{this.chkRediSource.selected}">
+						<ba:BaDropDownList id="drpRediInvNumber" width="{iFrmWidth}" 
+										   dataProvider="{RediSettings.INVOICE_OPTIONS_ARRAY}" 
+										   sIdField="id"
+										   currentSelection="{this.pModel.rediSettings.iInvoiceNumber}" change="drpRediInvNumber_changeHandler(event)"/>
+					</s:FormItem>
+					
+					<s:FormItem label="Email Notificaion Recipients">
+						<s:HGroup>
+							<s:TextInput id="tiEmail"  width="{iFrmWidth}"  />
+							<s:Button label="save" click="saveSettings()"/>
+							<s:Button label="delete"/>
+						</s:HGroup>
+						<s:List id="lsEmailRecipients" width="{iFrmWidth}" />
+					</s:FormItem>
+					
+				</s:Form>
+			</s:VGroup>
+		</s:VGroup>
+	</s:BorderContainer>
+	
+</s:Group>

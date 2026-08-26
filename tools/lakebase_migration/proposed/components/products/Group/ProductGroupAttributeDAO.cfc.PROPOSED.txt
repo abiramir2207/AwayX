@@ -1,0 +1,9 @@
+===== QUERY: updateAttributeQry =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateGroupAttributeQry =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: updateClaimSummaryLabel =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+

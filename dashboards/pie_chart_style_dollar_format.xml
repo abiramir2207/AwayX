@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pieChart style="Solid" angle="-30" foreground="white">
+          <axis>
+               <labelFormat style="Pattern" pattern="$#,##0;($#,##0)"/>
+               <parseFormat pattern="#,##0.###"/>
+               <groupStyle>
+                    <format pattern="#,##0.###"/>
+               </groupStyle>
+          </axis>
+          <dataLabels style="Value" font="Arial-11"/>
+          <legend>
+               <decoration style="None"/>
+          </legend>
+          <elements action="" drawOutline="false">
+               <morph morph="None" stage="Cols"/>
+          </elements>
+          <background type="HorizontalGradient" minColor="#666666" maxColor="black"/>
+          <paint palette="PastelTransluent" paint="Plain" min="44" max="95"/>
+</pieChart>

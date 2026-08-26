@@ -1,0 +1,23 @@
+===== QUERY: a =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseFora = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFora>
+	<cftry>
+		<cfset a = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFora = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFora>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: b =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

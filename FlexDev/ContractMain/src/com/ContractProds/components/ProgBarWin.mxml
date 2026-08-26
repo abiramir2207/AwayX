@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+		   width="420"
+		   height="150" 
+		   cornerRadius="10">
+
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			//private var j:uint=0;
+			
+			// Event handler function to set the value of the 
+			// ProgressBar control.
+			public function initBar(v:int,t:uint):void
+			{
+				bar.maximum = t;
+				bar.minimum = 0;
+				setProgress(v,0);
+				trace('initpopup');
+			}
+			public function setProgress(v:int,t:uint):void
+			{
+					bar.setProgress(v as Number,t as Number);
+			}
+			public function removePopUp():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>    
+	</mx:Script>
+	<mx:VBox verticalAlign="middle" backgroundColor="black" 
+			 paddingTop="25" paddingLeft="5" borderStyle="solid"
+			 paddingBottom="25" paddingRight="0" cornerRadius="10"
+			 width="330">
+		
+		<mx:ProgressBar id="bar" indeterminate="false" height="90%"
+						paddingLeft="25" paddingRight="25" label="Product Load %3%%"
+						labelWidth="200" mode="manual" width="300" />
+
+		<!--<mx:Button label="close" click="removePopUp()"/>-->
+	</mx:VBox>
+	
+</mx:Canvas>

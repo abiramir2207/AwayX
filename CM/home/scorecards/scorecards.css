@@ -1,0 +1,29 @@
+body{
+	padding :0;
+	margin :0;
+	font:			12px Arial;
+}
+
+
+td.linklive{
+	color:			White;
+	font-weight:	bold;
+	background-color: #4169E1;
+	text-align:		center;
+}
+
+td.linkdead{
+	color:			White;
+	font-weight:	bold;
+	background-color: Silver;
+	text-align:		center;
+}
+
+td{
+	font-size: 		12px;
+}
+
+td.weeklyscoreardtd{
+	border: 1 solid silver;
+}
+

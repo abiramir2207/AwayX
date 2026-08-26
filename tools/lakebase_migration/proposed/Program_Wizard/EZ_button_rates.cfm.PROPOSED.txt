@@ -1,0 +1,42 @@
+===== QUERY: TemplateInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForTemplateInfo>
+	<cftry>
+		<cfset TemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.TemplateID#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTemplateInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: EZButtonInfo =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForEZButtonInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ez_button_rate_setting")>
+<cfif useLakebaseForEZButtonInfo>
+	<cftry>
+		<cfset EZButtonInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ez_button_rate_setting", {
+				"ez_button_rate_id" = "eq.#url.EZButtonRateID#",
+				"select" = "ez_button_rate_title"
+			}), "ez_button_rate_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEZButtonInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEZButtonInfo>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

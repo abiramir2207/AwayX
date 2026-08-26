@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	 xmlns:ba="com.shared.components.*"
+	resizeEffect="Resize" resize="true"  horizontalScrollPolicy="off" verticalScrollPolicy="off" 
+	width="100%" height="100%"  creationComplete="createModule(mod, _modUrl);">
+
+	<mx:Script>
+		<![CDATA[
+			import com.shared.IModuleInterface;
+			import com.shared.events.*;
+			import com.shared.models.*;
+			import com.shared.vos.*;
+			
+			import flash.events.*;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.Application;
+			import mx.core.IUIComponent;
+			import mx.events.ModuleEvent;
+			import mx.managers.PopUpManager;
+			import mx.managers.PopUpManagerChildList;
+			import mx.modules.IModuleInfo;
+			import mx.modules.ModuleLoader;
+			import mx.modules.ModuleManager;
+			import mx.utils.ObjectUtil;
+/* demo start 	******************************************************************************* */
+			[Bindable] public var oSettings:Settings = new Settings();
+			[Bindable] public var oUser:Object = new Object();
+			[Bindable] public var var1:String = "";
+			[Bindable] public var var2:String = "";
+			[Bindable] public var acData:ArrayCollection = new ArrayCollection();
+					  // public var oGridData:GridData = new GridData();
+			 import flash.net.*;
+			 import flash.external.*;
+       		 public function callWrapper():void {
+		           ExternalInterface.call("function( id, h ) { document.getElementById(id).style.height = h + '%'; }",
+										    ExternalInterface.objectID, 100);
+					ExternalInterface.call("function( id, w ) { document.getElementById(id).style.width = w + '%'; }",
+										    ExternalInterface.objectID,100);	
+			        }
+            [Bindable]
+            public var selectedItem:Object;
+
+            [Bindable]
+            public var currentModuleName:String;
+            
+            private function applyModuleSettings(e:Event):void {
+                // Cast the ModuleLoader's child to the interface.
+                // This child is an instance of the module.
+                // You can now call methods on that instance.
+                var ichild:* = mod.child as IModuleInterface;                
+                if (mod.child != null) {                    
+                    // Call setters in the module to adjust its
+                    // appearance when it loads.
+                 	//ichild.setSettings(oSettings);
+                    //ichild.setBackgroundColor("red");
+                } else {                
+                    trace('Uh oh. The mod.child property is null');                 
+                }
+                // Set the value of a local variable by calling a method
+                // on the interface.
+                //currentModuleName = ichild.getModuleName();
+            }
+            
+            private function reloadModule():void {
+                mod.unloadModule();
+                mod.loadModule();
+            }
+            private var _modUrl:String = 'com/ContractProds/ContractProds.swf';// /flex/Program/
+            public function createModule(m:ModuleLoader, s:String):void {
+            if (!m.url) {
+                m.url = s;
+                return;
+            }
+			//m.applicationDomain = ApplicationDomain.currentDomain;
+            m.loadModule();
+        }
+        
+        public function removeModule(m:ModuleLoader):void {
+            m.unloadModule();
+        }
+        
+		
+		]]>
+	</mx:Script>
+		
+	<!-- Views _______________________________________________________ -->
+	<mx:VBox height="100%" width="100%"> 
+    	<!--*******************************	END		Main Panel UI	***************************************************************-->
+        
+        <mx:Canvas width="100%" height="100%">
+        <!-- Fired on CreationComplete of this Canvas -->
+	       <mx:ModuleLoader id="mod" height="100%" width="100%" />
+	        <!-- url="com.Admin.Admin.swf" 
+	            ready="applyModuleSettings(event)"-->
+    	</mx:Canvas>
+    	
+     </mx:VBox> 
+<mx:ComboBox includeInLayout="false" visible="false" />
+</mx:Canvas>

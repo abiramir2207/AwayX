@@ -1,0 +1,2673 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- Program search options and results. -->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+		   xmlns:ba="com.components.*"
+		   resizeEffect="Resize" resize="true"  horizontalScrollPolicy="off" verticalScrollPolicy="off" 
+		   width="100%" height="100%" xmlns:mate="http://mate.asfusion.com/" creationComplete="init()">
+	<mx:Style>
+		.red{
+			color: #c02025;
+			fontWeight: bold;
+		}
+	</mx:Style>
+<mx:Script xmlns:mx="http://www.adobe.com/2006/mxml">
+		<![CDATA[
+			import com.asfusion.mate.events.Dispatcher;
+			import com.components.StringUtils;
+			import com.events.*;
+			import com.events.SearchProgramEvent;
+			import com.models.*;
+			import com.vos.*;
+			
+			import flash.events.*;
+			import flash.external.ExternalInterface;
+			import flash.utils.getTimer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.controls.Alert;
+			import mx.controls.CheckBox;
+			import mx.controls.ToolTip;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.controls.dataGridClasses.DataGridHeader;
+			import mx.controls.listClasses.IDropInListItemRenderer;
+			import mx.controls.listClasses.ListBase;
+			import mx.core.Application;
+			import mx.events.DataGridEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.formatters.NumberFormatter;
+			import mx.managers.CursorManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ObjectUtil;
+			import mx.utils.StringUtil;
+			import mx.validators.RegExpValidator;
+			
+			[Bindable]
+			private var ProgramsReturned:Number;
+			[Bindable]
+			private var Duration_Time:Number;  
+			[Bindable]
+			public var arrSavedItems:Array = new Array();
+			[Bindable]
+			public var arrUserList:Array = new Array();
+			[Bindable]
+			
+			//DECLARATIONS BELOW ARE FOR THE PROPERTYINJECTORYS
+			// THESE VALUES GET SET IN THE MainEventMap.mxml INJECTORS 
+			// sd- Anand Rao/27-APR-09
+			public var dgProgramData:ArrayCollection= new ArrayCollection;
+			[Bindable]
+			public var dpTemplate:Array = null;
+			[Bindable]
+			public var dpStatus:Array = null;		
+			[Bindable]
+			public var dpUserPositions:Array = null;	
+			[Bindable]
+			public var dpBuyingGroups:Array = null;	
+			[Bindable]
+			public var dpFamilyNames:Array = null;	
+			[Bindable]
+			public var dpBudgetClasses:Array = null;	
+			[Bindable]
+			public var dpBusinessSegments:Array = null;							
+			[Bindable]
+			public var dpUsers:Array = null;	
+			[Bindable]
+			public var dpRSP:Array = null;	
+			[Bindable]
+			public var dpProgram:Array = new Array();
+			[Bindable]
+			public var dpReportType:Array = new Array();
+			[Bindable]
+			public var dpConditions:Array = new Array();		
+			[Bindable]
+			public var dpDistictProgramYears:Array = new Array();
+			[Bindable]
+			public var oSettings:Settings = null;
+			[Bindable]
+			public var sFamilyLabel:String = "";	
+			[Bindable]
+			public var sBuyingGroupLabel:String = "";	
+			[Bindable]
+			public var sOperatorLabel:String = "";	
+			[Bindable]
+			public var sOperatorIDLabel:String = "";				
+			[Bindable]
+			public var sOperatorNameLabel:String = "";
+			[Bindable]
+			public var sDistributorLabel:String = "";	
+			[Bindable]
+			public var sReferenceNumberLabel:String = "";	
+			[Bindable]
+			public var sQbrandLabel:String = "";
+			[Bindable]
+			public var sTypeGroupLabel:String = "";
+			[Bindable]
+			public var sTypeCodeLabel:String = "";
+			[Bindable]
+			public var sItemLabel:String = "";
+			[Bindable]
+			public var sShardShipToLabel:String = "";
+			[Bindable]
+			public var sFileSize:String = "";	
+			[Bindable]
+			public var sDtLastModified:String = "";
+			[Bindable]
+			public var sDeleteIsCancelAutoRenew:String = "";	
+			[Bindable]
+			public var sDeleteProgramMessage:String = "";
+			[Bindable]
+			public var bCreateProgramAccess:Boolean = false;		
+			[Bindable]
+			public var bSearchDocuments:Boolean = false;
+			[Bindable]
+			public var sApprovalSpendingCapOn:String = "";
+			[Bindable]
+			public var sPgmScorecardRevisionReport:String = "";
+			[Bindable]
+			public var sProgramAgreeEscalate:String = "";
+			[Bindable]
+			public var sApprovalLayeredOn:String = "";		
+			[Bindable]
+			public var sApprovalStandardOn:String = "";				
+			[Bindable]
+			public var sDeleteProgramAccess:String = "";		
+			[Bindable]
+			public var sMassRFAProgramApprove:String = "";		
+			[Bindable]
+			public var siUserPositions:int = 0;
+			[Bindable]
+			private var Combo_Box_Size:int = 10;
+			[Bindable]
+			public var iComboBoxHeight:int;
+			[Bindable]
+			public var iComboBoxContentWidth:int;
+			[Bindable]
+			public var iTextInputHeight:int;
+			[Bindable]
+			public var iButtonHeight:int;
+			[Bindable]
+			public var iUserID:String = "";
+			[Bindable]
+			public var iInclude_work_in_progress_below_me:int;
+			[Bindable]
+			public var iCreating_User_Position:int;
+			[Bindable]
+			public var bShowPricingReport:Boolean = false;
+			[Bindable]
+			public var bShowClaimRatesReport:Boolean = false;
+			[Bindable]
+			public var bShowPricingReportSelection:Boolean = false;
+			[Bindable]
+			public var bShowClaimRatesReportSelection:Boolean = false;
+			[Bindable]
+			public var bBidRequestTemplate:Boolean = false;
+			[Bindable]
+			public var bBidRequestTemplateSelection:Boolean = false;
+			[Bindable]
+			public var bMassApproveSelection:Boolean = false;
+			[Bindable]
+			public var bShowDeleteOptionSelection:Boolean = false;
+			[Bindable]
+			public var bShowCheckBoxOptionSelection:Boolean = true;	
+			[Bindable]
+			public var bShowRelease:Boolean = false;				
+			[Bindable]
+			/* For some unknown reason, "sScorecardSortOption" should not be blank */
+			public var sScorecardSortOption:String = "contract_title";
+			[Bindable]
+			/* For some unknown reason, "sScorecardSortMethod" should not be blank */
+			public var sScorecardSortMethod:String = "true";
+			/* While passing boolean from CF (passing 1), somehow the data load never completed,
+			and that is why I passed it inside quotes ("1"), and converted it into boolean here.
+			*/
+			[Bindable]
+			public var bScorecardSortMethod:Boolean = false;		
+			[Bindable]
+			public var sExactListMatchingOnMessage:String = '';
+			[Bindable]
+			public var dSODate:String = new String();
+			[Bindable]
+			public var bPrgReadOnlyCatalogAccess:Boolean = false;
+			private var strImportItems:String;
+			private var arrImportItems:Array = new Array();
+			private var strReportType:String;
+			private var bsortOrder:Boolean = false;
+			[Bindable]
+			public var objGridColumnSize:SearchGridColumnSize = new SearchGridColumnSize();
+			[Bindable]
+			public var bDisplayTradeDollars:Boolean = false;						
+			[Bindable]
+			public var bDisplayPaymentDollars:Boolean = false;
+			[Bindable]
+			public var bDisplayVolume:Boolean = false;	
+			[Bindable]
+			public var sDisplayTradeDollarsLabel:String = new String();					
+			[Bindable]
+			public var sDisplayPaymentDollarsLabel:String = new String();
+			[Bindable]
+			public var sDisplayVolumeLabel:String = new String();
+			[Bindable]
+			public var sBusinessSegmentsLabel:String = new String();					
+			[Bindable]
+			public var bshowbudgetDropdown:Boolean = false;
+			[Bindable]
+			public var bshowBusinessSegment:Boolean = false;				
+			[Bindable]
+			private var tmpArray:Array = new Array();
+			[Bindable]
+			private var datagridColumns:Array = new Array();
+			[Bindable]
+			public var createListData:Array = new Array();
+			
+			/*  This is useful when a user enters or pastes programs on the "create list" box and then the user
+			selects "Release" from the "select Action for" dropdown. This will filter programs which are not only eligible
+			for release but will also only look at the ones in the "create list"  box - double filter.
+			*/
+			public function updateCreateList():void{
+				var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.UPDATE_CREATE_LIST);
+				event.sUpdateCreateList = this.txtCrList.text;
+				this.dispatchEvent(event);				
+			}
+									
+			/* program_trade_spend formatting */
+			private function programTradeSpend_FormatNumber(item:Object, column:DataGridColumn):String {
+				return numberFormatterDollars.format(item.program_trade_spend);
+			}
+			
+			/* program_trade_spend sorting */
+			private function programTradeSpend_sortCompareFunc(itemA:Object, itemB:Object):int {
+				return ObjectUtil.numericCompare(itemA.program_trade_spend, itemB.program_trade_spend);
+			}
+			
+			/* Note: program_payment formatting is on payment_history.mxml */
+			/* program_payment sorting */			
+			private function programPayment_sortCompareFunc(itemA:Object, itemB:Object):int {
+				return ObjectUtil.numericCompare(itemA.program_payment, itemB.program_payment);
+			}
+				
+			/* program_volume formatting */
+			private function programVolume_FormatNumber(item:Object, column:DataGridColumn):String {
+				return numberFormatterVolume.format(item.program_volume);
+			}
+			
+			/* program_volume sorting */
+			private function programVolume_sortCompareFunc(itemA:Object, itemB:Object):int {
+				return ObjectUtil.numericCompare(itemA.program_volume, itemB.program_volume);
+			}
+			
+			/* This is called on "CreationComplete */
+			private function init():void
+			{
+				/* Require "import mx.controls.ToolTip;" for this to work */ 
+				ToolTip.maxWidth = 450;
+				
+				/* Import Items Button*/
+				this.btnImport.addEventListener(MouseEvent.CLICK,callImportItems,false,0,true);
+				this.btnImport.addEventListener(KeyboardEvent.KEY_DOWN,enterButton,false,0,true);
+			}
+			
+			
+			
+			
+			/* Handle the Import Items Button Click ****************************** */
+			private function callImportItems(e:Event):void
+			{
+				/* Dispatch Event */
+				var  event:SearchProgramEvent = new  SearchProgramEvent(SearchProgramEvent.IMPORT_ITEMS);
+				this.dispatchEvent(event);
+			}
+			/* ******************************************************************* */
+			
+			
+			
+			public function ResetFilters():void
+			{		
+				this.dg.dataProvider.filterFunction = null;
+				//this.dg.dataProvider.refresh();
+				
+				//var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.RESET_FILTERS);
+				//event.programAC = this.dgProgramData;
+				//this.dispatchEvent(event);
+				
+				/* Sort the Grid */
+				var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.DATA_GRID_SORT);
+				this.dispatchEvent(event);
+				
+				/* Reset the scrollbar position to the top. */
+				var e:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.RESET_SCROLLBAR_POSITION);
+				this.dispatchEvent(e);
+				
+				ResetControls(1);
+			}
+			
+			/* All = 1 resets all controls. All = 0 resets all controls
+			except "Status". Status is not reset, when a user clicks
+			on "refresh data" button.
+			*/			
+			private function ResetControls(All:int):void
+			{
+				ProgramInfo.selectedIndex = 0;
+				ProgramTemplate.selectedIndex = 0;
+				UserName.selectedIndex = 0;
+				BuyingGroups.selectedIndex = 0;
+				UserPositions.selectedIndex = 0;
+				FamilyName.selectedIndex = 0;
+				Responsible_Sales_Person.selectedIndex = 0;
+				budgetClasses.selectedIndex = 0;
+				businessSegments.selectedIndex = 0;
+				Report_List.selectedIndex = 0;
+				Conditions.selectedIndex = 0;
+				Program_Info.text = '';
+				Distributor_Info.text = '';
+				Operator_Info.text = '';
+				Item_Info.text = '';	
+				bShowDeleteOptionSelection = false;		
+				bShowClaimRatesReportSelection = false;
+				bShowPricingReportSelection = false;
+				bBidRequestTemplateSelection =  false;
+				bMassApproveSelection =  false;
+				bShowCheckBoxOptionSelection = true;
+				SelectedOptions.toolTip = '';	
+				/* Reset "status" too */
+				if(All == 1){
+					ProgramStatus.selectedIndex = 0;
+				}			
+				else{
+					/* Pass "status" to programSearchManager */
+					var eventStatus:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SET_STATUS);
+					eventStatus.eStatus = ProgramStatus.selectedLabel;
+					this.dispatchEvent(eventStatus);
+				}
+			}
+			
+			/* This has been added due to a timing issue:
+			When any option on the "users" dropdown gets changed, the user position
+			of that user should be set on the "user position" dropdown.
+			Earlier, on the "Change" event of the "Users" drodown, this was the code:
+			"SetUserPosition();FilterPrograms()". Due to this, sometimes the user position
+			dropdown did not have the position selected. Now the programs are being filtered
+			below after the position dropdown has the position selected.
+			*/
+			private function CallFilterPrograms(event:SearchProgramEvent):void{
+				FilterPrograms();
+			}
+			
+			private function FilterPrograms():void{	
+				if(Program_Info.text.length > 0 || Distributor_Info.text.length > 0 ||
+					Operator_Info.text.length > 0 || Item_Info.text.length > 0 ||
+					ProgramStatus.selectedIndex != 0 ||	ProgramTemplate.selectedIndex != 0 || 
+					Responsible_Sales_Person.selectedIndex != 0 || BuyingGroups.selectedIndex != 0 ||
+					FamilyName.selectedIndex != 0 || UserPositions.selectedIndex != 0 || 
+					ProgramInfo.selectedIndex != 0 || UserName.selectedIndex != 0  || 
+					Report_List.selectedIndex != 0 || Conditions.selectedIndex != 0 || 
+					budgetClasses.selectedIndex != 0 || businessSegments.selectedIndex  != 0
+				)
+				{				
+					setFilter();
+					
+					var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.DATA_GRID_SORT);
+					this.dispatchEvent(event);
+				}
+				else
+				{
+					ResetFilters();
+				}
+				showReportLink(Report_List.selectedLabel);
+			}
+			
+			/*On initial load, see if a status was passed in.  If yes, filter the data on status sent.  
+			This is triggered via a <mate:Listener /> tag on this page ********/
+			private function setStatusFilter(event:SearchProgramEvent):void{
+				var comboLabel:String = '';
+				var eStatus:String = event.eStatus;
+				if(eStatus != ''){
+					
+					for ( var i:Number=0; i<ProgramStatus.dataProvider.length; i++ )
+					{							
+						/*some of the dp values are string and some are objects (from cf).*/
+						if(ProgramStatus.dataProvider[i].hasOwnProperty('Contract_Status_Type_Desc')){
+							comboLabel = ProgramStatus.dataProvider[i].Contract_Status_Type_Desc;
+						}
+						else{
+							comboLabel = ProgramStatus.dataProvider[i].toString()
+						}
+						/*if an option in the comboBox ProgramStatus == the status passsed in, select it and fire the filter routine*/									   	
+						if (comboLabel == eStatus){
+							ProgramStatus.selectedIndex = i;
+							//this.setFilter();
+							break;
+						}
+					}
+					
+				}
+			}
+			
+			
+			public function resetScrollbarPosition(e:Event):void{
+				dg.scrollToIndex(0);
+			}
+			
+			public function SortGridData(event:SearchProgramEvent):void{	 
+
+				var bCaseInsensitive:Boolean;		
+				if(sScorecardSortMethod == "1"){
+					bScorecardSortMethod = true;
+				}
+				else{
+					bScorecardSortMethod = false;
+				}
+				
+				/* If the sort is on any date field, make CaseInsensitive as false. If it is set as true, then the records do not get sorted as date */
+				if(sScorecardSortOption == "contract_start_date" 
+					|| sScorecardSortOption == "contract_end_date" ){
+					bCaseInsensitive = false;
+				}
+				else{
+					bCaseInsensitive = true;
+				}
+				
+				var dataSortField:SortField = new SortField();
+				
+				/* sort column */
+				dataSortField.name = sScorecardSortOption;
+				/* sort case-insensitive  */
+				dataSortField.caseInsensitive = bCaseInsensitive;
+				/* sort order */
+				dataSortField.descending = bScorecardSortMethod;			
+				
+				var dataSort:Sort = new Sort();
+				dataSort.fields = [dataSortField];	
+				dgProgramData.sort = dataSort;
+				
+				dgProgramData.refresh();   
+				
+				/* The default sort order should be the reverse of the order that was used
+				to load the data. For eg: if contract_title is the field on which we need
+				to sort by default and the order of sort is Desc.  bsortOrder should now
+				be ASC. This is only useful if the user clicks on the default sort field
+				(Contract_title for some clients) even before sorting by any other field after 
+				program load  */
+				bsortOrder = !bScorecardSortMethod;
+			}
+			private function Call_Sort_Data(evt:DataGridEvent):void {
+				/* Hang out a while, wait a frame. This was required because the 
+				sort arrow disappeared with the "event.preventDefault()" in 
+				Sort_Data event.
+				*/
+				callLater(Sort_Data, [evt]);
+				
+				/* Reset the scrollbar position to the top. */
+				var e:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.RESET_SCROLLBAR_POSITION);
+				this.dispatchEvent(e);
+			}
+			
+			private function Sort_Data(event:DataGridEvent):void 
+			{	
+				/* Flex sorting is case-sensitive by default. Contract_title and rsp_user 
+				are the only fields where I had that issue, rest of the fields have the 
+				same case for all the rows.
+				*/
+				if(event.dataField == 'contract_title' || event.dataField =='rsp_user')
+				{	   	
+					dgProgramData.sort = new Sort();
+					
+					dgProgramData.sort.fields = [new SortField(event.dataField,true,bsortOrder)];
+					/* Milan (24459) - Do not remove the code - dgProgramData.refresh();
+					This ensures that the data is sorted correctly, i.e. case-insensitive.
+					*/ 
+					dgProgramData.refresh();
+					
+					event.preventDefault();
+					
+					bsortOrder = !bsortOrder;
+				}	
+				else
+				{
+					/* The default sorting order on any column is ASCENDING. Here false
+					means "ASCENDING". Once the user clicks on any other field, except the
+					default(Contract_title for some clients), we ned to make sure that
+					the Sort order is ASCENDING , next time the user sorts on the default
+					field
+					*/
+					bsortOrder = false;
+				}	
+			}
+			
+			/* IF (keyword search on Distributor, Operator, or Item or Dropdown search on Buying group or Family) OR (One of the RFA status filters is selected) 
+			Dispatch the event RO_FILTER_PROGRAMS which will send the request to CF and return an Array of Contract_Main IDs.*/	
+			private function setFilter():void{
+				
+				var strBGLabel:String = 'Show All ' + sBuyingGroupLabel;
+				var strFNLabel:String = 'Show All ' + sFamilyLabel;  
+				var strUserPositionID:String = '';
+				var strUserID:String = '0';
+				var selectedEntriesCounter:Number = 0;
+				
+				/* Even though "PositionID" is int, the program records are string and so "positionID" is a string here too.
+				We used the selectedLabel earlier but when the position dropdown label changed to "positionname(positionID)"
+				format, the filtering is being done by ID instead. */			
+				if(UserPositions.selectedLabel == 'Show All Positions'){
+					strUserPositionID = UserPositions.selectedLabel;
+				}
+				else{
+					/* Get the multiple position list */
+					for each(var oItem:Object in UserPositions.selectedItems)
+					{
+						selectedEntriesCounter = selectedEntriesCounter + 1;
+							strUserPositionID = strUserPositionID + oItem.User_Positions_ID 
+							if(selectedEntriesCounter != UserPositions.selectedItems.length){
+								strUserPositionID = strUserPositionID + ",";
+							}
+					}
+				}
+				
+				/* The filtering is being done by ID and not "description". */
+				if(UserName.selectedLabel == 'Show All Users'){
+					strUserID = UserName.selectedLabel;
+				}
+				else{
+					strUserID = UserName.selectedItem.Sales_Person_ID;
+				}
+				
+				/* When we do a multiple selection search involving combination of flex filtering and sql query 
+				(For eg: Pending Approval and work in progress), the first condition here gets executed.
+				When the results of the sql query are returned, then since the comma-delimited list still
+				has both (or multiple) statuses, the flex filter works for all the statues.
+				Note: FILTER_RESULTS event fires flex filter.
+				*/
+				if (Distributor_Info.text.length > 0 || Operator_Info.text.length > 0 || Item_Info.text.length > 0 
+					|| ProgramStatus.selectedLabel.indexOf('Pending Approval' ) != -1 
+					|| ProgramStatus.selectedLabel.indexOf('Agreed' ) != -1 
+					|| ProgramStatus.selectedLabel.indexOf('Under Review' ) != -1 
+					|| (ProgramInfo.selectedLabel.indexOf('CRA' ) != -1 && (UserName.selectedIndex != 0 || UserPositions.selectedIndex != 0))
+					|| budgetClasses.selectedIndex != 0
+					|| BuyingGroups.selectedLabel != strBGLabel 
+					|| FamilyName.selectedLabel != strFNLabel)
+				{	
+					
+					var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.RO_FILTER_PROGRAMS); //FILTER USING SQL ON SERVER
+					event.userId 			= iUserID;
+					event.eStatus 			= ProgramStatus.selectedLabel;
+					event.eTemplate 		= ProgramTemplate.selectedLabel;
+					event.eRSP				= Responsible_Sales_Person.selectedLabel;
+					event.eBuyingGroups 	= BuyingGroups.selectedLabel;
+					event.eFamilyName		= FamilyName.selectedLabel;
+					event.eUName			= strUserID;
+					event.ePositions		= strUserPositionID;
+					event.eProgramInfo 		= ProgramInfo.selectedLabel;
+					event.eReportType		= Report_List.selectedLabel;
+					event.eConditions		= Conditions.selectedLabel;
+					event.eProgram_Info 	= Program_Info.text;
+					event.eDistributor_Info = Distributor_Info.text;
+					event.eOperator_Info 	= Operator_Info.text;
+					event.eItem_Info 		= Item_Info.text;
+					event.eBudgetClasses	= budgetClasses.selectedLabel;
+					event.eBusinessSegments = businessSegments.selectedLabel;
+					
+					this.dispatchEvent(event);
+				}
+				else /* ELSE run a local filter on the dp using the AS filterfunction*/
+				{
+					var event1:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.FILTER_RESULTS);//LOCAL FILTER
+					event1.eStatus 			= ProgramStatus.selectedLabel;
+					event1.eTemplate 		= ProgramTemplate.selectedLabel;
+					event1.eRSP				= Responsible_Sales_Person.selectedLabel;
+					event1.eBuyingGroups 	= BuyingGroups.selectedLabel;
+					event1.eFamilyName		= FamilyName.selectedLabel;
+					event1.eUName			= strUserID;
+					event1.ePositions		= strUserPositionID;
+					event1.eProgramInfo 	= ProgramInfo.selectedLabel;
+					event1.eReportType		= Report_List.selectedLabel;
+					event1.eConditions		= Conditions.selectedLabel;
+					event1.eProgram_Info 	= Program_Info.text;
+					event1.eDistributor_Info = Distributor_Info.text;
+					event1.eOperator_Info 	= Operator_Info.text;
+					event1.eItem_Info 		= Item_Info.text;
+					event1.eBudgetClasses	= budgetClasses.selectedLabel;
+					event1.eBusinessSegments = businessSegments.selectedLabel;
+					this.dispatchEvent(event1);	
+				}	   		
+			}
+			
+			public function dispatchSearchEventGet():void{
+				
+				var e_Dispatcher:Dispatcher = new Dispatcher();
+				
+				var e:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET);
+				var e1:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.HIDE_INFO);
+				//Alert.show(iUserID.toString());
+				//Alert.show(e.Creating_User_Position.toString());
+				e.userId = iUserID;
+				e.Creating_User_Position = iCreating_User_Position;
+				e.Include_work_in_progress_below_me = iInclude_work_in_progress_below_me;
+				
+				/* Get Catalog records from the db */
+				if(DataLoadType.selectedValue == 'Catalog')
+				{
+					e.sStartDate = '';
+					e.sEndDate = '';
+					e.showCatalog = 1;
+					e_Dispatcher.dispatchEvent(e);
+					e_Dispatcher.dispatchEvent(e1);        				
+				}
+				else
+				{	/* Get "Current" records from the db */
+					if(ArchiveSearch.selectedValue == 'Current')
+					{
+						e.sStartDate = '';
+						e.sEndDate = '';
+						e.showCatalog = 0;
+						e.Include_work_in_progress_below_me = e.Include_work_in_progress_below_me
+						e.Creating_User_Position = e.Creating_User_Position;
+						e_Dispatcher.dispatchEvent(e);
+					}
+					/* If the user selects the "DateRange" option. */
+					else if(ArchiveSearch.selectedValue == 'DateRange')
+					{
+						/* The purpose of using "dateFormatter.format":
+						 - To convert the date in "mm/dd/yyyy" format.
+						 - The value gets converted to string datatype.
+						It is useful to use string datatype to avoid timezone issues.
+						*/
+						e.sStartDate = dateFormatter.format(dtStart.selectedDate);
+						e.sEndDate = dateFormatter.format(dtEnd.selectedDate);						
+						e.showCatalog = 0;
+						
+						/* If the user clicks on the Refresh button and the date range is not entered. */
+						if(e.sStartDate == '' || e.sEndDate == '')
+						{
+							Alert.show('Please enter the data range.');
+						}
+						/* "e.sStartDate" and "e.sEndDate" are not being used for comparison as they are of "string" dataType. */
+						else if(dtStart.selectedDate.getTime() >  dtEnd.selectedDate.getTime()) 
+						{
+							Alert.show('The end date must be after the start date.');
+						}
+						else
+						{
+							e_Dispatcher.dispatchEvent(e);
+						}
+						e_Dispatcher.dispatchEvent(e1);  
+					}
+				}				
+				ResetControls(0);
+			}
+			
+			
+			
+			
+			
+			
+			private function showReportLink(ReportType:String):void{
+				/* For Claim rates and pricing report, we check for app setting and the type
+				of report selected, but for Mass Approve,Edit Won Lost Status and Delete, 
+				we only check the report selected as the logic for including these in the 
+				dropdown already exists in ProgramSearchManager.		    
+				*/
+				
+				var bShowMassApprove:Boolean;
+				bShowMassApprove = false;
+				
+				bShowClaimRatesReportSelection = false;
+				bShowPricingReportSelection = false;
+				bBidRequestTemplateSelection =  false;
+				bMassApproveSelection =  false;
+				bShowDeleteOptionSelection = false;
+				bShowCheckBoxOptionSelection = true;
+				bShowRelease = false;
+				
+				/* User Searched for Claim Reports */
+				if(bShowClaimRatesReport == true){
+					if(ReportType == 'Claim Rates')
+					{
+						bShowClaimRatesReportSelection = true;
+					}
+				}
+				
+				/* User Searched for Pricing Reports */  		
+				if(bShowPricingReport == true){
+					if(ReportType == 'Pricing')
+					{
+						bShowPricingReportSelection = true;
+					}
+				} 
+				
+				/* User Searched for items to delete */
+				if(ReportType == 'Delete'){
+					bShowDeleteOptionSelection = true; 	
+					bShowCheckBoxOptionSelection =  false;	
+				}
+				
+				/* If Bid Request is on */
+				if(bBidRequestTemplate == true)
+				{
+					/*	If the user searches for Bid Request programs,Show the user the 
+					'Edit Won Lost Status' link 
+					*/
+					if(ReportType == 'Edit Won/Lost Status')
+					{
+						bBidRequestTemplateSelection =  true;
+					}
+				}
+				
+				/* Is Mass Approve on */
+				if(sMassRFAProgramApprove == '1')
+				{
+					bShowMassApprove = true;			   	
+				}
+				
+				/*	If Mass Approve is on and the user searches for mass approve,Show the user the 
+				'Mass Approve' link 
+				*/  
+				if(bShowMassApprove == true)
+				{
+					if(ReportType == 'Mass Approve')
+					{
+						bMassApproveSelection =  true;
+					}
+				}	
+				
+				/* User Searched for items to delete */
+				if(ReportType == 'Release'){
+					bShowRelease = true;
+				}
+			}	   	
+			/* ******************************************************************* */
+			/* ******************	USER LIST FUNCTIONS  ************************* */
+			/* ******************************************************************* */
+			/* Handle the Create List Button click */
+			private function callCreateList(txt:String):void
+			{
+				/* Dispatch Event */
+				var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.CREATE_LIST);
+				event.iList = txt;
+				this.dispatchEvent(event);
+				/* clear the Filter Selected checkbox */
+				// this.chBoxReset();
+			}
+			
+			/* Handle the Get List Items Button Click (btnGetListItems)  or (lsUserList) DOUBLE_CLICK */
+			private function getUserListItems():void
+			{
+				if(this.lsUserList.selectedItems.length == 0)
+				{
+					Alert.show("Please select a list to display");
+				}
+				else
+				{
+					/* Dispatch Event */
+					var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.GET_USERLIST_ITEMS);
+					event.arrUserListItems = this.lsUserList.selectedItem.DATA;
+					this.dispatchEvent(event);
+					// this.chBoxReset();
+					/* flag the items as selected */
+					//this.chSelectAll.selected = true;
+					//this.selectAll();
+				}
+			}
+			
+			/*  handler for when a user presses enter on a Saved user List row (lsUserList)*/
+			private function enterUserListRow(event:KeyboardEvent):void 
+			{                
+				if (event.keyCode == Keyboard.ENTER) 
+					/* ITEM_DOUBLE_CLICK calls getUserList()   */                   
+					lsUserList.dispatchEvent(new ListEvent(ListEvent.ITEM_DOUBLE_CLICK));
+			}
+			
+			/* Handle the Save My Lists Button Click (btnSaveUserList)*/
+			private function saveUserList():void
+			{
+				if(tListName.text.length == 0)
+				{
+					Alert.show("Please enter a name for your favorites");
+				}
+				else
+				{
+					/* Limit the favorites entries to 25 */
+					if(arrUserList.length > 24){
+						Alert.show("The limit for the favorites list is 25. Either delete one or edit an existing one.");
+					}
+					else
+					{					
+						/* Dispatch Event */				
+						var event1:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SAVE_USERLIST);
+						event1.userId 			= iUserID;
+						event1.userListItemsName = tListName.text;
+						
+						if(ProgramStatus.selectedIndex != 0){ 
+							
+							event1.eStatus 	= ProgramStatus.selectedLabel;
+						}
+						else{
+							event1.eStatus = '';
+						}
+						
+						if(ProgramTemplate.selectedIndex != 0){ 
+							event1.eTemplate = ProgramTemplate.selectedLabel;
+						}
+						else{
+							event1.eTemplate = '';
+						}
+						
+						if(Responsible_Sales_Person.selectedIndex != 0){ 
+							event1.eRSP = Responsible_Sales_Person.selectedLabel;
+						}
+						else{
+							event1.eRSP = '';
+						}
+						
+						if(BuyingGroups.selectedIndex != 0){ 
+							event1.eBuyingGroups = BuyingGroups.selectedLabel;
+						}
+						else{
+							event1.eBuyingGroups = '';
+						}
+						
+						if(FamilyName.selectedIndex != 0){ 
+							event1.eFamilyName = FamilyName.selectedLabel;
+						}
+						else{
+							event1.eFamilyName = '';
+						}
+						
+						if(UserName.selectedIndex != 0){ 
+							event1.eUName = UserName.selectedItem.Sales_Person_ID;
+						}
+						else{
+							event1.eUName = '';
+						}
+						
+						if(UserPositions.selectedIndex != 0){
+							var selectedEntriesCtr:Number = 0;
+							var strUserPositionList:String = '';
+							/* Get the multiple position list */
+							for each(var oItem:Object in UserPositions.selectedItems)
+							{
+								selectedEntriesCtr = selectedEntriesCtr + 1;
+								strUserPositionList = strUserPositionList + oItem.User_Positions_ID 
+								if(selectedEntriesCtr != UserPositions.selectedItems.length){
+									strUserPositionList = strUserPositionList + ",";
+								}
+							}
+							event1.ePositions = strUserPositionList;
+						}
+						else{
+							event1.ePositions = '';
+						}
+						
+						if(ProgramInfo.selectedIndex != 0){ 
+							event1.eProgramInfo = ProgramInfo.selectedLabel;
+						}
+						else{
+							event1.eProgramInfo = '';
+						}
+						
+						if(Report_List.selectedIndex != 0){ 
+							event1.eReportType = Report_List.selectedLabel;
+						}
+						else{
+							event1.eReportType = '';
+						}
+						
+						if(Conditions.selectedIndex != 0){ 
+							event1.eConditions	= Conditions.selectedLabel;
+						}
+						else{
+							event1.eConditions = '';
+						}
+						
+						event1.eProgram_Info 	= Program_Info.text;		
+						event1.eDistributor_Info = Distributor_Info.text;
+						event1.eOperator_Info 	= Operator_Info.text;
+						event1.eItem_Info 		= Item_Info.text;
+						
+						if(budgetClasses.selectedIndex != 0){ 
+							event1.eBudgetClasses	= budgetClasses.selectedLabel;
+						}
+						else{
+							event1.eBudgetClasses = '';
+						}
+						
+						if(businessSegments.selectedIndex != 0){ 
+							event1.eBusinessSegments	= businessSegments.selectedLabel;
+						}
+						else{
+							event1.eBusinessSegments = '';
+						}
+						
+						this.dispatchEvent(event1);
+						tListName.text = '';
+					}
+				}
+			}
+			
+			/* Handle the Get My Lists Button Click (btnGetLists)*/
+			private function deleteUserList():void
+			{
+				/* update the dp */
+				if(this.lsUserList.selectedItems.length == 0)
+				{
+					Alert.show("Please select a list to delete");				
+				}
+				else
+				{
+					/* Dispatch Event */
+					var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.DELETE_USERLIST);
+					event.userListId = lsUserList.selectedItem.USER_PROGRAM_LIST_ID;
+					this.dispatchEvent(event);
+				}
+			}
+			
+			private function loadData(event:ItemClickEvent):void{	
+				
+				/* We do not want to load any data, when we click on the "year" radio button */
+				if(event.currentTarget.selectedValue != 'DateRange')
+				{
+					
+					var event1:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.LOAD_SO_ITEMS);
+					event1.userId = iUserID;
+					/* Reset the "date range" dates. */
+					event1.sStartDate = '';
+					event1.sEndDate = '';
+					
+					/* If the user clicks on the 'Catalog' radio button */
+					if(event.currentTarget.selectedValue == 'Catalog')
+					{
+						/* Hide the "Current" and "year" options */
+						ShowHideControls(false,false);
+						/* Reset the "date range" dates. */
+						dtStart.text = '';
+						dtEnd.text = '';
+						
+						event1.showCatalog 	= 1;
+						event1.eStatus 		= 'Catalog';		   			
+					}
+					else
+					{
+						event1.showCatalog 	= 0;
+						event1.eStatus 		= '';
+					}
+					
+					/* If the user either clicks on the 'Current' or  'Program' radio buttons. 
+					Note: Clicking on the "Program" radio button, also checks the radio button 
+					for 'Current'. */
+					if(event.currentTarget.selectedValue == 'Current' || event.currentTarget.selectedValue == 'Program')
+					{
+						/* Hide the "Current" and "year" options */
+						ShowHideControls(true,false);
+						/* Reset the "date range" dates. */
+						dtStart.text = '';
+						dtEnd.text = '';
+						
+						/* Check the radio button for 'Current' */
+						ArchiveSearch.selection = rdoCurrent;
+					}
+					this.dispatchEvent(event1);
+					ResetControls(1);
+				}
+				else
+				{
+					ShowHideControls(true,true);
+				}
+				
+			}
+			
+			/* Show/Hide the radiobuttons/date range based on what is checked */
+			public function ShowHideControls(Status1:Boolean,Status2:Boolean):void
+			{
+				rdoCurrent.visible = Status1;
+				rdoCurrent.includeInLayout = Status1;
+				rdoArchiveDateRange.visible = Status1;
+				rdoArchiveDateRange.includeInLayout = Status1;
+				lblCurrent.visible = Status1;
+				lblCurrent.includeInLayout = Status1;
+				lblDateRange.visible = Status1;
+				lblDateRange.includeInLayout = Status1;	
+				lblOR.visible = Status1;
+				lblOR.includeInLayout = Status1;   	
+				
+				dtDateRange.visible = Status2;
+				dtDateRange.includeInLayout = Status2;
+			}
+			
+			/* When the data is loaded for the first time, check the 'program' and 'current' 
+			radio buttons
+			*/
+			public function selectOptionsProgram(e:Event):void
+			{
+				DataLoadType.selection = rdoProgram;
+				ArchiveSearch.selection = rdoCurrent;
+				ShowHideControls(true,false);
+			}		
+			/* When the data is loaded through the "Catalog' link on the scorecard,
+			Check the 'Catalog' radio button
+			*/
+			public function selectOptionsCatalog(e:Event):void
+			{
+				DataLoadType.selection = rdoCatalog;
+				ShowHideControls(false,false);
+			}		
+			
+			/*public function callSelectedOptions():void
+			{
+			var e1:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SHOW_SELECTED_OPTIONS);
+			this.dispatchEvent(e1);
+			}
+			*/
+			
+			/*
+			private function Run_GC():void
+			{
+			System.gc(); 
+			}
+			*/
+			
+			public function showSelectedOptions(e:Event):void
+			{
+				/* Ignore the commas and new line character and then start looking for 17th character.
+				then stop at the next comma or the end of string. If the length of the string is less than 
+				17 charcacters before the comma or the end of string (end of string is applicable for the 
+				last record),then ignore the string
+				*/
+				//var pattern:RegExp = /([^,\n]{17}).*?(,|$)/g;
+				
+				/* Here we need to put two entries of a comma-delimited list on one line, and then a new 
+				line and then another two entries..so on.
+				*/
+				/* Removed (commented) code to do above */
+				//var pattern1:RegExp = /(.*?),(.*?),/g;
+				
+				SelectedOptions.toolTip = '';
+				
+				/* Here we append all the search criteria. Different search criterias 
+				(for eg: template and status) have to be on different lines.
+				*/
+				if(ProgramStatus.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + ProgramStatus.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = ProgramStatus.selectedLabel;
+					}
+				}
+				if(ProgramTemplate.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + ProgramTemplate.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = ProgramTemplate.selectedLabel;
+					}
+				}
+				if(Responsible_Sales_Person.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + Responsible_Sales_Person.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = Responsible_Sales_Person.selectedLabel;
+					}
+				}
+				if(BuyingGroups.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + BuyingGroups.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = BuyingGroups.selectedLabel;
+					}
+				}
+				if(FamilyName.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + FamilyName.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = FamilyName.selectedLabel;
+					}
+				}
+				if(Conditions.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + Conditions.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = Conditions.selectedLabel;
+					}
+				}		
+				if(ProgramInfo.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + ProgramInfo.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = ProgramInfo.selectedLabel;
+					}
+				}
+				if(UserName.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + UserName.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = UserName.selectedLabel;
+					}
+				}
+				if(UserPositions.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + UserPositions.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = UserPositions.selectedLabel;
+					}
+				}
+				
+				if(budgetClasses.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + budgetClasses.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = budgetClasses.selectedLabel;
+					}
+				}
+				if(businessSegments.selectedIndex != 0)
+				{
+					if(SelectedOptions.toolTip != '')
+					{
+						SelectedOptions.toolTip = SelectedOptions.toolTip + "\n" + businessSegments.selectedLabel;
+					} 
+					else
+					{
+						SelectedOptions.toolTip = businessSegments.selectedLabel;
+					}
+				}				
+				//SelectedOptions.toolTip =  SelectedOptions.toolTip.replace(pattern1,"$1,$2\n");
+				//SelectedOptions.text =  SelectedOptions.text.replace(pattern,"$1..,");
+				//SelectedOptions.text =  SelectedOptions.text.replace(pattern1,"$1,$2\n");
+				
+			}
+			
+			private function toggleState(state:String):void
+			{
+				if(state == "fullRight")
+				{
+					this.currentState = "fullRight";
+					iconRight.visible = false;
+					iconAllR.visible = true;
+					iconRight.includeInLayout = false;
+					iconAllR.includeInLayout = true;											
+				}
+				else if(state == "fullAll")
+				{						
+					this.currentState = "";
+					iconAllR.visible = false;
+					iconRight.visible = true;
+					iconAllR.includeInLayout = false;
+					iconRight.includeInLayout = true;
+				}
+			}
+			
+			/* The user position should be the same as the position of the user selected */
+			private function SetUserPosition():void{
+				var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SET_USER_POSITION);
+				if(UserName.selectedIndex != 0)
+				{ 
+					event.eUserName = UserName.selectedItem.User_Positions_ID;
+				}
+					
+					/* If the search is for 'Show All Users' */
+				else
+				{
+					event.eUserName = '';
+				}          	         
+				dispatchEvent(event);
+			} 	
+			
+			private function callJavaScriptConfirm(arg:String):void {
+				ExternalInterface.call("confirm", arg);
+			}
+			
+			/* Get program id's selected by the user to mass approve, change won/lost status,
+			claim rates report or pricing report  
+			*/
+			public function getSelectedEntries(Type:String):void
+			{
+				var strBidRequestStatus:String;
+				for each(var oItem:Object in dg.dataProvider.source)
+				{
+					if(oItem['isSelected'] == true)
+					{
+						if(Type == 'EditStatus'){	
+							/* The reason why below filter is important is due to this:
+							If a user selects an option, say "Claim rates" from the "action"
+							dropdown and chooses (checkbox) a few programs. Now changes the option to
+							"pricing" on the dropdown. Some of the selected programs are not
+							filtered for the "pricing report" but are still checked and so
+							when a user generates the pricing report, those older selections 
+							come up too. We cannnot "uncheck" selected records on filter as 
+							the user might select records by using secondary filters too.
+							eg: First select template x, choose 2 programs, then select template y,
+							choose 3 more programs. If we uncheck on filter, those older selections will
+							be lost. So, here we are looking for programs where the respective
+							condition is met - Either pricing or edit status or claim report
+							or mass approve etc.
+							Note: The filter logic here comes from "programFilterFunc" function
+							on "programSearchManager.as".
+							*/		
+							if(oItem['is_catalog'] == 0 && oItem['status_id'] ==  10)
+							{
+								if(oItem['BidRequest_Status'] == 4){
+									strBidRequestStatus = '4';
+								}
+								else
+								{
+									strBidRequestStatus = '2';
+								}
+								arrImportItems.push(oItem['contract_main_id'] + '_' + strBidRequestStatus)
+							}
+						}									
+						else
+						{
+							/* The reason why below filter is important is due to this:
+							If a user selects an option, say "Claim rates" from the "action"
+							dropdown and chooses (checkbox) a few programs. Now changes the option to
+							"pricing" on the dropdown. Some of the selected programs are not
+							filtered for the "pricing report" but are still checked and so
+							when a user generates the pricing report, those older selections 
+							come up too. We cannnot "uncheck" selected records on filter as 
+							the user might select records by using secondary filters too.
+							eg: First select template x, choose 2 programs, then select template y,
+							choose 3 more programs. If we uncheck on filter, those older selections will
+							be lost. So, here we are looking for programs where the respective
+							condition is met - Either pricing or edit status or claim report
+							or mass approve etc.
+							Note: The filter logic here comes from "programFilterFunc" function
+							on "programSearchManager.as".
+							*/									
+							if(Type == 'ClaimRatesReport')
+							{
+								if(oItem['is_catalog'] == 0 && oItem['include_claim_rates_report'] == '1')
+								{
+									arrImportItems.push(oItem['contract_main_id'])
+								}
+							}
+							else if (Type == 'PricingReport'){
+								if(oItem['is_catalog'] == 0 && oItem['include_pricing_report'] == '1')
+								{
+									arrImportItems.push(oItem['contract_main_id'])	
+								}										
+							}								
+							else if (Type == 'MassApprove'){
+								if(oItem['is_catalog'] == 0 && oItem['status_id'] == 2)
+								{
+									arrImportItems.push(oItem['contract_main_id'])	
+								}										
+							}
+							else if (Type == 'Release'){
+								if(oItem['is_catalog'] == 0 && oItem['release_eligible'] == 1)
+								{
+									arrImportItems.push(oItem['contract_main_id'])	
+								}										
+							}						
+								/* This condition is not being used. */
+							else{
+								arrImportItems.push(oItem['contract_main_id'])	
+							}
+						}
+					}
+					
+				}
+				
+				/* "this" makes "strImportItems" available outside the function */			
+				this.strImportItems = arrImportItems.toString();
+				if(Type == 'MassApprove'){
+					MassApprovalConfirm();	
+				}
+				else if(Type == 'EditStatus'){
+					var pattern:RegExp = /[,]/gi;
+					
+					editSelectedProgramStatusConfirm();
+				}
+				else if(Type == 'ClaimRatesReport'){
+					this.strReportType = '1';
+					ShowReportConfirm();				
+				}
+				else if(Type == 'PricingReport'){
+					this.strReportType = '2';
+					ShowReportConfirm();					
+				}
+				else if(Type == 'Release'){
+					ShowReleaseConfirm();					
+				}
+			}
+			
+			private function ShowReportConfirm():void{
+				
+				/* If the user has selected at least one program */
+				if(this.strImportItems.length > 0){           
+					ShowReport();
+				}  
+				else{
+					Alert.show("Please select at least one program to report against.");	
+				}        
+			}
+			
+			private function ShowReleaseConfirm():void{
+				
+				/* If the user has selected at least one program */
+				if(this.strImportItems.length > 0){           
+					ShowRelease();
+				}  
+				else{
+					Alert.show("Please select at least one program to report against.");	
+				}        
+			}
+			
+			private function MassApprovalConfirm():void{
+				var alertResult:Alert; 
+				
+				/* If the user has selected at least one program */
+				if(this.strImportItems.length > 0){           
+					alertResult = Alert.show("Press OK to approve the selected programs", "Confirm Approval!", Alert.OK | Alert.CANCEL, this, MassApproval);  
+				}  
+				else{
+					Alert.show("Please select at least one program Ready For Approval first.");	
+				}        
+			}
+			
+			private function MassApproval(CloseEvent:Object) : void{ 
+				/* CloseEvent.detail is 1 for "yes" and 2 for "no" (It was applicable with  Alert.YES and Alert.NO. Not being used anymore) */
+				/* CloseEvent.detail is 4 for "ok" and 8 for "cancel" */
+				if(CloseEvent.detail == 4){
+					var url:URLRequest = new URLRequest("/scorecard/massapproval.cfm?massApprovalProgramList="+this.strImportItems+"&FromFlex=1");
+					navigateToURL(url, "_self");   
+				}  
+			}
+			
+			private function ShowReport() : void{ 
+				
+				/* Through a URL, only a limited number of programs can be sent and therefore the code below is commented  */
+				/*				
+				var winjscommand:String="/ReportWriter/program_claim_rates_report.cfm?REPORT_PROGRAM_ID_LIST="+this.strImportItems+"&REPORT_TYPE="+this.strReportType+"&FromFlex=1";
+				var jscommand:String = "window.open('"+winjscommand+"','win','height=600,width=900,toolbar=no,scrollbars=yes,resizable=yes');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self");
+				*/
+				
+				/* Pass object to CF (opener page), which will then send the data in a form instead. THis way we can even send thousands of programs, if needed. */
+				var objItems:Object = new Object();
+				objItems['Report_Program_ID_List']= this.strImportItems;
+				objItems['Report_Type']= this.strReportType;
+				
+				callJSFunction('showReport',objItems);
+			}
+			
+			
+			private function ShowRelease() : void{ 				
+				/* Pass object to CF (opener page), which will then send the data in a form instead. THis way we can even send thousands of programs, if needed. */
+				var objItems:Object = new Object();
+				objItems['ListContractMainID']= this.strImportItems;
+				
+				callJSFunction('showReleaseSettlement',objItems);
+			}
+						
+			private function callJSFunction(funcName:String,oItems:Object):void{			
+				var s:String;
+				if (ExternalInterface.available) {
+					var wrapperFunction:String = funcName;
+					s = ExternalInterface.call(wrapperFunction, oItems);
+				} else {
+					s = "Wrapper not available";
+				}				
+			}
+			
+			private function editSelectedProgramStatusConfirm():void{
+				var alertResult:Alert; 
+				
+				/* If the user has selected at least one program */
+				if(this.strImportItems.length > 0){           
+					alertResult = Alert.show("Press OK to change the selected programs status", "Confirm Status Change!", Alert.YES | Alert.NO, this, editSelectedProgramStatus);  
+				}  
+				else{
+					Alert.show("Please select at least one program to change the proposal status.");	
+				}        
+			}
+			
+			private function editSelectedProgramStatus(CloseEvent:Object) : void{ 
+				/* CloseEvent.detail is 1 for "yes" and 2 for "no" */
+				if(CloseEvent.detail == 1){
+					/* Through a URL, only a limited number of programs can be sent and therefore the code below is commented  */
+					/*var url:URLRequest = new URLRequest("/scorecard/masseditstatus.cfm?massEditStatusList="+this.strImportItems+"&FromFlex=1");
+					navigateToURL(url, "_self");*/
+					/* Pass object to CF (opener page), which will then send the data in a form instead. THis way we can even send thousands of programs, if needed. */
+					var objItems:Object = new Object();
+					objItems['massEditStatusList']= this.strImportItems;					
+					callJSFunction('editSelectedProgramStatus',objItems);
+				}  
+			}
+			
+			private function createProgram() : void{ 
+				var winjscommand:String="/common_files/select_new_program_type.cfm?FromFlex=1";
+				/* I have chosen the same window name as for the pop up for the program (program_Summary.mxml),
+				so that one replaces the other, when either is open. We want to avoid problems of two popups
+				related to program.
+				*/
+				var jscommand:String = "window.open('"+winjscommand+"','winSummary','height=710,width=1345,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=yes');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self");   
+			}        	           	
+			
+			/* Handle when user hits enter key in seach box -> call the setFilter() method */
+			private function enterSearchBox(event:KeyboardEvent):void 
+			{                
+				if (event.keyCode == Keyboard.ENTER)
+					/* call main filter method */                 
+					setFilter();
+			}
+			
+			/* Handle when user hits enter key on a form element -> dispatch the click event for the element */
+			private function enterButton(event:KeyboardEvent):void 
+			{                
+				if (event.keyCode == Keyboard.ENTER)
+				{
+					// Create new event object.
+					var mev:MouseEvent = new MouseEvent(MouseEvent.CLICK);
+					// Dispatch click event to the target of original keydown event.
+					event.currentTarget.dispatchEvent(mev);                 
+				}
+			}
+			
+			/* Convert the datagridcolumn into date format. Call the <mx:DateFormatter> 
+			for that purpose
+			*/
+			private function dateLabel(item:Object, column:DataGridColumn):String
+			{
+				return dateFormatter.format(item[column.dataField]);
+			}
+			
+			public function hideInfo(e:Event):void
+			{
+				//btnRefreshData.visible = false;
+				dataAsOf.visible = false;
+			}
+			
+			public function showInfo(e:Event):void
+			{
+				//btnRefreshData.visible = true;
+				dataAsOf.visible = true;
+			}
+			
+			public function uncheckSelectedItems(e:Event):void
+			{
+				for each(var o:Object in this.dg.dataProvider.source)
+				{
+					if(o['isSelected'] == true)
+					{
+						o['isSelected'] = false;
+					}
+				}	
+			}
+			
+			/* Generate xls file for the datagrid records */
+			private function callExportXLS():void
+			{					
+				var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.EXPORT_XLS);
+				this.dispatchEvent(event);		
+			}
+			
+			/* Populate objGridColumnSize object for column width.
+			This function adjusts the width of the grid columns when users adjust the slider ontrol.
+			It can work the other way too - By manually adjusting the grid column's width, the slider
+			control also adjusts.
+			*/
+			public function callSetColumnSize(columnHeader:String,type:String):void
+			{
+				
+				for(var i:int = 0;i<dg.columns.length;i++){
+					var col:DataGridColumn = DataGridColumn(dg.columns[i]);
+					/* When the user either adjusts the "Status" column manually or by adjusting the slider control. */
+					if(col.headerText == 'Status' && columnHeader == 'Status')
+					{	
+						/* If the user has manually adjusted the width of the "status " column,adjust the slider accordingly.*/
+						if(type =='header'){
+								sliderStatusSize.value = col.width;
+						}
+							this.objGridColumnSize.status = sliderStatusSize.value;
+					}	
+					if(col.headerText == 'RFA Age' && columnHeader == 'RFA Age')
+					{
+						if(type =='header'){
+							sliderRFAAgeSize.value = col.width;
+						}				
+						this.objGridColumnSize.rfaAge = sliderRFAAgeSize.value;		
+					}				
+					if(col.headerText == 'Program' && columnHeader == 'Program')
+					{
+						if(type =='header'){
+							sliderProgramSize.value = col.width;
+						}	
+						this.objGridColumnSize.program = sliderProgramSize.value;		
+					}
+					if(col.headerText == 'Title' && columnHeader == 'Title')
+					{
+						if(type =='header'){
+							sliderTitleSize.value = col.width;
+						}	
+						this.objGridColumnSize.title = sliderTitleSize.value;		
+					}
+					if(col.headerText == 'Type' && columnHeader == 'Type')
+					{
+						if(type =='header'){
+							sliderTypeSize.value = col.width;
+						}	
+						this.objGridColumnSize.type = sliderTypeSize.value;		
+					}	
+					if(col.headerText == 'Start Date' && columnHeader == 'Start Date')
+					{
+						if(type =='header'){
+							sliderStartDateSize.value = col.width;
+						}	
+						this.objGridColumnSize.startDate = sliderStartDateSize.value;	
+					}
+					if(col.headerText == 'End Date' && columnHeader == 'End Date')
+					{
+						if(type =='header'){
+							sliderEndDateSize.value = col.width;
+						}	
+						this.objGridColumnSize.endDate = sliderEndDateSize.value;		
+					}
+					if(col.headerText == 'RSP' && columnHeader == 'RSP')
+					{
+						if(type =='header'){
+							sliderRSPSize.value = col.width;
+						}	
+						this.objGridColumnSize.rsp = sliderRSPSize.value;	
+					}
+					/* (start) optional columns, based on setting */
+					if(col.headerText == sDisplayTradeDollarsLabel && columnHeader == sDisplayTradeDollarsLabel)
+					{
+						if(type =='header'){
+							sliderTradeDollarsSize.value = col.width;
+						}	
+						this.objGridColumnSize.tradeDollars = sliderTradeDollarsSize.value;	
+					}
+					if(col.headerText == sDisplayPaymentDollarsLabel && columnHeader == sDisplayPaymentDollarsLabel)
+					{
+						if(type =='header'){
+							sliderPaymentDollarsSize.value = col.width;
+						}	
+						this.objGridColumnSize.paymentDollars = sliderPaymentDollarsSize.value;	
+					}
+					if(col.headerText == sDisplayVolumeLabel && columnHeader == sDisplayVolumeLabel)
+					{
+						if(type =='header'){
+							sliderVolumeSize.value = col.width;
+						}	
+						this.objGridColumnSize.volume = sliderVolumeSize.value;	
+					}
+					if(col.headerText == 'More Info' && columnHeader == 'More Info')
+					{
+						if(type =='header'){
+							sliderMoreInfoSize.value = col.width;
+						}	
+						this.objGridColumnSize.moreInfo = sliderMoreInfoSize.value;	
+					}
+					if(col.headerText == sBusinessSegmentsLabel && columnHeader == sBusinessSegmentsLabel)
+					{
+						if(type =='header'){
+							sliderBusinessSegmentSize.value = col.width;
+						}	
+						this.objGridColumnSize.businessSegment = sliderBusinessSegmentSize.value;	
+					}					
+				}
+
+				var eventSetColumnSize:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SET_COLUMN_SIZE);
+				eventSetColumnSize.eSearchGridColumnSize = this.objGridColumnSize;
+				this.dispatchEvent(eventSetColumnSize);
+			}
+			
+			/* Click on save to save the column width values. */
+			public function saveColumnSize():void
+			{				
+				/* Save column size */
+				var event:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SAVE_ALL_COLUMNS_SIZE);
+					event.userId = iUserID;					
+					event.eSearchGridColumnSize = this.objGridColumnSize;
+					this.dispatchEvent(event);				
+			}
+			
+			private function callColumnWidthResize(evt:DataGridEvent):void
+			{
+				var col_Header:String;
+				
+				if(evt.dataField == 'status_abbreviation'){
+					col_Header = 'Status'
+				}
+				else if(evt.dataField == 'rfa_age'){
+					col_Header = 'RFA Age'
+				}
+				else if(evt.dataField == 'contract_number'){
+					col_Header = 'Program'
+				}
+				else if(evt.dataField == 'contract_title'){
+					col_Header = 'Title'
+				}
+				else if(evt.dataField == 'created_type'){
+					col_Header = 'Type'
+				}
+				else if(evt.dataField == 'contract_start_date'){
+					col_Header = 'Start Date'
+				}
+				else if(evt.dataField == 'contract_end_date'){
+					col_Header = 'End Date'
+				}
+				else if(evt.dataField == 'rsp_user'){
+					col_Header = 'RSP'
+				}
+				else if(evt.dataField == 'payment_history'){
+					col_Header = 'More Info'
+				}
+				
+				callSetColumnSize(col_Header,'header');
+					
+			}
+			
+			private function getColumnDataField(column:String):String
+			{
+				var col_data_field:String;
+				
+				if(column == 'isSelected'){
+					col_data_field = 'isSelected'
+				}
+				else if(column == 'contractMainID'){
+					col_data_field = 'contract_main_id'
+				}
+				else if(column == 'BidRequestStatus'){
+					col_data_field = 'BidRequest_Status'
+				}
+				else if(column == 'status'){
+					col_data_field = 'status_abbreviation'
+				}
+				else if(column == 'rfaAge'){
+					col_data_field = 'rfa_age'						
+				}
+				else if(column == 'program'){
+					col_data_field = 'contract_number'						
+				}				
+				else if(column == 'title'){
+					col_data_field = 'contract_title'
+				}
+				else if(column == 'type'){
+					col_data_field = 'created_type'
+				}
+				else if(column == 'startDate'){
+					col_data_field = 'contract_start_date'
+				}
+				else if(column == 'endDate'){
+					col_data_field = 'contract_end_date'
+				}
+				else if(column == 'rsp'){
+					col_data_field = 'rsp_user'
+				}
+				else if(column == 'tradeDollars'){
+					col_data_field = 'program_trade_spend'
+				}
+				else if(column == 'paymentDollars'){
+					col_data_field = 'program_payment'
+				}
+				else if(column == 'volume'){
+					col_data_field = 'program_volume'
+				}
+				else if(column == 'moreInfo'){
+					col_data_field = 'payment_history'
+				}	
+				else if(column == 'businessSegment'){
+					col_data_field = 'business_segment'
+				}					
+				return col_data_field;				
+			}	
+			
+			private function callColumnsHideShow():void
+			{
+				var arrColSize:Array = new Array();
+				/*
+				 Note:The order of columns below, i.e. status,rfaAge,program etc
+				is the same order of the columns below on "nx:datagrid". If the user
+				did not change the column sequence on the grid, the array antries will
+				be saved in the default order of columns on nx:datagrid".
+				If a user uses "drag and drop" to change the column sequence, then the order of
+				sequence in "datagridColumns" array automatically changes. So that this function
+				is called to update the "includeColumnList" array for the sequence of columns,
+				"headerShift" event on the grid calls this function.
+				*/			
+				
+				/* "isSelected" is the checkbox column and will always be shown */
+				arrColSize.push('isSelected:1');
+				/* Hide the next two columns. These columns will only be shown when a user takes certain action.
+				By default, i.e. on data load, it willl always be OFF.
+				*/
+				arrColSize.push('contractMainID:0');
+				arrColSize.push('BidRequestStatus:0');
+								
+				for(var i:int = 0;i<dg.columns.length;i++){
+					var col:DataGridColumn = DataGridColumn(dg.columns[i]);
+					
+					if(col.dataField== 'status_abbreviation')
+					{	
+						col.visible = cbStatusShowColumn.selected;
+						arrColSize.push('status:'+int(cbStatusShowColumn.selected));
+					}
+					if(col.dataField== 'rfa_age')
+					{	
+						col.visible = cbRFAAgeShowColumn.selected;
+						arrColSize.push('rfaAge:'+int(cbRFAAgeShowColumn.selected));
+					}
+					if(col.dataField== 'contract_number')
+					{	
+						col.visible = cbProgramShowColumn.selected;
+						arrColSize.push('program:'+int(cbProgramShowColumn.selected));
+					}	
+					if(col.dataField== 'contract_title')
+					{	
+						col.visible = cbTitleShowColumn.selected;
+						arrColSize.push('title:'+int(cbTitleShowColumn.selected));
+					}	
+					if(col.dataField== 'created_type')
+					{	
+						col.visible = cbTypeShowColumn.selected;
+						arrColSize.push('type:'+int(cbTypeShowColumn.selected));
+					}	
+					if(col.dataField== 'contract_start_date')
+					{	
+						col.visible = cbStartDateShowColumn.selected;
+						arrColSize.push('startDate:'+int(cbStartDateShowColumn.selected));
+					}	
+					if(col.dataField== 'contract_end_date')
+					{	
+						col.visible = cbEndDateShowColumn.selected;
+						arrColSize.push('endDate:'+int(cbEndDateShowColumn.selected));
+					}	
+					if(col.dataField== 'rsp_user')
+					{	
+						col.visible = cbRSPShowColumn.selected;
+						arrColSize.push('rsp:'+int(cbRSPShowColumn.selected));
+					}	
+					if(col.dataField== 'program_trade_spend')
+					{	
+						col.visible = cbTradeDollarsShowColumn.selected;
+						arrColSize.push('tradeDollars:'+int(cbTradeDollarsShowColumn.selected));
+					}						
+					if(col.dataField== 'program_payment')
+					{	
+						col.visible = cbPaymentDollarsShowColumn.selected;
+						arrColSize.push('paymentDollars:'+int(cbPaymentDollarsShowColumn.selected));
+					}	
+					if(col.dataField== 'program_volume')
+					{	
+						col.visible = cbVolumeShowColumn.selected;
+						arrColSize.push('volume:'+int(cbVolumeShowColumn.selected));
+					}					
+					if(col.dataField== 'payment_history')
+					{	
+						col.visible = cbMoreInfoShowColumn.selected;
+						arrColSize.push('moreInfo:'+int(cbMoreInfoShowColumn.selected));
+					}
+					if(col.dataField== 'business_segment')
+					{	
+						col.visible = cbBusinessSegmentShowColumn.selected;
+						arrColSize.push('businessSegment:'+int(cbBusinessSegmentShowColumn.selected));
+					}						
+				}
+
+				this.objGridColumnSize.includeColumnList = arrColSize;
+				
+				/* "SET COLUMN SIZE" is not only used to set the column size but also the "SEQUENCE" and "HIDE/SHOW" status
+				of the columns which is stored in the "includeColumnList" array.
+				*/
+				var eventSetColumnSize:SearchProgramEvent = new SearchProgramEvent(SearchProgramEvent.SET_COLUMN_SIZE);
+				eventSetColumnSize.eSearchGridColumnSize = this.objGridColumnSize;
+				this.dispatchEvent(eventSetColumnSize);				
+			}
+			
+			/* Put the selected programs in an array */
+			private function updateSearchAndUploadDocs(type:int):void
+			{			
+				this.strImportItems = new String();
+				this.arrImportItems = new Array();
+				
+				for each(var oItem:Object in dgProgramData.source)
+				{
+					if(oItem['isSelected'] == true)
+					{
+						this.arrImportItems.push(oItem['contract_main_id']);
+					}
+					
+					this.strImportItems = this.arrImportItems.toString();
+				}
+				searchAndUploadDocsConfirm(type);
+			}
+			
+			/* The user should select at least one program before uploading or deleting documents */
+			private function searchAndUploadDocsConfirm(type:int):void
+			{
+				var alertResult:Alert;
+				
+				/* If the user has selected at least one program */
+				if(this.arrImportItems.length == 0){          
+					Alert.show("Please select at least one program");
+				}  
+				else{
+					searchAndUploadDocs(type);
+				}        
+			 }
+			
+			/* Open a popup where the user can upload and search documents. */
+			private function searchAndUploadDocs(type:int) : void
+			{
+				var winjscommand:String;				
+				
+				if (ExternalInterface.available)
+				{
+					ExternalInterface.addCallback("saveDocs", saveDocs);
+					
+					/* upload documents */
+					if(type == 1)
+					{
+						winjscommand ="/common_files/documents/create_multiple_document_details.cfm?FormName=flex&FlexAppName=SearchProgramMain&ProgramList="+this.strImportItems;	
+					}
+						/* search documents */
+					else
+					{
+						winjscommand ="/common_files/Documents/Attach_Document.cfm?FormName=flex&FlexAppName=SearchProgramMain&ProgramList="+this.strImportItems;
+						
+					}
+					var jscommand:String = "window.open('"+winjscommand+"','winPrint','height=600,width=810,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=no');"   
+					var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+					navigateToURL(url, "_self");
+				}
+			}
+			
+			/* This is called when the documents upload process is completed. */
+			public function saveDocs():void
+			{			
+				/* Below code will refresh the data. If needed, it can be added. */
+				//dispatchSearchEventGet();
+				//Alert.show("The document process is completed.\n\n Refreshing data now.");
+				Alert.show("The document process is completed.");
+			}
+			
+			/* This function is called on "data load". */
+			public function resetColumnOrder(e:Event):void{
+				tmpArray = [];
+				datagridColumns = dg.columns;
+				var arrColumn:Array = new Array();
+				var colDataField:String;	
+				
+				/* Loop through the sequence of columns stored in the db. The data is in "FieldName:Hide/Show" format.
+				Eg: "title:1" or "rsp:0". The list of columns is stored in a sequence in the db - It is the seqeunce saved
+				by the user. The "hide/show" for every column is also stored in the db. If the user has not saved this data,
+				default data will be used.
+				*/
+				for(var i:Number=0; i<this.objGridColumnSize.includeColumnList.length; i++){
+					arrColumn = this.objGridColumnSize.includeColumnList[i].split(':');
+					/* data column */
+					colDataField = getColumnDataField(arrColumn[0]);
+					/* data column - hide/show */
+					var bShowColumn:Boolean = (arrColumn[1] == "1") ? true : false;
+					
+					/* Loop through the datagrid columns. This list and order will be the order at the bottom of this file,
+					where "mx:DataGrid" is used. If the column exists in both - db and "mx:DataGrid", then the hide/show 
+					status (bShowColumn) of that column will come from the db.
+					*/
+					for(var j:Number=0; j<datagridColumns.length; j++){
+						if(colDataField == datagridColumns[j].dataField){
+							//trace(arrColumn[i], "MATCHES", datagridColumns[j].dataField);
+							datagridColumns[j].visible = bShowColumn;
+							/* Add columns to "tmpArray" */
+							tmpArray.push(datagridColumns[j]);
+						}
+					}
+				}
+				
+				/* In case, a new column is added on the "mx:DataGrid" below and a new entry for that column is not made in the db 
+				(table - Program_Search_Grid_Field_Include). That column will still be added.
+				*/
+				for(var m:Number=0; m<datagridColumns.length; m++){	
+					var columnFound:Boolean = false;
+					for(var n:Number=0; n<this.objGridColumnSize.includeColumnList.length; n++){
+						arrColumn = this.objGridColumnSize.includeColumnList[n].split(':');
+						colDataField = getColumnDataField(arrColumn[0]);
+					
+						if(colDataField == datagridColumns[m].dataField){
+							columnFound = true;
+						}
+					}
+					/* If the column is not found in "includeColumnList", i.e. in the db, then add that column to the array in the same
+					position as it is in the "mx:DataGrid" below.
+					*/
+					if(columnFound == false){
+							/* Add columns to "tmpArray" in the same sequence as in the "mx:DataGrid" below. */
+							tmpArray.splice(m,0,datagridColumns[m]);						
+					}
+
+				}	
+				
+				/* reset the grid columns */
+				dg.columns = tmpArray;
+			}
+			
+			private function hideDeleteOption():void{
+				bShowDeleteOptionSelection=false;
+			}
+		]]>
+</mx:Script>
+	<mate:Listener type="{SearchProgramEvent.SET_FILTER}" method="setStatusFilter"   />
+	
+	<mate:Listener type="{SearchProgramEvent.DATA_GRID_SORT}" method="SortGridData" />
+	
+	<mate:Listener type="{SearchProgramEvent.FILTER_PROGRAMS}" method="CallFilterPrograms" />		
+	
+	<!-- Date Formatter -->	
+	<mx:DateFormatter id="dateFormatter" 
+					  formatString="MM/DD/YYYY"/>	
+	<!-- Dollar Formatter -->	
+	<mx:NumberFormatter id="numberFormatterDollars" 
+						precision="2" />
+	<!-- Volume Formatter -->	
+	<mx:NumberFormatter id="numberFormatterVolume" 
+						precision="0" />
+	
+	<!-- States _______________________________________________________ -->
+	<mx:states>
+		<mx:State name="fullRight">
+			<mx:SetProperty target="{pnlSelected}" name="x" value="-210" />
+			<mx:RemoveChild target="{pnlSelected}" />
+			<!-- I dont think we need 'SetProperty' for col1 and col2 -->
+			<!--<mx:SetProperty target="{col1}" name="width" value="0%" />
+			<mx:SetProperty target="{col2}" name="width" value="100%" />-->
+			<mx:SetProperty target="{fullBox}" name="height" value="100%" />
+			<mx:SetProperty target="{pnlAll}" name="height" value="100%" />
+			<mx:SetProperty target="{pnlAll}" name="width" value="100%" />
+		</mx:State>
+	</mx:states>	
+	
+	
+	<mx:transitions>
+		<mx:Transition id="showAll" fromState="fullRight" toState="">
+			<mx:Sequence>
+				<mx:Move duration="300" target="{pnlSelected}" />
+				<mx:Resize duration="300" target="{pnlSelected}" />
+				<mx:Resize duration="300" target="{pnlAll}" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition id="showRight" fromState="" toState="fullRight">
+			<mx:Parallel>
+				<mx:Fade duration="300" target="{pnlSelected}" alphaFrom="0" alphaTo="1"/>
+				<mx:Resize duration="300" target="{pnlAll}" />
+			</mx:Parallel>
+		</mx:Transition>
+	</mx:transitions>
+	<!-- I dont think we need 'constraintColumns' below -->
+	<!--
+	<mx:constraintColumns>
+	<mx:ConstraintColumn id="col1" width="40%"/>
+	<mx:ConstraintColumn id="col2" width="60%"/>
+	</mx:constraintColumns>
+	
+	<mx:constraintRows>
+	<mx:ConstraintRow id="row1" height="60%"/>
+	<mx:ConstraintRow id="row2" height="40%"/>
+	</mx:constraintRows>
+	-->
+	<mx:HDividedBox id="fullBox" height="100%" width="100%" paddingTop="0" paddingRight="0" paddingBottom="0" paddingLeft="0" top="2" right="2" bottom="2" left="2">	
+		<!-- Milan(23995) Leave the minHeight to be 568, otherwise the Left Panel resizes on toggle - Full screen datagrid view -->
+		<mx:Panel id="pnlSelected" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333" minWidth="185" height="{fullBox.height}" 
+				  name="selectedPrograms" title="Program Search Options" top="2" right="col1:2" bottom="row1:2" left="2" paddingTop="0">		
+			<mx:VBox width="100%" left="5" height="100%" verticalGap="0">
+				<mx:VBox width="250" horizontalScrollPolicy="off" verticalAlign="middle">	
+					<mx:HBox width="100%" verticalGap="0"  verticalAlign="middle">
+						<mx:Label text="selected criteria" fontFamily="Century Gothic" fontWeight="bold" fontSize="11" />
+						<mx:Image id="SelectedOptions" source="/flex/assets/images/i.gif" useHandCursor="true" buttonMode="true" mouseChildren="false"/>
+					</mx:HBox>				
+				</mx:VBox>
+				
+				<mx:TabNavigator id="tbNavList" width="100%" height="100%"
+								 creationComplete="this.tbNavList.selectedIndex = 0" tabWidth="79">
+					<mx:Canvas label="search" width="100%" height="100%" horizontalScrollPolicy="off">
+						<!-- Change "veriticalGap" here to alter veriticalGap between the controls on the screen -->		
+						<mx:VBox verticalGap="1">
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<mx:HBox verticalAlign="top" horizontalGap="0" >
+									<mx:Label text="Program" width="70" />
+									<mx:TextInput 
+										tabEnabled="true" 
+										text="" 
+										id="Program_Info" 
+										toolTip="Keyword search on any of the fields:&#13; ID, Title, {sReferenceNumberLabel}."
+										keyDown="enterSearchBox(event);" 
+										height="{iTextInputHeight}"
+										width="160"/>
+								</mx:HBox>
+							</mx:VBox>
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<mx:HBox verticalAlign="top" horizontalGap="0">
+									<mx:Label text="{sDistributorLabel}" width="70"/>
+									<mx:TextInput 
+										tabEnabled="true" 
+										text="" 				
+										id="Distributor_Info" 					  	
+										toolTip="Keyword search on any of the fields:&#13;{sShardShipToLabel}, Name, City, State,&#13;{sFamilyLabel} ID, {sFamilyLabel} Name,&#13;{sBuyingGroupLabel} ID, {sBuyingGroupLabel} Name." 
+										keyDown="enterSearchBox(event);"
+										height="{iTextInputHeight}"
+										width="160" />
+								</mx:HBox>
+							</mx:VBox>
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<mx:HBox verticalAlign="top" horizontalGap="0">
+									<mx:Label text="{sOperatorLabel}" width="70"/>
+									<mx:TextInput 
+										tabEnabled="true" 
+										text=""
+										id="Operator_Info" 		  	
+										toolTip="Keyword search on any of the fields:&#13; ID, Name, City, State, Zip, Location Type."
+										keyDown="enterSearchBox(event);"
+										height="{iTextInputHeight}"
+										width="160" />
+								</mx:HBox>
+							</mx:VBox>	
+							<mx:VBox verticalAlign="top" verticalGap="3">
+								<mx:HBox verticalAlign="top" horizontalGap="0">
+									<mx:Label text="Item" width="70"/>
+									<mx:TextInput 
+										tabEnabled="true" 
+										text=""
+										id="Item_Info" 					  	
+										toolTip="Keyword search on any of the fields:&#13; {sItemLabel}, Description, Brand Name, {sQbrandLabel},&#13;{sTypeCodeLabel}, {sTypeGroupLabel}." 
+										keyDown="enterSearchBox(event);"
+										height="{iTextInputHeight}"
+										width="160" />
+								</mx:HBox>
+								<mx:HBox verticalAlign="bottom">
+									<mx:Button 
+										click="FilterPrograms()"
+										label="search"
+										height="{iButtonHeight}"
+										keyDown="enterButton(event);">
+									</mx:Button>	
+									<mx:Button 
+										click="ResetFilters()"
+										label="reset"
+										height="{iButtonHeight}">
+									</mx:Button>
+								</mx:HBox>
+								<mx:VBox verticalAlign="top" verticalGap="0">						
+									<mx:Text text="Hold Ctrl key to multi-select from the drop downs" fontSize="9" color="#4169E1" />		  		
+									<ba:MultiComboBox
+										toolTip="filter:Program Status" 
+										id="ProgramStatus"  
+										labelField="Contract_Status_Type_Desc"
+										width="189"
+										dataProvider="{dpStatus}"
+										change="FilterPrograms()"
+										top="0"
+										rowCount="{Combo_Box_Size}"
+										height="{iComboBoxHeight}">
+									</ba:MultiComboBox> 
+								</mx:VBox>
+							</mx:VBox>
+							
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox 
+									toolTip="filter:Program Template" 
+									id="ProgramTemplate" 
+									labelField="Created_Type"
+									width="189"
+									dataProvider="{dpTemplate}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}"
+									dropdownWidth="{iComboBoxContentWidth}">
+								</ba:MultiComboBox>	
+							</mx:VBox>
+							
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox 
+									toolTip="filter:Responsible Sales Person" 
+									id="Responsible_Sales_Person" 
+									labelField="User_Name"
+									width="189"
+									dataProvider="{dpRSP}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}">
+								</ba:MultiComboBox>
+							</mx:VBox>
+							
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox 
+									toolTip="filter:{sBuyingGroupLabel}" 
+									id="BuyingGroups" 
+									labelField="Buying_Group_Name"
+									width="189"
+									dataProvider ="{dpBuyingGroups}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}">
+								</ba:MultiComboBox>
+							</mx:VBox>
+							
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox 
+									toolTip="filter:{sFamilyLabel}" 
+									id="FamilyName" 
+									labelField="Family_Name"
+									width="189"
+									dataProvider="{dpFamilyNames}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}">
+								</ba:MultiComboBox>
+							</mx:VBox>
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox 
+									id="Conditions" 
+									width="189"
+									dataProvider="{dpConditions}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}">
+								</ba:MultiComboBox>	
+							</mx:VBox>
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox 
+									toolTip="filter: Program" 
+									id="ProgramInfo" 
+									change="FilterPrograms()"
+									labelField="Program_info"
+									width="189"
+									dataProvider="{dpProgram}"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}">
+								</ba:MultiComboBox>	
+							</mx:VBox>
+							<!-- The programs are filtered after SetUserPosition() sets the
+							user position on the "User Position" dropdown.
+							-->
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<mx:ComboBox 
+									toolTip="filter:User Position of" 
+									id="UserName" 
+									labelField="User_Name"
+									width="189"
+									dataProvider="{dpUsers}"
+									change="SetUserPosition();"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}">
+								</mx:ComboBox>
+							</mx:VBox>
+							
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox
+									toolTip="filter:User Position" 
+									id="UserPositions" 
+									labelField="Position_Label_And_ID"
+									width="189"
+									dataProvider="{dpUserPositions}"
+									selectedIndex = "{siUserPositions}"
+									change="UserName.selectedIndex=0;FilterPrograms();"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}"
+									dropdownWidth="{iComboBoxContentWidth}">
+								</ba:MultiComboBox>
+							</mx:VBox>		
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<mx:ComboBox 
+									toolTip="filter:Program Actions" 
+									id="Report_List" 
+									labelField="Report_info"
+									width="189"
+									dataProvider="{dpReportType}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}">
+								</mx:ComboBox>
+							</mx:VBox>
+							<mx:VBox verticalAlign="top" verticalGap="0">
+								<ba:MultiComboBox
+									toolTip="filter:Budget Classes" 
+									id="budgetClasses" 
+									labelField="Budget_Class_Desc"
+									width="189"
+									dataProvider="{dpBudgetClasses}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}"
+									visible="{bshowbudgetDropdown}"
+									includeInLayout="{bshowbudgetDropdown}">
+								</ba:MultiComboBox>
+							</mx:VBox>							
+							<mx:VBox verticalAlign="top" verticalGap="4">
+								<!-- (start) optional filter, based on setting -->
+								<ba:MultiComboBox
+									toolTip="filter:{sBusinessSegmentsLabel}" 
+									id="businessSegments" 
+									labelField="Business_Unit_Desc"
+									width="189"
+									dataProvider="{dpBusinessSegments}"
+									change="FilterPrograms()"
+									rowCount="{Combo_Box_Size}"
+									height="{iComboBoxHeight}"
+									visible="{bshowBusinessSegment}"
+									includeInLayout="{bshowBusinessSegment}">
+								</ba:MultiComboBox>								
+								
+								<!-- (end) optional filter, based on setting -->
+								<mx:HBox verticalAlign="top" horizontalGap="3">
+									<mx:Button 
+										click="FilterPrograms()"
+										label="search"
+										height="{iButtonHeight}"
+										keyDown="enterButton(event);">
+									</mx:Button>	
+									<mx:Button 
+										click="ResetFilters()"
+										label="reset"
+										height="{iButtonHeight}">
+									</mx:Button>		
+								</mx:HBox>
+								<mx:HBox verticalAlign="bottom">
+									<mx:Button
+										toolTip="Create a Program"
+										id="CreateProgram" 
+										click="createProgram()"
+										label="create program"
+										height="{iButtonHeight}"
+										visible="{bCreateProgramAccess}"
+										includeInLayout="{bCreateProgramAccess}">
+									</mx:Button>
+									<mx:Button
+										toolTip="Generate Excel file"
+										id="btnExportXLS" 
+										click="callExportXLS()"
+										label="download data"
+										height="{iButtonHeight}">
+									</mx:Button>
+								</mx:HBox>
+								<mx:HBox horizontalGap="5" fontSize="9" fontFamily="Century Gothic" verticalAlign="middle">
+									<mx:Label text="Data View" fontSize="10" fontWeight="bold" width="65" fontFamily="Verdana"/>
+									<mx:RadioButtonGroup id="DataLoadType" itemClick="loadData(event);"/>
+									
+									<mx:RadioButton groupName="DataLoadType" id="rdoProgram" value="Program" scaleX="0.7" scaleY="0.7"/>
+									<mx:Label text="program" color="#4169E1" fontSize="9" fontFamily="Century Gothic" />
+									
+									<mx:Label text="OR"  fontSize="9" fontFamily="Verdana" fontWeight="bold" visible="{bPrgReadOnlyCatalogAccess}" includeInLayout="{bPrgReadOnlyCatalogAccess}" />
+									
+									<mx:RadioButton groupName="DataLoadType" id="rdoCatalog" value="Catalog" scaleX="0.7" scaleY="0.7" visible="{bPrgReadOnlyCatalogAccess}" includeInLayout="{bPrgReadOnlyCatalogAccess}" />					
+									<mx:Label text="catalog" color="#4169E1" fontSize="9" fontFamily="Century Gothic" visible="{bPrgReadOnlyCatalogAccess}" includeInLayout="{bPrgReadOnlyCatalogAccess}"/>
+								</mx:HBox>				
+							</mx:VBox>
+							<mx:VBox verticalAlign="bottom" verticalGap="1">
+								<mx:HBox horizontalGap="5" verticalAlign="middle">
+									<mx:RadioButtonGroup id="ArchiveSearch" itemClick="loadData(event);"/>
+									
+									<mx:RadioButton groupName="ArchiveSearch" id="rdoCurrent" value="Current" scaleX="0.7" scaleY="0.7" />
+									<mx:Label id="lblCurrent" text="current" color="#4169E1" fontSize="9" fontFamily="Century Gothic" />
+									
+									<mx:Label text="OR" id="lblOR" fontSize="9" fontFamily="Verdana" fontWeight="bold" />
+						
+									<mx:RadioButton groupName="ArchiveSearch" id="rdoArchiveDateRange" value="DateRange" scaleX="0.7" scaleY="0.7" />
+									<mx:Label id="lblDateRange" text="date range" color="#4169E1" fontSize="9" fontFamily="Century Gothic" />
+								</mx:HBox>
+								<mx:HBox id="dtDateRange" horizontalGap="5" horizontalAlign="left" width="255" horizontalScrollPolicy="off">
+									<mx:DateField id="dtStart"  
+												  editable="true"
+												  width="90" />
+									<mx:DateField id="dtEnd"
+												  editable="true"
+												  width="90" />
+								</mx:HBox>
+								<mx:HBox horizontalGap="0" fontSize="9" fontFamily="Century Gothic" verticalAlign="middle">
+									<mx:Label text="Favorites" fontSize="10" fontWeight="bold" width="59" fontFamily="Verdana"/>
+									<mx:Label text="(Click on the 'tools' tab to access)" fontSize="9" color="#4169E1" width="100%" fontFamily="Verdana"/>
+								</mx:HBox>	
+								<mx:HBox>
+									<mx:Text text="Name:" />
+									<mx:TextInput id="tListName"  maxChars="25" width="135" height="{iTextInputHeight}" toolTip="To access your favorites, go to the favorites tab.&#13;To save a favorite&#13;Enter your search criteria &#13;In the name field, enter a name for your favorite&#13;Click Save" />
+									<mx:Button id="btnSaveUserList" label="save" click="saveUserList();" toolTip="Save selected query for later use" height="{iButtonHeight}"/>
+								</mx:HBox>
+							</mx:VBox>
+							
+							<mx:VBox verticalAlign="bottom" verticalGap="0">
+								<mx:HBox verticalAlign="bottom">
+								</mx:HBox>
+							</mx:VBox>
+							
+						</mx:VBox>
+					</mx:Canvas>
+					<mx:Canvas label="create list" width="100%" height="100%" click="hideDeleteOption();">
+						<mx:VBox  id="crList" label="create list" width="100%" height="100%" paddingLeft="5">
+							<mx:TextArea height="300" width="180" id="txtCrList"
+										 toolTip="To search for a list of programs:&#13;Type or paste in a list of programs.{sExactListMatchingOnMessage} Separate each program by the enter key. Click search."
+										 wordWrap="false" editable="true" enabled="true"
+										 keyUp="this.updateCreateList()">
+							</mx:TextArea>
+							<mx:Button id="btnCreateList" label="search" click="callCreateList(this.txtCrList.text);" height="{iButtonHeight}"/>
+						</mx:VBox>
+					</mx:Canvas>
+					<mx:Canvas label="tools" width="100%" height="100%" click="hideDeleteOption();">
+						<mx:VBox id="svSearch" label="favorites" width="100%" height="100%" paddingLeft="5">
+							<mx:List id="lsUserList" dataProvider="{arrUserList}" 
+									 labelField="LIST_NAME" height="200" width="180"
+									 doubleClickEnabled="true" itemDoubleClick="this.getUserListItems();"
+									 keyDown="enterUserListRow(event);"
+									 toolTip="To see one of your favorites:&#13;Double click on the Favorites Name.&#13;The Favorites list will appear on the right hand side." />
+							<mx:HBox>
+								<mx:Button id="btnGetListItems" label="search" click="getUserListItems();" toolTip="Display the programs in the selected list" height="{iButtonHeight}"/>
+								<mx:Button id="btnDeleteList" label="delete" click="deleteUserList();" toolTip="Delete the selected list" height="{iButtonHeight}"/>
+							</mx:HBox>
+							
+							<mx:HBox width="100%">
+								<mx:HRule width="100%" />
+							</mx:HBox>
+		
+							<mx:HBox>
+								<mx:Text text="1.Check the box to display the column&#13;2.Drag the scale right/left to adjust&#13;width of column&#13;3.In the results list,select the column&#13;header you want to move, drag/drop it&#13;to a new location&#13;4.Click ‘save’ button below to save and&#13;store your column preferences" fontWeight="bold" />
+							</mx:HBox>
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="Status"  width="65" />
+								<mx:CheckBox id="cbStatusShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('status:1') != -1}" />
+								<mx:HSlider id="sliderStatusSize"
+										 minimum="30"
+										 maximum="425"
+										 value="{this.objGridColumnSize.status}"
+										 liveDragging="true"
+										 change="callSetColumnSize('Status','slider')" /> 			
+							</mx:HBox>							
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="RFA Age"  width="65" />
+								<mx:CheckBox id="cbRFAAgeShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('rfaAge:1') != -1}" />
+								<mx:HSlider id="sliderRFAAgeSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.rfaAge}"
+											liveDragging="true"
+											change="callSetColumnSize('RFA Age','slider')" /> 			
+							</mx:HBox>							
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="Program"  width="65" />
+								<mx:CheckBox id="cbProgramShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('program:1') != -1}" />
+								<mx:HSlider id="sliderProgramSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.program}"
+											liveDragging="true"
+											change="callSetColumnSize('Program','slider')" /> 			
+							</mx:HBox>
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="Title"  width="65" />
+								<mx:CheckBox id="cbTitleShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('title:1') != -1}" />
+								<mx:HSlider id="sliderTitleSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.title}"
+											liveDragging="true"
+											change="callSetColumnSize('Title','slider')" /> 			
+							</mx:HBox>							
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="Type"  width="65" />
+								<mx:CheckBox id="cbTypeShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('type:1') != -1}" />
+								<mx:HSlider id="sliderTypeSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.type}"
+											liveDragging="true"
+											change="callSetColumnSize('Type','slider')" /> 			
+							</mx:HBox>							
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="Start Date"  width="65" />
+								<mx:CheckBox id="cbStartDateShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('startDate:1') != -1}" />
+								<mx:HSlider id="sliderStartDateSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.startDate}"
+											liveDragging="true"
+											change="callSetColumnSize('Start Date','slider')"/> 			
+							</mx:HBox>
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="End Date"  width="65" />
+								<mx:CheckBox id="cbEndDateShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('endDate:1') != -1}" />
+								<mx:HSlider id="sliderEndDateSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.endDate}"
+											liveDragging="true"
+											change="callSetColumnSize('End Date','slider')" /> 			
+							</mx:HBox>							
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="RSP"  width="65" />
+								<mx:CheckBox id="cbRSPShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('rsp:1') != -1}" />
+								<mx:HSlider id="sliderRSPSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.rsp}"
+											liveDragging="true"
+											change="callSetColumnSize('RSP','slider')" /> 			
+							</mx:HBox>	
+							
+							<!-- (start) optional columns, based on setting -->
+							<mx:HBox verticalAlign="bottom" visible="{bDisplayTradeDollars}" includeInLayout="{bDisplayTradeDollars}">
+								<mx:Label text="Trade $"  width="65" />
+								<mx:CheckBox id="cbTradeDollarsShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('tradeDollars:1') != -1}" />
+								<mx:HSlider id="sliderTradeDollarsSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.rsp}"
+											liveDragging="true"
+											change="callSetColumnSize(sDisplayTradeDollarsLabel,'slider:true')" /> 			
+							</mx:HBox>		
+							<!-- (start) optional columns, based on setting -->
+							<mx:HBox verticalAlign="bottom" visible="{bDisplayPaymentDollars}" includeInLayout="{bDisplayPaymentDollars}">
+								<mx:Label text="Payment $"  width="65" />
+								<mx:CheckBox id="cbPaymentDollarsShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('paymentDollars:1') != -1}" />
+								<mx:HSlider id="sliderPaymentDollarsSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.rsp}"
+											liveDragging="true"
+											change="callSetColumnSize(sDisplayPaymentDollarsLabel,'slider:true')" /> 			
+							</mx:HBox>	
+							<mx:HBox verticalAlign="bottom" visible="{bDisplayVolume}" includeInLayout="{bDisplayVolume}">
+								<mx:Label text="Volume"  width="65" />
+								<mx:CheckBox id="cbVolumeShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('volume:1') != -1}" />
+								<mx:HSlider id="sliderVolumeSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.rsp}"
+											liveDragging="true"
+											change="callSetColumnSize(sDisplayVolumeLabel,'slider')" /> 			
+							</mx:HBox>
+							<!-- (end) optional columns, based on setting -->
+							<mx:HBox verticalAlign="bottom">
+								<mx:Label text="More Info"  width="65" />
+								<mx:CheckBox id="cbMoreInfoShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('moreInfo:1') != -1}" />
+								<mx:HSlider id="sliderMoreInfoSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.moreInfo}"
+											liveDragging="true"
+											change="callSetColumnSize('More Info','slider')" /> 			
+							</mx:HBox>	
+							<mx:HBox verticalAlign="bottom" visible="{bshowBusinessSegment}" includeInLayout="{bshowBusinessSegment}">
+								<mx:Label text="{sBusinessSegmentsLabel}"  width="65" />
+								<mx:CheckBox id="cbBusinessSegmentShowColumn"
+											 data="{}" 
+											 scaleX="0.7" 
+											 scaleY="0.7"
+											 click="callColumnsHideShow()"
+											 selected="{this.objGridColumnSize.includeColumnList.indexOf('businessSegment:1') != -1}" />
+								<mx:HSlider id="sliderBusinessSegmentSize"
+											minimum="30"
+											maximum="425"
+											value="{this.objGridColumnSize.businessSegment}"
+											liveDragging="true"
+											change="callSetColumnSize(sBusinessSegmentsLabel,'slider')" /> 			
+							</mx:HBox>							
+							<!-- (end) optional columns, based on setting -->
+							<mx:HBox verticalAlign="bottom">
+								<mx:Button id="btnSaveColumnSize" label="save" click="saveColumnSize()" toolTip="save the search grid column size" />
+							</mx:HBox>
+							
+							<mx:HBox width="100%">
+								<mx:HRule width="100%" />
+							</mx:HBox>
+							
+							<mx:HBox>
+								<mx:Label text="docs" fontWeight="bold" />
+							</mx:HBox>
+							<mx:HBox>
+								<mx:Label fontSize="9" text="[" width="7" />
+								<mx:Label fontSize="9" width="98" text="upload documents" color="blue" click="updateSearchAndUploadDocs(1)" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here to upload documents for programs"/>			 	
+								<mx:Label fontSize="9" text="]" width="7" />
+							</mx:HBox>
+							<mx:HBox visible="{bSearchDocuments}" includeInLayout="{bSearchDocuments}" >
+								<mx:Label fontSize="9" text="[" width="8"  />
+								<mx:Label fontSize="9" width="98" text="search documents" color="blue" click="updateSearchAndUploadDocs(2)" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="Click here to search documents for programs"/>			 	
+								<mx:Label fontSize="9" text="]" width="8"  />
+							</mx:HBox>
+						</mx:VBox> 
+					</mx:Canvas>
+				</mx:TabNavigator>		
+</mx:VBox>
+		</mx:Panel>
+		<mx:Panel id="pnlAll" backgroundColor="0xffffff" headerColors="['0xffce84','0xffffff']" color="0x333333"
+				  bottom="row2:2" height="100%" left="col2:2" right="2" top="2"
+				  name="ProgramSearchResultsUtility" 
+				  title="Program Search Results: {this.dg.dataProvider.length} records">
+			<mx:VBox height="100%" width="100%" horizontalAlign="left">
+				<!--*******************************	FILTER FIELDS	*************************************************************** visible="{iInclude_work_in_progress_below_me == 0}"-->
+				<mx:HBox width="100%" height="20"><!-- borderStyle="solid"-->
+					<mx:VBox height="100%" width="80%">
+						<mx:HBox width="100%">
+							<mx:HBox width="5%">
+								<mx:Image id="iconRight" 
+										  useHandCursor="true" buttonMode="true"	mouseChildren="false"
+										  source="/Flex/assets/images/fullScreen.png"
+										  width="20" height="20" click="toggleState('fullRight')" toolTip="Click for Right Panel Full Screen"/>
+								<mx:Image id="iconAllR" 
+										  useHandCursor="true" buttonMode="true"	mouseChildren="false"
+										  source="/Flex/assets/images/sharedScreen.png"
+										  width="20" height="20" click="toggleState('fullAll')" toolTip="Click for both Panels Shared Screen" visible="false" includeInLayout="false" />
+							</mx:HBox>
+							<mx:HBox width="35%">
+								<mx:Button id="btnRefreshData"
+										   label="refresh data" 
+										   click="dispatchSearchEventGet();"
+										   height="{iButtonHeight}" 
+										   toolTip="Reload data set from server. Current data in view was loaded: {dSODate}"
+										   />
+								
+								<mx:Button id="btnImport" 
+										   label="import selected" 
+										   tabEnabled="true" 
+										   height="{iButtonHeight}" 
+										   visible="{this.oSettings.importlist_type}" 
+										   includeInLayout="{this.oSettings.importlist_type}"/>
+								
+								<mx:Text id="dataAsOf" text=" Data as of: {dSODate}" styleName="red" toolTip="The time stamp for the data in the current view."/>
+							</mx:HBox>
+							<mx:HBox width="50%">
+								<mx:Text text="[mass approve]" click="getSelectedEntries('MassApprove')" visible="{bMassApproveSelection}" includeInLayout="{bMassApproveSelection}" textAlign="right"  useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+								<mx:Text text="[edit won/lost status]" click="getSelectedEntries('EditStatus')" visible="{bBidRequestTemplateSelection}" includeInLayout="{bBidRequestTemplateSelection}" textAlign="right" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+								<mx:Text text="[claim rates report]" click="getSelectedEntries('ClaimRatesReport')" visible="{bShowClaimRatesReportSelection}" includeInLayout="{bShowClaimRatesReportSelection}" textAlign="right" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+								<mx:Text text="[pricing report]" click="getSelectedEntries('PricingReport')" visible="{bShowPricingReportSelection}" includeInLayout="{bShowPricingReportSelection}" textAlign="right" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+								<mx:Text text="[release settlement]" click="getSelectedEntries('Release')" visible="{bShowRelease}" includeInLayout="{bShowRelease}" textAlign="right" useHandCursor="true" mouseChildren="false" buttonMode="true"/>
+							</mx:HBox>
+						</mx:HBox>
+					</mx:VBox>
+				</mx:HBox>		
+				<mx:HBox width="100%" height="100%" verticalAlign="top">
+					<!-- Dev Note:38364 - Do not add "horizontalScrollPolicy="off" on the grid as now we have a feature where we can increase/decrease the width of the grid columns using a slider control.
+					The width of the columns can also be increased by manually dragging the columns. This will automatically adjust the slider control. User can then save the data.					
+					Whenever we increase the size of a column, the other columns should remain fixed and if necessary a horizontal scrollbar should appear.
+					-->
+					<mx:DataGrid horizontalScrollPolicy="on" allowMultipleSelection="true" id="dg" editable="true" dataProvider="{dgProgramData}" width="100%"  height="100%" verticalAlign="top" headerRelease="Call_Sort_Data(event)" columnStretch="callColumnWidthResize(event)" headerShift="callColumnsHideShow();">
+						<mx:columns>
+							<!-- Below is the default SEQUENCE of columns, which gets overwritten by the sequence of columns in "this.objGridColumnSize.includeColumnList".
+							Some of the columns below - "program_trade_spend","program_payment" and "program_volume" are using the "visible" attribute along with a boolean variable 
+							to show/hide that column. That "show/hide" will also get overwritten by "show/hide" status in "this.objGridColumnSize.includeColumnList".
+							-->
+							<mx:DataGridColumn dataField="isSelected" visible="{bShowCheckBoxOptionSelection}" rendererIsEditor="true" itemRenderer="com.components.chBoxIsSelected" headerRenderer="com.components.chBoxSelectAll" editorDataField="varCbSelected" sortable="false" width="15" minWidth="15" />
+							<mx:DataGridColumn dataField="contract_main_id" headerText="" visible="{bShowDeleteOptionSelection &amp;&amp; this.tbNavList.selectedIndex == 0}" editable="false" rendererIsEditor="true"  itemRenderer="com.components.ScissorComp" width="25"  />		  	  
+							<mx:DataGridColumn dataField="BidRequest_Status"  sortable="false" visible="{bBidRequestTemplateSelection}" rendererIsEditor="true" itemRenderer="com.components.BidRequestStatus" headerText="Bid Status" editorDataField="varStatusSelected" width="70" />
+							<mx:DataGridColumn dataField="status_abbreviation" headerText="Status" editable="false" width="{this.objGridColumnSize.status}" />							
+							<mx:DataGridColumn dataField="rfa_age" headerText="RFA Age" editable="false" width="{this.objGridColumnSize.rfaAge}" />
+							<mx:DataGridColumn dataField="contract_number" headerText="Program" editable="false" itemRenderer="com.components.program_summary" width="{this.objGridColumnSize.program}"  />
+							<mx:DataGridColumn dataField="contract_title" headerText="Title" editable="false" itemRenderer="com.components.contract_title" width="{this.objGridColumnSize.title}" />
+							<mx:DataGridColumn dataField="created_type" headerText="Type" editable="false" width="{this.objGridColumnSize.type}" />	      
+							<mx:DataGridColumn dataField="contract_start_date" headerText="Start Date" labelFunction="dateLabel" editable="false" width="{this.objGridColumnSize.startDate}" />
+							<mx:DataGridColumn dataField="contract_end_date" headerText="End Date" labelFunction="dateLabel" editable="false" width="{this.objGridColumnSize.endDate}" />    
+							<mx:DataGridColumn dataField="rsp_user" headerText="RSP" editable="false" width="{this.objGridColumnSize.rsp}" />
+							<mx:DataGridColumn dataField="business_segment" headerText="{sBusinessSegmentsLabel}" editable="false" width="{this.objGridColumnSize.businessSegment}" visible="{bshowBusinessSegment}" />	 
+							<!-- (start) optional columns, based on setting. Use "labelFunction" for formatting and "sortCompareFunction" for numeric sorting for these columns.
+							Note: The reason why the data type is NOT modified to "NUMBER" on data load is because after formatting the values using "NumberFormatter", the
+							data type is modified to string and then the sorting happens as if it were a string. Reconverting to "NUMBER" data type gives an incorrect value.
+							-->
+							<mx:DataGridColumn dataField="program_trade_spend" labelFunction="programTradeSpend_FormatNumber" sortCompareFunction="programTradeSpend_sortCompareFunc" headerText="{sDisplayTradeDollarsLabel}" editable="false" width="{this.objGridColumnSize.tradeDollars}" visible="{bDisplayTradeDollars}" />
+							<mx:DataGridColumn dataField="program_payment" sortCompareFunction="programPayment_sortCompareFunc" headerText="{sDisplayPaymentDollarsLabel}" editable="false" itemRenderer="com.components.payment_history" width="{this.objGridColumnSize.paymentDollars}" visible="{bDisplayPaymentDollars}" />
+							<mx:DataGridColumn dataField="program_volume" labelFunction="programVolume_FormatNumber" sortCompareFunction="programVolume_sortCompareFunc" headerText="{sDisplayVolumeLabel}" editable="false" width="{this.objGridColumnSize.volume}" visible="{bDisplayVolume}" />
+							<!-- (end) optional columns -->
+							<mx:DataGridColumn dataField="payment_history" sortable="false" id="colPH"  headerText="More Info" editable="false" itemRenderer="com.components.program_details" width="{this.objGridColumnSize.moreInfo}" />	
+						</mx:columns>
+					</mx:DataGrid>
+				</mx:HBox>
+</mx:VBox>
+</mx:Panel>
+</mx:HDividedBox>
+</mx:Canvas>

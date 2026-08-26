@@ -1,0 +1,408 @@
+/* CSS file
+a.) classes, tags
+b.) objects in alpha
+c.) attributes in alpha order...*/
+@namespace "library://ns.adobe.com/flex/mx";
+@namespace s "library://ns.adobe.com/flex/spark";
+
+AdvancedDataGrid {
+	/*--- Not working consistently ---
+	headerSeparatorSkin:ClassReference("com.shared.views.skins.DataGridHeaderSeparatorSkinBa");
+	*/
+	alternatingItemColors: #bbffbb, #ffffff;
+	headerStyleName: "blacksmithHeader";
+	headerColors: #ffbf5f, #ffffff;	
+	rollOverColor:  #E5E5E5;
+	selectionColor: #CDCDCD;
+	size: 10;
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;
+	borderColor: #D0D0D0 ; /* gray */
+}
+Alert {
+	chromeColor:#e5bc7e;
+	backgroundColor: #778899;
+	titleStyleName: "alertTitle";
+	color: #FFFFFF;
+	fontSize: 11;
+}
+.alertTitle {
+	fontSize: 11;
+	color: #000000;
+	fontWeight:bold;
+}
+Application {
+	backgroundGradientColors: #ffffff, #e3e3e3;
+	themeColor: #000000;
+	verticalGap: 5;
+}
+s|Application {
+	backgroundGradientColors: #ffffff, #e3e3e3;
+	themeColor: #000000;
+	verticalGap: 5;
+}
+.blacksmithNormal {
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;
+ }
+.blacksmithBold {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+    font-weight: bold;
+ }
+.blacksmithBoldItalic {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+	font-style: italic;
+    font-weight: bold;
+ } 
+.blacksmithHeader {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:11;
+	font-weight: bold;
+ }
+.blacksmithHeaderSelected {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:11;
+    font-style: italic;
+    font-weight: bold;
+ }   
+.blacksmithItalic {
+	color: #333333;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+    font-style: italic;
+ }
+.blacksmithTooltip {
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:9;
+    font-style: italic;
+ }   
+.bbHeaderBg {
+	color: #c02025;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:14;
+ }
+/* ---------- */
+Button {
+	borderColor: #b7babc;
+	color: #4169E1;
+	fillColors: #ffffff, #ffbf5f, #ffffff, #ffce70;
+	selectionColor: #c02025;
+   	styleName: "blacksmithHeader";
+   	textRollOverColor: #C02025;
+   	textSelectedColor: #ffffff;
+   	cornerRadius: 5;
+}
+s|Button {
+	borderColor: #b7babc;
+	color: #4169E1;
+	selectionColor: #c02025;
+	/*styleName: "blacksmithHeader";*/
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+	font-weight: bold;
+	textRollOverColor: #C02025;
+	textSelectedColor: #ffffff;
+	cornerRadius: 5;
+}
+s|CheckBox {
+	borderColor: #b7babc;
+	color: #4169E1;
+	selectionColor: #c02025;
+	/*styleName: "blacksmithHeader";*/
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+	font-weight: bold;
+	textRollOverColor: #C02025;
+	textSelectedColor: #ffffff;
+	cornerRadius: 5;
+}
+s|RadioButton{
+	color: #4169E1;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+	font-weight: bold;
+}
+s|ButtonBarButton:upAndSelected,
+s|ButtonBarButton:overAndSelected,
+s|ButtonBarButton:downAndSelected,
+s|ButtonBarButton:disabledAndSelected{
+	chromeColor: #ffffff;
+	color:#4169E1;
+	cornerRadius:5;
+}
+s|ButtonBarButton { 
+	chromeColor: #FFDAB9;
+	color: #4169E1;
+	cornerRadius:5;
+}
+.bxBorder	{
+ 	verticalGap: 3;
+ /*	backgroundColor: #ebe9ee; */
+ 	backgroundAlpha: 0.35;
+ 	borderThickness:1;
+	borderColor: #8B1313;
+	borderStyle: solid;
+	cornerRadius:7;
+	dropShadowEnabled: true;
+	dropShadowColor: #8B1313;
+	paddingTop: 3;
+ 	paddingBottom: 3;
+ 	paddingLeft: 2;
+ 	paddingRight: 2;
+ 	verticalAlign: 'middle';
+}
+s|BorderContainer{
+	cornerRadius:10;
+	borderWeight:1;
+	borderStyle:'inset';
+	borderColor:#c02025;
+	dropShadowVisible:false;
+}
+ComboBox {
+	dropdownStyleName: "comboBoxDropdownStyles";
+    borderColor: #b7babc;
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;  
+}
+s|ComboBox {
+	dropdownStyleName: "comboBoxDropdownStyles";
+	borderColor: #b7babc;
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;
+}
+/*.baComboBox {
+	dropdownStyleName: "comboBoxDropdownStyles";
+    borderColor: #b7babc;
+    styleName: "blacksmithNormal";
+}*/
+
+.comboBoxDropdownStyles {
+    textRollOverColor: #000000;
+    textSelectedColor: #ffffff;
+    rollOverColor: #e3e3e3;
+    selectionColor: #c02025;
+    alternatingItemColors: #ffffff, #ffffff;
+	color: #333333;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+    fontWeight: normal;
+ }
+DataGrid {
+	headerBackgroundSkin:ClassReference("com.shared.views.skins.DataGridHeaderBackgroundSkinBa");
+	headerSeparatorSkin:ClassReference("com.shared.views.skins.DataGridHeaderSeparatorSkinBa");
+	verticalSeparatorSkin:ClassReference("com.shared.views.skins.DataGridHeaderSeparatorSkinBa");
+	alternatingItemColors: #bbffbb, #ffffff;
+	/* "headerStyleName" is only for regular columns on a datagrid. Eg:"Hdr ID" on the corrections screen 
+	and "row ID" on correction detail screen. Most of the datagridcolumns are using the custom "DataGridFilterColumn" OR
+	"AdvancedDataGridFilterColumn" and so the font changes for the header are at "TextInputRenderer.as" and "AdvancedInputRenderer.as"
+	respectively. The background color of the header is from a skin: "DataGridHeaderBackgroundSkinBa.mxml". */
+	headerStyleName: "blacksmithHeader";
+	/*headerColors: #ffbf5f, #ffffff;*/
+	borderColor: #b7babc;
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;
+	rollOverColor:  #E5E5E5;
+	selectionColor: #CDCDCD;
+}
+DateField {
+	font-family: Verdana, Arial;
+	font-size:10;
+	font-weight: normal;	
+	headerColors: #ffbf5f, #ffffff;
+	borderColor:#000000;
+	borderAlpha:.3;
+}
+s|DropDownList {
+	font-family: Verdana, Arial;
+	font-size:10;
+	font-weight: normal;
+	rollOverColor: #B2E1FF;
+	selectionColor: #7FCEFF;
+}
+.error {
+	color: #C02025;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:10;
+	font-weight: bold;
+}
+s|Form
+{
+	skinClass: ClassReference("com.shared.views.skins.FormSkinBa");
+}
+s|FormItem
+{
+	skinClass: ClassReference("com.shared.views.skins.FormItemSkinBa");
+}
+HScrollBar {
+	borderColor: #b7babc;
+    cornerRadius: 0;
+    fillColors: #ffffff, #ffbf5f, #cccccc, #eeeeee;
+    iconColor: #c02025;
+    thumbOffset: 1;
+    trackColors: #666666, #b7babc; 
+}
+Label {
+	font-family: Verdana, Arial;
+	font-size:10;
+	font-weight: normal;
+}
+s|Label {
+	font-family: Verdana, Arial;
+	font-size:10;
+	font-weight: normal;	
+}
+LinkButton {
+	font-family: Verdana, Arial;
+	font-size:10;
+	font-weight: bold;
+}
+List {
+	alternatingItemColors: #bbffbb, #ffffff;
+	rollOverColor: #e3e3e3;
+    selectionColor: #c02025;
+	color: #333333;
+	/*styleName: "blacksmithNormal";*/
+    textRollOverColor: #000000;
+    textSelectedColor: #ffffff;
+	color: #333333;
+}
+.message {
+	color: #000000;
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:9;
+	font-style: italic;
+}
+/* The font size of the menubar entries are affected from "List" properties above */
+MenuBar { 
+	/*backgroundSkin:ClassReference("com.shared.views.skins.GenericHeaderBackgroundSkinBa");*/
+	borderColor: #ffbf5f;
+	/*headerStyleName: "blacksmithHeader";*/
+	rollOverColor:  #E5E5E5;
+	/*selectionColor: #ffbf5f;
+	styleName: "blacksmithHeader";*/
+	borderColor: #AAB3B3;
+	color: #0B333C;
+	cornerRadius: 0;
+	disabledColor: #AAB3B3;
+	fontAntiAliasType: normal;
+	fontFamily: "Century Gothic";
+	fontStyle: normal;
+	fontSize: 11;
+	fontThickness: 0;
+	fontWeight: bold;
+	leading: 2;
+	rollOverColor: #B2E1FF;
+	textAlign: left;
+	textDecoration: none;
+	textIndent: 0;
+}
+Panel {
+	borderAlpha: 1;
+	cornerRadius: 7;
+	borderThicknessBottom: 0;
+	borderThicknessLeft: 0;
+	borderThicknessRight:0;
+	headerColors: #ffbf5f, #ffffff;
+	horizontalCenter: 0;
+	paddingTop: 5;
+	paddingRight: 5;
+	paddingBottom: 5;
+	paddingLeft: 5;
+	roundedBottomCorners: true;
+	titleStyleName: "blacksmithHeader";
+}
+s|Panel {
+	skinClass:ClassReference("com.shared.views.skins.PanelSkinBa");
+	borderAlpha: .1;
+	cornerRadius: 7;
+	borderColor: #000000;
+	headerColors: #ffbf5f, #ffffff;
+	horizontalCenter: 0;
+	paddingTop: 5;
+	paddingRight: 5;
+	paddingBottom: 5;
+	paddingLeft: 5;
+	roundedBottomCorners: true;
+	/*titleStyleName: "blacksmithHeader";*/
+}
+ProgressBar {
+   borderColor: #b7babc;
+   barColor: #c02025;
+   trackColors: #666666, #b7babc;
+   color: #ffffff;
+}
+/*
+TabNavigator {
+	firstTabStyleName: "blacksmithHeader";
+	lastTabStyleName: "blacksmithHeader";
+	selectedTabTextStyleName: "blacksmithHeaderSelected";
+	tabStyleName: "blacksmithHeader";	
+}
+*/
+s|RichText {
+	font-family: Verdana, Arial;
+	font-size:10;
+	font-weight: normal;
+}
+.tab
+{
+	up-skin: ClassReference("com.shared.views.skins.TabSkinBa");
+	down-skin: ClassReference("com.shared.views.skins.TabSkinBa");
+	over-skin: ClassReference("com.shared.views.skins.TabSkinBa");
+	
+	selected-up-skin: ClassReference("com.shared.views.skins.SelectedTabSkinBa");
+	selected-down-skin: ClassReference("com.shared.views.skins.SelectedTabSkinBa");
+	selected-over-skin: ClassReference("com.shared.views.skins.SelectedTabSkinBa");
+	
+	font-family: "Century Gothic", Verdana, Arial;
+	font-size:11;
+	font-weight: bold;
+}
+Text {
+	styleName: "blacksmithItalic";
+}
+TextArea {
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;
+}
+s|TextArea {
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;
+}
+TextInput {
+	styleName: "blacksmithNormal";
+}
+s|TextInput {
+	color: #333333;
+	font-family: Verdana, Arial;
+	font-size:10;	
+	borderColor:#000000;
+	borderAlpha:.3;
+}
+s|TitleWindow {
+	skinClass:ClassReference("com.shared.views.skins.TitleWindowSkinBa");
+	borderColor:#000000;
+	borderAlpha: .2;
+}
+ToolTip {
+   	paddingLeft: 5;
+   	paddingRight: 5;
+   	styleName: "blacksmithTooltip";	
+}
+VScrollBar {
+	borderColor: #b7babc;
+    cornerRadius: 0;
+    fillColors: #ffffff, #ffbf5f, #cccccc, #eeeeee;
+    iconColor: #c02025;
+    thumbOffset: 1;
+    trackColors: #666666, #b7babc; 
+}

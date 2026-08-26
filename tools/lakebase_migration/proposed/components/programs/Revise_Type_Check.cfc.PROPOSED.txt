@@ -1,0 +1,273 @@
+===== QUERY: GetRevisionSettingsData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetRevisionSettingsData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("revision_settings")>
+<cfif useLakebaseForGetRevisionSettingsData>
+	<cftry>
+		<cfset GetRevisionSettingsData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("revision_settings", {
+				"revision_setting_deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRevisionSettingsData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRevisionSettingsData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ResetRevisionTypes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForResetRevisionTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForResetRevisionTypes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main_aux_data",
+			{
+				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#"
+			},
+			{
+				"revisiontypea" = "0",
+				"revisiontypeb" = "0",
+				"revisiontypec" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetRevisionTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetRevisionTypes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qInsertRevisionChanges =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: qFreightApprovalOnly =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyDeleted =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyAdded =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyDeleted =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyAdded =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyDeleted =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyAdded =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qAnyRateChanged =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAnyRateChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyRateChanged>
+	<cftry>
+		<cfset qAnyRateChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"rate_change" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyRateChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyRateChanged>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAnyUOMChanged =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAnyUOMChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyUOMChanged>
+	<cftry>
+		<cfset qAnyUOMChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"uom_change" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyUOMChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyUOMChanged>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAnyClaimMechChanged =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAnyClaimMechChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyClaimMechChanged>
+	<cftry>
+		<cfset qAnyClaimMechChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"claimmech_changed" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyClaimMechChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyClaimMechChanged>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAnyRateChanged =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAnyRateChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyRateChanged>
+	<cftry>
+		<cfset qAnyRateChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"rate_change" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyRateChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyRateChanged>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qAnyUOMChanged =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqAnyUOMChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyUOMChanged>
+	<cftry>
+		<cfset qAnyUOMChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"uom_change" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyUOMChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyUOMChanged>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: geGetParentProgramInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: geGetChildProgramInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: Get_Settings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: checkifproductsadded =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForcheckifproductsadded = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_revision_changes")>
+<cfif useLakebaseForcheckifproductsadded>
+	<cftry>
+		<cfset checkifproductsadded = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_revision_changes", {
+				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "products_added"
+			}), "products_added"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckifproductsadded = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckifproductsadded>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetProgramRevisionTypes =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qGetRevisionSettingsData =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqGetRevisionSettingsData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("revision_settings")>
+<cfif useLakebaseForqGetRevisionSettingsData>
+	<cftry>
+		<cfset qGetRevisionSettingsData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("revision_settings", {
+				"revision_setting_deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRevisionSettingsData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRevisionSettingsData>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qLumpProducts =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForqLumpProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqLumpProducts>
+	<cftry>
+		<cfset qLumpProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#",
+				"product_type_id" = "eq.3",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_items_master_id,is_group"
+			}), "bsa_foodservice_items_master_id,is_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLumpProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLumpProducts>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qProductsBeyondEZRate =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: qProductCompare =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: qProductsCompare =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+

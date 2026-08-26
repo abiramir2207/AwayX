@@ -1,0 +1,21 @@
+===== QUERY: getUOM =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUOM>
+	<cftry>
+		<cfset getUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#bidrule.basic.bid_rule_uom#",
+				"select" = "unit_of_measure_desc"
+			}), "unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUOM>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

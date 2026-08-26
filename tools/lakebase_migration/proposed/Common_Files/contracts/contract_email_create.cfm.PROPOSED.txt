@@ -1,0 +1,91 @@
+===== QUERY: getCreatorEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetCreatorEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetCreatorEmail>
+	<cftry>
+		<cfset getCreatorEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Program_Details.Creator_ID#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCreatorEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCreatorEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getRSPEmail =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetRSPEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetRSPEmail>
+	<cftry>
+		<cfset getRSPEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Program_Details.Responsible_User_ID#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRSPEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRSPEmail>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Template_Details =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Template_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGet_Template_Details>
+	<cftry>
+		<cfset Get_Template_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#Get_Program_Details.programtype_id#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Template_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Template_Details>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Broker_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: evalNotes =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForevalNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_evaluation_notes")>
+<cfif useLakebaseForevalNotes>
+	<cftry>
+		<cfset evalNotes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_evaluation_notes", {
+				"contract_number" = "eq.#contractNum.contract_number#",
+				"contract_notes_type" = "eq.1",
+				"entered_by" = "eq.#request.AccessStructure.Name_First# #request.AccessStructure.Name_Last#",
+				"deleted" = "eq.0",
+				"order" = "created_date.desc",
+				"select" = "entered_by,eval_action,notes,created_date,contract_notes_type"
+			}), "entered_by,eval_action,notes,created_date,contract_notes_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForevalNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForevalNotes>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

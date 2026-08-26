@@ -1,0 +1,31 @@
+===== QUERY: postEvaluationNotes =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: saveBusinessConsiderations =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForsaveBusinessConsiderations = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForsaveBusinessConsiderations>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#RejectEmailProgramId#"
+			},
+			{
+				"broker_approved" = "0",
+				"contract_status_type_idx" = "1",
+				"rejected" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveBusinessConsiderations = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveBusinessConsiderations>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: deleteagree =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

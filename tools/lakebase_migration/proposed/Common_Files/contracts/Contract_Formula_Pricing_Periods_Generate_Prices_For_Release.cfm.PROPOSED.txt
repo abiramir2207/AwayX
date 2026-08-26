@@ -1,0 +1,54 @@
+===== QUERY: resetrulePrices =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForresetrulePrices = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_products")>
+<cfif useLakebaseForresetrulePrices>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rule_products",
+			{
+				"program_id" = "eq.#generateReleaseProgramID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"price" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForresetrulePrices = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForresetrulePrices>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: generateReleasePrograms =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgenerateReleasePrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForgenerateReleasePrograms>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_id" = "eq.#generateReleaseProgramID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0
+			--AND
+			--Created_By_System = 0
+
+			EXEC PROGRAM_FORMULA_PRICING"
+			},
+			{
+				"process_by_system" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgenerateReleasePrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgenerateReleasePrograms>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,12 @@
+===== QUERY: q_reportName =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: q_getThisFilter =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getThisFilter =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: q_getThisFilter =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

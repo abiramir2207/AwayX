@@ -1,0 +1,38 @@
+.tool-btn-group .tool-button {
+  border-radius: 0;
+}
+
+.tool-btn-group .tool-button:first-child {
+    border-radius: 3px 0 0 3px;
+}
+
+
+.tool-btn-group .tool-button:last-child {
+    border-radius: 0 3px 3px 0;
+    margin-left: -1px;
+}
+
+.tool-btn-group .tool-button:only-child {
+    border-radius: 3px;
+    margin-left: 0;
+}
+
+.tool-button {
+    padding: 7px;
+    background: white;
+    border: 1px #AFAFAF solid;
+    color: #406BE4;
+}
+
+.tool-button:hover {
+    border-color:#1E4DD3;
+    color: #1E4DD3;
+    text-decoration: none;
+}
+.tool-button img {
+    vertical-align: middle;
+}
+.tool-button label {
+    vertical-align: middle;
+}
+

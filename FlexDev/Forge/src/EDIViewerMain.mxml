@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:maps="com.Billback.Upload.maps.*"
+			   applicationComplete="applyRuntimeStyleSheet();"
+			   minWidth="955" minHeight="600" height="100%" width="100%">
+	<fx:Declarations>
+		
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<maps:EDIViewerMainEventMap />
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Main.events.BBMainEvent;
+			import com.Billback.Main.models.IBBRawEDI;
+			import com.Billback.Main.views.pm.BBMainPModel;
+			import com.Billback.Upload.models.vos.BBRawEDIHeader;
+			import com.shared.events.MainEvent;
+			import com.shared.models.IModuleBa;
+			import com.shared.views.skins.FormItemSkinBa;
+			import com.shared.views.skins.FormSkinBa;
+			import com.shared.vos.Settings;
+			
+			import flash.system.ApplicationDomain;
+			import flash.system.SecurityDomain;
+			
+			import mx.managers.PopUpManager;PopUpManager;			
+			import mx.controls.Alert;	
+			import mx.utils.ObjectUtil;			
+			import mx.managers.IDragManager;
+			
+			/* Could have done "import mx.managers.IDragManager;IDragManager" too, instead of instantiating a variable */
+			private var iDragManager:IDragManager;
+			
+			/* Could have done "import mx.managers.IDragManager;Alert" too, instead of instantiating a variable */
+			private var iAlert:Alert;
+			
+			import mx.events.ModuleEvent;
+			
+			import spark.modules.ModuleLoader;
+			import com.shared.views.skins.FormItemSkinBa;
+			import com.shared.views.skins.FormSkinBa;
+			
+			[Bindable]
+			public var settings:Settings = new Settings();
+			private var frmSkin:FormSkinBa;
+			private var frmItemSkin:FormItemSkinBa;
+			[Bindable]
+			public var pModel:BBMainPModel;
+			
+			private function applyRuntimeStyleSheet():void {
+				styleManager.loadStyleDeclarations("/flex/mainFx412.swf") 
+			}
+			
+			
+			public function loadEDIViewer(event:MainEvent):void {
+				var EDIViewerMod:ModuleLoader;
+				EDIViewerMod = new ModuleLoader();
+				var s:String = '/Flex/com/Billback/Upload/BBCorrections.swf';
+				EDIViewerMod.label = "EDI Viewer";
+				EDIViewerMod.addEventListener(ModuleEvent.READY, EDIViewerModReady,false,0,true);
+				EDIViewerMod.loadModule(s);
+				//grpEDIViewerMain.addElementAt(EDIViewerMod,0);
+				grpEDIViewerMain.addChild(EDIViewerMod);
+			}
+			
+			public function EDIViewerModReady(e:Event):void {
+				var mod:ModuleLoader = new ModuleLoader();
+				mod = e.currentTarget as ModuleLoader;
+				var ichild:* = mod.child as IModuleBa;
+				if (mod.child != null) {                    
+					/* Call data getters in the module  */
+					ichild.setSettings(this.settings);
+				} else {                
+					trace("EDI Viewer Module could not load ()");                 
+				}
+				//clean up
+				mod.removeEventListener(ModuleEvent.READY,EDIViewerModReady);
+			}
+			
+			private var dictUpload:Dictionary 	= new Dictionary(true);
+			private const MAX_CHILDREN:uint = 5;
+			private var bbRawEDIHeader:BBRawEDIHeader = new BBRawEDIHeader();
+			public function loadRawEDIUpload(e:BBMainEvent):void {
+				if (grpEDIViewerMain.numChildren <= MAX_CHILDREN) {
+					this.bbRawEDIHeader = e.bbRawEDIHeader;
+					
+					var BBRawEDIMod:ModuleLoader;
+					BBRawEDIMod = new ModuleLoader();
+					var sId:String = 'v' + e.bbRawEDIHeader.BBUploadIIIPHID.toString() + e.bbRawEDIHeader.UploadID.toString();
+					
+					//if already loaded, select it
+					if(dictUpload[sId]){
+						BBRawEDIMod = dictUpload[sId];
+						var ichild:IBBRawEDI = BBRawEDIMod.child as IBBRawEDI;
+						/* Call setters in the module  */
+						ichild.setSettings(this.pModel.oSettings);
+						/*DONT RELOAD IN CASE USER MADE UPDATES */
+						ichild.setBBRawEDI(e.bbRawEDIHeader);
+					}
+					else{ //else load it up
+						var s:String = '/Flex/com/Billback/Upload/BBRawEDI.swf';
+						BBRawEDIMod.label = 'EDI Upload ID: ' + e.bbRawEDIHeader.UploadID + ' / '   + ' (' + e.bbRawEDIHeader.BBNumber + ')';
+						BBRawEDIMod.addEventListener(ModuleEvent.READY, rawEDIModReady,false,0,true);
+						BBRawEDIMod.loadModule(s);
+						BBRawEDIMod.id = sId;
+						dictUpload[sId] = BBRawEDIMod;
+						grpEDIViewerMain.addChild(BBRawEDIMod);
+					}
+					grpEDIViewerMain.selectedChild = BBRawEDIMod;
+				}
+				else{
+					showAlert();
+				}
+			}
+			private function showAlert():void{
+				Alert.show('Unable to open EDI Details.  Max number of open items has been reached [ ' + MAX_CHILDREN + ' ].','Maximum Tabs Alert');
+			}
+			public function rawEDIModReady(e:Event):void {
+				var mod:ModuleLoader;
+				mod = e.currentTarget as ModuleLoader;
+				var ichild:IBBRawEDI = mod.child as IBBRawEDI;
+				if (mod.child != null) {                    
+					/* Call setters in the module  */
+					ichild.setSettings(this.settings);
+					/* need to get BBHeader obj from Search screen event */
+					ichild.setBBRawEDI(this.bbRawEDIHeader);
+					
+				} else {                
+					trace("BB Raw EDI Module could not load ()");                 
+				}
+				//clean up
+				mod.removeEventListener(ModuleEvent.READY,rawEDIModReady);
+				//select
+				//navigator.selectedChild = mod;
+			}
+			
+			public function unLoadRawEDI(e:BBMainEvent):void {
+				if (grpEDIViewerMain.selectedChild && grpEDIViewerMain.selectedChild is ModuleLoader) {
+					/* NEED TO CHECK IF SELECTED TAB IS SAME BB AS e.BHeader PASSED IN */
+					var mod:ModuleLoader = grpEDIViewerMain.selectedChild as ModuleLoader;
+					var ichild:IBBRawEDI = mod.child as IBBRawEDI;
+					//after a user deleted a corrections record, remove it from the list in the corrections screen
+					//var s:String = 'com/Billback/Upload/BBRawEDI.swf';
+					//BBRawEDIMod.label = 'ID: ' + e.bbRawEDIHeader.UploadID + ' / '   + ' (' + e.bbRawEDIHeader.BBNumber + ')';
+					//var idx:int = navigator.selectedIndex;
+					var sId:String = mod.id;
+					if(mod.url == "/Flex/com/Billback/Upload/BBRawEDI.swf" && (ichild.getBBRawEDI().BBUploadIIIPHID == e.bbRawEDIHeader.BBUploadIIIPHID) && (ichild.getBBRawEDI().UploadID == e.bbRawEDIHeader.UploadID) || e.bbRawEDIHeader.UploadID == 0){;
+						grpEDIViewerMain.removeChild(mod);
+						delete dictUpload[sId];
+						//mod.removeElement(ichild as IVisualElement);
+						//ichild = null;
+						//mod.label = "Edit: " + ' (' + e.bbHeader.BBCode + ')';
+						/*modNew = dictEdit[sId];
+						
+						navigator.addChildAt(modNew,idx);
+						navigator.selectedChild = modNew;
+						modNew.dispatchEvent(new ModuleEvent(ModuleEvent.READY));*/
+					}
+					else{
+						//textField.text = "NO UnLoad of Search "+System.totalMemory.toString()+"\n"+textField.text;
+					}
+					
+				}
+			}
+		]]>
+	</fx:Script>	
+	<mx:TabNavigator id="grpEDIViewerMain" width="100%" tabHeight="30" 
+					 height="100%" tabFocusEnabled="false" paddingTop="0"
+					 tabStyleName="tab" selectedTabTextStyleName="tab">
+		
+	</mx:TabNavigator>
+</s:Application>

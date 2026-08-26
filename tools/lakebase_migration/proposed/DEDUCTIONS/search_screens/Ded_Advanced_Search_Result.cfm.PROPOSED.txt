@@ -1,0 +1,44 @@
+===== QUERY: DeductionsProfilesSettings =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
+<cfif useLakebaseForDeductionsProfilesSettings>
+	<cftry>
+		<cfset DeductionsProfilesSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions_profiles_settings", {
+				"profiles_id" = "eq.#Get_Profile_Settings.Profiles_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeductionsProfilesSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeductionsProfilesSettings>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Check_Child =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheck_Child = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForCheck_Child>
+	<cftry>
+		<cfset Check_Child = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_dedid" = "eq.#DD_DedID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Child = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Child>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Get_Aging_Details =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+

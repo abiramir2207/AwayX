@@ -1,0 +1,6 @@
+===== QUERY: var_qAnyData =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: var_qColumns =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

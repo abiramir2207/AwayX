@@ -1,0 +1,48 @@
+===== QUERY: Get_Tax_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGet_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForGet_Tax_Info>
+	<cftry>
+		<cfset Get_Tax_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_tax_info", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Tax_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Update_Tax_Info =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdate_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForUpdate_Tax_Info>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_tax_info",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"tax_code_1_id" = "#form.Billbacks_Sales_Tax#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Tax_Info>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: Insert_Tax_Info =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

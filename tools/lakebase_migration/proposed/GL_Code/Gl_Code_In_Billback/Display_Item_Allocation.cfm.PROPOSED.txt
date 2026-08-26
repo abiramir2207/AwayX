@@ -1,0 +1,119 @@
+===== QUERY: UpdateDetele =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateDetele = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForUpdateDetele>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDetele = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDetele>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: GetARDetails1 =====
+STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
+
+===== QUERY: GetTotOnSub =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetItemAllocationTot =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: CheckProd_Grp =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckProd_Grp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForCheckProd_Grp>
+	<cftry>
+		<cfset CheckProd_Grp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckProd_Grp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckProd_Grp>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: CheckFundExist =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckFundExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForCheckFundExist>
+	<cftry>
+		<cfset CheckFundExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"fiscal_year" = "eq.#Fiscal_Year#",
+				"a_r" = "eq.#A_R#",
+				"fund_number" = "eq.#Fund_Number#",
+				"product_group" = "eq.#Pref_Prod_Grp#",
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckFundExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckFundExist>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: ItemsAmount =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
+
+===== QUERY: GetSCOA =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetSCOA = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetSCOA>
+	<cftry>
+		<cfset GetSCOA = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"fiscal_year" = "eq.#Fiscal_Year#",
+				"a_r" = "eq.#A_R#",
+				"fund_number" = "eq.#Fund_Number#",
+				"product_group" = "eq.#Pref_Prod_Grp#",
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSCOA = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSCOA>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: LogAllocation =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetItemDesc =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: GetProdGrp =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: InsertFailureInAllocation =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+

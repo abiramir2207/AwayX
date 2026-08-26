@@ -1,0 +1,39 @@
+===== QUERY: UNLockBBNotInFinalBB =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
+
+===== QUERY: Insert_Master =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GetID =====
+STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
+
+===== QUERY: LockBB =====
+STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
+
+===== QUERY: Insert_List =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: UpdateTotBBAmount =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForUpdateTotBBAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks")>
+<cfif useLakebaseForUpdateTotBBAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pay_multi_billbacks",
+			{
+				"pay_multi_billbacks_id" = "eq.#PayMultiBillbacksID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"total_paid_amount" = "#SUMBBAmount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTotBBAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTotBBAmount>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:ba="com.shared.components.filters.*"
+		 creationComplete="{this.pModel.setListenerDgBBDeduction(this.dgBBDeduction)}" 
+		 minHeight="800" minWidth="800" includeInLayout="true"
+		 xmlns:rndr="com.shared.views.renderer.*" 
+		 currentState="{pModel.sEditClosingDetailResult.length > 0 ? 'error' : ''}">
+	<s:layout>
+		<s:VerticalLayout paddingLeft="0" paddingRight="0" 
+						  paddingTop="0" paddingBottom="0" gap="0"/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.IList;
+			import mx.events.FlexEvent;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.Billback.Edit.views.pm.BBSettlementPModel;
+			import com.Billback.Main.models.vos.Billback;
+			import com.Billback.Main.models.vos.Payee;
+			import com.shared.components.StringUtils;
+			
+			import mx.collections.ArrayList;
+			import mx.controls.Image;
+			import mx.utils.ObjectUtil;
+			import mx.utils.StringUtil;
+			import spark.effects.WipeDirection;
+			/* this.pModel.oSettings.appSettings.Allow_Multiple_Deduction_Settlement */
+			
+			/* Presentation Model */
+			[Bindable]
+			public var pModel:BBSettlementPModel;
+			
+			[Bindable]
+			public var sTitle:String;
+			
+		 	public function initTitle(argTitle:String):String{
+				if ((argTitle).length > 85)
+				{
+					sTitle = (argTitle).substr(0,84);
+					sTitle = sTitle + "...";
+				}	
+				else
+				{
+					sTitle = argTitle;
+				}
+				return sTitle;	
+			}
+			 
+			/* private var _pModel:BBSettlementPModel;
+			[Bindable (event="BBSettlementPModelChange")]
+			public function get pModel():BBSettlementPModel
+			{
+				return _pModel;
+			}
+			public function set pModel(pm:BBSettlementPModel):void
+			{
+				this._pModel = pm;
+				this.currentState = pm.sEditClosingDetailResult.length > 0 ? 'error' : '';
+				dispatchEvent(new Event('BBSettlementPModelChange'));
+			} */
+			
+			/* 			
+			private function test(e:Event):void{
+			var x:Event = e;
+			var dg:DataGrid = e.currentTarget as DataGrid;
+			
+			} 
+			*/
+			
+			public function roundDecimal(numb:Number, decimal:Number):Number
+			{
+				var precision:Number = Math.pow(10,decimal);
+				return Math.round(numb*precision )/precision;
+			}
+		]]>
+	</fx:Script>
+	<!--header info display-->
+	
+	<s:states>
+		<s:State name="default"/>
+		<s:State name="error"/>
+	</s:states>
+	
+	<s:transitions>
+		<s:Transition id="toError" fromState="*" toState="error">
+			<s:Sequence id="t1" targets="{[this.fiResult,this.tiResult]}">
+				<s:SetAction property="includeInLayout"/>
+				<s:SetAction property="visible"/>
+				<s:Resize heightFrom="0" heightTo="{this.pModel.iFrmHeight*2}" duration="500"/>
+				<s:SetAction property="height"/>
+				<!--<s:Wipe direction="down" duration="3000"/>-->
+			</s:Sequence>
+		</s:Transition>
+	
+		<s:Transition id="toAnyFromAny" fromState="*" toState="*">
+			<s:Sequence id="t2" targets="{[this.fiResult,this.tiResult]}">
+				<s:Resize heightFrom="{this.pModel.iFrmHeight*2}" heightTo="0" duration="500"/>
+				<s:SetAction property="height"/>
+				<s:SetAction property="visible"/>
+				<s:SetAction property="includeInLayout"/>
+				<!--<s:Wipe direction="up" duration="3000"/>-->
+			</s:Sequence>
+		</s:Transition>
+	</s:transitions>
+	
+	
+	
+	<s:HGroup verticalAlign="middle" paddingTop="5" paddingBottom="5" paddingLeft="5" width="300">
+		<!--<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="0x0099FF" /></s:fill>
+		</s:Rect>-->
+		<s:Label text="{this.pModel.oSettings.appFlex.bbLabels.Payable} #: {this.pModel.billback.bbHeader.BBCode}" fontSize="14" minWidth="220"/>
+		<s:Label text="{initTitle(this.pModel.billback.bbHeader.title)}" fontSize="14" toolTip="{this.pModel.billback.bbHeader.title}"/>
+	</s:HGroup>
+	<s:HGroup verticalAlign="middle" paddingTop="5" paddingBottom="5" paddingLeft="5" width="300">
+		<s:Label text="[{this.pModel.billback.bbHeader.BBtype.description}]" fontSize="12" minWidth="220"/>
+		<s:Label text="{this.pModel.billback.bbHeader.status.description}" fontSize="14" minWidth="268"/>
+		<s:Label text="Created By: {this.pModel.billback.bbHeader.creator.fullName}" fontSize="12" minWidth="50" textAlign="right" />
+	</s:HGroup>		
+	
+	
+	<s:Group minWidth="850">
+		<s:layout>
+			<s:HorizontalLayout paddingLeft="0" paddingRight="0" 
+								paddingTop="0" paddingBottom="5" gap="0"/>
+		</s:layout>
+		
+		<s:Form width="300">
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Payee}" height="70">
+				<s:RichText textAlign="left">
+					<s:content>
+						<s:p>{this.pModel.billback.bbHeader.payee.name}</s:p>
+						<s:p>{this.pModel.billback.bbHeader.payee.payeeId}</s:p>
+						<s:p>{this.pModel.billback.bbHeader.payee.address.addressLine1}</s:p>
+						<s:p>{this.pModel.billback.bbHeader.payee.address.city}</s:p>
+						<s:p>{this.pModel.billback.bbHeader.payee.address.state}  {this.pModel.billback.bbHeader.payee.address.zipCode}</s:p>
+					</s:content>
+				</s:RichText>
+			</s:FormItem>
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Reference_Number}">
+				<s:Label text="{this.pModel.billback.bbHeader.referenceNumber}"/>
+			</s:FormItem>
+			<s:FormItem label="Budget" includeInLayout="{this.oSettings.appSettings.BudgetsFunctionalityOn}" visible="{this.oSettings.appSettings.BudgetsFunctionalityOn}">
+				<mx:LinkButton label="{this.pModel.budgetLabel}" 
+							   click="this.pModel.showBudget();"
+							   height="{this.pModel.iFrmHeight}" />
+			</s:FormItem>
+			<s:FormItem label="{this.pModel.oSettings.appFlex.billToLabel} #:" includeInLayout="{this.pModel.oSettings.appSettings.Multiple_BillTos_For_ShipTo &amp;&amp; this.pModel.acBillTo.length}" visible="{this.pModel.oSettings.appSettings.Multiple_BillTos_For_ShipTo &amp;&amp; this.pModel.acBillTo.length}">
+				<rndr:BaDropDownList
+					id="drpBillTo"
+					change="this.pModel.drpBillToHandler(this.drpBillTo.selectedItem)"
+					currentSelection="{this.pModel.billback.bbHeader.billTo}"
+					dataProvider="{this.pModel.acBillTo}" labelField="billTo"
+					enabled="{pModel.objBBToolsLock.bEditScreenEnabled &amp;&amp; this.pModel.bDrpBillToEnabled}"
+					defaultSingle="true" />
+			</s:FormItem>
+		</s:Form>
+		
+		<s:Form width="200">
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Billback} Date">
+				<s:Label text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.BBDate)}"/>
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Claimed}">
+				<s:Label text="{StringUtils.getDollarDec3( this.pModel.billback.expectedAmount )}"/>
+			</s:FormItem>
+			
+			<!--<s:FormItem label="Split Action" height="{this.pModel.iFrmHeight}"
+			visible="{this.pModel.nClosingRemainder != 0}">
+			<s:ComboBox id="cmbSplitAction"
+			dataProvider="{new ArrayList(this.pModel.arrSplitAction)}"
+			labelField="description" 
+			change="{this.pModel.cmbSplitActionHandler(this.cmbSplitAction.selectedItem.data)}"
+			/>
+			</s:FormItem>-->
+		</s:Form>
+		<!--</s:BorderContainer>
+		
+		<s:BorderContainer>-->
+		
+		<s:Form width="175">
+			<s:FormHeading height="0"/>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_Start}">
+				<s:Label text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.startDate)}"/>
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Expected}">
+				<s:Label text="{StringUtils.getDollarDec3( this.pModel.billback.bbHeader.expectedAmt )}"/>
+			</s:FormItem>
+			
+			<!--<s:RichText id="settlementHeader">
+				<s:content>
+					<s:p fontSize="10" textDecoration="underline" fontWeight="bold" paddingBottom="5">Settlement Information:</s:p>
+				</s:content>
+			</s:RichText>
+			
+			
+			<s:FormItem label="Amount">
+				<s:Label text="{StringUtils.getDollarDec3(this.pModel.billback.bbHeader.checkAmount)}"/>
+			</s:FormItem>
+			
+			<s:FormItem label="Settlement ID *">
+				<s:Label text="{this.pModel.billback.bbHeader.checkNumber}"/>
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Variable_1}">
+				<s:Label text="{this.pModel.billback.bbHeader.documentNumber1}"/>
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Variable_2}">
+				<s:Label text="{this.pModel.billback.bbHeader.documentNumber2}"/>
+			</s:FormItem>
+			
+			<s:RichText id="disclaimer">
+				<s:content>
+					<s:p fontSize="9" fontWeight="bold" paddingBottom="0" paddingLeft="5">* - The Settlement ID represents either the check number or</s:p>  
+					<s:p fontSize="9" fontWeight="bold" paddingBottom="5" paddingLeft="22">credit memo number, depending upon the closing method</s:p>
+				</s:content>
+			</s:RichText>	-->
+			
+		</s:Form>
+		
+		 <s:Form width="175">
+			<s:FormHeading height="0"/>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Delivery_Period_End}" height="{this.pModel.iFrmHeight}">
+				<s:Label text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.endDate)}"/>
+			</s:FormItem>
+			
+			<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Deviation}" height="{this.pModel.iFrmHeight}">
+				<!--<s:Label text="{StringUtils.getDollarDec3((parseFloat(this.pModel.billback.expectedAmount.toString()) - parseFloat(this.pModel.billback.bbHeader.expectedAmt.toString())).toString())}"/>-->
+				<s:Label text="{StringUtils.getDollarDec3(roundDecimal(this.pModel.billback.expectedAmount - this.pModel.billback.bbHeader.expectedAmt, 2).toString())}"/>
+			</s:FormItem>
+			
+			<s:FormItem>
+				<s:Spacer height="{this.settlementHeader.height}" width="{this.settlementHeader.width}" />
+			</s:FormItem>
+			
+			<!--<s:FormItem label="Date">
+				<s:Label text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.checkDate)}"/>
+			</s:FormItem>-->
+			
+			<s:FormItem>
+				<s:Spacer width="3" />
+			</s:FormItem>
+			
+		</s:Form> 
+		
+		<!--<s:Form width="175">
+		<s:FormHeading height="0"/>
+		
+		</s:Form>-->
+		
+	</s:Group>
+	<!-- Deductions and Closing Method DATA GRIDS -->
+	<s:Group minWidth = "850" >
+		<s:layout>
+			<s:HorizontalLayout paddingLeft="5" paddingRight="5" 
+								paddingTop="0" paddingBottom="5" gap="7"/>
+		</s:layout>
+		<!-- 30907: Changes to the BB Settlement screen/ Anand Rao/13-Mar-2012
+			 Settlement Information is now moved to the same location as the 
+			 Deduction search, ie., either Deductions search will show up 
+			 or settlement information will show up in this place.
+			 But there is a difference in the includeInLayout and visible properties
+		     as we want to keep the Closing method box in the same place on the screen.
+			 If we make both visible condition to be equal to includeInLayout then the 
+			 Closing method box will be moved to the left which should not happen
+			 (it was requested).
+		 -->
+		<s:BorderContainer width="375"
+			visible="{!(this.pModel.billback.bbHeader.status.id != 5 &amp;&amp; this.pModel.billback.bbHeader.status.id != 8)}" 
+			includeInLayout="{!(this.pModel.billback.bbHeader.status.id != 3 &amp;&amp; this.pModel.billback.bbHeader.status.id != 4 &amp;&amp; this.pModel.billback.bbHeader.status.id != 5 &amp;&amp; this.pModel.billback.bbHeader.status.id != 8)}"	 >
+			<s:layout>
+				<s:HorizontalLayout paddingLeft="5" paddingRight="5" 
+									paddingTop="0" paddingBottom="5" gap="7"/>
+			</s:layout>			
+			<s:Form width="200">
+				<s:RichText id="settlementHeader">
+					<s:content>
+						<s:p fontSize="10" textDecoration="underline" fontWeight="bold" paddingBottom="5">Settlement Information:</s:p>
+					</s:content>
+				</s:RichText>
+				
+				
+				<s:FormItem label="Amount *">
+					<s:Label text="{StringUtils.getDollarDec3(this.pModel.billback.bbHeader.checkAmount)}"/>
+				</s:FormItem>
+				
+				<s:FormItem label="Settlement ID **">
+					<s:Label text="{this.pModel.billback.bbHeader.checkNumber}"/>
+				</s:FormItem>
+				
+				<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Variable_1}">
+					<s:Label text="{this.pModel.billback.bbHeader.documentNumber1}"/>
+				</s:FormItem>
+				
+				<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Variable_2}">
+					<s:Label text="{this.pModel.billback.bbHeader.documentNumber2}"/>
+				</s:FormItem>
+				
+				<s:RichText id="disclaimer">
+					<s:content>
+						<s:p fontSize="9" fontWeight="bold" paddingBottom="0" paddingLeft="5">* - The Amount value and Approve value from the Closing Details</s:p>  
+						<s:p fontSize="9" fontWeight="bold" paddingBottom="0" paddingLeft="22">section will not equal when the billback has either reinstate</s:p>
+						<s:p fontSize="9" fontWeight="bold" paddingBottom="0" paddingLeft="22">and/or write off. The Approve value from the Closing Details</s:p>
+						<s:p fontSize="9" fontWeight="bold" paddingBottom="5" paddingLeft="22">section does not consider the reinstate or write off amounts.</s:p>
+						<s:p fontSize="9" fontWeight="bold" paddingBottom="0" paddingLeft="5">** - The Settlement ID represents either the check number or</s:p>  
+						<s:p fontSize="9" fontWeight="bold" paddingBottom="5" paddingLeft="22">credit memo number, depending upon the closing method</s:p>
+					</s:content>
+				</s:RichText>	
+				
+			</s:Form>
+			<s:Form width="175" >
+				<s:FormHeading height="0"/>
+				
+				<!--<s:FormItem label="End" height="{this.pModel.iFrmHeight}">
+					<s:Label text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.endDate)}"/>
+				</s:FormItem>
+				
+				<s:FormItem label="Deviation" height="{this.pModel.iFrmHeight}">
+					<s:Label text="{StringUtils.getDollarDec3( (this.pModel.billback.bbHeader.amount - this.pModel.billback.bbHeader.expectedAmt).toString() )}"/>
+				</s:FormItem>-->
+				
+				<s:FormItem>
+					<s:Spacer height="{this.settlementHeader.height}" width="{this.settlementHeader.width}" />
+				</s:FormItem>
+				
+				<s:FormItem label="Date">
+					<s:Label text="{StringUtils.getFormatDt(this.pModel.billback.bbHeader.checkDate)}"/>
+				</s:FormItem>
+				
+				<s:FormItem>
+					<s:Spacer width="3" />
+				</s:FormItem>
+				
+			</s:Form>
+		</s:BorderContainer>
+		
+	 
+		
+		
+		<!--  DEDUCTIONS -->
+		<s:BorderContainer width="350" borderVisible="true" 
+						   visible="{this.pModel.billback.bbHeader.status.id != 3 &amp;&amp; this.pModel.billback.bbHeader.status.id != 4 &amp;&amp; this.pModel.billback.bbHeader.status.id != 5 &amp;&amp; this.pModel.billback.bbHeader.status.id != 8}" 
+						   includeInLayout="{this.pModel.billback.bbHeader.status.id != 3 &amp;&amp; this.pModel.billback.bbHeader.status.id != 4 &amp;&amp; this.pModel.billback.bbHeader.status.id != 5 &amp;&amp; this.pModel.billback.bbHeader.status.id != 8}">
+			<s:layout>
+				<s:VerticalLayout paddingLeft="5" paddingRight="5" horizontalAlign="center" 
+								  paddingTop="5" paddingBottom="5" gap="0"/>
+			</s:layout>
+			<s:Group>
+				<s:layout>
+					<s:VerticalLayout horizontalAlign="left"
+									  paddingLeft="0" paddingRight="0" 
+									  paddingTop="0" paddingBottom="0"
+									  gap="0"/>
+				</s:layout>
+				<!--xxxxxxxxxxxxxxxxxxxxxxxx-->
+				<!--<s:Label text="Closing Details" fontSize="12" fontWeight="bold"/>
+				<s:Form>
+				<s:layout>
+				<s:HorizontalLayout paddingLeft="0" paddingRight="0" 
+				paddingTop="0" paddingBottom="0"
+				gap="0" />
+				</s:layout>
+				<s:FormItem label="approved" height="{this.pModel.iFrmHeight}">
+				<s:Label text="{StringUtils.getDollarDec( this.pModel.billback.bbHeader.finalSelectedAmount )}"/>
+				</s:FormItem>
+				<s:FormItem label="balance" height="{this.pModel.iFrmHeight}">
+				<s:Label text="{StringUtils.getDollarDec( this.pModel.nClosingRemainder)}"/>
+				</s:FormItem>
+				
+				<s:ComboBox id="cmbClosingMethod" visible="false" includeInLayout="false"
+				height="{this.pModel.iFrmHeight}"
+				dataProvider="{new ArrayList(this.pModel.closingMethodList)}"
+				labelField="description" 
+				toolTip="{cmbClosingMethod.selectedItem.description}"
+				/>
+				</s:Form>-->
+				
+				<!--xxxxxxxxxxxxxxxxxxxxx-->
+				<s:Label text="Deductions" 
+						 fontSize="12" 
+						 fontWeight="bold" 
+						 height="{this.pModel.iFrmHeight}"/>
+				
+				<s:HGroup height="{this.pModel.iFrmHeight}"
+						  paddingLeft="0" paddingRight="0" 
+						  paddingTop="0" paddingBottom="0"
+						  gap="0">
+					<s:TextInput id="tiKeyword"
+								 tabEnabled="true"
+								 toolTip="Search deductions based on:ship to name, ship to number, bill to name, bill to number, deduction check number, and reference number."
+								 text="{pModel.bbDeductionFilterParm.sKeyword}"
+								 width="205" 
+								 change="pModel.tiKeywordHandler(this.tiKeyword.text)"
+								 enabled="{this.pModel.bDeductionEditable}" />
+					<s:Spacer width="3" />
+					<s:Button label="search" 
+							  id="btnGetDeductions" 
+							  click="{pModel.getDeductions()}"
+							  enabled="{this.pModel.bDeductionEditable}" />
+				</s:HGroup>
+				
+				
+				<s:Form height="26">
+					<s:layout>
+						<s:HorizontalLayout paddingLeft="0" paddingRight="0" 
+											paddingTop="0" paddingBottom="0"
+											gap="0" />
+					</s:layout>
+					<s:FormItem label="Total">
+						<s:CheckBox id="chkItemAmount"
+									selected="{pModel.bbDeductionFilterParm.bAmount}" 
+									click="{pModel.chkItemAmountHandler(this.chkItemAmount.selected)}"
+									enabled="{this.pModel.bDeductionEditable}" />
+					</s:FormItem>
+					<s:FormItem label="{this.pModel.oSettings.appFlex.bbLabels.Payee}" >
+						<s:CheckBox id="chkDistributor"
+									selected="{pModel.bbDeductionFilterParm.bDistributor}" 
+									click="{pModel.chkDistributorHandler(this.chkDistributor.selected)}"
+									enabled="{this.pModel.bDeductionEditable}" />
+					</s:FormItem>
+					<s:FormItem label="Balance">
+						<s:CheckBox id="chkBalance"
+									selected="{pModel.bbDeductionFilterParm.bBalance}" 
+									click="{pModel.chkBalanceHandler(this.chkBalance.selected)}"
+									enabled="{this.pModel.bDeductionEditable}" />
+					</s:FormItem>
+				</s:Form>
+				
+				<!--<s:HGroup>
+				<s:Label text="Total" height="{this.pModel.iFrmHeight}" />
+				<s:CheckBox id="chkItemAmount" 
+				selected="{pModel.bbDeductionFilterParm.bAmount}" 
+				click="{pModel.chkItemAmountHandler(this.chkItemAmount.selected)}" />
+				<s:Label text="Payee" height="{this.pModel.iFrmHeight}" />
+				<s:CheckBox id="chkDistributor" 
+				selected="{pModel.bbDeductionFilterParm.bDistributor}" 
+				click="{pModel.chkDistributorHandler(this.chkDistributor.selected)}" />
+				<s:Label text="Balance" height="{this.pModel.iFrmHeight}" />
+				<s:CheckBox id="chkBalance" 
+				selected="{pModel.bbDeductionFilterParm.bBalance}" 
+				click="{pModel.chkBalanceHandler(this.chkBalance.selected)}" />
+				</s:HGroup>-->
+				<s:HGroup paddingTop="0">
+					<ba:FilterDatagrid id="dgBBDeduction" 
+									   editable="false"
+									   bAllowDelete="true"
+									   rowCount="9" 
+									   allowMultipleSelection="{this.pModel.oSettings.appSettings.Allow_Multiple_Deduction_Settlement}"
+									   columns="{pModel.arrBBDeductionDgCols}"
+									   dataProvider="{this.pModel.acBBDeductions}"
+									   itemEditEnd="{this.pModel.itemEditEndDgDeduction(event)}" 
+									   doubleClickEnabled="{this.pModel.bEditable}" 
+									   doubleClick="{this.pModel.selectDeduction(event)}" 
+									   enabled="{this.pModel.bDeductionEditable}"
+									   headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+									   headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+									   verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	
+									   />
+				</s:HGroup>
+				<s:Label text="{this.pModel.acBBDeductions.length} records" />
+			</s:Group>
+		</s:BorderContainer>
+		
+		<!-- CLOSING METHODS -->
+		<s:BorderContainer width="450" borderVisible="true" >
+			<s:layout>
+				<s:VerticalLayout paddingLeft="5" paddingRight="5" 
+								  paddingTop="5" paddingBottom="5" 
+								  horizontalAlign="center" 
+								  gap="0"/>
+			</s:layout>
+			<s:Group width="93%">
+				<s:layout>
+					<s:VerticalLayout horizontalAlign="left"
+									  paddingLeft="0" paddingRight="0" 
+									  paddingTop="0" paddingBottom="0" 
+									  gap="0"/>
+				</s:layout>
+				<s:Label text="Closing Details" 
+						 fontSize="12" 
+						 fontWeight="bold" 
+						 height="{this.pModel.iFrmHeight}"/>
+				<s:Form >
+					<s:layout>
+						<s:HorizontalLayout paddingLeft="0" paddingRight="0" 
+											paddingTop="0" paddingBottom="0"
+											gap="0" />
+					</s:layout> 
+					<s:FormItem label="Approved" width="130">
+						<s:Label text="{StringUtils.getDollarDec3( this.pModel.billback.bbHeader.finalSelectedAmount )}"/>
+					</s:FormItem>
+					<s:FormItem label="Balance" visible="{this.pModel.bEditable}">
+						<s:Label text="{StringUtils.getDollarDec3( this.pModel.nClosingRemainder)}"/>
+					</s:FormItem>
+					
+					
+					<!--<s:ComboBox id="cmbClosingMethod" visible="false" includeInLayout="false"
+								dataProvider="{new ArrayList(this.pModel.closingMethodList)}"
+								labelField="description" 
+								toolTip="{cmbClosingMethod.selectedItem.description}"
+								enabled="{pModel.objBBToolsLock.bSettlementScreenEnabled}" />-->
+				</s:Form>
+				<s:Form width="350">
+					<s:layout>
+						<s:HorizontalLayout paddingLeft="0" paddingRight="0" 
+											paddingTop="0" paddingBottom="0"
+											gap="0" />
+					</s:layout> 
+					<s:FormItem label="Error" id="fiResult" width="100%"
+								height="0"
+								height.error="{this.pModel.iFrmHeight*2}"
+								includeInLayout="false"
+								includeInLayout.error="true"
+								visible="false"
+								visible.error="true">
+						<s:Label text="{pModel.sEditClosingDetailResult}" 
+								 id="tiResult"
+								 width="300" color="red"
+								 height="0"
+								 height.error="{this.pModel.iFrmHeight*2}"
+								 includeInLayout="false"
+								 includeInLayout.error="true"
+								 visible="false"
+								 visible.error="true"
+								 />
+					</s:FormItem>
+				</s:Form>
+				<!--...................   DATAGRID   ..........................-->
+				<s:HGroup paddingTop="2" paddingBottom="0" width="100%">
+					<!-- Removing the skins from here may result in no background color for the datagrid header -->
+					<mx:DataGrid id="dgBBClosingDetail" 
+								 editable="{this.pModel.bEditable}"
+								 selectedItem="{pModel.bbClosingdetail}"
+								 rowCount="{this.pModel.acBBClosingDetail.length}" 
+								 allowMultipleSelection="true"
+								 columns="{pModel.arrBBClosingDetailDgCols}"
+								 dataProvider="{this.pModel.acBBClosingDetail}"
+								 itemEditEnd="this.pModel.itemEditEndDgClosing(event)"
+								 itemEditBegin="this.pModel.itemEditBeginDgClosing(event)"
+								 change="this.pModel.selectBBClosingDetail(event)" dataTipFunction="{this.pModel.cmToolTip}"
+								 headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+								 headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								 verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+								 />
+				</s:HGroup><!--   -->
+				
+				<s:Form height="100%">
+					<s:layout>
+						<s:HorizontalLayout paddingLeft="0" paddingRight="0" 
+											paddingTop="0" paddingBottom="0"
+											gap="0" />
+					</s:layout>
+					<s:FormItem label="Special Handling">
+						<s:CheckBox id="chkSpecialHandling"
+									selected="{pModel.billback.bbHeader.bbSettlement.bSpecialHandling}" 
+									click="{pModel.chkSpecialHandlingHandler(this.chkSpecialHandling.selected)}"
+									enabled="{pModel.objBBToolsLock.bSettlementScreenEnabled}" />
+					</s:FormItem>
+					<s:FormItem label="Remittance" height="{(this.pModel.iFrmHeight*2) + 10}" >
+						<s:TextArea id="tiPaymentNotes" 
+									height="{this.pModel.iFrmHeight*2}" width="190"
+									text="{this.pModel.billback.bbHeader.bbSettlement.paymentNotes}"
+									change="this.pModel.tiPaymentNotesHandler(this.tiPaymentNotes.text)"
+									enabled="{pModel.objBBToolsLock.bSettlementScreenEnabled}"/>
+					</s:FormItem>
+				</s:Form>
+				
+				<s:HGroup paddingTop="2" height="100%">
+					<s:VGroup width="182">
+						<s:HGroup paddingTop="5">
+							<!-- Dev Note: 30796 - Remove the "save" feature, for now -->
+							<!--<s:Button label="save" 
+									  enabled="{this.pModel.bApprovable}" 
+									  click="this.pModel.save()" />
+							-->
+							<s:Button label="deviation" 
+									  click="this.pModel.loadDeviations()"
+									  enabled="{pModel.objBBToolsLock.bDeviationEnabled}"/>
+							<s:Button label="close"
+									  click="this.pModel.close()" />
+						</s:HGroup>
+						
+						<s:Button label="discrepancy report"
+								  click="this.pModel.showDiscrepancyReport()" width="148" />	
+					</s:VGroup>
+					<s:Group toolTip="{this.pModel.sSubmitButtonTip}">
+						<s:HGroup paddingTop="5">
+							<s:Button label="disagree"
+									  enabled="{this.pModel.bApprovable &amp;&amp; this.pModel.billback.bbHeader.finalSelectedAmount != 0}"
+									  click="this.pModel.fnDisagreeClicked()" />					
+							<s:Button label="{this.pModel.sSubmitButtonText}" 
+									  enabled="{this.pModel.bApprovable &amp;&amp; this.pModel.billback.bbHeader.finalSelectedAmount != 0}" 
+									  click="this.pModel.approve()" />
+						</s:HGroup>						
+					</s:Group>
+				</s:HGroup>
+				
+			</s:Group>
+		</s:BorderContainer>
+	</s:Group>
+</s:Group>

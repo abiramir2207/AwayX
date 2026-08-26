@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--- This is the popup for program summary. -->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalScrollPolicy="off">
+<mx:HBox horizontalGap="1">
+<mx:Text text="[{data.Program}]"  id="program_num" click="openProgram(data.Program_ID,'0')" useHandCursor="true" mouseChildren="false" buttonMode="true" toolTip="{data.Program}{'\n'}[Click to preview Program]" />
+	<!-- color="{getColor(data.is_catalog)}"   dataTipFunction="fnDgToolTipProgram" --> 
+	<mx:Script>
+	<![CDATA[
+		import com.maps.*;
+		import com.views.*;
+		import com.models.*;
+		import com.events.*;
+		import mx.controls.Alert;
+		import mx.utils.ObjectUtil;
+		import mx.core.Application;
+				
+		private function getColor(Catalog:String):int
+		{
+			var colorCode:int = 0;
+			
+			if(Catalog == '1')
+			{
+				/* Color:Lavender Blush4 */
+				colorCode = 0x817679;
+			}
+			return colorCode;
+		}
+		
+		/* Program Summary */		
+		private function openProgram(Program_ID:int,Catalog:String) : void
+		{
+			 if(Catalog == '0')
+			 {
+				 ///scorecard/program_display.cfm
+		     //	var winjscommand:String ="/CID_Wrapper.cfm?RevisionHistory=1&Program_ID="+Program_ID+"&Page_Relocate=/common_files/contracts/contract_revision_history.cfm";
+				var winjscommand:String ="/CID_Wrapper.cfm?Program_ID="+Program_ID+"&Page_Relocate=/scorecard/program_display.cfm";
+				var jscommand:String = "window.open('"+winjscommand+"','winSummary','height=710,width=800,toolbar=no,scrollbars=yes,left=0,top=0,screenX=0,screenY=0,resizable=yes');"   
+				var url:URLRequest = new URLRequest("javascript:" + jscommand + " void(0);");   
+				navigateToURL(url, "_self");
+			 }
+	   }
+   ]]>    
+	</mx:Script>
+
+	</mx:HBox>
+</mx:VBox>

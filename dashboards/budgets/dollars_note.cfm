@@ -1,0 +1,1 @@
+<span class="dollars_note">(total dollars in thousands - metric is equivalent cases)</span>

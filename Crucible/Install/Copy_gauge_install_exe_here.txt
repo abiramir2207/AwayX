@@ -1,0 +1,4 @@
+
+
+
+Copy gauge_install.exe file from \\backupserver2\Gauge_Release\Base\gauge_install_V1.0.15_D30249_020202012 under clients AwayX\Crucible\Install when doing the build for gauge!

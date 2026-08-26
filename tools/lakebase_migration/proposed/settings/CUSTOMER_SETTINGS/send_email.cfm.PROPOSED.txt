@@ -1,0 +1,22 @@
+===== QUERY: email_select =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForemail_select = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForemail_select>
+	<cftry>
+		<cfset email_select = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"is_system_administrator" = "eq.1",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForemail_select = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForemail_select>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

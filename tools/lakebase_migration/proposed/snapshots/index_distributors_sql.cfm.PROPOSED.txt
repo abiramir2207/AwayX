@@ -1,0 +1,12 @@
+===== QUERY: get_summary =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: get_categories =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: get_claims =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+
+===== QUERY: get_operator_accounts =====
+STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
+

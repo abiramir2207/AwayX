@@ -1,0 +1,95 @@
+===== QUERY: GetUserLastEdited =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetUserLastEdited = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserLastEdited>
+	<cftry>
+		<cfset GetUserLastEdited = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetCompRebates.Last_Edited_By#",
+				"select" = "name_first + ' ' + name_last as userlastedited"
+			}), "name_first + ' ' + name_last as userlastedited"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLastEdited = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLastEdited>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: qGetActiveComps =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: alternateRateCheck =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForalternateRateCheck = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForalternateRateCheck>
+	<cftry>
+		<cfset alternateRateCheck = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#form.compid#",
+				"alternate_recapture_rate_index" = "eq.#i#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForalternateRateCheck = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForalternateRateCheck>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: alternateRateTemplateList =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForalternateRateTemplateList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_template")>
+<cfif useLakebaseForalternateRateTemplateList>
+	<cftry>
+		<cfset alternateRateTemplateList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_template", {
+				"program_rebates_component_name_id" = "eq.#form.compid#",
+				"alternate_recapture_rate_index" = "eq.#i#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForalternateRateTemplateList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForalternateRateTemplateList>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: DeleteComponentGL =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: InsertNewGLS =====
+STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
+
+===== QUERY: GLQuery =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGLQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForGLQuery>
+	<cftry>
+		<cfset GLQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"deleted" = "eq.0",
+				"is_active" = "eq.1",
+				"select" = "gl_account,gl_account_desc,gl_account_id"
+			}), "gl_account,gl_account_desc,gl_account_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGLQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGLQuery>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

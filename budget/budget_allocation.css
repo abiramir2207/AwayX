@@ -1,0 +1,30 @@
+.allocator_main_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	text-align: center;
+	background-color: RGB(0,0,99);
+	color: RGB(255,255,255);}
+
+.allocator_control_level_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	background-color: #66FF99;}
+
+table td {font-size: 10px;
+		  font-family: Arial, Helvetica, sans-serif;}
+
+.allocator_sub_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	text-align: left;
+	background-color: #FFCC66;}
+
+.allocator_manual_adj_sub_header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	text-align: left;
+	background-color: #00FFFF;}

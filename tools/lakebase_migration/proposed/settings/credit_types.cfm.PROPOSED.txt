@@ -1,0 +1,43 @@
+===== QUERY: GetLastUpdatedDetails =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForGetLastUpdatedDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("credit_type")>
+<cfif useLakebaseForGetLastUpdatedDetails>
+	<cftry>
+		<cfset GetLastUpdatedDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("credit_type", {
+				"order" = "updated_date.desc",
+				"limit" = "1",
+				"select" = "updated_by,updated_date"
+			}), "updated_by,updated_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLastUpdatedDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLastUpdatedDetails>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getUserName =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Last_Updated_By#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

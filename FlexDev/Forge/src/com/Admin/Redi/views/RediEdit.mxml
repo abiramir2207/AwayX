@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.Admin.Redi.views.*"
+		 xmlns:comps="com.Admin.Redi.components.*"
+		 xmlns:filters="com.shared.components.filters.*"
+		 xmlns:maps="com.Admin.Redi.maps.*"
+		 xmlns:z="com.shared.components.spark.*"
+		 xmlns:ba="com.ContractProds.views.renderer.*"
+		 width="100%" height="100%">
+	<s:layout >
+		<s:VerticalLayout paddingBottom="{pModel.iPadding}" paddingLeft="{pModel.iPadding}" paddingRight="{pModel.iPadding}" paddingTop="{pModel.iPadding}" />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Event Maps __________________________________________________ -->
+		<maps:RediEditEventMap dispatcher="{this}" cache="local" />
+	</fx:Declarations>
+		<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		s|Label#labelDisplay {
+			textAlign: left;
+		}
+		
+		s|FormItem {
+			textAlign: left;
+			skinClass: ClassReference("com.Billback.Upload.views.skins.FormValidatorItemSkin");
+		}
+		
+	</fx:Style>
+	<fx:Script>
+		<![CDATA[
+			import com.Admin.Redi.events.RediEvent;
+			import com.Admin.Redi.models.vos.RediCorrectionHeader;
+			import com.Admin.Redi.views.pm.RediEditPModel;
+			import com.shared.events.MainEvent;
+			import com.shared.models.entity.vos.Lock;
+			import com.shared.models.entity.vos.User;
+			import com.shared.models.utils.dateutils.DateUtils;
+			import com.shared.views.skins.DataGridHeaderBackgroundSkinBa;
+			import com.shared.views.skins.DataGridHeaderSeparatorSkinBa;
+			import com.shared.views.skins.FormItemSkinBa;
+			import com.shared.views.skins.FormSkinBa;
+			import com.shared.vos.Settings;
+			
+			private var frmItemSkin:FormItemSkinBa = new FormItemSkinBa();
+			private var frmSkin:FormSkinBa;
+			/* Presentation Model */
+			/*[Bindable]
+			public var pModelMain:RediPModel;*/
+			[Bindable]
+			public var pModel:RediEditPModel;
+			[Bindable]
+			private var iFrmWidth:Number = 190;
+			
+			private var _settings:Settings;
+			[Bindable (event="settingsRediEditChanged")]
+			public function get settings():Settings
+			{
+				return _settings;
+			}
+			public function set settings(s:Settings):void
+			{
+				_settings = s;
+				dispatchEvent(new Event('settingsRediEditChanged'));
+				
+				var e:MainEvent = new MainEvent(MainEvent.SET_LOCAL_APP_SETTINGS);
+				e.settings = s;
+				this.dispatchEvent(e);
+			}
+	
+			private var _rediCorrectionHeader:RediCorrectionHeader;
+			[Bindable (event="rediCorrectionHeaderChanged")]
+			public function get rediCorrectionHeader():RediCorrectionHeader
+			{
+				return _rediCorrectionHeader;
+			}
+			public function set rediCorrectionHeader(h:RediCorrectionHeader):void
+			{
+				h.lock = new Lock();
+				h.lock.userLocked = new User();
+				_rediCorrectionHeader = h;
+				dispatchEvent(new Event('rediCorrectionHeaderChanged'));
+				
+				var e:RediEvent = new RediEvent(RediEvent.LOAD_REDI_EDIT);
+				e.rch = h;
+				this.dispatchEvent(e);
+			}
+			
+			
+			public function remove(e:RediEvent):void{
+				var e:RediEvent = new RediEvent(RediEvent.CLOSE_CORRECTION);
+				e.rediId = this.id;
+				e.rch = this.pModel.rediCorrectionHeader;
+				this.parent.dispatchEvent(e);
+			}
+			
+		]]>
+	</fx:Script>
+	<!--<s:Label text="Edit: {settings.userId}"/>
+	<s:Button label="remove" click="remove()" />-->
+	<!-- Menu Bar -->
+	<s:HGroup gap="0" paddingLeft="0"> 
+		<mx:ApplicationControlBar id="acb" width="{pModel.iWidth}">
+			<!--<mx:MenuBar id="mb" width="100%" click="pModel.menuHandler(event)"
+						dataProvider="{pModel.acMenuData}" itemClick="pModel.menuItemHandler(event)"
+						backgroundSkin="com.shared.views.skins.GenericHeaderBackgroundSkinBa">
+			</mx:MenuBar>-->
+			<mx:MenuBar id="mb" width="100%" height="26"						
+						click="pModel.menuHandler(event)" dataProvider="{pModel.acMenuData}"
+						itemClick="pModel.menuItemHandler(event)"
+						menuBarItemRenderer="com.Billback.Edit.views.renderer.MenuBarItemRendererBA"
+						mouseOver="pModel.menuOverHandler(event)"
+						backgroundSkin="com.shared.views.skins.GenericHeaderBackgroundSkinBa"/>
+		</mx:ApplicationControlBar>
+	</s:HGroup>
+	<s:BorderContainer width="{pModel.iWidth}">
+		<s:layout>
+			<s:HorizontalLayout 
+				paddingLeft="0" paddingRight="0" 
+				paddingTop="0" paddingBottom="3" gap="0"/>
+		</s:layout>
+		<s:VGroup gap="0" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
+		<!--	<s:VGroup width="100%">-->
+				<z:BorderContainerLabel sText="Redi Correction :: {pModel.rediCorrectionHeader.sourceType} {pModel.rediCorrectionHeader.sourceTypeDesc} :: [ecid {pModel.rediCorrectionHeader.rediCorrectionHeaderId}]" 
+										width="100%"
+										iHeight="{pModel.iHeight}" iWidth="350" textAlign="center"/>
+			<!--</s:VGroup>-->
+			<!--	<s:VGroup width="33%">
+			<s:Form width="100%" color="0x323232">
+			<s:layout>
+			<s:FormLayout id="frmLay2" gap="0" paddingTop="0" paddingBottom="0"  />
+			</s:layout>
+			
+			</s:Form>
+			</s:VGroup>
+			<s:VGroup width="33%">
+			<s:Form width="100%" color="0x323232">
+			<s:layout>
+			<s:FormLayout id="frmLay3" gap="{pModel.iPaddingfrm}" paddingTop="{pModel.iPaddingfrm}" paddingBottom="{pModel.iPaddingfrm}" />
+			</s:layout>
+			</s:Form>
+			</s:VGroup> -->
+			<s:Group width="100%">
+				<s:layout>
+					<s:HorizontalLayout 
+						paddingLeft="0" paddingRight="0" 
+						paddingTop="0" paddingBottom="0" gap="0"/>
+				</s:layout>
+				<s:VGroup width="33%">
+					<s:Form color="0x323232" width="{iFrmWidth + 164}" enabled="{this.pModel.lock.bEditMode}">
+						<s:layout>
+							<s:FormLayout id="frmLay" gap="{pModel.iPadding}" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+						</s:layout>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Name">
+							<s:TextInput id="tiOrigName" text="{pModel.rediCorrectionHeader.originalCustomer.aliasName}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}">
+							<s:TextInput id="tiOrigShipTo" text="{pModel.rediCorrectionHeader.originalCustomer.aliasShipTo}"  width="{iFrmWidth}" editable="false" />
+						</s:FormItem>
+						
+						
+						<!--<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Id">
+							<s:TextInput id="tiOrigExternalId" text="{pModel.rediCorrectionHeader.originalCustomer.aliasShipTo}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>-->
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Address">
+							<s:TextInput id="tiOrigDistExtAddress" text="{pModel.getAddress(pModel.rediCorrectionHeader.originalCustomer.aliasAddress)}"  width="{iFrmWidth}" editable="false" />
+						</s:FormItem>
+						
+						<s:FormItem label="Man. {this.pModel.oSettings.appSettings.Original_Buyer_Label} Name">
+							<s:TextInput id="tiOrigDistBsaName" text="{pModel.rediCorrectionHeader.originalCustomer.name}"  width="{iFrmWidth}" editable="false" />
+						</s:FormItem>
+						
+						<s:FormItem label="*Man. {this.pModel.oSettings.appSettings.Original_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}"> 
+							<s:HGroup>
+								<s:TextInput id="tiOrigDistBsaId" text="{pModel.rediCorrectionHeader.originalCustomer.shipTo}"  
+											 width="{iFrmWidth-35}" editable="true"
+											 change="this.pModel.searchCustomer('originalCustomer',tiOrigDistBsaId.text)"/>
+								
+								<!-- V2 INLINE SEARCHING
+								<s:ComboBox dataProvider="{new ArrayList(this.parentDocument.pModel.arrItemSearch)}"  
+											labelFunction="listLabelFunc"
+											change="lsItems_changeHandler(event)"
+											textInput="tiItem_changeHandler(event)" 
+											doubleClickEnabled="true"
+											tabEnabled="true" 
+											width="100%" 
+											id="cbCustOrig"
+											paste="cbItems_pasteHandler(event)" 
+											caretChange="cbItems_caretChangeHandler(event)" 
+											enabled="{this.parentDocument.pModel.lock.bEditMode}"
+											skinClass="com.Admin.Redi.views.renderer.baComboBoxSkin"
+											valueCommit="cbItems_valueCommitHandler(event)"/>-->
+								<s:Image 
+									id="imgPayeeSearchOrig"
+									source="/flex/assets/Images/search.gif" 
+									tabEnabled="true"							 
+									verticalAlign="bottom"
+									horizontalAlign="right"
+									click="pModel.selectPayee(pModel.rediCorrectionHeader.originalCustomer,'originalCustomer');"
+									useHandCursor="true" toolTip="Search for Man. {this.pModel.oSettings.appSettings.Original_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}"
+									buttonMode="true" />
+							</s:HGroup>
+						</s:FormItem>
+						
+						<s:FormItem label="Man. {this.pModel.oSettings.appSettings.Original_Buyer_Label} Address"  
+									>
+							<s:TextInput id="tiOrigDistBsaAddress" text="{pModel.getAddress(pModel.rediCorrectionHeader.originalCustomer.address)}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+
+					</s:Form>
+				</s:VGroup>
+				
+				<s:VGroup width="33%">
+					<s:Form color="0x323232" width="{iFrmWidth + 158}" enabled="{this.pModel.lock.bEditMode}">
+						<s:layout>
+							<s:FormLayout id="frmLay1" gap="{pModel.iPadding}" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" />
+						</s:layout>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Final_Buyer_Label} Name">
+							<s:TextInput id="tiFinalDistExtName" text="{pModel.rediCorrectionHeader.finalCustomer.aliasName}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Final_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}"  >
+							<s:TextInput id="tiFinalDistExtId" text="{pModel.rediCorrectionHeader.finalCustomer.aliasShipTo}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Final_Buyer_Label} Address" >
+							<s:TextInput id="tiFinalDistExtAddress" text="{pModel.getAddress(pModel.rediCorrectionHeader.finalCustomer.aliasAddress)}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="Man. {this.pModel.oSettings.appSettings.Final_Buyer_Label} Name">
+							<s:TextInput id="tiFinalDistBsaName" text="{pModel.rediCorrectionHeader.finalCustomer.name}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="*Man. {this.pModel.oSettings.appSettings.Final_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}" > 
+							<s:HGroup>
+								<s:TextInput id="tiFinalDistBsaId" 
+											 text="{pModel.rediCorrectionHeader.finalCustomer.shipTo}"  
+											 width="{iFrmWidth-35}" 
+											 editable="true"
+											 change="this.pModel.searchCustomer('finalCustomer',tiFinalDistBsaId.text)"/>
+								<s:Image 
+									id="imgPayeeSearch"
+									source="/flex/assets/Images/search.gif" 
+									tabEnabled="true"							 
+									verticalAlign="bottom"
+									horizontalAlign="right"
+									click="pModel.selectPayee(pModel.rediCorrectionHeader.finalCustomer,'finalCustomer');"
+									useHandCursor="true" toolTip="Search for Man. {this.pModel.oSettings.appSettings.Final_Buyer_Label} {this.pModel.oSettings.appSettings.Shard_Ship_To_Label}"
+									buttonMode="true" />
+							</s:HGroup>
+						</s:FormItem>
+						
+						<s:FormItem label="Man. {this.pModel.oSettings.appSettings.Final_Buyer_Label} Address" >
+							<s:TextInput id="tiFinalDistBsaAddress" text="{pModel.getAddress(pModel.rediCorrectionHeader.finalCustomer.address)}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						
+					</s:Form>
+				</s:VGroup>
+				
+				<s:VGroup width="33%">
+					<s:Form color="0x323232" width="{iFrmWidth + 125}" enabled="{this.pModel.lock.bEditMode}">
+						<s:layout>
+							<s:FormLayout id="frmLay2" gap="{pModel.iPadding}" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0"/>
+						</s:layout>
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Inv. #"  >
+							<s:TextInput id="tiOrigInvNum" text="{pModel.rediCorrectionHeader.invoiceNumber}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="PO #" >
+							<s:TextInput id="tiPONum" text="{pModel.rediCorrectionHeader.poNum}"   width="{iFrmWidth}" editable="false"   />
+						</s:FormItem>
+						<s:FormItem label="{this.pModel.oSettings.appSettings.Original_Buyer_Label} Inv. Date" >
+							<s:TextInput id="tiOrigInvDate" text="{DateUtils.dateFormat(pModel.rediCorrectionHeader.invoiceDate)}"  width="{iFrmWidth}" editable="false"   />
+						</s:FormItem>	
+						<s:FormItem label="Total Cases">
+							<s:TextInput id="tiTotCases" text="{pModel.rediCorrectionHeader.InvCases}"  width="75" editable="false"  />
+						</s:FormItem>
+						
+						<s:FormItem label="Total Dollars" >
+							<s:TextInput id="tiTotDollars" text="{pModel.rediCorrectionHeader.InvDollars}"  width="75" editable="false"  />
+						</s:FormItem>
+						<s:FormItem label="Message" >
+							<s:TextInput id="tiMessage" text="{pModel.rediCorrectionHeader.errorMessage}"  width="{iFrmWidth}" editable="false"  />
+						</s:FormItem>
+					</s:Form>
+				</s:VGroup>
+			</s:Group>
+		</s:VGroup>
+	</s:BorderContainer>
+	
+	<filters:FilterAdvancedDatagrid dragEnabled="false" headerWordWrap="true"
+									oSettings="{pModel.oSettings}"
+									allowMultipleSelection="true"
+									liveScrolling="true" 
+									sortExpertMode="true"
+									horizontalScrollPolicy="on"
+									id="dgRediHistory"
+									dispatcher="{this}"
+									dataProvider="{pModel.acRediEditItems}"
+									editable="true"
+									width="100%" height="100%" minHeight="200"
+									top="0" left="0" right="0" bottom="0"
+									doubleClickEnabled="true"
+									tabEnabled="true" tabChildren="true"
+									columns="{pModel.arrRediEditDgCols}"
+									sortableColumns="true" resize="true"
+									headerBackgroundSkin="com.shared.views.skins.DataGridHeaderBackgroundSkinBa"
+									headerSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"
+									verticalSeparatorSkin="com.shared.views.skins.DataGridHeaderSeparatorSkinBa"	/>
+<!--	keyDown="pModel.enterRow(event);"-->
+</s:Group>

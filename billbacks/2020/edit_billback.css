@@ -1,0 +1,160 @@
+/*
+  * ===================================================================================================
+  *    @File: billbacks\2020\edit_billback.css
+  *  @Author: Kal
+  *    @Date: February 2020
+  *
+  * @Remarks: any grid related css changes; make corresponding IE changes too  *** Important***
+  *
+  * ====================================================================================================
+*/
+
+.sectionHeader span {padding-right: 30px;}	/* Temp fake text */
+
+.menuArea {
+	display: flex;
+	justify-content: space-between;
+	background-color: #FFEDD2;
+	min-height: 20px;
+	padding: 2px;
+}
+#searchFormArea {
+	margin: 2px 4px;
+	min-height: 50px;
+	padding-bottom: 1px;
+}
+
+/* -----------------------  CSS GRID for Search Form -------------------- */
+/* any grid related css changes; make corresponding IE changes too, below */
+.hdr-container {
+	display: grid;
+	grid-template-columns: repeat(12, 1fr);
+	grid-template-rows: 1fr 1fr 3fr;
+	grid-column-gap: 2%;
+	grid-row-gap: 2%;
+	/* IE */
+	display: -ms-grid;
+	-ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+	-ms-grid-rows: 1fr 1fr 3fr;
+}
+
+.hdr-container >*{ border: 0px solid #fab; padding: 2px 5px 0px 2px; }
+
+.div1 { grid-area: 1 / 1 / 2 / 3; }     /*invoice*/
+.div2 { grid-area: 1 / 3 / 2 / 5; }     /*referece*/
+.div3 { grid-area: 1 / 5 / 2 / 7; }     /*closing method*/
+.div4 { grid-area: 1 / 7 / 2 / 9; }     /*inv date*/
+.div5 { grid-area: 1 / 9 / 2 / 11; }    /*del start*/
+.div6 { grid-area: 1 / 11 / 2 / 13; }   /*del end*/
+.div7 { grid-area: 2 / 1 / 3 / 5; }     /*title*/
+.div8 { grid-area: 2 / 5 / 3 / 7; }     /*payee*/
+.div9 { grid-area: 2 / 7 / 3 / 9; }     /*account*/
+.div10 { grid-area :2 / 9 / 3 / 11; }   /*received date*/
+.div11 { grid-area :2 / 11 / 3 / 13; }  /*post date*/
+.div12 { grid-area :3 / 1 / 4 / 2; }    /*summary labels*/
+.div13 { grid-area :3 / 2 / 4 / 3; }    /*$*/
+.div14 { grid-area :3 / 3 / 4 / 4; }    /*cs*/
+.div14-1 { grid-area :3 / 4 / 4 / 5; }  /*lb*/
+.div15 { grid-area :3 / 5 / 4 / 7; }    /*payee info*/
+.div16 { grid-area :3 / 7 / 4 / 9; }    /*account info*/
+.div17 { grid-area :3 / 9 / 4 / 13; }   /*notes*/
+
+/*prg-dist section*/
+.div18 {
+  display: grid;
+  /* grid-template-columns: 2fr 0.5fr 1.5fr 2fr 0.5fr 1.5fr; */
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 1fr;
+  grid-area: 4 / 1 / 5 / 13;
+}
+.div19 { grid-area: 1 / 1 / 2 / 2; }	/*program*/
+.div20 { grid-area: 1 / 2 / 2 / 3; }	/*program info*/
+.div21 { grid-area: 1 / 3 / 2 / 4; }	/*distributor*/
+.div22 { grid-area: 1 / 4 / 2 / 5; }	/*distributor info*/
+
+/* IE-11 support */
+@media all and (-ms-high-contrast: active) {
+
+	.hdr-container >*{  border: 0px solid #fab; padding: 2px 20px 5px 2px;  }
+	.comp-container >*{ padding-right:10px; }
+
+	.div1{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:1;-ms-grid-column-span:2; }      /*invoice*/
+	.div2{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:3;-ms-grid-column-span:2; }      /*referece*/
+	.div3{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:5;-ms-grid-column-span:2; }      /*closing method*/
+	.div4{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:7;-ms-grid-column-span:2; }      /*inv date*/
+	.div5{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:9;-ms-grid-column-span:2; }      /*del start*/
+	.div6{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:11;-ms-grid-column-span:2; }     /*del end*/
+	.div7{-ms-grid-row:2;-ms-grid-row-span:1;-ms-grid-column:1;-ms-grid-column-span:4; }      /*title*/
+	.div8{-ms-grid-row:2;-ms-grid-row-span:1;-ms-grid-column:5;-ms-grid-column-span:2; }      /*payee*/
+	.div9{-ms-grid-row:2;-ms-grid-row-span:1;-ms-grid-column:7;-ms-grid-column-span:2; }      /*account*/
+	.div10{-ms-grid-row:2;-ms-grid-row-span:1;-ms-grid-column:9;-ms-grid-column-span:2; }     /*received date*/
+	.div11{-ms-grid-row:2;-ms-grid-row-span:1;-ms-grid-column:11;-ms-grid-column-span:2; }    /*post date*/
+	.div12{-ms-grid-row:3;-ms-grid-row-span:1;-ms-grid-column:1;-ms-grid-column-span:1; }     /*summary labels*/
+	.div13{-ms-grid-row:3;-ms-grid-row-span:1;-ms-grid-column:2;-ms-grid-column-span:1; }     /*$*/
+	.div14{-ms-grid-row:3;-ms-grid-row-span:1;-ms-grid-column:3;-ms-grid-column-span:1; }     /*cs*/
+	.div14-1{-ms-grid-row:3;-ms-grid-row-span:1;-ms-grid-column:4;-ms-grid-column-span:1; }   /*lb*/
+	.div15{-ms-grid-row:3;-ms-grid-row-span:1;-ms-grid-column:5;-ms-grid-column-span:2; }     /*payee info*/
+	.div16{-ms-grid-row:3;-ms-grid-row-span:1;-ms-grid-column:7;-ms-grid-column-span:2; }     /*account info*/
+	.div17{-ms-grid-row:3;-ms-grid-row-span:1;-ms-grid-column:9;-ms-grid-column-span:4; }     /*notes*/
+
+	/*prg-dist section*/
+	.div18{
+		display:-ms-grid;
+		-ms-grid-columns: 1fr 1fr 1fr 1fr;
+		-ms-grid-rows:1fr;
+		-ms-grid-row:4;
+		-ms-grid-row-span:1;
+		-ms-grid-column:1;
+		-ms-grid-column-span:12;
+	}
+	.div19{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:1;-ms-grid-column-span:1;}	/*program*/
+	.div20{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:2;-ms-grid-column-span:1;}	/*program info*/
+	.div21{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:3;-ms-grid-column-span:1;}	/*distributor*/
+	.div22{-ms-grid-row:1;-ms-grid-row-span:1;-ms-grid-column:4;-ms-grid-column-span:1;}	/*distributor info*/
+}
+
+/* grid css customizations */
+.hdr-container div label { color: #63666A; }
+.hdr-container div select,
+.hdr-container div input,
+.hdr-container div textarea {
+	border: 1px solid #c4c5c7;
+	border-radius: .25rem;
+	min-height: 15px;
+	padding: 0 3px;
+	width: 100%;
+}
+
+.hdr-container div textarea { min-height: 80px; }
+.div12 label, .div13 label, .div14 label, .div14-1 label { display: block; text-align:center; }
+.div12>label+label { margin-top: 8px; text-align: right; font-style: italic; }
+.div13>input, .div14>input, .div14-1>input { display: block; margin-top: 3px; text-align: right;}
+.div18>div {padding: 2px 50px 20px 0;}
+
+
+
+/* Component area of the form */
+.comp-container {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: flex-start;
+	align-content: flex-start;
+}
+.comp-item { flex: 0 1 24%; }
+.comp-item input[type=text]{ width:50px; text-align: right; }
+.comp-item input[type=checkbox]{ flex: none; margin-right: 10px; }
+
+/* Editing cells in the grid */
+input:invalid {
+	border: 1px solid red;
+}
+
+
+/* single row below the grid that holds the buttons */
+.bottom-row {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 5px;
+}

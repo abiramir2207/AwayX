@@ -1,0 +1,55 @@
+===== QUERY: getComponentInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getTiers =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getComponentInfo =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: CheckforVolumePool =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForCheckforVolumePool = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForCheckforVolumePool>
+	<cftry>
+		<cfset CheckforVolumePool = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"deleted" = "eq.0",
+				"parent_id" = "eq.#URL.COMPONENT_ID#",
+				"select" = "component_name"
+			}), "component_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckforVolumePool = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckforVolumePool>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+
+===== QUERY: getTiers =====
+STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
+
+===== QUERY: getAllGrowthComponentsAccess =====
+STATUS: AUTO-GENERATED (review before applying)
+
+<cfset useLakebaseForgetAllGrowthComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_profile")>
+<cfif useLakebaseForgetAllGrowthComponentsAccess>
+	<cftry>
+		<cfset getAllGrowthComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllGrowthComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllGrowthComponentsAccess>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>
+

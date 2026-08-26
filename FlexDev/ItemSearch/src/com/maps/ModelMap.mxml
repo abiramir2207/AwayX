@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EventMap xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.models.*;
+			import com.views.*;
+			import com.maps.MainEventMap;
+			import com.events.SearchEvent;
+			import mx.controls.Alert;
+		]]>
+	</mx:Script>
+	
+	
+	<!-- SearchPanel View __________________________________________________________________ -->
+	
+	<Injectors target="{SearchPanel}">
+		<PropertyInjector id="items" targetKey="items" source="{SearchManager}" sourceKey="itemList" />
+		<PropertyInjector id="dpBrand" targetKey="dpBrand" source="{SearchManager}" sourceKey="arrBrand" />
+		<PropertyInjector id="dpQBrand" targetKey="dpQBrand" source="{SearchManager}" sourceKey="arrQBrand" />
+		<PropertyInjector id="dpTypeCode" targetKey="dpTypeCode" source="{SearchManager}" sourceKey="arrTypeCode" />
+		<PropertyInjector id="dpTypeGroup" targetKey="dpTypeGroup" source="{SearchManager}" sourceKey="arrTypeGroup" />
+		<PropertyInjector id="dpPrgTypesDiscList" targetKey="dpPrgTypesDiscList" source="{SearchManager}" sourceKey="arrProgramDiscountTypesList" />
+		<PropertyInjector id="dpItemStatusList" targetKey="dpItemStatusList" source="{SearchManager}" sourceKey="arrItemStatusList" />
+		<PropertyInjector id="sRecordMessage" targetKey="sRecordMessage" source="{SearchManager}" sourceKey="sRecordMessage" />
+		<PropertyInjector id="oSettings" targetKey="oSettings" source="{SettingsManager}" sourceKey="settings" />
+		<PropertyInjector id="arrUserList" targetKey="arrUserList" source="{ListManager}" sourceKey="userItemList" />
+		<PropertyInjector id="statusFilterOn"  targetKey="statusFilterOn" source="{SettingsManager}" sourceKey="settings.statusFilterOn" />
+		<PropertyInjector id="iButtonHeight" targetKey="iButtonHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_buttonHeight" />
+		<PropertyInjector id="iComboBoxHeight" targetKey="iComboBoxHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_comboBoxHeight" />
+		<PropertyInjector id="iTextInputHeight" targetKey="iTextInputHeight" source="{SettingsManager}" sourceKey="settings.UIAttributes.cfApp_textInputHeight" />
+		<ListenerInjector eventType="{SearchEvent.FILTER_MINI_ITEMS}" method="filterEventHandler" />
+		<ListenerInjector eventType="{SearchEvent.RESET_SCROLLBAR_POSITION}" method="resetScrollbarPosition" />
+	</Injectors>
+
+
+</EventMap>

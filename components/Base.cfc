@@ -1,0 +1,238 @@
+<cfcomponent displayname="Base" extends="mvc.Models.SettingsService">
+	<!------ *************************************************************************************
+	returns sVal1 if it is not empty
+	else return sVal2
+	************************************************************************************* ----->
+	<cffunction name="getNonEmptyValue" output="false">
+		<cfargument name="sVal1" required="true" default="" type="string" />
+		<cfargument name="sVal2" required="true" default="" type="string" />
+
+		<cfif len(Arguments.sVal1)>
+			<cfreturn Arguments.sVal1 />
+		<cfelse>
+			<cfreturn Arguments.sVal2 />
+		</cfif>
+		<!------ <cfreturn (iif(len(Arguments.sVal1),  "Arguments.sVal1",  "Arguments.sVal2"))> ----->
+
+	</cffunction>
+
+	<!------ *************************************************************************************
+
+	************************************************************************************* ----->
+	<cffunction name="variableExist" output="false">
+		<cfargument name="sVarName" required="true" default="" type="string" />
+		<cfargument name="sDefaultValue" required="false" default="" type="string" />
+
+		<cfset returnValue = false>
+		<cfif isDefined(arguments.sVarName)>
+			<cfif Evaluate("#arguments.sVarName#") NEQ arguments.sDefaultValue>
+				<cfset returnValue = true>
+			</cfif>
+		</cfif>
+
+		<cfreturn returnValue />
+
+	</cffunction>
+
+	<!------ *************************************************************************************
+	Value List of nulls result in ",,,,aaa,,sss"
+	************************************************************************************* ----->
+	<cffunction name="replaceMultipleChars" output="false">
+		<cfargument name="sValue" required="true" default="" type="string" />
+		<cfargument name="sChar" required="true" default="" type="string" />
+
+		<cfset returnValue = arguments.sValue>
+		<cfset returnValue = ReReplaceNoCase(returnValue, "#arguments.sChar#+", "#arguments.sChar#", "all")>
+		<cfset returnValue = ReReplaceNoCase(returnValue, "^#arguments.sChar#", "", "all")>
+		<cfset returnValue = ReReplaceNoCase(returnValue, "#arguments.sChar#$", "", "all")>
+
+		<cfreturn returnValue />
+
+	</cffunction>
+
+	<!---////////////////////////////////////////// checkDateOverLap FUNCTION /////////////////////////////////////////////////////--->
+	<cffunction name="checkDateOverLap" output="false" returntype="boolean">
+
+		<cfargument name="startDate1" required="true" default="" />
+		<cfargument name="endDate1" required="true" default="" />
+		<cfargument name="startDate2" required="true" default="" />
+		<cfargument name="endDate2" required="true" default="" />
+
+		<cfset returnVal = false />
+
+		<!------ check there is any overlap ----->
+		<cfif
+			(
+				DateDiff("d", arguments.startDate1, arguments.startDate2) GTE 0
+				AND
+				DateDiff("d", arguments.startDate2, arguments.endDate1) GTE 0
+			)
+			OR
+			(
+				DateDiff("d", arguments.startDate1, arguments.endDate2) GTE 0
+				AND
+				DateDiff("d", arguments.endDate2, arguments.endDate1) GTE 0
+			)
+			OR
+			(
+				DateDiff("d", arguments.startDate2, arguments.startDate1) GTE 0
+				AND
+				DateDiff("d", arguments.startDate1, arguments.endDate2) GTE 0
+			)
+			OR
+			(
+				DateDiff("d", arguments.startDate2, arguments.endDate1) GTE 0
+				AND
+				DateDiff("d", arguments.endDate1, arguments.endDate2) GTE 0
+			)
+		>
+			<cfset returnVal = true />
+
+		</cfif>
+
+		<cfreturn returnVal />
+
+	</cffunction>
+
+	<cffunction name="checkDateSpanMatch" output="false" returntype="boolean">
+
+		<cfargument name="startDate1" required="true" default="" />
+		<cfargument name="endDate1" required="true" default="" />
+		<cfargument name="startDate2" required="true" default="" />
+		<cfargument name="endDate2" required="true" default="" />
+
+		<cfset returnVal =  false>
+		<!------ check the dates are same ----->
+		<cfif isDate(arguments.startDate1) AND isDate(arguments.startDate1) AND isDate(arguments.endDate1) AND isDate(arguments.endDate2)>
+			<cfset returnVal =  DateDiff("d", arguments.startDate1, arguments.startDate1) EQ 0 AND DateDiff("d", arguments.endDate1, arguments.endDate2) EQ 0>
+		</cfif>
+
+		<cfreturn returnVal />
+
+	</cffunction>
+
+	<cffunction name="stripHTMLTag" output="false" returntype="string">
+
+		<cfargument name="str" type="string" required="true" />
+		<cfargument name="thisTag" type="string" required="false" default="" />
+
+		<cfset returnValue = arguments.str />
+		<!------ <cfset returnValue = REReplaceNoCase(returnValue, "</#arguments.thisTag#[^>]*>", "", "ALL") />
+		<cfset returnValue = REReplaceNoCase(returnValue, "<#arguments.thisTag#[^>]*>", "", "ALL") /> ----->
+
+		<cfset returnValue = REReplaceNoCase(returnValue, "<#arguments.thisTag#>[\s\S]*?</#arguments.thisTag#*>", "", "ALL") />
+		<cfreturn returnValue />
+
+	</cffunction>
+
+	<cffunction name="makeUniqueList" output="false" returntype="string">
+
+		<cfargument name="str" type="string" required="true" />
+		<cfargument name="delimiter" type="string" required="false" default="," />
+
+		<cfset returnValue = "" />
+
+		<cfloop list="#arguments.str#" delimiters="#arguments.delimiter#" index="thisItem">
+			<cfset thisItem = trim(thisItem)>
+			<cfif NOT ListFindNoCase(returnValue, thisItem, arguments.delimiter)>
+
+				<cfset returnValue = ListAppend(returnValue, thisItem, arguments.delimiter) />
+
+			</cfif>
+
+		</cfloop>
+
+		<cfreturn returnValue />
+
+	</cffunction>
+
+	<cffunction name="listAppendIfNotExist" output="false" returntype="string">
+
+		<cfargument name="str" type="string" required="true" />
+		<cfargument name="addStr" type="string" required="true" />
+		<cfargument name="delimiter" type="string" required="false" default="," />
+
+		<cfset returnValue = arguments.str />
+
+		<cfloop list="#arguments.addStr#" delimiters="#arguments.delimiter#" index="thisItem">
+			<cfset thisItem = trim(thisItem)>
+			<cfif NOT ListFindNoCase(returnValue, thisItem, arguments.delimiter)>
+
+				<cfset returnValue = ListAppend(returnValue, thisItem, arguments.delimiter) />
+
+			</cfif>
+
+		</cfloop>
+
+		<cfreturn returnValue />
+
+	</cffunction>
+	<!--- Converts the first letter of every word to UpperCase --->
+	<cffunction name="CapFirst" output="false" returntype="string">
+		<cfargument name="str" type="string" required="true" />
+		<cfscript>
+			var newstr = "";
+			var word = "";
+			var i = 1;
+			var strlen = listlen(str," ");
+			for(i=1;i lte strlen;i=i+1) {
+				word = ListGetAt(str,i," ");
+				newstr = newstr & UCase(Left(word,1));
+				if(len(word) gt 1) newstr = newstr & Right(word,Len(word)-1);
+				if(i lt strlen) newstr = newstr & " ";
+			}
+		return newstr;
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="getProgramNumberLen" returntype="Numeric">
+
+		<cfquery name="qGetProgramNumberLen" datasource="#application.datasource#">
+			SELECT TOP 1 LEN(Contract_Number) AS ProgramNumberLen FROM Number_Generator_Contracts
+		</cfquery>
+
+		<cfreturn qGetProgramNumberLen.ProgramNumberLen />
+
+	</cffunction>
+
+	<cffunction name="getBillbackNumberLen" returntype="Numeric">
+
+		<cfquery name="qGetBillbackNumberLen" datasource="#application.datasource#">
+			SELECT TOP 1 LEN(Billback_Number) AS BillbackNumberLen FROM Number_Generator_Billbacks
+		</cfquery>
+
+		<cfreturn qGetBillbackNumberLen.BillbackNumberLen />
+
+	</cffunction>
+
+	<cffunction name="DollarFormatWithBlank" output="true" returntype="string">
+		<cfargument name="iValue" type="string" required="true" />
+
+		<cfif iValue eq "">
+			<cfreturn "" />
+		<cfelse>
+			<cfreturn DollarFormat(iValue) />
+		</cfif>
+
+	</cffunction>
+	<!--- Below function get the list of elements which are in list1 but not in list2  --->
+	<cffunction name="listCompare" output="false" returnType="string">
+		<cfargument name="list1" type="string" required="true" />
+		<cfargument name="list2" type="string" required="true" />
+			<cfset var list1Array = ListToArray(arguments.List1) />
+			<cfset var list2Array = ListToArray(arguments.List2) />
+			<cfset list1Array.removeAll(list2Array) />
+			<!--- Return in list format --->
+			<cfreturn ArrayToList(list1Array) />
+	</cffunction>
+	<!--- Below function gets common elements in both lists  --->
+	<cffunction name="listCommon" output="false" returnType="string">
+		<cfargument name="list1" type="string" required="true" />
+		<cfargument name="list2" type="string" required="true" />
+			<cfset var list1Array = ListToArray(arguments.List1) />
+			<cfset var list2Array = ListToArray(arguments.List2) />
+			<cfset list1Array.retainAll(list2Array) />
+			<!--- Return in list format --->
+			<cfreturn ArrayToList(list1Array) />
+	</cffunction>
+</cfcomponent>
