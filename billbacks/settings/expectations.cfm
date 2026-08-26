@@ -32,33 +32,7 @@ This allows an administrator to specify the tolerances for various deviations.
 		<!---Inserts if there are no previous values--->
 		<cfif form.up_sv IS 0>
 		
-		<cfset useLakebaseForInsert_Tolerance_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
-<cfif useLakebaseForInsert_Tolerance_Info>
-	<cftry>
-		<cfset application.oLakebase.insertRow("billback_settings", {
-			"user_id" = "#request.AccessStructure.Company_Main_ID#",
-			"bb_tolerance_dpp" = "#FORM.BB_Tolerance_DPP#",
-			"bb_tolerance_dpp_rate" = "#FORM.BB_Tolerance_DPP_Rate#",
-			"bb_tolerance_dppo" = "#int(FORM.BB_Tolerance_DPPO)#",
-			"bb_tolerance_bap" = "#FORM.BB_Tolerance_BAP#",
-			"bb_tolerance_bapo" = "#int(FORM.BB_Tolerance_BAPO)#",
-			"bb_tolerance_dvt" = "#int(FORM.BB_Tolerance_DVT)#",
-			"bb_tolerance_ert" = "#FORM.BB_Tolerance_ERT#",
-			"bb_tolerance_tet" = "#int(FORM.BB_Tolerance_TET)#",
-			"bb_start_offset_days" = "#val(FORM.BB_Start_Offset_Days)#",
-			"bb_end_offset_days" = "#val(FORM.BB_End_Offset_Days)#",
-			"validate_bb_uom" = "#val(FORM.Validate_BB_UOM)#",
-			"validate_bb_uom_rate_threshold" = "#val(FORM.Validate_BB_UOM_Rate_Threshold)#",
-			"bb_tolerance_update_date" = "#createodbcdatetime(Now())#",
-			"bb_tolerance_editor_id" = "#request.AccessStructure.User_ID#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsert_Tolerance_Info = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsert_Tolerance_Info>
-<cfquery name="Insert_Tolerance_Info" datasource="#application.datasource#">
+		<cfquery name="Insert_Tolerance_Info" datasource="#application.datasource#">
 
 			INSERT INTO Billback_Settings
 			(User_ID, 
@@ -93,7 +67,6 @@ This allows an administrator to specify the tolerances for various deviations.
 			#createodbcdatetime(Now())#, 
 			'#request.AccessStructure.User_ID#')
 			</cfquery>
-</cfif>
 		<cfelse>
 
 		<cfquery name="Update_Tolerance_Info" datasource="#application.datasource#">

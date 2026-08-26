@@ -48,21 +48,7 @@ WHERE Deleted = 0
 		<cfset Default_FieldName = "Customer_Type">
 			<cfset thisFieldName = "#trim(Default_FieldName)#_#j#_#i#">
 			<cfparam name="form.#thisFieldName#" default="0">
-			<cfset useLakebaseForInsertCustomertypeValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_customer_type_settings")>
-<cfif useLakebaseForInsertCustomertypeValues>
-	<cftry>
-		<cfset application.oLakebase.insertRow("profile_customer_type_settings", {
-			"profiles_id" = "#i#",
-			"customer_type_id" = "#j#",
-			"profile_customer_type_value" = "#evaluate(thisFieldName)#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertCustomertypeValues = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertCustomertypeValues>
-<cfquery name="InsertCustomertypeValues" datasource="#application.datasource#">
+			<cfquery name="InsertCustomertypeValues" datasource="#application.datasource#">
 				INSERT INTO Profile_Customer_Type_Settings
 				(
 					Profiles_ID,
@@ -76,7 +62,6 @@ WHERE Deleted = 0
 					#evaluate(thisFieldName)#
 				)
 			</cfquery>
-</cfif>
 	</cfloop>
 </CFLOOP>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
@@ -107,21 +92,7 @@ WHERE Deleted = 0
 
 
 		<cfset Program_Lump_Sum_Name_ID = right(IDs_Only, (IDs_Only_len - Underscorelocation))>
-		<cfset useLakebaseForEnterLSApprovalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>
-<cfif useLakebaseForEnterLSApprovalAmount>
-	<cftry>
-		<cfset application.oLakebase.insertRow("profile_ls_approval", {
-			"program_lump_sum_name_id" = "#Program_Lump_Sum_Name_ID#",
-			"profiles_id" = "#Profile_ID#",
-			"approval_amount" = "#evaluate(item)#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForEnterLSApprovalAmount = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForEnterLSApprovalAmount>
-<cfquery name="EnterLSApprovalAmount" datasource="#application.datasource#">
+		<cfquery name="EnterLSApprovalAmount" datasource="#application.datasource#">
 		INSERT INTO Profile_LS_Approval
 		(
 			Program_Lump_Sum_Name_ID,
@@ -135,7 +106,6 @@ WHERE Deleted = 0
 			'#evaluate(item)#'
 		)
 		</cfquery>
-</cfif>
 	</cfif>
 
       </cfif>

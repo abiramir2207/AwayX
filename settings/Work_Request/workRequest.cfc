@@ -582,26 +582,7 @@
 
 
 		<!--- Insert into Punch_Work_Request --->
-		<cfset useLakebaseForInsertToPunchWorkRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_work_request")>
-<cfif useLakebaseForInsertToPunchWorkRequest>
-	<cftry>
-		<cfset application.oLakebase.insertRow("punch_work_request", {
-			"punch_id" = "#InsertWorkRequestToPunch.Punch_ID#",
-			"created_user_name" = "#GetUserInfo.Name_First# #GetUserInfo.Name_Last#",
-			"created_user_email" = "#GetUserInfo.User_Email#",
-			"created_user_phone" = "#GetUserInfo.Work_Phone_1#-#GetUserInfo.Work_Phone_2#-#GetUserInfo.Work_Phone_3#",
-			"requesting_url" = "#arguments.Installation_URL#",
-			"ba_support_email" = "#SupportEmail.BA_Support_Email#",
-			"app_work_request_id" = "#InsertWorkRequest.Work_Request_ID#",
-			"urlenvironment" = "#arguments.URLEnvironment#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertToPunchWorkRequest = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertToPunchWorkRequest>
-<cfquery name="InsertToPunchWorkRequest" datasource="punchlist">
+		<cfquery name="InsertToPunchWorkRequest" datasource="punchlist">
 		INSERT INTO Punch_Work_Request
 		(
 			Punch_ID,
@@ -625,7 +606,6 @@
 			'#arguments.URLEnvironment#'
 		)
 		</cfquery>
-</cfif>
 		<!--- end insert to punchlist using DSN--->
 
 

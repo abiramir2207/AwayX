@@ -6,31 +6,12 @@
 				
 				  <cfset newVendorID = Evaluate("form.Vendor_ID_" & DistNum)>
 				  
-					<cfset useLakebaseForUpdate_Dist_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
-<cfif useLakebaseForUpdate_Dist_Info>
-	<cftry>
-		<cfset application.oLakebase.updateRows("bsa_foodservice_customers",
-			{
-				"bsa_foodservice_customers_id" = "eq.#CustID#"
-			},
-			{
-				"default_vendor_id" = "#newVendorID#",
-				"default_billback_closing_method_id" = "#ListGetAt(form.Default_BB_Closing_Method,DistNum)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdate_Dist_Info = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdate_Dist_Info>
-<CFQUERY NAME="Update_Dist_Info" DATASOURCE = "#Application.Datasource#">
+					<CFQUERY NAME="Update_Dist_Info" DATASOURCE = "#Application.Datasource#">
 						UPDATE BSA_Foodservice_Customers
 						   SET Default_Vendor_ID = '#newVendorID#',
 						       Default_Billback_Closing_Method_ID = '#ListGetAt(form.Default_BB_Closing_Method,DistNum)#'
 						 WHERE BSA_Foodservice_Customers_ID = '#CustID#'
 					</CFQUERY>
-</cfif>
 					
 	
           <!---26298 Feb 28, 2011 - Update/Add Vendor xref table for the same distributor ID--->
@@ -42,31 +23,12 @@
           </cfquery>
 				
 				  <cfif rsCount.Result>
-            <cfset useLakebaseForrsUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_dist_oper")>
-<cfif useLakebaseForrsUpdate>
-	<cftry>
-		<cfset application.oLakebase.updateRows("vendor_dist_oper",
-			{
-				"distributor_id" = "eq.#CustID#"
-			},
-			{
-				"default_vendor_id" = "#newVendorID#",
-				"default_billback_closing_method_id" = "#ListGetAt(Form.Default_BB_Closing_Method, DistNum)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForrsUpdate = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForrsUpdate>
-<cfquery NAME="rsUpdate" DATASOURCE = "#Application.Datasource#">
+            <cfquery NAME="rsUpdate" DATASOURCE = "#Application.Datasource#">
               UPDATE Vendor_Dist_Oper
                  SET Default_Vendor_ID = '#newVendorID#',
                      Default_Billback_Closing_Method_ID = '#ListGetAt(Form.Default_BB_Closing_Method, DistNum)#'
                WHERE Distributor_ID = '#CustID#'
             </cfquery>
-</cfif>
 				  <cfelse>
             <cfquery NAME="rsInsert" DATASOURCE = "#Application.Datasource#">
               INSERT Vendor_Dist_Oper

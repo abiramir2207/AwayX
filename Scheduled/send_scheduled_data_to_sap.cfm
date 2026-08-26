@@ -151,31 +151,11 @@
 					#Replace(getProgramheader.contract_number,"-","")#&"."&#discount_type#&#componentcount#&"."&#paymentcounter#> 
 					
 					<cfif mws eq 0>
-					   <cfset useLakebaseForinsertprogramperiods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
-<cfif useLakebaseForinsertprogramperiods>
-	<cftry>
-		<cfset application.oLakebase.insertRow("program_period_dates", {
-			"program_id" = "#getProgramheader.contract_main_id#",
-			"bsa_program_id" = "#RebateID#",
-			"program_payment_period" = "#paymentcounter#",
-			"contract_number" = "#getProgramheader.contract_number#",
-			"program_discount_type_id" = "#Discount_Type_ID#",
-			"component_name_id" = "#getDiscountTypeRates.Component_Name_ID#",
-			"period_start_date" = "#Trim(rUnits[i].PERIODSTARTDATE)#",
-			"period_end_date" = "#Trim(rUnits[i].PERIODENDDATE)#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForinsertprogramperiods = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForinsertprogramperiods>
-<CFQUERY NAME="insertprogramperiods" datasource="#application.datasource#">
+					   <CFQUERY NAME="insertprogramperiods" datasource="#application.datasource#">
 						insert into program_period_dates
 						(Program_Id,BSA_Program_Id,Program_Payment_Period,contract_number,Program_Discount_Type_ID,Component_Name_ID,Period_Start_Date,Period_End_Date)
 						values(#getProgramheader.contract_main_id#,'#RebateID#', #paymentcounter#, #getProgramheader.contract_number#,#Discount_Type_ID#, #getDiscountTypeRates.Component_Name_ID#,#Trim(rUnits[i].PERIODSTARTDATE)#,#Trim(rUnits[i].PERIODENDDATE)#)
 					   </CFQUERY>
-</cfif>
 					</cfif>
 
 					</cfloop>

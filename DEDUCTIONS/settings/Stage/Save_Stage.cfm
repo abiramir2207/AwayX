@@ -171,24 +171,10 @@
 	</CFQUERY>
 </cfif>
 	<cfloop from="1" to="#listlen(form.Action_Analyst_Profile)#" index="A">
-		<cfset useLakebaseForSave_Analyst_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_action_analyst")>
-<cfif useLakebaseForSave_Analyst_Data>
-	<cftry>
-		<cfset application.oLakebase.insertRow("dd_action_analyst", {
-			"dd_stage_id" = "#Save_Data.SCOPEIDENTITY#",
-			"analyst_user_id" = "#listgetat(form.Action_Analyst_Profile, A)#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForSave_Analyst_Data = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForSave_Analyst_Data>
-<CFQUERY NAME="Save_Analyst_Data" datasource="#application.datasource#">
+		<CFQUERY NAME="Save_Analyst_Data" datasource="#application.datasource#">
 			INSERT INTO DD_Action_Analyst(DD_Stage_ID,Analyst_User_ID)
 			Values(#Save_Data.SCOPEIDENTITY#,'#listgetat(form.Action_Analyst_Profile, A)#')
 		</CFQUERY>
-</cfif>
 	</cfloop>
 		<CFLOCATION URL="create_Stage.cfm" ADDTOKEN="No">
 		<CFABORT>

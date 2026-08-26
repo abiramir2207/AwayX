@@ -2505,7 +2505,28 @@ DEPENDENCIES:
 	            WHERE Group_Template_ID = #qryGetGroupTemplateByTemplateID.Group_Template_ID#
 	          </cfquery>
 	          <cfif FiltersChecked EQ "0">
-		          <cfquery name="updProdGroupSelection" datasource="#application.datasource#">
+		          <cfset useLakebaseForupdProdGroupSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_template_selection")>
+<cfif useLakebaseForupdProdGroupSelection>
+	<cftry>
+		<cfset application.oLakebase.updateRows("product_group_template_selection",
+			{
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"product_group_level_id" = "eq.#qryGetGroupTemplateByTemplateID.Group_Level_ID#"
+			},
+			{
+				"active" = "0",
+				"deleted" = "1",
+				"updated_date" = "#now()#",
+				"updated_by" = "#arguments.UserID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdProdGroupSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdProdGroupSelection>
+<cfquery name="updProdGroupSelection" datasource="#application.datasource#">
 		            UPDATE Product_Group_Template_Selection
 		            SET Active = 0,
 			            Deleted = 1,
@@ -2515,6 +2536,7 @@ DEPENDENCIES:
 		                  Template_ID = #arguments.stForm.TemplateID#
 			            AND   Product_Group_Level_ID = #qryGetGroupTemplateByTemplateID.Group_Level_ID#
 		           </cfquery>
+</cfif>
 	           </cfif>
           </cfif> <!--- END if prodGroupExistsAlready EQ 1 --->
         </cfloop> <!--- End Loop query="qryGetGroupTemplateByTemplateID" --->

@@ -217,13 +217,31 @@
 			<cfif appSettings.fixedcomponents_on IS 1>
 				<!---Checking fixed price rebate--->
 				<cfif listfind(DiscountList, '1')>
-					<cfquery name="GetFixedPayeeTo" datasource="#application.datasource#">
+					<cfset useLakebaseForGetFixedPayeeTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForGetFixedPayeeTo>
+	<cftry>
+		<cfset GetFixedPayeeTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"fixed_component_paid_to" = "eq.#Payee_Type#",
+				"program_id" = "eq.#ProductOnProgram.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "fixed_component_paid_to"
+			}), "fixed_component_paid_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFixedPayeeTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFixedPayeeTo>
+<cfquery name="GetFixedPayeeTo" datasource="#application.datasource#">
 					SELECT Program_Fixed_Component.Fixed_Component_Paid_To
 					FROM Program_Fixed_Component
 					WHERE Program_Fixed_Component.Fixed_Component_Paid_To = #Payee_Type#
 					AND Program_Fixed_Component.Program_ID = #ProductOnProgram.Contract_Main_ID#
 					AND Program_Fixed_Component.Deleted = 0
 					</cfquery>
+</cfif>
 								
 					<cfif GetFixedPayeeTo.RecordCount IS 0>
 						<cfset FixedLocation = listfind(DiscountList, '1')>

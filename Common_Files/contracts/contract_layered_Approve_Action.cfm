@@ -110,51 +110,13 @@
 				<!--- 	if typecode is agreed --->
 				<CFIF FindNoCase("GroupAgree", FIELDVALUE,1)>
 					<CFIF getprogramtypecodes.recordcount EQ 0>
-						<cfset useLakebaseForinsertprogramtypecodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_type_code_approval_info")>
-<cfif useLakebaseForinsertprogramtypecodes>
-	<cftry>
-		<cfset application.oLakebase.insertRow("program_type_code_approval_info", {
-			"program_id" = "#program_id#",
-			"type_code_desc_id" = "#getTypecodeId#",
-			"agree" = "#evaluate(FIELDVALUE)#",
-			"type" = "2",
-			"user_id" = "#request.AccessStructure.user_id#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForinsertprogramtypecodes = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForinsertprogramtypecodes>
-<cfquery name="insertprogramtypecodes" datasource="#application.datasource#">
+						<cfquery name="insertprogramtypecodes" datasource="#application.datasource#">
 							INSERT INTO Program_Type_Code_Approval_Info
 							(Program_Id,Type_Code_Desc_Id,Agree,type,User_Id)
 							Values(#program_id#,'#getTypecodeId#',#evaluate(FIELDVALUE)#,2,'#request.AccessStructure.user_id#')
 						</cfquery>
-</cfif>
 					<cfelse>
-						<cfset useLakebaseForupdateprogramtypecodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_type_code_approval_info")>
-<cfif useLakebaseForupdateprogramtypecodes>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_type_code_approval_info",
-			{
-				"program_id" = "eq.#program_id#",
-				"type_code_desc_id" = "eq.#getTypecodeId#",
-				"user_id" = "eq.#request.AccessStructure.user_id#",
-				"type" = "eq.2",
-				"deleted" = "eq.0"
-			},
-			{
-				"agree" = "#evaluate(FIELDVALUE)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateprogramtypecodes = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateprogramtypecodes>
-<cfquery name="updateprogramtypecodes" datasource="#application.datasource#">
+						<cfquery name="updateprogramtypecodes" datasource="#application.datasource#">
 							UPDATE Program_Type_Code_Approval_Info
 							SET Agree = #evaluate(FIELDVALUE)#
 							where
@@ -164,7 +126,6 @@
 							and type = 2
 							and deleted = 0
 						</cfquery>
-</cfif>
 					</CFIF>
 				<!--- if typecode is approved --->
 				<cfelseif FindNoCase("GroupApprove", FIELDVALUE,1)>
@@ -212,28 +173,7 @@
 							Values(#program_id#,'#getProductId#',#evaluate(FIELDVALUE)#,2,'#request.AccessStructure.user_id#')
 						</cfquery>
 					<cfelse>
-						<cfset useLakebaseForupdateprogramproducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_type_code_approval_info")>
-<cfif useLakebaseForupdateprogramproducts>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_type_code_approval_info",
-			{
-				"program_id" = "eq.#program_id#",
-				"product_id" = "eq.#getProductId#",
-				"user_id" = "eq.#request.AccessStructure.user_id#",
-				"type" = "eq.2",
-				"deleted" = "eq.0"
-			},
-			{
-				"agree" = "#evaluate(FIELDVALUE)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateprogramproducts = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateprogramproducts>
-<cfquery name="updateprogramproducts" datasource="#application.datasource#">
+						<cfquery name="updateprogramproducts" datasource="#application.datasource#">
 							UPDATE Program_Type_Code_Approval_Info
 							SET Agree = #evaluate(FIELDVALUE)#
 							where
@@ -243,7 +183,6 @@
 							and type = 2
 							and deleted = 0
 						</cfquery>
-</cfif>
 					</CFIF>
 				<!--- if product is approved --->
 				<cfelseif FindNoCase("ProductApprove", FIELDVALUE,1)>
@@ -445,13 +384,28 @@
 <CFIF DoNotApprove eq 0><!--- If program is to be approved (Milan - Label 9353 - 3/8/2006) --->
 
 
-	<cfquery name="GetSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#CSLGetContractInfo.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
+<cfquery name="GetSettings" datasource="#application.datasource#">
 		SELECT *
 		FROM
 			Program_Control_Panel_Options
 		WHERE
 			ProgramControl_Panel_Options_ID = '#CSLGetContractInfo.ProgramType_ID#'
 	</cfquery>
+</cfif>
 
 	<cfset getThisProgramsStatus = ProgramManager.getThisProgramsStatus(Program_ID)>
 

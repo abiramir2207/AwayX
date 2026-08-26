@@ -264,23 +264,7 @@
 		
 			<cfif isNumeric(arguments.distributorGroupID) AND arguments.distributorGroupID NEQ 0>
 			
-				<cfset useLakebaseForprodGroupDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
-<cfif useLakebaseForprodGroupDetails>
-	<cftry>
-		<cfset prodGroupDetails = application.oLakebase.toQuery(
-			application.oLakebase.selectRows("business_segment", {
-				"deleted" = "eq.0",
-				"business_segment_id" = "eq.#arguments.distributorGroupID#",
-				"select" = "'' as shr_ship_to,'' as ship_to,distributor_label_plural#' as name"
-			}), "'' as shr_ship_to,'' as ship_to,distributor_label_plural#' as name"
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForprodGroupDetails = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForprodGroupDetails>
-<cfquery name="prodGroupDetails" datasource="#application.datasource#">
+				<cfquery name="prodGroupDetails" datasource="#application.datasource#">
 				
 					SELECT 	'' AS Shr_Ship_To,
 							'' AS Ship_To,
@@ -292,7 +276,6 @@
 							Business_Segment.Business_Segment_ID = #arguments.distributorGroupID#
 							
 				</cfquery>
-</cfif>
 			
 			</cfif>
 		

@@ -481,27 +481,7 @@ function alert_landscape()
 		</SCRIPT>  --->
 	<CFELSE>
 	
-		<cfset useLakebaseForUpdate_Signed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
-<cfif useLakebaseForUpdate_Signed>
-	<cftry>
-		<cfset application.oLakebase.updateRows("payment_data_export_1",
-			{
-				"payment_data_export_1_id" = "eq.#Payment_Data_Export_1_ID#"
-			},
-			{
-				"signed" = "1",
-				"signed_by_first_name" = "#request.AccessStructure.Name_First#",
-				"signed_by_last_name" = "#request.AccessStructure.Name_Last#",
-				"signed_date" = "#DateFormat(Now())#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdate_Signed = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdate_Signed>
-<CFQUERY NAME="Update_Signed" DATASOURCE="#Application.Datasource#">
+		<CFQUERY NAME="Update_Signed" DATASOURCE="#Application.Datasource#">
 			UPDATE		Payment_Data_Export_1
 			
 			SET			Signed = 1,
@@ -510,8 +490,7 @@ function alert_landscape()
 						Signed_Date				= '#DateFormat(Now())#'	
 						
 			WHERE 	Payment_Data_Export_1_ID='#Payment_Data_Export_1_ID#'
-		</CFQUERY>
-</cfif>		
+		</CFQUERY>		
 		<BR><BR><BR>
 		<TABLE ALIGN="Center">
 			<TR>

@@ -2,29 +2,11 @@
 <CFSET FORM.Program_ID = cryp.value>
 
 <CFIF len(trim(FORM.newProgramGlobalVolume)) GT 0>
-	<cfset useLakebaseForsaveNewProgramVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
-<cfif useLakebaseForsaveNewProgramVolume>
-	<cftry>
-		<cfset application.oLakebase.updateRows("contract_main",
-			{
-				"contract_main_id" = "eq.#FORM.Program_ID#"
-			},
-			{
-				"contract_quantity" = "#trim(FORM.newProgramGlobalVolume)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForsaveNewProgramVolume = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForsaveNewProgramVolume>
-<cfquery name="saveNewProgramVolume" datasource="#application.datasource#">
+	<cfquery name="saveNewProgramVolume" datasource="#application.datasource#">
 		UPDATE Contract_Main
 		SET Contract_Quantity = '#trim(FORM.newProgramGlobalVolume)#'
 		WHERE Contract_Main_ID = '#FORM.Program_ID#'
 	</cfquery>
-</cfif>
 </CFIF>
 
 

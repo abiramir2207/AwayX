@@ -137,29 +137,11 @@
 			<CFLOCATION URL="/session_expired.cfm?id=#request.AccessStructure.User_ID#" ADDTOKEN="No">
 		<CFELSE>
 			<!--- Otherwise record the current time --->
-			<cfset useLakebaseForUpdate_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
-<cfif useLakebaseForUpdate_Session_Status>
-	<cftry>
-		<cfset application.oLakebase.updateRows("session_tracker",
-			{
-				"session_user_id" = "eq.#request.AccessStructure.User_ID#"
-			},
-			{
-				"session_date_time_stamp" = "#createodbcdatetime(now())#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdate_Session_Status = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdate_Session_Status>
-<CFQUERY NAME="Update_Session_Status" datasource="#application.datasource#">
+			<CFQUERY NAME="Update_Session_Status" datasource="#application.datasource#">
 				UPDATE	Session_Tracker
 				SET		Session_Date_Time_Stamp	=	#createodbcdatetime(now())#
 				WHERE	Session_User_ID = '#request.AccessStructure.User_ID#'
 			</CFQUERY>
-</cfif>
 		</CFIF>
 
 

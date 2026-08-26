@@ -1496,7 +1496,21 @@ Description  :  Manager for Planner Program
                         SET NOCOUNT OFF
                     </cfquery>
 
-					<cfquery NAME="qAddLumpSumProduct" datasource="#application.datasource#">
+					<cfset useLakebaseForqAddLumpSumProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_product_data")>
+<cfif useLakebaseForqAddLumpSumProduct>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_lump_sum_product_data", {
+			"program_lump_sum_id" = "#sLumpSumCompId#",
+			"contract_products_id" = "#qSaveLumpSumContractProducts.Contract_Products_ID#",
+			"is_group" = "#bIsGroup#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAddLumpSumProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAddLumpSumProduct>
+<cfquery NAME="qAddLumpSumProduct" datasource="#application.datasource#">
 						INSERT INTO Program_Lump_Sum_Product_Data
 							(
 								Program_Lump_Sum_ID,
@@ -1510,6 +1524,7 @@ Description  :  Manager for Planner Program
 								#bIsGroup#
 							)
 					</cfquery>
+</cfif>
 
 				</cfloop>
 

@@ -302,32 +302,7 @@
 								
 					
 					<!--- First, the main billback table --->
-					<cfset useLakebaseForInsertIntoBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
-<cfif useLakebaseForInsertIntoBillback>
-	<cftry>
-		<cfset application.oLakebase.insertRow("billback", {
-			"bb_code" = "#NewBBCode#",
-			"bb_title" = "Auto BB :: Lump Sum :: #Contract_Info.Contract_Number# :: #Contract_Info.Contract_Title#",
-			"bb_date" = "#now()#",
-			"bb_start_date" = "#Contract_Info.Contract_Start_Date#",
-			"bb_end_date" = "#Contract_Info.Contract_End_Date#",
-			"bb_amount" = "#GetAutoPayLS.Lump_Sum_Amount#",
-			"bb_up" = "0",
-			"bb_pnf" = "0",
-			"bb_request_approval_user_id" = "#arguments.User_Approved_ID#",
-			"bb_creator_id" = "#Contract_Info.Creator_ID#",
-			"bb_creator_user_position_id" = "#Contract_Info.Creating_User_Position_ID#",
-			"billback_payee_type_id" = "#Payee_Type_ID#",
-			"bb_request_approval_date" = "#now()#",
-			"auto_billback" = "1"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertIntoBillback = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertIntoBillback>
-<cfquery name="InsertIntoBillback" datasource="#application.datasource#">
+					<cfquery name="InsertIntoBillback" datasource="#application.datasource#">
 						INSERT INTO Billback
 						(
 							BB_Code,
@@ -364,7 +339,6 @@
 							1
 						)
 					</cfquery>
-</cfif>
 					
 					<!--- Get billback_ID --->
 					<cfset useLakebaseForGetBBID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>

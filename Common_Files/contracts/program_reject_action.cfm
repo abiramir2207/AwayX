@@ -24,28 +24,11 @@
 	<CFSET RejectEmailUserId 	= URL.User_Id />
 		<!--- Dev Note: KAL;  8891 --->
 		<cfif display_business_consideration and notes NEQ ""> <!--- Dev Note: KAL; 9559 --->
-			<cfset useLakebaseForpostEvaluationNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_evaluation_notes")>
-<cfif useLakebaseForpostEvaluationNotes>
-	<cftry>
-		<cfset application.oLakebase.insertRow("contract_evaluation_notes", {
-			"entered_by" = "#form.userName#",
-			"eval_action" = "#form.evalAction#",
-			"notes" = "#trim(form.notes)#",
-			"contract_number" = "#form.Contract_Number#",
-			"contract_notes_type" = "#NoteType#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForpostEvaluationNotes = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForpostEvaluationNotes>
-<cfquery name="postEvaluationNotes" datasource="#application.datasource#">
+			<cfquery name="postEvaluationNotes" datasource="#application.datasource#">
 				INSERT INTO Contract_Evaluation_Notes 
 						(Entered_By, Eval_Action, Notes, Contract_Number, Contract_Notes_Type)
 				VALUES	('#form.userName#','#form.evalAction#','#trim(form.notes)#','#form.Contract_Number#', '#NoteType#')
 			</cfquery>
-</cfif>
 		</cfif>
 	
 <cfset ApprovalProgramManager = CreateObject("component","components.programs.Approval.standard_program_approval") />

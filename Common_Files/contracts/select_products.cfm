@@ -135,27 +135,12 @@
 		<!--- The current UPC Does NOT Exists in DB so add it--->
 		<!--- <CFOUTPUT>#listfindnocase(FORM.FinalUPCList, ListItem)#</CFOUTPUT> --->
 		<CFIF listfindnocase(ListOfExistingProductsInDB, ListItem) EQ 0>
-			<cfset useLakebaseForSaveProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
-<cfif useLakebaseForSaveProduct>
-	<cftry>
-		<cfset application.oLakebase.insertRow("contract_products", {
-			"contract_main_id" = "#FORM.Contract_Main_ID#",
-			"product_upc" = "#trim(ListItem)#",
-			"creator_id" = "#request.AccessStructure.User_ID#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForSaveProduct = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForSaveProduct>
-<CFQUERY NAME="SaveProduct" datasource="#application.datasource#">
+			<CFQUERY NAME="SaveProduct" datasource="#application.datasource#">
 				INSERT INTO Contract_Products
 				(Contract_Main_ID, Product_UPC, Creator_ID)
 				VALUES
 				('#FORM.Contract_Main_ID#', '#trim(ListItem)#','#request.AccessStructure.User_ID#')
-			</CFQUERY>
-</cfif>					
+			</CFQUERY>					
 		</CFIF>
 	</CFLOOP>
 	

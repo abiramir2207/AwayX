@@ -438,11 +438,26 @@ function alert_in_use(component) {
 			WHERE Template_ID = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
 		</cfquery>
 
-		<cfquery name="GetPaymentPaidToTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForGetPaymentPaidToTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_paid_to_types")>
+<cfif useLakebaseForGetPaymentPaidToTypes>
+	<cftry>
+		<cfset GetPaymentPaidToTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_paid_to_types", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPaymentPaidToTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPaymentPaidToTypes>
+<cfquery name="GetPaymentPaidToTypes" datasource="#application.datasource#">
 			SELECT distinct *
 			FROM Payment_Paid_To_Types
 			WHERE Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfloop query="GetPaymentPaidToTypes">
 		<cfif isDefined("Form.Payment_Paid_To_Type_#Evaluate(Payment_Paid_To_ID)#")>
@@ -462,31 +477,12 @@ function alert_in_use(component) {
 		</cfloop>
 
 		<cfif defaultComp eq 1>
-			<cfset useLakebaseForupdateDefaultComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
-<cfif useLakebaseForupdateDefaultComponent>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_control_panel_options",
-			{
-				"programcontrol_panel_options_id" = "eq.#id#"
-			},
-			{
-				"default_fixed_component_name_id" = "#Listgetat(form.DEFAULT_COMP,2,'_')#",
-				"default_rebate_component_name_id" = "0"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateDefaultComponent = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateDefaultComponent>
-<cfquery name="updateDefaultComponent" datasource="#application.datasource#">
+			<cfquery name="updateDefaultComponent" datasource="#application.datasource#">
 	        	 UPDATE Program_Control_Panel_Options
 				 SET Default_Fixed_Component_Name_Id = #Listgetat(form.DEFAULT_COMP,2,'_')#,
 				 	Default_Rebate_Component_Name_Id = 0
 				 WHERE ProgramControl_Panel_Options_ID = #id#
 			</cfquery>
-</cfif>
 		<cfelseif defaultComp eq 2>
 			<cfquery name="updateDefaultComponent" datasource="#application.datasource#">
 	        	 UPDATE Program_Control_Panel_Options

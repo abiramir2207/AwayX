@@ -14,24 +14,10 @@
 	</cfloop>
 
 	<cfif Trim(form.txtAddLookupStandardCostsDesc) neq "" AND Trim(form.txtAddLookupStandardCosts) neq "">
-				<cfset useLakebaseForInsCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_costs")>
-<cfif useLakebaseForInsCosts>
-	<cftry>
-		<cfset application.oLakebase.insertRow("export_lookup_costs", {
-			"export_lookup_cost" = "#val(form.txtAddLookupStandardCosts)#",
-			"export_lookup_cost_desc" = "#form.txtAddLookupStandardCostsDesc#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsCosts = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsCosts>
-<CFQUERY NAME="InsCosts" datasource="#application.datasource#">
+				<CFQUERY NAME="InsCosts" datasource="#application.datasource#">
 					INSERT INTO Export_Lookup_Costs(Export_Lookup_Cost,Export_Lookup_Cost_Desc)
 					VALUES('#val(form.txtAddLookupStandardCosts)#','#form.txtAddLookupStandardCostsDesc#')
 				</CFQUERY>
-</cfif>
 	</cfif>
 </cfoutput>
 

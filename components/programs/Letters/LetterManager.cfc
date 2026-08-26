@@ -723,29 +723,11 @@ inner join _users on _users.user_id = Contract_Main.Responsible_User_ID
 
 		<cftry>
 
-            <cfset useLakebaseForvar_qUpdateLetterXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
-<cfif useLakebaseForvar_qUpdateLetterXML>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_letters",
-			{
-				"program_letters_id" = "eq.#arguments.program_letter_id#"
-			},
-			{
-				"letter_xml" = "#trim(arguments.sProgramLetterXML)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForvar_qUpdateLetterXML = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForvar_qUpdateLetterXML>
-<cfquery name="var_qUpdateLetterXML" datasource="#application.datasource#">
+            <cfquery name="var_qUpdateLetterXML" datasource="#application.datasource#">
               	UPDATE	Program_Letters
                 SET 	Letter_xml = '#trim(arguments.sProgramLetterXML)#'
                 WHERE 	Program_Letters_ID = #arguments.program_letter_id#
             </cfquery>
-</cfif>
 
             <cfcatch>
             

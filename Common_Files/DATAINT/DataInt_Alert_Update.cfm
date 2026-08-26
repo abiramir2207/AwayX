@@ -3,30 +3,12 @@
 <cfif isdefined("Intra_id")>
 
 <cfloop list="#form.intra_Id#" index="intra">
-	<cfset useLakebaseForQGetEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_contacts")>
-	<cfif useLakebaseForQGetEmail>
-		<cftry>
-			<cfset qGetEmail = application.oLakebase.toQuery(
-				application.oLakebase.selectRows("data_integration_contacts", {
-					"intra_id" = "eq.#intra#",
-					"or" = "(email.eq.#form.upd_email#,email.eq.#form.email#)",
-					"select" = "email,active"
-				})
-			)>
-			<cfcatch type="any">
-				<!--- Lakebase is momentarily unavailable (e.g. serverless compute scaling) -- fall back to SQL Server for this request rather than surface an error. --->
-				<cfset useLakebaseForQGetEmail = false>
-			</cfcatch>
-		</cftry>
-	</cfif>
-	<cfif NOT useLakebaseForQGetEmail>
-		<cfquery name="qGetEmail" datasource="#application.datasource#">
+	<cfquery name="qGetEmail" datasource="#application.datasource#">
 						Select email, Active
 						From Data_Integration_Contacts
 						Where intra_Id = #intra#
 							and (email = '#form.upd_email#' or email = '#form.email#')
 		</cfquery>
-	</cfif>
 	<!--- Delete record --->
 	<CFIF FORM.DeleteRecord EQ 1>
 		<cfif qGetEmail.recordcount gt 0>

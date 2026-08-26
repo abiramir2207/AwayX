@@ -74,6 +74,25 @@ SQL_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 SIMPLE_VALUE_RE = re.compile(r"^(NULL|'[^']*'|-?\d+(\.\d+)?|#[^#]*#|GetDate\s*\(\s*\))$", re.IGNORECASE)
 
 
+def is_simple_value(v: str) -> bool:
+    """Stricter than SIMPLE_VALUE_RE alone: also rejects quoted strings whose inner
+    content contains nested CFML complexity (multiple #...# segments, function calls
+    like evaluate()) that a bare apostrophe-free check would otherwise let through."""
+    if not SIMPLE_VALUE_RE.match(v):
+        return False
+    if v.startswith("'") and v.endswith("'"):
+        inner = v[1:-1]
+    elif v.startswith("#") and v.endswith("#"):
+        inner = v[1:-1]
+    else:
+        return True
+    if inner.count("#") not in (0, 2):
+        return False
+    if re.search(r"\b[A-Za-z_]\w*\s*\(", inner):
+        return False
+    return True
+
+
 def strip_cf_comments(sql: str) -> str:
     """CF comments are inert - safe to remove before parsing/dynamic-SQL checks."""
     return CF_COMMENT_RE.sub(" ", sql)
@@ -142,8 +161,12 @@ def parse_where_to_filters(where: str):
         col, op, rest = m.group(1), m.group(2).upper().replace("  ", " "), m.group(3).strip()
         pg_col = col_name(col)
         if op == "=":
+            if not is_simple_value(rest) or sql_value_to_cf(rest) is None:
+                return None
             filters[pg_col] = f'"eq.{sql_value_to_cf(rest)}"'
         elif op in ("<>", "!="):
+            if not is_simple_value(rest) or sql_value_to_cf(rest) is None:
+                return None
             filters[pg_col] = f'"neq.{sql_value_to_cf(rest)}"'
         elif op.startswith("IS NOT"):
             filters[pg_col] = '"not.is.null"'
@@ -170,6 +193,8 @@ def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     cols_raw, table, where, order_by = m.group(1), m.group(2), m.group(3), m.group(4)
     if UNSAFE_RE.search(cols_raw):
         return None, "SELECT column list contains functions/CASE - review manually"
+    if re.search(r"\bAS\b", cols_raw, re.IGNORECASE) or '"' in cols_raw:
+        return None, "SELECT column list uses aliasing (AS) - review manually"
     cols = [c.strip() for c in cols_raw.split(",")]
     is_star = cols_raw.strip() == "*"
     if has_dynamic_identifier(table, *cols):
@@ -238,7 +263,7 @@ def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
         val = val.strip()
         if has_dynamic_identifier(col):
             return None, "SET column name is a dynamic CFML variable (#...#) - review manually"
-        if not SIMPLE_VALUE_RE.match(val):
+        if not is_simple_value(val):
             return None, "SET clause too complex - review manually"
         data[col_name(col)] = sql_value_to_cf(val)
 
@@ -294,7 +319,7 @@ def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     vals = split_top_level(vals_raw, ",")
     if len(cols) != len(vals):
         return None, "INSERT column/value count mismatch - review manually"
-    if any(not SIMPLE_VALUE_RE.match(v.strip()) for v in vals):
+    if any(not is_simple_value(v.strip()) for v in vals):
         return None, "INSERT VALUES contain functions/expressions - review manually"
     if has_dynamic_identifier(table, *cols):
         return None, "table/column name is a dynamic CFML variable (#...#) - review manually"

@@ -19,28 +19,7 @@
 			<CFSET tempPassword=tempPassword&mid(alphastring, randrange(1, len(alphastring)), 1)>
 		</CFLOOP>
 
-	<cfset useLakebaseForUnlockUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
-<cfif useLakebaseForUnlockUser>
-	<cftry>
-		<cfset application.oLakebase.updateRows("_users",
-			{
-				"user_id" = "eq.#url.User_ID#",
-				"deleted" = "eq.0"
-			},
-			{
-				"is_locked" = "0",
-				"logintries" = "0",
-				"is_first_time" = "1",
-				"user_password" = "#hash(tempPassword)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUnlockUser = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUnlockUser>
-<cfquery name="UnlockUser" datasource="#application.datasource#">
+	<cfquery name="UnlockUser" datasource="#application.datasource#">
 		UPDATE _users
 		SET 
 		Is_Locked = 0, 
@@ -50,7 +29,6 @@
 		WHERE User_ID = '#url.User_ID#'
 		AND Deleted = 0
 	</cfquery>
-</cfif>
 	 
   <!--- 
 	Dev Notes: 23086/Anand Rao/21-May-10

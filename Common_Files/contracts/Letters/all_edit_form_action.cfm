@@ -1822,29 +1822,11 @@ FUNCTIONALITY:
 
 		<!--- D16774 8/14/08 [begin]
 		<!--- C.) Let's grab our DNA XML from our XML Custom Tag above via request scope... for future letter mods... --->
-        <cfset useLakebaseForqUpdateXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
-<cfif useLakebaseForqUpdateXML>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_letters",
-			{
-				"program_letters_id" = "eq.#variables.currentLetterID#"
-			},
-			{
-				"letter_xml" = "#trim(request.sProgramLetterXML)#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqUpdateXML = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqUpdateXML>
-<cfquery name="qUpdateXML" datasource="#application.datasource#">
+        <cfquery name="qUpdateXML" datasource="#application.datasource#">
             UPDATE	Program_Letters
             SET 	Letter_xml = '#trim(request.sProgramLetterXML)#'
             WHERE 	Program_Letters_ID = #variables.currentLetterID#
         </cfquery>
-</cfif>
 		--->
         <cfinvoke 
                 component="#application.oLetterManager#" 

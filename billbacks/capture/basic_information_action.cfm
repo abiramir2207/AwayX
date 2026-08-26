@@ -188,29 +188,7 @@ Description:	This file is the action page for billback basic information.
 		<cfset billbackAssignmentManager.saveBillbackAnalyst(billbackId = Billback_ID, creatorId = request.AccessStructure.user_id)>
 		
 		<CFIF len(trim(Billback_ID)) GT 0>
-			<cfset useLakebaseForUnlockLockedBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
-<cfif useLakebaseForUnlockLockedBillbacks>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_allied",
-			{
-				"bb_is_locked" = "eq.1",
-				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
-				"billback_id" = "neq.#Billback_ID#",
-				"bb_locked_by_match_central" = "eq.0"
-			},
-			{
-				"bb_is_locked" = "0",
-				"bb_locked_by_user_id" = "#request.AccessStructure.User_ID#",
-				"bb_lock_date" = "#createodbcdatetime(Now())#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUnlockLockedBillbacks = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUnlockLockedBillbacks>
-<cfquery name="UnlockLockedBillbacks" datasource="#Application.Datasource#">
+			<cfquery name="UnlockLockedBillbacks" datasource="#Application.Datasource#">
 				UPDATE
 					Billback_Allied
 				SET
@@ -225,29 +203,9 @@ Description:	This file is the action page for billback basic information.
 					Billback_ID <>  '#Billback_ID#'
 					AND BB_Locked_By_Match_Central = 0
 			</cfquery>
-</cfif>
 
 
-			<cfset useLakebaseForToggleLockStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
-<cfif useLakebaseForToggleLockStatus>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_allied",
-			{
-				"billback_id" = "eq.#Billback_ID#"
-			},
-			{
-				"bb_is_locked" = "1",
-				"bb_locked_by_user_id" = "#request.AccessStructure.User_ID#",
-				"bb_lock_date" = "#createodbcdatetime(Now())#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForToggleLockStatus = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForToggleLockStatus>
-<cfquery name="ToggleLockStatus" datasource="#Application.Datasource#">
+			<cfquery name="ToggleLockStatus" datasource="#Application.Datasource#">
 				UPDATE
 					Billback_Allied
 				SET
@@ -257,7 +215,6 @@ Description:	This file is the action page for billback basic information.
 				WHERE
 					Billback_ID = '#Billback_ID#'
 			</cfquery>
-</cfif>
 
 		<cfif Form.AddTax eq 1>
 			<cfset useLakebaseForAddBillbacksalesTax = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>

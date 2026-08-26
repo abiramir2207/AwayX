@@ -33,21 +33,7 @@
 		<cfset Underscorelocation  = find("_",IDs_Only)>
 		<cfset Program_Lump_Sum_Name_ID = right(IDs_Only, (IDs_Only_len - Underscorelocation))>	
 
-		<cfset useLakebaseForEnterLSApprovalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>
-<cfif useLakebaseForEnterLSApprovalAmount>
-	<cftry>
-		<cfset application.oLakebase.insertRow("profile_ls_approval", {
-			"program_lump_sum_name_id" = "#Program_Lump_Sum_Name_ID#",
-			"profiles_id" = "#ProfileId#",
-			"approval_amount" = "#evaluate(item)#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForEnterLSApprovalAmount = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForEnterLSApprovalAmount>
-<cfquery name="EnterLSApprovalAmount" datasource="#application.datasource#">
+		<cfquery name="EnterLSApprovalAmount" datasource="#application.datasource#">
 		INSERT INTO Profile_LS_Approval
 		(
 			Program_Lump_Sum_Name_ID,
@@ -61,7 +47,6 @@
 			'#evaluate(item)#'
 		)
 		</cfquery>
-</cfif>
 
 	</cfif>
 </CFLOOP>
