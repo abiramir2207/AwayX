@@ -123,7 +123,29 @@ label {
         </cfquery>
 </cfif>
 
-        <cfquery name="variables.qInsPGOperatorCategoryDefinition" datasource="#application.datasource#">
+        <cfset useLakebaseForvariables_qInsPGOperatorCategoryDefinition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForvariables_qInsPGOperatorCategoryDefinition>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pg_operator_category_definition", {
+			"pg_operator_category_id" = "#variables.PGCatID#",
+			"pg_type_id" = "#variables.selPGTypeID.PG_Type_ID#",
+			"operator_group_level_id" = "0",
+			"operator_group_id" = "#variables.OperatorID#",
+			"inclusion_exclusion" = "1",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"created_by" = "#request.AccessStructure.User_ID#",
+			"include_in_other_pg" = "1",
+			"is_pg" = "0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qInsPGOperatorCategoryDefinition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qInsPGOperatorCategoryDefinition>
+<cfquery name="variables.qInsPGOperatorCategoryDefinition" datasource="#application.datasource#">
           INSERT INTO PG_Operator_Category_Definition
           (
             PG_Operator_Category_ID,
@@ -153,6 +175,7 @@ label {
             0
           )
         </cfquery>
+</cfif>
 
         <cfquery name="variables.qryPopulateTempTableForOperator" datasource="#application.datasource#">
           IF OBJECT_ID ('tempdb..##tmp_PG_View_Operator_Members') IS NOT NULL
@@ -193,9 +216,27 @@ label {
           <cfprocresult name="qryUSPPopulateOperatorPGMembers">
         </cfstoredproc>
         
-        <cfquery name="qryCaptureGroup" datasource="#application.datasource#">
+        <cfset useLakebaseForqryCaptureGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForqryCaptureGroup>
+	<cftry>
+		<cfset qryCaptureGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_operators", {
+				"is_group" = "eq.1",
+				"deleted" = "eq.0",
+				"operator_group_id" = "eq.#variables.PGCatID#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCaptureGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCaptureGroup>
+<cfquery name="qryCaptureGroup" datasource="#application.datasource#">
           SELECT DISTINCT Contract_Main_ID FROM Contract_Operators WHERE Is_Group = 1 and Deleted = 0 and Operator_Group_ID  = '#variables.PGCatID#'
         </cfquery>
+</cfif>
         
         <cfif (qryCaptureGroup.RecordCount GTE 1)>
           <cfloop query ="qryCaptureGroup">

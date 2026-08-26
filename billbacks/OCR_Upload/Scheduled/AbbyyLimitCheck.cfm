@@ -101,11 +101,24 @@ DECLARE
 	<cfif (isDefined("qNotificationSent") and qNotificationSent.RecordCount EQ 0)>
 			<cfset remainingPages = 20000 - qGetTotalPages.TotalPages_Extracted />
 			<cfmail to="#toEmail#" from="#fromEmail#" type="HTML" subject="CIA-Error: Abbyy page limit is reaching on '#qDBName.DBName#'">
-				#remainingPages# pages remain before #DateFormat(qGetTotalPages.QuotaEnd,"mm/dd/yyyy")#.  Please work with Nupur Patel to see if Abbyy license can be updated. 
+				#remainingPages# pages remain before #DateFormat(qGetTotalPages.QuotaEnd,"mm/dd/yyyy")#. Please work withNupur Patelto see if Abbyy license can be updated. 
 				<br><br>
 				- CIA Team
 			</cfmail>
-			<cfquery name="qInsertQuotaNotificaiton" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsertQuotaNotificaiton = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("abbyy_quota_notification")>
+<cfif useLakebaseForqInsertQuotaNotificaiton>
+	<cftry>
+		<cfset application.oLakebase.insertRow("abbyy_quota_notification", {
+			"email_sent" = "1",
+			"created_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertQuotaNotificaiton = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertQuotaNotificaiton>
+<cfquery name="qInsertQuotaNotificaiton" datasource="#application.datasource#">
 				INSERT INTO 
 					ABBYY_Quota_Notification (Email_Sent,Created_Date)
 					VALUES
@@ -114,6 +127,7 @@ DECLARE
 						GetDate()
 					)
 			</cfquery>
+</cfif>
 	</cfif>
 </cfif>
 

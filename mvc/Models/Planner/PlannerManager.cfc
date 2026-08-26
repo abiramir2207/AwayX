@@ -4382,7 +4382,26 @@ Description  :  Manager for Planners
 					<cfset PlannerDDSVal	= evaluate("ppFormData.DaysLessStart_#Planner_Template_Perf_Types_ID#") />
 					<cfset PlannerDDEVal	= evaluate("ppFormData.DaysLessEnd_#Planner_Template_Perf_Types_ID#") />
 
-					<cfquery name="local.qInsertPlannerProfile" datasource="#application.datasource#">
+					<cfset useLakebaseForlocal_qInsertPlannerProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_profile")>
+<cfif useLakebaseForlocal_qInsertPlannerProfile>
+	<cftry>
+		<cfset application.oLakebase.insertRow("planner_profile", {
+			"planner_id" = "#profileRows.Planner_ID#",
+			"planner_perf_types_id" = "#profileRows.Planner_Perf_Types_ID#",
+			"deleted" = "0",
+			"duration" = "#DurationVal#",
+			"planner_delivery_days_start" = "#PlannerDDSVal#",
+			"planner_delivery_days_end" = "#PlannerDDEVal#",
+			"created_by" = "#request.AccessStructure.user_id#",
+			"created_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qInsertPlannerProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qInsertPlannerProfile>
+<cfquery name="local.qInsertPlannerProfile" datasource="#application.datasource#">
 						INSERT INTO Planner_Profile
 							( Planner_ID, Planner_Perf_Types_ID, Deleted, Duration, Planner_Delivery_Days_Start, Planner_Delivery_Days_End, Created_By, Created_Date )
 						VALUES
@@ -4396,6 +4415,7 @@ Description  :  Manager for Planners
 								getDate()
 							)
 					</cfquery>
+</cfif>
 				<cfelseif (profileRows.Planner_Profile_ID NEQ "")>
 					<!--- UPDATE --->
 					<cfset DurationVal		= evaluate("ppFormData.Duration_#Planner_Template_Perf_Types_ID#") />
@@ -5811,9 +5831,24 @@ Description  :  Manager for Planners
 
 	<cffunction name="getSegmentFilter" access="public" returntype="numeric" output="false">
 
-		<cfquery name="local.getSegmentSetting" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_getSegmentSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForlocal_getSegmentSetting>
+	<cftry>
+		<cfset local.getSegmentSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment_enabled", {
+				"select" = "planner_volume_plan_segment_enable"
+			}), "planner_volume_plan_segment_enable"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getSegmentSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getSegmentSetting>
+<cfquery name="local.getSegmentSetting" datasource="#application.datasource#">
 			SELECT Planner_Volume_Plan_Segment_Enable FROM Business_Segment_Enabled
 		</cfquery>
+</cfif>
 
 		<cfreturn Val(local.getSegmentSetting.Planner_Volume_Plan_Segment_Enable) />
 	</cffunction>

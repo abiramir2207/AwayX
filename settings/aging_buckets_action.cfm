@@ -16,12 +16,28 @@ FROM Deduction_Aging_Buckets
 
 
 <cfif len(trim(FORM.BUCKET_1_LABEL)) GT 0>
-	<cfquery name="saveBuckets" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveBuckets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_aging_buckets")>
+<cfif useLakebaseForsaveBuckets>
+	<cftry>
+		<cfset application.oLakebase.insertRow("deduction_aging_buckets", {
+			"bucket_label" = "#FORM.BUCKET_1_LABEL#",
+			"start_range" = "#FORM.Bucket_1_Start#",
+			"end_range" = "#FORM.Bucket_1_End#",
+			"last_updated" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveBuckets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveBuckets>
+<cfquery name="saveBuckets" datasource="#application.datasource#">
 		INSERT INTO Deduction_Aging_Buckets
 		(Bucket_Label, Start_range, End_Range, Last_Updated)
 		VALUES
 		('#FORM.BUCKET_1_LABEL#', '#FORM.Bucket_1_Start#', '#FORM.Bucket_1_End#', getdate())
 	</cfquery>
+</cfif>
 </cfif>
 
 <cfif len(trim(FORM.BUCKET_2_LABEL)) GT 0>

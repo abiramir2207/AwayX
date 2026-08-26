@@ -1,6 +1,19 @@
+<cfset useLakebaseForEnterLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dynamic_group_log")>
+<cfif useLakebaseForEnterLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dynamic_group_log", {
+			"start_date_time" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForEnterLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEnterLog>
 <CFQUERY NAME="EnterLog" DATASOURCE="#Application.Datasource#">
 	INSERT INTO Dynamic_Group_Log (Start_Date_Time) VALUES (getdate())
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="UpdatedBitInfo" DATASOURCE="#Application.Datasource#">
 	EXEC Program_Revision__Dynamic_Group_Change
@@ -24,10 +37,29 @@
 		</CFQUERY>
 	<CFELSEIF Dynamic_Group_Type EQ 2>
 		<CFSET Program_ID_Var = Program_ID>
-		<CFQUERY NAME="GetParam" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetParam = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGetParam>
+	<cftry>
+		<cfset GetParam = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#Program_ID_Var#",
+				"is_group" = "eq.1",
+				"dynamic_static_groups" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id,program_weight,distributor_group_level_id,distributor_group_id"
+			}), "contract_main_id,program_weight,distributor_group_level_id,distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetParam = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetParam>
+<CFQUERY NAME="GetParam" DATASOURCE="#Application.Datasource#">
 			SELECT DISTINCT Contract_Main_ID,Program_Weight,Distributor_Group_Level_ID,Distributor_Group_ID 
 			FROM Contract_Distributors WHERE Contract_main_ID = #Program_ID_Var# AND Is_Group = 1 AND Dynamic_Static_Groups = 1 AND Deleted = 0 
 		</CFQUERY>
+</cfif>
 		<CFLOOP QUERY = "GetParam">
 			<CFQUERY NAME="CustomerCapture" DATASOURCE="#Application.Datasource#">
 				EXEC CAPTURE_CUSTOMER_GROUPS #GetParam.Contract_Main_ID#,#GetParam.Program_Weight#,'#GetParam.Distributor_Group_Level_ID#','#GetParam.Distributor_Group_ID#',1		

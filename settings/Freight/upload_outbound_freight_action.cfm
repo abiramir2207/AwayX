@@ -95,13 +95,29 @@
 
 	<cfset filename = Right(filepath, find('\',reverse(filepath))-1)>
 
-	<cfquery name="setUploadErrors" datasource="#application.datasource#">
+	<cfset useLakebaseForsetUploadErrors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("outbound_freight_upload")>
+<cfif useLakebaseForsetUploadErrors>
+	<cftry>
+		<cfset application.oLakebase.insertRow("outbound_freight_upload", {
+			"outbound_freight_upload_by" = "#request.Accessstructure.User_ID#",
+			"outbound_freight_upload_date" = "#now()#",
+			"outbound_freight_upload_file_name" = "#FiletoUpload#",
+			"outbound_freight_upload_status" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetUploadErrors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetUploadErrors>
+<cfquery name="setUploadErrors" datasource="#application.datasource#">
 	INSERT INTO Outbound_Freight_Upload(Outbound_Freight_Upload_By,Outbound_Freight_Upload_Date,Outbound_Freight_Upload_File_Name
 	,Outbound_Freight_Upload_Status)
 	VALUES('#request.Accessstructure.User_ID#',getdate(),'#FiletoUpload#',1)
 
 	SELECT Outbound_Freight_Upload_ID = @@IDENTITY
 	</cfquery>
+</cfif>
 
 
 	<cfset useLakebaseForget_FileShare_Path = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_settings")>
@@ -194,10 +210,24 @@
 
 			<cfset ErrMessage = "#CFCATCH.Message# : #CFCATCH.detail#">
 
-			<cfquery name="setErrorMessage" datasource="#application.datasource#">
+			<cfset useLakebaseForsetErrorMessage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("outbound_freight_upload_detail")>
+<cfif useLakebaseForsetErrorMessage>
+	<cftry>
+		<cfset application.oLakebase.insertRow("outbound_freight_upload_detail", {
+			"outbound_freight_upload_id" = "#setUploadErrors.Outbound_Freight_Upload_ID#",
+			"errormessage" = "#ErrMessage#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetErrorMessage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetErrorMessage>
+<cfquery name="setErrorMessage" datasource="#application.datasource#">
 			INSERT INTO Outbound_Freight_Upload_Detail(Outbound_Freight_Upload_ID,ErrorMessage)
 			VALUES('#setUploadErrors.Outbound_Freight_Upload_ID#','#ErrMessage#')
 			</cfquery>
+</cfif>
 
 			<cfrethrow />
 		</cfcatch>

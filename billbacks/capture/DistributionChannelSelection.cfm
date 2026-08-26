@@ -78,7 +78,23 @@ function redirectToSummaryPage()
 			<cfset frmBSVar2 = Evaluate("FORM.selDC_#getDSChannelForDist.Billback_Distribution_Channel_ID#")>
 		
 			<cfif (getDSChannelForDist.BS_Var_2 NEQ frmBSVar2)>
-				<cfquery name="qUpdDSChannels" datasource="#application.datasource#">
+				<cfset useLakebaseForqUpdDSChannels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distribution_channel")>
+<cfif useLakebaseForqUpdDSChannels>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_distribution_channel", {
+			"billback_id" = "#getDSChannelForDist.Billback_ID#",
+			"billback_program_id" = "#getDSChannelForDist.Billback_Program_ID#",
+			"distributor_id" = "#getDSChannelForDist.Distributor_ID#",
+			"bs_var_2" = "#frmBSVar2#",
+			"created_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdDSChannels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdDSChannels>
+<cfquery name="qUpdDSChannels" datasource="#application.datasource#">
 					INSERT INTO Billback_Distribution_Channel
 						(Billback_ID, Billback_Program_ID, Distributor_ID, BS_Var_2, Created_Date)
 					VALUES
@@ -94,6 +110,7 @@ function redirectToSummaryPage()
 					WHERE  
 						Billback_Distribution_Channel_ID = #getDSChannelForDist.Billback_Distribution_Channel_ID#
 			</cfquery>
+</cfif>
 		</cfif>
 	<!--- <div align="center"><font color="red">#qGetBSVar2Label.General_Labels_Label#: #FORM.selDC# has been updated.</font></div><br><br> --->
 		</cfif>
@@ -195,7 +212,23 @@ wrapper {
 		<cfif (Trim(getDSChannelForDist.Cust_Suffix) EQ "R" AND RedistributorDefaultSegmentBSVar2 NEQ "")>
 			<cfset dcForReDist = RedistributorDefaultSegmentBSVar2 />
 		</cfif>
-		<cfquery name="qGetDSChannelFromDistMapping" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDSChannelFromDistMapping = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_salesorg_mapping")>
+<cfif useLakebaseForqGetDSChannelFromDistMapping>
+	<cftry>
+		<cfset qGetDSChannelFromDistMapping = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_salesorg_mapping", {
+				"bsa_foodservice_customers_id" = "eq.#getDSChannelForDist.Distributor_ID#",
+				"order" = "distribution_channel.asc",
+				"select" = "ship_to,distribution_channel,bsa_foodservice_customers_id,updated_date,created_date"
+			}), "ship_to,distribution_channel,bsa_foodservice_customers_id,updated_date,created_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDSChannelFromDistMapping = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDSChannelFromDistMapping>
+<cfquery name="qGetDSChannelFromDistMapping" datasource="#application.datasource#">
 			SELECT 
 				Ship_To,
 				Distribution_Channel,
@@ -208,6 +241,7 @@ wrapper {
 				BSA_Foodservice_Customers_ID = '#getDSChannelForDist.Distributor_ID#'
 			ORDER BY Distribution_Channel
 		</cfquery>
+</cfif>
 		<cfset useLakebaseForqGetDSChannelFromUnion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetdschannelfromdistmapping")>
 <cfif useLakebaseForqGetDSChannelFromUnion>
 	<cftry>

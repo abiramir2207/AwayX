@@ -22,19 +22,52 @@
 </cfif>
 
 <!--- Make an initial entry into the upload history table and get the Upload ID --->
+<cfset useLakebaseForsetUploadInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alias_management_products_history")>
+<cfif useLakebaseForsetUploadInfo>
+	<cftry>
+		<cfset application.oLakebase.insertRow("alias_management_products_history", {
+			"creator_id" = "#request.Accessstructure.User_ID#",
+			"created_date" = "#now()#",
+			"upload_filename" = "#FiletoUpload#",
+			"upload_action_status" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetUploadInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetUploadInfo>
 <cfquery name="setUploadInfo" datasource="#application.datasource#"> 
  INSERT INTO Alias_Management_Products_History(Creator_ID,Created_Date,Upload_FileName,Upload_Action_Status)
  VALUES('#request.Accessstructure.User_ID#',getdate(),'#FiletoUpload#',1)
 
  SELECT Alias_Management_Product_History_ID = @@IDENTITY
 </cfquery>
+</cfif>
 
 <!--- Get the db path where the uploaded file will be copied from the web server  --->
+<cfset useLakebaseForget_DTS_Reference_Path = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_settings")>
+<cfif useLakebaseForget_DTS_Reference_Path>
+	<cftry>
+		<cfset get_DTS_Reference_Path = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dataint_settings", {
+				"order" = "setting_date.desc",
+				"limit" = "1",
+				"select" = "dts_reference_path"
+			}), "dts_reference_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_DTS_Reference_Path = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_DTS_Reference_Path>
 <cfquery name="get_DTS_Reference_Path" datasource="#application.datasource#">
 SELECT TOP 1 DTS_Reference_Path
 FROM DataInt_Settings
 ORDER BY Setting_Date DESC
 </cfquery>
+</cfif>
 
 <!--- Get the filename of the file uploaded to the web server --->
 <cfset useLakebaseForget_Upload_File_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alias_management_products_history")>

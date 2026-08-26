@@ -104,10 +104,26 @@
 							AND Authority_Sequence_Order >= #arguments.authoritySequenceOrder#
 				</cfquery>
 				
-				<cfquery name="qInsertAS" datasource="#application.datasource#">
+				<cfset useLakebaseForqInsertAS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqInsertAS>
+	<cftry>
+		<cfset application.oLakebase.insertRow("authority_sequence", {
+			"authority_sequence_order" = "#arguments.authoritySequenceOrder#",
+			"authority_sequence_name" = "#arguments.authoritySequenceDesc#",
+			"updated_by" = "#arguments.AccessStructure.user_id#",
+			"updated_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertAS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertAS>
+<cfquery name="qInsertAS" datasource="#application.datasource#">
 					INSERT INTO Authority_Sequence (Authority_Sequence_Order, Authority_Sequence_Name, updated_by, updated_date)
 					VALUES (#arguments.authoritySequenceOrder#, '#arguments.authoritySequenceDesc#','#arguments.AccessStructure.user_id#',GetDate())
 				</cfquery>
+</cfif>
 			
 			</cfif>
 			
@@ -128,12 +144,29 @@
 	
 		<cfargument name="authoritySequenceId" type="numeric" required="true">
 		
-		<cfquery name="qGetUserAssosiated" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUserAssosiated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUserAssosiated>
+	<cftry>
+		<cfset qGetUserAssosiated = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"authority_sequence_id" = "eq.#arguments.authoritySequenceId#",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUserAssosiated = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUserAssosiated>
+<cfquery name="qGetUserAssosiated" datasource="#application.datasource#">
 			SELECT 	TOP 1 *
 			FROM	_Users
 			WHERE	Deleted = 0
 					AND Authority_Sequence_ID = #arguments.authoritySequenceId#
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetUserAssosiated />
 		

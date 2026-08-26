@@ -42,7 +42,21 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 	<cfif (qryIsSTProcessing.Recordcount EQ 0)>
 
 
-	<cfquery name="qryINSSTLog" datasource="#application.datasource#">
+	<cfset useLakebaseForqryINSSTLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cia_scheduled_task_log")>
+<cfif useLakebaseForqryINSSTLog>
+	<cftry>
+		<cfset application.oLakebase.insertRow("cia_scheduled_task_log", {
+			"start_datetime" = "#now()#",
+			"errored" = "0",
+			"isprocessing" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryINSSTLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryINSSTLog>
+<cfquery name="qryINSSTLog" datasource="#application.datasource#">
 		INSERT INTO CIA_Scheduled_Task_Log
 			(	
 				Start_DateTime,
@@ -58,6 +72,7 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 		
 		SELECT SCOPE_IDENTITY()	AS CIA_Scheduled_Task_Log_ID
 	</cfquery>
+</cfif>
 	<cfset CIAScheduledTaskLogID = qryINSSTLog.CIA_Scheduled_Task_Log_ID />
 	
 	<cfscript>

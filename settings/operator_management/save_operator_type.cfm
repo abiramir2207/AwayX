@@ -117,7 +117,24 @@
 
 <CFIF ((FORM.BSA_Operator_Type_ID EQ "") OR (FORM.BSA_Operator_Type_ID EQ 0))>
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("awayx_operator_type")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("awayx_operator_type", {
+			"operator_type" = "#FORM.Operator_Type#",
+			"business_segment_id" = "1",
+			"active" = "#FORM.Active#",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"last_edited_by" = "#request.AccessStructure.user_id#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO	awayX_Operator_Type
 		(Operator_Type,
       Business_Segment_ID,
@@ -129,6 +146,7 @@
     VALUES ('#FORM.Operator_Type#',1,#FORM.Active#,0,getDate(),'#request.AccessStructure.user_id#'
     )
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="select_operators.cfm?tabSetter=2" ADDTOKEN="No">
 	<CFABORT>
 <CFELSE>

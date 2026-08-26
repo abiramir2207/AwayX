@@ -39,14 +39,24 @@ UPDATE_RE = re.compile(
     r"UPDATE\s+([A-Za-z_][A-Za-z0-9_]*)\s+SET\s+(.*?)\s+WHERE\s+(.*?)\s*;?\s*$",
     re.IGNORECASE | re.DOTALL,
 )
-INSERT_RE = re.compile(
-    r"INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*VALUES\s*\(([^)]*)\)",
-    re.IGNORECASE | re.DOTALL,
-)
+INSERT_HEADER_RE = re.compile(r"INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", re.IGNORECASE)
 DELETE_RE = re.compile(
     r"DELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:WHERE\s+(.*?))?\s*;?\s*$",
     re.IGNORECASE | re.DOTALL,
 )
+
+
+def extract_paren_group(s: str, open_idx: int) -> tuple[str, int]:
+    """s[open_idx] must be '('. Returns (inner_content, index_after_closing_paren), or (None, -1)."""
+    depth = 0
+    for i in range(open_idx, len(s)):
+        if s[i] == "(":
+            depth += 1
+        elif s[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return s[open_idx + 1 : i], i + 1
+    return None, -1
 
 # Reject WHERE/SET clauses containing these - too risky to auto-generate.
 UNSAFE_RE = re.compile(
@@ -100,6 +110,8 @@ def sql_value_to_cf(v: str) -> str:
     v = v.strip()
     if v.upper() == "NULL":
         return None
+    if re.match(r"GetDate\s*\(\s*\)", v, re.IGNORECASE):
+        return "#now()#"
     if v.startswith("'") and v.endswith("'"):
         return v[1:-1]
     return v
@@ -250,15 +262,26 @@ def gen_insert_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     sql = strip_cf_comments(sql)
     if EMBEDDED_CFML_RE.search(sql):
         return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
-    m = INSERT_RE.search(sql.strip())
+    m = INSERT_HEADER_RE.search(sql.strip())
     if not m:
         return None, "INSERT pattern did not match parser"
-    table, cols_raw, vals_raw = m.group(1), m.group(2), m.group(3)
+    table = m.group(1)
+    cols_raw, after_cols_idx = extract_paren_group(sql, m.end() - 1)
+    if cols_raw is None:
+        return None, "could not find balanced INSERT column list"
+    remainder = sql[after_cols_idx:]
+    vm = re.search(r"VALUES\s*\(", remainder, re.IGNORECASE)
+    if not vm:
+        return None, "VALUES clause not found"
+    vals_raw, _ = extract_paren_group(remainder, vm.end() - 1)
+    if vals_raw is None:
+        return None, "could not find balanced VALUES list"
+
     cols = [c.strip() for c in cols_raw.split(",")]
-    vals = [v.strip() for v in vals_raw.split(",")]
+    vals = split_top_level(vals_raw, ",")
     if len(cols) != len(vals):
         return None, "INSERT column/value count mismatch - review manually"
-    if any(UNSAFE_RE.search(v) for v in vals):
+    if any(UNSAFE_RE.search(v) and not re.match(r"GetDate\s*\(\s*\)", v.strip(), re.IGNORECASE) for v in vals):
         return None, "INSERT VALUES contain functions/expressions - review manually"
     if has_dynamic_identifier(table, *cols):
         return None, "table/column name is a dynamic CFML variable (#...#) - review manually"

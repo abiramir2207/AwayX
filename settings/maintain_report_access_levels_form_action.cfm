@@ -42,11 +42,27 @@
 
 <CFIF Form.Level_Code EQ "">
 <!--- Insert the record --->
-	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
+	<cfset useLakebaseForSave_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_access_levels")>
+<cfif useLakebaseForSave_Data>
+	<cftry>
+		<cfset application.oLakebase.insertRow("report_access_levels", {
+			"description" = "#Form.Description#",
+			"status" = "#Form.Status#",
+			"updated_userid" = "#request.AccessStructure.User_ID#",
+			"lastupdated" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Data>
+<CFQUERY NAME="Save_Data" datasource="#application.datasource#">
 		INSERT INTO		report_access_levels
 						(Description,Status,Updated_UserID,LastUpdated)
 		Values			('#Form.Description#','#Form.Status#','#request.AccessStructure.User_ID#',getdate())
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="maintain_report_access_levels_form.cfm" ADDTOKEN="No">
 	<CFABORT>
 <CFELSE>

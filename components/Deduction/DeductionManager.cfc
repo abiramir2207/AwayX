@@ -1636,10 +1636,27 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 
 		<!----- - add notes entry ----->
 		<CFIF DeductionInfo.DD_Closure_Sent NEQ 1>
-			<CFQUERY NAME="AddNotes" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForAddNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_notes")>
+<cfif useLakebaseForAddNotes>
+	<cftry>
+		<cfset application.oLakebase.insertRow("dd_notes", {
+			"deduction_id" = "#arguments.deductionId#",
+			"dd_note" = "Closed and Reopened on the same date",
+			"dd_note_date" = "#now()#",
+			"dd_note_by" = "#request.AccessStructure.User_ID#",
+			"automated_notes" = "1"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForAddNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAddNotes>
+<CFQUERY NAME="AddNotes" DATASOURCE="#Application.Datasource#">
 				INSERT INTO DD_Notes (Deduction_ID,DD_Note,DD_Note_Date,DD_Note_By,Automated_notes)
 				VALUES ('#arguments.deductionId#','Closed and Reopened on the same date',getdate(),'#request.AccessStructure.User_ID#',1)
 			</CFQUERY>
+</cfif>
 		<CFELSE>
 			<CFQUERY NAME="AddNotes" DATASOURCE="#Application.Datasource#">
 				INSERT INTO DD_Notes (Deduction_ID,DD_Note,DD_Note_Date,DD_Note_By,Automated_notes)

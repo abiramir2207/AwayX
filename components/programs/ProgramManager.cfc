@@ -3717,7 +3717,26 @@ and contract_products.deleted = 0
 </cfif>
 
 			<cfloop query = "ProgramEZRates">
-				<cfquery name="insProgramEZRates" datasource="#application.datasource#">
+				<cfset useLakebaseForinsProgramEZRates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_template_ez_rate")>
+<cfif useLakebaseForinsProgramEZRates>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_template_ez_rate", {
+			"contract_main_id" = "#arguments.contractMainID#",
+			"product_id" = "#ProgramEZRates.BSA_Foodservice_Items_Master_ID#",
+			"template_ez_rate" = "#ProgramEZRates.ez_rate#",
+			"template_ez_rate_uom" = "#ProgramEZRates.ez_uom#",
+			"program_ez_rate" = "#ProgramEZRates.Program_rate#",
+			"program_ez_rate_uom" = "#ProgramEZRates.program_uom#",
+			"variance" = "#ProgramEZRates.variance#",
+			"created_date" = "#now()#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsProgramEZRates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsProgramEZRates>
+<cfquery name="insProgramEZRates" datasource="#application.datasource#">
 				INSERT INTO Program_Template_EZ_Rate
 				(
 					Contract_Main_ID,
@@ -3741,6 +3760,7 @@ and contract_products.deleted = 0
 					GetDate()
 				)
 				</cfquery>
+</cfif>
 			</cfloop>
 			<cfset bRetValue = 1 />
 		</cfif>

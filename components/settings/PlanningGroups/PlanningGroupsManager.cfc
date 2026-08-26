@@ -469,7 +469,28 @@ WHERE PGCC.PG_Customer_Category_ID = <cfqueryparam value="#arguments.PGCustomerC
             1
           )
         </cfquery>
-        <cfquery name="qInsProductGroupAttribute" datasource="#application.datasource#">
+        <cfset useLakebaseForqInsProductGroupAttribute = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_attribute")>
+<cfif useLakebaseForqInsProductGroupAttribute>
+	<cftry>
+		<cfset application.oLakebase.insertRow("product_group_attribute", {
+			"product_group_level_id" = "#qInsPgType.PG_Type_ID#",
+			"product_group_attribute_table" = "PG_Product_Category",
+			"product_group_attribute_id_field" = "PG_Product_Category_ID",
+			"product_group_attribute_name_field" = "PG_Product_Category_Name",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"product_group_attribute_search_sequence_field" = "PG_Product_Category",
+			"product_group_attribute_master_id_field" = "PG_Product_Category_ID",
+			"product_group_attribute_number_field" = "PG_Product_Category_Code"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsProductGroupAttribute = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsProductGroupAttribute>
+<cfquery name="qInsProductGroupAttribute" datasource="#application.datasource#">
           INSERT INTO Product_Group_Attribute
           (
             Product_Group_Level_ID,
@@ -497,6 +518,7 @@ WHERE PGCC.PG_Customer_Category_ID = <cfqueryparam value="#arguments.PGCustomerC
             'PG_Product_Category_Code'
          )
         </cfquery>
+</cfif>
       <cfelseif (arguments.stForm.rdoTypeCategory EQ 2)>
       <!--- Insert into the  Distributor_Group_Level Table  --->
         <cfquery name="qInsDistGroupLevel" datasource="#application.datasource#">
@@ -1019,7 +1041,31 @@ WHERE PGCC.PG_Customer_Category_ID = <cfqueryparam value="#arguments.PGCustomerC
 		<!--- <cfif recDelInInclude EQ 0 AND recDelInExclude EQ 0> --->
 		<cfif recInDelList EQ 0>
 
-      <cfquery name="qInsPGProductCategoryDefinition" datasource="#application.datasource#">
+      <cfset useLakebaseForqInsPGProductCategoryDefinition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_product_category_definition")>
+<cfif useLakebaseForqInsPGProductCategoryDefinition>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pg_product_category_definition", {
+			"pg_product_category_id" = "#qInsPGProduct.PG_Product_Category_ID#",
+			"pg_type_id" = "#iPGTypeID#",
+			"product_group_level_id" = "#arguments.stSession.qryGrpProdPack.GroupLevel_ID#",
+			"product_group_id" = "#arguments.stSession.qryGrpProdPack.Group_Product_ID#",
+			"inclusion_exclusion" = "#arguments.stSession.qryGrpProdPack.Inc_Exc#",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"created_by" = "#arguments.UserID#",
+			"include_in_other_pg" = "#bIncInOthers#",
+			"is_pg" = "#IsAPG#",
+			"pg_effective_start_date" = "#arguments.stForm.PG_Effective_Start_Date#",
+			"pg_effective_end_date" = "#arguments.stForm.PG_Effective_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsPGProductCategoryDefinition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsPGProductCategoryDefinition>
+<cfquery name="qInsPGProductCategoryDefinition" datasource="#application.datasource#">
         INSERT INTO PG_Product_Category_Definition
         (
           PG_Product_Category_ID,
@@ -1053,6 +1099,7 @@ WHERE PGCC.PG_Customer_Category_ID = <cfqueryparam value="#arguments.PGCustomerC
 		  '#arguments.stForm.PG_Effective_End_Date#'
         )
       </cfquery>
+</cfif>
     </cfif>
    </cfloop>
 
@@ -1113,7 +1160,28 @@ WHERE PGCC.PG_Customer_Category_ID = <cfqueryparam value="#arguments.PGCustomerC
 		 <cfset TemplateFiltersID = qInsTemplateFilters.Template_Filters_ID />
 	</cfif>
 
-      <cfquery name="qInsPGProductGroupTemplateSelection" datasource="#application.datasource#">
+      <cfset useLakebaseForqInsPGProductGroupTemplateSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_template_selection")>
+<cfif useLakebaseForqInsPGProductGroupTemplateSelection>
+	<cftry>
+		<cfset application.oLakebase.insertRow("product_group_template_selection", {
+			"template_id" = "#arguments.stForm[colName]#",
+			"product_group_level_id" = "#arguments.stForm.PGTypeID#",
+			"product_group_id" = "#qInsPGProduct.PG_Product_Category_ID#",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"created_by" = "#arguments.UserID#",
+			"pg_flag" = "1",
+			"updated_from" = "PG Adding Page",
+			"template_filters_id" = "#TemplateFiltersID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsPGProductGroupTemplateSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsPGProductGroupTemplateSelection>
+<cfquery name="qInsPGProductGroupTemplateSelection" datasource="#application.datasource#">
         INSERT INTO Product_Group_Template_Selection
         (
           Template_ID,
@@ -1142,6 +1210,7 @@ WHERE PGCC.PG_Customer_Category_ID = <cfqueryparam value="#arguments.PGCustomerC
           #TemplateFiltersID#
         )
       </cfquery>
+</cfif>
     </cfif>
 </cfloop>
 --->
@@ -1273,7 +1342,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
  <!--- Update the existing records in the PG_Product_Category_Definition table --->
     <!--- Get all the current records in the table for this PG_Product_Category_ID --->
 
-    <cfquery name="qrySelectProdCatDef" datasource="#application.datasource#">
+    <cfset useLakebaseForqrySelectProdCatDef = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_product_category_definition")>
+<cfif useLakebaseForqrySelectProdCatDef>
+	<cftry>
+		<cfset qrySelectProdCatDef = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_product_category_definition", {
+				"pg_product_category_id" = "eq.#arguments.stForm.PGProductCategoryID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "pg_product_category_definition_id,pg_product_category_id,pg_type_id,product_group_level_id,product_group_id,inclusion_exclusion,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg,is_pg"
+			}), "pg_product_category_definition_id,pg_product_category_id,pg_type_id,product_group_level_id,product_group_id,inclusion_exclusion,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg,is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrySelectProdCatDef = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrySelectProdCatDef>
+<cfquery name="qrySelectProdCatDef" datasource="#application.datasource#">
       SELECT
         PG_Product_Category_Definition_ID,
         PG_Product_Category_ID,
@@ -1295,6 +1381,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
       AND Active = 1
       AND Deleted = 0
     </cfquery>
+</cfif>
 
     <cfloop query="qrySelectProdCatDef">
       <cfset groupFound = 0 />
@@ -1721,7 +1808,25 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
 	<cfset var bPGExist = 0 />
 
-	<cfquery name="qIsPlanningGroupProductExist" datasource="#application.datasource#">
+	<cfset useLakebaseForqIsPlanningGroupProductExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_product_category_definition")>
+<cfif useLakebaseForqIsPlanningGroupProductExist>
+	<cftry>
+		<cfset qIsPlanningGroupProductExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_product_category_definition", {
+				"pg_product_category_id" = "eq.#arguments.PG_Product_Category_ID#",
+				"product_group_id" = "eq.#arguments.Group_Product_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsPlanningGroupProductExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsPlanningGroupProductExist>
+<cfquery name="qIsPlanningGroupProductExist" datasource="#application.datasource#">
 		SELECT 1
 		FROM PG_Product_Category_Definition
 		WHERE PG_Product_Category_ID = '#arguments.PG_Product_Category_ID#'
@@ -1729,6 +1834,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		AND deleted = 0
 		AND Active = 1
 	</cfquery>
+</cfif>
 
 	<cfif qIsPlanningGroupProductExist.recordcount>
 		<cfset bPGExist = 1 />
@@ -2222,7 +2328,31 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		<!--- <cfif recDelInInclude EQ 0 AND recDelInExclude EQ 0> --->
 		<cfif recInDelList EQ 0>
 
-	    <cfquery name="qInsPGCustomerCategoryDefinition" datasource="#application.datasource#">
+	    <cfset useLakebaseForqInsPGCustomerCategoryDefinition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_customer_category_definition")>
+<cfif useLakebaseForqInsPGCustomerCategoryDefinition>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pg_customer_category_definition", {
+			"pg_customer_category_id" = "#qInsPGCustomer.PG_Customer_Category_ID#",
+			"pg_type_id" = "#iPGTypeID#",
+			"distributor_group_level_id" = "#arguments.stSession.qryGrpDistPack.GroupLevel_ID#",
+			"distributor_group_id" = "#arguments.stSession.qryGrpDistPack.Group_Dist_ID#",
+			"inclusion_exclusion" = "#arguments.stSession.qryGrpDistPack.Inc_Exc#",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"created_by" = "#arguments.UserID#",
+			"include_in_other_pg" = "#bIncInOthers#",
+			"is_pg" = "#IsAPG#",
+			"pg_effective_start_date" = "#arguments.stForm.PG_Effective_Start_Date#",
+			"pg_effective_end_date" = "#arguments.stForm.PG_Effective_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsPGCustomerCategoryDefinition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsPGCustomerCategoryDefinition>
+<cfquery name="qInsPGCustomerCategoryDefinition" datasource="#application.datasource#">
 	      INSERT INTO PG_Customer_Category_Definition
 	      (
 	        PG_Customer_Category_ID,
@@ -2257,6 +2387,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		  	'#arguments.stForm.PG_Effective_End_Date#'
 	      )
 	    </cfquery>
+</cfif>
     </cfif>
    </cfloop>
 
@@ -2315,7 +2446,28 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
       </cfquery>
 		 <cfset TemplateFiltersID = qInsTemplateFilters.Template_Filters_ID />
 	</cfif>
-      <cfquery name="qInsPGCustomerGroupTemplateSelection" datasource="#application.datasource#">
+      <cfset useLakebaseForqInsPGCustomerGroupTemplateSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_group_template_selection")>
+<cfif useLakebaseForqInsPGCustomerGroupTemplateSelection>
+	<cftry>
+		<cfset application.oLakebase.insertRow("customer_group_template_selection", {
+			"template_id" = "#arguments.stForm[colName]#",
+			"distributor_group_level_id" = "#arguments.stForm.PGTypeID#",
+			"distributor_group_id" = "#qInsPGCustomer.PG_Customer_Category_ID#",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"created_by" = "#arguments.UserID#",
+			"pg_flag" = "1",
+			"updated_from" = "PG Adding Page",
+			"template_filters_id" = "#TemplateFiltersID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsPGCustomerGroupTemplateSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsPGCustomerGroupTemplateSelection>
+<cfquery name="qInsPGCustomerGroupTemplateSelection" datasource="#application.datasource#">
         INSERT INTO Customer_Group_Template_Selection
         (
           Template_ID,
@@ -2344,6 +2496,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
           #TemplateFiltersID#
         )
       </cfquery>
+</cfif>
     </cfif>
 </cfloop>
 --->
@@ -3124,7 +3277,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
   <cffunction name="fnCusGrpTemSel" output="false" returntype="Query">
     <cfargument name="PGCustomerCategoryID" type="string" required="true" />
-     <cfquery name="qryCusGrpTemSel" datasource="#application.datasource#">
+     <cfset useLakebaseForqryCusGrpTemSel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_group_template_selection")>
+<cfif useLakebaseForqryCusGrpTemSel>
+	<cftry>
+		<cfset qryCusGrpTemSel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_group_template_selection", {
+				"distributor_group_id" = "eq.#arguments.PGCustomerCategoryID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "customer_group_template_selection_id,template_id,distributor_group_level_id,distributor_group_id,active,deleted,created_date,updated_date,created_by,updated_by,pg_flag,updated_from,template_filters_id"
+			}), "customer_group_template_selection_id,template_id,distributor_group_level_id,distributor_group_id,active,deleted,created_date,updated_date,created_by,updated_by,pg_flag,updated_from,template_filters_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCusGrpTemSel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCusGrpTemSel>
+<cfquery name="qryCusGrpTemSel" datasource="#application.datasource#">
         SELECT
           Customer_Group_Template_Selection_ID,
           Template_ID,
@@ -3145,6 +3315,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         AND Active = 1
         AND Deleted = 0
       </cfquery>
+</cfif>
        <cfreturn qryCusGrpTemSel />
   </cffunction>
 
@@ -3610,7 +3781,31 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
 		<!--- <cfif recDelInInclude EQ 0 AND recDelInExclude EQ 0> --->
 		<cfif recInDelList EQ 0>
-			<cfquery name="qInsPGOperatorCategoryDefinition" datasource="#application.datasource#">
+			<cfset useLakebaseForqInsPGOperatorCategoryDefinition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForqInsPGOperatorCategoryDefinition>
+	<cftry>
+		<cfset application.oLakebase.insertRow("pg_operator_category_definition", {
+			"pg_operator_category_id" = "#qInsPGOperator.PG_Operator_Category_ID#",
+			"pg_type_id" = "#iPGTypeID#",
+			"operator_group_level_id" = "#arguments.stSession.qryGrpOperatorPack.GroupLevel_ID#",
+			"operator_group_id" = "#arguments.stSession.qryGrpOperatorPack.Operator_ID#",
+			"inclusion_exclusion" = "#arguments.stSession.qryGrpOperatorPack.Inc_Exc#",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"created_by" = "#arguments.UserID#",
+			"include_in_other_pg" = "#bIncInOthers#",
+			"is_pg" = "#IsAPG#",
+			"pg_effective_start_date" = "#arguments.stForm.PG_Effective_Start_Date#",
+			"pg_effective_end_date" = "#arguments.stForm.PG_Effective_End_Date#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsPGOperatorCategoryDefinition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsPGOperatorCategoryDefinition>
+<cfquery name="qInsPGOperatorCategoryDefinition" datasource="#application.datasource#">
 	      INSERT INTO PG_Operator_Category_Definition
 	      (
 	        PG_Operator_Category_ID,
@@ -3645,6 +3840,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 			'#arguments.stForm.PG_Effective_End_Date#'
 	      )
 	    </cfquery>
+</cfif>
     </cfif>
    </cfloop>
 
@@ -3702,7 +3898,28 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
       </cfquery>
 		 	<cfset TemplateFiltersID = qInsTemplateFilters.Template_Filters_ID />
 	</cfif>
-      <cfquery name="qInsPGOperatorGroupTemplateSelection" datasource="#application.datasource#">
+      <cfset useLakebaseForqInsPGOperatorGroupTemplateSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_group_template_selection")>
+<cfif useLakebaseForqInsPGOperatorGroupTemplateSelection>
+	<cftry>
+		<cfset application.oLakebase.insertRow("operator_group_template_selection", {
+			"template_id" = "#arguments.stForm[colName]#",
+			"operator_group_level_id" = "#arguments.stForm.PGTypeID#",
+			"operator_group_id" = "#qInsPGOperator.PG_Operator_Category_ID#",
+			"active" = "1",
+			"deleted" = "0",
+			"created_date" = "#now()#",
+			"created_by" = "#arguments.UserID#",
+			"pg_flag" = "1",
+			"updated_from" = "PG Adding Page",
+			"template_filters_id" = "#TemplateFiltersID#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsPGOperatorGroupTemplateSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsPGOperatorGroupTemplateSelection>
+<cfquery name="qInsPGOperatorGroupTemplateSelection" datasource="#application.datasource#">
         INSERT INTO Operator_Group_Template_Selection
         (
           Template_ID,
@@ -3730,6 +3947,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
           #TemplateFiltersID#
         )
       </cfquery>
+</cfif>
     </cfif>
 </cfloop>
 --->
@@ -4282,7 +4500,25 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
 	<cfset var bPGExist = 0 />
 
-	<cfquery name="qIsPlanningGroupOperatorExist" datasource="#application.datasource#">
+	<cfset useLakebaseForqIsPlanningGroupOperatorExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForqIsPlanningGroupOperatorExist>
+	<cftry>
+		<cfset qIsPlanningGroupOperatorExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category_definition", {
+				"pg_operator_category_id" = "eq.#arguments.PG_Operator_Category_ID#",
+				"operator_group_id" = "eq.#arguments.Group_Operator_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsPlanningGroupOperatorExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsPlanningGroupOperatorExist>
+<cfquery name="qIsPlanningGroupOperatorExist" datasource="#application.datasource#">
 		SELECT 1
 		FROM PG_Operator_Category_Definition
 		WHERE PG_Operator_Category_ID = '#arguments.PG_Operator_Category_ID#'
@@ -4290,6 +4526,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		AND deleted = 0
 		AND Active = 1
 	</cfquery>
+</cfif>
 
 	<cfif qIsPlanningGroupOperatorExist.recordcount>
 		<cfset bPGExist = 1 />

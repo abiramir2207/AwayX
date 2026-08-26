@@ -78,10 +78,27 @@
 				</cfquery>
 			</cfif>
 				
-			<cfquery name="insertBudgets" datasource="#application.datasource#">
+			<cfset useLakebaseForinsertBudgets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_program")>
+<cfif useLakebaseForinsertBudgets>
+	<cftry>
+		<cfset application.oLakebase.insertRow("budget_program", {
+			"program_id" = "#arguments.program_id#",
+			"discount_type_id" = "#arguments.discount_type_id#",
+			"budget_reference_id" = "#arguments.budget_reference_id#",
+			"created_date" = "#now()#",
+			"deleted" = "0"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertBudgets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertBudgets>
+<cfquery name="insertBudgets" datasource="#application.datasource#">
 				INSERT INTO BUDGET_PROGRAM (program_id, discount_type_id, budget_reference_id,created_date,deleted)
 							VALUES		   (#arguments.program_id#, #arguments.discount_type_id#, #arguments.budget_reference_id#,getDate(),0)
 			</cfquery>
+</cfif>
 		</cffunction>
 		
 	<!--- Get Budget Assigned to Program --->
