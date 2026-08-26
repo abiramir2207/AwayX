@@ -105,7 +105,23 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
       <cfset varDDPackageHeaderID = URL.DDPackageHeaderID />
      </cfif>
    
-    <cfquery name="qryGetRebillPackageDtl" datasource="#Application.Datasource#">
+    <cfset useLakebaseForqryGetRebillPackageDtl = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_dtl") AND application.oLakebase.isTableMigrated("dd_reason_code") AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForqryGetRebillPackageDtl>
+	<cftry>
+		<cfset qryGetRebillPackageDtl = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin2("dd_rebill_package_dtl", {
+				"deleted" = "eq.0",
+				"dd_rebill_package_hdr_id" = "eq.#varDDPackageHeaderID#",
+				"select" = "created_date,dd_classification_id,dd_reason_code_id,dd_rebill_package_dtl_id,deleted,is_default"
+			}, "dd_reason_code_id", "dd_reason_code", "dd_reason_code_id", "dd_reason_code", "dd_classification_id", "dd_classification", "dd_classification_id", "dd_classification_desc"), "created_date,dd_classification_id,dd_reason_code_id,dd_rebill_package_dtl_id,deleted,is_default,dd_reason_code,dd_classification_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetRebillPackageDtl = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetRebillPackageDtl>
+<cfquery name="qryGetRebillPackageDtl" datasource="#Application.Datasource#">
       SELECT 
           DDRPD.DD_Rebill_Package_Dtl_ID,
           DDRPD.DD_Reason_Code_ID,
@@ -121,6 +137,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
           LEFT JOIN DD_Classification DDC ON DDC.DD_Classification_ID = DDRPD.DD_Classification_ID
       WHERE DDRPD.Deleted = 0 AND DDRPD.DD_Rebill_Package_Hdr_ID = #varDDPackageHeaderID#
     </cfquery>
+</cfif>
   
     <cfquery name="qryGetRebillPackageHdrOnID" datasource="#Application.Datasource#">
       SELECT DD_Rebill_Package_Hdr_ID,

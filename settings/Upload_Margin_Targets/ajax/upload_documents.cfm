@@ -256,7 +256,22 @@
 					<cfset data.GM_Floor_Value = '0.0'>
 				</cfif>
 
-				<cfquery name="getBSAID" datasource="#application.datasource#">
+				<cfset useLakebaseForgetBSAID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master") AND application.oLakebase.isTableMigrated("type_code_desc") AND application.oLakebase.isTableMigrated("type_group_desc")>
+<cfif useLakebaseForgetBSAID>
+	<cftry>
+		<cfset getBSAID = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin2("bsa_foodservice_items_master", {
+				"item" = "eq.#item#",
+				"select" = "bsa_foodservice_items_master_id,type_code_desc_id,type_group_desc_id"
+			}, "type_code_desc_id", "type_code_desc", "type_code_desc_id", "type_code_desc", "type_group_desc_id", "type_group_desc", "type_group_desc_id", "type_group_desc"), "bsa_foodservice_items_master_id,type_code_desc_id,type_group_desc_id,type_code_desc,type_group_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBSAID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBSAID>
+<cfquery name="getBSAID" datasource="#application.datasource#">
 					SELECT BSA.BSA_Foodservice_Items_Master_ID, BSA.Type_Code_Desc_ID, TCD.Type_Code_Desc, BSA.Type_Group_Desc_ID, TGD.Type_Group_Desc
 					FROM BSA_Foodservice_Items_Master BSA
 					LEFT JOIN Type_Code_Desc TCD
@@ -265,6 +280,7 @@
 					ON TGD.Type_Group_Desc_ID = BSA.Type_Group_Desc_ID
 					WHERE item = '#item#'
 				</cfquery>
+</cfif>
 
 				<cfset useLakebaseForcheckItemExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload")>
 <cfif useLakebaseForcheckItemExist>

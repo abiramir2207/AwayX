@@ -55,6 +55,21 @@ JOIN_SELECT_RE = re.compile(
     r"(?:\s+WHERE\s+(.*?))?(?:\s+ORDER\s+BY\s+(.*?))?\s*;?\s*$",
     re.IGNORECASE | re.DOTALL,
 )
+# Two independent "belongs-to" joins off the same main table (e.g. orders JOIN
+# customers ... JOIN statuses ...) - NOT a chained/dependent join between the two
+# lookup tables. Both ON conditions must reference the main table's alias.
+TWO_JOIN_SELECT_RE = re.compile(
+    r"SELECT\s+(?:(?:DISTINCT|TOP\s+\d+)\s+)*(.*?)\s+FROM\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*)\s+"
+    r"(INNER|LEFT(?:\s+OUTER)?)\s+JOIN\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*)\s+"
+    r"ON\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s+"
+    r"(INNER|LEFT(?:\s+OUTER)?)\s+JOIN\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*)\s+"
+    r"ON\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)"
+    r"(?:\s+WHERE\s+(.*?))?(?:\s+ORDER\s+BY\s+(.*?))?\s*;?\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def extract_paren_group(s: str, open_idx: int) -> tuple[str, int]:
@@ -364,6 +379,126 @@ def gen_join_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     return wrapper, None
 
 
+def gen_two_join_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
+    """Handles exactly one supported shape: SELECT ... FROM main a JOIN lookup1 b
+    ON a.fk1 = b.pk1 JOIN lookup2 c ON a.fk2 = c.pk2 [WHERE <a-only>] [ORDER BY <a-only>].
+    Both joins must be independent belongs-to lookups off the SAME main alias (not a
+    chained b-to-c join). Uses application.oLakebase.selectRowsJoin2()."""
+    sql = strip_sql_comments(strip_cf_comments(sql))
+    if EMBEDDED_CFML_RE.search(sql):
+        return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
+    sql_stripped = sql.strip()
+    if len(re.findall(r"\bJOIN\b", sql_stripped, re.IGNORECASE)) != 2:
+        return None, "not exactly two JOINs - review manually"
+    if re.search(r"\bGROUP\s+BY\b|\bDISTINCT\b|\bUNION\b|\bHAVING\b", sql_stripped, re.IGNORECASE):
+        return None, "GROUP BY/DISTINCT/UNION/HAVING with a join - review manually"
+    m = TWO_JOIN_SELECT_RE.search(sql_stripped)
+    if not m:
+        return None, "two-JOIN SELECT pattern did not match parser (chained join, multi-condition ON, self-join, etc.) - review manually"
+    (cols_raw, table1, alias1, join1type, table2, alias2,
+     on1_a, on1_a_col, on1_b, on1_b_col,
+     join2type, table3, alias3,
+     on2_a, on2_a_col, on2_b, on2_b_col, where, order_by) = m.groups()
+
+    if UNSAFE_RE.search(cols_raw):
+        return None, "SELECT column list contains functions/CASE - review manually"
+    if re.search(r"\bAS\b", cols_raw, re.IGNORECASE) or '"' in cols_raw:
+        return None, "SELECT column list uses aliasing (AS) - review manually"
+    if has_dynamic_identifier(table1, table2, table3, cols_raw):
+        return None, "table/column name is a dynamic CFML variable (#...#) - review manually"
+    aliases = [alias1.lower(), alias2.lower(), alias3.lower()]
+    if len(set(aliases)) != 3:
+        return None, "ambiguous aliases - review manually"
+
+    def resolve_fk(on_a, on_a_col, on_b, on_b_col, other_alias):
+        if on_a.lower() == alias1.lower() and on_b.lower() == other_alias.lower():
+            return on_a_col, on_b_col
+        if on_a.lower() == other_alias.lower() and on_b.lower() == alias1.lower():
+            return on_b_col, on_a_col
+        return None, None
+
+    fk1_col, lookup1_key_col = resolve_fk(on1_a, on1_a_col, on1_b, on1_b_col, alias2)
+    if fk1_col is None:
+        return None, "first ON condition does not reference the main alias and lookup1 alias directly - review manually"
+    fk2_col, lookup2_key_col = resolve_fk(on2_a, on2_a_col, on2_b, on2_b_col, alias3)
+    if fk2_col is None:
+        return None, "second ON condition does not reference the main alias and lookup2 alias directly - review manually"
+
+    # WHERE/ORDER BY must only touch the main table's alias
+    if where and (re.search(rf"\b{re.escape(alias2)}\.", where, re.IGNORECASE) or re.search(rf"\b{re.escape(alias3)}\.", where, re.IGNORECASE)):
+        return None, "WHERE clause references a joined/lookup table - review manually"
+    if order_by and (re.search(rf"\b{re.escape(alias2)}\.", order_by, re.IGNORECASE) or re.search(rf"\b{re.escape(alias3)}\.", order_by, re.IGNORECASE)):
+        return None, "ORDER BY references a joined/lookup table - review manually"
+
+    cols = [c.strip() for c in cols_raw.split(",")]
+    main_cols, lookup1_cols, lookup2_cols = [], [], []
+    for c in cols:
+        if "." not in c:
+            return None, "SELECT column without a table alias prefix - review manually"
+        c_alias, c_col = c.split(".", 1)
+        if c_alias.lower() == alias1.lower():
+            main_cols.append(c_col.strip())
+        elif c_alias.lower() == alias2.lower():
+            lookup1_cols.append(c_col.strip())
+        elif c_alias.lower() == alias3.lower():
+            lookup2_cols.append(c_col.strip())
+        else:
+            return None, "SELECT column references an unknown alias - review manually"
+    if not lookup1_cols or not lookup2_cols:
+        return None, "no columns selected from one of the joined tables - review manually"
+    main_col_names = {col_name(c) for c in main_cols}
+    lookup1_col_names = {col_name(c) for c in lookup1_cols}
+    lookup2_col_names = {col_name(c) for c in lookup2_cols}
+    if main_col_names & lookup1_col_names or main_col_names & lookup2_col_names or lookup1_col_names & lookup2_col_names:
+        return None, "main/lookup column name collision - review manually"
+
+    filters = {}
+    if where:
+        filters = parse_where_to_filters(where)
+        if filters is None:
+            return None, "WHERE clause too complex (OR/parens/functions) - review manually"
+    if order_by:
+        order_by = order_by.strip()
+        if UNSAFE_RE.search(order_by) or "," in order_by or has_dynamic_identifier(order_by):
+            return None, "ORDER BY too complex - review manually"
+        parts = order_by.split()
+        ocol = col_name(parts[0].split(".")[-1])
+        odir = "desc" if len(parts) > 1 and parts[1].upper() == "DESC" else "asc"
+        filters["order"] = f'"{ocol}.{odir}"'
+
+    fk1_col_pg = col_name(fk1_col)
+    fk2_col_pg = col_name(fk2_col)
+    all_main_select_cols = sorted(main_col_names | {fk1_col_pg, fk2_col_pg})
+    filters["select"] = '"' + ",".join(all_main_select_cols) + '"'
+
+    var_name = f"useLakebaseFor{query_name.replace('.', '_')}"
+    pg_table1 = table1.lower()
+    pg_table2 = table2.lower()
+    pg_table3 = table3.lower()
+    params_lines = "\n".join(f'\t\t\t\t"{k}" = {v},' for k, v in filters.items())
+    params_block = "{\n" + params_lines.rstrip(",") + "\n\t\t\t}" if filters else "{}"
+    all_cols = sorted(main_col_names) + sorted(lookup1_col_names) + sorted(lookup2_col_names)
+    to_query_cols = ', "' + ",".join(all_cols) + '"'
+    lookup1_select = ",".join(sorted(lookup1_col_names))
+    lookup2_select = ",".join(sorted(lookup2_col_names))
+
+    wrapper = f'''<cfset {var_name} = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("{pg_table1}") AND application.oLakebase.isTableMigrated("{pg_table2}") AND application.oLakebase.isTableMigrated("{pg_table3}")>
+<cfif {var_name}>
+\t<cftry>
+\t\t<cfset {query_name} = application.oLakebase.toQuery(
+\t\t\tapplication.oLakebase.selectRowsJoin2("{pg_table1}", {params_block}, "{fk1_col_pg}", "{pg_table2}", "{col_name(lookup1_key_col)}", "{lookup1_select}", "{fk2_col_pg}", "{pg_table3}", "{col_name(lookup2_key_col)}", "{lookup2_select}"){to_query_cols}
+\t\t)>
+\t\t<cfcatch type="any">
+\t\t\t<cfset {var_name} = false>
+\t\t</cfcatch>
+\t</cftry>
+</cfif>
+<cfif NOT {var_name}>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>'''
+    return wrapper, None
+
+
 def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     sql = strip_sql_comments(strip_cf_comments(sql))
     if EMBEDDED_CFML_RE.search(sql):
@@ -534,8 +669,13 @@ def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[st
         sql = m.group(2)
         sql_stripped = sql.strip()
         if re.match(r"SELECT", sql_stripped, re.IGNORECASE):
-            if re.search(r"\bJOIN\b", sql_stripped, re.IGNORECASE):
+            join_count = len(re.findall(r"\bJOIN\b", sql_stripped, re.IGNORECASE))
+            if join_count == 1:
                 wrapper, reason = gen_join_select_wrapper(qname, sql_stripped)
+            elif join_count == 2:
+                wrapper, reason = gen_two_join_select_wrapper(qname, sql_stripped)
+            elif join_count > 2:
+                wrapper, reason = None, "more than two JOINs - review manually"
             else:
                 wrapper, reason = gen_select_wrapper(qname, sql_stripped)
         elif re.match(r"UPDATE", sql_stripped, re.IGNORECASE):
