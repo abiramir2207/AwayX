@@ -1176,12 +1176,31 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
                       WHERE Billback_ID = '#arguments.Billback_ID#'
                     </cfquery>
             <cfelse>
-                      <cfquery name="UpdBBItemInvoiceLevel" datasource="#application.datasource#">
+                      <cfset useLakebaseForUpdBBItemInvoiceLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
+<cfif useLakebaseForUpdBBItemInvoiceLevel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_item_invoice_level",
+			{
+				"billback_id" = "eq.#arguments.Billback_ID#"
+			},
+			{
+				"volume_override" = "0",
+				"rate_override" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdBBItemInvoiceLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdBBItemInvoiceLevel>
+<cfquery name="UpdBBItemInvoiceLevel" datasource="#application.datasource#">
                           UPDATE BB_Item_Invoice_Level
                           SET Volume_Override = 0,
                               Rate_Override = 0
                           WHERE Billback_ID = '#arguments.Billback_ID#'
                       </cfquery>
+</cfif>
             </cfif> 
     		  	<cfquery name="updBillback" datasource="#application.datasource#">
     	          UPDATE Billback 

@@ -149,13 +149,31 @@
 		<cfargument name="typeGroupDescId" type="string" required="false" default="" />
 		
 		<!---Check for Check_Bit Costs--->
-		<cfquery name="qCheckBit" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("trade_plan_item_cost")>
+<cfif useLakebaseForqCheckBit>
+	<cftry>
+		<cfset qCheckBit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("trade_plan_item_cost", {
+				"trade_plan_id" = "eq.#arguments.tradePlanID#",
+				"trade_plan_costs_id" = "eq.#arguments.tradePlanCostsId#",
+				"type_group_desc_id" = "eq.#arguments.typeGroupDescId#",
+				"select" = "check_bit"
+			}), "check_bit"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckBit>
+<cfquery name="qCheckBit" datasource="#application.datasource#">
 			SELECT 	Check_Bit 
 			FROM 	trade_plan_item_cost
 			WHERE 	trade_plan_id = '#arguments.tradePlanID#'
 	 		AND		trade_plan_costs_id = #arguments.tradePlanCostsId#
 			AND 	Type_Group_Desc_ID = '#arguments.typeGroupDescId#'
 		</cfquery>
+</cfif>
 		
 		
 		<cfreturn qCheckBit.Check_Bit />

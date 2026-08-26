@@ -1,6 +1,0 @@
-===== QUERY: check4Parent =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: check4RFAWIP =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-

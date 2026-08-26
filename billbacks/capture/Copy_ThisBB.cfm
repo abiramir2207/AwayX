@@ -466,9 +466,25 @@ WHERE 					Billback_ID = '#BBID#' AND
 	</CFQUERY>		
 </CFIF>
 
+<cfset useLakebaseForSelectProg = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForSelectProg>
+	<cftry>
+		<cfset SelectProg = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#BillbackID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelectProg = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelectProg>
 <CFQUERY NAME="SelectProg" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback_Program WHERE Billback_ID = '#BillbackID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 
 <CFLOOP QUERY="SelectProg">

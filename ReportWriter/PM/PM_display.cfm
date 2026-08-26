@@ -1098,12 +1098,27 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 						<TR>
 						<CFSET Mycounter=0> 
 						<CFLOOP QUERY="Get_Position">
-							<CFQUERY NAME="ThisUserPositionEmail" DBTYPE="query">
+							<cfset useLakebaseForThisUserPositionEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_position_emails")>
+<cfif useLakebaseForThisUserPositionEmail>
+	<cftry>
+		<cfset ThisUserPositionEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_position_emails", {
+				"user_positions_id" = "eq.#Get_Position.User_Positions_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThisUserPositionEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThisUserPositionEmail>
+<CFQUERY NAME="ThisUserPositionEmail" DBTYPE="query">
 								SELECT	*
 								FROM	Get_Position_Emails
 								WHERE
 										User_Positions_ID = #Get_Position.User_Positions_ID#
 							</CFQUERY>
+</cfif>
 							<CFSET ThisPositionEmails = ValueList(ThisUserPositionEmail.User_Email, ";")>		
 		            	   	<TD STYLE="border-bottom: 1px silver solid">
 							<CFIF Len(ThisPositionEmails) GT 0>

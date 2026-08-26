@@ -839,11 +839,29 @@
 		<cfargument name="Component_Name_ID" type="numeric" required="false" default="0" />
 		<cfargument name="Claim_Mechanics" type="numeric" required="false" default="0" />
 
-		<!--- <cfquery name="qDelFixedComps" datasource="#application.datasource#">
+		<!--- <cfset useLakebaseForqDelFixedComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqDelFixedComps>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component",
+			{
+				"program_id" = "eq.#arguments.contractId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDelFixedComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDelFixedComps>
+<cfquery name="qDelFixedComps" datasource="#application.datasource#">
 			Update Program_Fixed_Component
 			Set deleted = 1
 			WHERE Program_Id = #arguments.contractId#
-		</cfquery> --->
+		</cfquery>
+</cfif> --->
 			<cfquery name="qInsFixedComps" datasource="#application.datasource#" result="q">
 				INSERT INTO Program_Fixed_Component
 						(Program_ID,Program_Fixed_Component_Name_Id,Fixed_Component_Paid_To, Claim_Mechanics, GL_account_Id)

@@ -1,6 +1,0 @@
-===== QUERY: qGetContractDistributors =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
-
-===== QUERY: qGetDistributor =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-

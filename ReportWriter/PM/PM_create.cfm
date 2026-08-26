@@ -429,11 +429,27 @@ function formatRate(oInput, fne)
 
 <CFSET PM_IsCritical = 0>
 <CFIF Len(Get_Data.PM_Priority_ID) GT 0>
-	<CFQUERY NAME="Get_Iscritical" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGet_Iscritical = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_priority")>
+<cfif useLakebaseForGet_Iscritical>
+	<cftry>
+		<cfset Get_Iscritical = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_priority", {
+				"pm_priority_id" = "eq.#Get_Data.PM_Priority_ID#",
+				"select" = "pm_iscritical"
+			}), "pm_iscritical"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Iscritical = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Iscritical>
+<CFQUERY NAME="Get_Iscritical" DATASOURCE="#Application.Datasource#">
 		SELECT 	PM_Iscritical 
 		FROM 	PM_Priority 
 		WHERE 	PM_Priority_ID = '#Get_Data.PM_Priority_ID#'
 	</CFQUERY>
+</cfif>
 	<CFSET PM_IsCritical = Get_Iscritical.PM_Iscritical>
 </CFIF>
 <TABLE WIDTH="92%" CELLSPACING="0" CELLPADDING="2" ALIGN="center" BORDER="0">

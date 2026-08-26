@@ -318,9 +318,24 @@
 						ORDER BY	GL_Code_AR_For_ProgTemp.Fiscal_Year,GL_Code_AR_For_ProgTemp.A_R
 					</CFQUERY>
 					
-					<CFQUERY NAME="AlreadySelAR" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForAlreadySelAR = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForAlreadySelAR>
+	<cftry>
+		<cfset AlreadySelAR = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_program_id" = "eq.#Billback_Program_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlreadySelAR = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlreadySelAR>
+<CFQUERY NAME="AlreadySelAR" DATASOURCE="#Application.Datasource#">
 						SELECT * FROM Billback_Program WHERE Billback_Program_ID = '#Billback_Program_ID#'
 					</CFQUERY>
+</cfif>
 					
 					<CFSET AlreadySelectedAR = "">
 					<CFIF AlreadySelAR.A_R NEQ "">

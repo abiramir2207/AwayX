@@ -1,9 +1,0 @@
-===== QUERY: Save_Broker_Data =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: Save_Notes_Data =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: Save_Products_Data =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

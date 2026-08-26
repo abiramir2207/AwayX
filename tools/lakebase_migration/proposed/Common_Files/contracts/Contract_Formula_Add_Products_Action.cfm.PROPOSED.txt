@@ -1,3 +1,0 @@
-===== QUERY: Get_Active_Products =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

@@ -1,9 +1,0 @@
-===== QUERY: GetAllComponents =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
-
-===== QUERY: GetInvoices =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
-
-===== QUERY: SumsForComp =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-

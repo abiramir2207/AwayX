@@ -106,7 +106,27 @@ TABLE.UNDERLINED TD
 </CFQUERY>
 
 <CFIF Dont_Recal_Fund EQ 1>
-	<CFQUERY NAME="UpdateSave" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateSave = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForUpdateSave>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.3",
+				"deleted" = "eq.0",
+				"allocation_saved" = "eq.1"
+			},
+			{
+				"allocation_saved" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateSave = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateSave>
+<CFQUERY NAME="UpdateSave" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		SET 	Allocation_Saved = 0
 		WHERE 	Billback_ID = '#Billback_ID#' AND
@@ -114,6 +134,7 @@ TABLE.UNDERLINED TD
 				Deleted = 0 AND
 				Allocation_Saved = 1
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 <CFQUERY NAME="GetDinstAllocation" DATASOURCE="#Application.Datasource#">

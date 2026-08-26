@@ -1,9 +1,0 @@
-===== QUERY: GetAutoBB_BasicInfo =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: ProgramList =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: Dist_Search_Result =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-

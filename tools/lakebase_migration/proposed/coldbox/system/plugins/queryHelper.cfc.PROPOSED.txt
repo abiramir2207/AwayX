@@ -1,9 +1,0 @@
-===== QUERY: qryNew =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: qryNew =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: stPrivate.qryCount =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

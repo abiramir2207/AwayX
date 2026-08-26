@@ -1,9 +1,0 @@
-===== QUERY: getBillback_Program_ID =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: deleteProgramProducts =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: undeleteProgramProducts =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-

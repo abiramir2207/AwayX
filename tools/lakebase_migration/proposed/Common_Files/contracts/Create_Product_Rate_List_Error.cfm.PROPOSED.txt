@@ -1,9 +1,0 @@
-===== QUERY: CheckItems =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: Update_tempdb =====
-STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
-
-===== QUERY: Update_Items_tempdb =====
-STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
-

@@ -1,6 +1,0 @@
-===== QUERY: INSERT_Danger_Date =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: UPDATE_Danger_Date =====
-STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
-

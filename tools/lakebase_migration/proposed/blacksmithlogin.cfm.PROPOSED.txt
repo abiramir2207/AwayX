@@ -1,3 +1,0 @@
-===== QUERY: Set_Is_First_Time =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

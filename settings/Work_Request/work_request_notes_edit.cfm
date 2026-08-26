@@ -142,11 +142,26 @@
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
+<cfset useLakebaseForGet_WR_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGet_WR_Details>
+	<cftry>
+		<cfset Get_WR_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#Work_Request_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_WR_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_WR_Details>
 <CFQUERY NAME="Get_WR_Details" datasource="#application.datasource#">
 	Select		*
 	From		Work_Request
 	Where Work_Request_ID = #Work_Request_ID#
 </CFQUERY>
+</cfif>
 
 <cfquery name="GetUserInfo" datasource="#application.datasource#">
 SELECT User_Code FROM _Users WHERE User_ID LIKE '#request.accessStructure.User_ID#'

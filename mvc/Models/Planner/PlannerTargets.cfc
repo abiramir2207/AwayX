@@ -1224,12 +1224,30 @@
 		</cfquery>
 
 		<cfif local.qGetSlottingApprovalUsers.recordCount>
-			<cfquery name="local.qSystemAdmin" datasource="#application.datasource#">
+			<cfset useLakebaseForlocal_qSystemAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForlocal_qSystemAdmin>
+	<cftry>
+		<cfset local.qSystemAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qSystemAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qSystemAdmin>
+<cfquery name="local.qSystemAdmin" datasource="#application.datasource#">
 				SELECT	TOP 1 User_Email
 				  FROM  _Users
 				 WHERE 	Is_System_Administrator = 1
 						AND	Deleted = 0
 			</cfquery>
+</cfif>
 
 			<cfset qTargets = getTargets(arguments.id) />
 

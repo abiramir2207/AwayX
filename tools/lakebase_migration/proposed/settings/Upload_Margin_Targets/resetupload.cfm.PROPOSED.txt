@@ -1,6 +1,0 @@
-===== QUERY: StopDTS =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: StopDTS =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

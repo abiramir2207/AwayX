@@ -1,6 +1,0 @@
-===== QUERY: totalBeforeFilter =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: totalAfterFilter =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

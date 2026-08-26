@@ -163,12 +163,28 @@
 	ORDER BY Calc_Type DESC, Overage_Index
 </CFQUERY>
 
+<cfset useLakebaseForGet_All_Commodity_Overage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_commodity_overage")>
+<cfif useLakebaseForGet_All_Commodity_Overage>
+	<cftry>
+		<cfset Get_All_Commodity_Overage = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_commodity_overage", {
+				"program_formula_pricing_rule_id" = "eq.#URL.Formula_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_All_Commodity_Overage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_All_Commodity_Overage>
 <CFQUERY NAME="Get_All_Commodity_Overage" DATASOURCE="#application.datasource#">
 	SELECT	*
 	FROM	Formula_Pricing_Commodity_Overage
 	WHERE Program_Formula_Pricing_Rule_ID = '#URL.Formula_ID#' AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
 <html>
 <head>

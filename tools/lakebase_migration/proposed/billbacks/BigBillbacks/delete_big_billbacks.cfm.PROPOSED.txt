@@ -1,3 +1,0 @@
-===== QUERY: DeleteBigBillbacks =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

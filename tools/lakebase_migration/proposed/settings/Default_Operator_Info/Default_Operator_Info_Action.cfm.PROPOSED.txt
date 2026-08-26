@@ -1,9 +1,0 @@
-===== QUERY: Update_Info =====
-STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
-
-===== QUERY: rsUpdate =====
-STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
-
-===== QUERY: rsInsert =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

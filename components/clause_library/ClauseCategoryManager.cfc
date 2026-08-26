@@ -58,7 +58,23 @@
 
 	<cffunction name="getAll" output="false" returntype="query">
 
-		<cfquery name="qGetAll" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_category")>
+<cfif useLakebaseForqGetAll>
+	<cftry>
+		<cfset qGetAll = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("clause_category", {
+				"deleted" = "eq.0",
+				"order" = "clause_category_id.asc",
+				"select" = "clause_category_id,clause_category_name,require_approval,default_clause_library_id"
+			}), "clause_category_id,clause_category_name,require_approval,default_clause_library_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAll = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAll>
+<cfquery name="qGetAll" datasource="#application.datasource#">
 			SELECT 	Clause_Category_ID,
 					Clause_Category_Name,
 					Require_Approval,
@@ -67,6 +83,7 @@
 			WHERE 	Deleted = 0
 			ORDER BY Clause_Category_ID
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetAll />
 

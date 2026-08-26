@@ -1,3 +1,0 @@
-===== QUERY: get_data_1 =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

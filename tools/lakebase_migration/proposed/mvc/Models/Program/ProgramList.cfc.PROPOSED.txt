@@ -1,6 +1,0 @@
-===== QUERY: qGetData =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: qGetData =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

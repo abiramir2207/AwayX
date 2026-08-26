@@ -1,9 +1,0 @@
-===== QUERY: qgetEZButtonProductList =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: local.query =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: local.query =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

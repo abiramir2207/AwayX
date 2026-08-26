@@ -1,6 +1,0 @@
-===== QUERY: qDeviationDetailReport =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: qDeviationDetailReport =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

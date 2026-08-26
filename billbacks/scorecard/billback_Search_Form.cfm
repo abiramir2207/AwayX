@@ -646,11 +646,27 @@ TSF - Label 16253: Code to handle Billback Analyst search form
       <!--- 8.) Date [moved] --->
       <td>
       	<cfsilent>
-          <cfquery NAME="Get_Billback_Dates" datasource="#application.datasource#">
+          <cfset useLakebaseForGet_Billback_Dates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_date_type")>
+<cfif useLakebaseForGet_Billback_Dates>
+	<cftry>
+		<cfset Get_Billback_Dates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_date_type", {
+				"deleted" = "eq.0",
+				"select" = "bb_date_type,bb_date_field"
+			}), "bb_date_type,bb_date_field"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Billback_Dates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Billback_Dates>
+<cfquery NAME="Get_Billback_Dates" datasource="#application.datasource#">
             SELECT BB_Date_Type,BB_Date_Field
             FROM 	BB_Date_Type
             WHERE Deleted = 0
           </cfquery>
+</cfif>
         </cfsilent>
 	<table cellpadding="1" cellspacing="0" border="0" width="100%">
           <tr>

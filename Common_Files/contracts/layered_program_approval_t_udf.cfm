@@ -2959,12 +2959,29 @@ body, html {
 								</cfif>
 
 								<!--- do we have more than 1 fixed component for this program ? [begin]  ???????????????????????????? OUTSIDE LOOP--->
-								<cfquery name="qGetFixedComponentIDs" datasource="#application.datasource#">
+								<cfset useLakebaseForqGetFixedComponentIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqGetFixedComponentIDs>
+	<cftry>
+		<cfset qGetFixedComponentIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#contract_main_id#",
+				"deleted" = "eq.0",
+				"select" = "program_fixed_component_id"
+			}), "program_fixed_component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedComponentIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedComponentIDs>
+<cfquery name="qGetFixedComponentIDs" datasource="#application.datasource#">
 									SELECT  Program_Fixed_Component_ID
 									FROM  Program_Fixed_Component
 									WHERE   Program_ID = #contract_main_id#
 									AND   deleted = 0
 								</cfquery>
+</cfif>
 								<!--- do we have more than 1 fixed component for this program ? [end] --->
 							</cfsilent>
 							<!--- if we are negative... --->

@@ -820,10 +820,25 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 			<CFSET RegularBBProgram = VALUELIST(BBProgram.Billback_Program_ID)>
 		</cfif>
 
- 		<cfquery name="AdjustmentSettings" datasource="#application.datasource#">
+ 		<cfset useLakebaseForAdjustmentSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForAdjustmentSettings>
+	<cftry>
+		<cfset AdjustmentSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "adjustment_from_program_without_pullback,adjustment_from_program_with_pullback"
+			}), "adjustment_from_program_without_pullback,adjustment_from_program_with_pullback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAdjustmentSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAdjustmentSettings>
+<cfquery name="AdjustmentSettings" datasource="#application.datasource#">
 			SELECT 	Adjustment_From_Program_WithOut_PullBack, Adjustment_From_Program_With_PullBack
 			FROM 	Billback_Settings
 		</cfquery>
+</cfif>
 
 		<cfif AdjustmentSettings.Adjustment_From_Program_WithOut_PullBack NEQ AdjustmentSettings.Adjustment_From_Program_With_PullBack AND
 		(

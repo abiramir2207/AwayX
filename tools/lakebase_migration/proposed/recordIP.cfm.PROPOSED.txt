@@ -1,9 +1,0 @@
-===== QUERY: AddUserTransLockedOut =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: qryRecent =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-
-===== QUERY: AddIP =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

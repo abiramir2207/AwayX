@@ -523,12 +523,29 @@ a vendor from the vendor popup.
 	WHERE 	Billback_ID =  '#Form.Billback_ID#'
 	AND Deleted = 0
 </cfquery>
+<cfset useLakebaseForgetBB_ModifyAgree = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetBB_ModifyAgree>
+	<cftry>
+		<cfset getBB_ModifyAgree = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "bb_modify_agree,bb_modify_agree_user"
+			}), "bb_modify_agree,bb_modify_agree_user"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBB_ModifyAgree = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBB_ModifyAgree>
 <cfquery name="getBB_ModifyAgree" datasource="#Application.Datasource#">
 	SELECT 	BB_modify_agree,BB_Modify_Agree_User
 	FROM 	Billback
 	WHERE 	Billback_ID =  '#Form.Billback_ID#'
 	AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfif getBB_AgreedInfo.BB_AgreedCount GT 0>
 <cfset disablelinks = 1>

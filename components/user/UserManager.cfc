@@ -497,12 +497,29 @@
 
 	<cffunction name="getCurrentSystemAdmin" output="false" returntype="query">
 
-		<cfquery name="qGetCurrentSystemAdmin" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCurrentSystemAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetCurrentSystemAdmin>
+	<cftry>
+		<cfset qGetCurrentSystemAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCurrentSystemAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCurrentSystemAdmin>
+<cfquery name="qGetCurrentSystemAdmin" datasource="#application.datasource#">
 			SELECT	TOP 1 *
 			FROM 	_Users
 			WHERE 	Is_System_Administrator = 1
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetCurrentSystemAdmin />
 

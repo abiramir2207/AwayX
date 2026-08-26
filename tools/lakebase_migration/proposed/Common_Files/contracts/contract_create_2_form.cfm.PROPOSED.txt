@@ -1,6 +1,0 @@
-===== QUERY: SaveGeneralContractInfo =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: SaveProduct =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

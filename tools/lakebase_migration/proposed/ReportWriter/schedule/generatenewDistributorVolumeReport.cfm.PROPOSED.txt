@@ -1,3 +1,0 @@
-===== QUERY: q_getReport =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

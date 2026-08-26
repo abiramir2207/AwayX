@@ -1,6 +1,0 @@
-===== QUERY: GetDiscountsforProgram =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
-
-===== QUERY: GetAllBillbacks =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
-

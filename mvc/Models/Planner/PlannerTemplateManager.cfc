@@ -426,11 +426,26 @@ Description  :  Manager for Planner Templates
 
 		<cfelse>
 			<!--- AUDITING - CAPTURE ORIGINAL --->
-			<cfquery name="variables.qOriginal" datasource="#application.datasource#">
+			<cfset useLakebaseForvariables_qOriginal = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template")>
+<cfif useLakebaseForvariables_qOriginal>
+	<cftry>
+		<cfset variables.qOriginal = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template", {
+				"planner_template_id" = "eq.#arguments.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qOriginal = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qOriginal>
+<cfquery name="variables.qOriginal" datasource="#application.datasource#">
 				SELECT *
 				FROM Planner_Template
 				WHERE Planner_Template_ID = '#arguments.id#'
 			</cfquery>
+</cfif>
 
 			<cfquery name="local.query" datasource="#application.datasource#">
 				UPDATE  Planner_Template

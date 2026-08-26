@@ -545,11 +545,29 @@
 			</CFIF>		
 		</CFIF>
 	<CFELSEIF DeleteRecord EQ 1>
-		<CFQUERY NAME="DeleteThis" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForDeleteThis = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_dist_oper")>
+<cfif useLakebaseForDeleteThis>
+	<cftry>
+		<cfset application.oLakebase.updateRows("vendor_dist_oper",
+			{
+				"vendor_dist_oper_id" = "eq.#FORM.RID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteThis = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteThis>
+<CFQUERY NAME="DeleteThis" DATASOURCE="#Application.Datasource#">
 			UPDATE 	Vendor_Dist_Oper
 			SET 	Deleted = 1
 			WHERE 	Vendor_Dist_Oper_ID = '#FORM.RID#'
 		</CFQUERY>
+</cfif>
 		<BR><BR><BR><BR>
 		<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" ALIGN="Center">
 			<TR>

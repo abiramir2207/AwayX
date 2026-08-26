@@ -1,9 +1,0 @@
-===== QUERY: BBIDRecordcount =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: DropTheTable =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: DropTheSecondTable =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

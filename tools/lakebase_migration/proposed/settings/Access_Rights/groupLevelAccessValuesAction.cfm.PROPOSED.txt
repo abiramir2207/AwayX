@@ -1,9 +1,0 @@
-===== QUERY: qDeleteAll =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: qInsertGroupAccessApprove =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: UpdateGeneralInformation =====
-STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
-

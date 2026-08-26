@@ -4370,12 +4370,29 @@
 			</cfif>
 
 			<!---check for revision--->
-			<cfquery name="qCheckIfRevision" datasource="#application.datasource#">
+			<cfset useLakebaseForqCheckIfRevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqCheckIfRevision>
+	<cftry>
+		<cfset qCheckIfRevision = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.rebateData.programId#",
+				"select" = "is_a_revision"
+			}), "is_a_revision"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfRevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfRevision>
+<cfquery name="qCheckIfRevision" datasource="#application.datasource#">
 				SELECT	Is_A_Revision
 				FROM 	Contract_Main
 				WHERE	Deleted = 0
 				AND		Contract_Main_ID = #arguments.rebateData.programId#
 			</cfquery>
+</cfif>
 
 			<!---check if it's a bid request--->
 			<cfset useLakebaseForqCheckIfBidRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>

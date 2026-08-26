@@ -1,6 +1,0 @@
-===== QUERY: q_diLogFields =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: q_diLogUpdate =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

@@ -665,12 +665,29 @@
 	
 	<cffunction name="getTypeGroups" output="true" returntype="query">
 	
-		<cfquery name="qGetTypeGroups" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetTypeGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("type_group_desc")>
+<cfif useLakebaseForqGetTypeGroups>
+	<cftry>
+		<cfset qGetTypeGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("type_group_desc", {
+				"deleted" = "eq.0",
+				"order" = "type_group_desc.asc",
+				"select" = "type_group_desc_id as product_group_id,type_group_legacy as product_group_legacy_id,type_group_desc as product_group_desc"
+			}), "type_group_desc_id as product_group_id,type_group_legacy as product_group_legacy_id,type_group_desc as product_group_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTypeGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTypeGroups>
+<cfquery name="qGetTypeGroups" datasource="#application.datasource#">
 			SELECT	Type_Group_Desc_ID As Product_Group_ID, Type_Group_Legacy As Product_Group_Legacy_ID, Type_Group_Desc As Product_Group_Desc
 			FROM	Type_Group_Desc
 			WHERE	Deleted = 0
 			ORDER BY Type_Group_Desc
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetTypeGroups />
 	

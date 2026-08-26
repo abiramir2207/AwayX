@@ -827,11 +827,29 @@
 	</cfquery>
 </CFIF>
 
+<cfset useLakebaseForunidentifiedpayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForunidentifiedpayee>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"bb_up" = "#form.selected_bb_payee_type_is_unknown#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunidentifiedpayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunidentifiedpayee>
 <cfquery name="unidentifiedpayee" datasource="#Application.Datasource#">
 	UPDATE Billback
 	SET BB_UP = '#form.selected_bb_payee_type_is_unknown#'
 	WHERE Billback_ID = '#FORM.Billback_ID#'
 </cfquery>
+</cfif>
 
 <!--- 
 	50616 - New Duplicate BB Logic/Anand Rao/17-Jun-2015

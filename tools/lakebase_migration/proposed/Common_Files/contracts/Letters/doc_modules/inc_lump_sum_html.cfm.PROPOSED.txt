@@ -1,6 +1,0 @@
-===== QUERY: qCheckLineNumber =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: getItemCountForComponent =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

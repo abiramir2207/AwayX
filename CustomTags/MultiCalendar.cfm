@@ -576,11 +576,27 @@ WHERE   SiteID = #attributes.siteid#
     </cfif>
 	ORDER BY	startdate
 </CFQUERY>
-	<CFQUERY name="GetNoGreet" datasource="#attributes.MultiCalDSN#">
+	<cfset useLakebaseForGetNoGreet = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("greeting")>
+<cfif useLakebaseForGetNoGreet>
+	<cftry>
+		<cfset GetNoGreet = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("greeting", {
+				"greeting_date" = "eq.00/00",
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNoGreet = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNoGreet>
+<CFQUERY name="GetNoGreet" datasource="#attributes.MultiCalDSN#">
 				SELECT * FROM Greeting
 				WHERE greeting_date = '00/00'
 				AND siteid =#attributes.siteid#
 	</CFQUERY>
+</cfif>
 <CFSET OffSet = #DayOfWeek("#MonthStart#")#>
 <CFSET LastSlot = #OffSet# + #DaysInMonth("#MonthStart#")#-1>
 <CFSET CalDays = (#Ceiling(LastSlot/7)#)*7>

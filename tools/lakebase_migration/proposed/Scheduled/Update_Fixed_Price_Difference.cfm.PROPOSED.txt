@@ -1,6 +1,0 @@
-===== QUERY: qCheckTableExist =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: Call_Refresh_price_change =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

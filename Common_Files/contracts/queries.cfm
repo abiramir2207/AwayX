@@ -2220,11 +2220,27 @@
 	<CFIF getTemplateSettings.Discount_Formula_Pricing EQ 1>
 
 
-		<cfquery name="qGetFormulaPricingProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetFormulaPricingProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_products")>
+<cfif useLakebaseForqGetFormulaPricingProducts>
+	<cftry>
+		<cfset qGetFormulaPricingProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_products", {
+				"program_id" = "eq.#Renewed_Program_ID#",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFormulaPricingProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFormulaPricingProducts>
+<cfquery name="qGetFormulaPricingProducts" datasource="#application.datasource#">
 			SELECT 	top 1 *
 			FROM 	Program_Formula_Pricing_Rule_Products
 			WHERE 	Program_ID = #Renewed_Program_ID#
 		</cfquery>
+</cfif>
 
 		<CFIF qGetFormulaPricingProducts.recordcount GT 0>
 			<!----- Generate Formula Prices ---------->

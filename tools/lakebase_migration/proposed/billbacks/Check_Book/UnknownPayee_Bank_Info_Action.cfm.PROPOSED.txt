@@ -1,6 +1,0 @@
-===== QUERY: temp_unknown =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: select_id =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-

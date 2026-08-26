@@ -80,11 +80,26 @@ Last Modified On:
 <!--- end::reinsert settings with 0-hide value to Settings_Template_Display table---> 
 
 <cfif Form.Generic_Type IS NOT "Distributor Off-Invoice" AND Form.Generic_Type NEQ "LSAutoPay">
-	<cfquery name="GetPaymentPaidToTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGetPaymentPaidToTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_paid_to_types")>
+<cfif useLakebaseForGetPaymentPaidToTypes>
+	<cftry>
+		<cfset GetPaymentPaidToTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_paid_to_types", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPaymentPaidToTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPaymentPaidToTypes>
+<cfquery name="GetPaymentPaidToTypes" datasource="#application.datasource#">
 		SELECT 	*
 		FROM 	Payment_Paid_To_Types
 		WHERE 	Deleted = 0
 	</cfquery>
+</cfif>
 	<CFLOOP query="GetPaymentPaidToTypes">
 		<cfparam name="Form.Payment_Paid_To_Type_#Payment_Paid_To_ID#" default="1">
 		<cfset FieldValuePaymentPaidToTypes = Evaluate("Form.Payment_Paid_To_Type_#Payment_Paid_To_ID#")>

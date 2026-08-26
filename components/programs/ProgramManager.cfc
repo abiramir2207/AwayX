@@ -3972,13 +3972,32 @@ and contract_products.deleted = 0
 
 			<cfset local.bProductGroupExists = 0>
 
-			<CFQUERY NAME="qCheckProductGroupExistsOnProgram" datasource="#application.datasource#">
+			<cfset useLakebaseForqCheckProductGroupExistsOnProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqCheckProductGroupExistsOnProgram>
+	<cftry>
+		<cfset qCheckProductGroupExistsOnProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.1",
+				"limit" = "1",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckProductGroupExistsOnProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckProductGroupExistsOnProgram>
+<CFQUERY NAME="qCheckProductGroupExistsOnProgram" datasource="#application.datasource#">
 				SELECT TOP 1 Contract_Main_ID
 				FROM Contract_Products
 				WHERE Contract_Main_ID = '#arguments.programId#'
 				AND deleted = 0
 				AND Is_Group = 1
 			</CFQUERY>
+</cfif>
 
 			<cfif qCheckProductGroupExistsOnProgram.recordcount GT 0>
 				<cfset local.bProductGroupExists = 1>

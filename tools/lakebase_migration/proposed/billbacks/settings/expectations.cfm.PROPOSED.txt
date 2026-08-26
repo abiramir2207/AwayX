@@ -1,6 +1,0 @@
-===== QUERY: Insert_Tolerance_Info =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: Update_Tolerance_Info =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-

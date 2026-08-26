@@ -1,9 +1,0 @@
-===== QUERY: vars.delete =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
-
-===== QUERY: vars.deactivate =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
-
-===== QUERY: vars.activate =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex - review manually
-

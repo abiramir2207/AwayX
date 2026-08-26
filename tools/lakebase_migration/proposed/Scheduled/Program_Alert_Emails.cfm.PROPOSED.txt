@@ -1,9 +1,0 @@
-===== QUERY: qProgramAlertsSP =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: qGetAlertingPrograms =====
-STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
-
-===== QUERY: qGetProgramsToAlertByUser =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-

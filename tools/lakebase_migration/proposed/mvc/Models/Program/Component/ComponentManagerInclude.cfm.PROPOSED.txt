@@ -1,3 +1,0 @@
-===== QUERY: qAddFixedFreightData#qGetDistributors.Shr_Ship_To# =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

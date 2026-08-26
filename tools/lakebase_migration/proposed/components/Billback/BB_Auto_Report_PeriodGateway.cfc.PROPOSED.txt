@@ -1,6 +1,0 @@
-===== QUERY: qRead =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: qRead =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

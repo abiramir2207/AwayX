@@ -68,12 +68,27 @@
 	ORDER BY Calc_Type DESC, Overage_Index
 </CFQUERY>
 
+<cfset useLakebaseForGet_All_Commodity_Overage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_commodity_overage")>
+<cfif useLakebaseForGet_All_Commodity_Overage>
+	<cftry>
+		<cfset Get_All_Commodity_Overage = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_commodity_overage", {
+				"program_formula_pricing_rule_id" = "eq.#URL.Formula_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_All_Commodity_Overage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_All_Commodity_Overage>
 <CFQUERY NAME="Get_All_Commodity_Overage" DATASOURCE="#application.datasource#">
 	SELECT	*
 	FROM	Formula_Pricing_Commodity_Overage
 	WHERE
 			Program_Formula_Pricing_Rule_ID = '#URL.Formula_ID#'
 </CFQUERY>
+</cfif>
 
 <html>
 <head>
@@ -245,7 +260,23 @@
 			</CFIF>			
 		</TR>
 	</CFOUTPUT>
-		<CFQUERY NAME="Commodities_Overage_1" DBTYPE="query">
+		<cfset useLakebaseForCommodities_Overage_1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
+<cfif useLakebaseForCommodities_Overage_1>
+	<cftry>
+		<cfset Commodities_Overage_1 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_commodity_overage", {
+				"program_formula_pricing_rule_comm_data_id" = "eq.#Program_Formula_Pricing_Rule_Comm_Data_ID#",
+				"calc_type" = "eq.1",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCommodities_Overage_1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCommodities_Overage_1>
+<CFQUERY NAME="Commodities_Overage_1" DBTYPE="query">
 			SELECT	*
 			FROM	Get_All_Commodity_Overage
 			WHERE
@@ -254,6 +285,7 @@
 					Calc_Type = 1
 			ORDER BY Overage_Index
 		</CFQUERY>
+</cfif>
 		<cfset useLakebaseForCommodities_Overage_2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
 <cfif useLakebaseForCommodities_Overage_2>
 	<cftry>

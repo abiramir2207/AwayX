@@ -260,13 +260,30 @@
 	
 		<cfargument name="HQPositionId" type="numeric" required="true">
 		
-		<cfquery name="qGetASAssosiated" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetASAssosiated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqGetASAssosiated>
+	<cftry>
+		<cfset qGetASAssosiated = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("authority_sequence", {
+				"deleted" = "eq.0",
+				"hq_position_id" = "neq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetASAssosiated = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetASAssosiated>
+<cfquery name="qGetASAssosiated" datasource="#application.datasource#">
 			SELECT 	TOP 1 *
 			FROM	Authority_Sequence
 			WHERE	Deleted = 0
 					AND HQ_Position_ID = #arguments.HQPositionId#
 					AND HQ_Position_ID <> 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetASAssosiated />
 		

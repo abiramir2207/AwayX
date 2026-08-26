@@ -574,12 +574,27 @@
 	<cffunction name="getVolPlanMasterSource" returntype="Query" access="public" >
 		<cfset var qGetVolPlanSource = "" />
 		
-		<cfquery name="qGetVolPlanSource" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetVolPlanSource = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("volume_plan_source")>
+<cfif useLakebaseForqGetVolPlanSource>
+	<cftry>
+		<cfset qGetVolPlanSource = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("volume_plan_source", {
+				"select" = "volume_plan_source_id as idsource,description as descsource"
+			}), "volume_plan_source_id as idsource,description as descsource"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVolPlanSource = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVolPlanSource>
+<cfquery name="qGetVolPlanSource" datasource="#application.datasource#">
 			SELECT	
 				Volume_Plan_Source_Id as idSource,
 				Description as descSource
 			FROM Volume_Plan_Source
     	</cfquery>
+</cfif>
 		
 		<cfreturn qGetVolPlanSource />
 	</cffunction>

@@ -783,9 +783,25 @@ Transaction_Type('<CFOUTPUT>#FORM.trans_type#</CFOUTPUT>');
 	<CFPARAM NAME = "BB_ID" DEFAULT = "">
 <CFOUTPUT>
 	<CFIF form.BB_Reference NEQ "">
-		<CFQUERY NAME = "BB_Search" DATASOURCE = "#Application.Datasource#">
+		<cfset useLakebaseForBB_Search = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBB_Search>
+	<cftry>
+		<cfset BB_Search = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_reference" = "eq.#Form.BB_Reference#",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Search = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Search>
+<CFQUERY NAME = "BB_Search" DATASOURCE = "#Application.Datasource#">
 			SELECT Billback_ID from Billback WHERE BB_Reference = '#Form.BB_Reference#'
-		</CFQUERY> 
+		</CFQUERY>
+</cfif> 
 		<CFIF bb_search.recordcount NEQ 0>
 			<CFSET bb_id = 1>
 		<CFELSE>

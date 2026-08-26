@@ -1,3 +1,0 @@
-===== QUERY: variables.drop_tempdb =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

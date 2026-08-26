@@ -1,6 +1,0 @@
-===== QUERY: qGetProdVarBLabel =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: qGetProdVarELabel =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

@@ -1,0 +1,3 @@
+tools/lakebase_migration/proposed/
+tools/lakebase_migration/migration_report.csv
+tools/lakebase_migration/__pycache__/

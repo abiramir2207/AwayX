@@ -141,12 +141,31 @@
 		</cfif>
 		WHERE 	BA_Ticket_Number in (#arguments.LabelIDs#)
 	</cfquery>
-	<cfquery name="setStageToProd" datasource="#application.datasource#">
+	<cfset useLakebaseForsetStageToProd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForsetStageToProd>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"builtonstage" = "is.null",
+				"builtonprod" = "not.is.null"
+			},
+			{
+				"builtonstage" = "builtOnProd"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetStageToProd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetStageToProd>
+<cfquery name="setStageToProd" datasource="#application.datasource#">
 		UPDATE 	Work_Request
 		SET builtOnStage = builtOnProd
 		WHERE  builtOnStage is  NULL
 		AND builtOnProd is NOT NULL
 	</cfquery>
+</cfif>
 	<cfreturn  #arguments.LabelIDs#>
 </cffunction>
 

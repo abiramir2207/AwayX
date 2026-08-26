@@ -992,10 +992,25 @@ TSF - Label 16253: Code to handle Billback Analyst search form
     <tr>
     	<td>
       	<cfsilent>
-          <cfquery name="GetDefaultProgram" datasource="#application.datasource#">
+          <cfset useLakebaseForGetDefaultProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForGetDefaultProgram>
+	<cftry>
+		<cfset GetDefaultProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program"
+			}), "default_program"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDefaultProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDefaultProgram>
+<cfquery name="GetDefaultProgram" datasource="#application.datasource#">
             SELECT 	Default_Program
             FROM 		Billback_Settings
           </cfquery>
+</cfif>
 				</cfsilent>
 				<cfif len(trim(GetDefaultProgram.Default_Program)) GT 0>
         <b>Show Incomplete Uploaded Billbacks:</b><br>

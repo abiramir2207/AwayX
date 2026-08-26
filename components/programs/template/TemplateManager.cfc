@@ -2395,7 +2395,25 @@ DEPENDENCIES:
 
       <cfloop query="qGetTopLevelGroups">
         <cfset prodGroupExistsAlready = 0 />
-          <cfquery name="qryCheckPGTS" datasource="#application.datasource#">
+          <cfset useLakebaseForqryCheckPGTS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_template_selection")>
+<cfif useLakebaseForqryCheckPGTS>
+	<cftry>
+		<cfset qryCheckPGTS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_template_selection", {
+				"product_group_level_id" = "eq.#qGetTopLevelGroups.Product_Group_Level_ID#",
+				"template_id" = "eq.#arguments.stForm.TemplateID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "product_group_template_selection_id"
+			}), "product_group_template_selection_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCheckPGTS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCheckPGTS>
+<cfquery name="qryCheckPGTS" datasource="#application.datasource#">
             SELECT  Product_Group_Template_Selection_ID
             FROM Product_Group_Template_Selection
             WHERE Product_Group_Level_ID = #qGetTopLevelGroups.Product_Group_Level_ID#
@@ -2403,6 +2421,7 @@ DEPENDENCIES:
             AND Active = 1
             AND Deleted = 0
           </cfquery>
+</cfif>
         <cfloop query="qryGetGroupTemplateByTemplateID">
           <cfif qryGetGroupTemplateByTemplateID.Group_Level_ID EQ qGetTopLevelGroups.Product_Group_Level_ID>
           	<cfset prodGroupExistsAlready = 1 />

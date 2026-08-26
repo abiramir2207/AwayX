@@ -1,6 +1,0 @@
-===== QUERY: qLabels =====
-STATUS: NEEDS_MANUAL_REVIEW - WHERE clause too complex (OR/parens/functions) - review manually
-
-===== QUERY: labels.sortedQuery =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

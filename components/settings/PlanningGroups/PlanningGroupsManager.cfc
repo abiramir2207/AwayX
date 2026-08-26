@@ -2940,7 +2940,25 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
 	<cfset var bPGExist = 0 />
 
-	<cfquery name="qIsPlanningGroupCustomerExist" datasource="#application.datasource#">
+	<cfset useLakebaseForqIsPlanningGroupCustomerExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_customer_category_definition")>
+<cfif useLakebaseForqIsPlanningGroupCustomerExist>
+	<cftry>
+		<cfset qIsPlanningGroupCustomerExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_customer_category_definition", {
+				"pg_customer_category_id" = "eq.#arguments.PG_Customer_Category_ID#",
+				"distributor_group_id" = "eq.#arguments.Group_Distributor_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsPlanningGroupCustomerExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsPlanningGroupCustomerExist>
+<cfquery name="qIsPlanningGroupCustomerExist" datasource="#application.datasource#">
 		SELECT 1
 		FROM PG_Customer_Category_Definition
 		WHERE PG_Customer_Category_ID = '#arguments.PG_Customer_Category_ID#'
@@ -2948,6 +2966,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 		AND deleted = 0
 		AND Active = 1
 	</cfquery>
+</cfif>
 
 	<cfif qIsPlanningGroupCustomerExist.recordcount>
 		<cfset bPGExist = 1 />

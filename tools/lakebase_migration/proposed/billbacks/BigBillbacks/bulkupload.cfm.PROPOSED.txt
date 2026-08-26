@@ -1,6 +1,0 @@
-===== QUERY: InsertIntoBigBillbackSummary =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: ExecuteSP =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

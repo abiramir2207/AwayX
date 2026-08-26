@@ -699,7 +699,27 @@
 			</cfif>
 			<!--- update --->
 			<cfif len(currentnode.Bid_Rule_Modifier_ID) GT 0 AND currentnode.Action EQ 2>
-				<cfquery name="updateModifier" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateModifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_modifiers")>
+<cfif useLakebaseForupdateModifier>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_modifiers",
+			{
+				"bid_rule_modifier_id" = "eq.#currentnode.Bid_Rule_Modifier_ID#"
+			},
+			{
+				"modifier_index" = "#x#",
+				"modifier_amount" = "#currentnode.Modifier_Amount#",
+				"modifier_desc" = "#currentnode.Modifier_Desc#",
+				"modifier_uom" = "#currentnode.Modifier_UOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateModifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateModifier>
+<cfquery name="updateModifier" datasource="#application.datasource#">
 					UPDATE
 						Bid_Rule_Modifiers
 					SET
@@ -709,7 +729,8 @@
 						Modifier_UOM		= '#currentnode.Modifier_UOM#'
 					WHERE
 						Bid_Rule_Modifier_ID = '#currentnode.Bid_Rule_Modifier_ID#'
-				</cfquery>	
+				</cfquery>
+</cfif>	
 			</cfif>
 		</cfloop>
 		

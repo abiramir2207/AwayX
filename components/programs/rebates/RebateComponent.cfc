@@ -744,12 +744,29 @@
 			<cfset usedAllowanceCodes = ValueList(qGetAllTemplateDiscountComponents.Allowance_Code_ID) />
 			<cfif ListFindNOCase(usedAllowanceCodes, arguments.allowanceCodeId) NEQ 0>
 				<!------ check if this allowance cod eis used by teh same component ----->
-				<cfquery name="qCheckIfCurrentcomponent" dbtype="query">
+				<cfset useLakebaseForqCheckIfCurrentcomponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalltemplatediscountcomponents")>
+<cfif useLakebaseForqCheckIfCurrentcomponent>
+	<cftry>
+		<cfset qCheckIfCurrentcomponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalltemplatediscountcomponents", {
+				"allowance_code_id" = "eq.#arguments.allowanceCodeId#",
+				"component_id" = "eq.#arguments.compId#",
+				"select" = "component_id"
+			}), "component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfCurrentcomponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfCurrentcomponent>
+<cfquery name="qCheckIfCurrentcomponent" dbtype="query">
 					SELECT	Component_ID
 					FROM	qGetAllTemplateDiscountComponents
 					WHERE	Allowance_Code_ID = #arguments.allowanceCodeId#
 					AND		Component_ID = #arguments.compId#
 				</cfquery>
+</cfif>
 				<cfif not qCheckIfCurrentcomponent.recordCount>
 					<cfset bProceedWithUpdate = 0 />
 					<cfset bCompNameExists = 3 />

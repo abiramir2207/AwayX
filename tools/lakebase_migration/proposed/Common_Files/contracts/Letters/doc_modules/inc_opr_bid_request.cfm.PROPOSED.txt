@@ -1,9 +1,0 @@
-===== QUERY: thisTag.qGetBidRequestPaymentFrequency =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: thisTag.qGetBidRequestPaymentFrequency =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: thisTag.qGetBidRequestClaimMechanism =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

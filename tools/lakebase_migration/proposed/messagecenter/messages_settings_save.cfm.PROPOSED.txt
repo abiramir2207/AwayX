@@ -1,3 +1,0 @@
-===== QUERY: save_settings =====
-STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
-

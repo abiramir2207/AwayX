@@ -852,13 +852,30 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 
 				<CFIF AnyUnclosedSplit.RecordCOunt EQ 0>
 
-					<CFQUERY NAME="IsAnyUnPaid" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForIsAnyUnPaid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForIsAnyUnPaid>
+	<cftry>
+		<cfset IsAnyUnPaid = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#CheckParent.BB_Parent_ID#",
+				"billback_status_id" = "neq.5",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsAnyUnPaid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsAnyUnPaid>
+<CFQUERY NAME="IsAnyUnPaid" DATASOURCE="#Application.Datasource#">
 						SELECT 	*
 						FROM 	Billback
 						WHERE 	BB_Parent_ID = '#CheckParent.BB_Parent_ID#' AND
 								Billback_Status_ID <> 5 AND
 								Deleted = 0
 					</CFQUERY>
+</cfif>
 					<CFIF IsAnyUnPaid.RecordCount EQ 0>
 						<CFQUERY NAME="CloseBillbackParent" DATASOURCE="#Application.Datasource#">
 							UPDATE Billback

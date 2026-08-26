@@ -744,11 +744,29 @@
 											<cfif LSAmount IS 0 OR len(trim(LSAmount)) LT 1>
 												<cfset DeleteThisComponent = 1>
 											<cfelseif LSAmount NEQ Original_Component.Supplied_Amount>
-												<cfquery name="UpdateLSAmount" datasource="#application.datasource#">
+												<cfset useLakebaseForUpdateLSAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForUpdateLSAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_program_lumpsum_component_id" = "eq.#Original_Component.Billback_Program_Lumpsum_Component_ID#"
+			},
+			{
+				"amount" = "#LSAmount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLSAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLSAmount>
+<cfquery name="UpdateLSAmount" datasource="#application.datasource#">
 												UPDATE Billback_Program_Lumpsum_Component
 												SET Amount = #LSAmount#
 												WHERE Billback_Program_Lumpsum_Component_ID = '#Original_Component.Billback_Program_Lumpsum_Component_ID#'
 												</cfquery>
+</cfif>
 											
 											</cfif>
 										</cfif>

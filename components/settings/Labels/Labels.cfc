@@ -571,12 +571,30 @@
 
 	<cfargument name="LangCode" default="0" type="string" required="false">
 
-		<cfquery name="getLangCode" datasource="#this.dsn#">
+		<cfset useLakebaseForgetLangCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_summary_label_sets")>
+<cfif useLakebaseForgetLangCode>
+	<cftry>
+		<cfset getLangCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_summary_label_sets", {
+				"item_language_code" = "eq.#arguments.LangCode#",
+				"deleted" = "eq.0",
+				"order" = "item_language_code.asc",
+				"select" = "item_language_code"
+			}), "item_language_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLangCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLangCode>
+<cfquery name="getLangCode" datasource="#this.dsn#">
 			SELECT DISTINCT Item_Language_Code
 			FROM Program_Summary_Label_Sets
 			WHERE Item_Language_Code = '#arguments.LangCode#' AND deleted = 0
 			ORDER BY Item_Language_Code
 		</cfquery>
+</cfif>
 
 		<cfreturn getLangCode.Item_Language_Code>
 

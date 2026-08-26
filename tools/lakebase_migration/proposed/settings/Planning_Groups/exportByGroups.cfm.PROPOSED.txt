@@ -1,3 +1,0 @@
-===== QUERY: variables.getData =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

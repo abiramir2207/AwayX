@@ -1,9 +1,0 @@
-===== QUERY: get_summary =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-
-===== QUERY: get_distributor_sources =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-
-===== QUERY: get_items =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-

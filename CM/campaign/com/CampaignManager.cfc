@@ -344,11 +344,26 @@
 	
 	<cffunction name="getAll" output="false" returntype="query">
 					
-		<cfquery name="qGetAllCampaign" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAllCampaign = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_campaign")>
+<cfif useLakebaseForqGetAllCampaign>
+	<cftry>
+		<cfset qGetAllCampaign = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_campaign", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllCampaign = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllCampaign>
+<cfquery name="qGetAllCampaign" datasource="#application.datasource#">
 			SELECT 	*
 			FROM	CM_Campaign
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
 			
 		<cfreturn qGetAllCampaign />
 		

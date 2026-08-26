@@ -1,6 +1,0 @@
-===== QUERY: qGetQBrand =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-
-===== QUERY: qGetTypeCode =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-

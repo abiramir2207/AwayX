@@ -1602,11 +1602,28 @@ Added/Changed: Added URL variable CID to FORM action url --->
 
 <!--- Form with the data needed to cancel the contract --->
 <!--- If the Program has formula periods (dates) set up,program dates are locked --->
+<cfset useLakebaseForcheckFormulaPeriod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForcheckFormulaPeriod>
+	<cftry>
+		<cfset checkFormulaPeriod = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_id" = "eq.#URL.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_formula_pricing_period_id"
+			}), "program_formula_pricing_period_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckFormulaPeriod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckFormulaPeriod>
 <CFQUERY NAME="checkFormulaPeriod" datasource="#application.datasource#">
 	SELECT Program_Formula_Pricing_Period_Id FROM Program_Formula_Pricing_Periods
 	WHERE Program_Id = #URL.Contract_Main_ID# AND
 	Deleted = 0
 </CFQUERY>
+</cfif>
 <CFOUTPUT>
 	<FORM ACTION="contract_renewal_action.cfm" METHOD="post" NAME="RenewForm" ID="RenewForm">
 		<INPUT TYPE="hidden" NAME="Program_ID" VALUE="#EncrypContractId#" >

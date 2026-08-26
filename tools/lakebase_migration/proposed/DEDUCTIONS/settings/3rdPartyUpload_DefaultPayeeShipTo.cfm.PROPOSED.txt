@@ -1,3 +1,0 @@
-===== QUERY: vars.qDistributor_Customer =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

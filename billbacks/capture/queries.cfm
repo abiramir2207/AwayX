@@ -214,11 +214,29 @@
 						('#insert.Contract_Main_ID#')
 					</cfquery>
 				</CFIF>
-				<cfquery name="saveAuxData" datasource="#Application.Datasource#">
+				<cfset useLakebaseForsaveAuxData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForsaveAuxData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main_aux_data",
+			{
+				"contract_main_id" = "eq.#insert.Contract_Main_ID#"
+			},
+			{
+				"comments" = "#Form.Comments#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveAuxData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveAuxData>
+<cfquery name="saveAuxData" datasource="#Application.Datasource#">
 					UPDATE Contract_Main_Aux_Data
 					SET Comments = '#Form.Comments#'
 					WHERE Contract_Main_ID = '#insert.Contract_Main_ID#'
 				</cfquery>
+</cfif>
 				<!--- END comments --->
 				
 				<CF_CRYP type="en" string="#insert.Contract_Main_ID#" key="#request.key#">

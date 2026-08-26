@@ -1,9 +1,0 @@
-===== QUERY: q_getReportDetails =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: q_getReportDetails =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-
-===== QUERY: q_getReportStructure =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

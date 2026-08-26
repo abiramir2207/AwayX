@@ -80,12 +80,31 @@ Last Modified On:
 <!--- end::reinsert settings with 0-hide value to Settings_Template_Display table---> 
 
 <!--- update the updated by info --->			
+<cfset useLakebaseForUpdate_Updated_By = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_template_display")>
+<cfif useLakebaseForUpdate_Updated_By>
+	<cftry>
+		<cfset application.oLakebase.updateRows("settings_template_display",
+			{
+				"generic_type" = "eq.#Form.Generic_Type#",
+				"excluded_first_parent_id" = "is.null"
+			},
+			{
+				"updated_by" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Updated_By = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Updated_By>
 <cfquery name="Update_Updated_By" datasource="#application.datasource#">
 	update Settings_Template_Display
 	set Updated_By = '#request.AccessStructure.User_ID#' 
 	where 	Generic_Type = '#Form.Generic_Type#'
 	and	Excluded_First_Parent_ID IS NULL
 </cfquery>
+</cfif>
 
 <!--- update the last updated by info --->			
 <cfquery name="GetGenericTypeID" datasource="#application.datasource#">

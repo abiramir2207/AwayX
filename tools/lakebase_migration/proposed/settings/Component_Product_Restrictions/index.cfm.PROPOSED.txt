@@ -1,9 +1,0 @@
-===== QUERY: SaveValues =====
-STATUS: NEEDS_MANUAL_REVIEW - UPDATE pattern did not match parser
-
-===== QUERY: DeleteFromComponentMappingTable =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: DeleteFromProductMappingTable =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

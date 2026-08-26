@@ -1,3 +1,0 @@
-===== QUERY: get_lump_sum_products =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

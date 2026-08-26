@@ -1,3 +1,0 @@
-===== QUERY: GetBillbackInfo =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-

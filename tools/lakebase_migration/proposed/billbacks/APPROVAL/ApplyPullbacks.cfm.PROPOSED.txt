@@ -1,3 +1,0 @@
-===== QUERY: SortBillbackstoApply =====
-STATUS: NEEDS_MANUAL_REVIEW - ORDER BY too complex - review manually
-

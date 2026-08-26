@@ -178,13 +178,29 @@
 	
 	<cffunction name="getAll" output="false" returntype="query">
 		
-		<cfquery name="qGetNewProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetNewProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_new_product")>
+<cfif useLakebaseForqGetNewProducts>
+	<cftry>
+		<cfset qGetNewProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_new_product", {
+				"deleted" = "eq.0",
+				"select" = "fp_new_product_id,product_desc,customer_request"
+			}), "fp_new_product_id,product_desc,customer_request"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetNewProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetNewProducts>
+<cfquery name="qGetNewProducts" datasource="#application.datasource#">
 			SELECT 	FP_New_Product_ID,
 					Product_Desc,
 					Customer_Request
 			FROM 	FP_New_Product
 			WHERE	Deleted = 0					
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetNewProducts />
 	

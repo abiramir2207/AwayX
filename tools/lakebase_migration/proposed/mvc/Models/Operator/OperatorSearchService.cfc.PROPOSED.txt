@@ -1,9 +1,0 @@
-===== QUERY: var_qAllStates =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-
-===== QUERY: var_qAllOperatorTypes =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-
-===== QUERY: var_qAllStatus =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT column list contains functions/CASE - review manually
-

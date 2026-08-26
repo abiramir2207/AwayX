@@ -1,6 +1,0 @@
-===== QUERY: main.qBudgetClass =====
-STATUS: NEEDS_MANUAL_REVIEW - query body contains embedded CFML tags/comments (dynamic SQL) - review manually
-
-===== QUERY: main.qoq =====
-STATUS: NEEDS_MANUAL_REVIEW - SELECT pattern did not match parser
-

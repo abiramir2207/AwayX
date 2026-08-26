@@ -1,6 +1,0 @@
-===== QUERY: GetAllDistinctExistingLSNames =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
-===== QUERY: InsertIntoOptions =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-

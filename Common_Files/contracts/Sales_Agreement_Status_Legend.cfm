@@ -163,11 +163,29 @@ MM_reloadPage(true);
 		<!--- has the user been inactive longer than the setting specified --->
 		<CFIF PercentageOfTHeDayInactive GT getSessionTimeoutSetting.Session_Expiration_Length>
 			
-	 		<CFQUERY NAME="unLockContract" datasource="#application.datasource#">
+	 		<cfset useLakebaseForunLockContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sales_agreement")>
+<cfif useLakebaseForunLockContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("sales_agreement",
+			{
+				"export_sales_agreement_id" = "eq.#CSLGetContractInfo.Export_Sales_Agreement_ID#"
+			},
+			{
+				"sales_agreement_is_locked" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunLockContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunLockContract>
+<CFQUERY NAME="unLockContract" datasource="#application.datasource#">
 				UPDATE Sales_Agreement
 				SET Sales_Agreement_Is_Locked = 0
 				WHERE Export_Sales_Agreement_ID = '#CSLGetContractInfo.Export_Sales_Agreement_ID#'
 			</CFQUERY>
+</cfif>
 
 			<CFSET DisAllowAccessBasedOnLockStatus = 0>
 		</CFIF>

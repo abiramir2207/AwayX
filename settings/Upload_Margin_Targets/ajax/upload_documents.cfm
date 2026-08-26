@@ -162,11 +162,29 @@
 					VALUES (#docId#,'#item#', '#Distribution_Channel#', '#Net_Sales_Target_Value#', '#Net_Sales_Floor_Value#', '#GM_Target_Value#', '#GM_Floor_Value#','#reason#')
 				</cfquery>
 
-				<cfquery name="updateDocTable" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateDocTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload_doc_details")>
+<cfif useLakebaseForupdateDocTable>
+	<cftry>
+		<cfset application.oLakebase.updateRows("margin_targets_upload_doc_details",
+			{
+				"doc_id" = "eq.#docId#"
+			},
+			{
+				"success" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateDocTable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateDocTable>
+<cfquery name="updateDocTable" datasource="#application.datasource#">
 					UPDATE Margin_Targets_Upload_Doc_Details
 					SET Success = 0
 					WHERE Doc_ID = #docId#
 				</cfquery>
+</cfif>
 
 				<cfset fileProcessed = 0>
 

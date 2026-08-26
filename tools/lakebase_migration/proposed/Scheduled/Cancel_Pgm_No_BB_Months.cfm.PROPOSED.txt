@@ -1,6 +1,0 @@
-===== QUERY: updateEndDate =====
-STATUS: NEEDS_MANUAL_REVIEW - SET clause too complex - review manually
-
-===== QUERY: updateNotes =====
-STATUS: NEEDS_MANUAL_REVIEW - INSERT/DELETE/other - review manually
-
