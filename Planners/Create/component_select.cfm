@@ -280,9 +280,24 @@ Purpose:  	Component select popup called from Single Page Planner Program Create
 <cfif qGetComponentData.RecordCount>
 <form method="post" name="<cfoutput>#variables.formName#</cfoutput>" id="<cfoutput>#variables.formName#</cfoutput>">
 <cfoutput query="qGetComponentData" group="Discount_Type_ID">
-	<cfquery name="qGetCompDetail" dbtype="query">
+	<cfset useLakebaseForqGetCompDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetcomponentdata")>
+<cfif useLakebaseForqGetCompDetail>
+	<cftry>
+		<cfset qGetCompDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetcomponentdata", {
+				"discount_type_id" = "eq.#Discount_Type_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCompDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCompDetail>
+<cfquery name="qGetCompDetail" dbtype="query">
 		SELECT * FROM qGetComponentData WHERE Discount_Type_ID = #Discount_Type_ID#
 	</cfquery>
+</cfif>
 <div>
 <table class="datagrid" id="datagrid" width="100%">
 	<thead>

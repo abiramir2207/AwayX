@@ -1,6 +1,21 @@
 
 <cfoutput>
-	<cfquery name="GetWorkRequest" datasource="#application.datasource#">
+	<cfset useLakebaseForGetWorkRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGetWorkRequest>
+	<cftry>
+		<cfset GetWorkRequest = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#Work_Request_ID#",
+				"select" = "work_title,request_type,app_area,user_created,client_priority,client_reference_number,item_status,urlenvironment,progbbddids,userinfo,errorevent,currentbehavior,expectedbehavior"
+			}), "work_title,request_type,app_area,user_created,client_priority,client_reference_number,item_status,urlenvironment,progbbddids,userinfo,errorevent,currentbehavior,expectedbehavior"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetWorkRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetWorkRequest>
+<cfquery name="GetWorkRequest" datasource="#application.datasource#">
 		select 
 			Work_Title,
 			Request_Type,
@@ -18,11 +33,28 @@
 		from  Work_Request
 		where Work_Request_ID = #Work_Request_ID#
 	</cfquery>
+</cfif>
 
-	<cfquery name="GetUserInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetWorkRequest.User_Created#",
+				"select" = "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+			}), "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+<cfquery name="GetUserInfo" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last, User_Email, User_Code, Work_Phone_1, Work_Phone_2, Work_Phone_3
 		FROM _Users WHERE User_ID = '#GetWorkRequest.User_Created#'
 	</cfquery>
+</cfif>
 
 	<cfquery name="GetForgeRelease" datasource="#application.datasource#">
 			SELECT TOP 1 LEFT(LTRIM(RTRIM(Patch_Number)),3) As Release_Version
@@ -72,9 +104,27 @@
 		</cfinvoke>
 
 		<!--- Update with punchlist ID --->
-		<cfquery name="UpdatePunchlist" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdatePunchlist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForUpdatePunchlist>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"work_request_id" = "eq.#Work_Request_ID#"
+			},
+			{
+				"ba_ticket_number" = "#Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunchlist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunchlist>
+<cfquery name="UpdatePunchlist" datasource="#application.datasource#">
 		UPDATE Work_Request
 		SET BA_Ticket_Number = #Punch_ID#
 		WHERE Work_Request_ID = #Work_Request_ID#
 		</cfquery>
+</cfif>
 		<!--- end send to punchlist --->

@@ -84,9 +84,25 @@
 
 		<!--- grap email address from current logged in user  --->
 		<cfelseif isDefined("request.AccessStructure.User_ID")>
-			<cfquery name="local.user" datasource="#application.datasource#">
+			<cfset useLakebaseForlocal_user = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForlocal_user>
+	<cftry>
+		<cfset local.user = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_user = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_user>
+<cfquery name="local.user" datasource="#application.datasource#">
 				select user_email from _users where user_id = '#request.AccessStructure.User_ID#'
 			</cfquery>
+</cfif>
 
 			<cfset local.user_email = trim(local.user.user_email)>
 

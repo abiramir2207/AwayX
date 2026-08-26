@@ -12,6 +12,25 @@ TABLE.UNDERLINED TD
 <CFOUTPUT>
 <CFSAVECONTENT VARIABLE="ItemContent"> 
 <CFIF SavedAlready NEQ 1>
+<cfset useLakebaseForUpdateDetele = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForUpdateDetele>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDetele = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDetele>
 <CFQUERY NAME="UpdateDetele" DATASOURCE="#Application.Datasource#">
 	UPDATE Gl_Code_Allocation 
 	SET Deleted = 1
@@ -19,6 +38,7 @@ TABLE.UNDERLINED TD
 			Allocation_Method = 1 AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 </CFIF>
 
 <CFQUERY NAME="GetARDetails1" DATASOURCE="#Application.Datasource#">
@@ -148,7 +168,26 @@ TABLE.UNDERLINED TD
 					<CFSET ValidProdGroup = 0>				
 					<CFSET ProductIDWithoutProd_Grp = "#ProductIDWithoutProd_Grp##Product_ID#,">				
 				</CFIF>
-				<CFQUERY NAME="CheckFundExist" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForCheckFundExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForCheckFundExist>
+	<cftry>
+		<cfset CheckFundExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"fiscal_year" = "eq.#Fiscal_Year#",
+				"a_r" = "eq.#A_R#",
+				"fund_number" = "eq.#Fund_Number#",
+				"product_group" = "eq.#Pref_Prod_Grp#",
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckFundExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckFundExist>
+<CFQUERY NAME="CheckFundExist" DATASOURCE="#Application.Datasource#">
 					SELECT 	* 
 					FROM 	GL_Code_Activation 
 					WHERE 	Fiscal_Year = '#Fiscal_Year#' AND
@@ -158,6 +197,7 @@ TABLE.UNDERLINED TD
 							Current_Active_Data = 1 AND				
 							Deleted = 0
 				</CFQUERY>
+</cfif>
 				<CFIF CheckFundExist.RecordCount EQ 0>
 					<CFSET ValidFundNumber = 0>	
 					<CFSET Pref_Prod_GrpWithOutMatch_List = "#Pref_Prod_GrpWithOutMatch_List##Pref_Prod_Grp#,">				

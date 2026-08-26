@@ -111,12 +111,28 @@
 
 		<cfargument name="templateId" required="true" type="numeric">
 
-		<cfquery name="qGetTemplateAllowApprovalGroups" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetTemplateAllowApprovalGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_allow_approval_group")>
+<cfif useLakebaseForqGetTemplateAllowApprovalGroups>
+	<cftry>
+		<cfset qGetTemplateAllowApprovalGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_allow_approval_group", {
+				"deleted" = "eq.0",
+				"program_type_id" = "eq.#arguments.templateId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplateAllowApprovalGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplateAllowApprovalGroups>
+<cfquery name="qGetTemplateAllowApprovalGroups" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Template_Allow_Approval_Group
 			WHERE	Template_Allow_Approval_Group.Deleted = 0
 					AND Template_Allow_Approval_Group.Program_Type_ID = #arguments.templateId#
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetTemplateAllowApprovalGroups>
 
@@ -155,13 +171,30 @@
 
 		<cfargument name="profile_id" required="true" type="numeric">
 
-		<cfquery name="qGetProfileAllowApprovalGroups" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProfileAllowApprovalGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_approval_rights")>
+<cfif useLakebaseForqGetProfileAllowApprovalGroups>
+	<cftry>
+		<cfset qGetProfileAllowApprovalGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_approval_rights", {
+				"deleted" = "eq.0",
+				"user_profile_id" = "eq.#arguments.profile_id#",
+				"group_id_approval" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfileAllowApprovalGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfileAllowApprovalGroups>
+<cfquery name="qGetProfileAllowApprovalGroups" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Group_Approval_Rights
 			WHERE	Group_Approval_Rights.Deleted = 0
 					AND Group_Approval_Rights.user_profile_id = #arguments.profile_id#
 					AND Group_Approval_Rights.Group_ID_Approval = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetProfileAllowApprovalGroups>
 

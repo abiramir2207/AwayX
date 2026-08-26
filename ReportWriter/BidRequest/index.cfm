@@ -457,9 +457,24 @@ ORDER BY #url.SortBy#
 <!---Breaks down by business unit if there's more than one--->
 <!--- <cfif businessSegmentsOn EQ 1>
 	
-	<cfquery name="HowManyBUs" dbtype="query">
+	<cfset useLakebaseForHowManyBUs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getinfo")>
+<cfif useLakebaseForHowManyBUs>
+	<cftry>
+		<cfset HowManyBUs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getinfo", {
+				"select" = "business_segment_id,business_unit_desc"
+			}), "business_segment_id,business_unit_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForHowManyBUs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForHowManyBUs>
+<cfquery name="HowManyBUs" dbtype="query">
 	SELECT DISTINCT Business_Segment_ID, Business_Unit_Desc FROM GetInfo
 	</cfquery>
+</cfif>
 	
 	<!---There's more than one business unit--->
 	<cfif HowManyBUs.Recordcount GT 1>

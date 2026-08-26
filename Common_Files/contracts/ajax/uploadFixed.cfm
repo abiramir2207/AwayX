@@ -167,9 +167,25 @@
       <cfif not isValid("guid", variables.local.Bsa_FoodService_Items_Master_Id)>
         <cfset arrayAppend(variables.local.errors, "internal row id is invalid")>
       <cfelse>
-        <cfquery name="variables.qItem" datasource="#application.datasource#">
+        <cfset useLakebaseForvariables_qItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForvariables_qItem>
+	<cftry>
+		<cfset variables.qItem = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#variables.local.Bsa_FoodService_Items_Master_Id#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qItem>
+<cfquery name="variables.qItem" datasource="#application.datasource#">
           SELECT 1 FROM BSA_Foodservice_Items_Master WHERE BSA_Foodservice_Items_Master_ID = '#variables.local.Bsa_FoodService_Items_Master_Id#'
         </cfquery>
+</cfif>
         <cfif variables.qItem.recordCount eq 0>
           <cfset arrayAppend(variables.local.errors, "internal row id is incorrect")>
         </cfif>

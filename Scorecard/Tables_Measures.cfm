@@ -1,10 +1,26 @@
 <cfparam name="printresults" default="0">
 <!--- Dev Note: KAL; D7573 --->
+<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "scorecard_sort_option,scorecard_sort_method"
+			}), "scorecard_sort_option,scorecard_sort_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
 <CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 	Select		scorecard_sort_option, scorecard_sort_method
 	From		_Users_Settings
 	Where		User_ID		=		'#request.AccessStructure.Company_Main_ID#'
 </CFQUERY>
+</cfif>
 
 <cfif printresults EQ 1>
 	<CFSET Table_Width =  "700">

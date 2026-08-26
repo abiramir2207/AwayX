@@ -1,7 +1,22 @@
+<cfset useLakebaseForgetCurrentSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetCurrentSettings>
+	<cftry>
+		<cfset getCurrentSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "usdanoi_i_agree_enabled"
+			}), "usdanoi_i_agree_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentSettings>
 <cfquery name="getCurrentSettings" datasource="#application.datasource#">
 	SELECT USDANOI_I_Agree_Enabled
 	FROM general_Settings
 </cfquery>
+</cfif>
 
 <cfoutput>
 <tr id="dropdown_row">

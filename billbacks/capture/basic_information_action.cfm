@@ -63,11 +63,29 @@ Description:	This file is the action page for billback basic information.
 </cfif>
 
 <!--- get user position id --->
+<cfset useLakebaseForgetThisUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetThisUserPosition>
+	<cftry>
+		<cfset getThisUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisUserPosition>
 <CFQUERY NAME="getThisUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.User_ID#' AND User_Position_Type = 'P' AND  DELETED = 0
 </CFQUERY>
+</cfif>
 <CFSET This_User_Position_ID = getThisUserPosition.User_Positions_ID>
 
 <CFSWITCH expression="#QueryType#">
@@ -248,9 +266,25 @@ Description:	This file is the action page for billback basic information.
 	</cfif>
 	</cfcase>
 	<CFCASE value="update">
-		<CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
+<CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
 			SELECT Billback_Status_ID FROM Billback WHERE Billback_ID = '#FORM.Billback_ID#'
 		</CFQUERY>
+</cfif>
 		<CFIF GetStatus.Billback_Status_ID GTE 3>
 			<!--- 17302 - Redirect to Summary --->
 			<CFSET Billback_Status_ID = GetStatus.Billback_Status_ID>

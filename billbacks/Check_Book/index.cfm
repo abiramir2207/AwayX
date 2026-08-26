@@ -105,11 +105,26 @@
 <BR><BR>
 
 <!--- Display all records --->
+<cfset useLakebaseForGet_Checkbook = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForGet_Checkbook>
+	<cftry>
+		<cfset Get_Checkbook = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"order" = "date_time.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Checkbook = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Checkbook>
 <CFQUERY NAME="Get_Checkbook" DATASOURCE="#application.datasource#">
 	Select		*
 	From		Ledger_Table
 	Order by	Date_Time desc
 </CFQUERY>
+</cfif>
 
 <SCRIPT type = "text/javascript">
 function check_Comparison_Presence_Date(selectName, Field1, Field2, ErrSp)
@@ -1108,9 +1123,25 @@ Transaction_Type('<CFOUTPUT>#FORM.trans_type#</CFOUTPUT>');
 	<TD CLASS="maintable"><B><FONT COLOR="Red">]</FONT></B>&nbsp;</TD>
 	<TD CLASS="maintable">#dateformat(Date_Time, 'm/d/yyyy')#&nbsp;</TD>
  	<TD CLASS="maintable" ALIGN="jusdity">#Memo_Field#&nbsp;</TD> 
+<cfset useLakebaseForCurr_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_symbol")>
+<cfif useLakebaseForCurr_Name>
+	<cftry>
+		<cfset Curr_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_symbol", {
+				"symbol" = "eq.#curr_symbol#",
+				"select" = "symbol_description"
+			}), "symbol_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCurr_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCurr_Name>
 <CFQUERY NAME = "Curr_Name" DATASOURCE="#application.datasource#">
 	SELECT Symbol_Description FROM commodities_symbol WHERE symbol='#curr_symbol#'
 </CFQUERY>
+</cfif>
 
  	<TD CLASS="maintable">
 	<CFIF #curr_symbol# NEQ "US">

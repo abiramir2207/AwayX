@@ -17,10 +17,25 @@
 <CFSET Locked_Program_ID_List = "">
 <CFIF isdefined("FORM.SelectedITEMS")>
 
+<cfset useLakebaseForGet_Session_Window = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGet_Session_Window>
+	<cftry>
+		<cfset Get_Session_Window = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "session_expiration_length"
+			}), "session_expiration_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Window = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Window>
 <CFQUERY NAME="Get_Session_Window" datasource="#application.datasource#">
 	Select   Session_Expiration_Length
 	From     General_Settings
 </CFQUERY>
+</cfif>
 <CFSET session_time=Get_Session_Window.Session_Expiration_Length>
 
 <CFLOOP INDEX="item" LIST="#Form.SelectedITEMS#" DELIMITERS=",">
@@ -28,9 +43,25 @@
 	<cfparam name="FORM.responsibleUser_#item#" 	default="0">
 	<cfset FORM.responsibleUser = Evaluate("FORM.responsibleUser_#item#") />
 
-	<CFQUERY NAME="Find_Contract_Number" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForFind_Contract_Number = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForFind_Contract_Number>
+	<cftry>
+		<cfset Find_Contract_Number = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Item#",
+				"select" = "contract_number,programtype_id,contract_main_id"
+			}), "contract_number,programtype_id,contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForFind_Contract_Number = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForFind_Contract_Number>
+<CFQUERY NAME="Find_Contract_Number" DATASOURCE="#Application.Datasource#">
 		SELECT Contract_Number, ProgramType_ID, Contract_Main_ID FROM Contract_Main WHERE Contract_Main_ID = #Item#
 	</CFQUERY>
+</cfif>
 	<CFQUERY NAME="Check_islocked" DATASOURCE="#Application.Datasource#">
 		SELECT 	Contract_Main.*,
 				DateDiff(s, ISNULL(Contract_Lock_Date, GetDate()), GetDate()) AS qSession_delta
@@ -100,11 +131,29 @@
 						SET deleted = 1
 						WHERE ProgramID = #Item#
 					</CFQUERY>
-					<CFQUERY NAME="Update_Program_Type_code" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForUpdate_Program_Type_code = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_type_code_approval_info")>
+<cfif useLakebaseForUpdate_Program_Type_code>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_type_code_approval_info",
+			{
+				"program_id" = "eq.#Item#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Program_Type_code = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Program_Type_code>
+<CFQUERY NAME="Update_Program_Type_code" DATASOURCE="#Application.Datasource#">
 						UPDATE Program_Type_Code_Approval_Info
 						SET deleted = 1
 						WHERE Program_ID = #Item#
 					</CFQUERY>
+</cfif>
 				</cfif>
 
 					<cfstoredproc procedure="Populate_Program_Approvable_Positions" datasource="#application.datasource#">

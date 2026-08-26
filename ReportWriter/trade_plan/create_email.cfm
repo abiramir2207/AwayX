@@ -28,11 +28,27 @@ function confirmCompletion()
 }
 </script>
 
+<cfset useLakebaseForqGetTradePlanTitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("trade_plan")>
+<cfif useLakebaseForqGetTradePlanTitle>
+	<cftry>
+		<cfset qGetTradePlanTitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("trade_plan", {
+				"trade_plan_id" = "eq.#Trade_Plan_ID#",
+				"select" = "trade_plan_title"
+			}), "trade_plan_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTradePlanTitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTradePlanTitle>
 <cfquery name="qGetTradePlanTitle" datasource="#application.datasource#">
 	SELECT 	Trade_Plan_Title
 	FROM 	trade_plan
 	WHERE 	trade_plan_id = '#Trade_Plan_ID#'
 </cfquery>
+</cfif>
 
 <form method="post" name="emailForm">
 <INPUT TYPE="Hidden" NAME="TP_Title" VALUE=<CFOUTPUT>"#qGetTradePlanTitle.Trade_Plan_Title#"</CFOUTPUT>>

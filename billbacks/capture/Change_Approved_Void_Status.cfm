@@ -13,15 +13,48 @@ Change_Approved_Void_Status.cfm
 <cfinclude template="billback_number_generator.cfm">
 <CFSET Generated_BB_Code = generator_billback_number>
 
+<cfset useLakebaseForGetVoidDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetVoidDetail>
+	<cftry>
+		<cfset GetVoidDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#URL.BBID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVoidDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVoidDetail>
 <CFQUERY NAME="GetVoidDetail" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback WHERE Billback_ID = '#URL.BBID#'
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForgetThisUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetThisUserPosition>
+	<cftry>
+		<cfset getThisUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisUserPosition>
 <CFQUERY NAME="getThisUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.User_ID#' AND User_Position_Type = 'P' AND  DELETED = 0
 </CFQUERY>
+</cfif>
 <CFSET This_User_Position_ID = getThisUserPosition.User_Positions_ID>
 
 <cfparam name="FORM.resubmitBillback" 	default="0">
@@ -41,12 +74,31 @@ Change_Approved_Void_Status.cfm
 		WHERE 	Billback_ID 				= '#URL.BBID#'
 	</CFQUERY>
 	
-	<CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDeletePrevious = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_item_allocation_cal")>
+<cfif useLakebaseForDeletePrevious>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_item_allocation_cal",
+			{
+				"billback_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrevious = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrevious>
+<CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
 		UPDATE 	GL_Code_Item_Allocation_Cal
 		SET 	Deleted = 1
 		WHERE 	Billback_ID = '#URL.BBID#' AND			
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
 		UPDATE 	GL_Code_Fixed_Fund_Allocation_Cal
@@ -56,7 +108,30 @@ Change_Approved_Void_Status.cfm
 	</CFQUERY>
 	
 	
-	<CFQUERY NAME="DeleteAllo" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDeleteAllo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForDeleteAllo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"allocation_saved" = "0",
+				"payment_requested" = "0",
+				"approved" = "0",
+				"approved_date" = javaCast("null",""),
+				"approved_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteAllo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteAllo>
+<CFQUERY NAME="DeleteAllo" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		SET 	Deleted = 1,
 				Allocation_Saved = 0,
@@ -68,6 +143,7 @@ Change_Approved_Void_Status.cfm
 		WHERE 	Billback_ID = '#URL.BBID#' AND				
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<!------ 
 	FORM.resubmitBillback (1=WIP status, 2=Approved Status)

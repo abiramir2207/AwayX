@@ -18,12 +18,42 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
  
 <cfloop query="qryRecordsToProcess">
 	
-	<cfquery name="qryNewUploads" datasource="#application.datasource#">
+	<cfset useLakebaseForqryNewUploads = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqryNewUploads>
+	<cftry>
+		<cfset qryNewUploads = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#qryRecordsToProcess.OCR_Upload_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryNewUploads = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryNewUploads>
+<cfquery name="qryNewUploads" datasource="#application.datasource#">
 		SELECT * FROM OCR_Upload_Log WHERE OCR_Upload_ID = #qryRecordsToProcess.OCR_Upload_ID#
 	</cfquery>
-	<cfquery name="qryTestset" datasource="#application.datasource#">
+</cfif>
+	<cfset useLakebaseForqryTestset = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log_testset")>
+<cfif useLakebaseForqryTestset>
+	<cftry>
+		<cfset qryTestset = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log_testset", {
+				"ocr_upload_id" = "eq.#qryRecordsToProcess.OCR_Upload_TestSet_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryTestset = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryTestset>
+<cfquery name="qryTestset" datasource="#application.datasource#">
 		SELECT * FROM OCR_Upload_Log_TestSet WHERE OCR_Upload_ID = #qryRecordsToProcess.OCR_Upload_TestSet_ID#
 	</cfquery>
+</cfif>
 	
 	<cfloop query="qryNewUploads">
 		<!--- <cfloop query="qryTestset"> --->
@@ -81,45 +111,131 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		
 		<cfloop query="qryTestset"> 
 			<cfif ((qryTestset.OCR_Step EQ qryNewUploads.OCR_Step) OR qryNewUploads.OCR_Step EQ '13' OR qryNewUploads.OCR_Step EQ '12' OR qryNewUploads.OCR_Step EQ '7' OR qryNewUploads.OCR_Step EQ '9' )>
-				<cfquery name="qryUpdDetailSummaryDisplay1" datasource="#application.datasource#">
+				<cfset useLakebaseForqryUpdDetailSummaryDisplay1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryUpdDetailSummaryDisplay1>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_test_log_detail_summary",
+			{
+				"ocr_upload_test_log_detail_summary_id" = "eq.#qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#"
+			},
+			{
+				"display_status" = "COMPLETE",
+				"idone" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdDetailSummaryDisplay1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdDetailSummaryDisplay1>
+<cfquery name="qryUpdDetailSummaryDisplay1" datasource="#application.datasource#">
 						UPDATE OCR_Upload_Test_Log_Detail_Summary 
 						SET  Display_Status = 'COMPLETE',
 						iDone = 1
 						WHERE 
 						OCR_Upload_Test_Log_Detail_Summary_ID = #qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#
 				</cfquery>
+</cfif>
 			<cfelseif ((qryNewUploads.OCR_Step EQ '7' OR qryNewUploads.OCR_Step EQ '9') AND  qryTestset.OCR_Step NEQ qryNewUploads.OCR_Step)>
-				<cfquery name="qryUpdDetailSummaryDisplay2" datasource="#application.datasource#">
+				<cfset useLakebaseForqryUpdDetailSummaryDisplay2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryUpdDetailSummaryDisplay2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_test_log_detail_summary",
+			{
+				"ocr_upload_test_log_detail_summary_id" = "eq.#qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#"
+			},
+			{
+				"display_status" = "IN PROGRESS"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdDetailSummaryDisplay2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdDetailSummaryDisplay2>
+<cfquery name="qryUpdDetailSummaryDisplay2" datasource="#application.datasource#">
 						UPDATE OCR_Upload_Test_Log_Detail_Summary 
 						SET  Display_Status = 'IN PROGRESS'
 						WHERE 
 						OCR_Upload_Test_Log_Detail_Summary_ID = #qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#
 				</cfquery>
+</cfif>
 			<cfelseif ((qryNewUploads.OCR_Step EQ '2.CF_Error' OR qryNewUploads.OCR_Step EQ '2.CF_ParseError' OR qryNewUploads.OCR_Step EQ '2.DB_Error' OR
 				qryNewUploads.OCR_Step EQ '4.DB_Error' OR  qryNewUploads.OCR_Step EQ '6' OR qryNewUploads.OCR_Step EQ '6.DB_Error'  OR qryNewUploads.OCR_Step EQ '9.DB_Error' OR
 				qryNewUploads.OCR_Step EQ '10') AND  (qryTestset.OCR_Step NEQ qryNewUploads.OCR_Step))>
-				<cfquery name="qryUpdDetailSummaryDisplay3" datasource="#application.datasource#">
+				<cfset useLakebaseForqryUpdDetailSummaryDisplay3 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryUpdDetailSummaryDisplay3>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_test_log_detail_summary",
+			{
+				"ocr_upload_test_log_detail_summary_id" = "eq.#qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#"
+			},
+			{
+				"display_status" = "ERROR",
+				"idone" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUpdDetailSummaryDisplay3 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUpdDetailSummaryDisplay3>
+<cfquery name="qryUpdDetailSummaryDisplay3" datasource="#application.datasource#">
 						UPDATE OCR_Upload_Test_Log_Detail_Summary 
 						SET  Display_Status = 'ERROR',
 							 iDone = 1
 						WHERE 
 						OCR_Upload_Test_Log_Detail_Summary_ID = #qryRecordsToProcess.OCR_Upload_Test_Log_Detail_Summary_ID#
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfloop>
 	</cfloop> <!--- <cfloop query="qryNewUploads"> --->
 </cfloop><!--- <cfloop query="qryRecordsToProcess"> --->
 
 	
-	<cfquery name="qryTestLog" datasource="#application.datasource#">
+	<cfset useLakebaseForqryTestLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryTestLog>
+	<cftry>
+		<cfset qryTestLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_test_log_detail_summary", {
+				"select" = "ocr_upload_test_log_id"
+			}), "ocr_upload_test_log_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryTestLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryTestLog>
+<cfquery name="qryTestLog" datasource="#application.datasource#">
 		SELECT DISTINCT OCR_Upload_Test_Log_ID FROM OCR_Upload_Test_Log_Detail_Summary
 	</cfquery>
+</cfif>
 
 	<cfloop query="qryTestLog">	
 		<cfset OCRUploadTestLogID = qryTestLog.OCR_Upload_Test_Log_ID />
-		<cfquery name="qryRecordsToProcess2" datasource="#application.datasource#">
+		<cfset useLakebaseForqryRecordsToProcess2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log_detail_summary")>
+<cfif useLakebaseForqryRecordsToProcess2>
+	<cftry>
+		<cfset qryRecordsToProcess2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_test_log_detail_summary", {
+				"ocr_upload_test_log_id" = "eq.#OCRUploadTestLogID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryRecordsToProcess2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryRecordsToProcess2>
+<cfquery name="qryRecordsToProcess2" datasource="#application.datasource#">
 			SELECT * FROM OCR_Upload_Test_Log_Detail_Summary WHERE OCR_Upload_Test_Log_ID = #OCRUploadTestLogID#
 		</cfquery>
+</cfif>
 		<cfset countInProgress = 0 />
 		<cfset countCompleted = 0 />
 		<cfset countFailed = 0 />

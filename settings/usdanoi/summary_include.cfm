@@ -6,9 +6,25 @@
 <cfparam name="Raw_Price" 		default="0">
 
 <!---Gets raw materials pass through value -- will need to be re-written for multiple items with different PTV --->
+<cfset useLakebaseForGetPTV = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds")>
+<cfif useLakebaseForGetPTV>
+	<cftry>
+		<cfset GetPTV = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usda_noi_epds", {
+				"limit" = "1",
+				"select" = "yield,raw_price"
+			}), "yield,raw_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPTV = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPTV>
 <cfquery name="GetPTV" datasource="#application.datasource#">
 SELECT TOP 1 Yield, Raw_Price FROM USDA_NOI_EPDS
 </cfquery>
+</cfif>
 
 <cfset Yield = GetPTV.Yield>
 <cfset Raw_Price = GetPTV.Raw_Price>

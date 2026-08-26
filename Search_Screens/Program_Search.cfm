@@ -234,11 +234,27 @@ SELECT
 					<cfelse>
 						<span ID="searchItemLabel"><B>Program Generic type</B></span><BR>						
 						<CFPARAM NAME="FORM.Generic_Type" DEFAULT="0">
-						<CFQUERY NAME="Get_Generic_Types" DATASOURCE="#application.datasource#">
+						<cfset useLakebaseForGet_Generic_Types = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_type")>
+<cfif useLakebaseForGet_Generic_Types>
+	<cftry>
+		<cfset Get_Generic_Types = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_type", {
+				"order" = "generic_type.asc",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Generic_Types = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Generic_Types>
+<CFQUERY NAME="Get_Generic_Types" DATASOURCE="#application.datasource#">
 						Select	Generic_Type
 						From 	Generic_Type
 						Order By Generic_Type
 						</CFQUERY>
+</cfif>
 						<SELECT NAME="Generic_Type" STYLE="WIDTH:<CFOUTPUT>#Input_Select_Width#</CFOUTPUT>px">
 							<OPTION VALUE="0">**ALL** Generic Type</OPTION>
 							<CFOUTPUT QUERY="Get_Generic_Types"><OPTION VALUE="#trim(Generic_Type)#"#IIF(trim(FORM.Generic_Type) EQ Generic_Type, DE(" SELECTED"), DE(""))#>#trim(ReReplaceNoCase(Generic_Type, "trade", application.returned_customer_setting.Trade_Label))#</OPTION></CFOUTPUT>
@@ -359,13 +375,30 @@ SELECT
 					</TD>
 					<TD>
 					<cfoutput><span ID="searchItemLabel"><B>#application.returned_customer_setting.buying_group_label_singular#</B></span><BR></cfoutput>
-					<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
+					<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
 						SELECT *
 						FROM Distributor_Buying_Groups
 						WHERE Deleted = 0
 						AND	Active_Code = 'A'
 						ORDER BY Buying_Group_Name
 					</cfquery>
+</cfif>
 					<CFPARAM NAME="FORM.Buying_Group" DEFAULT="0">
 					<SPAN ID="SP_Buying_Group">
 					<SELECT NAME="Buying_Group" style="width: <CFOUTPUT>#Input_Select_Width#</CFOUTPUT>px;">
@@ -376,12 +409,28 @@ SELECT
 					</TD>
 					<TD>
 					<cfoutput><span ID="searchItemLabel"><B>#application.returned_customer_setting.family_name_label_singular#</B></span><BR></cfoutput>
-					<cfquery name="GetFamilyNames" datasource="#application.datasource#">
+					<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#">
 						SELECT *
 						FROM Distributor_Family
 						WHERE Deleted = 0
 						ORDER BY Family_Name
 					</cfquery>
+</cfif>
 					<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 					<SPAN ID="SP_Family_Name">
 					<SELECT NAME="Family_Name" style="width: <CFOUTPUT>#Large_Select_Width#</CFOUTPUT>px;">
@@ -484,11 +533,28 @@ Add Sort By
 	<CFIF FORM.FilterSearchPrograms NEQ 0>
 		<CFSWITCH expression="#FORM.FilterType#">
 			<cfcase value="1"><!--- Distributor --->
-				<cfquery name="getPayeeFilter" datasource="#Application.Datasource#">
+				<cfset useLakebaseForgetPayeeFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForgetPayeeFilter>
+	<cftry>
+		<cfset getPayeeFilter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"bsa_foodservice_customers_id" = "eq.#FORM.FilterDataList#",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeFilter>
+<cfquery name="getPayeeFilter" datasource="#Application.Datasource#">
 					SELECT Contract_Main_ID
 					FROM Contract_Distributors
 					WHERE BSA_Foodservice_Customers_ID = '#FORM.FilterDataList#' AND Deleted = 0
 				</cfquery>
+</cfif>
 				<CFIF getPayeeFilter.recordcount EQ 0>
 					<CFSET Filter_CID_List = 0>
 				<CFELSE>

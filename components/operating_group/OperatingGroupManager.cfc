@@ -475,11 +475,29 @@
 	<cffunction name="deleteOperatingGroupProfileSettings" output="false" returntype="void">
 		
 		<!------ Delete ----->
-		<cfquery name="DeleteAllPriorOperatingGroupProfileSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteAllPriorOperatingGroupProfileSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operating_group_profile_map")>
+<cfif useLakebaseForDeleteAllPriorOperatingGroupProfileSettings>
+	<cftry>
+		<cfset application.oLakebase.updateRows("operating_group_profile_map",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteAllPriorOperatingGroupProfileSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteAllPriorOperatingGroupProfileSettings>
+<cfquery name="DeleteAllPriorOperatingGroupProfileSettings" datasource="#application.datasource#">
 			UPDATE	Operating_Group_Profile_Map
 			SET		Deleted = 1
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 		
 	</cffunction>
 	

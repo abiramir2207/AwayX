@@ -10,12 +10,29 @@
  ORDER BY Outbound_Freight_Upload_Date DESC
 </cfquery>
 
+<cfset useLakebaseForgetUncompletedTasks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("outbound_freight_upload")>
+<cfif useLakebaseForgetUncompletedTasks>
+	<cftry>
+		<cfset getUncompletedTasks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("outbound_freight_upload", {
+				"outbound_freight_upload_status" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "outbound_freight_upload_id"
+			}), "outbound_freight_upload_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUncompletedTasks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUncompletedTasks>
 <cfquery name="getUncompletedTasks" datasource="#application.datasource#">
  SELECT Outbound_Freight_Upload_ID
  FROM Outbound_Freight_Upload
  WHERE Outbound_Freight_Upload_Status = 1
  AND Deleted = 0
 </cfquery>
+</cfif>
 
 <script language="javascript">
 function ErrorCheck()

@@ -35,11 +35,27 @@
 <cfmodule template="/customTags/include.cfm" file_to_include="/Script/javascript/dom_common.js, /script/javascript/fixed_popup.js, /Script/javascript/dhtml.js">
 
 <!---Queries regarding this page --->
+<cfset useLakebaseForgetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetPayeeInfo>
+	<cftry>
+		<cfset getPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "billback_payee_type_id"
+			}), "billback_payee_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeInfo>
 <cfquery name="getPayeeInfo" datasource="#Application.Datasource#">
 	SELECT 	Billback_Payee_Type_ID
 	FROM 	Billback
 	WHERE 	Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 <!--- D51977 :: START Billback enhancements for operator level data --->
 <cfif application.appSettingsGet.getViewOperatorinBillbackDeviation()>
 	<cfquery name="GetItemsfromProgramOnBillback" datasource="#application.datasource#">
@@ -150,7 +166,24 @@
         <cfset NewProgram = qGetNewProgramCMIDFromBB.Program_ID />
     </cfif>
     
-	<cfquery name="getID" datasource="#application.datasource#">
+	<cfset useLakebaseForgetID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForgetID>
+	<cftry>
+		<cfset getID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"program_id" = "neq.#NewProgram#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id,discount_list"
+			}), "billback_program_id,discount_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetID>
+<cfquery name="getID" datasource="#application.datasource#">
 		SELECT 	Billback_Program_ID, Discount_List
 		FROM 	Billback_Program
 		WHERE 	Program_ID = '#Program_ID#'
@@ -158,6 +191,7 @@
 		AND 	Deleted = 0
 		AND		Program_ID <> '#NewProgram#'
 	</cfquery>
+</cfif>
 
 	<cfif getID.recordCount EQ 0 or listlen(ProductsToSwitch) EQ 0>
 		<!---
@@ -190,6 +224,25 @@
 <CFSET Progress_Type = 1>
 <CFINCLUDE TEMPLATE = "BB_In_Progress_Check.cfm">
 
+<cfset useLakebaseForClearDev = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForClearDev>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"deviation_ran_date" = javaCast("null",""),
+				"auto_deviation_on" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForClearDev = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForClearDev>
 <cfquery name="ClearDev" datasource="#application.datasource#">
 	UPDATE 	Billback 
 	SET 	Deviation_Ran_Date = NULL,
@@ -197,6 +250,7 @@
 			Deviation_Ran_By = NULL
 	WHERE	Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <cftransaction>
 <CFSET LoadBillbackID = Billback_ID>
@@ -1138,11 +1192,27 @@
 		<cfif CompAlreadyExists.Recordcount EQ 0>
 
 		<!--- Information on the new program--->
-		<cfquery name="GetContractNumbers" datasource="#application.datasource#">
+		<cfset useLakebaseForGetContractNumbers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractNumbers>
+	<cftry>
+		<cfset GetContractNumbers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#NewProgram#",
+				"select" = "contract_number,contract_title"
+			}), "contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractNumbers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractNumbers>
+<cfquery name="GetContractNumbers" datasource="#application.datasource#">
 			SELECT Contract_Number, Contract_Title
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#NewProgram#'
 		</cfquery>
+</cfif>
 		
 		<cfquery name="GetAllContractMains" datasource="#application.datasource#">
 			SELECT 	Contract_Main_ID
@@ -1951,10 +2021,26 @@ AND Contract_Products.Deleted = 0
 	</cfquery>
 </cfif>
 
+<cfset useLakebaseForOldProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForOldProgramInfo>
+	<cftry>
+		<cfset OldProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"select" = "contract_number,contract_title"
+			}), "contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOldProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOldProgramInfo>
 <cfquery name="OldProgramInfo" datasource="#application.datasource#">
 SELECT Contract_Number, Contract_Title
 FROM Contract_Main WHERE Contract_Main_ID = '#Program_ID#'
 </cfquery>
+</cfif>
 
 <cf_cryp string="#Program_ID#" type="en" key="#request.key#">
 <CFSET OldCID = cryp.value>

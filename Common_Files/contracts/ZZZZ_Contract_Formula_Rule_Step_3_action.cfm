@@ -16,26 +16,83 @@
 
 <!------ Make Active  ----->
 <CFSET Rule_ID=FORM.Program_Formula_Pricing_Rule_ID>
+<cfset useLakebaseForactivateRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForactivateRule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"active" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForactivateRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForactivateRule>
 <CFQUERY NAME="activateRule" datasource="#application.datasource#">
 	UPDATE Program_Formula_Pricing_Rules
 	SET Active = 1
 	WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
 	AND Deleted = 0
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForactivateRuleCommData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_comm_data")>
+<cfif useLakebaseForactivateRuleCommData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rule_comm_data",
+			{
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"active" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForactivateRuleCommData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForactivateRuleCommData>
 <CFQUERY NAME="activateRuleCommData" datasource="#application.datasource#">
 	UPDATE Program_Formula_Pricing_Rule_Comm_Data
 	SET Active = 1
 	WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
 	AND Deleted = 0
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForactivateRuleOverage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
+<cfif useLakebaseForactivateRuleOverage>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rule_overage",
+			{
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"active" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForactivateRuleOverage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForactivateRuleOverage>
 <CFQUERY NAME="activateRuleOverage" datasource="#application.datasource#">
 	UPDATE Program_Formula_Pricing_Rule_Overage
 	SET Active = 1
 	WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
 	AND Deleted = 0
 </CFQUERY>
+</cfif>
 <!------ Make Active  ----->
 
 

@@ -35,9 +35,24 @@
 		
 		<cfparam name="arguments.programID" default="0" />
 
-		<cfquery NAME="Get_BB_Tolerance_Settings" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_BB_Tolerance_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForGet_BB_Tolerance_Settings>
+	<cftry>
+		<cfset Get_BB_Tolerance_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "auto_deviation_family_level"
+			}), "auto_deviation_family_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_BB_Tolerance_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_BB_Tolerance_Settings>
+<cfquery NAME="Get_BB_Tolerance_Settings" DATASOURCE="#application.datasource#">
 			SELECT Auto_Deviation_Family_Level FROM Billback_Tolerance_Settings
 		</cfquery>
+</cfif>
 
 		<!------ get data ----->
 		<CFIF IsDate(arguments.date1) AND IsDate(arguments.date2)>
@@ -1496,12 +1511,29 @@
 		<cfset var payeeId = "" />
 		<cfswitch expression="#arguments.billbackPayeeTypeId#">
 			<cfcase value="1">
-				<cfquery name="qGetBillbackPayee" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetBillbackPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForqGetBillbackPayee>
+	<cftry>
+		<cfset qGetBillbackPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#arguments.billbackId#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbackPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbackPayee>
+<cfquery name="qGetBillbackPayee" datasource="#application.datasource#">
 					SELECT	Distributor_ID
 					FROM	Billback_Distributor
 					WHERE	Billback_Distributor.Billback_ID = '#arguments.billbackId#'
 					AND		Billback_Distributor.Deleted = 0
 				</cfquery>
+</cfif>
 				<cfset payeeId = qGetBillbackPayee.Distributor_ID />
 			</cfcase>
 			<cfcase value="2">
@@ -1962,9 +1994,24 @@
 <!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
 	<cffunction name="bGetInvoiceOnlyOBF" output="false" returntype="boolean" >
 
-		<cfquery name="qGetInvoiceOnlyOBF" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqGetInvoiceOnlyOBF = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqGetInvoiceOnlyOBF>
+	<cftry>
+		<cfset qGetInvoiceOnlyOBF = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "add_obf_rate_to_invoice_only"
+			}), "add_obf_rate_to_invoice_only"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInvoiceOnlyOBF = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInvoiceOnlyOBF>
+<cfquery name="qGetInvoiceOnlyOBF" datasource="#Application.Datasource#">
 				SELECT Add_OBF_Rate_To_Invoice_Only FROM _application_settings
 		</cfquery>
+</cfif>
 
 		<cfreturn JAVACAST("boolean",qGetInvoiceOnlyOBF.Add_OBF_Rate_To_Invoice_Only) />
 

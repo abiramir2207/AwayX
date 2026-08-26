@@ -128,7 +128,23 @@ has been added to the "rates" grid and so we do not need validation here anymore
 	}	
 	</script>
 	
-	<cfquery name="qGetDistinctChangeType1" dbtype="query">
+	<cfset useLakebaseForqGetDistinctChangeType1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetclauserequireapproval")>
+<cfif useLakebaseForqGetDistinctChangeType1>
+	<cftry>
+		<cfset qGetDistinctChangeType1 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetclauserequireapproval", {
+				"clause_change_type" = "eq.1",
+				"order" = "clause_category_name.asc",
+				"select" = "clause_library_id,clause_category_id,clause_category_name,clause_id,category_name,clause_library_body,clause_body,clause_change_type"
+			}), "clause_library_id,clause_category_id,clause_category_name,clause_id,category_name,clause_library_body,clause_body,clause_change_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistinctChangeType1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistinctChangeType1>
+<cfquery name="qGetDistinctChangeType1" dbtype="query">
 		SELECT	DISTINCT Clause_Library_ID, Clause_Category_ID, Clause_Category_Name, Clause_ID, Category_Name,
 				Clause_Library_Body, Clause_Body, Clause_Change_Type
 		FROM	qGetClauseRequireApproval
@@ -136,7 +152,24 @@ has been added to the "rates" grid and so we do not need validation here anymore
 				Clause_Change_Type = 1
 		ORDER BY Clause_Category_Name
 	</cfquery>
-	<cfquery name="qGetDistinctChangeType2" dbtype="query">
+</cfif>
+	<cfset useLakebaseForqGetDistinctChangeType2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetclauserequireapproval")>
+<cfif useLakebaseForqGetDistinctChangeType2>
+	<cftry>
+		<cfset qGetDistinctChangeType2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetclauserequireapproval", {
+				"clause_change_type" = "eq.2",
+				"order" = "clause_category_name.asc",
+				"select" = "clause_library_id,clause_category_id,clause_category_name,clause_id,category_name,clause_library_body,clause_body,clause_change_type"
+			}), "clause_library_id,clause_category_id,clause_category_name,clause_id,category_name,clause_library_body,clause_body,clause_change_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistinctChangeType2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistinctChangeType2>
+<cfquery name="qGetDistinctChangeType2" dbtype="query">
 		SELECT	DISTINCT Clause_Library_ID, Clause_Category_ID, Clause_Category_Name, Clause_ID, Category_Name,
 				Clause_Library_Body, Clause_Body, Clause_Change_Type
 		FROM	qGetClauseRequireApproval
@@ -144,6 +177,7 @@ has been added to the "rates" grid and so we do not need validation here anymore
 				Clause_Change_Type = 2
 		ORDER BY Clause_Category_Name
 	</cfquery>
+</cfif>
 	<style>
 		.topBorder TD
 		{

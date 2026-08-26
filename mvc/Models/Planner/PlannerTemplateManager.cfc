@@ -223,7 +223,22 @@ Description  :  Manager for Planner Templates
 			nId       = arguments.id;
 		</cfscript>
 
-		<cfquery name="qPlannerFiltersCustomers" datasource="#application.datasource#">
+		<cfset useLakebaseForqPlannerFiltersCustomers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_customers")>
+<cfif useLakebaseForqPlannerFiltersCustomers>
+	<cftry>
+		<cfset qPlannerFiltersCustomers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_customers", {
+				"planner_template_id" = "eq.#nId#",
+				"select" = "planner_template_id,distributor_group_level_id,distributor_group_id"
+			}), "planner_template_id,distributor_group_level_id,distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPlannerFiltersCustomers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPlannerFiltersCustomers>
+<cfquery name="qPlannerFiltersCustomers" datasource="#application.datasource#">
 
 			SELECT  Planner_Template_ID,
 					Distributor_Group_Level_ID,
@@ -232,6 +247,7 @@ Description  :  Manager for Planner Templates
 			WHERE 	Planner_Template_ID = '#nId#'
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qPlannerFiltersCustomers />
 
@@ -249,7 +265,22 @@ Description  :  Manager for Planner Templates
 			nId       = arguments.id;
 		</cfscript>
 
-		<cfquery name="qPlannerFiltersProducts" datasource="#application.datasource#">
+		<cfset useLakebaseForqPlannerFiltersProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_products")>
+<cfif useLakebaseForqPlannerFiltersProducts>
+	<cftry>
+		<cfset qPlannerFiltersProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_products", {
+				"planner_template_id" = "eq.#nId#",
+				"select" = "planner_template_id,product_group_level_id,product_group_id"
+			}), "planner_template_id,product_group_level_id,product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPlannerFiltersProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPlannerFiltersProducts>
+<cfquery name="qPlannerFiltersProducts" datasource="#application.datasource#">
 
 			SELECT  Planner_Template_ID,
 					Product_Group_Level_ID,
@@ -258,6 +289,7 @@ Description  :  Manager for Planner Templates
 			WHERE 	Planner_Template_ID = '#nId#'
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qPlannerFiltersProducts />
 
@@ -275,7 +307,22 @@ Description  :  Manager for Planner Templates
 			nId       = arguments.id;
 		</cfscript>
 
-		<cfquery name="qPlannerFiltersOperators" datasource="#application.datasource#">
+		<cfset useLakebaseForqPlannerFiltersOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters_operators")>
+<cfif useLakebaseForqPlannerFiltersOperators>
+	<cftry>
+		<cfset qPlannerFiltersOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters_operators", {
+				"planner_template_id" = "eq.#nId#",
+				"select" = "planner_template_id,operator_group_level_id,operator_group_id"
+			}), "planner_template_id,operator_group_level_id,operator_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPlannerFiltersOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPlannerFiltersOperators>
+<cfquery name="qPlannerFiltersOperators" datasource="#application.datasource#">
 
 			SELECT  Planner_Template_ID,
 					Operator_Group_Level_ID,
@@ -284,6 +331,7 @@ Description  :  Manager for Planner Templates
 			WHERE 	Planner_Template_ID = '#nId#'
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qPlannerFiltersOperators />
 
@@ -569,17 +617,56 @@ Description  :  Manager for Planner Templates
 		</cfscript>
 
 
-		<cfquery name="qCheckIfExists" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckIfExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters")>
+<cfif useLakebaseForqCheckIfExists>
+	<cftry>
+		<cfset qCheckIfExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_template_filters", {
+				"planner_template_id" = "eq.#nId#",
+				"group_level_id" = "eq.#strGroupLevelID#",
+				"pg_group_type" = "eq.#strGroupType#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfExists>
+<cfquery name="qCheckIfExists" datasource="#application.datasource#">
 			SELECT  *
 			FROM  Planner_Template_Filters
 			WHERE Planner_Template_ID = '#nId#'
 			AND   Group_Level_ID = '#strGroupLevelID#'
 			AND   PG_Group_Type = '#strGroupType#'
 		</cfquery>
+</cfif>
 		<!--- TODO: Add logging --->
 
 		<cfif qCheckIfExists.RecordCount>
-			<cfquery name="qUpdatePlannerTemplateFilters" datasource="#application.datasource#">
+			<cfset useLakebaseForqUpdatePlannerTemplateFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_template_filters")>
+<cfif useLakebaseForqUpdatePlannerTemplateFilters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_template_filters",
+			{
+				"planner_template_id" = "eq.#nId#",
+				"group_level_id" = "eq.#strGroupLevelID#",
+				"pg_group_type" = "eq.#strGroupType#"
+			},
+			{
+				"allow_in_search" = "#bAllowInSearch#",
+				"allow_in_group_search" = "#bAllowInGroupSearch#",
+				"allow_filter" = "#bAllowFilter#",
+				"default_view" = "#arguments.default_view#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdatePlannerTemplateFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdatePlannerTemplateFilters>
+<cfquery name="qUpdatePlannerTemplateFilters" datasource="#application.datasource#">
 
 				UPDATE  Planner_Template_Filters
 				SET 	Allow_In_Search = '#bAllowInSearch#',
@@ -590,6 +677,7 @@ Description  :  Manager for Planner Templates
 				AND   	Group_Level_ID = '#strGroupLevelID#'
 				AND		PG_Group_Type = '#strGroupType#'
 			</cfquery>
+</cfif>
 
 		<cfelse>
 
@@ -915,13 +1003,31 @@ Description  :  Manager for Planner Templates
 		<cfargument name="user_profile_id" required="false" default="#request.accessStructure.profiles_id#">
 
 		<!--- locate for a specific profile --->
-		<cfquery name="local.qAccess" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_qAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_planner")>
+<cfif useLakebaseForlocal_qAccess>
+	<cftry>
+		<cfset local.qAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_planner", {
+				"profile_id" = "eq.#arguments.user_profile_id#",
+				"access_is_forbidden" = "eq.0",
+				"deleted" = "eq.0",
+				"select" = "planner_template_id"
+			}), "planner_template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qAccess>
+<cfquery name="local.qAccess" datasource="#application.datasource#">
 			SELECT planner_template_id
 			  FROM Profile_Forbidden_Planner
 			 WHERE Profile_ID = #arguments.user_profile_id#
 			 		AND Access_is_forbidden = 0
 					AND Deleted = 0
 		</cfquery>
+</cfif>
 
 		<!--- a specific profile does not exist (it may be new) so find "any new profiles" --->
 		<cfif local.qAccess.recordCount eq 0>

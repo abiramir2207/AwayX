@@ -21,7 +21,22 @@
 
 <body>
 
-		<cfquery name="qDashboardAccessInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqDashboardAccessInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dashboard_access")>
+<cfif useLakebaseForqDashboardAccessInfo>
+	<cftry>
+		<cfset qDashboardAccessInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dashboard_access", {
+				"profile_id" = "eq.#url.profileId#",
+				"select" = "budget,budgets_territory_total,budgets_customer_specific_budgets,budgets_program_details,budgets_territory_budget_level_detail,budgets_sub_region_budget_level_detail,billback,billbacks_summary_table,billbacks_monthly_summary,billbacks_yearly_summary,billbacks_quarterly_summary,billbacks_stats,sales,sales_last_12_months_eqc,sales_fiscal_year_summary_eqc,sales_sales_view_drilldown,sales_tbm_sales_tracker,sales_nam_sales_tracker,sales_tracker,performance,performance_programs"
+			}), "budget,budgets_territory_total,budgets_customer_specific_budgets,budgets_program_details,budgets_territory_budget_level_detail,budgets_sub_region_budget_level_detail,billback,billbacks_summary_table,billbacks_monthly_summary,billbacks_yearly_summary,billbacks_quarterly_summary,billbacks_stats,sales,sales_last_12_months_eqc,sales_fiscal_year_summary_eqc,sales_sales_view_drilldown,sales_tbm_sales_tracker,sales_nam_sales_tracker,sales_tracker,performance,performance_programs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDashboardAccessInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDashboardAccessInfo>
+<cfquery name="qDashboardAccessInfo" datasource="#application.datasource#">
 			SELECT 
 				Budget,
 				Budgets_territory_total,
@@ -53,7 +68,8 @@
 
 			WHERE
 				Profile_ID = #url.profileId#
-		</cfquery>	
+		</cfquery>
+</cfif>	
 
 
 <font COLOR="Navy" SIZE="+1">Dashboard Access Control Panel</font>

@@ -254,11 +254,26 @@
 <!--- Get all of the UOM descriptions																 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFIF uom NEQ "All">
-	<CFQUERY NAME="Get_UOM" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_UOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForGet_UOM>
+	<cftry>
+		<cfset Get_UOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#uom#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_UOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_UOM>
+<CFQUERY NAME="Get_UOM" datasource="#application.datasource#">
 	Select	*
 	From	Units_of_Measure
 	Where	Unit_of_Measure_ID	=	#uom#
 	</CFQUERY>
+</cfif>
 <CFELSE>
 	<CFSET Get_UOM.Unit_of_Measure_Desc="Any U.O.M.">	
 </CFIF>

@@ -64,10 +64,25 @@
  <!--- 44290/Anand Rao/08-Aug-2014 --->
 
 <!--- Dev Note: drachala; D29378: Display Billback settings Use_UOM on the upload payables settings page  START--->
+<cfset useLakebaseForBBUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForBBUOM>
+	<cftry>
+		<cfset BBUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "use_uom"
+			}), "use_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBUOM>
 <cfquery name="BBUOM" datasource="#application.datasource#">
       SELECT USE_UOM
 	  FROM Billback_Settings
 </cfquery>
+</cfif>
 <cfset form.incl_BB_UOM		=   BBUOM.USE_UOM />
 <!--- End Dev Note: drachala; D29378: Display Billback settings Use_UOM on the upload payables settings page  --->
 

@@ -1,10 +1,25 @@
 <!--- initialize product id mapping array --->
 		<!---Get Program Span--->
-	<cfquery name="getTemplateSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForgetTemplateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetTemplateSettings>
+	<cftry>
+		<cfset getTemplateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#NewID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateSettings>
+<cfquery name="getTemplateSettings" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = '#NewID#'
 	</cfquery>
+</cfif>
 		<CFSET Contract_Products_ID_Mapping = ArrayNew(2)>
 		<CFSET Contract_Products_ID_TO_Lump_Sum_Component_ID_Mapping = ArrayNew(2)>
 		<!--- END initialize product id mapping array --->

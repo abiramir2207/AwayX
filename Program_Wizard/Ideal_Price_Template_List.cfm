@@ -14,12 +14,28 @@
 <cfinclude template="/Script/cf/ListCompare.cfm">
 <cfparam name="form.Selected" default="0">
 
+<cfset useLakebaseForCheckTemplateList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ideal_price_template_list")>
+<cfif useLakebaseForCheckTemplateList>
+	<cftry>
+		<cfset CheckTemplateList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ideal_price_template_list", {
+				"first_parent_id" = "eq.#url.First_Parent_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckTemplateList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckTemplateList>
 <cfquery name="CheckTemplateList" datasource="#application.datasource#">
 	SELECT *
 	FROM Ideal_Price_Template_List
 	WHERE First_Parent_ID = #url.First_Parent_ID#
 	AND Deleted = 0
 </cfquery>
+</cfif>
 <cfset selectedTemplate = valueList(CheckTemplateList.Include_First_Parent_ID)>
 
 <cfif form.Selected>

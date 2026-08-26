@@ -354,11 +354,27 @@ WHERE CM.Contract_Main_ID = #arguments.ContractMainID#
 		<cfprocparam cfsqltype="CF_SQL_INTEGER" dbvarname="@Billback_Quick_Pay_Log_ID" value="#qInsertIntoLog.Billback_Quick_Pay_Log_ID#" />
 	</cfstoredproc>
 
-	<cfquery name="qGetBBInfo" datasource="#Application.Datasource#">
+	<cfset useLakebaseForqGetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_quick_pay_log")>
+<cfif useLakebaseForqGetBBInfo>
+	<cftry>
+		<cfset qGetBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_quick_pay_log", {
+				"billback_quick_pay_log_id" = "eq.#qInsertIntoLog.Billback_Quick_Pay_Log_ID#",
+				"select" = "bb_code"
+			}), "bb_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBBInfo>
+<cfquery name="qGetBBInfo" datasource="#Application.Datasource#">
 		SELECT BB_Code
 		FROM Billback_Quick_Pay_Log
 		WHERE Billback_Quick_Pay_Log_ID = #qInsertIntoLog.Billback_Quick_Pay_Log_ID#
 	</cfquery>
+</cfif>
 
 	<cfreturn qGetBBInfo>
 </cffunction>
@@ -1182,6 +1198,24 @@ BEGIN
 	<cfprocresult name="qBBCreation">
 </cfstoredproc>
 
+<cfset useLakebaseForqfinalInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqfinalInfo>
+	<cftry>
+		<cfset qfinalInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"deleted" = "eq.0",
+				"processed" = "eq.1",
+				"billback_id" = "not.is.null",
+				"user_id" = "eq.#arguments.unique_ID#",
+				"select" = "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+			}), "dd_dedid,program_number,bb_code,'billback creation complete' as bb_creation_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqfinalInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqfinalInfo>
 <cfquery name="qfinalInfo" datasource="#application.datasource#">
 	SELECT    DD_DedID, Program_Number, BB_Code, 'Billback Creation Complete' as BB_Creation_Status_Desc
 	FROM    ADV_Quick_Pay_Billback_Log
@@ -1190,6 +1224,7 @@ BEGIN
 	AND        Billback_ID IS NOT NULL
 	AND        User_ID =  '#arguments.unique_ID#'
 </cfquery>
+</cfif>
 <cfif qfinalInfo.recordcount EQ 0>
 	<cfquery name="qfinalInfo" datasource="#application.datasource#">
 		SELECT 	DD_DedID, Program_Number, BB_Code, BB_Creation_Status_Desc
@@ -1224,7 +1259,26 @@ BEGIN
 <cffunction name="AutoApproveQPBillbacks"   output="false" access="remote" returnFormat="json">
 	<cfargument name="uniqueID" required="true" default="" />
 
-	<cfquery name="qcheckBBCreation" datasource="#application.datasource#">
+	<cfset useLakebaseForqcheckBBCreation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqcheckBBCreation>
+	<cftry>
+		<cfset qcheckBBCreation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"deleted" = "eq.0",
+				"processed" = "eq.1",
+				"billback_id" = "not.is.null",
+				"bb_approved" = "eq.0",
+				"user_id" = "eq.#arguments.uniqueID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqcheckBBCreation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqcheckBBCreation>
+<cfquery name="qcheckBBCreation" datasource="#application.datasource#">
 		SELECT 1
 		FROM ADV_Quick_Pay_Billback_Log
 		WHERE Deleted = 0
@@ -1233,6 +1287,7 @@ BEGIN
 		AND	  BB_Approved = 0
 		AND	 User_ID = '#arguments.uniqueID#'
 	</cfquery>
+</cfif>
 
 	<cfif qcheckBBCreation.recordcount>
 
@@ -1512,7 +1567,27 @@ BEGIN
 		AND U.Deleted = 0
 	</CFQUERY>
 <cfif ! qcheckLockStatus.recordcount>
-	<CFQUERY name="LockDD" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForLockDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForLockDD>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "#arguments.Lock_Status#",
+				"locked_by" = "#request.AccessStructure.User_ID#",
+				"dd_locked_by_quick_pay" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockDD>
+<CFQUERY name="LockDD" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Deductions
 		SET 	Is_Locked = #arguments.Lock_Status#
 						,Locked_By = '#request.AccessStructure.User_ID#'
@@ -1520,6 +1595,7 @@ BEGIN
 		WHERE 	Deduction_ID = '#arguments.Deduction_ID#'
 		AND Deleted=0
 	</CFQUERY>
+</cfif>
 	<cfset arrLocked = 0>
 	<cfset arrstatus  ="Deduction Is Sucesfully Locked.">
 <cfelse>
@@ -1575,12 +1651,29 @@ BEGIN
 <cffunction name="DeleteRecords" output="false" access="remote" returnFormat="json">
 	<cfargument name="unique_ID" required="true" default="" />
 
-	<cfquery name="qCheckDD" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForqCheckDD = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("adv_quick_pay_billback_log")>
+<cfif useLakebaseForqCheckDD>
+	<cftry>
+		<cfset qCheckDD = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("adv_quick_pay_billback_log", {
+				"user_id" = "eq.#arguments.unique_ID#",
+				"deleted" = "eq.0",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckDD = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckDD>
+<cfquery name="qCheckDD" DATASOURCE="#Application.Datasource#">
 		SELECT DISTINCT Deduction_ID
 		FROM ADV_Quick_Pay_Billback_Log
 		WHERE User_ID =  '#arguments.unique_ID#'
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfif qCheckDD.RecordCount>
 		<cfloop query="qCheckDD">

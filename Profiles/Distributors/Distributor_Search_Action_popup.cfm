@@ -48,11 +48,27 @@ input.nostyle
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get Market family names																		 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Family_Names = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGet_Family_Names>
+	<cftry>
+		<cfset Get_Family_Names = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"deleted" = "eq.0",
+				"select" = "family_name"
+			}), "family_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Family_Names = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Family_Names>
 <cfquery name="Get_Family_Names" datasource="#application.datasource#">
 	SELECT DISTINCT	Family_Name
 	FROM 			BSA_Foodservice_Customers
 	WHERE			deleted = 0
 </cfquery>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get brokers																					 --->

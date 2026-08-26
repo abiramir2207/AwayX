@@ -28,33 +28,81 @@
 	<cfset Form.Program_ID = cryp.value>
 	<cfset Form.ISREVISIONOFEXISTINGCONTRACT = 1>
 	
-	<cfquery name="Getcompany" datasource="#application.datasource#">
+	<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 		SELECT Top 1 Company_Main_ID
 		FROM Company_Main
 	</cfquery>
+</cfif>
 
 	<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 	
 	<cfinclude template="/common_files/contracts/contract_revise_action.cfm">
 		
-		<cfquery name="GetOriginalUser" datasource="#application.datasource#">
+		<cfset useLakebaseForGetOriginalUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetOriginalUser>
+	<cftry>
+		<cfset GetOriginalUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"select" = "original_creating_user_position_id,creating_user_position_id,creator_id"
+			}), "original_creating_user_position_id,creating_user_position_id,creator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOriginalUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOriginalUser>
+<cfquery name="GetOriginalUser" datasource="#application.datasource#">
 			SELECT 	Original_Creating_User_Position_ID, 
 					Creating_User_Position_ID, 
 					Creator_ID
 			FROM 	Contract_Main
 			WHERE 	Contract_Main_ID = '#Program_ID_To_Replicate#'
 		</cfquery>
+</cfif>
 		
 		<cfset Original_Creating_User_Position_ID = GetOriginalUser.Original_Creating_User_Position_ID>
 		<cfset User_Position_ID = GetOriginalUser.Creating_User_Position_ID>
 		<cfset request.AccessStructure.Creating_User_Position_ID = GetOriginalUser.Creating_User_Position_ID>
 		<cfset request.AccessStructure.User_ID = GetOriginalUser.Creator_ID>
 		
-		<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
+		<cfset useLakebaseForgetPacket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_renewal_packets")>
+<cfif useLakebaseForgetPacket>
+	<cftry>
+		<cfset getPacket = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_renewal_packets", {
+				"contract_renewal_packets_id" = "eq.#savePacket.Contract_Renewal_Packets_ID#",
+				"select" = "xml_file_location"
+			}), "xml_file_location"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPacket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPacket>
+<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
 			SELECT XML_File_Location
 			FROM Contract_Renewal_Packets
 			WHERE Contract_Renewal_Packets_ID = '#savePacket.Contract_Renewal_Packets_ID#'
 		</CFQUERY>
+</cfif>
 	
 		<CFFILE ACTION="READ" FILE="#getPacket.XML_File_Location#" VARIABLE="Packet_Data">
 		<CFWDDX ACTION="WDDX2CFML" INPUT="#Packet_Data#" OUTPUT="Program_Packet">
@@ -158,14 +206,50 @@
 </cfloop>
 
 <!---after the process runs set the updated bit to low--->
+<cfset useLakebaseForqUpdateProductMembers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_members")>
+<cfif useLakebaseForqUpdateProductMembers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("group_members",
+			{
+				"updated_bit" = "eq.1"
+			},
+			{
+				"updated_bit" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateProductMembers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateProductMembers>
 <cfquery name="qUpdateProductMembers" datasource="#application.datasource#">
 	UPDATE	Group_Members
 	SET		Updated_Bit = 0		
 	WHERE	Updated_Bit = 1
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForqUpdateCustomerMembers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_group_members")>
+<cfif useLakebaseForqUpdateCustomerMembers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("customer_group_members",
+			{
+				"updated_bit" = "eq.1"
+			},
+			{
+				"updated_bit" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateCustomerMembers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateCustomerMembers>
 <cfquery name="qUpdateCustomerMembers" datasource="#application.datasource#">
 	UPDATE	Customer_Group_Members
 	SET		Updated_Bit = 0
 	WHERE	Updated_Bit = 1
 </cfquery>
+</cfif>

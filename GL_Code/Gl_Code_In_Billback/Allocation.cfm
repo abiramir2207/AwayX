@@ -58,12 +58,31 @@ TABLE.UNDERLINED TD
 </CFIF>
 
 
+<cfset useLakebaseForDeletePrevious = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_item_allocation_cal")>
+<cfif useLakebaseForDeletePrevious>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_item_allocation_cal",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrevious = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrevious>
 <CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
 	UPDATE 	GL_Code_Item_Allocation_Cal
 	SET 	Deleted = 1
 	WHERE 	Billback_ID = '#Billback_ID#' AND			
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
 	UPDATE 	GL_Code_Fixed_Fund_Allocation_Cal
@@ -158,7 +177,26 @@ TABLE.UNDERLINED TD
 		</CFQUERY>
 		
 		<CFLOOP QUERY="GetARDetails2">		
-			<CFQUERY NAME="GetProgramForEachAR2" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForGetProgramForEachAR2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetProgramForEachAR2>
+	<cftry>
+		<cfset GetProgramForEachAR2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"a_r" = "eq.#A_R#",
+				"ar_from_fiscal_year" = "eq.#AR_From_Fiscal_Year#",
+				"allocation_method" = "eq.2",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProgramForEachAR2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProgramForEachAR2>
+<CFQUERY NAME="GetProgramForEachAR2" DATASOURCE="#Application.Datasource#">
 				SELECT 		Billback_Program.Program_ID
 				FROM 		Billback_Program 
 				WHERE 		Billback_ID = '#Billback_ID#' AND 
@@ -167,6 +205,7 @@ TABLE.UNDERLINED TD
 							Billback_Program.Allocation_Method = 2 AND
 							Billback_Program.Deleted = 0
 			</CFQUERY>
+</cfif>
 			<CFSET Program_List = VALUELIST(GetProgramForEachAR2.Program_ID)>
 			<CFSET FixedProgram_List = Program_List>
 			<CFLOOP LIST = "#Program_List#" INDEX = "MainProgID">

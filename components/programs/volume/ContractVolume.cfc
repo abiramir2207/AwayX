@@ -146,13 +146,32 @@
 		<CFSET Program_Volume = Arguments.Program_Volume>
 		<CFSET DailyContractQuantity = Program_Volume / this.Contract_Span>
 
-		<CFQUERY NAME="Save_Program_Volume" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForSave_Program_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForSave_Program_Volume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#this.Program_ID#"
+			},
+			{
+				"contract_quantity" = "#Program_Volume#",
+				"contract_daily_volume" = "#DailyContractQuantity#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Program_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Program_Volume>
+<CFQUERY NAME="Save_Program_Volume" DATASOURCE="#application.datasource#">
 			UPDATE	Contract_Main
 			SET		Contract_Quantity = #Program_Volume#,
 					Contract_Daily_Volume = #DailyContractQuantity#
 			WHERE
 					Contract_Main_ID = #this.Program_ID#
-		</CFQUERY>		
+		</CFQUERY>
+</cfif>		
 	</cffunction>
 	
 	<!----------------- Check_Any_NULL_Volume() -------------------->
@@ -325,18 +344,50 @@
 		<cfargument name="Product_ID" type="string" required="true" default="">
 		<cfargument name="Distributor_ID" type="string" required="true" default="">
 		<cfargument name="Show_Details" type="numeric" required="false" default="1">
-		<CFQUERY NAME="Get_Product_Info" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_Product_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGet_Product_Info>
+	<cftry>
+		<cfset Get_Product_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#Arguments.Product_ID#",
+				"select" = "item,upc,description"
+			}), "item,upc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Product_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Product_Info>
+<CFQUERY NAME="Get_Product_Info" DATASOURCE="#application.datasource#">
 			SELECT	Item, UPC, Description
 			FROM	BSA_Foodservice_Items_Master
 			WHERE
 					BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = '#Arguments.Product_ID#'
 		</CFQUERY>
-		<CFQUERY NAME="Get_Distributor_Info" DATASOURCE="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForGet_Distributor_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGet_Distributor_Info>
+	<cftry>
+		<cfset Get_Distributor_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Arguments.Distributor_ID#",
+				"select" = "name,ship_to"
+			}), "name,ship_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Distributor_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Distributor_Info>
+<CFQUERY NAME="Get_Distributor_Info" DATASOURCE="#application.datasource#">
 			SELECT	Name, Ship_to
 			FROM	BSA_Foodservice_Customers
 			WHERE
 					BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID = '#Arguments.Distributor_ID#'
 		</CFQUERY>
+</cfif>
 		<CFQUERY NAME="Get_Invoice_Detail" DATASOURCE="#application.datasource#">
 			SELECT	
 					ISNULL(<CFIF this.UOM EQ 1>Cases_Invoiced<CFELSE>Pounds_Invoiced</CFIF>,0) AS Volume,
@@ -2308,52 +2359,148 @@
 			</CFIF>	
 		<CFELSE>
 			<!------------- Fixed Volume ---------------->
-			<CFQUERY NAME="This_Fixed_Volume" DBTYPE="query">
+			<cfset useLakebaseForThis_Fixed_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_fixed_volume")>
+<cfif useLakebaseForThis_Fixed_Volume>
+	<cftry>
+		<cfset This_Fixed_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_fixed_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Fixed_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Fixed_Volume>
+<CFQUERY NAME="This_Fixed_Volume" DBTYPE="query">
 				SELECT		Volume
 				FROM		Get_Fixed_Volume
 				WHERE
 							BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 			</CFQUERY>
+</cfif>
 			
 			<!------------- Rebate Volume ---------------->
-			<CFQUERY NAME="This_Rebate_Volume" DBTYPE="query">
+			<cfset useLakebaseForThis_Rebate_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_rebate_volume")>
+<cfif useLakebaseForThis_Rebate_Volume>
+	<cftry>
+		<cfset This_Rebate_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_rebate_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Rebate_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Rebate_Volume>
+<CFQUERY NAME="This_Rebate_Volume" DBTYPE="query">
 				SELECT		Volume
 				FROM		Get_Rebate_Volume
 				WHERE
 							BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 			</CFQUERY>
+</cfif>
 			
 			<!------------- Growth Volume ---------------->
-			<CFQUERY NAME="This_Growth_Volume" DBTYPE="query">
+			<cfset useLakebaseForThis_Growth_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_volume")>
+<cfif useLakebaseForThis_Growth_Volume>
+	<cftry>
+		<cfset This_Growth_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Growth_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Growth_Volume>
+<CFQUERY NAME="This_Growth_Volume" DBTYPE="query">
 				SELECT		Volume
 				FROM		Get_Growth_Volume
 				WHERE
 							BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 			</CFQUERY>
+</cfif>
 			
 			<!------------- Formula Volume ---------------->
-			<CFQUERY NAME="This_Formula_Volume" DBTYPE="query">
+			<cfset useLakebaseForThis_Formula_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_formula_volume")>
+<cfif useLakebaseForThis_Formula_Volume>
+	<cftry>
+		<cfset This_Formula_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_formula_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Formula_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Formula_Volume>
+<CFQUERY NAME="This_Formula_Volume" DBTYPE="query">
 				SELECT		Volume
 				FROM		Get_Formula_Volume
 				WHERE
 							BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 			</CFQUERY>
+</cfif>
 			
 			<!------------- Off invoice Volume ---------------->
-			<CFQUERY NAME="This_Off_Invoice_Volume" DBTYPE="query">
+			<cfset useLakebaseForThis_Off_Invoice_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_off_invoice_volume")>
+<cfif useLakebaseForThis_Off_Invoice_Volume>
+	<cftry>
+		<cfset This_Off_Invoice_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_off_invoice_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Off_Invoice_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Off_Invoice_Volume>
+<CFQUERY NAME="This_Off_Invoice_Volume" DBTYPE="query">
 				SELECT		Volume
 				FROM		Get_Off_Invoice_Volume
 				WHERE
 							BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 			</CFQUERY>
+</cfif>
 			
 			<!------------- Lumpsum Volume ---------------->
-			<CFQUERY NAME="This_Lumpsum_Volume" DBTYPE="query">
+			<cfset useLakebaseForThis_Lumpsum_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_lumpsum_volume")>
+<cfif useLakebaseForThis_Lumpsum_Volume>
+	<cftry>
+		<cfset This_Lumpsum_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_lumpsum_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Lumpsum_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Lumpsum_Volume>
+<CFQUERY NAME="This_Lumpsum_Volume" DBTYPE="query">
 				SELECT		Volume
 				FROM		Get_Lumpsum_Volume
 				WHERE
 							BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 			</CFQUERY>
+</cfif>
 			
 			<cfset product_volume = 0>
 			<cfset product_volume = this.Get_Larger_Volume(This_Fixed_Volume, product_volume)>

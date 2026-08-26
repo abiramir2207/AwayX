@@ -320,7 +320,23 @@
 
 		<cfargument name="userPositionId" type="numeric" required="true" />
 
-		<cfquery name="qGetPosition" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForqGetPosition>
+	<cftry>
+		<cfset qGetPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"deleted" = "eq.0",
+				"user_positions_id" = "eq.#arguments.userPositionId#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPosition>
+<cfquery name="qGetPosition" datasource="#application.datasource#">
 			SELECT	User_Positions.*
 			FROM	User_Positions
 			WHERE
@@ -328,6 +344,7 @@
 					AND
 					User_Positions.User_Positions_ID = '#arguments.userPositionId#'
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetPosition />
 
@@ -436,9 +453,26 @@
 	<cffunction name="isUserEligibleRSP" output="false" returntype="boolean">
 		<cfargument name="userID" type="string" required="true" />
 
-		<cfquery name="getEligibleRspData" datasource="#application.datasource#">
+		<cfset useLakebaseForgetEligibleRspData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetEligibleRspData>
+	<cftry>
+		<cfset getEligibleRspData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.userID#",
+				"deleted" = "eq.0",
+				"select" = "is_eligible_rsp"
+			}), "is_eligible_rsp"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEligibleRspData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEligibleRspData>
+<cfquery name="getEligibleRspData" datasource="#application.datasource#">
 			select is_eligible_rsp from _users where user_id = '#arguments.userID#' and deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfif getEligibleRSPData.Recordcount GT 0>
 			<cfreturn getEligibleRspData.is_eligible_rsp />

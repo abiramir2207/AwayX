@@ -74,7 +74,23 @@
 		<cfparam name="bCompHasProfiles" default="0" />
 		
 		<!---check to see if there are any components by profile --->
-		<cfquery name="qCheckCompProfile" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckCompProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_profile")>
+<cfif useLakebaseForqCheckCompProfile>
+	<cftry>
+		<cfset qCheckCompProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_profile", {
+				"deleted" = "eq.0",
+				"program_rebates_component_name_id" = "eq.#arguments.compNameId#",
+				"select" = "program_rebates_component_profile_id"
+			}), "program_rebates_component_profile_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckCompProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckCompProfile>
+<cfquery name="qCheckCompProfile" datasource="#application.datasource#">
 		
 			SELECT 	Program_Rebates_Component_Profile_ID
 			FROM 	Program_Rebates_Component_Profile
@@ -82,6 +98,7 @@
 			AND		Program_Rebates_Component_Name_ID = #arguments.compNameId#
 			
 		</cfquery>
+</cfif>
 		
 		<!---if we get a recordcount back then we know we have profiles--->
 		<cfif qCheckCompProfile.RecordCount>

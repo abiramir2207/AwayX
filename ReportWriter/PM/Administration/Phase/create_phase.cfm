@@ -10,11 +10,26 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Phase = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_phase")>
+<cfif useLakebaseForGet_Phase>
+	<cftry>
+		<cfset Get_Phase = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_phase", {
+				"order" = "pm_phase_description.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Phase = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Phase>
 <CFQUERY NAME="Get_Phase" datasource="#application.datasource#">
 	Select		*
 	From		PM_Phase
 	Order by	PM_Phase_Description
 </CFQUERY>
+</cfif>
 
 <CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
 

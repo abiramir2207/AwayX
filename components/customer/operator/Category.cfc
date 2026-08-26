@@ -81,11 +81,29 @@
 	
 		<cfargument name="id" type="numeric" required="false" default="0" />
 				
-			<cfquery name="qDeleteCategory" datasource="#application.datasource#">
+			<cfset useLakebaseForqDeleteCategory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_category")>
+<cfif useLakebaseForqDeleteCategory>
+	<cftry>
+		<cfset application.oLakebase.updateRows("operator_category",
+			{
+				"operator_category_id" = "eq.#arguments.id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteCategory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteCategory>
+<cfquery name="qDeleteCategory" datasource="#application.datasource#">
 				UPDATE	Operator_Category
 				SET		Deleted = 1
 				WHERE	Operator_Category_ID = #arguments.id#
 			</cfquery>
+</cfif>
 		
 	</cffunction>
 	

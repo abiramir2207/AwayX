@@ -1,16 +1,51 @@
 
+<cfset useLakebaseForSetAllToShow = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_list")>
+<cfif useLakebaseForSetAllToShow>
+	<cftry>
+		<cfset application.oLakebase.updateRows("settings_list",
+			{
+				"setting_type" = "eq.Profile"
+			},
+			{
+				"setting_display_value" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSetAllToShow = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSetAllToShow>
 <cfquery name="SetAllToShow" datasource="#application.datasource#">
 	update Settings_List
 	set Setting_Display_Value = 1
 	where Setting_Type = 'Profile'		
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetDefaultForm = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_list")>
+<cfif useLakebaseForgetDefaultForm>
+	<cftry>
+		<cfset getDefaultForm = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("settings_list", {
+				"setting_type" = "eq.Profile",
+				"order" = "setting_name.asc",
+				"select" = "setting_name"
+			}), "setting_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDefaultForm = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDefaultForm>
 <CFQUERY NAME="getDefaultForm" datasource="#application.datasource#">
 	select Setting_Name
 	from settings_list
 	where Setting_Type = 'Profile'
 	order by Setting_Name
 </CFQUERY>
+</cfif>
 
 <cfoutput query = getDefaultForm>
 	<cfparam name="Form.#getDefaultForm.Setting_Name#"  default="1">
@@ -22,12 +57,31 @@
 	<CFSET ValueFormField = evaluate("FORM.#getDefaultForm.Setting_Name#")>
 
 	<cfif ValueFormField eq 0>
-		<CFQUERY NAME="update_#getDefaultForm.Setting_Name#" datasource="#application.datasource#">
+		<cfset useLakebaseForupdate_#getDefaultForm_Setting_Name# = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_list")>
+<cfif useLakebaseForupdate_#getDefaultForm_Setting_Name#>
+	<cftry>
+		<cfset application.oLakebase.updateRows("settings_list",
+			{
+				"setting_name" = "eq.#getDefaultForm.Setting_Name#",
+				"setting_type" = "eq.Profile"
+			},
+			{
+				"setting_display_value" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdate_#getDefaultForm_Setting_Name# = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdate_#getDefaultForm_Setting_Name#>
+<CFQUERY NAME="update_#getDefaultForm.Setting_Name#" datasource="#application.datasource#">
 			update Settings_List
 			set Setting_Display_Value = 0
 			where Setting_Name = '#getDefaultForm.Setting_Name#'
 			and Setting_Type = 'Profile'
 		</CFQUERY>
+</cfif>
 	</cfif>
 </cfloop>
 </cfoutput>
@@ -55,21 +109,55 @@
 
 	<CFIF ThisApprovalType EQ 4>
 		<cfif appSettings.getApproveLSComponentByProfile() NEQ 1>
-			<cfquery name="GetLumpSums" datasource="#application.datasource#">
+			<cfset useLakebaseForGetLumpSums = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_name")>
+<cfif useLakebaseForGetLumpSums>
+	<cftry>
+		<cfset GetLumpSums = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_name", {
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLumpSums = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLumpSums>
+<cfquery name="GetLumpSums" datasource="#application.datasource#">
 				SELECT *
 				FROM Program_Lump_Sum_Name
 				WHERE Deleted = 0
 				AND Active = 1
 			</cfquery>
+</cfif>
 			<cfloop query="GetLumpSums">
 				<cfset lsNameID = GetLumpSums.Program_Lump_Sum_Name_ID>
 				<cfparam name="Form.Program_LSN_#lsNameID#" default="1">
  				<cfset FieldValue = Evaluate("Form.Program_LSN_#lsNameID#")>
-				<cfquery name="UpdateLumpSums" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdateLumpSums = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_name")>
+<cfif useLakebaseForUpdateLumpSums>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_lump_sum_name",
+			{
+				"program_lump_sum_name_id" = "eq.#GetLumpSums.Program_Lump_Sum_Name_ID#"
+			},
+			{
+				"setting_display_value" = "#FieldValue#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLumpSums = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLumpSums>
+<cfquery name="UpdateLumpSums" datasource="#application.datasource#">
 					update Program_Lump_Sum_Name
 					set Setting_Display_Value = #FieldValue#
 					where 	Program_Lump_Sum_Name_ID = #GetLumpSums.Program_Lump_Sum_Name_ID#
 				</cfquery>
+</cfif>
 			</cfloop>
 		</cfif>
 	</CFIF>
@@ -83,30 +171,81 @@
 		<cfset ProgramPostApprovalStatusID = qGetProgramPostApprovalStatus.Program_Post_Approval_Status_ID>
 		<cfparam name="Form.ProfileProgramPostApprovalStatus_#ProgramPostApprovalStatusID#" default="1">
 		<cfset FieldValueProgramPostApprovalStatus = Evaluate("Form.ProfileProgramPostApprovalStatus_#ProgramPostApprovalStatusID#")>
-		<cfquery name="UpdateProgramPostApprovalStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateProgramPostApprovalStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_post_approval_status")>
+<cfif useLakebaseForUpdateProgramPostApprovalStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_post_approval_status",
+			{
+				"program_post_approval_status_id" = "eq.#qGetProgramPostApprovalStatus.Program_Post_Approval_Status_ID#"
+			},
+			{
+				"setting_display_value" = "#FieldValueProgramPostApprovalStatus#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateProgramPostApprovalStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateProgramPostApprovalStatus>
+<cfquery name="UpdateProgramPostApprovalStatus" datasource="#application.datasource#">
 			update Program_Post_Approval_Status
 			set Setting_Display_Value = #FieldValueProgramPostApprovalStatus#
 			where 	Program_Post_Approval_Status_ID = #qGetProgramPostApprovalStatus.Program_Post_Approval_Status_ID#
 		</cfquery>
+</cfif>
 	</cfloop>
 </cfif>	
 
 <cfset UseCustomerType = appSettings.getCustomertype()>
 <cfif UseCustomerType IS 1>
-	<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForGetCustomerTypes>
+	<cftry>
+		<cfset GetCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustomerTypes>
+<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
 		SELECT *
 		FROM Customer_Type
 		WHERE Deleted = 0
 	</cfquery>
+</cfif>
 	<CFLOOP query="GetCustomerTypes">
 		<cfset j = GetCustomerTypes.customer_type_id>
 		<cfparam name="Form.Customer_Type_#j#" default="1">
 		<cfset FieldValueGetCustomerTypes = Evaluate("Form.Customer_Type_#j#")>
-		<cfquery name="UpdateCustomer_Type" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateCustomer_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForUpdateCustomer_Type>
+	<cftry>
+		<cfset application.oLakebase.updateRows("customer_type",
+			{
+				"customer_type_id" = "eq.#j#"
+			},
+			{
+				"setting_display_value" = "#FieldValueGetCustomerTypes#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateCustomer_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateCustomer_Type>
+<cfquery name="UpdateCustomer_Type" datasource="#application.datasource#">
 			update Customer_Type
 			set Setting_Display_Value = #FieldValueGetCustomerTypes#
 			where 	customer_type_id = #j#
 		</cfquery>
+</cfif>
 	</CFLOOP>
 </cfif>
 

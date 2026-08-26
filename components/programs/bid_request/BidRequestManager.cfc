@@ -18,7 +18,23 @@
 		<cfset rBidReqObj = CreateObject("component", "components.programs.bid_request.BidRequest") />
 
 		<!---grab bid request data from db for this program id. if there is no record then an empty BidRequest object will get returned--->
-		<cfquery name="qGetBidRequest" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBidRequest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForqGetBidRequest>
+	<cftry>
+		<cfset qGetBidRequest = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "program_bid_request_id,open_date,open_time,date_needed,expected_reply_date,line_item,bid_request_status_id,status_changed_by,status_changed_date,program_bid_source_id,program_bid_source_type_id"
+			}), "program_bid_request_id,open_date,open_time,date_needed,expected_reply_date,line_item,bid_request_status_id,status_changed_by,status_changed_date,program_bid_source_id,program_bid_source_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBidRequest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBidRequest>
+<cfquery name="qGetBidRequest" datasource="#application.datasource#">
 
 			SELECT 	Program_Bid_Request_ID,
 					Open_Date,
@@ -36,6 +52,7 @@
 			AND		Program_ID = #arguments.programId#
 
 		</cfquery>
+</cfif>
 
 		<cfloop query="qGetBidRequest">
 
@@ -205,19 +222,52 @@
 
 		<cfset CreateObject("component", "components.programs.bid_request.BidRequestProductStatusManager").saveBidRequestProductStatus(arguments.programId, arguments.statusId) />
 
-		<cfquery name="qCheckProgramApproved" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckProgramApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqCheckProgramApproved>
+	<cftry>
+		<cfset qCheckProgramApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "approved"
+			}), "approved"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckProgramApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckProgramApproved>
+<cfquery name="qCheckProgramApproved" datasource="#application.datasource#">
 			SELECT	Approved
 			FROM	Contract_Main
 			WHERE	contract_main_id = #arguments.programId#
 		</cfquery>
+</cfif>
 
-		<CFQUERY NAME="checkRevision" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckRevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckRevision>
+	<cftry>
+		<cfset checkRevision = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "revision_of_contract_main_id,contract_status_type_idx"
+			}), "revision_of_contract_main_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckRevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckRevision>
+<CFQUERY NAME="checkRevision" datasource="#application.datasource#">
 			SELECT	Revision_Of_Contract_Main_ID,
 					Contract_Status_Type_IDX
 			FROM	Contract_Main
 			WHERE 	Deleted = 0
 			AND		Contract_Main_ID = '#arguments.programId#'
 		</CFQUERY>
+</cfif>
 
 		<cfset revisionId = trim(checkRevision.Revision_Of_Contract_Main_ID) />
 
@@ -229,12 +279,31 @@
 				<!---if the Revision_Of_Contract_Main_ID is not null then set the parent to deleted --->
 				<cfif (revisionId neq "" or revisionId neq 0) and checkRevision.Contract_Status_Type_IDX eq 5 OR checkRevision.Contract_Status_Type_IDX eq 6>
 
-					<CFQUERY NAME="updateParentRevision" datasource="#application.datasource#">
+					<cfset useLakebaseForupdateParentRevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdateParentRevision>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#revisionId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateParentRevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateParentRevision>
+<CFQUERY NAME="updateParentRevision" datasource="#application.datasource#">
 						UPDATE 	Contract_Main
 						SET 	Deleted = 1
 						WHERE 	Deleted = 0
 						AND		Contract_Main_ID = '#revisionId#'
 					</CFQUERY>
+</cfif>
 
 				</cfif>
 
@@ -244,12 +313,31 @@
 
 		<!---set all products to lost--->
 		<cfif arguments.statusId eq 4>
-			<CFQUERY NAME="setBidProdsToLost" datasource="#application.datasource#">
+			<cfset useLakebaseForsetBidProdsToLost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request_product")>
+<cfif useLakebaseForsetBidProdsToLost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_bid_request_product",
+			{
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#"
+			},
+			{
+				"won" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsetBidProdsToLost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsetBidProdsToLost>
+<CFQUERY NAME="setBidProdsToLost" datasource="#application.datasource#">
 				UPDATE 	Program_Bid_Request_Product
 				SET 	Won = 0
 				WHERE 	Deleted = 0
 				AND		Program_ID = #arguments.programId#
 			</CFQUERY>
+</cfif>
 		</cfif>
 
 		<!---handle revision--->
@@ -263,11 +351,29 @@
 		</cfif>
 
 		<!--- Dev Note: 12814; - This query fires the trigger on Contract_Main, which sets the status of the contract --->
-			<CFQUERY NAME="updStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForupdStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#arguments.programId#"
+			},
+			{
+				"deleted" = "Deleted"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdStatus>
+<CFQUERY NAME="updStatus" datasource="#application.datasource#">
 			 UPDATE 	Contract_Main
 			 SET 	Deleted = Deleted
 			 WHERE 	Contract_Main_ID = #arguments.programId#
 			</CFQUERY>
+</cfif>
 
 		<!---delete the temp file if it exists--->
 		<cfif FileExists("#Application.Doc_Path#\Temp_Files\Program\View_Program_#arguments.programId#.htm")>

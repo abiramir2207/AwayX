@@ -1,9 +1,25 @@
 <cfif isDefined("blnSubmit")>
-	<cfquery name="getCurrentNotes" datasource="#application.datasource#">
+	<cfset useLakebaseForgetCurrentNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForgetCurrentNotes>
+	<cftry>
+		<cfset getCurrentNotes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#form.Work_Request_ID#",
+				"select" = "notes as notesprevious"
+			}), "notes as notesprevious"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentNotes>
+<cfquery name="getCurrentNotes" datasource="#application.datasource#">
 		select  Notes as NotesPrevious
 		from Work_Request
 		where Work_Request_ID = '#form.Work_Request_ID#'
 	</cfquery>
+</cfif>
 	<cfquery name="UpdateNotes" datasource="#application.datasource#">
 		UPDATE Work_Request
 		SET Notes = <cfqueryparam value="#form.Notes#">
@@ -11,16 +27,47 @@
 	</cfquery>
 
 	<cfoutput>
-	<cfquery name="GetUserInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.accessStructure.User_ID#",
+				"select" = "name_first,name_last,user_email"
+			}), "name_first,name_last,user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+<cfquery name="GetUserInfo" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last, User_Email
 		FROM _Users WHERE User_ID = '#request.accessStructure.User_ID#'
 	</cfquery>
+</cfif>
 
 	<cfif form.Notes NEQ getCurrentNotes.NotesPrevious>
-		<cfquery name="SupportEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email"
+			}), "ba_support_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+<cfquery name="SupportEmail" datasource="#application.datasource#">
 			SELECT BA_Support_Email
 			FROM _Application_Settings
 		</cfquery>
+</cfif>
 
 		<CFIF application.oApplicationAppSettingsManager.getApplicationAppSettings().getWebserviceOn() EQ 1>
 

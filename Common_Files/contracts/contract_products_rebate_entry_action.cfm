@@ -1,8 +1,23 @@
+<cfset useLakebaseForGetExistingProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetExistingProducts>
+	<cftry>
+		<cfset GetExistingProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetExistingProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetExistingProducts>
 <cfquery name="GetExistingProducts" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Products
 	WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
-</cfquery>	
+</cfquery>
+</cfif>	
 <CFLOOP INDEX="LoopCount" FROM="1" TO="#Form.ProductCount#" STEP="1">
 	<CFIF isdefined("FORM.UPC_#LoopCount#")>
 		<CFQUERY NAME="UpdateContractProductsRebate" datasource="#application.datasource#">

@@ -161,22 +161,70 @@ function confirmCompletion(disableClickedButtonName)
 				Contract_Main.ProgramType_ID = PCPO.ProgramControl_Panel_Options_ID
 	Where		Contract_Main_ID	=	#URL.Contract_Main_ID#
 </CFQUERY>
+<cfset useLakebaseForgetCreatorEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetCreatorEmail>
+	<cftry>
+		<cfset getCreatorEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Program_Details.Creator_ID#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCreatorEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCreatorEmail>
 <cfquery name="getCreatorEmail" datasource="#application.datasource#">
 	Select User_Email
 	From _Users
 	Where User_ID = '#Get_Program_Details.Creator_ID#'
 </cfquery>
+</cfif>
+<cfset useLakebaseForgetRSPEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetRSPEmail>
+	<cftry>
+		<cfset getRSPEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Program_Details.Responsible_User_ID#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRSPEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRSPEmail>
 <cfquery name="getRSPEmail" datasource="#application.datasource#">
 	Select User_Email
 	From _Users
 	Where User_ID = '#Get_Program_Details.Responsible_User_ID#'
 </cfquery>
+</cfif>
 <cfif url.EZTemplate EQ 1>
+<cfset useLakebaseForGet_Template_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGet_Template_Details>
+	<cftry>
+		<cfset Get_Template_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#Get_Program_Details.programtype_id#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Template_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Template_Details>
 <CFQUERY NAME="Get_Template_Details" datasource="#application.datasource#">
 	Select		created_type
 	From		Program_Control_Panel_Options
 	Where		ProgramControl_Panel_Options_ID	=	#Get_Program_Details.programtype_id#
 </CFQUERY>
+</cfif>
 </cfif>
 
 <!--- Get the broker emails --->

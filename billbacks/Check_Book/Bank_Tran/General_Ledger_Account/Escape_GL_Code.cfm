@@ -21,7 +21,23 @@
 
 
 <CFIF IsDefined("URL.Pay_Multi_Billbacks_ID")>
-	<CFQUERY NAME="GetAllMultiPRBB" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetAllMultiPRBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks_list")>
+<cfif useLakebaseForGetAllMultiPRBB>
+	<cftry>
+		<cfset GetAllMultiPRBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pay_multi_billbacks_list", {
+				"pay_multi_billbacks_id" = "eq.#URL.Pay_Multi_Billbacks_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllMultiPRBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllMultiPRBB>
+<CFQUERY NAME="GetAllMultiPRBB" DATASOURCE="#Application.Datasource#">
 		SELECT 	Billback_ID 
 		
 		FROM 	Pay_Multi_Billbacks_List 
@@ -29,6 +45,7 @@
 		WHERE 	Pay_Multi_Billbacks_ID = '#URL.Pay_Multi_Billbacks_ID#' AND 
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<CFSET BBList = VALUELIST(GetAllMultiPRBB.Billback_ID)>	
 <CFELSE>
@@ -52,9 +69,24 @@
 			
 			WHERE 			Billback.Billback_ID = '#ListBBID#' AND Deleted = 0
 		</CFQUERY>
-		<CFQUERY NAME="GetPayeeInfo" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_transaction")>
+<cfif useLakebaseForGetPayeeInfo>
+	<cftry>
+		<cfset GetPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_transaction", {
+				"payment_trans_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeInfo>
+<CFQUERY NAME="GetPayeeInfo" DATASOURCE="#Application.Datasource#">
 			SELECT * FROM Payment_Transaction WHERE Payment_Trans_ID = '#URL.RID#'
 		</CFQUERY>
+</cfif>
 		
 		<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 		<!--- Insert Data in Payment_Data_Export_1--->

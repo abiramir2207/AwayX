@@ -10,10 +10,25 @@
 <cfset qExportPullDetails = application.oBBReportGet.getExportPullDetails(URL.BB_Auto_Report_id) />
 <cfset qExportPullLabels = application.oBBReportGet.getExportPullLabels() />
 <cfset qExportPullLabelsColumnList = valueList(qExportPullLabels.DB_Col_Name) >
+<cfset useLakebaseForqExportPullDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qexportpulldetails")>
+<cfif useLakebaseForqExportPullDetails>
+	<cftry>
+		<cfset qExportPullDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qexportpulldetails", {
+				"select" = "#qexportpulllabelscolumnlist#"
+			}), "#qexportpulllabelscolumnlist#"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqExportPullDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqExportPullDetails>
 <cfquery name="qExportPullDetails" dbtype="query">
 	SELECT #qExportPullLabelsColumnList#
 	FROM qExportPullDetails
 </cfquery>
+</cfif>
 
 <!--- Assume we get passed a legit id --->
 <cfif BB_Auto_Report_id>
@@ -82,10 +97,25 @@
 	<!--- Create list of columns to pull data in the order desired --->
 	<cfset BBcolList = qExportBBLabelsColumnList>
 	
-	<cfquery name="qExportBBDetails" dbtype="query">
+	<cfset useLakebaseForqExportBBDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetexportdetails")>
+<cfif useLakebaseForqExportBBDetails>
+	<cftry>
+		<cfset qExportBBDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetexportdetails", {
+				"select" = "#qexportbblabelscolumnlist#,unit_of_measure_desc"
+			}), "#qexportbblabelscolumnlist#,unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqExportBBDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqExportBBDetails>
+<cfquery name="qExportBBDetails" dbtype="query">
 		SELECT #qExportBBLabelsColumnList#,Unit_Of_Measure_Desc
 		FROM qGetExportDetails
 	</cfquery>
+</cfif>
 	
 	
 	<!--- Write out the content to save to the file -- will display as written so be careful of white space --->

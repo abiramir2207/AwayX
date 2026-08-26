@@ -1,8 +1,24 @@
+<cfset useLakebaseForCheckUsername = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCheckUsername>
+	<cftry>
+		<cfset CheckUsername = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_code" = "eq.#URL.Username#",
+				"select" = "name_first"
+			}), "name_first"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckUsername = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckUsername>
 <CFQUERY NAME="CheckUsername" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT Name_First
 	FROM _Users
 	WHERE user_code = '#URL.Username#'
 </CFQUERY>
+</cfif>
 
 
 

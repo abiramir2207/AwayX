@@ -13,11 +13,26 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 
+<cfset useLakebaseForGet_Bank_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_bank_info")>
+<cfif useLakebaseForGet_Bank_Info>
+	<cftry>
+		<cfset Get_Bank_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_bank_info", {
+				"order" = "bank_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Bank_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Bank_Info>
 <CFQUERY NAME="Get_Bank_Info" datasource="#application.datasource#">
 	Select		*
 	From		Company_Bank_Info
 	Order by	Bank_Name
 </CFQUERY>
+</cfif>
 
 <CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
 
@@ -61,11 +76,26 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->				
 <CFPARAM NAME="URL.RID" DEFAULT="0">
 
+<cfset useLakebaseForGet_Item = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_bank_info")>
+<cfif useLakebaseForGet_Item>
+	<cftry>
+		<cfset Get_Item = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_bank_info", {
+				"bank_info_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Item = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Item>
 <CFQUERY NAME="Get_Item" datasource="#application.datasource#">
 	Select		*
 	From		Company_Bank_Info
 	Where		Bank_Info_Id='#URL.RID#'
 </CFQUERY>
+</cfif>
 
 
 <CFPARAM NAME="Get_Item.Bank_Name" DEFAULT="">
@@ -132,9 +162,24 @@ function alert_and_delete()
 					<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 					<!--- Get the number of projects that have this sponsor: If there is at least 1 project that is active and has this sponsor, then I will not allow the user to delete this sponsor --->
 					<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-						<CFQUERY NAME="Delete_Check" DATASOURCE="#Application.datasource#">
+						<cfset useLakebaseForDelete_Check = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_bank_info")>
+<cfif useLakebaseForDelete_Check>
+	<cftry>
+		<cfset Delete_Check = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_bank_info", {
+				"bank_info_deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Check = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Check>
+<CFQUERY NAME="Delete_Check" DATASOURCE="#Application.datasource#">
 							SELECT * FROM Company_Bank_Info WHERE Bank_Info_Deleted = 0						
 						</CFQUERY>
+</cfif>
 						<CFIF Delete_Check.recordcount LT 2>
 							<CFSET disabled = "DISABLED">
 						</CFIF>

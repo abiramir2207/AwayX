@@ -337,21 +337,53 @@ order by Type_Code_Desc.Type_Code_Desc
 
 <cffunction name="getThisProgramsStatus" access="public" returntype="query">
 <cfargument name="program_id" type="string" required="true" />
+<cfset useLakebaseForqgetThisProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqgetThisProgramsStatus>
+	<cftry>
+		<cfset qgetThisProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.program_id#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+			}), "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetThisProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetThisProgramsStatus>
 <CFQUERY NAME="qgetThisProgramsStatus" datasource="#application.datasource#">
 			SELECT Contract_Status_Type_IDX, Revision_Of_Contract_Main_ID, Broker_User_ID, Contract_Number, Contract_Title,Adv_Spending_Amount
 			FROM Contract_main
 			WHERE Contract_main_ID = #arguments.program_id#
 		</CFQUERY>
+</cfif>
 	<cfreturn qgetThisProgramsStatus />
 </cffunction>
 
 <cffunction name="checkParentStats" access="public" returntype="query">
 <cfargument name="Revision_Of_Contract_Main_ID" type="string" required="true" />
+<cfset useLakebaseForqcheckParentStats = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqcheckParentStats>
+	<cftry>
+		<cfset qcheckParentStats = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Revision_Of_Contract_Main_ID#",
+				"select" = "contract_main_id,contract_status_type_idx"
+			}), "contract_main_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqcheckParentStats = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqcheckParentStats>
 <CFQUERY NAME="qcheckParentStats" datasource="#application.datasource#">
 				SELECT Contract_Main_ID, Contract_Status_Type_IDX
 				FROM Contract_Main
 				WHERE Contract_Main_ID = #arguments.Revision_Of_Contract_Main_ID#
 			</CFQUERY>
+</cfif>
 	<cfreturn qcheckParentStats />
 </cffunction>
 

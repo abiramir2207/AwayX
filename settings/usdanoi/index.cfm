@@ -6,39 +6,115 @@
 <SCRIPT SRC="/script/javascript/string_functions.js"></SCRIPT>
 
 <!--- get NOI enabled or disabled --->
+<cfset useLakebaseForGet_NOI_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGet_NOI_Status>
+	<cftry>
+		<cfset Get_NOI_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "usdanoi_enabled"
+			}), "usdanoi_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_NOI_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_NOI_Status>
 <CFQUERY NAME="Get_NOI_Status" datasource="#application.datasource#">
 	SELECT usdanoi_enabled
 	FROM _Application_Settings
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFPARAM NAME="URL.RID" DEFAULT="0">
+<cfset useLakebaseForGet_EDPS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds")>
+<cfif useLakebaseForGet_EDPS>
+	<cftry>
+		<cfset Get_EDPS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usda_noi_epds", {
+				"order" = "name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_EDPS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_EDPS>
 <CFQUERY NAME="Get_EDPS" datasource="#application.datasource#">
 	Select		*
 	From		usda_noi_epds
 	Order by	Name
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForGet_LastUpdated_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("global_last_edited_by")>
+<cfif useLakebaseForGet_LastUpdated_Details>
+	<cftry>
+		<cfset Get_LastUpdated_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("global_last_edited_by", {
+				"global_last_edited_by_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_LastUpdated_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_LastUpdated_Details>
 <CFQUERY NAME="Get_LastUpdated_Details" datasource="#application.datasource#">
 	Select		*
 	From		Global_Last_Edited_By
 	WHERE		Global_Last_Edited_By_ID = 1
 </CFQUERY>
+</cfif>
 
 <CFIF len(trim(Get_LastUpdated_Details.User_ID)) NEQ 0>
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_LastUpdated_Details.User_ID#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT _Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 		FROM _Users
 		WHERE User_ID = '#Get_LastUpdated_Details.User_ID#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 <!--- establish USDA I agrre and time --->
+<cfset useLakebaseForgetCurrentSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetCurrentSettings>
+	<cftry>
+		<cfset getCurrentSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "usdanoi_i_agree_enabled,usdanoi_summary_time,usdanoi_summary_email"
+			}), "usdanoi_i_agree_enabled,usdanoi_summary_time,usdanoi_summary_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentSettings>
 <cfquery name="getCurrentSettings" datasource="#application.datasource#">
 	SELECT USDANOI_I_Agree_Enabled, USDANOI_Summary_Time, USDANOI_Summary_Email
 	FROM general_Settings
 </cfquery>
+</cfif>
 <cfset  form.i_agree_status = getCurrentSettings.USDANOI_I_Agree_Enabled>
 
 <cfset sumHour = Hour(getCurrentSettings.USDANOI_Summary_Time)>
@@ -128,11 +204,26 @@
 <CFPARAM NAME="Get_Item.PM_Status_ID" DEFAULT="">
 <CFPARAM NAME="Get_Item.PM_Status_Deleted" DEFAULT="0">
 
+<cfset useLakebaseForGet_Item = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds")>
+<cfif useLakebaseForGet_Item>
+	<cftry>
+		<cfset Get_Item = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usda_noi_epds", {
+				"usda_noi_epds_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Item = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Item>
 <CFQUERY NAME="Get_Item" datasource="#application.datasource#">
 	Select		*
 	From		usda_noi_epds
 	Where		usda_noi_epds_id	=	'#URL.RID#'
 </CFQUERY>
+</cfif>
 
 <SCRIPT language="JavaScript">
 function alert_and_delete()

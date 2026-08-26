@@ -10,11 +10,26 @@
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFPARAM NAME="URL.RID" DEFAULT="0">
+<cfset useLakebaseForGet_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_status")>
+<cfif useLakebaseForGet_Status>
+	<cftry>
+		<cfset Get_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_status", {
+				"order" = "pm_status_description.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Status>
 <CFQUERY NAME="Get_Status" datasource="#application.datasource#">
 	Select		*
 	From		PM_Status
 	Order by	PM_Status_Description
 </CFQUERY>
+</cfif>
 <CFQUERY NAME="Get_LastUpdated_Details" datasource="#application.datasource#">
 	Select		TOP 1*
 	From		PM_Status

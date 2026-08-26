@@ -443,11 +443,27 @@ Note: These are the steps:
             We do NOT want the user_id visible in the pdf info. [end] --->
               
 			<cfif len(trim(variables.qGetDisLetters.distributor_id))>
-                <cfquery name="getdisemailaddress" dbtype="query">
+                <cfset useLakebaseForgetdisemailaddress = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdistributoremail")>
+<cfif useLakebaseForgetdisemailaddress>
+	<cftry>
+		<cfset getdisemailaddress = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdistributoremail", {
+				"bsa_foodservice_customers_id" = "eq.#variables.qGetDisLetters.distributor_id#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetdisemailaddress = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetdisemailaddress>
+<cfquery name="getdisemailaddress" dbtype="query">
                 select distinct user_email from
                 getdistributoremail 
                 where bsa_foodservice_customers_id = '#variables.qGetDisLetters.distributor_id#'
                 </cfquery>
+</cfif>
                 <cfset emailaddresslist = ValueList(getdisemailaddress.user_email)>
             <cfelse>
             	<cfset emailaddresslist = "">

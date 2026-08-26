@@ -10,10 +10,25 @@
 <cfset fileDir = "#Application.Doc_Path#\data_Files\created\contracts\RebateData\" />
 
 <!---loop over the dir and delete all the files--->
+<cfset useLakebaseForgetrebatefilestodelete = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_protection_schedule_contracts")>
+<cfif useLakebaseForgetrebatefilestodelete>
+	<cftry>
+		<cfset getrebatefilestodelete = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_protection_schedule_contracts", {
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetrebatefilestodelete = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetrebatefilestodelete>
 <cfquery name="getrebatefilestodelete" datasource="#application.datasource#">
 	 select distinct PROGRAM_ID
 	from Price_Protection_Schedule_Contracts 
 </cfquery>
+</cfif>
 <cfoutput query="getrebatefilestodelete"> 
 	
 	<cftry>

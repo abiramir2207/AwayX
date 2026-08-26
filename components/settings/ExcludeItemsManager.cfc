@@ -117,7 +117,23 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 
   <!--- This function gets the Active items in the Exclusion List --->
 	<cffunction name="getActiveItemsExclude" output="false" returntype="Query" >
-		<cfquery name="qGetItemsExclude" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetItemsExclude = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_item_exclusion")>
+<cfif useLakebaseForqGetItemsExclude>
+	<cftry>
+		<cfset qGetItemsExclude = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_item_exclusion", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "margin_item_exclusion_id,margin_item_exclusion_code,margin_item_exclusion_name,include_on_volume,created_date,active,deleted,created_by,updated_by,updated_on"
+			}), "margin_item_exclusion_id,margin_item_exclusion_code,margin_item_exclusion_name,include_on_volume,created_date,active,deleted,created_by,updated_by,updated_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetItemsExclude = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetItemsExclude>
+<cfquery name="qGetItemsExclude" datasource="#application.datasource#">
 			SELECT
         Margin_Item_Exclusion_ID,
         Margin_Item_Exclusion_Code,
@@ -133,6 +149,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
       WHERE Deleted = 0
       AND Active = 1
     	</cfquery>
+</cfif>
 		<cfreturn qGetItemsExclude />
   </cffunction>
 

@@ -31,11 +31,26 @@
       <cfset value = #form.option1#>
     </cfif>
 
-        <cfquery name="checkname" datasource="#application.datasource#">
+        <cfset useLakebaseForcheckname = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications")>
+<cfif useLakebaseForcheckname>
+	<cftry>
+		<cfset checkname = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_qualifications", {
+				"qualification_name" = "eq.#form.requirement_name#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckname = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckname>
+<cfquery name="checkname" datasource="#application.datasource#">
           SELECT *
           FROM Program_Qualifications
           WHERE qualification_name = '#form.requirement_name#'
         </cfquery>
+</cfif>
         <cfif checkname.recordcount EQ 0>
           <!--- insert the record --->
           <cfquery name="save_data" datasource="#application.datasource#">
@@ -81,7 +96,29 @@
       </cfif>
     </cfloop>
 
-    <cfquery name="update_data" datasource="#application.datasource#">
+    <cfset useLakebaseForupdate_data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications")>
+<cfif useLakebaseForupdate_data>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_qualifications",
+			{
+				"program_qualification_id" = "eq.#form.program_qualification_id#"
+			},
+			{
+				"qualification_name" = "#form.requirement_name#",
+				"type" = "#form.type#",
+				"value" = "#value#",
+				"isactive" = "#form.active#",
+				"updated_by" = "#request.AccessStructure.User_ID#",
+				"store_operator_type" = "#form.Store_Operator_Type#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdate_data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdate_data>
+<cfquery name="update_data" datasource="#application.datasource#">
       UPDATE Program_Qualifications
       SET qualification_name = '#form.requirement_name#',
       type = #form.type#,
@@ -91,6 +128,7 @@
 	  Store_Operator_Type = '#form.Store_Operator_Type#'
       WHERE Program_Qualification_id = '#form.program_qualification_id#'
     </cfquery>
+</cfif>
     </cfif>
 </cfif>
 
@@ -122,12 +160,28 @@
 </table>
     </CFIF>
 
+<cfset useLakebaseForvariables_qRows = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications")>
+<cfif useLakebaseForvariables_qRows>
+	<cftry>
+		<cfset variables.qRows = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_qualifications", {
+				"deleted" = "eq.0",
+				"order" = "program_qualification_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qRows = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qRows>
 <cfquery name="variables.qRows" datasource="#application.datasource#">
   select    *
   from    Program_Qualifications
   where deleted = 0
   order by Program_Qualification_ID
 </cfquery>
+</cfif>
 
 <table border="0" cellspacing="10" cellpadding="0" width="100%" style="table-layout:fixed;">
 <col width="50%">

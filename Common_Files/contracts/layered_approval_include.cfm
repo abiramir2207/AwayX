@@ -81,10 +81,25 @@
 <cfset margin_display_style = application.util.query.get_Setting("margin_display_style")>
 
 <!---TSF - Label 11072: If margin targets are enabled, then display target % at the item level--->
+<cfset useLakebaseForqGetMarginTargetEnabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqGetMarginTargetEnabled>
+	<cftry>
+		<cfset qGetMarginTargetEnabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_target_enabled"
+			}), "program_margin_target_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetMarginTargetEnabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetMarginTargetEnabled>
 <CFQUERY NAME="qGetMarginTargetEnabled" datasource="#application.datasource#">
 	SELECT 	Program_Margin_Target_Enabled
 	FROM 	General_Settings
 </CFQUERY>
+</cfif>
 <cfif trim(qGetMarginTargetEnabled.Program_Margin_Target_Enabled) eq "1">
 	<cfset marginTagetEnabled = 1 />
 </cfif>
@@ -1437,11 +1452,27 @@ function changeUnitOfTime( newUoT ) {
 	</cfif>
 </cfif>
 <!---D48315 :: Reduce Business Consideration auto pop-ups---- 8.0 Release ONLY START--->
+<cfset useLakebaseForCSLGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCSLGetContractInfo>
+	<cftry>
+		<cfset CSLGetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#contract_main_id#",
+				"select" = "broker_user_id"
+			}), "broker_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCSLGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCSLGetContractInfo>
 <CFQUERY NAME="CSLGetContractInfo" datasource="#application.datasource#">
 	SELECT Broker_User_ID
 	FROM  Contract_main
 	WHERE Contract_Main_ID = '#contract_main_id#'
 </cfquery>
+</cfif>
 <!---D48315 :: Reduce Business Consideration auto pop-ups---- 8.0 Release ONLY END --->
 <script>
 function submitreject()

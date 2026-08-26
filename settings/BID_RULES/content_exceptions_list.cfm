@@ -8,12 +8,29 @@
 	</cfif>
 </cfloop>
 
+<cfset useLakebaseForgetExeptionGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_groups")>
+<cfif useLakebaseForgetExeptionGroups>
+	<cftry>
+		<cfset getExeptionGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("exception_groups", {
+				"deleted" = "eq.0",
+				"order" = "group_name.asc",
+				"select" = "exception_group_id,group_name"
+			}), "exception_group_id,group_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExeptionGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExeptionGroups>
 <cfquery name="getExeptionGroups" datasource="#application.datasource#">
 	SELECT Exception_Group_ID, Group_Name
 	FROM Exception_Groups
 	WHERE Deleted = 0
 	ORDER By Group_Name
 </cfquery>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 

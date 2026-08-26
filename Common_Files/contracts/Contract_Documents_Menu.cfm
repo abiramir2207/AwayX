@@ -90,12 +90,28 @@ FUNCTIONALITY:
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForAttachmentCount>
-		<CFQUERY NAME="Attachment_Count" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForAttachment_Count = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForAttachment_Count>
+	<cftry>
+		<cfset Attachment_Count = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAttachment_Count = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAttachment_Count>
+<CFQUERY NAME="Attachment_Count" DATASOURCE="#application.datasource#">
 			SELECT 	*
 			FROM	Contract_Attachments
 			WHERE	Program_ID = '#FORM.Contract_Main_ID#'
 			AND		Deleted=0
 		</CFQUERY>
+</cfif>
 	</cfif>
 </cfif>
 

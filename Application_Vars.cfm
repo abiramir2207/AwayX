@@ -201,10 +201,25 @@
 </cfif>
 
 <cfif NOT StructKeyExists(Application, "Session_Expiration_Length")>
-	<CFQUERY NAME="Get_Session_Window" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Session_Window = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGet_Session_Window>
+	<cftry>
+		<cfset Get_Session_Window = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "session_expiration_length"
+			}), "session_expiration_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Window = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Window>
+<CFQUERY NAME="Get_Session_Window" datasource="#application.datasource#">
 		SELECT	Session_Expiration_Length
 		FROM	General_Settings
 	</CFQUERY>
+</cfif>
 
 	<!--- If there is no data in the session expiration field, put 15 minutes in there --->
 	<CFIF Get_Session_Window.recordcount EQ 0>

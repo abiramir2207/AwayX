@@ -124,9 +124,25 @@ So you need to pass this code to this page depending on the type of note.
 <cfif isDefined("url.CID")>
 	<cf_cryp type="de" key="#request.key#" string="#URL.CID#">
 
-	<cfquery name="qContractNumber" datasource="#application.datasource#">
+	<cfset useLakebaseForqContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqContractNumber>
+	<cftry>
+		<cfset qContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "contract_number,is_a_revision,programtype_id,reset_user_id"
+			}), "contract_number,is_a_revision,programtype_id,reset_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqContractNumber>
+<cfquery name="qContractNumber" datasource="#application.datasource#">
 		select contract_number,Is_A_Revision, ProgramType_ID, Reset_User_ID from contract_main where contract_main_id = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 	<!--- D11689: On Revision force Biz Considerations --->
 	<cfset TemplateRevisionSettings = CreateObject("component", "components.programs.template.TemplateManager").getTemplateRevisionSettings(qContractNumber.ProgramType_ID) />
@@ -258,13 +274,30 @@ So you need to pass this code to this page depending on the type of note.
 
 <!--- Query which gets the details of the record which needs to be updated. --->
 <cfif editRecord gt 0>
-	<cfquery name="qEvaluationNotesEdit" datasource="#application.datasource#">
+	<cfset useLakebaseForqEvaluationNotesEdit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_evaluation_notes")>
+<cfif useLakebaseForqEvaluationNotesEdit>
+	<cftry>
+		<cfset qEvaluationNotesEdit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_evaluation_notes", {
+				"contract_number" = "eq.#qContractNumber.Contract_Number#",
+				"contract_evaluation_notes_id" = "eq.#editRecord#",
+				"select" = "contract_evaluation_notes_id,notes"
+			}), "contract_evaluation_notes_id,notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqEvaluationNotesEdit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqEvaluationNotesEdit>
+<cfquery name="qEvaluationNotesEdit" datasource="#application.datasource#">
 			select 	Contract_Evaluation_Notes.Contract_Evaluation_Notes_ID,
 				Contract_Evaluation_Notes.Notes
 			from 	Contract_Evaluation_Notes
 			where 	Contract_Evaluation_Notes.Contract_Number = '#qContractNumber.Contract_Number#'
 			and Contract_Evaluation_Notes.Contract_Evaluation_Notes_ID = #editRecord#
 	</cfquery>
+</cfif>
 </cfif>
  <!--- Query which gets all the records. --->
 <cfquery name="qEvaluationNotes" datasource="#application.datasource#">

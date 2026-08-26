@@ -33,9 +33,25 @@
 <CFSET CSL_CallingPageCode = "sys"> 
 <CFSET FORM.Contract_Main_ID = cryp.value>
 	
-	<cfquery name="getContractNumber" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetContractNumber>
+	<cftry>
+		<cfset getContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractNumber>
+<cfquery name="getContractNumber" datasource="#application.datasource#">
 	SELECT Contract_Number FROM Contract_Main WHERE Contract_Main_ID = #FORM.Contract_Main_ID#
 	</cfquery>
+</cfif>
 
 
 	 <cfquery name="GetRevisedContractInfo" datasource="#application.datasource#">

@@ -8,7 +8,22 @@
 	
 	<cffunction name="getRules" output="false" returntype="query">
 		
-		<cfquery name="qGetBusinessRules" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBusinessRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_rule")>
+<cfif useLakebaseForqGetBusinessRules>
+	<cftry>
+		<cfset qGetBusinessRules = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_rule", {
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_rule_id,rebates_component_rule_desc,unit_of_measure_id,cost_impact,cost_impact_uom"
+			}), "program_rebates_component_rule_id,rebates_component_rule_desc,unit_of_measure_id,cost_impact,cost_impact_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBusinessRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBusinessRules>
+<cfquery name="qGetBusinessRules" datasource="#application.datasource#">
 			
 			SELECT	Program_Rebates_Component_Rule_ID,
 					Rebates_Component_Rule_Desc,
@@ -19,6 +34,7 @@
 			WHERE	Deleted = 0
 			
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetBusinessRules />
 		
@@ -166,7 +182,25 @@
 	
 		<cfargument name="ruleId" required="false" default="" />
 		
-		<cfquery name="qDeleteBusRule" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteBusRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_rule")>
+<cfif useLakebaseForqDeleteBusRule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_rebates_component_rule",
+			{
+				"program_rebates_component_rule_id" = "eq.#arguments.ruleId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteBusRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteBusRule>
+<cfquery name="qDeleteBusRule" datasource="#application.datasource#">
 		
 			UPDATE	Program_Rebates_Component_Rule
 			SET		Deleted = 1
@@ -174,6 +208,7 @@
 			AND		Deleted = 0
 		
 		</cfquery>
+</cfif>
 
 	</cffunction>
 	

@@ -6,11 +6,27 @@
 		<cfset ListPosition = 0>
 			<cfloop list="#FORM.report_program_id_list#" index="i">
 				<cfset ListPosition = ListPosition + 1>
-				<cfquery name="getProgramNumber" datasource="#application.datasource#">
+				<cfset useLakebaseForgetProgramNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramNumber>
+	<cftry>
+		<cfset getProgramNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#i#",
+				"select" = "contract_number,revision_version,contract_title"
+			}), "contract_number,revision_version,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramNumber>
+<cfquery name="getProgramNumber" datasource="#application.datasource#">
 				 SELECT contract_number,revision_version,contract_title
 				 FROM Contract_Main
 				 WHERE Contract_Main_ID = '#i#'
 				</cfquery>
+</cfif>
 
 				<cfset contract_number = getProgramNumber.contract_number>
 				<cfset revision_version = Right("000#getProgramNumber.revision_version#", 3)>

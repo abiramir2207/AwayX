@@ -25,11 +25,28 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForListDocType>
-	<CFQUERY NAME = "List_Doc_Type" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForList_Doc_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_type")>
+<cfif useLakebaseForList_Doc_Type>
+	<cftry>
+		<cfset List_Doc_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("document_type", {
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "doc_type"
+			}), "doc_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForList_Doc_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForList_Doc_Type>
+<CFQUERY NAME = "List_Doc_Type" DATASOURCE = "#Application.Datasource#">
 		SELECT Top 1 Doc_Type
 		FROM Document_Type
 		WHERE Deleted = 0
 	</CFQUERY>
+</cfif>
 </cfif>
 	
 <!--- In the database Table "Document_Details", the column "Public_View" of 1 actually means private rather than public and so

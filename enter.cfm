@@ -93,10 +93,25 @@ This is a major revision of a previous version of the login.  We now count unsuc
 	</cfif>
 <cfelse>
 	<!--- Continue with the regular approval process. --->
-	<cfquery name="GetMaximumAttempts" datasource="#application.datasource#">
+	<cfset useLakebaseForGetMaximumAttempts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGetMaximumAttempts>
+	<cftry>
+		<cfset GetMaximumAttempts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "login_attempts"
+			}), "login_attempts"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMaximumAttempts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMaximumAttempts>
+<cfquery name="GetMaximumAttempts" datasource="#application.datasource#">
 		SELECT 	Login_Attempts
 		FROM 	General_Settings
 	</cfquery>
+</cfif>
 
 	<cfset MaximumAttempts = GetMaximumAttempts.Login_Attempts>
 

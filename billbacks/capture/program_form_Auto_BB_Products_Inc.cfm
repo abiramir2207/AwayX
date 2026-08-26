@@ -91,10 +91,25 @@
 												
 												<CFIF CurrentProduct.Product_Type_ID EQ 1>
 													<CFIF ShowProductsInGroupLevel EQ 1>
-														<CFQUERY NAME="getProductData" DATASOURCE="#Application.Datasource#">
+														<cfset useLakebaseForgetProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_hierarchy")>
+<cfif useLakebaseForgetProductData>
+	<cftry>
+		<cfset getProductData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_hierarchy", {
+				"product_hierarchy_id" = "eq.#CurrentProduct.PRODUCT_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductData>
+<CFQUERY NAME="getProductData" DATASOURCE="#Application.Datasource#">
 															SELECT * FROM Product_Hierarchy
 															WHERE Product_Hierarchy_ID = '#CurrentProduct.PRODUCT_ID#'
-														</CFQUERY>													
+														</CFQUERY>
+</cfif>													
 													<CFELSE>
 
 														<cfquery name="getProductData" datasource="#Application.Datasource#">
@@ -119,10 +134,26 @@
 															<CFSET NewCust = replace(CurrentProduct.Distributor_ID_Earned, "-", "_", "ALL")>
 															<cfset custid = CurrentProduct.Distributor_ID_Earned>
 															<cfset SubTot = 0>
-																<CFQUERY NAME="getCustName" DATASOURCE="#Application.Datasource#">
+																<cfset useLakebaseForgetCustName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForgetCustName>
+	<cftry>
+		<cfset getCustName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#CurrentProduct.Distributor_ID_Earned#",
+				"select" = "name,shr_ship_to"
+			}), "name,shr_ship_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCustName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCustName>
+<CFQUERY NAME="getCustName" DATASOURCE="#Application.Datasource#">
 																	SELECT Name, Shr_Ship_To FROM BSA_Foodservice_customers
 																	WHERE BSA_Foodservice_customers_ID = '#CurrentProduct.Distributor_ID_Earned#'
 																</CFQUERY>
+</cfif>
 																<CFQUERY NAME="getCustRate" DATASOURCE="#Application.Datasource#">
 																	SELECT 		sum(cast(BB_Rate as float)) as Cust_rate
 																	FROM 		Billback_Product 
@@ -301,7 +332,22 @@
 															  </TD>
 															<CFELSE>
 															<CFIF xl eq 0><!--- start (don't run if export to xl is yes) ---><td></td></CFIF><!--- end (don't run if export to xl is yes) --->
-																<cfquery name="getUOMs" datasource="#application.datasource#">
+																<cfset useLakebaseForgetUOMs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUOMs>
+	<cftry>
+		<cfset getUOMs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#CurrentProduct.Volume_UOM#",
+				"select" = "unit_of_measure_id,unit_of_measure_desc,abbreviation"
+			}), "unit_of_measure_id,unit_of_measure_desc,abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUOMs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUOMs>
+<cfquery name="getUOMs" datasource="#application.datasource#">
 																	SELECT 	Unit_Of_Measure_ID,
 																			Unit_Of_Measure_Desc,
 																			Abbreviation
@@ -309,6 +355,7 @@
 																			Units_Of_Measure
 																	WHERE Unit_Of_Measure_ID = '#CurrentProduct.Volume_UOM#'
 																</cfquery>
+</cfif>
 																<!--- Display moved down below for Auto BB --->
 																<!--- <cfoutput><span style="background: White; width: 40px; padding-bottom: 1px; padding-top: 1px; border: 2px solid Black; text-align: center;">#UCase(getUOMs.Abbreviation)#</span></cfoutput> --->
 															</CFIF>
@@ -322,12 +369,29 @@
 
 																	<A tabindex="-1" href="##" onclick="return LaunchVolumeWindow('#Billback.Billback_ID#','ProgramCount_#currentProgramObject.Count_ID#_ProductCount_#CurrentProduct.Count_ID#_Volume','worksheet_#currentProgramObject.Count_ID#_ProductCount_#CurrentProduct.Count_ID#_Volume','KnownProgramForm','#CurrentProduct.PRODUCT_ID#','#CurrentProduct.Volume_UOM#','#currentProgramObject.Program_ID#','ProgramCount_#currentProgramObject.Count_ID#_ProductCount_#CurrentProduct.Count_ID#_UOM')" Title="Worksheet">
 			
-																			<cfquery name="WSVolumeEntry" dbtype="query">
+																			<cfset useLakebaseForWSVolumeEntry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("worksheetvolume")>
+<cfif useLakebaseForWSVolumeEntry>
+	<cftry>
+		<cfset WSVolumeEntry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("worksheetvolume", {
+				"product_id" = "eq.#CurrentProduct.Product_ID#",
+				"program_id" = "eq.#currentProgramObject.Program_ID#",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForWSVolumeEntry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForWSVolumeEntry>
+<cfquery name="WSVolumeEntry" dbtype="query">
 																				SELECT Program_ID
 																				FROM WorksheetVolume
 																				WHERE Product_ID = '#CurrentProduct.Product_ID#' 
 																				AND Program_ID = #currentProgramObject.Program_ID#
 																			</cfquery>
+</cfif>
 																			
 																			<cfif WSVolumeEntry.Recordcount GT 0>
 																				<img src="/images/worksheet_has_data.gif" border="0" valign="center" id="worksheet_#currentProgramObject.Count_ID#_ProductCount_#CurrentProduct.Count_ID#_Volume" ></a>

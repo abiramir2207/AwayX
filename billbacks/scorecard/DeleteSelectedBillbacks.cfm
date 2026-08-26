@@ -13,11 +13,27 @@
 	<cfloop list="#BillbacksToDelete#" index="BillbackID">
 		<cfset Billback_ID = replace(BillbackID, "_", "-", "all")>
 		
-		<cfquery name="BillbacksToDelete" datasource="#application.datasource#">
+		<cfset useLakebaseForBillbacksToDelete = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBillbacksToDelete>
+	<cftry>
+		<cfset BillbacksToDelete = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_code,bb_title,bb_amount,bb_date,auto_billback"
+			}), "bb_code,bb_title,bb_amount,bb_date,auto_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbacksToDelete = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbacksToDelete>
+<cfquery name="BillbacksToDelete" datasource="#application.datasource#">
 		SELECT BB_Code, BB_Title, BB_Amount, BB_Date, Auto_Billback
 		FROM Billback
 		WHERE Billback_ID = '#Billback_ID#'
 		</cfquery>
+</cfif>
 
 		<tr BGCOLOR="#IIf(counter Mod 2, DE('ffffff'), DE('C6FFC6'))#">
 				<td><strong>#BillbacksToDelete.BB_Code#</strong></td>

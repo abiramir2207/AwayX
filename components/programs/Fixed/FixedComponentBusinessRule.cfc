@@ -181,7 +181,25 @@
 			AND		Deleted = 0
 		
 		</cfquery>
-		<cfquery name="qDeleteBusNameRule" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteBusNameRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name_rule")>
+<cfif useLakebaseForqDeleteBusNameRule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component_name_rule",
+			{
+				"program_fixed_component_rule_id" = "eq.#arguments.ruleId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteBusNameRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteBusNameRule>
+<cfquery name="qDeleteBusNameRule" datasource="#application.datasource#">
 		
 			UPDATE	Program_Fixed_Component_Name_Rule
 			SET		Deleted = 1
@@ -189,6 +207,7 @@
 			AND		Deleted = 0
 		
 		</cfquery>
+</cfif>
 		<cfquery name="qDeleteBusHasRule" datasource="#application.datasource#">
 		
 			UPDATE	Program_Fixed_Component_Name

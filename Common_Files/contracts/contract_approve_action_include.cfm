@@ -23,11 +23,27 @@
 			ON (Contract_Main.ProgramType_ID =  Program_Control_Panel_Options.ProgramControl_Panel_Options_ID)
 		WHERE Contract_Main_ID = '#program_id#'
 	</CFQUERY>
-		<CFQUERY NAME="checkifrevision" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckifrevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckifrevision>
+	<cftry>
+		<cfset checkifrevision = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#program_id#",
+				"select" = "is_a_revision,contract_number"
+			}), "is_a_revision,contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckifrevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckifrevision>
+<CFQUERY NAME="checkifrevision" datasource="#application.datasource#">
 				SELECT Is_A_Revision,contract_number
 				FROM Contract_main
 				where Contract_Main_Id = #program_id#
-		</CFQUERY> 
+		</CFQUERY>
+</cfif> 
 		
 		<cfif checkifrevision.Is_A_Revision EQ 1>
 <!--- if it just a manual revision and not a date exclusion program, remove any of the preactive programs, once the current program becomes active or preactive --->
@@ -58,11 +74,27 @@
 						BidRequestStatusOn=CSLGetContractInfo.BidRequestStatusOn) />
 
 				
-		<CFQUERY NAME="checkifparentisactive" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckifparentisactive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckifparentisactive>
+	<cftry>
+		<cfset checkifparentisactive = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#program_id#",
+				"select" = "contract_status_type_idx"
+			}), "contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckifparentisactive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckifparentisactive>
+<CFQUERY NAME="checkifparentisactive" datasource="#application.datasource#">
 			SELECT contract_status_type_idx
 			FROM Contract_main
 			where Contract_Main_Id = #program_id#
-	</CFQUERY> 
+	</CFQUERY>
+</cfif> 
 
 	<CFIF NOT IsDefined("GetSettings")>
 		<CFQUERY NAME="GetSettings" datasource="#application.datasource#">
@@ -101,11 +133,27 @@
 				</CFQUERY>
 		
 <!--- <!--- <!--- <!--- <!--- <!--- <!--- <!--- <!--- THIS SECTION FOR PROGRAM EXCLUSION REVISIONS ONLY ---> ---> ---> ---> ---> ---> ---> ---> --->
-			<cfquery name="getProgramExclusionData" datasource="#application.datasource#">
+			<cfset useLakebaseForgetProgramExclusionData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetProgramExclusionData>
+	<cftry>
+		<cfset getProgramExclusionData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"original_program_id" = "eq.#program_id#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramExclusionData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramExclusionData>
+<cfquery name="getProgramExclusionData" datasource="#application.datasource#">
 				SELECT *
 				FROM Program_Exclusions
 				WHERE Original_Program_ID = '#program_id#' AND Deleted = 0
 			</cfquery>
+</cfif>
 			
 			<cfif getProgramExclusionData.recordcount GT 0>
 				<!--- save a WDDX packe with the approved version of the Master program so it may be restored at the end of every exclusion period --->
@@ -120,18 +168,52 @@
 		
 		<!--- check for revision if it is pre-active remove it --->
 		<CFIF len(CSLGetContractInfo.Revision_Of_Contract_Main_ID) GT 0>
-			<CFQUERY NAME="checkParentStats" datasource="#application.datasource#">
+			<cfset useLakebaseForcheckParentStats = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckParentStats>
+	<cftry>
+		<cfset checkParentStats = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CSLGetContractInfo.Revision_Of_Contract_Main_ID#",
+				"select" = "contract_main_id,contract_status_type_idx"
+			}), "contract_main_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckParentStats = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckParentStats>
+<CFQUERY NAME="checkParentStats" datasource="#application.datasource#">
 				SELECT Contract_Main_ID, Contract_Status_Type_IDX
 				FROM Contract_Main
 				WHERE Contract_Main_ID = #CSLGetContractInfo.Revision_Of_Contract_Main_ID#
 			</CFQUERY>
+</cfif>
 
 			<CFIF checkParentStats.Contract_Status_Type_IDX EQ getThisProgramsStatus.Contract_Status_Type_IDX>
-				<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
+				<cfset useLakebaseFordeleteParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFordeleteParent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#checkParentStats.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteParent>
+<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
 					UPDATE Contract_main
 					SET deleted = 1
 					where contract_main_id = '#checkParentStats.Contract_Main_ID#'
 				</CFQUERY>
+</cfif>
 			</CFIF>
 		</CFIF>
 		

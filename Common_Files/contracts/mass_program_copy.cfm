@@ -29,6 +29,24 @@ WHERE dbo.Contract_Main.Contract_Main_ID = '#form.Program_ID#'
 </CFQUERY>
 
 <!--- Dev Note:Milan (25639)- Check whether the most recent version is active --->
+<cfset useLakebaseForgetActiveTemplateVersion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetActiveTemplateVersion>
+	<cftry>
+		<cfset getActiveTemplateVersion = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#getProgramTemplateInfo.First_Parent_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"isdominant" = "eq.1",
+				"select" = "isdominant"
+			}), "isdominant"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetActiveTemplateVersion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetActiveTemplateVersion>
 <CFQUERY NAME="getActiveTemplateVersion" datasource="#application.datasource#">
 SELECT IsDominant
 FROM Program_Control_Panel_Options
@@ -37,6 +55,7 @@ AND Deleted = 0
 AND Active = 1
 AND IsDominant = 1
 </CFQUERY>
+</cfif>
 
 <!--- Dev Note:Milan (25639) - I have copied most of the code for allow/disallow access from "contract_renewal_action.cfm" --->
 <CFSET TemplateIsReuseable = 1>

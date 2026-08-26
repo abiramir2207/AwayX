@@ -9,9 +9,22 @@ EDITED:   09/26/08  RBL [16314]
 
   <cffunction name="init" output="false" returntype="components.settings.ApplicationSettingsManager">
 
-	<cfquery name="this.original" datasource="#application.datasource#">
+	<cfset useLakebaseForthis_original = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForthis_original>
+	<cftry>
+		<cfset this.original = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthis_original = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthis_original>
+<cfquery name="this.original" datasource="#application.datasource#">
 		SELECT * FROM _Application_Settings
 	</cfquery>
+</cfif>
 
   	<cfreturn this />
   </cffunction>
@@ -1615,12 +1628,29 @@ EDITED:   09/26/08  RBL [16314]
 </cffunction>
 
 <cffunction name="getPriceListIds" output="false" returntype="query">
-	<cfquery name="qGetPriceListIds" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetPriceListIds = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForqGetPriceListIds>
+	<cftry>
+		<cfset qGetPriceListIds = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_id.asc",
+				"select" = "price_list_id"
+			}), "price_list_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceListIds = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceListIds>
+<cfquery name="qGetPriceListIds" datasource="#application.datasource#">
 		SELECT  Price_List_ID
 		FROM  Price_List_Header
 		WHERE Deleted = 0
 		ORDER BY Price_List_ID
 	</cfquery>
+</cfif>
 	<cfreturn qGetPriceListIds>
 </cffunction>
 

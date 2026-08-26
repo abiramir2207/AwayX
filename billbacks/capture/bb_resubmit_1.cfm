@@ -12,7 +12,23 @@ bb_resubmit_1.cfm
 <CFIF resubmit_This_Billback>
 	<CFSET Billback_ID = URL.BBID>
 	
-	<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
+	<cfset useLakebaseForBB_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBB_Info>
+	<cftry>
+		<cfset BB_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "bb_code,bb_title,billback_status_id"
+			}), "bb_code,bb_title,billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Info>
+<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
 		SELECT	BB_Code, BB_Title, Billback_Status_ID
 		FROM	Billback
 		WHERE
@@ -20,6 +36,7 @@ bb_resubmit_1.cfm
 				AND
 				Billback.Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFIF BB_Info.recordCount GT 0>
 		<HTML>
 		<HEAD>

@@ -83,10 +83,25 @@ ORDER BY bsafc.Shr_Ship_To
   ORDER  BY Bb.Bb_code  
 </cfquery>
 
+<cfset useLakebaseForqGetEmailInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqGetEmailInfo>
+	<cftry>
+		<cfset qGetEmailInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_new_distributor_default_vendor_email"
+			}), "send_new_distributor_default_vendor_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetEmailInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetEmailInfo>
 <cfquery name="qGetEmailInfo" datasource="#application.datasource#">
 SELECT Send_New_Distributor_Default_Vendor_Email
 FROM General_Settings
 </cfquery>
+</cfif>
 
 <!--- Attach the style sheet to the email content --->
 <CFSET EmailDetailsCustomerDefaultVendorID = "<STYLE>

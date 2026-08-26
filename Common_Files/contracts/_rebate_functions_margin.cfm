@@ -64,10 +64,25 @@
 </cfscript>
 
 <cfif Display_Basis_Treatment_Code>
-	<cfquery name="qComponentNames" dbtype="query">
+	<cfset useLakebaseForqComponentNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetactivecomps")>
+<cfif useLakebaseForqComponentNames>
+	<cftry>
+		<cfset qComponentNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetactivecomps", {
+				"select" = "program_rebates_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+			}), "program_rebates_component_name_id component_name_id,allowance_code_id component_allowance_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqComponentNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqComponentNames>
+<cfquery name="qComponentNames" dbtype="query">
 		SELECT	Program_Rebates_Component_Name_ID Component_Name_ID, Allowance_Code_ID Component_Allowance_Code_ID
 		FROM	qGetActiveComps
 	</cfquery>
+</cfif>
 	<cfinclude template="Contract_Basis_Tratment_Code.cfm" />
 </cfif>
 	

@@ -47,7 +47,24 @@
    
 	<cffunction name="getActive" output="false" returntype="query">	
    
-		<cfquery name="qGetActiveComps" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_codes")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_codes", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "template_code.asc",
+				"select" = "template_code,template_code_desc,template_code_id,external_id"
+			}), "template_code,template_code_desc,template_code_id,external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+<cfquery name="qGetActiveComps" datasource="#application.datasource#">
 			SELECT 	Template_Code,
 					Template_Code_Desc,
 					Template_Code_Id,
@@ -57,6 +74,7 @@
 			AND		Active = 1
 			ORDER BY 	Template_Code
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetActiveComps />
 		
@@ -66,7 +84,22 @@
    
    		<cfargument name="compId" required="false" default=0 />
 		
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_codes")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_codes", {
+				"template_code_id" = "eq.#arguments.compId#",
+				"select" = "template_code,template_code_desc,template_code_id,external_id"
+			}), "template_code,template_code_desc,template_code_id,external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	Template_Code,
 					Template_Code_Desc,
 					Template_Code_Id,
@@ -74,6 +107,7 @@
 			FROM 	Template_Codes
 			WHERE 	Template_Code_Id = #arguments.compId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 		

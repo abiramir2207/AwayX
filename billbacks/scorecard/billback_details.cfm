@@ -39,16 +39,49 @@
 
 <cfinclude template="/Common_Files/Documents/Document_Include.cfm" />
 
+<cfset useLakebaseForqryChkBSA_Assoc_Operator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_assoc_operator")>
+<cfif useLakebaseForqryChkBSA_Assoc_Operator>
+	<cftry>
+		<cfset qryChkBSA_Assoc_Operator = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_assoc_operator", {
+				"billback_id" = "eq.#url.bbid#",
+				"deleted" = "eq.0",
+				"select" = "operator_id,operator_legacy_id,operator_name"
+			}), "operator_id,operator_legacy_id,operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryChkBSA_Assoc_Operator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryChkBSA_Assoc_Operator>
 <cfquery name="qryChkBSA_Assoc_Operator" datasource="#Application.Datasource#">
 	SELECT Operator_ID, Operator_Legacy_ID, Operator_Name
 	FROM Billback_Assoc_Operator
 	WHERE Billback_ID = '#url.bbid#' AND
 	Deleted = 0
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetUploadedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetUploadedBB>
+	<cftry>
+		<cfset getUploadedBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#url.bbid#",
+				"select" = "uploaded_billback"
+			}), "uploaded_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUploadedBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUploadedBB>
 <cfquery NAME="getUploadedBB" datasource="#Application.Datasource#">
 	SELECT Uploaded_Billback FROM Billback WHERE Billback_ID = '#url.bbid#'
 </cfquery>
+</cfif>
 
 <cfset IsSplitChild = 0>
 <cfif len(trim(Get_Billback_Info.BB_parent_ID)) GT 0>

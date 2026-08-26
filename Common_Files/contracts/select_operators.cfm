@@ -21,11 +21,26 @@
 <CFIF len(trim(URL.CID)) GT 0>
 
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfset ModifyDeletedPrograms = CreateObject("component","components.programs.program").ModifyDeletedProgram(GetContractInfo.Contract_Main_ID,Get_Profile_Settings.Modify_Expired_Programs) />
@@ -138,11 +153,27 @@
 			Operator groups search fields = template group search fields (only)
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 
+<cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
 <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
   SELECT First_parent_ID
     FROM Program_Control_Panel_Options
    WHERE ProgramControl_Panel_Options_ID =  #GetContractInfo.ProgramType_ID#
 </cfquery>
+</cfif>
 
 <!---Gather operator search fields defined in program template --->
 <cfset DataManager = CreateObject("component", "components.operator.Group.DataManager").init() />
@@ -729,20 +760,52 @@ function reset_Form_Fields()
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 	<!--- Get the list of Operator_Category																	 --->
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-	<CFQUERY NAME="Get_Operator_Category" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
+	<cfset useLakebaseForGet_Operator_Category = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_category")>
+<cfif useLakebaseForGet_Operator_Category>
+	<cftry>
+		<cfset Get_Operator_Category = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_category", {
+				"deleted" = "eq.0",
+				"select" = "operator_category_id,category_label"
+			}), "operator_category_id,category_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Category = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Category>
+<CFQUERY NAME="Get_Operator_Category" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
 		Select	Operator_Category_ID, Category_Label
 		From	Operator_Category
 		Where	deleted = 0
 	</CFQUERY>
+</cfif>
 
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 	<!--- Get the list of Operator_Category																	 --->
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-	<CFQUERY NAME="Get_Operator_Priority" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
+	<cfset useLakebaseForGet_Operator_Priority = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_priority")>
+<cfif useLakebaseForGet_Operator_Priority>
+	<cftry>
+		<cfset Get_Operator_Priority = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_priority", {
+				"deleted" = "eq.0",
+				"select" = "operator_priority_id,priority_label"
+			}), "operator_priority_id,priority_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Priority = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Priority>
+<CFQUERY NAME="Get_Operator_Priority" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
 	Select	Operator_Priority_ID, Priority_Label
 	From	Operator_Priority
 	Where	deleted = 0
 	</CFQUERY>
+</cfif>
 </cfif>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the states																				 --->

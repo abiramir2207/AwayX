@@ -3,11 +3,27 @@
 	<cfset Template_Manager = CreateObject("component", "Components.Programs.Template.TemplateManager") />
 
 
-	<cfquery name="qGettemplatesettings" datasource="#application.datasource#">
+	<cfset useLakebaseForqGettemplatesettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGettemplatesettings>
+	<cftry>
+		<cfset qGettemplatesettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.TemplateID#",
+				"select" = "ez_contract_id,first_parent_id"
+			}), "ez_contract_id,first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGettemplatesettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGettemplatesettings>
+<cfquery name="qGettemplatesettings" datasource="#application.datasource#">
 	SELECT Ez_Contract_ID,First_Parent_ID
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = #url.TemplateID#
 	</cfquery>
+</cfif>
 
 	<!--- Get all the programs with Ez Button On which do not have the Ez_Contract_ID of the latest template.
 	      The comparison of the 'Ez_Contract_ID' is made in the Contract_products table. If we add products to a program

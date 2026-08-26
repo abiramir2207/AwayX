@@ -735,10 +735,25 @@ resetnavigate();
 		<TD>#TheQuery.Description#</TD>
 		<!------<CFPARAM NAME="FORM.Fixed_Price_Product_Volume_#FieldNameEnd#" 	DEFAULT="#Volume#">----->
 		<cfif direct_pricing EQ 1>
-		<CFQUERY name="getthisitemgrossprice" dbtype="query">
+		<cfset useLakebaseForgetthisitemgrossprice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getgrossprice")>
+<cfif useLakebaseForgetthisitemgrossprice>
+	<cftry>
+		<cfset getthisitemgrossprice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getgrossprice", {
+				"product_id" = "eq.#TheQuery.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetthisitemgrossprice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetthisitemgrossprice>
+<CFQUERY name="getthisitemgrossprice" dbtype="query">
 			select * from getgrossprice
 			where product_id = '#TheQuery.BSA_Foodservice_Items_Master_ID#'
 		</CFQUERY>
+</cfif>
 		
 		<TD>
 		<cfif getthisitemgrossprice.recordcount GT 0>

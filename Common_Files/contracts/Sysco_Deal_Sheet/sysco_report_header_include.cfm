@@ -1,8 +1,24 @@
+<cfset useLakebaseForGetContractInformation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInformation>
+	<cftry>
+		<cfset GetContractInformation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInformation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInformation>
 <CFQUERY NAME="GetContractInformation" datasource="#application.datasource#">
 	SELECT 	Contract_Main.*
 	FROM 	Contract_Main		
 	WHERE 	Contract_Main_ID = '#FORM.Contract_Main_ID#'
 </CFQUERY>
+</cfif>
 
  <cfoutput> <TR> 
           <TD COLSPAN="3"  ><B>Today's Date:</B></TD>

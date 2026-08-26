@@ -18,12 +18,31 @@
 		<cfset activeSequence = row>
 	</cfif>
 
-	<cfquery name="updateOrder" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateOrder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("table_column_labels")>
+<cfif useLakebaseForupdateOrder>
+	<cftry>
+		<cfset application.oLakebase.updateRows("table_column_labels",
+			{
+				"table_column_labels_id" = "eq.#id#",
+				"table_name" = "eq.#tblName#"
+			},
+			{
+				"sequence" = "#activeSequence#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOrder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOrder>
+<cfquery name="updateOrder" datasource="#application.datasource#">
 		UPDATE Table_Column_Labels
 		SET sequence = '#activeSequence#'
 		WHERE Table_Column_Labels_ID = '#id#'
 			AND Table_Name = '#tblName#'
 	</cfquery>
+</cfif>
 
 	<cfset row = row + 1>
 

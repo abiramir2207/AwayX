@@ -64,17 +64,52 @@
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 	<!--- Unlock all locked deductions under this user --->
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-	<CFQUERY NAME="UnlockDDUnderThisUser" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUnlockDDUnderThisUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUnlockDDUnderThisUser>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"locked_by" = "eq.#request.AccessStructure.user_ID#",
+				"dd_locked_by_match_central" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by" = ""
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlockDDUnderThisUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlockDDUnderThisUser>
+<CFQUERY NAME="UnlockDDUnderThisUser" DATASOURCE="#Application.Datasource#">
 		UPDATE	Deductions
 		SET 	Is_Locked=0,
 				Locked_By=''
 		WHERE	Locked_By = '#request.AccessStructure.user_ID#'
 			AND DD_Locked_By_Match_Central = 0
 	</CFQUERY>
+</cfif>
 
-	<cfquery name="DeductionsProfilesSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
+<cfif useLakebaseForDeductionsProfilesSettings>
+	<cftry>
+		<cfset DeductionsProfilesSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions_profiles_settings", {
+				"profiles_id" = "eq.#Get_Profile_Settings.Profiles_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeductionsProfilesSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeductionsProfilesSettings>
+<cfquery name="DeductionsProfilesSettings" datasource="#application.datasource#">
 		SELECT * FROM Deductions_Profiles_Settings WHERE Profiles_ID = '#Get_Profile_Settings.Profiles_ID#'
 	</cfquery>
+</cfif>
 </cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
@@ -92,11 +127,28 @@
 <cfset usdanoi_on = 0>
 <cfset usdanoi_component_id = "0">
 <cfif application.util.query.get_setting("usdanoi_enabled") eq "1">
-	<cfquery name="getusdanoicomponentid" datasource="#application.datasource#">
+	<cfset useLakebaseForgetusdanoicomponentid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForgetusdanoicomponentid>
+	<cftry>
+		<cfset getusdanoicomponentid = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"is_usda_noi_comp" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_name_id"
+			}), "program_rebates_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetusdanoicomponentid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetusdanoicomponentid>
+<cfquery name="getusdanoicomponentid" datasource="#application.datasource#">
 		SELECT Program_Rebates_Component_Name_ID
 		  FROM Program_Rebates_Component_Name
 		 WHERE Is_USDA_NOI_Comp = 1 AND Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfif getusdanoicomponentid.recordcount GT 0>
 		<cfset usdanoi_on = 1>

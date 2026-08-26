@@ -2,13 +2,30 @@
 	<cfset getComponents  = ViewProgramManager.getgrowthComponents(CSLGetContractInfo.Contract_Main_ID,appSettings.getGrowthExpansion1())>
 
 	<!--- D45016 :: Restrict access at component level for all discount types START--->
-	<cfquery name="getAllGrowthComponentsAccess" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllGrowthComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_profile")>
+<cfif useLakebaseForgetAllGrowthComponentsAccess>
+	<cftry>
+		<cfset getAllGrowthComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"allow_user_to_view" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllGrowthComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllGrowthComponentsAccess>
+<cfquery name="getAllGrowthComponentsAccess" datasource="#application.datasource#">
 			SELECT 	*
 			FROM		Program_Growth_Component_Profile
 			WHERE	Deleted = 0
 			AND 		Profiles_ID = #request.AccessStructure.Profiles_ID#
 			AND 		Allow_User_To_View = 1
 	</cfquery>
+</cfif>
 	<cfset restictList = valuelist(getAllGrowthComponentsAccess.Program_Growth_Component_Name_ID)>
 <cfif listlen(restictList)>
 	<cfquery name="getComponents" dbtype="query" >

@@ -335,9 +335,25 @@
 				</cfoutput>
 			<cfelse>
 				<cfoutput query="getAllProductMargins" group="Type_Code_Desc_ID">
-					<cfquery name="local.getGroupValues" dbtype="query" maxRows="1">
+					<cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#",
+				"select" = "group_id_approval"
+			}), "group_id_approval"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+<cfquery name="local.getGroupValues" dbtype="query" maxRows="1">
 						select Group_ID_Approval from getAllGroupMargins where type_code_desc_id = '#getallproductmargins.type_code_desc_id#'
 					</cfquery>
+</cfif>
 					<cfset variables.noApprovalClass = (local.getGroupValues.Group_ID_Approval eq 0 ? " noar" : "")>
 					<cfset variables.disabled2       = (local.getGroupValues.Group_ID_Approval eq 0 ? "disabled=disabled" : "")>
 					<cfif url.showProducts eq "1">
@@ -394,9 +410,25 @@
 					<cfoutput query="getAllProductMargins" group="Type_Code_Desc_ID">
 							<cfif url.showProducts eq "1">
 								<cfoutput>  <!--- invidual products cfoutput loop --->
-								<cfquery name="local.detail" dbtype="query">
+								<cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+<cfquery name="local.detail" dbtype="query">
 									SELECT Net_weight,Fixed_Price_CS FROM qCostDetail WHERE Product_ID = '#getAllProductMargins.Product_ID#'
 								</cfquery>
+</cfif>
 
 								<cfscript>
 									multiplier     = "*";
@@ -2242,10 +2274,25 @@
 <!---  HORIZONTALPNL()  ---------------------------------------------------------------------------------------------->
 <!-------------------------------------------------------------------------------------------------------------------->
 <cffunction name="horizontalPNL">
-	<cfquery name="getGlobalUOM" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+<cfquery name="getGlobalUOM" datasource="#application.datasource#">
 		SELECT Global_Target_UOM
 		FROM General_Settings
 	</cfquery>
+</cfif>
 	<cfif appSettings.getApprovalMarginType() NEQ 3>
 		<cfset UOMdisplay = '%'>
 	<cfelse>
@@ -2650,10 +2697,25 @@ body, html {
 			<!--- mass approve --->
 			<cfset itemCheckBoxDisabled = 0>
 
-			<cfquery name="getGroupvalues" dbtype="query">
+			<cfset useLakebaseForgetGroupvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForgetGroupvalues>
+	<cftry>
+		<cfset getGroupvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getAllProductMargins.Type_Code_Desc_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupvalues>
+<cfquery name="getGroupvalues" dbtype="query">
 				select * from getAllGroupMargins
 				where Type_Code_Desc_Id = '#getAllProductMargins.Type_Code_Desc_Id#'
 			</cfquery>
+</cfif>
 			<!--- add variation to group margin --->
 			<cfif trim(getGroupvalues.Group_ID_Margin) eq "">
 				<cfset getGroupvalues.Group_ID_Margin = 0>
@@ -3185,11 +3247,27 @@ body, html {
 
 						<!---Tim Ford - Label 19381: Show if the Program is a revision and Operating Income is different from Revised program--->
 						<cfif Program_Is_A_Revision and isDefined("getProductPreviousVersionMargins")>
-							<cfquery name="qGetPreviousOperatingIncome" dbtype="query">
+							<cfset useLakebaseForqGetPreviousOperatingIncome = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproductpreviousversionmargins")>
+<cfif useLakebaseForqGetPreviousOperatingIncome>
+	<cftry>
+		<cfset qGetPreviousOperatingIncome = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproductpreviousversionmargins", {
+				"product_id" = "eq.#Product_ID#",
+				"select" = "operating_income,operatingmargin_percent"
+			}), "operating_income,operatingmargin_percent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPreviousOperatingIncome = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPreviousOperatingIncome>
+<cfquery name="qGetPreviousOperatingIncome" dbtype="query">
 								SELECT  Operating_Income, OperatingMargin_percent
 								FROM  getProductPreviousVersionMargins
 								WHERE Product_ID = '#Product_ID#'
 							</cfquery>
+</cfif>
 							<cfif qGetPreviousOperatingIncome.RecordCount>
 								<cfif DecimalFormat(qGetPreviousOperatingIncome.Operating_Income) neq DecimalFormat(Operating_Income)>
 									<i class="tooltip" title="Previous Version #trim(replace(replace(appsettings.getMarginColHeader11(),'%',''),'$',''))#: &nbsp; #UnitNumberFormat(qGetPreviousOperatingIncome.Operating_Income,form.Margin_Type)# &nbsp; #round(qGetPreviousOperatingIncome.OperatingMargin_percent)#%">&bigstar;</i>
@@ -3414,7 +3492,25 @@ body, html {
 				<td class="csvExclude 3228">#img_1010#</td> --->
 			<cfelse>
 				<!--- get all the previous approved items  --->
-				<cfquery name="getitemapprovedvalues" dbtype="query">
+				<cfset useLakebaseForgetitemapprovedvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettypecodeapprovalinfo")>
+<cfif useLakebaseForgetitemapprovedvalues>
+	<cftry>
+		<cfset getitemapprovedvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettypecodeapprovalinfo", {
+				"product_id" = "eq.#BSA_Foodservice_Items_Master_Id#",
+				"system_agreement" = "eq.0",
+				"approve" = "eq.1",
+				"order" = "system_agreement.asc",
+				"select" = "approve as item_approve,name_last,name_first"
+			}), "approve as item_approve,name_last,name_first"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetitemapprovedvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetitemapprovedvalues>
+<cfquery name="getitemapprovedvalues" dbtype="query">
 					select approve as item_approve,Name_Last,Name_First
 					from getTypeCodeApprovalInfo
 					where product_id = '#BSA_Foodservice_Items_Master_Id#'
@@ -3422,6 +3518,7 @@ body, html {
 					and approve = 1
 					order by System_Agreement
 				</cfquery>
+</cfif>
 				<cfquery name="getitemagreedcount" dbtype="query">
 					select count(Product_ID) as agreecount
 					from getTypeCodeApprovalInfo
@@ -3856,12 +3953,29 @@ body, html {
 						<!--- <td class="3647">#img_1010#</td>
 						<td class="3648">#img_1010#</td> --->
 					<cfelse>
-						<cfquery name="getgroupapprovedvalues" dbtype="query">
+						<cfset useLakebaseForgetgroupapprovedvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettypecodeapprovalinfo")>
+<cfif useLakebaseForgetgroupapprovedvalues>
+	<cftry>
+		<cfset getgroupapprovedvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettypecodeapprovalinfo", {
+				"type_code_desc_id" = "eq.#getGroupvalues.Type_Code_Desc_Id#",
+				"approve" = "eq.1",
+				"select" = "approve as group_approve,name_last,name_first"
+			}), "approve as group_approve,name_last,name_first"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetgroupapprovedvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetgroupapprovedvalues>
+<cfquery name="getgroupapprovedvalues" dbtype="query">
 							select approve as group_approve, Name_Last, Name_First
 							from getTypeCodeApprovalInfo
 							where Type_Code_Desc_Id = '#getGroupvalues.Type_Code_Desc_Id#'
 							and approve = 1
 						</cfquery>
+</cfif>
 
 						<cfquery name="getgroupagreedcount" dbtype="query">
 							select count(Type_Code_Desc_Id) as agreecount

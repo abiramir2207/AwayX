@@ -9,9 +9,24 @@
 
 <cfset recordDeleted = 0/>
 	
-	<cfquery name="updateOCRUploadLog" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_settings")>
+<cfif useLakebaseForupdateOCRUploadLog>
+	<cftry>
+		<cfset updateOCRUploadLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_upload_settings", {
+				"select" = "file_path"
+			}), "file_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLog>
+<cfquery name="updateOCRUploadLog" datasource="#application.datasource#">
 		SELECT File_Path FROM Billback_Upload_Settings
-	</cfquery>		
+	</cfquery>
+</cfif>		
 	<cfset goldSetPath = trim(updateOCRUploadLog.File_Path & "OCR_Upload_Test\") />
 	<cfset FileUploadPath = "#Application.Doc_Path#\data_files\uploaded\documents\uploaded_doc\" />
 	<!--- <cfset UploadFileAndPath = trim(goldSetPath & "OCR_Upload_Test\") />  --->
@@ -308,7 +323,22 @@
   </cfif>
  </cfif>
  
-		<cfquery name="qryOCRUploadTestLog" datasource="#application.datasource#">
+		<cfset useLakebaseForqryOCRUploadTestLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_test_log")>
+<cfif useLakebaseForqryOCRUploadTestLog>
+	<cftry>
+		<cfset qryOCRUploadTestLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_test_log", {
+				"order" = "created_date.desc",
+				"select" = "ocr_upload_test_log_id,file_name,created_user_id,created_date"
+			}), "ocr_upload_test_log_id,file_name,created_user_id,created_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryOCRUploadTestLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryOCRUploadTestLog>
+<cfquery name="qryOCRUploadTestLog" datasource="#application.datasource#">
 					SELECT 
 						OCR_Upload_Test_Log_ID,	
 						File_Name,
@@ -318,14 +348,28 @@
 						OCR_Upload_Test_Log 
 					ORDER BY 
 						Created_Date DESC
-		</cfquery>	
+		</cfquery>
+</cfif>	
 
 	<!---- CHECK IF THE FORM IS EMPTY, IF SO LOAD TEH LAST TEST BATCH BY DEFAULT  --->		
 	<cfif structisEmpty(FORM)>
 		<cfset FORM.Submitted = "3" />
-		<cfquery name="qryOCRUploadTestLogTop1" dbType="query" maxrows="1">
+		<cfset useLakebaseForqryOCRUploadTestLogTop1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qryocruploadtestlog")>
+<cfif useLakebaseForqryOCRUploadTestLogTop1>
+	<cftry>
+		<cfset qryOCRUploadTestLogTop1 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qryocruploadtestlog", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryOCRUploadTestLogTop1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryOCRUploadTestLogTop1>
+<cfquery name="qryOCRUploadTestLogTop1" dbType="query" maxrows="1">
 			SELECT * from qryOCRUploadTestLog
 		</cfquery>
+</cfif>
 		<cfset FORM.selDtlRec = qryOCRUploadTestLogTop1.OCR_Upload_Test_Log_ID />
 	</cfif>
  

@@ -106,13 +106,30 @@
 
 	<!--- Dev Note: KAL; 11209 - Component code and description are not working correctly - This logic is obselete as you can add multiple components --->
 	<!--- D45016 :: Restrict access at component level for all discount types START--->
-	<cfquery name="getAllFixedComponentsAccess" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllFixedComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_profile")>
+<cfif useLakebaseForgetAllFixedComponentsAccess>
+	<cftry>
+		<cfset getAllFixedComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"allow_user_to_view" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllFixedComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllFixedComponentsAccess>
+<cfquery name="getAllFixedComponentsAccess" datasource="#application.datasource#">
 			SELECT 	*
 			FROM		Program_Fixed_Component_Profile
 			WHERE	Deleted = 0
 			AND 		Profiles_ID = #request.AccessStructure.Profiles_ID#
 			AND 		Allow_User_To_View = 1
 	</cfquery>
+</cfif>
 	<!--- D45016 :: Restrict access at component level for all discount types END--->
 					<TABLE CLASS="Maintable" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" border="0">
 					<!--- TABLE HEADERS --->

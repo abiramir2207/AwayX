@@ -2,11 +2,28 @@
 <CFSET tabstoturnon = "">
 
 <CFIF len(trim(thisbbid)) NEQ 0 AND trim(thisbbid) NEQ 0>
-	<cfquery name="BI_Tab_Info" datasource="#Application.Datasource#" maxrows=1>
+	<cfset useLakebaseForBI_Tab_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBI_Tab_Info>
+	<cftry>
+		<cfset BI_Tab_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#thisbbid#",
+				"deleted" = "eq.0",
+				"select" = "billback_id,billback_payee_type_id,billback_status_id"
+			}), "billback_id,billback_payee_type_id,billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBI_Tab_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBI_Tab_Info>
+<cfquery name="BI_Tab_Info" datasource="#Application.Datasource#" maxrows=1>
 		SELECT Billback_ID, Billback_Payee_Type_ID, Billback_Status_ID
 		FROM Billback
 		WHERE Billback_ID = '#thisbbid#' AND Deleted = 0
 	</cfquery>
+</cfif>
 
 	<!--- basic information --->
 	<CFIF BI_Tab_Info.recordcount GT 0>

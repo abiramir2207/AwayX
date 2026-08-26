@@ -32,11 +32,27 @@
 	</cfquery>
 	<!---D37702 :: Brokerage template type doesn't allow vendor select --->
 	<cfif len(URL.ProgramType_ID)>
-		<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#URL.ProgramType_ID#",
+				"select" = "allow_only_one_broker"
+			}), "allow_only_one_broker"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 			SELECT Allow_Only_One_Broker
 			FROM Program_Control_Panel_Options
 			WHERE ProgramControl_Panel_Options_ID = #URL.ProgramType_ID#
 		</cfquery>
+</cfif>
 	<cfelse>
 		<cfset GetTemplateInfo.Allow_Only_One_Broker = 0>
 	</cfif>

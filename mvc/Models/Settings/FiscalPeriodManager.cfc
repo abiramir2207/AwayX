@@ -12,12 +12,29 @@ Usage:					N/A
 	<!--- get the list of fiscal years --->
 	<cffunction name="getFiscalYears" returntype="query" output="false" access="remote">
 
-		<cfquery name="qGetFiscalYears" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetFiscalYears = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForqGetFiscalYears>
+	<cftry>
+		<cfset qGetFiscalYears = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"deleted" = "eq.0",
+				"order" = "fiscal_year.asc",
+				"select" = "fiscal_year"
+			}), "fiscal_year"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFiscalYears = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFiscalYears>
+<cfquery name="qGetFiscalYears" datasource="#application.datasource#">
 			SELECT DISTINCT Fiscal_Year
 			FROM Fiscal_Year
 			WHERE Deleted = 0
 			ORDER BY Fiscal_Year
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetFiscalYears />
 	</cffunction>

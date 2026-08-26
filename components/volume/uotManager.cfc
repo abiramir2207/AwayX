@@ -33,11 +33,27 @@
 	<cffunction name="getDefaultVolumeUOT" output="false" returntype="components.volume.uot">
 		<cfargument name="companyId" type="string" required="true" />
 		
-		<cfquery name="qGetDefaultUOT" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDefaultUOT = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqGetDefaultUOT>
+	<cftry>
+		<cfset qGetDefaultUOT = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#arguments.companyId#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultUOT = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultUOT>
+<cfquery name="qGetDefaultUOT" datasource="#application.datasource#">
 			Select	Volume_UOT_ID
 			From	_Users_Settings					
 			Where	_Users_Settings.User_ID		=	'#arguments.companyId#'
 		</cfquery>
+</cfif>
 		
 		<cfset defaultVolumeUOT = 0 />
 		<cfloop query="qGetDefaultUOT">

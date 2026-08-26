@@ -1,24 +1,70 @@
 <CFSET PAGE_TITLE=	"Company Search Page">
 <CFSET GROUP=		"Administration">
 
+<cfset useLakebaseForGetAllCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetAllCompanies>
+	<cftry>
+		<cfset GetAllCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"order" = "company_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllCompanies>
 <CFQUERY NAME="GetAllCompanies" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Company_Main
 	Order By Company_Name ASC
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetAffiliationCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetAffiliationCodes>
+	<cftry>
+		<cfset GetAffiliationCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"national_affiliation_code" = "neq.0",
+				"order" = "national_affiliation_code.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAffiliationCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAffiliationCodes>
 <CFQUERY NAME="GetAffiliationCodes" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Company_Main
 	WHERE National_Affiliation_Code != '0'
 	ORDER BY National_Affiliation_Code ASC
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetAllCompanyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_types")>
+<cfif useLakebaseForGetAllCompanyTypes>
+	<cftry>
+		<cfset GetAllCompanyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_types", {
+				"order" = "company_type_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllCompanyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllCompanyTypes>
 <CFQUERY NAME="GetAllCompanyTypes" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Company_Types
 	ORDER BY Company_Type_Desc ASC
 </CFQUERY>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 

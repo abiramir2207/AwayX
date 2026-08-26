@@ -162,9 +162,25 @@ div.save { margin-top:10px; }
 		<cfset qDateRanges = oBudgetClassManager.getCalendarDates("#form.frmYearSelection#") />
 	</cfif>
 
-	<cfquery name="qFiscalSelected" datasource="#application.datasource#"  dbtype="query">
+	<cfset useLakebaseForqFiscalSelected = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qdateranges")>
+<cfif useLakebaseForqFiscalSelected>
+	<cftry>
+		<cfset qFiscalSelected = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qdateranges", {
+				"periodid" = "eq.#form.single_period#",
+				"select" = "start_date,end_date"
+			}), "start_date,end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFiscalSelected = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFiscalSelected>
+<cfquery name="qFiscalSelected" datasource="#application.datasource#"  dbtype="query">
 		SELECT start_Date, end_Date FROM qDateRanges WHERE periodID = #form.single_period#
 	</cfquery>
+</cfif>
 
 	<cfloop list="#form.selected_ids#" index="vars.element_id">
 		<cftransaction>

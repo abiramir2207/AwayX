@@ -41,22 +41,58 @@
 			</cfquery>
 			
 			<!---query distributors--->
-			<cfquery name="qGetDistributorId" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetDistributorId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_customer")>
+<cfif useLakebaseForqGetDistributorId>
+	<cftry>
+		<cfset qGetDistributorId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_customer", {
+				"cm_activity_id" = "eq.#arguments.id#",
+				"cm_customer_type_id" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistributorId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistributorId>
+<cfquery name="qGetDistributorId" datasource="#application.datasource#">
 				SELECT	Distributor_ID
 				FROM	CM_Activity_Customer						
 				WHERE	CM_Activity_Customer.CM_Activity_ID = #arguments.id#
 				AND		CM_Customer_Type_ID = 1
 				AND		deleted = 0
 			</cfquery>
+</cfif>
 			
 			<!---query operators--->
-			<cfquery name="qGetOperatorId" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetOperatorId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_customer")>
+<cfif useLakebaseForqGetOperatorId>
+	<cftry>
+		<cfset qGetOperatorId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_customer", {
+				"cm_activity_id" = "eq.#arguments.id#",
+				"cm_customer_type_id" = "eq.2",
+				"deleted" = "eq.0",
+				"select" = "operator_id"
+			}), "operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOperatorId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOperatorId>
+<cfquery name="qGetOperatorId" datasource="#application.datasource#">
 				SELECT	Operator_ID
 				FROM	CM_Activity_Customer						
 				WHERE	CM_Activity_Customer.CM_Activity_ID = #arguments.id#
 				AND		CM_Customer_Type_ID = 2
 				AND		deleted = 0
 			</cfquery>
+</cfif>
 			
 			<cfloop query="qGetActivity">
 				

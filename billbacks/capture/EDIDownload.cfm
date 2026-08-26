@@ -17,9 +17,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 <cfset BillbackID = URL.Billback_ID />
 <cfset uploadUtility = CreateObject("component","components.billback.billbackuploadutility") />
 
+<cfset useLakebaseForBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBBInfo>
+	<cftry>
+		<cfset BBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#BillbackID#",
+				"select" = "bb_title,bb_code,bb_reference"
+			}), "bb_title,bb_code,bb_reference"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBInfo>
 <cfquery name = "BBInfo" datasource = "#Application.datasource#">
 	SELECT BB_Title,BB_Code,BB_Reference FROM Billback WHERE Billback_ID = '#BillbackID#'
 </cfquery>
+</cfif>
 			
 <cfif URL.Type EQ 2 AND isDefined("FORM.rdoDownloadData")>
 	<cfdump var="#form#" />

@@ -106,11 +106,27 @@ th { text-align:center; }
 <cftransaction>
 <cfloop query="qExcelEntries">
 	<cfif qBudget.Allocation_Position_Level eq "4">
-		<cfquery name="qValid" dbtype="query">
+		<cfset useLakebaseForqValid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qdistributors")>
+<cfif useLakebaseForqValid>
+	<cftry>
+		<cfset qValid = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qdistributors", {
+				"shr_ship_to" = "eq.#qExcelEntries.distributor#",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqValid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqValid>
+<cfquery name="qValid" dbtype="query">
 			SELECT BSA_Foodservice_Customers_ID
 			  FROM qDistributors
 			 WHERE Shr_Ship_To = '#qExcelEntries.distributor#'
 		</cfquery>
+</cfif>
 		<cfset vars.element_id = qValid.BSA_Foodservice_Customers_ID>
 	<cfelse>
 		<cfquery name="qValid" dbtype="query">

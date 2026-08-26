@@ -75,12 +75,28 @@
    
    		<cfargument name="lumpSumNameId" required="false" default=0 />
 		
-		<cfquery name="qGetLumpSumName" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetLumpSumName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_name")>
+<cfif useLakebaseForqGetLumpSumName>
+	<cftry>
+		<cfset qGetLumpSumName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_name", {
+				"program_lump_sum_name_id" = "eq.#arguments.lumpSumNameId#",
+				"select" = "program_lump_sum_name,program_lump_sum_name_id"
+			}), "program_lump_sum_name,program_lump_sum_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLumpSumName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLumpSumName>
+<cfquery name="qGetLumpSumName" datasource="#application.datasource#">
 			SELECT 	Program_Lump_Sum_Name,
 					Program_Lump_Sum_Name_ID 
 			FROM 	Program_Lump_Sum_Name
 			WHERE 	Program_Lump_Sum_Name_ID = #arguments.lumpSumNameId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetLumpSumName />
 		

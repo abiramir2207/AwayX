@@ -10,6 +10,23 @@
 <cfparam name="url.type" default="R"><!--- rebate --->
 <cfif url.CID NEQ "">
 <cfif Type EQ "R">
+<cfset useLakebaseForTheQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_error_detail")>
+<cfif useLakebaseForTheQuery>
+	<cftry>
+		<cfset TheQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_error_detail", {
+				"deleted" = "eq.0",
+				"bsa_program_id" = "eq.#url.CID#",
+				"message_type" = "eq.E",
+				"select" = "message_text,bsa_program_id"
+			}), "message_text,bsa_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTheQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTheQuery>
 <CFQUERY NAME="TheQuery" datasource="#application.datasource#">
 	select distinct message_text,bsa_program_id
 	from
@@ -18,6 +35,7 @@
 	and Program_Webservices_Error_Detail.bsa_program_id = '#url.CID#'
 	and Program_Webservices_Error_Detail.message_type = 'E'
 </CFQUERY>
+</cfif>
 <cfelse> <!--- it is a settlement --->
 <CFQUERY NAME="TheQuery" datasource="#application.datasource#">
 	select distinct message_text,RESP.Rebate_ID as bsa_program_id

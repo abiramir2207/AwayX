@@ -59,11 +59,27 @@ ORDER BY Invoice_Header.Invoice_Date DESC
 </cfquery>
 
 <cfif GetInvoices.Recordcount GT 0>
+<cfset useLakebaseForGetItemName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetItemName>
+	<cftry>
+		<cfset GetItemName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "description"
+			}), "description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetItemName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetItemName>
 <cfquery name="GetItemName" datasource="#application.datasource#">
 	SELECT Description
 	FROM BSA_Foodservice_Items_Master
 	WHERE BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
 </cfquery>
+</cfif>
 
 <table border="0" cellspacing="0" cellpadding="1"  width="100%">
 	
@@ -102,11 +118,27 @@ ORDER BY Invoice_Header.Invoice_Date DESC
 <cfloop query="GetInvoices">
 <cfset counter = counter + 1>
 	<!---Getting Contract Number--->
-	<cfquery name="GetContractNumber" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_info")>
+<cfif useLakebaseForGetContractNumber>
+	<cftry>
+		<cfset GetContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_program_info", {
+				"contract_main_id" = "eq.#ContractID#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractNumber>
+<cfquery name="GetContractNumber" datasource="#application.datasource#">
 	SELECT Contract_Number
 	FROM BB_Program_Info
 	WHERE Contract_Main_ID = #ContractID#
 	</cfquery>
+</cfif>
 	
 	<cfset Contract_Number = GetContractNumber.Contract_Number>
 	

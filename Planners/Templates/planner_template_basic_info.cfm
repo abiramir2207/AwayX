@@ -127,12 +127,29 @@ Description  : 	Planner Templates
 		<!--- business segment is disabled --->
 		<input type="hidden" name="Business_Segment_ID" value="">
 	</cfif>
-	<cfquery name="GetPriceList" datasource="#application.datasource#">
+	<cfset useLakebaseForGetPriceList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForGetPriceList>
+	<cftry>
+		<cfset GetPriceList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_description.asc",
+				"select" = "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+			}), "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPriceList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPriceList>
+<cfquery name="GetPriceList" datasource="#application.datasource#">
 		SELECT      Price_List_Header_ID, Price_List_ID + '-' + Price_List_Description as Price_List_Diplay_Desc
 		FROM        Price_List_Header
 		WHERE       Deleted = 0
 		ORDER BY    Price_List_Description
 	</cfquery>
+</cfif>
 
 	<cfif application.appsettingsget.getPriceListByTemplate()>
 	<tr>

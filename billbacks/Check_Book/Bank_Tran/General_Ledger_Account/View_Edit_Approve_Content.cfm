@@ -3,12 +3,27 @@
 <cfset appSettings = genSettingsManager.get()>
 
 
+<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_data_export_1", {
+				"payment_data_export_1_id" = "eq.#URL.Payment_Data_Export_1_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
 <CFQUERY NAME="Get_Data" DATASOURCE="#Application.Datasource#">
 	SELECT 		* 
 	FROM 		Payment_Data_Export_1
 		
 	WHERE 		Payment_Data_Export_1_ID = '#URL.Payment_Data_Export_1_ID#'
 </CFQUERY>
+</cfif>
 
 <CFIF Isdefined("URL.GetPaymentInfo")>	
 	<CFQUERY NAME="Get_Payee_Type" DATASOURCE="#Application.Datasource#">

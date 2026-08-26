@@ -37,12 +37,28 @@
 	</cfquery>
 	
 	<!------ Find if any products is 'All products' ----->
-	<cfquery name="qCheckGroupProducts" dbtype="query">
+	<cfset useLakebaseForqCheckGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getitemnumbers")>
+<cfif useLakebaseForqCheckGroupProducts>
+	<cftry>
+		<cfset qCheckGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getitemnumbers", {
+				"product_group_level_id" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id,product_group_id,contract_products_id"
+			}), "bsa_foodservice_items_master_id,product_group_id,contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckGroupProducts>
+<cfquery name="qCheckGroupProducts" dbtype="query">
 		SELECT		BSA_Foodservice_Items_Master_ID, Product_Group_ID, Contract_Products_ID
 		FROM		GetItemNumbers
 		WHERE
 					Product_Group_Level_ID = 1
-	</cfquery>		
+	</cfquery>
+</cfif>		
 	<cfif qCheckGroupProducts.recordCount>
 		<cfset Product_Group_ID = qCheckGroupProducts.Product_Group_ID />
 		<cfset ProductID = qCheckGroupProducts.BSA_Foodservice_Items_Master_ID />
@@ -188,10 +204,25 @@
 			<cfloop query="GetAllComponents">
 	
 			<!---Query InvoicesforRebateComponents for only items in the component--->
-				<cfquery name="InvoicesforItems" dbtype="query">
+				<cfset useLakebaseForInvoicesforItems = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoicesforrebatecomponents")>
+<cfif useLakebaseForInvoicesforItems>
+	<cftry>
+		<cfset InvoicesforItems = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoicesforrebatecomponents", {
+				"bsa_foodservice_items_master_id" = "eq.#InvoicesforRebateComponents.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForInvoicesforItems = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInvoicesforItems>
+<cfquery name="InvoicesforItems" dbtype="query">
 				SELECT * FROM InvoicesForRebateComponents
 				WHERE BSA_Foodservice_Items_Master_ID = '#InvoicesforRebateComponents.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 							
 				<cfif InvoicesForItems.Recordcount GT 0>
 				
@@ -385,11 +416,27 @@ ORDER BY Invoice_Header.Invoice_Date DESC
 </cfquery>
 
 <cfif GetInvoices.Recordcount GT 0>
+<cfset useLakebaseForGetItemName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetItemName>
+	<cftry>
+		<cfset GetItemName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "description"
+			}), "description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetItemName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetItemName>
 <cfquery name="GetItemName" datasource="#application.datasource#">
 	SELECT Description
 	FROM BSA_Foodservice_Items_Master
 	WHERE BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
 </cfquery>
+</cfif>
 <cfoutput>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 	<tr onclick="NewWindow('/profiles/Products/Product_profile.cfm?PID=#BSA_Foodservice_Items_Master_ID#','name','400','450','Yes', 'No');return false;" NOWRAP style="cursor:pointer;">
@@ -433,11 +480,27 @@ ORDER BY Invoice_Header.Invoice_Date DESC
 <cfset counter = counter + 1>
 
 	<!---Getting Contract Number--->
-	<cfquery name="GetContractNumber" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_info")>
+<cfif useLakebaseForGetContractNumber>
+	<cftry>
+		<cfset GetContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_program_info", {
+				"contract_main_id" = "eq.#ContractID#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractNumber>
+<cfquery name="GetContractNumber" datasource="#application.datasource#">
 	SELECT Contract_Number
 	FROM BB_Program_Info
 	WHERE Contract_Main_ID = #ContractID#
 	</cfquery>
+</cfif>
 	
 	<cfset Contract_Number = GetContractNumber.Contract_Number>
 	

@@ -6,9 +6,25 @@ Created By:		N/A
 Description:	This file is responsible for saving billback power punch data.  
 --->
 
+<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
 <CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
 	SELECT Billback_Status_ID FROM Billback WHERE Billback_ID = '#FORM.Billback_ID#'
 </CFQUERY>
+</cfif>
 <CFIF GetStatus.Billback_Status_ID GTE 3> 
 	<!--- 17302 - Redirect to Summary --->
 	<CFSET Billback_Status_ID = GetStatus.Billback_Status_ID>
@@ -656,7 +672,7 @@ Description:	This file is responsible for saving billback power punch data.
 					<th colspan="100%" bgcolor="orange"><strong><font size="3">Items not recognized</font></strong></th>
 				</tr>
 				
-				<!--- Dev Note : Kal: 12235: Cant remove item under the ”Unknown Products” section on BB - [HZQ65]
+				<!--- Dev Note : Kal: 12235: Cant remove item under the Unknown Products section on BB - [HZQ65]
 						Commented the code below to remove ability to add unknown products --->
 				<!--- <tr>
 					<td><strong>Add Item</strong></td>
@@ -680,7 +696,7 @@ Description:	This file is responsible for saving billback power punch data.
 					<tr>
 					<td valign="top" colspan="100%"><br><strong><font size="2">Above items are invalid and were not added.</font></strong></td>
 					</tr>
-				<!--- End Note : Kal: 12235: Cant remove item under the ”Unknown Products” section on BB - [HZQ65] --->	
+				<!--- End Note : Kal: 12235: Cant remove item under the Unknown Products section on BB - [HZQ65] --->	
 			</table>
 			<input type="hidden" name="Billback_ID" value="#Billback_ID#">
 		<div align="center">

@@ -190,10 +190,25 @@ DEPENDENCIES:
 </cfsavecontent>
 
 <cfif appSettings.getApprovalMarginType() eq 3>
-	<cfquery name="getGlobalUOM" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+<cfquery name="getGlobalUOM" datasource="#application.datasource#">
 		SELECT Global_Target_UOM
 			FROM General_Settings
 	</cfquery>
+</cfif>
   <cfset Global_Target_UOM = getGlobalUOM.Global_Target_UOM>
 <cfelse>
 	<cfset Global_Target_UOM = 0>
@@ -436,6 +451,23 @@ DEPENDENCIES:
 </cfif>
 <!---  D56447 :: EZ Rates Indicator inside a Program END --->
 
+<cfset useLakebaseForisEditing = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForisEditing>
+	<cftry>
+		<cfset isEditing = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#getProgramInfo.contract_main_id#",
+				"contract_is_locked" = "eq.1",
+				"contract_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisEditing = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisEditing>
 <cfquery name="isEditing" datasource="#application.datasource#">
 	SELECT 1
 	FROM Contract_Main
@@ -443,6 +475,7 @@ DEPENDENCIES:
 			AND Contract_Is_Locked = 1
 			AND Contract_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 </cfquery>
+</cfif>
 <cfif url.verticalPNL neq "">
 	<cfset verticalPNL()>
 <cfelse>

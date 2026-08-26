@@ -8,9 +8,24 @@
 
 <BODY>
 
+<cfset useLakebaseForfax_bank = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_transaction")>
+<cfif useLakebaseForfax_bank>
+	<cftry>
+		<cfset fax_bank = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_transaction", {
+				"payment_trans_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfax_bank = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfax_bank>
 <CFQUERY name = "fax_bank" datasource="#application.datasource#">
 	SELECT * from payment_transaction where payment_trans_ID = '#URL.RID#'
 </CFQUERY>
+</cfif>
 
 
 <CFSAVECONTENT variable = "fax_content">

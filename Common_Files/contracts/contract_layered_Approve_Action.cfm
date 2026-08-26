@@ -433,17 +433,49 @@
 
 
 
-	<CFQUERY NAME="GetContractNumber" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractNumber>
+	<cftry>
+		<cfset GetContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#program_id#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractNumber>
+<CFQUERY NAME="GetContractNumber" datasource="#application.datasource#">
 		select contract_number
 		from contract_main
 		where Contract_Main_Id = #program_id#
 	</CFQUERY>
+</cfif>
 
-	<CFQUERY NAME="checkifrevision" datasource="#application.datasource#">
+	<cfset useLakebaseForcheckifrevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckifrevision>
+	<cftry>
+		<cfset checkifrevision = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#program_id#",
+				"select" = "is_a_revision"
+			}), "is_a_revision"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckifrevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckifrevision>
+<CFQUERY NAME="checkifrevision" datasource="#application.datasource#">
 			SELECT Is_A_Revision
 			FROM Contract_main
 			where Contract_Main_Id = #program_id#
 	</CFQUERY>
+</cfif>
 
 	<cfif checkifrevision.Is_A_Revision EQ 1>
 		<!--- now get the maximum version of all the approved programs of this contract number and then update the current approved program with max(revision_number) + 1 --->

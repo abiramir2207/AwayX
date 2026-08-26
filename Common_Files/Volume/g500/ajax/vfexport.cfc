@@ -144,11 +144,27 @@
       </cfscript>
     
       <!---count number of periods became actual--->
-      <cfquery name="qBecameActual" dbtype="query">
+      <cfset useLakebaseForqBecameActual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qperiod")>
+<cfif useLakebaseForqBecameActual>
+	<cftry>
+		<cfset qBecameActual = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qperiod", {
+				"became_actual" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBecameActual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBecameActual>
+<cfquery name="qBecameActual" dbtype="query">
          SELECT 1
            FROM qPeriod
           WHERE Became_Actual = 1
       </cfquery>
+</cfif>
     
       <cfscript>
         vars.aQueryColumn       = [];

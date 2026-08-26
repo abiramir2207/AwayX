@@ -22,7 +22,24 @@
 	<CFSET ShowLog = 0>
 	
 	<CFIF CheckProcessStatus.GL_Code_Process_Status_ID EQ 5>
-		<CFQUERY NAME="CheckForLog" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForCheckForLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation_log")>
+<cfif useLakebaseForCheckForLog>
+	<cftry>
+		<cfset CheckForLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation_log", {
+				"gl_code_upload_id" = "eq.#CheckProcessStatus.GL_Code_Upload_ID#",
+				"temp_log" = "eq.1",
+				"script_log" = "eq.0",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForLog>
+<CFQUERY NAME="CheckForLog" DATASOURCE="#Application.Datasource#">
 			SELECT 	* 
 			FROM 	Gl_Code_Activation_Log 
 			
@@ -31,6 +48,7 @@
 					Script_Log = 0 AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 		
 		<CFIF CheckForLog.RecordCount GT 0>
 			<CFSET ShowLog = 1>
@@ -42,11 +60,29 @@
 			<TD>
 				<B><FONT COLOR="Red" SIZE="3">
 					<CFIF CheckProcessStatus.GL_Code_Process_Status_ID EQ 3>
-						<CFQUERY NAME="UpdateActivateBit" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForUpdateActivateBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForUpdateActivateBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"gl_code_upload_id" = "eq.#CheckProcessStatus.GL_Code_Upload_ID#"
+			},
+			{
+				"activate_tonight" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateActivateBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateActivateBit>
+<CFQUERY NAME="UpdateActivateBit" DATASOURCE="#Application.Datasource#">
 							UPDATE 	GL_Code_Upload 
 							SET 	Activate_Tonight = 0
 							WHERE 	GL_Code_Upload_ID = #CheckProcessStatus.GL_Code_Upload_ID#
 						</CFQUERY>
+</cfif>
 						Upload failed.
 					<CFELSEIF CheckProcessStatus.GL_Code_Process_Status_ID EQ 5>
 						Upload Process completed successfully. This Upload will be committed on nightly basis 
@@ -103,9 +139,25 @@
 <CFELSE>
 	<CFPARAM NAME="URL.RID" DEFAULT="">
 	
-	<CFQUERY NAME="AnyReadyActivateTonight" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForAnyReadyActivateTonight = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForAnyReadyActivateTonight>
+	<cftry>
+		<cfset AnyReadyActivateTonight = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_upload", {
+				"activate_tonight" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAnyReadyActivateTonight = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAnyReadyActivateTonight>
+<CFQUERY NAME="AnyReadyActivateTonight" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM GL_Code_Upload WHERE Activate_Tonight = 1 AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET AnyReadyToActivate = 0>
 	<CFIF AnyReadyActivateTonight.RecordCount GT 0>
 		<CFSET AnyReadyToActivate = 1>
@@ -153,12 +205,29 @@
 								</CFIF>
 						</TD>
 						<TD ALIGN="Center">
-							<CFQUERY NAME="GetActive" DATASOURCE="#Application.Datasource#">
+							<cfset useLakebaseForGetActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetActive>
+	<cftry>
+		<cfset GetActive = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"gl_code_upload_id" = "eq.#GL_Code_Upload_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetActive>
+<CFQUERY NAME="GetActive" DATASOURCE="#Application.Datasource#">
 								SELECT 	Top 1 * 
 								FROM 	GL_Code_Activation
 								WHERE 	GL_Code_Upload_ID = #GL_Code_Upload_ID# AND
 										Deleted = 0
 							</CFQUERY>
+</cfif>
 							<CFIF GetActive.Current_Active_Data EQ 1>
 							<img src="/Images/alert_icon_small.gif" alt="" width="10" height="10" border="0">
 							<CFELSE>

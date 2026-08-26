@@ -13,11 +13,26 @@
 		
 		<cfargument name="forecastId" type="string" required="true">
 		
-		<cfquery name="qGetForecastData" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetForecastData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("forecast")>
+<cfif useLakebaseForqGetForecastData>
+	<cftry>
+		<cfset qGetForecastData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("forecast", {
+				"forecast_id" = "eq.#arguments.forecastId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetForecastData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetForecastData>
+<cfquery name="qGetForecastData" datasource="#application.datasource#">
 			SELECT 	* 
 			FROM	Forecast
 			WHERE	Forecast_Id = #arguments.forecastId#
-		</cfquery>	
+		</cfquery>
+</cfif>	
 	
 		<cfreturn qGetForecastData>
 		

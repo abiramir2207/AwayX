@@ -6,6 +6,21 @@
 
 <!--- Get the data for the passed rule --->
 
+<cfset useLakebaseForGet_Rule_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pricing_rule")>
+<cfif useLakebaseForGet_Rule_Data>
+	<cftry>
+		<cfset Get_Rule_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pricing_rule", {
+				"pricing_rule_id" = "eq.#URL.PRID#",
+				"select" = "pricing_rule_id,pricing_rule_name,pricing_rule_date,pricing_rule_author,pricing_rule_final_cost,pricing_rule_data"
+			}), "pricing_rule_id,pricing_rule_name,pricing_rule_date,pricing_rule_author,pricing_rule_final_cost,pricing_rule_data"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Rule_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Rule_Data>
 <CFQUERY NAME="Get_Rule_Data" datasource="#application.datasource#">
 	Select		Pricing_Rule.Pricing_Rule_ID,
 				Pricing_Rule.Pricing_Rule_Name,
@@ -16,14 +31,30 @@
 	From		Pricing_Rule
 	Where		Pricing_Rule.Pricing_Rule_ID			=	'#URL.PRID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- Get the products of the rule --->
+<cfset useLakebaseForGet_Rule_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pricing_rule_products")>
+<cfif useLakebaseForGet_Rule_Products>
+	<cftry>
+		<cfset Get_Rule_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pricing_rule_products", {
+				"pricing_rule_id" = "eq.#Get_Rule_Data.Pricing_Rule_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Rule_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Rule_Products>
 <CFQUERY name="Get_Rule_Products" datasource="#application.datasource#">
 	Select		*
 	From		Pricing_Rule_Products
 	Where		Pricing_Rule_Products.Pricing_Rule_ID = '#Get_Rule_Data.Pricing_Rule_ID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- Convert the XML packet to a structure --->
@@ -76,11 +107,27 @@
 
 
 <!--- Get the name of the pricing rule author --->
+<cfset useLakebaseForGet_Author_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_Author_Name>
+	<cftry>
+		<cfset Get_Author_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Rule_Data.Pricing_Rule_Author#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Author_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Author_Name>
 <CFQUERY NAME="Get_Author_Name" datasource="#application.datasource#">
 	Select		Name_First, Name_Last
 	From		_Users
 	Where		User_ID	=	'#Get_Rule_Data.Pricing_Rule_Author#'
 </CFQUERY>
+</cfif>
 
 
 	<TABLE BGCOLOR="White" BORDERCOLOR="Orange" BORDER="1" CELLPADDING="3" CELLSPACING="0">

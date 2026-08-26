@@ -1101,7 +1101,27 @@
 		
 		<cfif arguments.manualCancel>
 		
-			<cfquery name="qUpdateSentStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForqUpdateSentStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqUpdateSentStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"sent_to_external_client" = "eq.1",
+				"manual_cancel" = "eq.1",
+				"cancel_sent_to_external_client" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#"
+			},
+			{
+				"cancel_sent_to_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateSentStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateSentStatus>
+<cfquery name="qUpdateSentStatus" datasource="#application.datasource#">
 				UPDATE	Contract_Main
 				SET		Cancel_Sent_To_External_Client = 1
 				WHERE	Sent_To_External_Client = 1
@@ -1109,6 +1129,7 @@
 						AND Cancel_Sent_To_External_Client = 0
 						AND Contract_Main_ID = #arguments.programId#
 			</cfquery>
+</cfif>
 		
 		<cfelse>
 		

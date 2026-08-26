@@ -56,11 +56,29 @@ Solution: Comment the three files in Scheduled_Task.cfm
 		</TABLE>	
 	</CF_EMAILWRAPPER>
 	
-	<CFQUERY NAME="UpdateSentBit" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateSentBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateSentBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"bb_void_notification_sent" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateSentBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateSentBit>
+<CFQUERY NAME="UpdateSentBit" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback
 		SET BB_Void_Notification_Sent = 1
 		WHERE Billback_ID = '#Billback_ID#'
-	</CFQUERY>		
+	</CFQUERY>
+</cfif>		
 </CFLOOP>
 </CFOUTPUT> 
 <!--- vvvvvvvvvvvvvvvvvvvvvvvvv End Void Notification vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
@@ -122,28 +140,80 @@ Solution: Comment the three files in Scheduled_Task.cfm
 <!--- xxxxxxxxxxxxxxx		Interface 800 Error Notifications sent here 		xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- get this run_date and time...if any errors match this run, let someone know --->
 
+<cfset useLakebaseForqGetAlertEmails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_contacts")>
+<cfif useLakebaseForqGetAlertEmails>
+	<cftry>
+		<cfset qGetAlertEmails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_integration_contacts", {
+				"intra_id" = "eq.800",
+				"active" = "eq.1",
+				"select" = "email,active"
+			}), "email,active"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAlertEmails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAlertEmails>
 <cfquery name="qGetAlertEmails" datasource="#application.datasource#">
 	Select email, Active
 	From Data_Integration_Contacts
 	Where intra_Id = 800
 	and active = 1
 </cfquery>
+</cfif>
+<cfset useLakebaseForqGetLastRun = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_upload")>
+<cfif useLakebaseForqGetLastRun>
+	<cftry>
+		<cfset qGetLastRun = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_integration_upload", {
+				"intra_id" = "eq.800",
+				"order" = "data_integration_upload_id.desc",
+				"limit" = "1",
+				"select" = "run_date,run_time"
+			}), "run_date,run_time"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLastRun = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLastRun>
 <cfquery name="qGetLastRun" datasource="#application.datasource#">
 	select top 1 run_date, run_time from data_integration_upload
 	where intra_id = 800
 	order by data_Integration_upload_id
 	desc
 </cfquery>
+</cfif>
 
 <cfset lastrd = qGetLastRun.run_date>
 <cfset lastrt = qGetLastRun.run_time>
 
+<cfset useLakebaseForqGet800Errors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("log_cf_800")>
+<cfif useLakebaseForqGet800Errors>
+	<cftry>
+		<cfset qGet800Errors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("log_cf_800", {
+				"run_date" = "eq.#lastrd#",
+				"run_time" = "eq.#lastrt#",
+				"order" = "reason_code_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGet800Errors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGet800Errors>
 <cfquery name="qGet800Errors" datasource="#application.datasource#">
 	Select * from Log_cf_800
  	where run_date = '#lastrd#'
 	and run_time = '#lastrt#'
 	order by Reason_Code_Id
 </cfquery>
+</cfif>
 
 <cfset elist = "">
 <cfoutput query="qGetAlertEmails">

@@ -331,11 +331,26 @@
 </CFQUERY>
 
 
+<cfset useLakebaseForT_All_Overlapped_Billbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("all_overlapped_billbacks")>
+<cfif useLakebaseForT_All_Overlapped_Billbacks>
+	<cftry>
+		<cfset T_All_Overlapped_Billbacks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("all_overlapped_billbacks", {
+				"order" = "bb_start_date.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForT_All_Overlapped_Billbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForT_All_Overlapped_Billbacks>
 <CFQUERY NAME="T_All_Overlapped_Billbacks" DBTYPE="query">
 	SELECT	*
 	FROM	All_Overlapped_Billbacks
 	ORDER BY BB_Start_Date
 </CFQUERY>
+</cfif>
 
 <CFSET All_Overlapped_Billbacks = T_All_Overlapped_Billbacks>
 

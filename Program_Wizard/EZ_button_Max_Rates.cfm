@@ -11,11 +11,27 @@
 		<cfprocresult name = "EZInfo">
 	</cfstoredproc>
 
- <cfquery name="TemplateInfo" datasource="#application.datasource#">
+ <cfset useLakebaseForTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForTemplateInfo>
+	<cftry>
+		<cfset TemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.TemplateID#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTemplateInfo>
+<cfquery name="TemplateInfo" datasource="#application.datasource#">
 	SELECT Created_Type
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = #url.TemplateID#
 </cfquery>
+</cfif>
 
 	<cfscript>
 	    //Use an absolute path for the files.

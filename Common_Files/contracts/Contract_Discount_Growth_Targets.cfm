@@ -82,11 +82,29 @@
 		<cfset FieldName = replace(FieldNames, "_", "-", "all")>
 		<cfset Child_ID = right(FieldName, GUID_len)>
 		
-		<cfquery name="UpdateOrder" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateOrder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForUpdateOrder>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_components",
+			{
+				"program_growth_component_id" = "eq.#Child_ID#"
+			},
+			{
+				"target_order" = "#New_Order#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateOrder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateOrder>
+<cfquery name="UpdateOrder" datasource="#application.datasource#">
 		UPDATE Program_Growth_Components
 		SET Target_Order = #New_Order#
 		WHERE Program_Growth_Component_ID = '#Child_ID#'
 		</cfquery>
+</cfif>
 		
 	</cfif>
 </cfloop>
@@ -102,11 +120,26 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfinclude template="/get_access_profile.cfm">

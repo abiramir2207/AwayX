@@ -6418,10 +6418,25 @@
 	<!---
 	<cffunction name="getMarginCostColStatus" access="public" output="false" return="boolean">
 		<cfargument name="marginCostColHeader" type="string" required="Yes">
-		<cfquery name="get_status" datasource="#application.datasource#" >
+		<cfset useLakebaseForget_status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForget_status>
+	<cftry>
+		<cfset get_status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "margincostcolheader#"
+			}), "margincostcolheader#"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_status>
+<cfquery name="get_status" datasource="#application.datasource#" >
 			SELECT #arguments.marginCostColHeader#
 			FROM _Application_settings
 		</cfquery>
+</cfif>
 		<cfset get_status =  evaluate('get_status.#arguments.marginCostColHeader#')>
 		<cfreturn get_status />
 	</cffunction>

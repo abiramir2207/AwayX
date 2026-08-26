@@ -123,10 +123,25 @@ Description:	I am responsible for Billback email notifications.
 			qGetPayeeType 	= objBillbackManager.getBillbackDetails(strBillbackId);
 		</cfscript>
 		
-		<cfquery name="GetBillbackEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForGetBillbackEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetBillbackEmail>
+	<cftry>
+		<cfset GetBillbackEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "bb_approved_email"
+			}), "bb_approved_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackEmail>
+<cfquery name="GetBillbackEmail" datasource="#application.datasource#">
 			SELECT	BB_Approved_Email 
 			FROM 	_application_settings
 		</cfquery>
+</cfif>
 		
 		<cfif Len(trim(qGetPayeeType.BB_Request_Approval_User_ID)) GT 0 AND GetBillbackEmail.BB_Approved_Email EQ 1>
 			

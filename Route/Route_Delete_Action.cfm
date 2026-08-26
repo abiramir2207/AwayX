@@ -8,7 +8,25 @@ Route_Close_Action.cfm
 
 <CFLOOP LIST="#FORM.Route_Recipient_ID#" INDEX="this_Route_Recipient_ID">
 	<CFOUTPUT>
-	<CFQUERY NAME="Update_As_Acknowledged" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForUpdate_As_Acknowledged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("route_recipient")>
+<cfif useLakebaseForUpdate_As_Acknowledged>
+	<cftry>
+		<cfset application.oLakebase.updateRows("route_recipient",
+			{
+				"route_recipient_id" = "eq.#this_Route_Recipient_ID#",
+				"route_message_id" = "eq.#FORM.Message_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_As_Acknowledged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_As_Acknowledged>
+<CFQUERY NAME="Update_As_Acknowledged" DATASOURCE="#application.datasource#">
 		UPDATE	Route_Recipient
 		SET
 			Deleted = 1
@@ -17,6 +35,7 @@ Route_Close_Action.cfm
 			AND
 			Route_Recipient.Route_Message_ID = #FORM.Message_ID#
 	</CFQUERY>
+</cfif>
 	
 		</CFOUTPUT>
 </CFLOOP>

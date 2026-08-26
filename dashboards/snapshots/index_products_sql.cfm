@@ -12,6 +12,23 @@
 <!--- ----------------------------------------------------------------------------------------- --->
 <!--- summary --------------------------------------------------------------------------------- --->
 <!--- ----------------------------------------------------------------------------------------- --->
+<cfset useLakebaseForget_summary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_product_summary")>
+<cfif useLakebaseForget_summary>
+	<cftry>
+		<cfset get_summary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_product_summary", {
+				"product_group_id" = "eq.#product_group_id#",
+				"pr_date_period" = "eq.#pr_date_period#",
+				"deleted" = "eq.0",
+				"select" = "pr_product_summary_id,pr_purchases_cases,pr_purchases_dollars,pr_street_cases,pr_street_dollars,pr_street_cases_percent,pr_street_dollars_percent,pr_operator_discounted_cases,pr_operator_discounted_dollars,pr_operator_discounted_cases_percent,pr_operator_discounted_dollars_percent,pr_mrkt_shelter_case_rate,pr_mrkt_shelter_dollars,pr_operator_discounted_case_rate,pr_operator_discounted_dollars_cr,pr_investment_case_rate,pr_investment_dollars,pr_date_period,deleted,created_date,product_group_id,product_group_description"
+			}), "pr_product_summary_id,pr_purchases_cases,pr_purchases_dollars,pr_street_cases,pr_street_dollars,pr_street_cases_percent,pr_street_dollars_percent,pr_operator_discounted_cases,pr_operator_discounted_dollars,pr_operator_discounted_cases_percent,pr_operator_discounted_dollars_percent,pr_mrkt_shelter_case_rate,pr_mrkt_shelter_dollars,pr_operator_discounted_case_rate,pr_operator_discounted_dollars_cr,pr_investment_case_rate,pr_investment_dollars,pr_date_period,deleted,created_date,product_group_id,product_group_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_summary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_summary>
 <cfquery name="get_summary" datasource="#Application.Datasource#">
 
 SELECT	pr_product_summary_ID,
@@ -46,6 +63,7 @@ WHERE	product_group_id = '#product_group_id#'
 		deleted = 0
 
 </cfquery>
+</cfif>
 
 
 <!--- ----------------------------------------------------------------------------------------- --->

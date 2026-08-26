@@ -37,9 +37,27 @@
 <cfset Program_Volume.Load_Basic_Information(URL.Program_ID, request.AccessStructure.Company_Main_ID)>
 <cfset bidExcludeLostFromVolumeAuto = 0 />
 <cfif Program_Volume.BidRequestStatusOn eq 1 AND Program_Volume.ItemMarked_Lost_Program_Volume_Automation eq 0 >
-  <cfquery name="ProgramBidRequestStatusID" datasource="#application.datasource#">
+  <cfset useLakebaseForProgramBidRequestStatusID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForProgramBidRequestStatusID>
+	<cftry>
+		<cfset ProgramBidRequestStatusID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#URL.Program_ID#",
+				"limit" = "1",
+				"select" = "bid_request_status_id"
+			}), "bid_request_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgramBidRequestStatusID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgramBidRequestStatusID>
+<cfquery name="ProgramBidRequestStatusID" datasource="#application.datasource#">
     SELECT  TOP 1 Bid_Request_status_ID FROM Program_Bid_Request WHERE Deleted = 0 AND Program_ID = '#URL.Program_ID#'
   </cfquery>
+</cfif>
   <cfif ProgramBidRequestStatusID.recordcount GT 0 AND ProgramBidRequestStatusID.Bid_Request_status_ID neq 1>
     <cfset bidExcludeLostFromVolumeAuto = 1 />
   </cfif>

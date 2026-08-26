@@ -19,11 +19,29 @@
 			<cfset FieldName = replace(FieldName, "_", "-", "all")>
 			<cfset FieldValue = Evaluate("Form.#FieldNames#")>
 			
-		<cfquery name="DeleteItem" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_product_data")>
+<cfif useLakebaseForDeleteItem>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_lump_sum_product_data",
+			{
+				"program_lump_sum_product_data_id" = "eq.#FieldName#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteItem>
+<cfquery name="DeleteItem" datasource="#application.datasource#">
 			UPDATE Program_Lump_Sum_Product_Data
 			SET Deleted = 1
 			WHERE Program_Lump_Sum_Product_Data_ID = '#FieldName#'
 		</cfquery>
+</cfif>
 			
 		</cfif>
 		

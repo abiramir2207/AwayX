@@ -24,7 +24,22 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 
 <cffunction name="fnGetAllPGTypes" output="false" returntype="Query">
 		<cfset var qGetActivePGTypes = "" />
-		<cfquery name="qGetActivePGTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActivePGTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_type")>
+<cfif useLakebaseForqGetActivePGTypes>
+	<cftry>
+		<cfset qGetActivePGTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_type", {
+				"deleted" = "eq.0",
+				"select" = "pg_type_id,pg_type_code,pg_type_name,pg_group_type,active,deleted,updated_date,created_date,created_by,updated_by"
+			}), "pg_type_id,pg_type_code,pg_type_name,pg_group_type,active,deleted,updated_date,created_date,created_by,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivePGTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivePGTypes>
+<cfquery name="qGetActivePGTypes" datasource="#application.datasource#">
 			SELECT
         PG_Type_ID,
         PG_Type_Code,
@@ -39,6 +54,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 			FROM		PG_Type
 			WHERE  Deleted = 0
     	</cfquery>
+</cfif>
 		<cfreturn qGetActivePGTypes />
 	</cffunction>
 
@@ -205,7 +221,23 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 
 	<cffunction name="fnGetActiveCustomerPGs" output="false" returntype="Query">
 		<cfset var qGetActiveCustomerPGs = "" />
-		<cfquery name="qGetActiveCustomerPGs" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveCustomerPGs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_customer_category")>
+<cfif useLakebaseForqGetActiveCustomerPGs>
+	<cftry>
+		<cfset qGetActiveCustomerPGs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_customer_category", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "pg_customer_category_id,pg_type_id,pg_customer_category_code,pg_customer_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+			}), "pg_customer_category_id,pg_type_id,pg_customer_category_code,pg_customer_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveCustomerPGs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveCustomerPGs>
+<cfquery name="qGetActiveCustomerPGs" datasource="#application.datasource#">
 			SELECT
             PG_Customer_Category_ID,
             PG_Type_ID,
@@ -222,12 +254,29 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 			WHERE Active = 1
       AND   Deleted = 0
     	</cfquery>
+</cfif>
 		<cfreturn qGetActiveCustomerPGs />
 	</cffunction>
 
  	<cffunction name="fnGetInActiveCustomerPGs" output="false" returntype="Query">
 		<cfset var qGetInActiveCustomerPGs = "" />
-		<cfquery name="qGetInActiveCustomerPGs" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetInActiveCustomerPGs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_customer_category")>
+<cfif useLakebaseForqGetInActiveCustomerPGs>
+	<cftry>
+		<cfset qGetInActiveCustomerPGs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_customer_category", {
+				"active" = "eq.0",
+				"deleted" = "eq.0",
+				"select" = "pg_customer_category_id,pg_type_id,pg_customer_category_code,pg_customer_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+			}), "pg_customer_category_id,pg_type_id,pg_customer_category_code,pg_customer_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInActiveCustomerPGs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInActiveCustomerPGs>
+<cfquery name="qGetInActiveCustomerPGs" datasource="#application.datasource#">
 			SELECT
             PG_Customer_Category_ID,
             PG_Type_ID,
@@ -244,6 +293,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 			WHERE Active = 0
       AND   Deleted = 0
     	</cfquery>
+</cfif>
 		<cfreturn qGetInActiveCustomerPGs />
 	</cffunction>
 
@@ -2428,7 +2478,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
  <!--- Update the existing records in the PG_Customer_Category_Definition table --->
     <!--- Get all the current records in the table for this PG_Customer_Category_ID --->
 
-    <cfquery name="qrySelectCusCatDef" datasource="#application.datasource#">
+    <cfset useLakebaseForqrySelectCusCatDef = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_customer_category_definition")>
+<cfif useLakebaseForqrySelectCusCatDef>
+	<cftry>
+		<cfset qrySelectCusCatDef = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_customer_category_definition", {
+				"pg_customer_category_id" = "eq.#arguments.stForm.PGCustomerCategoryID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "pg_customer_category_definition_id,pg_customer_category_id,pg_type_id,distributor_group_level_id,distributor_group_id,inclusion_exclusion,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg,is_pg"
+			}), "pg_customer_category_definition_id,pg_customer_category_id,pg_type_id,distributor_group_level_id,distributor_group_id,inclusion_exclusion,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg,is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrySelectCusCatDef = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrySelectCusCatDef>
+<cfquery name="qrySelectCusCatDef" datasource="#application.datasource#">
       SELECT
         PG_Customer_Category_Definition_ID,
         PG_Customer_Category_ID,
@@ -2450,6 +2517,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
       AND Active = 1
       AND Deleted = 0
     </cfquery>
+</cfif>
 
 <cfscript>
     queryExecute( " DROP TABLE IF EXISTS ##tmp_customer_pg
@@ -3063,7 +3131,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
 <cffunction name="fnProdGrpTemSel" output="false" returntype="Query">
     <cfargument name="PGProductCategoryID" type="string" required="true" />
-     <cfquery name="qryProdGrpTemSel" datasource="#application.datasource#">
+     <cfset useLakebaseForqryProdGrpTemSel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_template_selection")>
+<cfif useLakebaseForqryProdGrpTemSel>
+	<cftry>
+		<cfset qryProdGrpTemSel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_template_selection", {
+				"product_group_id" = "eq.#arguments.PGProductCategoryID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "product_group_template_selection_id,template_id,product_group_level_id,product_group_id,active,deleted,created_date,updated_date,created_by,updated_by,pg_flag,updated_from,template_filters_id"
+			}), "product_group_template_selection_id,template_id,product_group_level_id,product_group_id,active,deleted,created_date,updated_date,created_by,updated_by,pg_flag,updated_from,template_filters_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryProdGrpTemSel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryProdGrpTemSel>
+<cfquery name="qryProdGrpTemSel" datasource="#application.datasource#">
         SELECT
           Product_Group_Template_Selection_ID,
           Template_ID,
@@ -3084,6 +3169,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         AND Active = 1
         AND Deleted = 0
       </cfquery>
+</cfif>
        <cfreturn qryProdGrpTemSel />
   </cffunction>
 
@@ -3109,7 +3195,23 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
 <cffunction name="fnGetActiveOperatorPGs" output="false" returntype="Query">
 		<cfset var qGetActiveOperatorPGs = "" />
-		<cfquery name="qGetActiveOperatorPGs" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveOperatorPGs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForqGetActiveOperatorPGs>
+	<cftry>
+		<cfset qGetActiveOperatorPGs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "pg_operator_category_id,pg_type_id,pg_operator_category_code,pg_operator_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+			}), "pg_operator_category_id,pg_type_id,pg_operator_category_code,pg_operator_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveOperatorPGs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveOperatorPGs>
+<cfquery name="qGetActiveOperatorPGs" datasource="#application.datasource#">
 			SELECT
             PG_Operator_Category_ID,
             PG_Type_ID,
@@ -3126,12 +3228,29 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 			WHERE Active = 1
       AND   Deleted = 0
     	</cfquery>
+</cfif>
 		<cfreturn qGetActiveOperatorPGs />
 	</cffunction>
 
  	<cffunction name="fnGetInActiveOperatorPGs" output="false" returntype="Query">
 		<cfset var qGetInActiveOperatorPGs = "" />
-		<cfquery name="qGetInActiveOperatorPGs" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetInActiveOperatorPGs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForqGetInActiveOperatorPGs>
+	<cftry>
+		<cfset qGetInActiveOperatorPGs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"active" = "eq.0",
+				"deleted" = "eq.0",
+				"select" = "pg_operator_category_id,pg_type_id,pg_operator_category_code,pg_operator_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+			}), "pg_operator_category_id,pg_type_id,pg_operator_category_code,pg_operator_category_name,active,deleted,updated_date,created_date,created_by,updated_by,include_in_other_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInActiveOperatorPGs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInActiveOperatorPGs>
+<cfquery name="qGetInActiveOperatorPGs" datasource="#application.datasource#">
 			SELECT
             PG_Operator_Category_ID,
             PG_Type_ID,
@@ -3148,6 +3267,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 			WHERE Active = 0
       AND   Deleted = 0
     	</cfquery>
+</cfif>
 		<cfreturn qGetInActiveOperatorPGs />
 	</cffunction>
 
@@ -3244,7 +3364,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
     <cffunction name="fnGetCoreOperatorPG" output="false" returntype="Query">
 		  <cfset var qGetCoreOperatorPG = "" />
-		  <cfquery name="qGetCoreOperatorPG" datasource="#application.datasource#">
+		  <cfset useLakebaseForqGetCoreOperatorPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForqGetCoreOperatorPG>
+	<cftry>
+		<cfset qGetCoreOperatorPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"include_in_other_pg" = "eq.1",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "pg_operator_category_id,pg_type_id,pg_operator_category_code,pg_operator_category_name,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg"
+			}), "pg_operator_category_id,pg_type_id,pg_operator_category_code,pg_operator_category_name,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCoreOperatorPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCoreOperatorPG>
+<cfquery name="qGetCoreOperatorPG" datasource="#application.datasource#">
   			SELECT
           PG_Operator_Category_ID,
           PG_Type_ID,
@@ -3262,6 +3399,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         AND Active = 1
         AND Deleted = 0
     	</cfquery>
+</cfif>
 		  <cfreturn qGetCoreCustomerPG />
 	  </cffunction>
 
@@ -4200,7 +4338,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 
 <cffunction name="fnOprGrpTemSel" output="false" returntype="Query">
     <cfargument name="PGOperatorCategoryID" type="string" required="true" />
-     <cfquery name="qryOprGrpTemSel" datasource="#application.datasource#">
+     <cfset useLakebaseForqryOprGrpTemSel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_group_template_selection")>
+<cfif useLakebaseForqryOprGrpTemSel>
+	<cftry>
+		<cfset qryOprGrpTemSel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_group_template_selection", {
+				"operator_group_id" = "eq.#arguments.PGOperatorCategoryID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "operator_group_template_selection_id,template_id,operator_group_level_id,operator_group_id,active,deleted,created_date,updated_date,created_by,updated_by,pg_flag,updated_from,template_filters_id"
+			}), "operator_group_template_selection_id,template_id,operator_group_level_id,operator_group_id,active,deleted,created_date,updated_date,created_by,updated_by,pg_flag,updated_from,template_filters_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryOprGrpTemSel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryOprGrpTemSel>
+<cfquery name="qryOprGrpTemSel" datasource="#application.datasource#">
         SELECT
           Operator_Group_Template_Selection_ID,
           Template_ID,
@@ -4221,6 +4376,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         AND Active = 1
         AND Deleted = 0
       </cfquery>
+</cfif>
        <cfreturn qryOprGrpTemSel />
   </cffunction>
 
@@ -4260,7 +4416,25 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
 			var bIsSystemCheck = 0;
 		</cfscript>
 
-		<cfquery name="qIsSystem" datasource="#application.datasource#">
+		<cfset useLakebaseForqIsSystem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_type")>
+<cfif useLakebaseForqIsSystem>
+	<cftry>
+		<cfset qIsSystem = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_type", {
+				"deleted" = "eq.0",
+				"pg_group_type" = "eq.#arguments.pggrouptype#",
+				"pg_type_id" = "eq.#arguments.pgtypeid#",
+				"is_system" = "eq.1",
+				"select" = "is_system"
+			}), "is_system"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsSystem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsSystem>
+<cfquery name="qIsSystem" datasource="#application.datasource#">
 			SELECT  Is_System
         	FROM 	pg_type
         	WHERE 	Deleted = 0
@@ -4268,6 +4442,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         	AND 	pg_type_id = '#arguments.pgtypeid#'
 			AND 	Is_System = 1
 		</cfquery>
+</cfif>
 
 		<cfif qIsSystem.RecordCount>
 			<cfset bIsSystemCheck = 1 />

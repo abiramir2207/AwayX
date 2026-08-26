@@ -88,11 +88,28 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 
 							
 <!---  initial user position--->
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 <!--- locate those positions underneath the supplied position --->
 <CFSET GP_Supplied_Position = ValueList(getUserPosition.User_Positions_ID)>
 
@@ -434,24 +451,72 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 </CFQUERY>
 
 <!--- Get Owner --->
-<!------<CFQUERY NAME="Get_Owner" datasource="#application.datasource#">
+<!------<cfset useLakebaseForGet_Owner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_Owner>
+	<cftry>
+		<cfset Get_Owner = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#PM_Owner_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Owner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Owner>
+<CFQUERY NAME="Get_Owner" datasource="#application.datasource#">
 	Select		Name_First, 
 				Name_Last
 	From 		_Users	
 	Where 		User_ID = '#PM_Owner_ID#'
-</CFQUERY>----->
+</CFQUERY>
+</cfif>----->
 
+<cfset useLakebaseForGet_Position = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForGet_Position>
+	<cftry>
+		<cfset Get_Position = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#PM_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Position = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Position>
 <CFQUERY NAME="Get_Position" datasource="#application.datasource#">
 	Select		Position_Label
 	From 		User_Positions	
 	Where 		User_Positions_ID = '#PM_Position_ID#'
 </CFQUERY>
+</cfif>
 <CFIF FORM.Broker_ID NEQ "0" AND FORM.Broker_ID NEQ "">
-	<CFQUERY NAME="Get_Broker" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Broker = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_active")>
+<cfif useLakebaseForGet_Broker>
+	<cftry>
+		<cfset Get_Broker = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("broker_active", {
+				"bsa_foodservice_brokers_id" = "eq.#FORM.Broker_ID#",
+				"select" = "broker_name"
+			}), "broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Broker = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Broker>
+<CFQUERY NAME="Get_Broker" datasource="#application.datasource#">
 		Select		Broker_Name
 		From 		broker_active	
 		Where 		BSA_Foodservice_Brokers_ID = '#FORM.Broker_ID#'
 	</CFQUERY>
+</cfif>
 <CFELSE>
 	<cfset get_broker = QueryNew("Broker_Name")>
 	<cfset temp = QueryAddRow(get_broker)>

@@ -118,6 +118,21 @@
 </cfif>
 
 
+<cfset useLakebaseForLockedUsers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLockedUsers>
+	<cftry>
+		<cfset LockedUsers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_locked" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockedUsers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockedUsers>
 <cfquery name="LockedUsers" datasource="#application.datasource#">
 SELECT * 
 FROM _users
@@ -125,6 +140,7 @@ WHERE
 		Is_Locked = 1
 		AND Deleted = 0
 </cfquery>
+</cfif>
 
 <BLOCKQUOTE>
 

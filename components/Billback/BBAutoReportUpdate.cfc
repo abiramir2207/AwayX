@@ -1208,12 +1208,29 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         </CFQUERY>
 
         <!--- Find if there are billback that have interfaced and not yet acknowledged --->
-        <CFQUERY Name="qCheckBBCannotReverse" dbtype="query">
+        <cfset useLakebaseForqCheckBBCannotReverse = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbb")>
+<cfif useLakebaseForqCheckBBCannotReverse>
+	<cftry>
+		<cfset qCheckBBCannotReverse = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbb", {
+				"bb_payment_request_sent" = "eq.1",
+				"bb_received_ack_type" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckBBCannotReverse = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckBBCannotReverse>
+<CFQUERY Name="qCheckBBCannotReverse" dbtype="query">
             SELECT  1
             FROM    qGetBB
             WHERE   BB_Payment_Request_Sent = 1
             AND     BB_Received_Ack_Type = 0
         </CFQUERY>
+</cfif>
 
         <!--- Stop if atleast one billback cannot be reversed --->
         <cfif qCheckBBCannotReverse.RecordCount>

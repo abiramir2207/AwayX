@@ -9,11 +9,27 @@
 
 <BODY BGCOLOR="White" TEXT="Black" LINK="Blue" VLINK="Blue" ALINK="Red" LEFTMARGIN="0" TOPMARGIN="0">
 
+<cfset useLakebaseForgetDistinctFilepaths = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cf_file_access")>
+<cfif useLakebaseForgetDistinctFilepaths>
+	<cftry>
+		<cfset getDistinctFilepaths = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cf_file_access", {
+				"path_info" = "neq./xm/checkConnection.cfm",
+				"select" = "path_info"
+			}), "path_info"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistinctFilepaths = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistinctFilepaths>
 <cfquery name="getDistinctFilepaths" datasource="#Application.Datasource#">
 	SELECT DISTINCT path_info
 	FROM cf_file_Access
 	WHERE path_info <> '/graph.cfm' AND path_info <> '/xm/checkConnection.cfm'
 </cfquery>
+</cfif>
 
 <CFSET tempdata = arrayNew(1)>
 
@@ -29,11 +45,27 @@
 
 <cfloop query="getDistinctFilepaths">
 	<cfset path_info_string = getDistinctFilepaths.path_info>
-	<cfquery name="getCount" datasource="#Application.Datasource#">
+	<cfset useLakebaseForgetCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cf_file_access")>
+<cfif useLakebaseForgetCount>
+	<cftry>
+		<cfset getCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cf_file_access", {
+				"path_info" = "eq.#path_info_string#",
+				"select" = "cf_file_access_id"
+			}), "cf_file_access_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCount>
+<cfquery name="getCount" datasource="#Application.Datasource#">
 		SELECT cf_file_access_id
 		FROM cf_file_access
 		WHERE path_info = '#path_info_string#'
 	</cfquery>
+</cfif>
 	<CFSET temp = QuerySetCell(getDistinctFilepaths,'number_of_requests',getCount.recordcount,recordcounter)>
 
 	<CFSet recordcounter = recordcounter + 1>

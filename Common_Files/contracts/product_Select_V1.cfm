@@ -52,12 +52,29 @@
 </cfif>
 
 
+<cfset useLakebaseForgetDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForgetDistributors>
+	<cftry>
+		<cfset getDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#URL.prgID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistributors>
 <cfquery name="getDistributors" datasource="#application.datasource#" >
 	SELECT 1
 	FROM Contract_Distributors
 	Where Deleted = 0
 	AND Contract_Main_ID = #URL.prgID#
 </cfquery>
+</cfif>
 
 <cfset session.Group_Rebate_Type_Search_ID = 0  >
 
@@ -810,7 +827,26 @@ function save_Documents()
     <cfif (GetSettings.isDominant EQ 1)>
       <cfset Latest_EZ_Contract_ID = GetSettings.EZ_Contract_Id />
     <cfelse>
-      <cfquery name="qryGetLatestTemplate" datasource="#application.datasource#">
+      <cfset useLakebaseForqryGetLatestTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryGetLatestTemplate>
+	<cftry>
+		<cfset qryGetLatestTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#GetSettings.First_Parent_ID#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1",
+				"select" = "ez_contract_id"
+			}), "ez_contract_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetLatestTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetLatestTemplate>
+<cfquery name="qryGetLatestTemplate" datasource="#application.datasource#">
       SELECT TOP 1 EZ_Contract_ID
 			FROM Program_Control_Panel_Options
 			WHERE First_Parent_ID = #GetSettings.First_Parent_ID#
@@ -818,6 +854,7 @@ function save_Documents()
 			and deleted = 0
 			ORDER BY ProgramControl_Panel_Options_ID desc
       </cfquery>
+</cfif>
       <cfset Latest_EZ_Contract_ID = qryGetLatestTemplate.EZ_Contract_ID />
   	</cfif>
   	<cfset EZButtonProgramProductList = ProgramProducts.getEZButtonProductList(Latest_EZ_Contract_ID,url.Discountype,url.component_id,url.isparent,0)/>
@@ -1563,11 +1600,27 @@ function save_Documents()
 </cfoutput>
 
 <cfsilent>
+<cfset useLakebaseForgetLOBCharacter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getlinesofbiz")>
+<cfif useLakebaseForgetLOBCharacter>
+	<cftry>
+		<cfset getLOBCharacter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getlinesofbiz", {
+				"line_of_business_id" = "eq.#FORM.Line_Of_Biz#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLOBCharacter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLOBCharacter>
 <CFQUERY NAME="getLOBCharacter" DBTYPE="query">
 	SELECT *
 	FROM GetLinesOfBiz
 	WHERE Line_Of_Business_ID = '#FORM.Line_Of_Biz#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="getCategories" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
 	SELECT Category_ID

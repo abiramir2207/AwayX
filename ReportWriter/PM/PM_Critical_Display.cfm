@@ -75,9 +75,25 @@
 		<TR VALIGN="bottom" BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#" HEIGHT="25">
 			<TD CLASS="tdbody">&nbsp;</TD>
 			<TD CLASS="tdbody">#PM_Acct_Project#&nbsp;</TD>
-			<CFQUERY NAME="Check_attachments" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCheck_attachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForCheck_attachments>
+	<cftry>
+		<cfset Check_attachments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"project_id" = "eq.#PM_Item_Master_ID#",
+				"select" = "doc_id"
+			}), "doc_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_attachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_attachments>
+<CFQUERY NAME="Check_attachments" DATASOURCE="#Application.Datasource#">
 				SELECT Doc_ID FROM Contract_Attachments WHERE Project_ID = '#PM_Item_Master_ID#'
 			</CFQUERY>
+</cfif>
 					
 			<TD CLASS="tdbody"><CFIF Check_attachments.recordcount GT 0><IMG SRC="/images/doc.gif" ALT="This project has #Check_attachments.recordcount# attached document(s)" height="16" width="13"></CFIF>&nbsp;</TD>
 	

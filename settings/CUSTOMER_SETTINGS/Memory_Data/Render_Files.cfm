@@ -1,7 +1,20 @@
+<cfset useLakebaseForgetAllSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForgetAllSettings>
+	<cftry>
+		<cfset getAllSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllSettings>
 <cfquery name="getAllSettings" datasource="#application.datasource#">
 	SELECT * 
 	FROM Customer_Settings
 </cfquery>
+</cfif>
 
 <cfscript>
 	setting_struct = [
@@ -128,10 +141,23 @@
                    ];
 </cfscript>
                    
+<cfset useLakebaseForgetGroupLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_labels")>
+<cfif useLakebaseForgetGroupLabels>
+	<cftry>
+		<cfset getGroupLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_labels", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupLabels>
 <cfquery name="getGroupLabels" datasource="#application.datasource#">
 	SELECT *
 	FROM Group_Labels
 </cfquery>
+</cfif>
 
 <cfloop index="x" from="1" to="#getGroupLabels.approval_group_count#" step="1">
 	<cfset numCount = 3 - len(x)>

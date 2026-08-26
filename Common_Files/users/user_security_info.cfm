@@ -1,10 +1,26 @@
 <CFSET PAGE_TITLE="User Security Info">
 
+<cfset useLakebaseForGetUserAccessLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserAccessLevel>
+	<cftry>
+		<cfset GetUserAccessLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#URL.User_ID#",
+				"select" = "access_level"
+			}), "access_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserAccessLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserAccessLevel>
 <CFQUERY NAME="GetUserAccessLevel" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT Access_Level
 	FROM _Users
 	WHERE User_ID = '#URL.User_ID#'
 </CFQUERY>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 

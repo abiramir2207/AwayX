@@ -210,7 +210,25 @@ TABLE.Underlinedtable TD
 			<TD COLSPAN="2">
 				<B><CFOUTPUT>#application.returned_customer_setting.distributor_label_singular# Name</CFOUTPUT></B>
 				<CFIF FORM.Distributor NEQ "">
-					<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
+					<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Distributor#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "name.asc",
+				"select" = "bsa_foodservice_customers_id,name"
+			}), "bsa_foodservice_customers_id,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
 						SELECT BSA_Foodservice_Customers_ID,Name 
 						FROM BSA_Foodservice_Customers 
 						WHERE
@@ -221,6 +239,7 @@ TABLE.Underlinedtable TD
 							BSA_Foodservice_Customers.Active_Code = 'A'
 						ORDER BY Name
 					</CFQUERY>
+</cfif>
 					
 					<CFSET FORM.Visible_Distributor=VAlueList(Dist_Search_Result.Name)>
 				</CFIF>
@@ -236,11 +255,27 @@ TABLE.Underlinedtable TD
 			<TD COLSPAN="2">
 				<B><CFOUTPUT>#application.returned_customer_setting.operator_label_singular# Name</CFOUTPUT></B>
 				<CFIF FORM.Operator_List NEQ "">
-					<CFQUERY NAME="Oper_Search_Result" DATASOURCE = "#Application.Datasource#">
+					<cfset useLakebaseForOper_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForOper_Search_Result>
+	<cftry>
+		<cfset Oper_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_List#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOper_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOper_Search_Result>
+<CFQUERY NAME="Oper_Search_Result" DATASOURCE = "#Application.Datasource#">
 						SELECT Operator_Name
 						FROM	BSA_Operator
 						WHERE 	BSA_Operator_ID = '#FORM.Operator_List#'
 					</CFQUERY>
+</cfif>
 					
 					<CFSET FORM.Visible_Operator=Oper_Search_Result.Operator_Name>
 				</CFIF>

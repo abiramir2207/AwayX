@@ -9,11 +9,26 @@
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFPARAM NAME="URL.RID" DEFAULT="0">
+<cfset useLakebaseForGet_Holidays = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("holidays")>
+<cfif useLakebaseForGet_Holidays>
+	<cftry>
+		<cfset Get_Holidays = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("holidays", {
+				"order" = "holiday_date.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Holidays = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Holidays>
 <CFQUERY NAME="Get_Holidays" datasource="#application.datasource#">
 	Select		*
 	From		Holidays
 	Order by	Holiday_Date
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="Get_LastUpdated_Details" datasource="#application.datasource#">
 	Select		TOP 1*

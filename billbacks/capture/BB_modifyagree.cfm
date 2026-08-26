@@ -1,9 +1,28 @@
+<cfset useLakebaseForupdatemodifyagree = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdatemodifyagree>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#url.BBID#"
+			},
+			{
+				"bb_modify_agree" = "1",
+				"bb_modify_agree_user" = "#request.AccessStructure.user_id#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatemodifyagree = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatemodifyagree>
 <CFQUERY NAME="updatemodifyagree" DATASOURCE="#application.datasource#">
 update Billback
 set BB_modify_agree = 1,
 BB_Modify_Agree_User = '#request.AccessStructure.user_id#'
 where Billback_Id = '#url.BBID#'
 </CFQUERY>
+</cfif>
 	
 <CFQUERY NAME="updatemodifyagree" DATASOURCE="#application.datasource#">
 update BB_Agreed_Info

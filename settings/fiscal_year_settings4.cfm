@@ -2,6 +2,23 @@
 <cfset Fiscal_Year = "FY_" & dateFormat( form[ 'Period_' & form.Number_of_periods & '_Ending_Date'], 'yyyy' )>
 
 <!---  determine if fiscal year exists & get the number of periods based on record count --->
+<cfset useLakebaseForgetFiscalYear = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForgetFiscalYear>
+	<cftry>
+		<cfset getFiscalYear = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"fiscal_year" = "eq.#Fiscal_Year#",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFiscalYear = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFiscalYear>
 <cfquery name="getFiscalYear" datasource="#application.datasource#">
   SELECT 1
     FROM Fiscal_Year
@@ -9,6 +26,7 @@
          AND Fiscal_Year = '#Fiscal_Year#'
          AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset oldPeriodCount = getFiscalYear.recordCount>
 

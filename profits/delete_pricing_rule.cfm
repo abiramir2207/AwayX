@@ -5,11 +5,27 @@
 
 <!--- Get the data for the passed rule --->
 
+<cfset useLakebaseForGet_Rule_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pricing_rule")>
+<cfif useLakebaseForGet_Rule_Data>
+	<cftry>
+		<cfset Get_Rule_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pricing_rule", {
+				"pricing_rule_id" = "eq.#URL.PRID#",
+				"select" = "pricing_rule_name"
+			}), "pricing_rule_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Rule_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Rule_Data>
 <CFQUERY NAME="Get_Rule_Data" datasource="#application.datasource#">
 	Select		Pricing_Rule.Pricing_Rule_Name
 	From		Pricing_Rule
 	Where		Pricing_Rule.Pricing_Rule_ID			=	'#URL.PRID#'
 </CFQUERY>
+</cfif>
 
 <CFSET pagetitle = "View Pricing Rule: "&Get_Rule_Data.Pricing_Rule_Name>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->

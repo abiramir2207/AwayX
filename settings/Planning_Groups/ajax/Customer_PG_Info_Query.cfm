@@ -42,11 +42,26 @@
 		<cfprocresult name="qryPGCustomerCategoryDefinitionByID">
 </cfstoredproc>
 
+<cfset useLakebaseForqppg = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qrypgcustomercategorydefinitionbyid")>
+<cfif useLakebaseForqppg>
+	<cftry>
+		<cfset qppg = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qrypgcustomercategorydefinitionbyid", {
+				"order" = "isortcol_0.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqppg = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqppg>
 <cfquery name="qppg" dbtype="Query">
 		SELECT *
 		FROM qryPGCustomerCategoryDefinitionByID
 		ORDER BY #tmp.columnArray[url.iSortCol_0 + 1]# #url.sSortDir_0#
 </cfquery>
+</cfif>
 <!--- CREATED NEW QUERY WITH ONLY SPECIFIED COLUMNS ABOVE --->
 
 	<cfset tmp.qppg = QueryNew("Group_Desc, Group_Number, Group_Name, Inclusion_Exclusion, Business_Unit_Desc","varchar,varchar,varchar,varchar,varchar") />

@@ -62,6 +62,22 @@
 </cfquery>
 
 <!---Get statuses--->
+<cfset useLakebaseForGetStatuses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_status_types")>
+<cfif useLakebaseForGetStatuses>
+	<cftry>
+		<cfset GetStatuses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_status_types", {
+				"contract_status_type_id" = "neq.3",
+				"order" = "contract_status_type_id.asc",
+				"select" = "contract_status_type_id,contract_status_type_desc"
+			}), "contract_status_type_id,contract_status_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatuses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatuses>
 <cfquery name="GetStatuses" datasource="#application.datasource#">
 	Select	Contract_Status_Type_ID, Contract_Status_Type_Desc
 	From 	Contract_Status_Types
@@ -69,16 +85,34 @@
 		Contract_Status_Type_ID <> 3
 	Order By Contract_Status_Type_ID
 </cfquery>
+</cfif>
 
 <!---Populates distributor if defined--->
 <CFIF FORM.Distributor_List NEQ "">
-	<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#FORM.Distributor_List#",
+				"order" = "name.asc",
+				"select" = "bsa_foodservice_customers_id,name"
+			}), "bsa_foodservice_customers_id,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
 		SELECT BSA_Foodservice_Customers_ID,Name 
 		FROM BSA_Foodservice_Customers 
 		WHERE
 			BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID = '#FORM.Distributor_List#'
 		ORDER BY Name
 	</CFQUERY>
+</cfif>
 	<CFSET Selected_Distributor=Dist_Search_Result.Name>
 </CFIF>
 

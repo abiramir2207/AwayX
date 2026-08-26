@@ -1,10 +1,25 @@
 
 <cfset pagebreak = "<div style='page-break-after: always; '> </div>">
 <cfoutput>
+<cfset useLakebaseForGetDistinctTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_type")>
+<cfif useLakebaseForGetDistinctTypes>
+	<cftry>
+		<cfset GetDistinctTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistinctTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistinctTypes>
 <cfquery name="GetDistinctTypes" datasource="#application.datasource#">
 SELECT DISTINCT * FROM RP_Type
 WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 <cfloop query="GetDistinctTypes">
 	<CFFILE 
@@ -84,12 +99,29 @@ Table.Maintable TD.tableheaders
 
 <!---Distributor Summary--->
 <tr><th colspan="100%" style="border-bottom: solid navy 1px">#GetDistributorSummary.Type_Desc# Summary</th>
-	<cfquery name="DistributorSummary" datasource="#application.datasource#">
+	<cfset useLakebaseForDistributorSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_distributor_summary")>
+<cfif useLakebaseForDistributorSummary>
+	<cftry>
+		<cfset DistributorSummary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_distributor_summary", {
+				"distributor_id" = "eq.#Distributor_ID#",
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistributorSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistributorSummary>
+<cfquery name="DistributorSummary" datasource="#application.datasource#">
 	SELECT DISTINCT * FROM RP_Distributor_Summary 
 	WHERE Distributor_ID = '#Distributor_ID#'
 	AND Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 	AND Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 	</cfquery>
+</cfif>
 	
 	<tr>
 		
@@ -125,13 +157,31 @@ Table.Maintable TD.tableheaders
 <!---Billback Summary--->
 <cfset BillbackTotal = 0>
 <tr><th colspan="100%" style="border-bottom: solid navy 1px">Billback Summary</th>
-	<cfquery name="GetBillbackSummary" datasource="#application.datasource#">
+	<cfset useLakebaseForGetBillbackSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_summary")>
+<cfif useLakebaseForGetBillbackSummary>
+	<cftry>
+		<cfset GetBillbackSummary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_billback_summary", {
+				"distributor_id" = "eq.#Distributor_ID#",
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"bb_summary_type" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSummary>
+<cfquery name="GetBillbackSummary" datasource="#application.datasource#">
 	SELECT * FROM RP_Billback_Summary 
 	WHERE Distributor_ID = '#Distributor_ID#'
 	AND Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 	AND Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#' 
 	AND BB_Summary_Type = 1 
 	</cfquery>
+</cfif>
 
 	<tr>
 		
@@ -174,7 +224,25 @@ Table.Maintable TD.tableheaders
 <cfset TotalInvoice = 0>
 <cfset GrossSales = 0>
 <tr><th colspan="100%"  style="border-bottom: solid navy 1px"><strong>Invoice Summary</strong></th>
-	<cfquery name="GetInvoiceSummaries" datasource="#application.datasource#">
+	<cfset useLakebaseForGetInvoiceSummaries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_summary")>
+<cfif useLakebaseForGetInvoiceSummaries>
+	<cftry>
+		<cfset GetInvoiceSummaries = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_invoice_summary", {
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"distributor_id" = "eq.#Distributor_ID#",
+				"order" = "invoice_date.desc",
+				"select" = "invoice_number,invoice_date,purchase_order,dist_sales,total_dist_dollars"
+			}), "invoice_number,invoice_date,purchase_order,dist_sales,total_dist_dollars"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetInvoiceSummaries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetInvoiceSummaries>
+<cfquery name="GetInvoiceSummaries" datasource="#application.datasource#">
 	SELECT DISTINCT Invoice_Number, Invoice_Date, Purchase_Order, Dist_Sales, Total_Dist_Dollars 
 	FROM RP_Invoice_Summary
 	WHERE Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
@@ -182,6 +250,7 @@ Table.Maintable TD.tableheaders
 	AND Distributor_ID = '#Distributor_ID#'
 	ORDER BY Invoice_Date DESC
 	</cfquery>
+</cfif>
 	<tr>
 		
 		<th colspan="2"><strong>#application.returned_customer_setting.distributor_label_singular# Name</strong></td>

@@ -26,10 +26,26 @@ Shows all the details for a program.
 <cfparam name="ViewOnly" default="0">
 
 <!---Show discount identifier--->
+<cfset useLakebaseForgetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGeneralSettings>
+	<cftry>
+		<cfset getGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1",
+				"select" = "use_discount_id"
+			}), "use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGeneralSettings>
 <cfquery name="getGeneralSettings" datasource="#application.datasource#">
 SELECT TOP 1 Use_Discount_ID
 FROM General_Settings
 </cfquery>
+</cfif>
 
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = genSettingsManager.get()>
@@ -122,11 +138,27 @@ FROM General_Settings
 
 	<!---Show Discount Identifier if it's turned on and there is one--->
 	<cfif getGeneralSettings.Use_Discount_ID IS 1 AND len(trim(GetAllInfo.Discount_Identifier_ID)) GT 0>
-	<cfquery name="GetDIInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetDIInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetDIInfo>
+	<cftry>
+		<cfset GetDIInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#GetAllInfo.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDIInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDIInfo>
+<cfquery name="GetDIInfo" datasource="#application.datasource#">
 	SELECT Discount_Identifier_Number, Discount_Identifier_Desc
 	FROM Discount_Identifier
 	WHERE Discount_Identifier_ID = '#GetAllInfo.Discount_Identifier_ID#'
 	</cfquery>
+</cfif>
 		<tr>
 		<td>Discount Identifier</td>
 		<td>#GetDIInfo.Discount_Identifier_Desc# (#GetDIInfo.Discount_Identifier_Number#)</td>
@@ -1233,11 +1265,27 @@ FROM General_Settings
 
 		<cfif len(trim(Default_Product)) GT 0>
 
-			<cfquery name="GetDefaultProductName" datasource="#application.datasource#">
+			<cfset useLakebaseForGetDefaultProductName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetDefaultProductName>
+	<cftry>
+		<cfset GetDefaultProductName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#Default_Product#",
+				"select" = "description"
+			}), "description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDefaultProductName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDefaultProductName>
+<cfquery name="GetDefaultProductName" datasource="#application.datasource#">
 				SELECT Description
 				FROM BSA_Foodservice_Items_Master
 				WHERE BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = '#Default_Product#'
 			</cfquery>
+</cfif>
 
 			<tr>
 				<td colspan="3">
@@ -1370,11 +1418,26 @@ FROM General_Settings
 			</tr>
 			<tr>
 			<td>
-			<cfquery name="qGetTemplateComponents" dbtype="query">
+			<cfset useLakebaseForqGetTemplateComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetalltemplatediscountcomponents")>
+<cfif useLakebaseForqGetTemplateComponents>
+	<cftry>
+		<cfset qGetTemplateComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetalltemplatediscountcomponents", {
+				"discount_type_id" = "eq.#DISCOUNT_TYPE_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplateComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplateComponents>
+<cfquery name="qGetTemplateComponents" dbtype="query">
 				SELECT	*
 				FROM	qGetAllTemplateDiscountComponents
 				WHERE	DISCOUNT_TYPE_ID = #DISCOUNT_TYPE_ID#
 			</cfquery>
+</cfif>
 			<cfif qGetTemplateComponents.recordCount>
 				<cfset colsCount = 0 />
 				<table cellpadding="1" cellspacing="0" width="100%">

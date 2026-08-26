@@ -2168,11 +2168,27 @@ function validateForm(btnSaveaction,num,svTemplate ,ezTemplate,ezButton,ezMaxRat
 			<table bgcolor="White" style="border-color:Orange;border-style:solid;" cellpadding="3" cellspacing="0"  align="center">
 				<tr>
 					<td>
-						<cfquery name="qGetEzButtonUpdateData" datasource="#application.datasource#">
+						<cfset useLakebaseForqGetEzButtonUpdateData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetEzButtonUpdateData>
+	<cftry>
+		<cfset qGetEzButtonUpdateData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetSettings.EZ_Button_Last_Updated_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetEzButtonUpdateData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetEzButtonUpdateData>
+<cfquery name="qGetEzButtonUpdateData" datasource="#application.datasource#">
 							SELECT	Name_First, Name_Last
 							FROM	_Users
 							WHERE	User_ID = '#GetSettings.EZ_Button_Last_Updated_By#'
 						</cfquery>
+</cfif>
 						<cfoutput>
 							<font size="2"><b>The settings were last updated on #dateformat(GetSettings.EZ_Button_Last_Updated_Date, 'mm/dd/yyyy')# #timeformat(GetSettings.EZ_Button_Last_Updated_Date, 'hh:mm:ss TT')# by #qGetEzButtonUpdateData.Name_First# #qGetEzButtonUpdateData.Name_Last#</b></font>
 						</cfoutput>

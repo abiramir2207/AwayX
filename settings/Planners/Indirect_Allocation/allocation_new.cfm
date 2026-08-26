@@ -11,11 +11,27 @@
 <cfset duplicate_found_in_save = 0>
 
 <cfif cgi.request_method is "post">
-    <cfquery name="qAllocation" datasource="#application.datasource#">
+    <cfset useLakebaseForqAllocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_indirect_allocation_header")>
+<cfif useLakebaseForqAllocation>
+	<cftry>
+		<cfset qAllocation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_indirect_allocation_header", {
+				"fiscal_year" = "eq.#form.fiscal_year#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAllocation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAllocation>
+<cfquery name="qAllocation" datasource="#application.datasource#">
         SELECT 1
           FROM Planner_Indirect_Allocation_Header
          WHERE Fiscal_year = #form.fiscal_year#
     </cfquery>
+</cfif>
 
     <cfif qAllocation.recordCount and form.overwrite neq "1">
         <cfset duplicate_found_in_save = 1>

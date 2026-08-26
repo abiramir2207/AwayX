@@ -97,11 +97,26 @@
 <!--- Get all of the UOM descriptions																 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFIF uom NEQ "All">
-	<CFQUERY NAME="Get_UOM" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_UOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForGet_UOM>
+	<cftry>
+		<cfset Get_UOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#uom#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_UOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_UOM>
+<CFQUERY NAME="Get_UOM" datasource="#application.datasource#">
 	Select	*
 	From	Units_of_Measure
 	Where	Unit_of_Measure_ID	=	#uom#
 	</CFQUERY>
+</cfif>
 <CFELSE>
 	<CFSET Get_UOM = QueryNew("Unit_of_Measure_Desc")>
 	<CFSET temp = QueryAddRow(Get_UOM)>
@@ -780,11 +795,27 @@ Order by	Contract_Created_Date desc
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 <CFIF isnumeric(Get_Contracts.Operator_ID)>
-		<CFQUERY NAME="Get_Operator_Name" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Operator_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Name>
+	<cftry>
+		<cfset Get_Operator_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#Get_Contracts.Operator_ID#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Name>
+<CFQUERY NAME="Get_Operator_Name" datasource="#application.datasource#">
 			Select		BSA_Operator.operator_name
 			From		BSA_Operator
 			Where		BSA_Operator_ID	=	'#Get_Contracts.Operator_ID#'
 		</CFQUERY>
+</cfif>
 		<CFSET operatorname=Get_Operator_Name.operator_name>
 	<CFELSE>
 		<CFSET operatorname="Multiple">

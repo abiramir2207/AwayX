@@ -265,12 +265,29 @@
 	
 	<cffunction name="getBillbackInfo" output="false" returntype="query">
 		<cfargument name="billbackId" type="string" required="true">
-		<cfquery name="qGetBillbackInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBillbackInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqGetBillbackInfo>
+	<cftry>
+		<cfset qGetBillbackInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#arguments.billbackId#",
+				"select" = "bb_code,bb_title,bb_start_date,bb_end_date"
+			}), "bb_code,bb_title,bb_start_date,bb_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbackInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbackInfo>
+<cfquery name="qGetBillbackInfo" datasource="#application.datasource#">
 			SELECT	BB_Code, BB_Title, BB_Start_Date, BB_End_Date
 			FROM	Billback
 			WHERE	Billback.Deleted = 0
 			AND		Billback.Billback_ID = '#arguments.billbackId#'
 		</cfquery>
+</cfif>
 		<cfreturn qGetBillbackInfo />
 	</cffunction>
 	
@@ -371,12 +388,29 @@
 	
 	<cffunction name="getBillbackIDForProgram" output="false" returntype="string">
 		<cfargument name="billbackProgramId" type="string" required="true">
-		<cfquery name="qGetBillbackID" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBillbackID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForqGetBillbackID>
+	<cftry>
+		<cfset qGetBillbackID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"deleted" = "eq.0",
+				"billback_program_id" = "eq.#arguments.billbackProgramId#",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbackID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbackID>
+<cfquery name="qGetBillbackID" datasource="#application.datasource#">
 			SELECT	Billback_ID
 			FROM	Billback_Program
 			WHERE	Billback_Program.Deleted = 0
 			AND		Billback_Program.Billback_Program_ID = '#arguments.billbackProgramId#'
 		</cfquery>
+</cfif>
 		<cfreturn qGetBillbackID.Billback_ID />
 	</cffunction>
 	
@@ -477,12 +511,29 @@
 
 	<cffunction name="getBBCurrDistIdList" output="false" returntype="string">
 		<cfargument name="billbackId" type="string" required="true">
-		<cfquery name="qGetBBCurrDistId" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBBCurrDistId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>
+<cfif useLakebaseForqGetBBCurrDistId>
+	<cftry>
+		<cfset qGetBBCurrDistId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor_list", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBBCurrDistId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBBCurrDistId>
+<cfquery name="qGetBBCurrDistId" datasource="#application.datasource#">
 			Select	Distinct Distributor_ID 
 				from Billback_Distributor_List
 				where Billback_ID = '#FORM.Billback_ID#'
 				and	Deleted = 0
 		</cfquery>
+</cfif>
 		<cfreturn valueList(qGetBBCurrDistId.Distributor_ID) />
 	</cffunction>
 <!---\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\          //////////////////////////////////////////////////////////--->	

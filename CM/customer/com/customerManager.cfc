@@ -11,13 +11,30 @@
 	<cffunction name="getFamilys" output="true">
 		
 		
-		<CFQUERY NAME="getFamilys" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForgetFamilys = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForgetFamilys>
+	<cftry>
+		<cfset getFamilys = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc",
+				"select" = "family_id,family_name"
+			}), "family_id,family_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFamilys = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFamilys>
+<CFQUERY NAME="getFamilys" DATASOURCE="#application.datasource#">
 			SELECT	Family_ID, Family_Name
 			FROM	Distributor_Family
 			WHERE
 					Deleted = 0
 			ORDER BY Family_Name
 		</CFQUERY>
+</cfif>
 		
 		<cfreturn getFamilys>
 		
@@ -26,13 +43,30 @@
 	<cffunction name="getBuyingGroups" output="true">
 		
 		
-		<CFQUERY NAME="getBuyingGroups" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForgetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForgetBuyingGroups>
+	<cftry>
+		<cfset getBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"order" = "buying_group_name.asc",
+				"select" = "buying_group_id,buying_group_name"
+			}), "buying_group_id,buying_group_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBuyingGroups>
+<CFQUERY NAME="getBuyingGroups" DATASOURCE="#application.datasource#">
 			SELECT	Buying_Group_ID, Buying_Group_Name
 			FROM	Distributor_Buying_Groups
 			WHERE
 					Deleted = 0
 			ORDER BY Buying_Group_Name
 		</CFQUERY>
+</cfif>
 		
 		<cfreturn getBuyingGroups>
 		
@@ -41,13 +75,30 @@
 	<cffunction name="getOperatorTypes" output="true">
 		
 		
-		<CFQUERY NAME="getOperatorTypes" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForgetOperatorTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForgetOperatorTypes>
+	<cftry>
+		<cfset getOperatorTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"deleted" = "eq.0",
+				"order" = "operator_type.asc",
+				"select" = "operator_type"
+			}), "operator_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOperatorTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOperatorTypes>
+<CFQUERY NAME="getOperatorTypes" DATASOURCE="#application.datasource#">
 			SELECT	DISTINCT Operator_Type
 			FROM	BSA_Operator
 			WHERE
 				Deleted = 0
 			ORDER BY Operator_Type
 		</CFQUERY>
+</cfif>
 		
 		<cfreturn getOperatorTypes>
 		

@@ -41,12 +41,30 @@
 	AND		Copied = 1
 </cfquery>
 
+<cfset useLakebaseForqGetSystemAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetSystemAdmin>
+	<cftry>
+		<cfset qGetSystemAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSystemAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSystemAdmin>
 <cfquery name="qGetSystemAdmin" datasource="#application.datasource#">
 	SELECT	TOP 1 User_Email
 	FROM 	_Users
 	WHERE 	Is_System_Administrator = 1
 	AND		Deleted = 0
 </cfquery>
+</cfif>
 
 <!---Loop over Mass Copied Programs and send out RFA emails--->
 <cfloop query="qGetMassCopiedPrograms">

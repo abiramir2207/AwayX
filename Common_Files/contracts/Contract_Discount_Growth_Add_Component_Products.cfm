@@ -60,11 +60,27 @@
 		contract = CreateObject("component", "components.programs.rebates.Contract");
 		GetContractInfo = contract.get(cryp.value);
 	</cfscript>
-  <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+  <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT First_parent_ID
     FROM Program_Control_Panel_Options
     WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
   </cfquery>
+</cfif>
 
 </cfif>
 <cfif isDefined("GetTemplateInfo") AND GetTemplateInfo.RecordCount GTE 1>
@@ -578,11 +594,27 @@
 					)
 		</CFQUERY>
 	<!---handle for multi level groups--->
-	<cfquery name="qGetGroups" dbtype="query">
+	<cfset useLakebaseForqGetGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_comp_products")>
+<cfif useLakebaseForqGetGroups>
+	<cftry>
+		<cfset qGetGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_comp_products", {
+				"is_group" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+			}), "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroups>
+<cfquery name="qGetGroups" dbtype="query">
 		SELECT 	BSA_Foodservice_Items_Master_ID, 	Product_Group_Level_ID, Pricing_Level_ID
 		FROM	Get_Growth_Comp_Products
 		WHERE	Is_Group = 1
 	</cfquery>
+</cfif>
 	<!---if we have a record set then we know we have groups so we have to handle for it--->
 	<cfif qGetGroups.RecordCount>
 
@@ -598,11 +630,27 @@
 		</cfloop>
 
 		<!---if we have groups check to see if there are any products--->
-		<cfquery name="qGetProducts" dbtype="query">
+		<cfset useLakebaseForqGetProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_comp_products")>
+<cfif useLakebaseForqGetProducts>
+	<cftry>
+		<cfset qGetProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_comp_products", {
+				"is_group" = "eq.0",
+				"select" = "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+			}), "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProducts>
+<cfquery name="qGetProducts" dbtype="query">
 			SELECT 	BSA_Foodservice_Items_Master_ID, Product_Group_Level_ID, Pricing_Level_ID
 			FROM	Get_Growth_Comp_Products
 			WHERE	Is_Group = 0
 		</cfquery>
+</cfif>
 
 		<!---77408 Product Group sequencing START--->
 		<cfloop from="1" to="#request.AccessStructure.numberOfProductGroupLevels#" index="levels">
@@ -628,11 +676,27 @@
 	</cfif>
 
 	<CFSET FORM.Product_List = ValueList(Get_Growth_Comp_Products.BSA_Foodservice_Items_Master_ID, ",")>
-	<cfquery name="qGetLevel_1_Products" dbtype="query">
+	<cfset useLakebaseForqGetLevel_1_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_comp_products")>
+<cfif useLakebaseForqGetLevel_1_Products>
+	<cftry>
+		<cfset qGetLevel_1_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_comp_products", {
+				"product_group_level_id" = "eq.1",
+				"select" = "product_group_id"
+			}), "product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLevel_1_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLevel_1_Products>
+<cfquery name="qGetLevel_1_Products" dbtype="query">
 		SELECT	Product_Group_ID
 		FROM	Get_Growth_Comp_Products
 		WHERE	Product_Group_Level_ID = 1
 	</cfquery>
+</cfif>
 	<cfset FORM.Product_Level_1 = ValueList(qGetLevel_1_Products.Product_Group_ID) />
 </CFIF>
 
@@ -1782,12 +1846,29 @@ METHOD="post" name="compProductTierRates" ID="compProductTierRates" STYLE="DISPL
 
 	<Cfif appsettings.getComponent_Product_Restrictions_On() IS 1>
 
-	<cfquery name="ComponentForbiddenProducts" datasource="#application.datasource#">
+	<cfset useLakebaseForComponentForbiddenProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
+<cfif useLakebaseForComponentForbiddenProducts>
+	<cftry>
+		<cfset ComponentForbiddenProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_products_restricted", {
+				"discount_type_id" = "eq.4 --Growth",
+				"component_id" = "eq.#url.Growth_Component_Name_ID#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForComponentForbiddenProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForComponentForbiddenProducts>
+<cfquery name="ComponentForbiddenProducts" datasource="#application.datasource#">
 		SELECT Product_ID
 		FROM Component_Products_Restricted
 		WHERE Discount_Type_ID = 4 --Growth
 		AND Component_ID = '#url.Growth_Component_Name_ID#'
 	</cfquery>
+</cfif>
 
 	<cfset ProductForbiddenList = valuelist(ComponentForbiddenProducts.Product_ID)>
 	<input type="hidden" name="ProductListToExcludeFromSelecting" value="#ProductForbiddenList#">

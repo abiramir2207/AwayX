@@ -3,11 +3,26 @@
 
 <link rel="stylesheet" type="text/css" href="/common_files/datatable.css">
 
-    <cfquery name="qErrorRecords" datasource="#application.datasource#">
+    <cfset useLakebaseForqErrorRecords = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload_doc_error_details")>
+<cfif useLakebaseForqErrorRecords>
+	<cftry>
+		<cfset qErrorRecords = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_targets_upload_doc_error_details", {
+				"doc_id" = "eq.#url.Doc_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqErrorRecords = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqErrorRecords>
+<cfquery name="qErrorRecords" datasource="#application.datasource#">
         SELECT * 
         FROM Margin_Targets_Upload_Doc_Error_Details
         WHERE Doc_ID  = #url.Doc_ID#
     </cfquery>
+</cfif>
 
 <table class="datagrid" style="width: 100%">	
 <thead>

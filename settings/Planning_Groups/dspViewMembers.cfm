@@ -4,9 +4,25 @@
 <cfset iCounter = 1/>
 <cfset  CURRENTROW = 1 />
 <cfif isDefined("URL.PGOperatorCategoryID") AND URL.PGOperatorCategoryID NEQ "">
-	<cfquery name="OperatorCategoryDetails" datasource="#application.datasource#">
+	<cfset useLakebaseForOperatorCategoryDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForOperatorCategoryDetails>
+	<cftry>
+		<cfset OperatorCategoryDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"pg_operator_category_id" = "eq.#URL.PGOperatorCategoryID#",
+				"select" = "pg_type_id,pg_operator_category_code,pg_operator_category_name"
+			}), "pg_type_id,pg_operator_category_code,pg_operator_category_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOperatorCategoryDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOperatorCategoryDetails>
+<cfquery name="OperatorCategoryDetails" datasource="#application.datasource#">
 		SELECT PG_Type_ID, PG_Operator_Category_Code, PG_Operator_Category_Name FROM PG_Operator_Category where PG_Operator_Category_ID ='#URL.PGOperatorCategoryID#'
 	</cfquery>
+</cfif>
 	<cfstoredproc procedure="Get_Operator_Group_Info_For_PG" datasource="#application.datasource#">
 		<cfprocparam type="In" CFSQLType="CF_SQL_VARCHAR" dbVarName = "@@PG_Operator_Category_ID" value = "#URL.PGOperatorCategoryID#" null="no">
 	  <cfprocresult name="qryPGOperatorCategoryDefinitionByID">    

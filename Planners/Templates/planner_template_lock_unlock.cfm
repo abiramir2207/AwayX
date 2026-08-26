@@ -10,9 +10,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 ------------------------------------------------------------------------------>
 
 <cfif (isDefined("qGetPlannerTemplate") AND qGetPlannerTemplate.RecordCount NEQ 0)>
-	<cfquery name="getLockedUser" datasource="#application.datasource#">
+	<cfset useLakebaseForgetLockedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetLockedUser>
+	<cftry>
+		<cfset getLockedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetPlannerTemplate.Locked_By_User_ID#",
+				"select" = "name_first + ' ' + name_last as locked_user"
+			}), "name_first + ' ' + name_last as locked_user"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLockedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLockedUser>
+<cfquery name="getLockedUser" datasource="#application.datasource#">
 	      SELECT Name_First + ' ' + Name_Last AS Locked_user  FROM _users WHERE USER_ID = '#qGetPlannerTemplate.Locked_By_User_ID#'
 	</cfquery>
+</cfif>
 	<cfoutput>
 	<cfset variables.inEditMode = 0>
 	<div style="display:flex;width:80%;">

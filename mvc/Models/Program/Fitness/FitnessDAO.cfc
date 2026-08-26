@@ -313,13 +313,30 @@
 			var qGetDropDownData		= "";
 			 WriteLog(file="mws.log", text="[ ] [getBusSegData ] #now()#"); 
 		</cfscript>
-		<cfquery name="qGetDropDownData" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDropDownData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDropDownData>
+	<cftry>
+		<cfset qGetDropDownData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_unit_id" = "neq.NONE",
+				"select" = "business_segment_id as sid,business_unit_desc as label"
+			}), "business_segment_id as sid,business_unit_desc as label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDropDownData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDropDownData>
+<cfquery name="qGetDropDownData" datasource="#application.datasource#">
 			SELECT Business_Segment_Id as sId,
 				Business_Unit_Desc as label
 			 FROM Business_Segment
 			 WHERE Deleted = 0 AND 
 				Business_Unit_ID != 'NONE'
 		</cfquery>
+</cfif>
 	
 		<cfreturn qGetDropDownData />
 	</cffunction>

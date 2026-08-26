@@ -15,10 +15,25 @@
 <cfparam name="error_DiscountType" default="0">
 
 <!---Makes sure that all required fields are accounted for--->
+<cfset useLakebaseForGetAllInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetAllInfo>
+	<cftry>
+		<cfset GetAllInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllInfo>
 <cfquery name="GetAllInfo" datasource="#application.datasource#">
 	SELECT * FROM Program_Control_Panel_Options 
 	WHERE ProgramControl_Panel_Options_ID = #ID#
 </cfquery>
+</cfif>
 
 <cfparam name="error" default="0">
 

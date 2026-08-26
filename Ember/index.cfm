@@ -1,5 +1,21 @@
 <cfparam name="sDestination" default="Ember"/>
 <!--- get the ember logon account for this user --->
+<cfset useLakebaseForqEmberInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqEmberInfo>
+	<cftry>
+		<cfset qEmberInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "ember_info,analytics_sso_user_name,user_code"
+			}), "ember_info,analytics_sso_user_name,user_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqEmberInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqEmberInfo>
 <CFQUERY NAME="qEmberInfo" datasource="#application.datasource#">
 	Select		Ember_Info,
 				Analytics_SSO_USER_NAME,
@@ -8,6 +24,7 @@
 	Where 		user_id = '#request.AccessStructure.user_id#'
 	AND 		deleted = 0
 </CFQUERY>
+</cfif>
 
 <cfscript>
 	if(sDestination == 'Ember'){ //Login to Ember/Insight

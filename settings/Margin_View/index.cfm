@@ -94,11 +94,27 @@ FROM	Margin_View
 		<B>How should the margin approval screen be displayed?</B>&nbsp;
 		<hr color="navy">
 		
-		<cfquery name="GetMarginTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForGetMarginTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_view_type")>
+<cfif useLakebaseForGetMarginTypes>
+	<cftry>
+		<cfset GetMarginTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_view_type", {
+				"deleted" = "eq.0",
+				"order" = "margin_view_type_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMarginTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMarginTypes>
+<cfquery name="GetMarginTypes" datasource="#application.datasource#">
 		SELECT * FROM Margin_View_Type
 		WHERE Deleted = 0
 		ORDER BY Margin_View_Type_ID
 		</cfquery>
+</cfif>
 		
 		<cfoutput query="GetMarginTypes">
 		<input type="radio" value="#Margin_View_Type_ID#" name="Margin_View_Type" <cfif Margin_View_Type_ID IS DateUpdated.Margin_View_Type>checked</cfif>> #Margin_Type_Description#<br>

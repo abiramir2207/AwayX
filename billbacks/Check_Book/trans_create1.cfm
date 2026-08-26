@@ -237,9 +237,25 @@
 	
 	
 	<CFIF Not IsDefined("FORM.Pay_Multi_Billbacks_ID")>
-		<CFQUERY NAME="Get_bb_code" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_bb_code = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGet_bb_code>
+	<cftry>
+		<cfset Get_bb_code = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#form.billback_ID#",
+				"select" = "bb_reference"
+			}), "bb_reference"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_bb_code = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_bb_code>
+<CFQUERY NAME="Get_bb_code" DATASOURCE="#application.datasource#">
 			SELECT BB_Reference FROM billback WHERE billback_id='#form.billback_ID#'
 		</CFQUERY>
+</cfif>
 	
 		<CFQUERY name = "Get_desc_amt" datasource="#application.datasource#">
 			SELECT a.Paid_amount amount,b.BB_Start_Date st_dt,b.BB_End_Date end_dt 
@@ -310,9 +326,25 @@
 	
 </CFIF>
 
+<cfset useLakebaseForcheck_no_list = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForcheck_no_list>
+	<cftry>
+		<cfset check_no_list = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"check_number" = "not.is.null",
+				"select" = "check_number"
+			}), "check_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck_no_list = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck_no_list>
 <CFQUERY name = "check_no_list" datasource="#application.datasource#">
 	select check_number from ledger_table where check_number is not null
 </CFQUERY>
+</cfif>
 
  <CFOUTPUT>
 <script type = "text/javascript">
@@ -470,11 +502,26 @@ function checkDate(dateStr1,dateStr2)
 </SCRIPT>
 
 
+<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"ledger_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
 <CFQUERY NAME="Get_Data" DATASOURCE="#application.datasource#">
 	Select		*
 	From		Ledger_Table
 	Where		Ledger_ID	=	#URL.RID#
 </CFQUERY>
+</cfif>
 
 
 

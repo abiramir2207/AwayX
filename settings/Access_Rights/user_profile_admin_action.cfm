@@ -9,11 +9,30 @@
 		</cfcase>
 	
 		<cfcase value="edit">
-	 		<cfquery name="updatePosition" datasource="#application.datasource#">
+	 		<cfset useLakebaseForupdatePosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForupdatePosition>
+	<cftry>
+		<cfset application.oLakebase.updateRows("profiles",
+			{
+				"profiles_id" = "eq.#form.profiles_id#"
+			},
+			{
+				"profiles_desc" = "#Profile_Label#",
+				"profiles_short_desc" = "#Profile_Label_Abbr#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatePosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatePosition>
+<cfquery name="updatePosition" datasource="#application.datasource#">
 				UPDATE Profiles
 				SET Profiles_Desc = '#Profile_Label#', Profiles_Short_Desc = '#Profile_Label_Abbr#'
 				WHERE Profiles_ID = '#form.profiles_id#'
-			</cfquery>	
+			</cfquery>
+</cfif>	
 		</cfcase>
 
 		<cfcase value="copy">

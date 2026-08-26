@@ -1,12 +1,60 @@
+<cfset useLakebaseForGlossary_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_status")>
+<cfif useLakebaseForGlossary_Status>
+	<cftry>
+		<cfset Glossary_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_status", {
+				"pm_status_deleted" = "eq.0",
+				"order" = "pm_status_description.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGlossary_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGlossary_Status>
 <CFQUERY NAME = "Glossary_Status" DATASOURCE = "#Application.Datasource#">
 	SELECT * from PM_status WHERE PM_Status_deleted = 0 ORDER BY PM_Status_Description 
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForGlossary_Phase = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_phase")>
+<cfif useLakebaseForGlossary_Phase>
+	<cftry>
+		<cfset Glossary_Phase = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_phase", {
+				"pm_phase_deleted" = "eq.0",
+				"order" = "pm_phase_description.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGlossary_Phase = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGlossary_Phase>
 <CFQUERY NAME = "Glossary_Phase" DATASOURCE = "#Application.Datasource#">
 	SELECT * from PM_Phase WHERE PM_Phase_deleted = 0 ORDER BY PM_Phase_Description
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForGlossary_Priority = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_priority")>
+<cfif useLakebaseForGlossary_Priority>
+	<cftry>
+		<cfset Glossary_Priority = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_priority", {
+				"pm_priority_deleted" = "eq.0",
+				"order" = "pm_priority_description.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGlossary_Priority = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGlossary_Priority>
 <CFQUERY NAME = "Glossary_Priority" DATASOURCE = "#Application.Datasource#">
 	SELECT * from PM_Priority WHERE PM_Priority_deleted = 0 ORDER BY PM_Priority_Description
 </CFQUERY>
+</cfif>
 <STYLE>
 .bottomThin TD
 {

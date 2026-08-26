@@ -24,11 +24,27 @@
 			
 			<cfif len(trim(userId)) GT 0 AND len(trim(reasonTxt)) GT 0>
 				
-				<cfquery name="isUserAlreadyQueued" datasource="#application.datasource#">
+				<cfset useLakebaseForisUserAlreadyQueued = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_auto_logout_list")>
+<cfif useLakebaseForisUserAlreadyQueued>
+	<cftry>
+		<cfset isUserAlreadyQueued = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_auto_logout_list", {
+				"user_id" = "eq.#userId#",
+				"select" = "_users_auto_logout_list_id"
+			}), "_users_auto_logout_list_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisUserAlreadyQueued = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisUserAlreadyQueued>
+<cfquery name="isUserAlreadyQueued" datasource="#application.datasource#">
 					SELECT _Users_Auto_Logout_List_ID
 					FROM _Users_Auto_Logout_List
 					WHERE User_ID = '#userId#'
 				</cfquery>
+</cfif>
 				<cfset this_Users_Auto_Logout_List_ID = isUserAlreadyQueued._Users_Auto_Logout_List_ID>
 				
 				<cfif isUserAlreadyQueued.recordcount EQ 0>

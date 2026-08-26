@@ -102,12 +102,29 @@
 	<cfloop query="GetLumpSums">
 		<cfset lsNameID = GetLumpSums.Program_Lump_Sum_Name_ID>
 			
-		<cfquery name="GetApprovalAmountforProfile" datasource="#application.datasource#">
+		<cfset useLakebaseForGetApprovalAmountforProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>
+<cfif useLakebaseForGetApprovalAmountforProfile>
+	<cftry>
+		<cfset GetApprovalAmountforProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_ls_approval", {
+				"profiles_id" = "eq.#url.profileId#",
+				"program_lump_sum_name_id" = "eq.#lsNameID#",
+				"select" = "approval_amount"
+			}), "approval_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetApprovalAmountforProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetApprovalAmountforProfile>
+<cfquery name="GetApprovalAmountforProfile" datasource="#application.datasource#">
 			SELECT 	Approval_Amount
 			FROM 	Profile_LS_Approval
 			WHERE 	Profiles_ID = #url.profileId#
 			AND 	Program_Lump_Sum_Name_ID = #lsNameID#
 		</cfquery>
+</cfif>
 
 		<td bgcolor="#bgColor#"><input type="checkbox" value="1" name="Check_#lsNameID#"></td>
 		<td bgcolor="#bgColor#">#Program_Lump_Sum_Name#</td>

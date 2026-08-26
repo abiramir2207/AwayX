@@ -10,19 +10,52 @@ Date Last Modified 	-	07/20/2005 by Kalyan --->
 </cfif>
 
 <!--- D29904:Preventing duplicate program templates START --->
+<cfset useLakebaseForgetCurrentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetCurrentID>
+	<cftry>
+		<cfset getCurrentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.ID#",
+				"select" = "first_parent_id,isdominant"
+			}), "first_parent_id,isdominant"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentID>
 <cfquery name="getCurrentID" datasource="#application.datasource#">
       SELECT First_Parent_ID, IsDominant 
       FROM Program_Control_Panel_options
       WHERE ProgramControl_Panel_options_ID = #url.ID#
 </cfquery>
+</cfif>
 
 <cfif NOT getCurrentID.IsDominant>
-	<cfquery name="getParentID" datasource="#application.datasource#">
+	<cfset useLakebaseForgetParentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetParentID>
+	<cftry>
+		<cfset getParentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#getCurrentID.First_Parent_ID#",
+				"isdominant" = "eq.1",
+				"select" = "programcontrol_panel_options_id"
+			}), "programcontrol_panel_options_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentID>
+<cfquery name="getParentID" datasource="#application.datasource#">
 	      SELECT ProgramControl_Panel_options_ID 
 	      FROM Program_Control_Panel_options
 	      WHERE First_Parent_ID = #getCurrentID.First_Parent_ID#
 		  AND IsDominant = 1
 	</cfquery>
+</cfif>
       <cfset ID = getParentID.ProgramControl_Panel_Options_ID>
 </cfif>
 <!--- D29904:Preventing duplicate program templates END --->

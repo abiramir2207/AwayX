@@ -55,11 +55,27 @@ function start_End_Date(start_D,thisObj)
 			<cfelse>
 				<span ID="searchItemLabel"><B>Program Generic Type</B></span><BR>
 				<CFPARAM NAME="FORM.Generic_Type" DEFAULT="0">
-				<CFQUERY NAME="Get_Generic_Types" DATASOURCE="#application.datasource#">
+				<cfset useLakebaseForGet_Generic_Types = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_type")>
+<cfif useLakebaseForGet_Generic_Types>
+	<cftry>
+		<cfset Get_Generic_Types = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_type", {
+				"order" = "generic_type.asc",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Generic_Types = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Generic_Types>
+<CFQUERY NAME="Get_Generic_Types" DATASOURCE="#application.datasource#">
 				Select	Generic_Type
 				From 	Generic_Type
 				Order By Generic_Type
 				</CFQUERY>
+</cfif>
 				<SELECT NAME="Generic_Type">
 					<OPTION VALUE="0">**ALL** Generic Type</OPTION>
 					<CFOUTPUT QUERY="Get_Generic_Types"><OPTION VALUE="#trim(Generic_Type)#"#IIF(trim(FORM.Generic_Type) EQ Generic_Type, DE(" SELECTED"), DE(""))#>#trim(ReReplaceNoCase(Generic_Type, "trade", application.returned_customer_setting.Trade_Label))#</OPTION></CFOUTPUT>
@@ -68,13 +84,30 @@ function start_End_Date(start_D,thisObj)
 				
 <TD>
 			<span ID="searchItemLabel"><B>Program Status</B></span><BR>
-				<CFQUERY NAME="Get_Status" DATASOURCE="#application.datasource#">
+				<cfset useLakebaseForGet_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_status_types")>
+<cfif useLakebaseForGet_Status>
+	<cftry>
+		<cfset Get_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_status_types", {
+				"contract_status_type_id" = "neq.3",
+				"order" = "contract_status_type_id.asc",
+				"select" = "contract_status_type_id,contract_status_type_desc"
+			}), "contract_status_type_id,contract_status_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Status>
+<CFQUERY NAME="Get_Status" DATASOURCE="#application.datasource#">
 					Select	Contract_Status_Type_ID,Contract_Status_Type_Desc
 					From 	Contract_Status_Types
 					Where	
 						Contract_Status_Type_ID <> 3
 					Order By Contract_Status_Type_ID
 					</CFQUERY>
+</cfif>
 					<CFPARAM NAME="FORM.Status" DEFAULT="-1">
 					<SELECT NAME="Status">
 						<OPTION VALUE="0">**ALL** Status</OPTION>

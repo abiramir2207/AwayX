@@ -78,11 +78,27 @@
 
 <!--- RULES ARE LOCKED  --->
 <cfif FileExists("#apppath#\settings\bid_rules\rulesarelocked")>
-	<cfquery name="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#tempArray[1]#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<cfquery name="getUserName" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last
 		FROM _USERS
 		WHERE User_ID = '#tempArray[1]#'
 	</cfquery>
+</cfif>
 	<div align="center" style="color: red; font-weight:bold; font-size: 14px;">Bid Rules are currently locked by: <cfoutput>#getUserName.Name_First# #getUserName.Name_Last#</cfoutput></div>
 </cfif>
 

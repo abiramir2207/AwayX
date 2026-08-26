@@ -77,13 +77,28 @@ Description  :  File for downloading the alternate customers.
     output_fullpath = expandPath( '/common_documents/temp_files/' ) & output_file;
 </cfscript>
 
+<cfset useLakebaseForqoqInd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getinddists")>
+<cfif useLakebaseForqoqInd>
+	<cftry>
+		<cfset qoqInd = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getinddists", {
+				"select" = "customer_description,customer_group_number,customer_number,customer_name"
+			}), "customer_description,customer_group_number,customer_number,customer_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqoqInd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqoqInd>
 <cfquery name="qoqInd" dbtype="query">
     SELECT  Customer_Description,
 		 Customer_Group_Number,
 		 Customer_Number,
 		 Customer_Name
     FROM getIndDists
-</cfquery>  
+</cfquery>
+</cfif>  
 <cfloop query="qoqInd">
 	<cfscript>
 		qoqInd[ "Customer_Description" ][ qoqInd.currentRow ] = application.util.string.stripHTML(qoqInd[ "Customer_Description" ][ qoqInd.currentRow ]);
@@ -98,12 +113,27 @@ Description  :  File for downloading the alternate customers.
 </cfscript>  
 
 <cfif (isDefined("getGroups") AND getGroups.RecordCount GTE 1)>
-	<cfquery name="qoqGrp" dbtype="query">
+	<cfset useLakebaseForqoqGrp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getgroups")>
+<cfif useLakebaseForqoqGrp>
+	<cftry>
+		<cfset qoqGrp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getgroups", {
+				"select" = "customer_group_type_description,customer_group_number,customer_group_description"
+			}), "customer_group_type_description,customer_group_number,customer_group_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqoqGrp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqoqGrp>
+<cfquery name="qoqGrp" dbtype="query">
 	     SELECT Customer_Group_Type_Description,
 				Customer_Group_Number,
 				Customer_Group_Description
 	     FROM getGroups
 	 </cfquery>
+</cfif>
 	<cfloop query="qoqGrp">
 	    <cfscript>
 	        qoqGrp[ "Customer_Group_Type_Description" ][ qoqGrp.currentRow ] = application.util.string.stripHTML(qoqGrp[ "Customer_Group_Type_Description" ][ qoqGrp.currentRow ]);

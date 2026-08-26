@@ -952,12 +952,29 @@ Contract_Operators.BSA_Operator_ID, --->
 	<cfif url.pages eq "">
 		<cfset variables.lsCustomerIDs = valueList(variables.qProgramDistributorInitial.BSA_Foodservice_Customers_ID, ",")>
 
-		<cfquery name="qDefaultConfig" datasource="#application.datasource#">
+		<cfset useLakebaseForqDefaultConfig = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("claim_rates_setting")>
+<cfif useLakebaseForqDefaultConfig>
+	<cftry>
+		<cfset qDefaultConfig = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("claim_rates_setting", {
+				"deleted" = "eq.0",
+				"default_setting" = "eq.1",
+				"select" = "config_id"
+			}), "config_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDefaultConfig = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDefaultConfig>
+<cfquery name="qDefaultConfig" datasource="#application.datasource#">
 			SELECT Config_ID
 			FROM CLAIM_RATES_SETTING
 			WHERE Deleted = 0
 			AND default_setting = 1
 		</cfquery>
+</cfif>
 
 		<cfquery name="getProgramNumber" datasource="#application.datasource#">
 			SELECT contract_number,ISNULL(CLAIM_RATES_SETTING.Config_ID, #qDefaultConfig.Config_ID#) AS config_id
@@ -969,11 +986,27 @@ Contract_Operators.BSA_Operator_ID, --->
 		</cfquery>
 
 		<!--- get info as to whether the claim reports should be handled for groups. --->
-		<cfquery name="getClaimRatesInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForgetClaimRatesInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("claim_rates_setting")>
+<cfif useLakebaseForgetClaimRatesInfo>
+	<cftry>
+		<cfset getClaimRatesInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("claim_rates_setting", {
+				"config_id" = "eq.#getProgramNumber.config_id#",
+				"select" = "by_group"
+			}), "by_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetClaimRatesInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetClaimRatesInfo>
+<cfquery name="getClaimRatesInfo" datasource="#application.datasource#">
 			SELECT By_Group
 			FROM CLAIM_RATES_SETTING
 			WHERE Config_ID = #getProgramNumber.config_id#
 		</cfquery>
+</cfif>
 
 		<!--- Dev Note: Milan (24785). Originally, this page used to call the "components.programs.ProgramClaimRatesReport",
 		but that component requires a query to be returned and I am leaving it as it is for the original claim report.

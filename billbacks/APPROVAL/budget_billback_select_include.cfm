@@ -12,12 +12,28 @@
 <cfset qGetBudgetsForBillback = BudgetBillbackManager.getBudgetsForBillback(
 				billbackId = Billback_ID) />
 
+<cfset useLakebaseForqCheckForBudget = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbudgetsforbillback")>
+<cfif useLakebaseForqCheckForBudget>
+	<cftry>
+		<cfset qCheckForBudget = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbudgetsforbillback", {
+				"simple_budget_class_id" = "not.is.null",
+				"simple_budget_id" = "not.is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckForBudget = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckForBudget>
 <cfquery name="qCheckForBudget" dbtype="query">
 	SELECT	*
 	FROM	qGetBudgetsForBillback
 	WHERE	Simple_Budget_Class_ID IS NOT NULL
 	AND		Simple_Budget_ID IS NOT NULL
 </cfquery>
+</cfif>
 	
 <cfif qCheckForBudget.RecordCount>
 	<SCRIPT SRC="/Script/javascript/dom_common.js"></SCRIPT>
@@ -278,13 +294,30 @@
 	<!---------------- loop over programs - starte -------------------------->
 	<cfoutput query="qGetBudgetsForBillback" group="Contract_Number">
 		
-		<cfquery name="qCheckForThisBudget" dbtype="query">
+		<cfset useLakebaseForqCheckForThisBudget = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbudgetsforbillback")>
+<cfif useLakebaseForqCheckForThisBudget>
+	<cftry>
+		<cfset qCheckForThisBudget = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbudgetsforbillback", {
+				"contract_number" = "eq.#Contract_Number#",
+				"simple_budget_class_id" = "not.is.null",
+				"simple_budget_id" = "not.is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckForThisBudget = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckForThisBudget>
+<cfquery name="qCheckForThisBudget" dbtype="query">
 			SELECT	*
 			FROM	qGetBudgetsForBillback
 			WHERE	Contract_Number = '#Contract_Number#'
 			AND		Simple_Budget_Class_ID IS NOT NULL
 			AND		Simple_Budget_ID IS NOT NULL
 		</cfquery>
+</cfif>
 			
 		<cfif qCheckForThisBudget.RecordCount>
 		
@@ -296,11 +329,26 @@
 				<cfset Billback_Program_Amount = Billback_Program_Paid_Amount />
 			</cfif>
 			
-			<cfquery name="qGetProgramBudgets" dbtype="query">
+			<cfset useLakebaseForqGetProgramBudgets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbudgetsforbillback")>
+<cfif useLakebaseForqGetProgramBudgets>
+	<cftry>
+		<cfset qGetProgramBudgets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbudgetsforbillback", {
+				"billback_program_id" = "eq.#Billback_Program_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramBudgets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramBudgets>
+<cfquery name="qGetProgramBudgets" dbtype="query">
 				select	*
 				from	qGetBudgetsForBillback
 				where	Billback_Program_ID = '#Billback_Program_ID#'
 			</cfquery>
+</cfif>
 			
 			<tr>
 				<td colspan="100%" bgcolor="ccffcc">[#Contract_Number#] #Contract_Title# - <b>#DollarFormat(Billback_Program_Amount)#</b>

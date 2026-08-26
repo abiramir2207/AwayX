@@ -23,10 +23,23 @@
 
 </script>
 
+<cfset useLakebaseForgetBuckets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_aging_buckets")>
+<cfif useLakebaseForgetBuckets>
+	<cftry>
+		<cfset getBuckets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_aging_buckets", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBuckets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBuckets>
 <cfquery name="getBuckets" datasource="#application.datasource#">
 	SELECT *
 	FROM Deduction_Aging_Buckets
 </cfquery>
+</cfif>
 
 <CFIF getBuckets.recordcount EQ 0>
 

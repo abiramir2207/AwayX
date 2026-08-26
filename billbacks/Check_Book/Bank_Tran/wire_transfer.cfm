@@ -6,9 +6,24 @@
 
 <BODY>
 
+<cfset useLakebaseForfax_bank = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_transaction")>
+<cfif useLakebaseForfax_bank>
+	<cftry>
+		<cfset fax_bank = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_transaction", {
+				"payment_trans_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfax_bank = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfax_bank>
 <CFQUERY name = "fax_bank" datasource="#application.datasource#">
 	SELECT * from payment_transaction where payment_trans_ID = '#URL.RID#'
 </CFQUERY>
+</cfif>
 
  
 
@@ -197,11 +212,29 @@ CENTRAL CLIENT SERVICE DIVISION</P>
 		SUBJECT="Test Subject"
 		MIMEATTACH="#Application.Doc_Path#\temp_files\billback\Check_Book\Bank_Tran\Wire_Fax\#Wire_FileName#">		
 </CFMAIL> 
- <CFQUERY name = "confirm_payment" datasource="#Application.datasource#">
+ <cfset useLakebaseForconfirm_payment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForconfirm_payment>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ledger_table",
+			{
+				"ledger_id" = "eq.#URL.LRID#"
+			},
+			{
+				"paid" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForconfirm_payment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForconfirm_payment>
+<CFQUERY name = "confirm_payment" datasource="#Application.datasource#">
 	UPDATE Ledger_Table 
 	SET		Paid = 1
 	WHERE Ledger_ID = #URL.LRID#
 </CFQUERY>
+</cfif>
 <CFTRANSACTION ACTION="BEGIN">
 <!--- <CFLOCATION url="../index.cfm" addtoken="No">    --->
  <CFOUTPUT>

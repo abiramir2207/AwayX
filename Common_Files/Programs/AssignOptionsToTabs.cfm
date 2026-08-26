@@ -1,7 +1,20 @@
+<cfset useLakebaseForgetTabs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("menu_tabs")>
+<cfif useLakebaseForgetTabs>
+	<cftry>
+		<cfset getTabs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("menu_tabs", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTabs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTabs>
 <cfquery name="getTabs" datasource="#application.datasource#">
 	SELECT *
 	FROM Menu_Tabs
 </cfquery>
+</cfif>
 
 <cfset ListOfTabIds = ValueList(getTabs.Menu_Tab_ID)>
 <cfset ListOfTabCaptions = ValueList(getTabs.Tab_Caption)>

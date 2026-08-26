@@ -41,7 +41,23 @@
 		<cfif Len(trim(arguments.prodId))>
 		
 			<!---get product detail info from database--->
-			<cfquery name="qGetProductInfo" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 8, 0, 0)#">
+			<cfset useLakebaseForqGetProductInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqGetProductInfo>
+	<cftry>
+		<cfset qGetProductInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.prodId#",
+				"deleted" = "eq.0",
+				"select" = "item,upc,description,net_weight"
+			}), "item,upc,description,net_weight"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductInfo>
+<cfquery name="qGetProductInfo" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 8, 0, 0)#">
 				SELECT 	Item,
 						UPC,
 						Description,
@@ -50,6 +66,7 @@
 				WHERE	BSA_Foodservice_Items_Master_ID = '#arguments.prodId#'
 				AND		Deleted = 0
 			</cfquery>
+</cfif>
 			
 			<cfoutput query="qGetProductInfo">
 				<cfset this.setDesc(Description) />
@@ -76,12 +93,29 @@
 		<cfif IsNumeric(this.newProdId)>
 		
 			<!---get new product detail info from database--->
-			<cfquery name="qNewProducts" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 8, 0, 0)#">
+			<cfset useLakebaseForqNewProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_new_product")>
+<cfif useLakebaseForqNewProducts>
+	<cftry>
+		<cfset qNewProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_new_product", {
+				"deleted" = "eq.0",
+				"fp_new_product_id" = "eq.#arguments.newProdId#",
+				"select" = "product_desc"
+			}), "product_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqNewProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqNewProducts>
+<cfquery name="qNewProducts" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 8, 0, 0)#">
 				SELECT 	Product_Desc
 				FROM 	FP_New_Product
 				WHERE	Deleted = 0
 				AND		FP_New_Product_ID = #arguments.newProdId#
 			</cfquery>
+</cfif>
 			
 			<cfoutput query="qNewProducts">
 				<cfset this.setDesc(Product_Desc) />
@@ -164,12 +198,29 @@
 		
 		<!---grab delivery type desc from database--->
 		<cfif isNumeric(arguments.deliveryTypeId)>
-			<cfquery name="qGetDelTypeDesc" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 8, 0, 0)#">
+			<cfset useLakebaseForqGetDelTypeDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("delivery_type")>
+<cfif useLakebaseForqGetDelTypeDesc>
+	<cftry>
+		<cfset qGetDelTypeDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("delivery_type", {
+				"delivery_type_id" = "eq.#arguments.deliveryTypeId#",
+				"deleted" = "eq.0",
+				"select" = "delivery_type_desc"
+			}), "delivery_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDelTypeDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDelTypeDesc>
+<cfquery name="qGetDelTypeDesc" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 8, 0, 0)#">
 				SELECT 	Delivery_Type_Desc
 				FROM 	Delivery_Type
 				WHERE	Delivery_Type_ID = #arguments.deliveryTypeId#
 				AND	Deleted = 0
 			</cfquery>
+</cfif>
 			
 			<cfset this.setDeliveryTypeDesc(qGetDelTypeDesc.Delivery_Type_Desc) />
 		</cfif>

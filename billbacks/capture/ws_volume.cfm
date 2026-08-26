@@ -18,13 +18,30 @@
 <cfset Counter = replace(Counter, ",", "", "all")>
 <Cfset Counter = len(Counter)>
 	
-	<cfquery name="GetCurrentEntries" datasource="#application.datasource#">
+	<cfset useLakebaseForGetCurrentEntries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_worksheet_volume")>
+<cfif useLakebaseForGetCurrentEntries>
+	<cftry>
+		<cfset GetCurrentEntries = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_worksheet_volume", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"product_id" = "eq.#Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentEntries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentEntries>
+<cfquery name="GetCurrentEntries" datasource="#application.datasource#">
 	SELECT * FROM
 	BB_Worksheet_Volume
 	WHERE Billback_ID = '#Billback_ID#'
 	AND Program_ID = #Program_ID#
 	AND Product_ID = '#Product_ID#'
 	</cfquery>
+</cfif>
 	
 	<cfloop query="GetCurrentEntries">
 	<cfset Worksheet_ID = replace(GetCurrentEntries.BB_WS_Volume_ID, "-", "_", "all")>
@@ -39,7 +56,28 @@
 		</cfif>
 			
 		<cfif  (F.Cases NEQ 0 AND F.Pounds NEQ 0) AND F.isDeleted NEQ 1>
-			<cfquery name="UpdateRecord" datasource="#application.datasource#">
+			<cfset useLakebaseForUpdateRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_worksheet_volume")>
+<cfif useLakebaseForUpdateRecord>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_worksheet_volume",
+			{
+				"bb_ws_volume_id" = "eq.#GetCurrentEntries.BB_WS_Volume_ID#"
+			},
+			{
+				"billback_id" = "#Form.Billback_ID#",
+				"program_id" = "#Form.Program_ID#",
+				"product_id" = "#Form.Product_ID#",
+				"pounds" = "#F.Pounds#",
+				"cases" = "#F.Cases#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateRecord>
+<cfquery name="UpdateRecord" datasource="#application.datasource#">
 			UPDATE BB_Worksheet_Volume
 			SET 
 			Billback_ID = '#Form.Billback_ID#',
@@ -49,6 +87,7 @@
 			Cases = #F.Cases#
 			WHERE BB_WS_Volume_ID = '#GetCurrentEntries.BB_WS_Volume_ID#'
 			</cfquery>
+</cfif>
 		
 		<cfelse>
 			<cfquery name="DeleteRecord" datasource="#application.datasource#">

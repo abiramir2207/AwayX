@@ -2,9 +2,22 @@
 
     <cffunction name="init" output="false">
 
-        <cfquery name="this.original" datasource="#application.datasource#">
+        <cfset useLakebaseForthis_original = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForthis_original>
+	<cftry>
+		<cfset this.original = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthis_original = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthis_original>
+<cfquery name="this.original" datasource="#application.datasource#">
             SELECT * FROM _Application_Settings
         </cfquery>
+</cfif>
 
         <cfreturn this />
     </cffunction>

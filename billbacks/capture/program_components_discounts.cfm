@@ -98,9 +98,25 @@
 What this is all about:
 You need to be able to select any component that was ever on any version of the program -- but you also need a component ID for each component, and there's a new one for each version of the program, so you need to get the most recent component ID.
  --->
+<cfset useLakebaseForGetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractNumber>
+	<cftry>
+		<cfset GetContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractNumber>
 <cfquery name="GetContractNumber" datasource="#application.datasource#">
 	SELECT Contract_Number FROM Contract_Main WHERE Contract_Main_ID = #Program_ID#
 </cfquery>
+</cfif>
 
 <cfquery name="IsNegative" datasource="#application.datasource#">
 	SELECT <!--- Negative_Billback, ---> BB_End_Date
@@ -130,6 +146,23 @@ You need to be able to select any component that was ever on any version of the 
 	<cfset ContractMainList = valuelist(GetAllContractMains.Contract_Main_ID)>
 </cfif>
 
+<cfset useLakebaseForPriorEntries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForPriorEntries>
+	<cftry>
+		<cfset PriorEntries = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "discount_list"
+			}), "discount_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPriorEntries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPriorEntries>
 <cfquery name="PriorEntries" datasource="#application.datasource#">
 	Select Discount_List
 	FROM Billback_Program
@@ -137,6 +170,7 @@ You need to be able to select any component that was ever on any version of the 
 	AND Program_ID = '#Program_ID#'
 	AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset ExistingDiscountList = PriorEntries.Discount_List>
 
@@ -209,13 +243,30 @@ You need to be able to select any component that was ever on any version of the 
 				<cfset RebateList = "">
 				<cfif Has_Rebate.Recordcount GT 0>
 					<!--- Get prior rebates --->
-					<cfquery name="PriorRebates" datasource="#application.datasource#">
+					<cfset useLakebaseForPriorRebates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_rebate_component")>
+<cfif useLakebaseForPriorRebates>
+	<cftry>
+		<cfset PriorRebates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_rebate_component", {
+				"billback_program_id" = "eq.#Program_ID#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPriorRebates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPriorRebates>
+<cfquery name="PriorRebates" datasource="#application.datasource#">
 						SELECT *
 						FROM Billback_Program_Rebate_Component
 						WHERE Billback_Program_ID = '#Program_ID#'
 						AND Billback_ID = '#Billback_ID#'
 						AND Deleted = 0
 					</cfquery>
+</cfif>
 					<cfset ProgramRebatesComponentID = valuelist(PriorRebates.Program_Rebates_Component_Name_ID)>
 
 					<tr><Td colspan="2" class="redheader"><span style="color:white; font-weight: bold; padding-left:5px;">#Application.RebateLabel#</span></TD></tr>
@@ -448,7 +499,25 @@ You need to be able to select any component that was ever on any version of the 
 						</cfquery>
 
 						<!--- Get's the value of existing LS components on billback --->
-						<cfquery name="ExistingLS" datasource="#application.datasource#">
+						<cfset useLakebaseForExistingLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForExistingLS>
+	<cftry>
+		<cfset ExistingLS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_lumpsum_component", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"component_type_id" = "eq.1",
+				"program_lump_sum_id" = "eq.#GetLSID.Program_Lump_Sum_ID#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForExistingLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForExistingLS>
+<cfquery name="ExistingLS" datasource="#application.datasource#">
 							SELECT Amount
 							  FROM Billback_Program_Lumpsum_Component
 							 WHERE Billback_ID = '#Billback_ID#'
@@ -456,6 +525,7 @@ You need to be able to select any component that was ever on any version of the 
 									AND Component_Type_ID = 1
 									AND Billback_Program_Lumpsum_Component.Program_Lump_Sum_ID = '#GetLSID.Program_Lump_Sum_ID#'
 						</cfquery>
+</cfif>
 
 						<cfset SafeLS = replace(GetLSID.Program_Lump_Sum_ID, "-", "_", "ALL") />
 						<cfset LSList = listappend(LSList, SafeLS)>
@@ -530,7 +600,26 @@ You need to be able to select any component that was ever on any version of the 
 						<cfset GrowthTier = SafeGrowthLS & "__" & SafeCompTier>
 						<cfset GrowthLSList = listappend(GrowthLSList, GrowthTier)>
 
-						<cfquery name="ExistingGrowthLS" datasource="#application.datasource#">
+						<cfset useLakebaseForExistingGrowthLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForExistingGrowthLS>
+	<cftry>
+		<cfset ExistingGrowthLS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_lumpsum_component", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_lump_sum_id" = "eq.#Program_Growth_Component_ID#",
+				"deleted" = "eq.0",
+				"component_type_id" = "eq.3",
+				"program_growth_component_tier_id" = "eq.#Program_Growth_Component_Tier_ID#",
+				"select" = "program_lump_sum_id,amount"
+			}), "program_lump_sum_id,amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForExistingGrowthLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForExistingGrowthLS>
+<cfquery name="ExistingGrowthLS" datasource="#application.datasource#">
 							SELECT Program_Lump_Sum_ID, Amount
 							FROM Billback_Program_Lumpsum_Component
 							WHERE Billback_ID = '#Billback_ID#'
@@ -539,6 +628,7 @@ You need to be able to select any component that was ever on any version of the 
 							AND Component_Type_ID = 3
 							AND Program_Growth_Component_Tier_ID = '#Program_Growth_Component_Tier_ID#'
 						</cfquery>
+</cfif>
 
 						<tr>
 							<td align="right">#Program_Growth_Components_Name# #Component_Description# - Tier #Tier_Number#</td>

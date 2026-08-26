@@ -10,19 +10,51 @@
 <cfset objProgramManager = CreateObject("component", "components.programs.ProgramManager")>
 
 <!------ Get general info about the program ----->
+<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"select" = "contract_contains_sysco"
+			}), "contract_contains_sysco"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
 <CFQUERY NAME="GetContractInfo" DATASOURCE="#Application.Datasource#">
 	SELECT 	Contract_contains_Sysco			
 	FROM 	Contract_Main
 	WHERE 	Contract_Main_ID = '#Program_ID#'
 </CFQUERY>
+</cfif>
 
 <!--- Payment Address Detail --->
+<cfset useLakebaseForCheckSelection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForCheckSelection>
+	<cftry>
+		<cfset CheckSelection = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"select" = "pay_to_distributor,send_to_broker"
+			}), "pay_to_distributor,send_to_broker"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckSelection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckSelection>
 <CFQUERY NAME="CheckSelection" DATASOURCE="#Application.Datasource#">
 	SELECT 	Pay_To_Distributor,
 			Send_To_Broker
 	FROM 	Contract_Main_Aux_Data 
 	WHERE 	Contract_Main_ID = '#Program_ID#'
 </CFQUERY>
+</cfif>
 
 
 <CFSET AttachPaymentInfo = 0>
@@ -159,12 +191,28 @@
 	</TR>
 	</CFIF>
 		<CFOUTPUT QUERY="Mail_Documents">
-		<CFQUERY NAME="get_userName" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForget_userName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForget_userName>
+	<cftry>
+		<cfset get_userName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_userName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_userName>
+<CFQUERY NAME="get_userName" DATASOURCE="#Application.Datasource#">
 			SELECT 		Name_First,
 						Name_Last
 			FROM		_users
 			WHERE 		User_ID = '#Uploaded_By#'
 		</CFQUERY>
+</cfif>
 		<TR BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#">		
 		<TD WIDTH="100" BGCOLOR="White">&nbsp;</TD>		
 		 <TD ALIGN="right"  VALIGN="TOP"><INPUT TYPE="Checkbox" NAME="Doc_ID" VALUE="#Doc_ID#" >&nbsp;&nbsp;</TD> 

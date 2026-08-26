@@ -6,11 +6,26 @@
 	<cfset this.FREIGHT_VERSION = '' />
 	<!--- Get freight settings --->
 	<cffunction name="getFreightSettings" output="no" returntype="query">
-		<CFQUERY NAME="qrygetFreightSettings" DATASOURCE = "#Application.Datasource#">
+		<cfset useLakebaseForqrygetFreightSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("freight_settings")>
+<cfif useLakebaseForqrygetFreightSettings>
+	<cftry>
+		<cfset qrygetFreightSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("freight_settings", {
+				"freight_setting_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetFreightSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetFreightSettings>
+<CFQUERY NAME="qrygetFreightSettings" DATASOURCE = "#Application.Datasource#">
 			 SELECT *
 			 FROM Freight_Settings
 			 WHERE Freight_Setting_ID = 1
 		</CFQUERY>
+</cfif>
 		<cfif qrygetFreightSettings.Version EQ this.FREIGHT_VERSION_ITEM>
 			<cfset this.bFREIGHT_VERSION_ITEM = true />
 		</cfif>

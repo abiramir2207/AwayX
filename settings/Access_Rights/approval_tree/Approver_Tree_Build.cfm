@@ -23,11 +23,28 @@ WHERE     (dbo.BSA_Foodservice_Brokers.Active_Code = 'A') AND (dbo.BSA_Foodservi
 	<CFSET ThisLevelStructure = evaluate("Approval_Tree.#thisServiceZone_ID#")>
 	<cfset temp =StructInsert(ThisLevelStructure,"aa_Zone_Name",getZones.Zone_Name)>
 
-	<CFQUERY NAME="getPositionID" datasource="#application.datasource#">
+	<cfset useLakebaseForgetPositionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetPositionID>
+	<cftry>
+		<cfset getPositionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"service_zone_id" = "eq.#DB_ServiceZone_ID#",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPositionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPositionID>
+<CFQUERY NAME="getPositionID" datasource="#application.datasource#">
 		SELECT *
 		FROM User_Positions
 		WHERE Service_Zone_ID = '#DB_ServiceZone_ID#' AND Service_Region_ID IS NULL AND Service_Market_ID IS NULL
 	</CFQUERY>
+</cfif>
 	
 	<!--- get Approvers --->
 	<CFIF getPositionID.Recordcount GT 0>

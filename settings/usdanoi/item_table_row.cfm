@@ -61,12 +61,29 @@
 </cfif>
 
 <cfif url.showoperatorsummary EQ 1>
-	<cfquery name="getOperatorPrograms" datasource="#application.datasource#">
+	<cfset useLakebaseForgetOperatorPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usdanoi_program_product_detail")>
+<cfif useLakebaseForgetOperatorPrograms>
+	<cftry>
+		<cfset getOperatorPrograms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usdanoi_program_product_detail", {
+				"bsa_operator_id" = "eq.#getGeoBasedReport.BSA_Operator_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#getGeoBasedReport.BSA_Foodservice_Items_Master_ID#",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOperatorPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOperatorPrograms>
+<cfquery name="getOperatorPrograms" datasource="#application.datasource#">
 		SELECT Program_ID
 		FROM USDANOI_Program_Product_Detail
 		WHERE BSA_Operator_ID = '#getGeoBasedReport.BSA_Operator_ID#' AND BSA_Foodservice_Items_Master_ID = '#getGeoBasedReport.BSA_Foodservice_Items_Master_ID#'
 
 	</cfquery>
+</cfif>
 	<cfset get_latest_billback_numbers_Program_ID_List = valuelist(getOperatorPrograms.Program_ID)>
 	<cfif listlen(get_latest_billback_numbers_Program_ID_List) EQ 0>
 		<cfset get_latest_billback_numbers_Program_ID_List = 0>
@@ -395,18 +412,48 @@
 	<!--- show monthly bilback break out --->
 	<cfif url.ReportBBDetail EQ 1>
 		<cfif GetALLBBs.recordcount GT 0>
-				<cfquery name="getDistinctMonths" dbtype="query">
+				<cfset useLakebaseForgetDistinctMonths = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallbbs")>
+<cfif useLakebaseForgetDistinctMonths>
+	<cftry>
+		<cfset getDistinctMonths = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallbbs", {
+				"select" = "month_number,month_name"
+			}), "month_number,month_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistinctMonths = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistinctMonths>
+<cfquery name="getDistinctMonths" dbtype="query">
 					SELECT Distinct Month_Number, Month_Name FROM GetALLBBs
 				</cfquery>
+</cfif>
 				<cfloop query="getDistinctMonths">
 
 				<cfset thisMonthNumber 	= getDistinctMonths.Month_Number>
 				<cfset thisMonthName	= getDistinctMonths.Month_Name>
 								
-				<cfquery name="GetBBs" dbtype="query">
+				<cfset useLakebaseForGetBBs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallbbs")>
+<cfif useLakebaseForGetBBs>
+	<cftry>
+		<cfset GetBBs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallbbs", {
+				"month_number" = "eq.#thisMonthNumber#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBs>
+<cfquery name="GetBBs" dbtype="query">
 					SELECT * FROM GetALLBBs
 					WHERE Month_Number = #thisMonthNumber#
 				</cfquery>
+</cfif>
 				
 				<tr>
 					<td colspan="100%" bgcolor="white" height="10px">&nbsp;</td>

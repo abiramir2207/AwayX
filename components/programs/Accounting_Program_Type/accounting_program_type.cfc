@@ -53,7 +53,24 @@
    
 	<cffunction name="getActive" output="false" returntype="query">	
    
-		<cfquery name="qGetActiveComps" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "apt_name.asc",
+				"select" = "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "accounting_program_type_id,apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+<cfquery name="qGetActiveComps" datasource="#application.datasource#">
 			SELECT	Accounting_Program_Type_ID,
 					APT_Name,
 					APT_Reference_Number,
@@ -64,6 +81,7 @@
 			AND		Active = 1
 			ORDER BY 	APT_Name
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetActiveComps />
 		
@@ -73,7 +91,22 @@
    
    		<cfargument name="compId" required="false" default=0 />
 		
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accounting_program_type")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accounting_program_type", {
+				"accounting_program_type_id" = "eq.#arguments.compId#",
+				"select" = "apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+			}), "apt_name,apt_reference_number,apt_use_for_tpa,apt_allow_billbacks"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 
 					APT_Name,
 					APT_Reference_Number,
@@ -82,6 +115,7 @@
 			FROM 	Accounting_Program_Type
 			WHERE 	Accounting_Program_Type_ID = #arguments.compId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 		

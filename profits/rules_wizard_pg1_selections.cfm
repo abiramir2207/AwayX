@@ -35,9 +35,25 @@
 	<TD ALIGN="right" VALIGN="top" NOWRAP>Commodity:</TD>
 	<TD>
 		<!--- Create query to retrieve the name of the commodity --->
-		<CFQUERY NAME="Get_Commodity" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Commodity = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_symbol")>
+<cfif useLakebaseForGet_Commodity>
+	<cftry>
+		<cfset Get_Commodity = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_symbol", {
+				"symbol" = "eq.#Form.Commodity#",
+				"select" = "symbol_description"
+			}), "symbol_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Commodity = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Commodity>
+<CFQUERY NAME="Get_Commodity" datasource="#application.datasource#">
 		Select Symbol_Description from Commodities_Symbol where Symbol	=	'#Form.Commodity#'
 		</CFQUERY>
+</cfif>
 		#Get_Commodity.Symbol_Description#
 	</TD>
 </TR>

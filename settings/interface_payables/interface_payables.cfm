@@ -1,6 +1,20 @@
 	<cfsilent>
 
-	<CFQUERY NAME="qGetToleranceSettings" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForqGetToleranceSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForqGetToleranceSettings>
+	<cftry>
+		<cfset qGetToleranceSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "billback_tolerance_settings_id,cannot_exceed_percent,cannot_exceed_dollar,billback_status_id_below,billback_status_id_exceed,auto_deviation_inc_manual_bb,maximum_dollar_amount_checked,maximum_dollar_amount,billback_status_for_max_dollar_amt,last_updated_date,last_updated_by,auto_deviation_family_level,billback_ls_auto_process_amt,autoprocess_check_bb_beyond_budget"
+			}), "billback_tolerance_settings_id,cannot_exceed_percent,cannot_exceed_dollar,billback_status_id_below,billback_status_id_exceed,auto_deviation_inc_manual_bb,maximum_dollar_amount_checked,maximum_dollar_amount,billback_status_for_max_dollar_amt,last_updated_date,last_updated_by,auto_deviation_family_level,billback_ls_auto_process_amt,autoprocess_check_bb_beyond_budget"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetToleranceSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetToleranceSettings>
+<CFQUERY NAME="qGetToleranceSettings" DATASOURCE="#Application.Datasource#">
 		SELECT	Billback_Tolerance_Settings_ID,
 				Cannot_Exceed_Percent,
 				Cannot_Exceed_Dollar,
@@ -17,6 +31,7 @@
 				AutoProcess_Check_BB_Beyond_Budget
 		FROM	Billback_Tolerance_Settings
 	</CFQUERY>
+</cfif>
 
 	<CFQUERY NAME="qGetBillbackStatus" DATASOURCE="#Application.Datasource#">
 		SELECT	Billback_Status_ID,
@@ -33,11 +48,27 @@
 		ORDER BY vchBillback_Closing_Method_Desc
 	</cfquery>
 
-	<CFQUERY NAME="qGetUserName" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForqGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUserName>
+	<cftry>
+		<cfset qGetUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetToleranceSettings.Last_Updated_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUserName>
+<CFQUERY NAME="qGetUserName" DATASOURCE="#Application.Datasource#">
 		SELECT	Name_First,Name_Last
 		FROM 	_Users
 		WHERE 	User_ID = '#qGetToleranceSettings.Last_Updated_By#'
 	</CFQUERY>
+</cfif>
 
 <!----D74179 :: Auto Deviations at Family level START--->
 	<cfset bbManager = createObject("component", "components.Billback.BillbackSettingsManager")>

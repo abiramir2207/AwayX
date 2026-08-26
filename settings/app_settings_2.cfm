@@ -87,6 +87,24 @@ input[readonly] {
 <cfset qGetProgramLockTypes = CreateObject("component","components.programs.ProgramLockType").getProgramLockType() />
 <cfset qGenericTypes = CreateObject("component","components.programs.template.TemplateManager").getGenericType() />
 
+<cfset useLakebaseForqProductGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqProductGroups>
+	<cftry>
+		<cfset qProductGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"active" = "eq.1",
+				"is_pg" = "eq.0",
+				"product_group_level_id" = "neq.1",
+				"order" = "group_level_desc.asc",
+				"select" = "product_group_level_id,group_level_desc,group_internal_label"
+			}), "product_group_level_id,group_level_desc,group_internal_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqProductGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqProductGroups>
 <cfquery name="qProductGroups" datasource="#application.datasource#">
   SELECT  Product_Group_Level.Product_Group_Level_ID
 		 ,Product_Group_Level.Group_Level_Desc
@@ -97,7 +115,25 @@ input[readonly] {
 		  AND Product_Group_Level.Product_Group_Level_ID <> 1
 				ORDER BY Product_Group_Level.Group_Level_Desc
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForqDistributorGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_level")>
+<cfif useLakebaseForqDistributorGroups>
+	<cftry>
+		<cfset qDistributorGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_level", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "group_level_desc.asc",
+				"select" = "distributor_group_level_id,group_level_desc,group_level_desc_internal,is_pg"
+			}), "distributor_group_level_id,group_level_desc,group_level_desc_internal,is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDistributorGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDistributorGroups>
 <cfquery name="qDistributorGroups" datasource="#application.datasource#">
 	SELECT  Distributor_Group_Level.Distributor_Group_Level_ID
 			,Distributor_Group_Level.Group_Level_Desc
@@ -108,12 +144,29 @@ input[readonly] {
 			AND Distributor_Group_Level.Deleted = 0
 	ORDER BY Distributor_Group_Level.Group_Level_Desc
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForEachInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForEachInfo>
+	<cftry>
+		<cfset EachInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.5",
+				"select" = "unit_of_measure_desc,abbreviation,unit_of_measure_desc_singular"
+			}), "unit_of_measure_desc,abbreviation,unit_of_measure_desc_singular"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEachInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEachInfo>
 <cfquery name="EachInfo" datasource="#application.datasource#">
   SELECT Unit_Of_Measure_Desc,Abbreviation,Unit_of_Measure_Desc_Singular
   FROM Units_of_Measure
   WHERE Unit_Of_Measure_ID= 5
 </cfquery>
+</cfif>
 
 <!---if state is true then we know that we have to save--->
 <cfif form.state>
@@ -3627,7 +3680,24 @@ function permanentlyDeleteAllBBAnalysts()
 		</select>
 	  </td>
   </tr>
-	<cfquery name="qPTProductGroups" datasource="#application.datasource#">
+	<cfset useLakebaseForqPTProductGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqPTProductGroups>
+	<cftry>
+		<cfset qPTProductGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"active" = "eq.1",
+				"product_group_level_id" = "neq.1",
+				"order" = "group_level_desc.asc",
+				"select" = "product_group_level_id,group_level_desc,group_internal_label"
+			}), "product_group_level_id,group_level_desc,group_internal_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPTProductGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPTProductGroups>
+<cfquery name="qPTProductGroups" datasource="#application.datasource#">
 		SELECT  Product_Group_Level.Product_Group_Level_ID
 		,Product_Group_Level.Group_Level_Desc
 		,Product_Group_Level.Group_Internal_Label
@@ -3636,6 +3706,7 @@ function permanentlyDeleteAllBBAnalysts()
 		AND Product_Group_Level.Product_Group_Level_ID <> 1
 		ORDER BY Product_Group_Level.Group_Level_Desc
 	</cfquery>
+</cfif>
   <tr style="margin-bottom:5px">
 	  <td>#Application.PlannerLabel# Targets - Initial Sales Targets (product):</td>
 	  <td>&nbsp;</td>

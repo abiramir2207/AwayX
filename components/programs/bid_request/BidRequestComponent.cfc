@@ -47,13 +47,30 @@
    
 	<cffunction name="getActive" output="false" returntype="query">	
    
-		<cfquery name="qGetActiveComps" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bidrequest_component_name")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bidrequest_component_name", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bidrequest_component_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+<cfquery name="qGetActiveComps" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_BidRequest_Component_Name
 			WHERE 	Deleted = 0
 			AND		Active = 1
 			ORDER BY 	Program_BidRequest_Component_Name
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetActiveComps />
 		
@@ -63,11 +80,26 @@
    
    		<cfargument name="compId" required="false" default=0 />
 		
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bidrequest_component_name")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bidrequest_component_name", {
+				"program_bidrequest_component_name_id" = "eq.#arguments.compId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_BidRequest_Component_Name
 			WHERE 	Program_BidRequest_Component_Name_ID = #arguments.compId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 		

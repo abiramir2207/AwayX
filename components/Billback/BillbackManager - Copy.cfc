@@ -1758,25 +1758,83 @@ Description:	This file is responsible for managing Billback data.
 		<cfargument name="billbackId" type="string" required="true"  />
 		<cfargument name="userId" type="string" required="false" default="00000000-0000-0000-0000000000000000" />
 
-		<CFQUERY NAME="Delete_Billback_1" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDelete_Billback_1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_exclusion")>
+<cfif useLakebaseForDelete_Billback_1>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_program_exclusion",
+			{
+				"exclusion_deducted_from_bb_id" = "eq.#arguments.billbackId#",
+				"applied" = "eq.1"
+			},
+			{
+				"exclusion_deducted_from_bb_id" = javaCast("null",""),
+				"applied" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_1>
+<CFQUERY NAME="Delete_Billback_1" DATASOURCE="#application.datasource#">
 			UPDATE 	BB_Program_Exclusion
 			SET		Exclusion_Deducted_From_BB_ID = NULL,
 					Applied = 0
 			WHERE	Exclusion_Deducted_From_BB_ID = '#arguments.billbackId#'
 					AND Applied = 1
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_2" DATASOURCE="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForDelete_Billback_2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_adjustment")>
+<cfif useLakebaseForDelete_Billback_2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_adjustment",
+			{
+				"adjustment_deducted_from_bb_id" = "eq.#arguments.billbackId#",
+				"applied" = "eq.1"
+			},
+			{
+				"adjustment_deducted_from_bb_id" = javaCast("null",""),
+				"applied" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_2>
+<CFQUERY NAME="Delete_Billback_2" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Adjustment
 			SET		Adjustment_deducted_From_BB_ID = NULL,
 					Applied = 0
 			WHERE	Adjustment_deducted_From_BB_ID = '#arguments.billbackId#'
 					AND	Applied = 1
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_3" DATASOURCE="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForDelete_Billback_3 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_adjustment")>
+<cfif useLakebaseForDelete_Billback_3>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_adjustment",
+			{
+				"billback_id" = "eq.#arguments.billbackId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_3 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_3>
+<CFQUERY NAME="Delete_Billback_3" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Adjustment
 			SET		Deleted = 1
 			WHERE	Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
+</cfif>
 		<CFQUERY NAME="Delete_Billback_4" DATASOURCE="#application.datasource#">
 			DELETE
 			FROM	BB_Approved
@@ -1838,37 +1896,132 @@ Description:	This file is responsible for managing Billback data.
 			WHERE	BB_Item_Final_Detail.Deleted = 0
 			AND		BB_Item_Final.Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_9" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDelete_Billback_9 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_final")>
+<cfif useLakebaseForDelete_Billback_9>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_item_final",
+			{
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#arguments.billbackId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_9 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_9>
+<CFQUERY NAME="Delete_Billback_9" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Item_Final
 			SET		Deleted = 1
 			WHERE	BB_Item_Final.Deleted = 0
 			AND		BB_Item_Final.Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_10" DATASOURCE="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForDelete_Billback_10 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_lump_sums")>
+<cfif useLakebaseForDelete_Billback_10>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_lump_sums",
+			{
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#arguments.billbackId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_10 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_10>
+<CFQUERY NAME="Delete_Billback_10" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Lump_Sums
 			SET		Deleted = 1
 			WHERE	BB_Lump_Sums.Deleted = 0
 			AND		BB_Lump_Sums.Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_11" DATASOURCE="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForDelete_Billback_11 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_growth_program")>
+<cfif useLakebaseForDelete_Billback_11>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_growth_program",
+			{
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#arguments.billbackId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_11 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_11>
+<CFQUERY NAME="Delete_Billback_11" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Growth_Program
 			SET		Deleted = 1
 			WHERE	BB_Growth_Program.Deleted = 0
 			AND		BB_Growth_Program.Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
-		<CFQUERY NAME="Delete_Billback_12" DATASOURCE="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForDelete_Billback_12 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_lump_sum_distributor")>
+<cfif useLakebaseForDelete_Billback_12>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_program_lump_sum_distributor",
+			{
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#arguments.billbackId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_12 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_12>
+<CFQUERY NAME="Delete_Billback_12" DATASOURCE="#application.datasource#">
 			UPDATE	BB_Program_Lump_Sum_Distributor
 			SET		Deleted = 1
 			WHERE	BB_Program_Lump_Sum_Distributor.Deleted = 0
 			AND		BB_Program_Lump_Sum_Distributor.Billback_ID = '#arguments.billbackId#'
 		</CFQUERY>
+</cfif>
 		<!---- Delete GL code allocation entries ---->
-		<CFQUERY NAME="Delete_Billback_Gl_Code_Allocation" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDelete_Billback_Gl_Code_Allocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForDelete_Billback_Gl_Code_Allocation>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#arguments.billbackId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_Billback_Gl_Code_Allocation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_Billback_Gl_Code_Allocation>
+<CFQUERY NAME="Delete_Billback_Gl_Code_Allocation" DATASOURCE="#application.datasource#">
 			UPDATE 	Gl_Code_Allocation
 			SET 	Deleted = 1
 			WHERE 	Billback_ID = '#arguments.billbackId#'
 			AND		Deleted = 0
 		</CFQUERY>
+</cfif>
 	<!--- 	delete 'Manually configured Auto Pay' Pullbacks --->
 		<CFQUERY NAME="unapplyPBLog" DATASOURCE="#application.datasource#">
 					Update BB_Auto_Report_PB_Log
@@ -1900,11 +2053,27 @@ Description:	This file is responsible for managing Billback data.
 	<cffunction name="getDisagreeDetails" output="false" returntype="query">
 		<cfargument name="billbackId" type="string" required="true"  />
 
-				<cfquery name="qgetDisagreeDetails" datasource="#application.datasource#">
+				<cfset useLakebaseForqgetDisagreeDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqgetDisagreeDetails>
+	<cftry>
+		<cfset qgetDisagreeDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#arguments.billbackId#",
+				"select" = "bb_disagree"
+			}), "bb_disagree"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetDisagreeDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetDisagreeDetails>
+<cfquery name="qgetDisagreeDetails" datasource="#application.datasource#">
 					SELECT BB_DisAgree
 					FROM Billback
 					WHERE Billback_ID = '#arguments.billbackId#'
 				</cfquery>
+</cfif>
 
 		<cfreturn qgetDisagreeDetails />
 	</cffunction>
@@ -1914,12 +2083,29 @@ Description:	This file is responsible for managing Billback data.
 		<cfargument name="userId" type="string" required="true"  />
 
 		<cfset var returnValue = 0 />
-			<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
+			<cfset useLakebaseForBB_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBB_Info>
+	<cftry>
+		<cfset BB_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#arguments.billbackId#",
+				"deleted" = "eq.0",
+				"select" = "auto_billback"
+			}), "auto_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Info>
+<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
 				SELECT	Auto_Billback
 				FROM	Billback
 				WHERE	Billback.Billback_ID = '#arguments.billbackId#' AND
 						Billback.Deleted = 0
 			</CFQUERY>
+</cfif>
 		<CFTRANSACTION ACTION="BEGIN">
 			<CFTRY>
 				<cfset this.DeleteApprovalInformation(arguments.billbackId,arguments.userId) />
@@ -2923,19 +3109,52 @@ Description:	This file is responsible for managing Billback data.
 
 		<cfset var bReturnValue = 0 />
 
-		<CFQUERY name="GetBillbackSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForGetBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForGetBillbackSettings>
+	<cftry>
+		<cfset GetBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program"
+			}), "default_program"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSettings>
+<CFQUERY name="GetBillbackSettings" datasource="#application.datasource#">
 			SELECT 	Default_Program
 			FROM 	Billback_Settings
 		</CFQUERY>
+</cfif>
 
 		<cfif len(trim(GetBillbackSettings.Default_Program)) GT 0>
-			<cfquery name="IsDefaultProgramOnBillback" datasource="#application.datasource#">
+			<cfset useLakebaseForIsDefaultProgramOnBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForIsDefaultProgramOnBillback>
+	<cftry>
+		<cfset IsDefaultProgramOnBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#arguments.BillbackID#",
+				"program_id" = "eq.#GetBillbackSettings.Default_Program#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsDefaultProgramOnBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsDefaultProgramOnBillback>
+<cfquery name="IsDefaultProgramOnBillback" datasource="#application.datasource#">
 				SELECT 	Billback_Program_ID
 				FROM 	Billback_Program
 				WHERE 	Billback_ID = '#arguments.BillbackID#'
 				AND 	Program_ID = '#GetBillbackSettings.Default_Program#'
 				AND 	Deleted = 0
 			</cfquery>
+</cfif>
 			<cfif IsDefaultProgramOnBillback.Recordcount GT 0>
 				<cfset bReturnValue = 1>
 			</cfif>
@@ -2946,11 +3165,27 @@ Description:	This file is responsible for managing Billback data.
 
 	<cffunction name="getBillbackClosingMethods" access="public" returntype="query">
 
-		<cfquery name="qgetBillbackClosingMethods" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetBillbackClosingMethods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForqgetBillbackClosingMethods>
+	<cftry>
+		<cfset qgetBillbackClosingMethods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"deleted" = "eq.0",
+				"select" = "ibillback_closing_method_id,vchbillback_closing_method_desc,abbreviation"
+			}), "ibillback_closing_method_id,vchbillback_closing_method_desc,abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetBillbackClosingMethods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetBillbackClosingMethods>
+<cfquery name="qgetBillbackClosingMethods" datasource="#application.datasource#">
 		 SELECT iBillback_Closing_Method_ID,vchBillback_Closing_Method_DESC,Abbreviation
 		 FROM Billback_Closing_Methods
 		 WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qgetBillbackClosingMethods />
 	</cffunction>

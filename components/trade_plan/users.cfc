@@ -13,12 +13,28 @@
 	
 		<cfargument name="user_id" type="any" required="false" default="" />
 		
-		<cfquery name="qGetUser" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUser>
+	<cftry>
+		<cfset qGetUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.user_id#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUser>
+<cfquery name="qGetUser" datasource="#application.datasource#">
 			SELECT 	name_first,
 					name_last 
 			FROM 	_users
 			WHERE 	user_id = '#arguments.user_id#'
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetUser>
 		
@@ -29,12 +45,29 @@
 	
 		<cfargument name="user_id" type="any" required="false" default="" />
 		
-		<CFQUERY NAME="getUserPosition" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#arguments.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+<CFQUERY NAME="getUserPosition" DATASOURCE="#application.datasource#">
 			SELECT 	User_Positions_ID	
 			FROM 	User_Position_Holders
 			WHERE 	User_ID = '#arguments.user_id#'
 			AND 	Deleted = 0
 		</CFQUERY>
+</cfif>
 		
 		<cfreturn getUserPosition.User_Positions_ID>
 		

@@ -7,11 +7,26 @@
 	<cffunction name="getComp" output="false" returntype="query">
 		<cfargument name="GL_Account_ID" type="numeric" required="false" default="0" />	
 		
-		<cfquery name="qGetGLAccountInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetGLAccountInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForqGetGLAccountInfo>
+	<cftry>
+		<cfset qGetGLAccountInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"gl_account_id" = "eq.#arguments.GL_Account_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGLAccountInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGLAccountInfo>
+<cfquery name="qGetGLAccountInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM GL_Account
 		WHERE GL_Account_ID = '#arguments.GL_Account_ID#'
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetGLAccountInfo />
 		
@@ -21,13 +36,30 @@
 		<cfargument name="sortBy" type="string" required="true" />
 		<cfset var GetActiveGLs = "" />
 		
-		<cfquery name="GetActiveGLs" datasource="#application.datasource#">
+		<cfset useLakebaseForGetActiveGLs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForGetActiveGLs>
+	<cftry>
+		<cfset GetActiveGLs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"deleted" = "eq.0",
+				"is_active" = "eq.1",
+				"order" = "sortby#.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetActiveGLs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetActiveGLs>
+<cfquery name="GetActiveGLs" datasource="#application.datasource#">
 		SELECT *
 		FROM GL_Account
 		WHERE Deleted = 0
 		AND Is_Active = 1
 		Order By #arguments.sortBy#
 		</cfquery>
+</cfif>
 		
 		<cfreturn GetActiveGLs />
 		
@@ -37,13 +69,30 @@
 		<cfargument name="sortBy" type="string" required="true" />
 		<cfset var GetInActiveGLs = "" />
 		
-		<cfquery name="GetInActiveGLs" datasource="#application.datasource#">
+		<cfset useLakebaseForGetInActiveGLs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForGetInActiveGLs>
+	<cftry>
+		<cfset GetInActiveGLs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"deleted" = "eq.0",
+				"is_active" = "eq.0",
+				"order" = "sortby#.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetInActiveGLs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetInActiveGLs>
+<cfquery name="GetInActiveGLs" datasource="#application.datasource#">
 		SELECT *
 		FROM GL_Account
 		WHERE Deleted = 0
 		AND Is_Active = 0
 		Order By #arguments.sortBy#
 		</cfquery>
+</cfif>
 		
 		<cfreturn GetInActiveGLs />
 		

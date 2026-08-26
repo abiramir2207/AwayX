@@ -6,9 +6,24 @@
 </head>
 
 <body>
+<cfset useLakebaseForGetLogDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation_log")>
+<cfif useLakebaseForGetLogDetails>
+	<cftry>
+		<cfset GetLogDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation_log", {
+				"gl_code_activation_log_id" = "eq.#GL_Code_Activation_Log_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLogDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLogDetails>
 <CFQUERY NAME="GetLogDetails" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Gl_Code_Activation_Log WHERE GL_Code_Activation_Log_ID = '#GL_Code_Activation_Log_ID#'
 </CFQUERY>
+</cfif>
 
 <BR>
 <CFOUTPUT>

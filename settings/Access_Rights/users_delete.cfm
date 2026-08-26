@@ -114,11 +114,27 @@
 		       AND Deleted = 0 
 	</cfquery>
 
-	<cfquery name="qUser" datasource="#application.datasource#">
+	<cfset useLakebaseForqUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqUser>
+	<cftry>
+		<cfset qUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#FORM.User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUser>
+<cfquery name="qUser" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last
 		  FROM _Users
 		 WHERE User_ID = '#FORM.User_ID#'
 	</cfquery>
+</cfif>
 
 	<cfif checkifanyprimaryPOSITIONS.recordcount GT 0>
 		<cfset user_primaty_position = checkifanyprimaryPOSITIONS.user_positions_id>
@@ -167,9 +183,24 @@
                             </cfif>
                     
                             <cfif checkifanyprimaryPOSITIONS.recordcount>
-                                <cfquery NAME="getdistinctusers" dbtype="query">
+                                <cfset useLakebaseForgetdistinctusers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("users")>
+<cfif useLakebaseForgetdistinctusers>
+	<cftry>
+		<cfset getdistinctusers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("users", {
+				"select" = "user_full_name,user_id"
+			}), "user_full_name,user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetdistinctusers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetdistinctusers>
+<cfquery NAME="getdistinctusers" dbtype="query">
                                     select distinct USER_FULL_NAME, user_id from Users
                                 </cfquery>
+</cfif>
                                 <p>Select a person to reassign this user's primary position as secondary position:</p>
                                 <select name="Reassign_User_Id__Primary_Position" id="Reassign_User_Id_Position" class="multi">
                                     <option></option>
@@ -351,13 +382,33 @@
         <cfif len(trim(form.Responsible_User_Id_Position_Id)) GT 0>
                 <CFSET New_User_Position_ID = ListFirst(FORM.Responsible_User_Id_Position_Id, "_")>
                 <cfset New_Responsible_User_Id = ListLast(FORM.Responsible_User_Id_Position_Id, "_")>
-                <cfquery name="ReassignPrograms" datasource="#application.datasource#">
+                <cfset useLakebaseForReassignPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForReassignPrograms>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"responsible_user_id" = "eq.#FORM.User_ID#"
+			},
+			{
+				"responsible_user_id" = "#New_Responsible_User_Id#",
+				"creating_user_position_id" = "#New_User_Position_ID#",
+				"original_creating_user_position_id" = "Creating_User_Position_ID"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForReassignPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForReassignPrograms>
+<cfquery name="ReassignPrograms" datasource="#application.datasource#">
                     UPDATE 	Contract_Main
                     SET 	Responsible_User_ID = '#New_Responsible_User_Id#',
                             Creating_User_Position_ID = #New_User_Position_ID#,
                             Original_Creating_User_Position_ID = Creating_User_Position_ID
                     WHERE 	Responsible_User_ID =  '#FORM.User_ID#'
                 </cfquery>
+</cfif>
                     
             <cfloop query="FindProgramstoReassign">
                 <!--- If the progam is unapproved, make an entry to keep track of the sales person responsible --->

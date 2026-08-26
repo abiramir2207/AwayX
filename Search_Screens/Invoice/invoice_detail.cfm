@@ -13,13 +13,31 @@ Brenda Flynn -- bflynn@awayx.com
 
  <!--- WR 68986: show Invoice details from the payment history (offinvoice) page --->
  <cfif url.Order_Number neq "" AND url.invoice_date neq "">
-	<cfquery name="qGetInvoiceHeader" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetInvoiceHeader = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoice_header")>
+<cfif useLakebaseForqGetInvoiceHeader>
+	<cftry>
+		<cfset qGetInvoiceHeader = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoice_header", {
+				"order_number" = "eq.#url.order_Number#",
+				"invoice_date" = "eq.#url.invoice_date#",
+				"deleted" = "eq.0",
+				"select" = "invoice_header_id"
+			}), "invoice_header_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInvoiceHeader = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInvoiceHeader>
+<cfquery name="qGetInvoiceHeader" datasource="#application.datasource#">
 		SELECT Invoice_Header_ID
 		FROM Invoice_Header
 		WHERE Order_Number = '#url.order_Number#'
 		AND Invoice_Date = '#url.invoice_date#'
 		AND deleted = 0
 	</cfquery>
+</cfif>
 	<cfif qGetInvoiceHeader.recordcount neq 0>
 		<cfset url.Invoice_Header_ID = qGetInvoiceHeader.Invoice_Header_ID>
 	<cfelse>

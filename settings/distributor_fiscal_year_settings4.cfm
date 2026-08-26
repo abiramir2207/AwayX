@@ -1,9 +1,28 @@
+<cfset useLakebaseFordeletePriorDistributorCalendar = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_fiscal_year")>
+<cfif useLakebaseFordeletePriorDistributorCalendar>
+	<cftry>
+		<cfset application.oLakebase.updateRows("distributor_fiscal_year",
+			{
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"distributor_id" = "eq.#Form.Distributor_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletePriorDistributorCalendar = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletePriorDistributorCalendar>
 <CFQUERY NAME="deletePriorDistributorCalendar" datasource="#application.datasource#">
 	UPDATE Distributor_Fiscal_year
 	SET Deleted = 1
 	WHERE Company_main_ID = '#request.AccessStructure.Company_Main_ID#'
 	AND Distributor_ID = '#Form.Distributor_ID#'
 </CFQUERY>
+</cfif>
 
 <CFLOOP INDEX="LoopCount" FROM="1" TO="#FORM.NUMBER_OF_PERIODS#" STEP="1">
 	<CFQUERY NAME="saveFiscalYear" datasource="#application.datasource#">

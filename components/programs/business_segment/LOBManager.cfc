@@ -25,13 +25,29 @@
 		<cfargument name="programId" type="numeric" required="false" default="0" />
 		
 		<!---get the business segments--->
-		<cfquery name="qGetLOBIdFromProgram" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetLOBIdFromProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetLOBIdFromProgram>
+	<cftry>
+		<cfset qGetLOBIdFromProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "line_of_business_id"
+			}), "line_of_business_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLOBIdFromProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLOBIdFromProgram>
+<cfquery name="qGetLOBIdFromProgram" datasource="#application.datasource#">
 			
 			SELECT 	Line_Of_Business_ID 
 			FROM 	Contract_Main
 			WHERE	Contract_Main_ID = #arguments.programId#
 			
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetLOBIdFromProgram.Line_Of_Business_ID />
 		

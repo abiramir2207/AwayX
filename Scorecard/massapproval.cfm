@@ -593,11 +593,27 @@ cannot use <cfflush> inside "cfsavecontent" tag.
 
 			 <cfif LetUserApprove EQ 1>
 			 	 <cfset CloseWindow = 0>
-				 <CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
+				 <cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#getRevisionData.Contract_Main_ID#",
+				"select" = "contract_start_date,contract_end_date,revision_of_contract_main_id"
+			}), "contract_start_date,contract_end_date,revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
 						SELECT Contract_Start_Date, Contract_End_Date, Revision_Of_Contract_Main_ID
 						FROM Contract_Main
 						WHERE Contract_Main_ID = '#getRevisionData.Contract_Main_ID#'
 				</CFQUERY>
+</cfif>
 				 <cfinclude template="/common_files/contracts/contract_approve_action_include.cfm">
 			<cfelse>
 				<!---taken from common_files/contracts/program_agree_action.cfm--->

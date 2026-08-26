@@ -37,7 +37,25 @@
 		
 		<cfif arguments.groupLevel NEQ 0 AND isNumeric(arguments.groupLevel)>
 	
-			<cfquery name="qGetAllDistributorsDistributorID" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetAllDistributorsDistributorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_distributor")>
+<cfif useLakebaseForqGetAllDistributorsDistributorID>
+	<cftry>
+		<cfset qGetAllDistributorsDistributorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_distributor", {
+				"deleted" = "eq.0",
+				"distributor_group_level_id" = "eq.#arguments.groupLevel#",
+				"distributor_group_id" = "eq.#arguments.groupID#",
+				"limit" = "1",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllDistributorsDistributorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllDistributorsDistributorID>
+<cfquery name="qGetAllDistributorsDistributorID" datasource="#application.datasource#">
 				SELECT	TOP 1 Distributor_ID
 				FROM	Distributor_Group_Distributor
 				WHERE
@@ -45,6 +63,7 @@
 						AND Distributor_Group_Level_ID = #arguments.groupLevel#
 						AND Distributor_Group_ID = '#arguments.groupID#'
 			</cfquery>
+</cfif>
 			
 			<cfloop query="qGetAllDistributorsDistributorID">
 			
@@ -167,7 +186,23 @@
 		<cfset groupId = "">
 		
 		
-		<cfquery name="qGetDistributorGroup" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDistributorGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_distributor")>
+<cfif useLakebaseForqGetDistributorGroup>
+	<cftry>
+		<cfset qGetDistributorGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_distributor", {
+				"deleted" = "eq.0",
+				"distributor_id" = "eq.#arguments.distributorId#",
+				"select" = "distributor_group_level_id,distributor_group_id"
+			}), "distributor_group_level_id,distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistributorGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistributorGroup>
+<cfquery name="qGetDistributorGroup" datasource="#application.datasource#">
 			SELECT	Distributor_Group_Level_ID, Distributor_Group_ID
 			FROM	Distributor_Group_Distributor
 			WHERE
@@ -175,6 +210,7 @@
 					AND
 					Distributor_ID = '#arguments.distributorId#'
 		</cfquery>
+</cfif>
 		
 		<cfif arguments.returnType EQ 1>
 		
@@ -228,7 +264,23 @@
 		
 			<cfif isNumeric(arguments.distributorGroupID) AND arguments.distributorGroupID NEQ 0>
 			
-				<cfquery name="prodGroupDetails" datasource="#application.datasource#">
+				<cfset useLakebaseForprodGroupDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForprodGroupDetails>
+	<cftry>
+		<cfset prodGroupDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_segment_id" = "eq.#arguments.distributorGroupID#",
+				"select" = "'' as shr_ship_to,'' as ship_to,distributor_label_plural#' as name"
+			}), "'' as shr_ship_to,'' as ship_to,distributor_label_plural#' as name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForprodGroupDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForprodGroupDetails>
+<cfquery name="prodGroupDetails" datasource="#application.datasource#">
 				
 					SELECT 	'' AS Shr_Ship_To,
 							'' AS Ship_To,
@@ -240,6 +292,7 @@
 							Business_Segment.Business_Segment_ID = #arguments.distributorGroupID#
 							
 				</cfquery>
+</cfif>
 			
 			</cfif>
 		
@@ -273,13 +326,31 @@
 		<cfargument name="programId" required="true" type="numeric" />
 		
 		<cfset returnValue = 0 />
-		<cfquery name="qGetGroupsSaved" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetGroupsSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForqGetGroupsSaved>
+	<cftry>
+		<cfset qGetGroupsSaved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.1",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupsSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupsSaved>
+<cfquery name="qGetGroupsSaved" datasource="#application.datasource#">
 			SELECT 	TOP 1 *
 			FROM 	Contract_Distributors
 			WHERE 	Contract_Main_ID = #arguments.programId#
 			AND 	Deleted = 0
 			AND		Is_Group = 1		
 		</cfquery>
+</cfif>
 		
 		<cfif qGetGroupsSaved.recordCount>
 			<cfset returnValue = 1 />

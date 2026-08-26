@@ -6,23 +6,56 @@
 ----------------------------------------------------------------------------------------------------------------------->
 
 <!--- gather planner permissions for all profiles --->
+<cfset useLakebaseForqPermissions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_planner")>
+<cfif useLakebaseForqPermissions>
+	<cftry>
+		<cfset qPermissions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_planner", {
+				"planner_template_id" = "eq.#form.id#",
+				"deleted" = "eq.0",
+				"select" = "access_is_forbidden,profile_id,planner_template_id"
+			}), "access_is_forbidden,profile_id,planner_template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPermissions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPermissions>
 <cfquery name="qPermissions" datasource="#application.datasource#">
 	SELECT Access_is_forbidden, Profile_ID, Planner_Template_ID
 	  FROM Profile_Forbidden_Planner
 	 WHERE Planner_Template_ID = #form.id#
 			AND Deleted = 0
 </cfquery>
+</cfif>
 
 <!--- set up an array for ag-Grid --->
 <cfset settings = []>
 <cfoutput query="qProfiles">
 	<!--- locate for a specific profile --->
-	<cfquery name="qAccess" dbtype="query">
+	<cfset useLakebaseForqAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qpermissions")>
+<cfif useLakebaseForqAccess>
+	<cftry>
+		<cfset qAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qpermissions", {
+				"profile_id" = "eq.#qProfiles.Profiles_ID#",
+				"planner_template_id" = "eq.#form.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAccess>
+<cfquery name="qAccess" dbtype="query">
 		SELECT *
 		  FROM qPermissions
 		 WHERE qPermissions.Profile_ID = #qProfiles.Profiles_ID#
 				AND qPermissions.Planner_Template_ID = #form.id#
 	</cfquery>
+</cfif>
 	<!--- a specific profile does not exist (it may be new) so find "any new profiles" --->
 	<cfif qAccess.recordCount eq 0>
 		<cfquery name="qAccess" dbtype="query">

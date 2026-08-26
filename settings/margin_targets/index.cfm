@@ -74,10 +74,25 @@
 	<tr>
 		<td><b>Global Target&nbsp;&nbsp;</b><input type="text" name="allRateBox" size="3" maxlength="7" id="allRateBox">
 			<cfif appSettings.getApprovalMarginType() EQ 3>
-				<cfquery name="getGlobalUOM" datasource="#application.datasource#">
+				<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+<cfquery name="getGlobalUOM" datasource="#application.datasource#">
 					SELECT Global_Target_UOM
 					FROM General_Settings
 				</cfquery>
+</cfif>
 				<select name="Global_Target_UOM">
 					<option value="1" <cfif getGlobalUOM.Global_Target_UOM EQ 1>selected</cfif>>CS</option>
 					<option value="2" <cfif getGlobalUOM.Global_Target_UOM EQ 2>selected</cfif>>LB</option>

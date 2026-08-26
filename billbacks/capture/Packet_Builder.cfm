@@ -18,11 +18,29 @@
 <!--- If the profile, program template allow rebate update and the program has rebate as a discount type --->
  <cfif RebateUpdateAllowed eq 1>
 		<cfif TotalRebate neq 0 AND FORM.Billback_ID neq 0>
-				<cfquery name="updBBAmount" datasource="#application.datasource#">
+				<cfset useLakebaseForupdBBAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdBBAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"bb_amount" = "#TotalRebate#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBAmount>
+<cfquery name="updBBAmount" datasource="#application.datasource#">
 					UPDATE Billback
 					SET BB_Amount = '#TotalRebate#'
 					WHERE Billback_ID = '#FORM.Billback_ID#'
 				</cfquery>
+</cfif>
 		</cfif>
  </cfif>
 
@@ -162,13 +180,31 @@
 
 			<CFSET Billback.List_Of_Programs = listappend(Billback.List_Of_Programs, x)>
 			
-			<cfquery name="GetDiscountList" datasource="#application.datasource#">
+			<cfset useLakebaseForGetDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetDiscountList>
+	<cftry>
+		<cfset GetDiscountList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"program_id" = "eq.#x#",
+				"deleted" = "eq.0",
+				"select" = "discount_list"
+			}), "discount_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountList>
+<cfquery name="GetDiscountList" datasource="#application.datasource#">
 			SELECT Discount_List 
 			FROM Billback_Program
 			WHERE Billback_ID = '#Billback.Billback_ID#'
 			AND Program_ID = '#x#'
 			AND Deleted = 0
 			</cfquery>
+</cfif>
 			
 			<CFSET Program.Discount_List = "#GetDiscountList.Discount_List#">
 			
@@ -406,19 +442,53 @@
 			<CFSET ProductStruct.Product_Type_ID = FORM.IsOnProgram>
 
 			<!---TSF - 11671: Get the Customer Ship To and the product item number and set them to the sort key in the product struct--->
-			<cfquery name="qGetShipTo" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetShipTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForqGetShipTo>
+	<cftry>
+		<cfset qGetShipTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#thisDistributor_Id_Earned#",
+				"deleted" = "eq.0",
+				"select" = "ship_to"
+			}), "ship_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetShipTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetShipTo>
+<cfquery name="qGetShipTo" datasource="#application.datasource#">
 				SELECT 	DISTINCT Ship_To 
 				FROM 	BSA_Foodservice_Customers
 				WHERE	BSA_Foodservice_Customers_ID = '#thisDistributor_Id_Earned#'
 				AND		Deleted = 0
 			</cfquery>
+</cfif>
 			
-			<cfquery name="qGetProductItem" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetProductItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqGetProductItem>
+	<cftry>
+		<cfset qGetProductItem = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#thisProduct_ID#",
+				"deleted" = "eq.0",
+				"select" = "item"
+			}), "item"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductItem>
+<cfquery name="qGetProductItem" datasource="#application.datasource#">
 				SELECT 	DISTINCT Item 
 				FROM 	BSA_Foodservice_Items_Master
 				WHERE	BSA_Foodservice_Items_Master_ID = '#thisProduct_ID#'
 				AND		Deleted = 0
 			</cfquery>
+</cfif>
 			<CFIF FORM.IsOnProgram EQ 1>
 				<CFSET Program.Products_On_Program = Program.Products_On_Program + 1>
 			<CFELSE>

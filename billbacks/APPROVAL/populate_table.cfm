@@ -34,9 +34,25 @@
 	</CFIF>	
 </CFIF>
 
+<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
 <CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
 	SELECT Billback_Status_ID FROM Billback WHERE Billback_ID = '#Billback_ID#'
 </CFQUERY>
+</cfif>
 <CFIF GetStatus.Billback_Status_ID GTE 3> 
 	<!--- 17302 - Redirect to Summary --->
 	<CFSET Billback_Status_ID = GetStatus.Billback_Status_ID>

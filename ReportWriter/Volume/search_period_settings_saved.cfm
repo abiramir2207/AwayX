@@ -113,11 +113,27 @@ self.close();
 		AND Distributor_Fiscal_Year.Distributor_ID = '#Distributor_ID#'
 	</cfquery>
 	
-	<cfquery name="getDistributorName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetDistributorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForgetDistributorName>
+	<cftry>
+		<cfset getDistributorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Distributor_ID#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistributorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistributorName>
+<cfquery name="getDistributorName" datasource="#application.datasource#">
 		SELECT Name 
 		FROM BSA_Foodservice_Customers
 		WHERE BSA_Foodservice_Customers_ID = '#Distributor_ID#'
 	</cfquery>
+</cfif>
 
 	<!--- Since 1 to 6 Fiscal periods can be on one line AND more than 6 will be on two lines, we get either 1 or 2 or 3
 	 (There can be upto 13 fiscal periods) --->

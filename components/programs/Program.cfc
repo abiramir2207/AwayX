@@ -83,12 +83,28 @@
 
 		<cfset statusDesc = "">
 
-		<cfquery name="qGetStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_status_types")>
+<cfif useLakebaseForqGetStatus>
+	<cftry>
+		<cfset qGetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_status_types", {
+				"contract_status_type_id" = "eq.#arguments.statusId#",
+				"select" = "contract_status_type_desc"
+			}), "contract_status_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetStatus>
+<cfquery name="qGetStatus" datasource="#application.datasource#">
 			SELECT 	Contract_Status_Type_Desc
 			FROM 	Contract_Status_Types
 			WHERE
 					Contract_Status_Type_ID = #arguments.statusId#
 		</cfquery>
+</cfif>
 
 		<cfloop query="qGetStatus">
 			<cfset statusDesc = Contract_Status_Type_Desc>
@@ -1632,11 +1648,26 @@
 
 	<cffunction name="getProgramUserSettings" returntype="query">
 
-		<cfquery name="qGetProgramUserSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramUserSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqGetProgramUserSettings>
+	<cftry>
+		<cfset qGetProgramUserSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.accessstructure.company_Main_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramUserSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramUserSettings>
+<cfquery name="qGetProgramUserSettings" datasource="#application.datasource#">
 			Select		*
 			From		_Users_Settings
 			Where		User_ID = '#request.accessstructure.company_Main_Id#'
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetProgramUserSettings />
 
@@ -3405,12 +3436,29 @@ Note: We insert vendors into customer master table for client(s) who want "vendo
 	<cfset local.bAllowVendorOnly = 0>
 
 	<CFIF application.appSettingsGet.get_Setting('Lump_Sums_Programs_Paid_To_Vendor') eq '1'>
-		<CFQUERY NAME="qAllowVendorOnly" datasource="#application.datasource#">
+		<cfset useLakebaseForqAllowVendorOnly = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqAllowVendorOnly>
+	<cftry>
+		<cfset qAllowVendorOnly = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.templateID#",
+				"allow_vendor_only" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAllowVendorOnly = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAllowVendorOnly>
+<CFQUERY NAME="qAllowVendorOnly" datasource="#application.datasource#">
 			SELECT 1
 			FROM Program_Control_Panel_Options
 			WHERE ProgramControl_Panel_Options_ID = '#arguments.templateID#'
 			AND Allow_Vendor_Only = 1
 		</CFQUERY>
+</cfif>
 
 		<cfif qAllowVendorOnly.recordcount GT 0>
 			<cfset local.bAllowVendorOnly = 1>
@@ -3532,7 +3580,28 @@ Note: We insert vendors into customer master table for client(s) who want "vendo
 
 		<cfset PricingLevelID = 1>
 		<cfloop query="getProductGroupLevels">
-			<cfquery name="upPricingLevel" datasource="#application.datasource#">
+			<cfset useLakebaseForupPricingLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForupPricingLevel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.contract_main_id#",
+				"product_type_id" = "eq.#arguments.Product_Type_ID#",
+				"product_group_level_id" = "eq.#getProductGroupLevels.Product_Group_Level_ID#",
+				"is_group" = "eq.1"
+			},
+			{
+				"pricing_level_id" = "#PricingLevelID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupPricingLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupPricingLevel>
+<cfquery name="upPricingLevel" datasource="#application.datasource#">
 				UPDATE Contract_Products
 				SET Pricing_Level_ID = #PricingLevelID#
 				WHERE Deleted = 0
@@ -3541,10 +3610,32 @@ Note: We insert vendors into customer master table for client(s) who want "vendo
 				AND Product_Group_Level_ID = #getProductGroupLevels.Product_Group_Level_ID#
 				AND  is_group = 1
 			</cfquery>
+</cfif>
 			<cfset PricingLevelID = PricingLevelID + 1>
 		</cfloop>
 
-			<cfquery name="upItemPricingLevel" datasource="#application.datasource#">
+			<cfset useLakebaseForupItemPricingLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForupItemPricingLevel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.contract_main_id#",
+				"product_type_id" = "eq.#arguments.Product_Type_ID#",
+				"is_group" = "eq.0",
+				"captured_from_group" = "eq.0"
+			},
+			{
+				"pricing_level_id" = "#PricingLevelID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupItemPricingLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupItemPricingLevel>
+<cfquery name="upItemPricingLevel" datasource="#application.datasource#">
 				UPDATE Contract_Products
 				SET Pricing_Level_ID = #PricingLevelID#
 				WHERE Deleted = 0
@@ -3553,6 +3644,7 @@ Note: We insert vendors into customer master table for client(s) who want "vendo
 				AND  is_group = 0
 				AND Captured_From_Group = 0
 			</cfquery>
+</cfif>
 
 	</cffunction>
 	<!---77408 Product Group sequencing END--->

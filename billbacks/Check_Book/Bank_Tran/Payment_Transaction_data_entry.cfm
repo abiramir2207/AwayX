@@ -22,9 +22,25 @@
 </CFIF>
 <BODY>
 <Cfsilent>
+<cfset useLakebaseForCom_Bank_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_bank_info")>
+<cfif useLakebaseForCom_Bank_Info>
+	<cftry>
+		<cfset Com_Bank_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_bank_info", {
+				"bank_info_deleted" = "eq.0",
+				"select" = "debit_account_no"
+			}), "debit_account_no"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCom_Bank_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCom_Bank_Info>
 <CFQUERY name="Com_Bank_Info" datasource="#application.datasource#">
 	SELECT debit_Account_No FROM company_bank_Info WHERE Bank_Info_Deleted = 0
 </CFQUERY>
+</cfif>
 <CFOUTPUT>
 <CFIF Com_Bank_Info.recordcount EQ 0 and application.returned_customer_setting.PayBy_awayX EQ 1>
 	<CFLOCATION URL = "../Company_Bank_Info_Form.cfm?FromPayment=1&new_bb_check=#URL.new_bb_check#&Trans_type=#URL.Trans_type#&CRID=#URL.RID#" ADDTOKEN = "No">
@@ -43,9 +59,24 @@
 </CFOUTPUT>
  --->
  
+<cfset useLakebaseForget_data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForget_data>
+	<cftry>
+		<cfset get_data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"ledger_id" = "eq.#url.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_data>
 <CFQUERY name = "get_data" datasource="#application.datasource#">
 	Select * from ledger_table where ledger_ID = '#url.RID#'
 </CFQUERY>
+</cfif>
 
 <!--- fix for an issue when 2 useres submit payments at exactly the same time.  The ledger recoed gets deleted --->
 <!--- if no record...try again --->

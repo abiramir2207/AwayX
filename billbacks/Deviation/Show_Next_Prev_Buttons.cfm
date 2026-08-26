@@ -1,11 +1,27 @@
 <cfinclude template="/get_access_profile.cfm">
 
 <!---Finds out if the program is PNF or UP--->
+<cfset useLakebaseForUPorPNF = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUPorPNF>
+	<cftry>
+		<cfset UPorPNF = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_up,bb_pnf"
+			}), "bb_up,bb_pnf"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUPorPNF = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUPorPNF>
 <cfquery name="UPorPNF" datasource="#application.datasource#">
 SELECT BB_UP, BB_PNF
 FROM Billback
 WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <!-------------- Show Buttons ------------->
 

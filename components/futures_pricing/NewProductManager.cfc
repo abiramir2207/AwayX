@@ -14,7 +14,23 @@
 		
 		<cfif arguments.id>
 		
-			<cfquery name="qNewProducts" datasource="#application.datasource#">
+			<cfset useLakebaseForqNewProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_new_product")>
+<cfif useLakebaseForqNewProducts>
+	<cftry>
+		<cfset qNewProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_new_product", {
+				"deleted" = "eq.0",
+				"fp_new_product_id" = "eq.#arguments.id#",
+				"select" = "fp_new_product_id,product_desc,customer_request"
+			}), "fp_new_product_id,product_desc,customer_request"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqNewProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqNewProducts>
+<cfquery name="qNewProducts" datasource="#application.datasource#">
 				SELECT 	FP_New_Product_ID,
 						Product_Desc,
 						Customer_Request
@@ -22,6 +38,7 @@
 				WHERE	Deleted = 0
 				AND		FP_New_Product_ID = #arguments.id#
 			</cfquery>
+</cfif>
 			
 			<!---loop over new products and populate NewProduct object--->
 			<cfloop query="qNewProducts">

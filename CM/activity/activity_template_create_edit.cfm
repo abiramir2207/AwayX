@@ -1,9 +1,22 @@
 <cfoutput>
 
+<cfset useLakebaseForqTempGet = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_template")>
+<cfif useLakebaseForqTempGet>
+	<cftry>
+		<cfset qTempGet = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_template", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqTempGet = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqTempGet>
 <cfquery name="qTempGet" datasource="#application.datasource#">
 	SELECT	* 
 	FROM 	CM_Activity_Template
 </cfquery>
+</cfif>
 
 <cfloop query="qTempGet">
 	<a href="/cm/handler.cfm?command=ceActivityTemplate&id=#CM_Activity_Template_ID#">#Activity_Template_Name#</a><br>

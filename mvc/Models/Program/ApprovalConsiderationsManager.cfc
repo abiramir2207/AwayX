@@ -2,12 +2,30 @@
 
 	<cffunction name="getText" output="false" returntype="query">
 
-		<cfquery name="local.query" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_query = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("approval_considerations")>
+<cfif useLakebaseForlocal_query>
+	<cftry>
+		<cfset local.query = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("approval_considerations", {
+				"deleted" = "eq.0",
+				"display_on_whatif_generic" = "eq.1",
+				"order" = "approval_considerations_name.asc",
+				"select" = "approval_considerations_text"
+			}), "approval_considerations_text"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_query = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_query>
+<cfquery name="local.query" datasource="#application.datasource#">
 			SELECT Approval_Considerations_Text
 			  FROM Approval_Considerations
 			 WHERE Deleted = 0 AND Display_On_WhatIF_Generic = 1
 			 ORDER BY Approval_Considerations_Name
 		</cfquery>
+</cfif>
 
 		<cfreturn local.query>
 	</cffunction>

@@ -34,11 +34,29 @@
 
 <cfif form.status>
 <!--- First set the deleted bit to one for the entrie in the table --->
-	<CFQUERY NAME="Set_Deleted" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForSet_Deleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("limited_revision_settings")>
+<cfif useLakebaseForSet_Deleted>
+	<cftry>
+		<cfset application.oLakebase.updateRows("limited_revision_settings",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSet_Deleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSet_Deleted>
+<CFQUERY NAME="Set_Deleted" DATASOURCE="#application.datasource#">
 		UPDATE 	Limited_Revision_Settings
 		SET 		Deleted = 1
 		WHERE		Deleted = 0
 	</CFQUERY>
+</cfif>
 	<!--- Then insert the latest settings... --->
 	<CFQUERY NAME="Save_Data" DATASOURCE="#application.datasource#">
 		INSERT INTO Limited_Revision_Settings

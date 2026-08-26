@@ -19,9 +19,24 @@ So, <fieldset> was removed from here ans it was not needed.
 	<!--- mass approve --->
 	<cfset itemCheckBoxDisabled = 0 />
 	<cfset getGroupvalues = "" />
-	<cfquery name="getGroupvalues" dbtype="query">
+	<cfset useLakebaseForgetGroupvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallexcludedgroupmargins")>
+<cfif useLakebaseForgetGroupvalues>
+	<cftry>
+		<cfset getGroupvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallexcludedgroupmargins", {
+				"type_code_desc_id" = "eq.#getAllExcludedProductMargins.Type_Code_Desc_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupvalues>
+<cfquery name="getGroupvalues" dbtype="query">
 		select * from getAllExcludedGroupMargins where Type_Code_Desc_Id = '#getAllExcludedProductMargins.Type_Code_Desc_Id#' 
 	</cfquery>
+</cfif>
 	<!--- add variation to group margin --->
 	<cfif trim(getGroupvalues.Group_ID_Margin) EQ "">
 		<cfset getGroupvalues.Group_ID_Margin = 0 />
@@ -320,9 +335,25 @@ So, <fieldset> was removed from here ans it was not needed.
 					#application.util.string.cellFormat(value=Operating_Income ,decimalplaces = request.dollar_format)#
 					<!---Tim Ford - Label 19381: Show if the Program is a revision and Operating Income is different from Revised program--->
 					<cfif Program_Is_A_Revision and isDefined("getProductPreviousVersionMargins")>
-						<cfquery name="qGetPreviousOperatingIncome" dbtype="query">
+						<cfset useLakebaseForqGetPreviousOperatingIncome = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproductpreviousversionmargins")>
+<cfif useLakebaseForqGetPreviousOperatingIncome>
+	<cftry>
+		<cfset qGetPreviousOperatingIncome = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproductpreviousversionmargins", {
+				"product_id" = "eq.#Product_ID#",
+				"select" = "operating_income,operatingmargin_percent"
+			}), "operating_income,operatingmargin_percent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPreviousOperatingIncome = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPreviousOperatingIncome>
+<cfquery name="qGetPreviousOperatingIncome" dbtype="query">
 							SELECT Operating_Income, OperatingMargin_percent FROM getProductPreviousVersionMargins WHERE Product_ID = '#Product_ID#' 
 						</cfquery>
+</cfif>
 						<cfif qGetPreviousOperatingIncome.RecordCount>
 							<cfif DecimalFormat(qGetPreviousOperatingIncome.Operating_Income) neq DecimalFormat(Operating_Income)>
 								&nbsp; 

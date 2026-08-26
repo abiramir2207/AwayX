@@ -13,9 +13,26 @@
 
 
 <!------
+<cfset useLakebaseForemail_select = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForemail_select>
+	<cftry>
+		<cfset email_select = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"is_system_administrator" = "eq.1",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForemail_select = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForemail_select>
 <CFQUERY name = "email_select" datasource="#application.datasource#">
 	SELECT user_email from _users where deleted = 0 and is_system_administrator = 1
 </CFQUERY>
+</cfif>
 <CFOUTPUT query = "email_select">
 <CFSET sys_admin_email = #user_email#>
 </CFOUTPUT>

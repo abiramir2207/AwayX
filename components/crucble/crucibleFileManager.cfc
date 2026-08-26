@@ -9,7 +9,24 @@
 	<cffunction name="getWeeklyReport" output="false" returntype="query">
 	
 		
-		<cfquery name="qGetCrucibleWeeklyReport" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCrucibleWeeklyReport = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("crucible_weekly_report")>
+<cfif useLakebaseForqGetCrucibleWeeklyReport>
+	<cftry>
+		<cfset qGetCrucibleWeeklyReport = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("crucible_weekly_report", {
+				"deleted" = "eq.0",
+				"is_current" = "eq.1",
+				"limit" = "1",
+				"select" = "crucible_weekly_report_id,weekly_report_folder,weekly_report_date"
+			}), "crucible_weekly_report_id,weekly_report_folder,weekly_report_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCrucibleWeeklyReport = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCrucibleWeeklyReport>
+<cfquery name="qGetCrucibleWeeklyReport" datasource="#application.datasource#">
 			SELECT	Top 1 Crucible_Weekly_Report.Crucible_Weekly_Report_ID, Crucible_Weekly_Report.Weekly_Report_Folder,
 					Crucible_Weekly_Report.Weekly_Report_Date
 					
@@ -18,6 +35,7 @@
 			WHERE	Crucible_Weekly_Report.Deleted = 0
 			AND		Crucible_Weekly_Report.Is_Current = 1
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetCrucibleWeeklyReport />
 	
@@ -109,10 +127,23 @@
 	
 	<cffunction name="getCrucibleFileSettings" output="false" returntype="query">
 	
-		<cfquery name="qGetCrucibleFileSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCrucibleFileSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("crucible_extract_folder_setting")>
+<cfif useLakebaseForqGetCrucibleFileSettings>
+	<cftry>
+		<cfset qGetCrucibleFileSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("crucible_extract_folder_setting", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCrucibleFileSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCrucibleFileSettings>
+<cfquery name="qGetCrucibleFileSettings" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Crucible_Extract_Folder_Setting
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetCrucibleFileSettings />
 	

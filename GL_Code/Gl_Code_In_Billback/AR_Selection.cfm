@@ -1,7 +1,7 @@
 
 
 <!--- 
-	Dev Note: Ana; D17928: Update‘Recalc’ link so takes the user to a page to change AR 
+	Dev Note: Ana; D17928: UpdateRecalc link so takes the user to a page to change AR 
 	"Recalculate Allocation" Link will be used to manually override the AR automation methodology. 
 	So when user clicks this link we will be showing the AR selection dropdown just like the older way perior to D17664.	
  --->
@@ -35,7 +35,7 @@
 
 	<CFLOCATION URL="Allocation.cfm?#URLString#" ADDTOKEN="No">
 <CFELSE>
-	<!--- D17928: Update‘Recalc’ link so takes the user to a page to change AR  --->
+	<!--- D17928: UpdateRecalc link so takes the user to a page to change AR  --->
 	<SCRIPT LANGUAGE="JavaScript" SRC="/Script/javascript/dhtml.js"></SCRIPT>
 	
 	<!--- <CFPARAM NAME="FORM.Submitted" DEFAULT=""> --->
@@ -51,7 +51,24 @@
 			<CFSET right_Len = FormARlength - 5>
 			<CFSET A_R_Number = RIGHT(Sel_AR_Value,right_Len)>	
 			
-			<CFQUERY NAME="GetAllocation" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForGetAllocation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_ar_for_progtemp")>
+<cfif useLakebaseForGetAllocation>
+	<cftry>
+		<cfset GetAllocation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_ar_for_progtemp", {
+				"template_id" = "eq.#Template_ID#",
+				"fiscal_year" = "eq.#A_R_Fiscal_Year#",
+				"a_r" = "eq.#A_R_Number#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllocation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllocation>
+<CFQUERY NAME="GetAllocation" DATASOURCE="#Application.Datasource#">
 				SELECT 	* 
 				FROM 	GL_Code_AR_For_ProgTemp 
 				WHERE 	Template_ID = '#Template_ID#' AND 
@@ -59,22 +76,58 @@
 						A_R = '#A_R_Number#' AND 
 						Deleted = 0	
 			</CFQUERY>
+</cfif>
 			
 			<CFSET Final_Allocation_Method = GetAllocation.Allocation_Method>
 				
-			<CFQUERY NAME="CheckForLumpsum" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCheckForLumpsum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_lump_sums")>
+<cfif useLakebaseForCheckForLumpsum>
+	<cftry>
+		<cfset CheckForLumpsum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_lump_sums", {
+				"billback_id" = "eq.#Billback_ID#",
+				"billback_program_id" = "eq.#ItemID#",
+				"ls_paid_amount" = "neq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForLumpsum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForLumpsum>
+<CFQUERY NAME="CheckForLumpsum" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM BB_Lump_Sums 
 				WHERE 	Billback_ID = '#Billback_ID#' AND 
 						Billback_Program_ID = '#ItemID#' AND 
 						LS_Paid_Amount <> 0
 			</CFQUERY>
+</cfif>
 			
-			<CFQUERY NAME="CheckAnyClaimedProduct" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCheckAnyClaimedProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForCheckAnyClaimedProduct>
+	<cftry>
+		<cfset CheckAnyClaimedProduct = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product", {
+				"billback_id" = "eq.#Billback_ID#",
+				"billback_program_id" = "eq.#ItemID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckAnyClaimedProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckAnyClaimedProduct>
+<CFQUERY NAME="CheckAnyClaimedProduct" DATASOURCE="#Application.Datasource#">
 				SELECT 	Top 1 * FROM Billback_Product 
 				WHERE 	Billback_ID = '#Billback_ID#' AND 
 						Billback_Program_ID = '#ItemID#' AND 
 						Deleted = 0
 			</CFQUERY>
+</cfif>
 	
 			<CFQUERY NAME="UpdateProg" DATASOURCE="#Application.Datasource#">
 				UPDATE 	Billback_Program
@@ -109,7 +162,25 @@
 				
 				<CFIF CheckTemplateType.RecordCount GT 0 OR (CheckAnyClaimedProduct.RecordCount EQ 0 AND GetAllocation.Allocation_Method EQ 1)>
 					<CFSET Final_Allocation_Method = 3>			
-					<CFQUERY NAME="CheckAlreadySaved" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForCheckAlreadySaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForCheckAlreadySaved>
+	<cftry>
+		<cfset CheckAlreadySaved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"a_r" = "eq.#A_R_Number#",
+				"ar_from_fiscal_year" = "eq.#A_R_Fiscal_Year#",
+				"allocation_method" = "eq.3",
+				"billback_program_id" = "eq.#ItemID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckAlreadySaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckAlreadySaved>
+<CFQUERY NAME="CheckAlreadySaved" DATASOURCE="#Application.Datasource#">
 						SELECT 	* FROM Billback_Program
 						WHERE 	A_R = '#A_R_Number#' AND
 								AR_From_Fiscal_Year = '#A_R_Fiscal_Year#' AND
@@ -117,6 +188,7 @@
 								Billback_Program_ID = '#ItemID#' AND 
 								Deleted = 0
 					</CFQUERY>
+</cfif>
 					<CFIF CheckAlreadySaved.RecordCount EQ 0>
 						<CFSET RecalcFund = 1>
 					</CFIF>			

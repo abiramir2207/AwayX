@@ -111,7 +111,21 @@
 			ON _Users.User_ID = general_Settings.Email_Settings_Updated_By
 	</cfquery>
 <!--- D38427 : Billback email notifications  --->
-	<cfquery name="getAppSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAppSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetAppSettings>
+	<cftry>
+		<cfset getAppSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "send_secondary_email,send_auto_attachments,send_approved_programs_emailadress,cancel_program_email,rfa_email_event,send_release_settlement_emailaddress,bb_agree_email,send_distributor_broker_email,send_create_auto_billback_email,email_auto_renewed_programs,bb_approved_email,ba_support_email,only_notify_rsp_of_approval,budgets_program_approve_email_address,budgets_billback_approve_email_address,send_program_error_ack_emailaddress,pgm_email_pricing_admin,third_party_bb_upload,program_without_budget_email_address,billback_rfa_agree_email_event,show_fixed_freight,send_summarized_weekly_notification_fuel_surcharge,billback_rfa_agree_email_event,notify_rsp_only_notallhquser,send_rfa_agree_emails_to_cra_users"
+			}), "send_secondary_email,send_auto_attachments,send_approved_programs_emailadress,cancel_program_email,rfa_email_event,send_release_settlement_emailaddress,bb_agree_email,send_distributor_broker_email,send_create_auto_billback_email,email_auto_renewed_programs,bb_approved_email,ba_support_email,only_notify_rsp_of_approval,budgets_program_approve_email_address,budgets_billback_approve_email_address,send_program_error_ack_emailaddress,pgm_email_pricing_admin,third_party_bb_upload,program_without_budget_email_address,billback_rfa_agree_email_event,show_fixed_freight,send_summarized_weekly_notification_fuel_surcharge,billback_rfa_agree_email_event,notify_rsp_only_notallhquser,send_rfa_agree_emails_to_cra_users"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAppSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAppSettings>
+<cfquery name="getAppSettings" datasource="#application.datasource#">
 	SELECT 	Send_Secondary_Email, Send_Auto_Attachments, Send_Approved_programs_Emailadress, Cancel_Program_Email, RFA_Email_Event, send_release_settlement_emailaddress,
 			BB_Agree_Email, Send_Distributor_Broker_Email, Send_Create_Auto_Billback_Email, Email_Auto_Renewed_Programs, BB_Approved_Email, BA_Support_Email, Only_Notify_RSP_Of_Approval,
 			Budgets_Program_Approve_Email_Address, Budgets_Billback_Approve_Email_Address,send_Program_Error_Ack_emailaddress,Pgm_Email_Pricing_Admin,Third_Party_BB_Upload,
@@ -119,6 +133,7 @@
 			Billback_RFA_Agree_Email_Event,Notify_RSP_Only_NotAllHQUser,Send_RFA_Agree_Emails_To_CRA_Users
 	FROM 	_Application_Settings
 	</cfquery>
+</cfif>
 		<cfoutput>
 	<TABLE BGCOLOR="White" style="border-color:Orange;border-style:solid;" CELLPADDING="3" CELLSPACING="0" align="center">
 <TR>

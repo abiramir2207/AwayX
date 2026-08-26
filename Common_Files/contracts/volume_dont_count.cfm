@@ -50,22 +50,58 @@ function submitForm()
 	<!--- Set Fixed Dont_Count_Volume if selected --->
 	<cfif form.Program_Fixed_Component_ID neq 0>
 		<cfloop index="fIdx" list="#form.Program_Fixed_Component_ID#">
-			<cfquery name="qSetFixedDontCount" datasource="#application.datasource#">
+			<cfset useLakebaseForqSetFixedDontCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqSetFixedDontCount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component",
+			{
+				"program_fixed_component_id" = "eq.#fIdx#"
+			},
+			{
+				"dont_count_volume" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetFixedDontCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetFixedDontCount>
+<cfquery name="qSetFixedDontCount" datasource="#application.datasource#">
 				UPDATE	Program_Fixed_Component
 				SET		Dont_Count_Volume = 1
 				WHERE	Program_Fixed_Component_ID = '#fIdx#'
 			</cfquery>
+</cfif>
 		</cfloop>
 	</cfif>
 
 	<!--- Set Rebate Dont_Count_Volume if selected --->
 	<cfif form.Program_Rebates_Component_ID neq 0>
 		<cfloop index="rIdx" list="#form.Program_Rebates_Component_ID#">
-			<cfquery name="qSetRebateDontCount" datasource="#application.datasource#">
+			<cfset useLakebaseForqSetRebateDontCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForqSetRebateDontCount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_rebates_component",
+			{
+				"program_rebates_component_id" = "eq.#rIdx#"
+			},
+			{
+				"dont_count_volume" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSetRebateDontCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSetRebateDontCount>
+<cfquery name="qSetRebateDontCount" datasource="#application.datasource#">
 				UPDATE	Program_Rebates_Component
 				SET		Dont_Count_Volume = 1
 				WHERE	Program_Rebates_Component_ID = '#rIdx#'
 			</cfquery>
+</cfif>
 		</cfloop>
 	</cfif>
 

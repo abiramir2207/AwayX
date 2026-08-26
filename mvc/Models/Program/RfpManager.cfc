@@ -65,11 +65,26 @@
 
 	<cfset var qGetDistributors = "" />
 
-	<cfquery name="qGetDistributors" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForqGetDistributors>
+	<cftry>
+		<cfset qGetDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"program_id" = "eq.#arguments.contractId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistributors>
+<cfquery name="qGetDistributors" datasource="#application.datasource#">
 		SELECT	*
 		FROM Contract_Distributors
 		WHERE Program_Id = #arguments.contractId#
 	</cfquery>
+</cfif>
 
 	<cfreturn qGetDistributors />
 
@@ -127,9 +142,27 @@
 	<cfargument name="val" type="any" required="false" default="0" />
 	<cfargument name="field" type="any" required="false" default="0" />
 	<cfargument name="contractId" type="numeric" required="false" default="0" />
-		<cfquery name="qSaveInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqSaveInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqSaveInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#arguments.contractId#"
+			},
+			{
+				"field#" = "#arguments.val#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveInfo>
+<cfquery name="qSaveInfo" datasource="#application.datasource#">
 			Update Contract_main SET #arguments.field# = '#arguments.val#' WHERE Contract_Main_Id = #arguments.contractId#
 		</cfquery>
+</cfif>
 
 	<cfreturn arguments />
 

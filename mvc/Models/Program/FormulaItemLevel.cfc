@@ -252,7 +252,31 @@
         var a = arguments;
     </cfscript>
     <cfif arguments.reset>
-        <CFQUERY NAME="updBracket" DATASOURCE="#application.datasource#">
+        <cfset useLakebaseForupdBracket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fpbd")>
+<cfif useLakebaseForupdBracket>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fpbd",
+			{
+				"formula_program_bracket_data_id" = "eq.#a.BracketId#"
+			},
+			{
+				"rate" = "OFR.OBF_Rate",
+				"is_over_ride" = "0
+            FROM Formula_Program_Bracket_Data FPBD
+            INNER JOIN Freight_Lookup_Bracket_Settings F ON
+                F.Freight_Bracket_Code = FPBD.Bracket_Number
+            INNER JOIn Outbound_Freight_Rate OFR ON
+                OFR.Freight_Bracket_Setting_ID = F.Freight_Bracket_Setting_ID
+                and ofr.deleted = 0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBracket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBracket>
+<CFQUERY NAME="updBracket" DATASOURCE="#application.datasource#">
             UPDATE FPBD SET  rate = OFR.OBF_Rate,
                             Is_Over_Ride = 0
             FROM Formula_Program_Bracket_Data FPBD
@@ -263,6 +287,7 @@
                 and ofr.deleted = 0
             Where FPBD.Formula_Program_Bracket_Data_Id = #a.BracketId#
         </CFQUERY>
+</cfif>
     <cfelse>
         <CFQUERY NAME="updBracket" DATASOURCE="#application.datasource#">
             Update Formula_Program_Bracket_Data
@@ -440,18 +465,55 @@
         <cfscript>
         var a = arguments;
     </cfscript>
-        <cfquery name="qSaveSchedule" datasource="#application.datasource#">
+        <cfset useLakebaseForqSaveSchedule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqSaveSchedule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#a.contractId#"
+			},
+			{
+				"formula_price_rebate_type" = "#a.optionId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveSchedule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveSchedule>
+<cfquery name="qSaveSchedule" datasource="#application.datasource#">
                 Update Contract_Main
                 SET Formula_Price_Rebate_Type = #a.optionId#
                 where Contract_main_Id = #a.contractId#
         </cfquery>
+</cfif>
 
-        <cfquery name="qSaveScheduleRules" datasource="#application.datasource#">
+        <cfset useLakebaseForqSaveScheduleRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqSaveScheduleRules>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_id" = "eq.#a.contractId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"fp_schedule_option_id" = "#a.optionId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveScheduleRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveScheduleRules>
+<cfquery name="qSaveScheduleRules" datasource="#application.datasource#">
                 Update Program_Formula_Pricing_Rules
                 SET FP_Schedule_Option_Id = #a.optionId#
                 where Program_ID = #a.contractId# and
                         deleted = 0
         </cfquery>
+</cfif>
         <!--- <cfdump var="#compIdList#" output="c:/dump.log" /> --->
     <cfreturn 'Schedule Saved'/>
 </cffunction>
@@ -970,7 +1032,23 @@
     <cffunction name="getSavedFormulas" hint="Saved Formulas" access="remote" output="false" returntype="any">
         <cfargument name="contractId" type="numeric" required="false" default="0" />
 
-        <cfquery name="qgetSavedFormula" datasource="#application.datasource#">
+        <cfset useLakebaseForqgetSavedFormula = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqgetSavedFormula>
+	<cftry>
+		<cfset qgetSavedFormula = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"saved" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_formula_pricing_rule_id,program_id,rule_name,number_of_comms,created_date,formula_price"
+			}), "program_formula_pricing_rule_id,program_id,rule_name,number_of_comms,created_date,formula_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetSavedFormula = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetSavedFormula>
+<cfquery name="qgetSavedFormula" datasource="#application.datasource#">
                 SELECT Program_Formula_Pricing_Rule_ID,
                         Program_ID,
                         Rule_Name,
@@ -980,6 +1058,7 @@
                 FROM Program_Formula_Pricing_Rules
                 WHERE Saved = 1 AND Deleted = 0
         </cfquery>
+</cfif>
 
         <cfreturn qgetSavedFormula />
 
@@ -987,10 +1066,28 @@
     <cffunction name="removeFromSaved" hint="Saved Formulas" access="remote" output="false" returntype="string" returnformat="JSON">
         <cfargument name="Program_Formula_Pricing_Rule_ID" type="any" required="false" default="" />
 
-        <cfquery name="qremoveFromSaved" datasource="#application.datasource#">
+        <cfset useLakebaseForqremoveFromSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqremoveFromSaved>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_formula_pricing_rule_id" = "eq.#arguments.Program_Formula_Pricing_Rule_ID#"
+			},
+			{
+				"saved" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqremoveFromSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqremoveFromSaved>
+<cfquery name="qremoveFromSaved" datasource="#application.datasource#">
                 UPDATE  Program_Formula_Pricing_Rules SET Saved = 0
                 WHERE Program_Formula_Pricing_Rule_ID = '#arguments.Program_Formula_Pricing_Rule_ID#'
         </cfquery>
+</cfif>
 
         <cfreturn application.util.query.toAgGridJSON(this.getSavedFormulas(), 'Program_Formula_Pricing_Rule_ID, Program_ID, Rule_Name, Formula_Price') />
 
@@ -1008,11 +1105,27 @@
         <!--- Handling for retroactive dates for this client --->
         <cfif application.util.query.get_setting('Margin_Display_Style') EQ "CUSTOM_T">
             
-            <cfquery name="qGetContractStart" datasource="#application.datasource#">
+            <cfset useLakebaseForqGetContractStart = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetContractStart>
+	<cftry>
+		<cfset qGetContractStart = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#a.contractId#",
+				"select" = "contract_start_date,formula_price_rebate_type as schedule_id"
+			}), "contract_start_date,formula_price_rebate_type as schedule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetContractStart = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetContractStart>
+<cfquery name="qGetContractStart" datasource="#application.datasource#">
                 select	Contract_Start_Date, Formula_Price_Rebate_Type as Schedule_ID
                 from	Contract_Main
                 where 	Contract_Main_ID = '#a.contractId#'
             </cfquery>
+</cfif>
 
             <cfset processDate = getRetroactiveCalcProcDate(qGetContractStart.Contract_Start_Date, Val(qGetContractStart.Schedule_ID), '') />
             
@@ -1020,7 +1133,30 @@
             <cfset processDate = "NULL" />
         </cfif>
 
-        <cfquery name="qCreateFromSavedDel" datasource="#application.datasource#">
+        <cfset useLakebaseForqCreateFromSavedDel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForqCreateFromSavedDel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"contract_products_id" = "eq.#a.contractProductsId#'
+
+                UPDATE Program_Formula_Pricing_Rules
+                SET deleted = 1
+                WHERE Contract_Products_Id = '#a.contractProductsId#",
+				"saved" = "eq.0"
+			},
+			{
+				"contract_products_id" = "0",
+				"program_id" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCreateFromSavedDel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCreateFromSavedDel>
+<cfquery name="qCreateFromSavedDel" datasource="#application.datasource#">
                 UPDATE Program_Formula_Pricing_Rules
                 SET Contract_Products_Id = 0 , Program_Id = 0
                 WHERE Contract_Products_Id = '#a.contractProductsId#'
@@ -1029,6 +1165,7 @@
                 SET deleted = 1
                 WHERE Contract_Products_Id = '#a.contractProductsId#' AND Saved = 0
         </cfquery>
+</cfif>
 
         <cfquery name="qCreateFromSaved" datasource="#application.datasource#">
                 DECLARE
@@ -1396,11 +1533,30 @@
             var compId = st.prg_comp_id;
         </cfscript>
             <cfdump var="#st#" output="c:/dump.log" />
-            <cfquery name="qSaveInfo" datasource="#application.datasource#">
+            <cfset useLakebaseForqSaveInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqSaveInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component",
+			{
+				"program_id" = "eq.#a.contractId#",
+				"program_fixed_component_id" = "eq.#compId#"
+			},
+			{
+				"claim_mechanics" = "#cmId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveInfo>
+<cfquery name="qSaveInfo" datasource="#application.datasource#">
                 Update Program_Fixed_Component set Claim_Mechanics = #cmId#
                 WHERE Program_Id = #a.contractId# AND
                         Program_Fixed_Component_id = #compId#
             </cfquery>
+</cfif>
         <cfreturn arguments />
     </cffunction>
     <cffunction name="deleteOneFPComponent" hint="Mass Apply Rates" access="remote" output="false" returntype="string" returnformat="JSON">
@@ -1595,11 +1751,27 @@
         <cfif application.util.query.get_setting('Margin_Display_Style') EQ "CUSTOM_T">
 
             <!--- Get program start date --->
-            <cfquery NAME="qGetProgramStartDate" DATASOURCE="#application.datasource#">
+            <cfset useLakebaseForqGetProgramStartDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramStartDate>
+	<cftry>
+		<cfset qGetProgramStartDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.contractId#",
+				"select" = "contract_start_date"
+			}), "contract_start_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramStartDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramStartDate>
+<cfquery NAME="qGetProgramStartDate" DATASOURCE="#application.datasource#">
                 select	Contract_Start_Date
                 from	Contract_Main
                 where 	Contract_Main_ID = #arguments.contractId#
             </cfquery>
+</cfif>
 
             <cfset dateNull = "No" />
             <cfset procDate = getRetroactiveCalcProcDate(qGetProgramStartDate.Contract_Start_Date, 0, arguments.ruleID) />

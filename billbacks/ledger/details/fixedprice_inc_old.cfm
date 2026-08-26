@@ -37,12 +37,28 @@
 	</cfquery>
 	
 	<!------ Find if any products is 'All products' ----->
-	<cfquery name="qCheckGroupProducts" dbtype="query">
+	<cfset useLakebaseForqCheckGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getitemnumbers")>
+<cfif useLakebaseForqCheckGroupProducts>
+	<cftry>
+		<cfset qCheckGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getitemnumbers", {
+				"product_group_level_id" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id,product_group_id,contract_products_id"
+			}), "bsa_foodservice_items_master_id,product_group_id,contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckGroupProducts>
+<cfquery name="qCheckGroupProducts" dbtype="query">
 		SELECT		BSA_Foodservice_Items_Master_ID, Product_Group_ID, Contract_Products_ID
 		FROM		GetItemNumbers
 		WHERE
 					Product_Group_Level_ID = 1
-	</cfquery>		
+	</cfquery>
+</cfif>		
 	<cfif qCheckGroupProducts.recordCount>
 		<cfset Product_Group_ID = qCheckGroupProducts.Product_Group_ID />
 		<cfset ProductID = qCheckGroupProducts.BSA_Foodservice_Items_Master_ID />
@@ -190,10 +206,25 @@
 			<cfloop query="GetAllComponents">
 	
 			<!---Query InvoicesforRebateComponents for only items in the component--->
-				<cfquery name="InvoicesforItems" dbtype="query">
+				<cfset useLakebaseForInvoicesforItems = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoicesforfixedcomponents")>
+<cfif useLakebaseForInvoicesforItems>
+	<cftry>
+		<cfset InvoicesforItems = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoicesforfixedcomponents", {
+				"bsa_foodservice_items_master_id" = "eq.#InvoicesforFixedComponents.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForInvoicesforItems = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInvoicesforItems>
+<cfquery name="InvoicesforItems" dbtype="query">
 				SELECT * FROM InvoicesForFixedComponents
 				WHERE BSA_Foodservice_Items_Master_ID = '#InvoicesforFixedComponents.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 							<!--- <cfdump var="#InvoicesforItems#"> --->
 				<cfif InvoicesForItems.Recordcount GT 0>
 				

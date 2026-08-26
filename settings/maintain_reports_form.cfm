@@ -102,9 +102,25 @@
 	select group_id, group_label from report_groups where deleted <> 1 order by group_id ASC
 </CFQUERY>
 
+<cfset useLakebaseForGet_Report_Access_Levels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_access_levels")>
+<cfif useLakebaseForGet_Report_Access_Levels>
+	<cftry>
+		<cfset Get_Report_Access_Levels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("report_access_levels", {
+				"order" = "level_code.asc",
+				"select" = "level_code,description"
+			}), "level_code,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Report_Access_Levels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Report_Access_Levels>
 <CFQUERY NAME="Get_Report_Access_Levels" datasource="#application.datasource#">
 	select level_code, description from report_access_levels order by level_code ASC
 </CFQUERY>
+</cfif>
 
 <!--- Delete record --->
 <SCRIPT language="JavaScript">

@@ -510,10 +510,23 @@
 
 		<!--- Standard Costs (Lookup) --->
 	<cffunction name="getLookupStandardCosts" output="false" returntype="query">
-			<cfquery name="qrygetLookupStandardCosts" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetLookupStandardCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_costs")>
+<cfif useLakebaseForqrygetLookupStandardCosts>
+	<cftry>
+		<cfset qrygetLookupStandardCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_costs", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupStandardCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupStandardCosts>
+<cfquery name="qrygetLookupStandardCosts" datasource="#application.datasource#">
 			 SELECT *
 			 FROM Export_lookup_Costs
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetLookupStandardCosts />
 	</cffunction>
@@ -532,30 +545,69 @@
 
 		<!--- Named Place Type (Lookup) --->
 	<cffunction name="getLookupNamedPlaceType" output="false" returntype="query">
-			<cfquery name="qrygetLookupNamedPlaceType" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetLookupNamedPlaceType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_named_place_type")>
+<cfif useLakebaseForqrygetLookupNamedPlaceType>
+	<cftry>
+		<cfset qrygetLookupNamedPlaceType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_named_place_type", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupNamedPlaceType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupNamedPlaceType>
+<cfquery name="qrygetLookupNamedPlaceType" datasource="#application.datasource#">
 			 SELECT *
 			 FROM Export_Lookup_Named_Place_Type
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetLookupNamedPlaceType />
 	</cffunction>
 
 		<!--- Pallet Type (Lookup) --->
 	<cffunction name="getLookupPalletType" output="false" returntype="query">
-			<cfquery name="qrygetLookupPalletType" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetLookupPalletType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_pallet_type")>
+<cfif useLakebaseForqrygetLookupPalletType>
+	<cftry>
+		<cfset qrygetLookupPalletType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_pallet_type", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupPalletType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupPalletType>
+<cfquery name="qrygetLookupPalletType" datasource="#application.datasource#">
 			 SELECT *
 			 FROM Export_Lookup_Pallet_Type
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetLookupPalletType />
 	</cffunction>
 
 		<!--- Destination Ports (Lookup) --->
 	<cffunction name="getLookupDestinationPorts" output="false" returntype="query">
-			<cfquery name="qrygetLookupDestinationPorts" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetLookupDestinationPorts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_ports")>
+<cfif useLakebaseForqrygetLookupDestinationPorts>
+	<cftry>
+		<cfset qrygetLookupDestinationPorts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_ports", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupDestinationPorts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupDestinationPorts>
+<cfquery name="qrygetLookupDestinationPorts" datasource="#application.datasource#">
 			 SELECT *
 			 FROM Export_Lookup_Destination_Ports
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetLookupDestinationPorts />
 	</cffunction>
@@ -581,10 +633,23 @@
 
 		<!--- Relocation Costs (Lookup) --->
 	<cffunction name="getLookupRelocationCost" output="false" returntype="query">
-			<cfquery name="qrygetLookupRelocationCost" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetLookupRelocationCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_origin_relocation")>
+<cfif useLakebaseForqrygetLookupRelocationCost>
+	<cftry>
+		<cfset qrygetLookupRelocationCost = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_origin_relocation", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupRelocationCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupRelocationCost>
+<cfquery name="qrygetLookupRelocationCost" datasource="#application.datasource#">
 			 SELECT *
 			 FROM Export_Lookup_Origin_Relocation
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetLookupRelocationCost />
 	</cffunction>
@@ -608,11 +673,27 @@
 	<!--- Additional Freight Charges --->
 	<cffunction name="getFreightCosts" output="false" returntype="query">
 		<cfargument name="Export_Sales_Agreement_ID" type="string" required="yes">
-			<cfquery name="qrygetFreightCosts" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetFreightCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForqrygetFreightCosts>
+	<cftry>
+		<cfset qrygetFreightCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"select" = "export_additional_freight_cost,export_additional_inland_fuel_surcharge,export_additional_ocean_fuel_surcharge"
+			}), "export_additional_freight_cost,export_additional_inland_fuel_surcharge,export_additional_ocean_fuel_surcharge"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetFreightCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetFreightCosts>
+<cfquery name="qrygetFreightCosts" datasource="#application.datasource#">
 			 SELECT Export_Additional_Freight_Cost,Export_Additional_Inland_Fuel_Surcharge,Export_Additional_Ocean_Fuel_Surcharge
 			 FROM Export_Sales_Agreement
 	         WHERE Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetFreightCosts />
 	</cffunction>
@@ -620,13 +701,31 @@
 	<!--- Misc Costs --->
 	<cffunction name="getMiscCosts" output="false" returntype="query">
 		<cfargument name="Export_Sales_Agreement_ID" type="string" required="yes">
-			<cfquery name="qrygetMiscCosts" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetMiscCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_misc_cost")>
+<cfif useLakebaseForqrygetMiscCosts>
+	<cftry>
+		<cfset qrygetMiscCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_misc_cost", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"export_misc_cost" = "neq.0",
+				"order" = "show_order_sequence.asc",
+				"select" = "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+			}), "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetMiscCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetMiscCosts>
+<cfquery name="qrygetMiscCosts" datasource="#application.datasource#">
 			SELECT Export_Misc_Cost_ID,Export_Misc_Cost_Desc,Export_Misc_Cost,Show_Order_Sequence
 			 FROM Export_Misc_Cost
 			 WHERE Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'	
 			 AND Export_Misc_Cost != 0
 			 ORDER BY Show_Order_Sequence
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetMiscCosts />
 	</cffunction>
@@ -672,11 +771,27 @@
 		<!--- get Notes --->
 	<cffunction name="getNotes" output="false" returntype="query">
 		<cfargument name="Export_Sales_Agreement_ID" type="string" required="yes">
-			<cfquery name="qrygetNotes" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForqrygetNotes>
+	<cftry>
+		<cfset qrygetNotes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"select" = "export_special_conditions,export_internal_notes"
+			}), "export_special_conditions,export_internal_notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetNotes>
+<cfquery name="qrygetNotes" datasource="#application.datasource#">
 			 SELECT Export_Special_Conditions,Export_Internal_Notes
 		     FROM Export_Sales_Agreement
 		     WHERE Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'	
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetNotes />
 	</cffunction>

@@ -72,6 +72,23 @@ WHERE	operator_id = '#operator_id#'
 <!--- ----------------------------------------------------------------------------------------- --->
 <!--- items ----------------------------------------------------------------------------------- --->
 <!--- ----------------------------------------------------------------------------------------- --->
+<cfset useLakebaseForget_items = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("snapshot_operator_tt_items")>
+<cfif useLakebaseForget_items>
+	<cftry>
+		<cfset get_items = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("snapshot_operator_tt_items", {
+				"operator_id" = "eq.#operator_id#",
+				"os_date_period" = "eq.#os_date_period#",
+				"deleted" = "eq.0",
+				"select" = "ttit_items_id,os_operator_summary_id,ttit_item_number,ttit_item_description,ttit_dollars,ttit_cases,ttit_dollars_per_cases,ttit_net,ttit_index,deleted,created_date,operator_id,os_date_period"
+			}), "ttit_items_id,os_operator_summary_id,ttit_item_number,ttit_item_description,ttit_dollars,ttit_cases,ttit_dollars_per_cases,ttit_net,ttit_index,deleted,created_date,operator_id,os_date_period"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_items = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_items>
 <cfquery name="get_items" datasource="#Application.Datasource#">
 
 SELECT	ttit_items_ID,
@@ -97,6 +114,7 @@ WHERE	operator_id = '#operator_id#'
 		deleted = 0
 
 </cfquery>
+</cfif>
 
 
 

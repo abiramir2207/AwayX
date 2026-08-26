@@ -24,11 +24,26 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfinclude template="/get_access_profile.cfm">
 		<cfset ModifyDeletedPrograms = CreateObject("component","components.programs.program").ModifyDeletedProgram(GetContractInfo.Contract_Main_ID,Get_Profile_Settings.Modify_Expired_Programs) />

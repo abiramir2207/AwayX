@@ -14,10 +14,25 @@
 	<cfset qGetDeduction = DeductionManager.getDeduction(url.Deduction_ID) />
 	<cfset variables.appSettings = application.oApplicationAppSettingsManager.getApplicationAppSettings() />
 
-	<cfquery name="AutoCloseReason" datasource="#application.datasource#">
+	<cfset useLakebaseForAutoCloseReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_auto_close")>
+<cfif useLakebaseForAutoCloseReason>
+	<cftry>
+		<cfset AutoCloseReason = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_auto_close", {
+				"select" = "dd_reason_code_id"
+			}), "dd_reason_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAutoCloseReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAutoCloseReason>
+<cfquery name="AutoCloseReason" datasource="#application.datasource#">
 		SELECT DD_Reason_Code_ID
 		FROM DD_Auto_Close
 	</cfquery>
+</cfif>
 
 	<cfquery name="ReasonCodes" datasource="#application.datasource#">
 		SELECT *
@@ -40,13 +55,31 @@
 		AND Deleted = 0
 	</cfquery>
 
-	<cfquery NAME="Get_DD_Closing_Method" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_DD_Closing_Method = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForGet_DD_Closing_Method>
+	<cftry>
+		<cfset Get_DD_Closing_Method = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"ibillback_closing_method_id" = "eq.2",
+				"hide" = "eq.0",
+				"order" = "display_sequence.asc",
+				"select" = "vendor_required"
+			}), "vendor_required"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_DD_Closing_Method = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_DD_Closing_Method>
+<cfquery NAME="Get_DD_Closing_Method" datasource="#application.datasource#">
 		SELECT Vendor_Required
 		FROM  	Billback_Closing_Methods
 		WHERE	iBillback_Closing_Method_ID = 2
 		AND Hide = 0
 		ORDER BY Display_Sequence
 	</cfquery>
+</cfif>
 
 	<link rel="stylesheet" type="text/css" href="/common_files/datatable.css">
 	<style>

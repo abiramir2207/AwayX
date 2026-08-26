@@ -14,12 +14,28 @@
 	<cfset url.usda_noi_epds_id = 0>
 </cfif>
 
+<cfset useLakebaseForgetCurrentlySelectedTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usda_noi_epds_type")>
+<cfif useLakebaseForgetCurrentlySelectedTypes>
+	<cftry>
+		<cfset getCurrentlySelectedTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usda_noi_epds_type", {
+				"usda_noi_epds_id" = "eq.#URL.usda_noi_epds_id#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentlySelectedTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentlySelectedTypes>
 <cfquery name="getCurrentlySelectedTypes" datasource="#application.datasource#">
 	SELECT *
 	FROM usda_noi_epds_type
 	WHERE usda_noi_epds_ID = '#URL.usda_noi_epds_id#'
 	AND Deleted = 0
 </cfquery>
+</cfif>
 <CFSET CurrentlySelectedList = valuelist(getCurrentlySelectedTypes.type_id)>
 
 

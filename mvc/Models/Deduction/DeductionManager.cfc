@@ -248,9 +248,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		</cfscript>
 
 	 <!--- TODO: push these cfqueries into the DAO file  --->
-	<cfquery name="UserHasAssignments" datasource="#Application.Datasource#">
+	<cfset useLakebaseForUserHasAssignments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_analyst")>
+<cfif useLakebaseForUserHasAssignments>
+	<cftry>
+		<cfset UserHasAssignments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_analyst", {
+				"analyst_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUserHasAssignments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUserHasAssignments>
+<cfquery name="UserHasAssignments" datasource="#Application.Datasource#">
 	 	SELECT * FROM DD_Analyst WHERE Analyst_User_ID = '#request.AccessStructure.User_ID#' AND Deleted=0
 	</cfquery>
+</cfif>
 
 	<cfquery name="DefaultSupervisor" datasource="#Application.Datasource#">
 	SELECT Name_First, Name_Last

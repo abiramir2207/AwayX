@@ -20,11 +20,26 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForGetDocType>
-	<CFQUERY NAME="Get_Doc_type" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Doc_type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_type")>
+<cfif useLakebaseForGet_Doc_type>
+	<cftry>
+		<cfset Get_Doc_type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("document_type", {
+				"order" = "doc_type.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Doc_type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Doc_type>
+<CFQUERY NAME="Get_Doc_type" datasource="#application.datasource#">
 		Select		*
 		From		Document_type
 		Order by	Doc_Type
 	</CFQUERY>
+</cfif>
 </cfif>
 
 <!--- <B>
@@ -99,11 +114,26 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForGetItem>
-	<CFQUERY NAME="Get_Item" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Item = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_type")>
+<cfif useLakebaseForGet_Item>
+	<cftry>
+		<cfset Get_Item = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("document_type", {
+				"doc_type_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Item = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Item>
+<CFQUERY NAME="Get_Item" datasource="#application.datasource#">
 		Select		*
 		From		Document_Type
 		Where		Doc_type_ID	= '#URL.RID#'
 	</CFQUERY>
+</cfif>
 </cfif>
 
 <SCRIPT language="JavaScript">

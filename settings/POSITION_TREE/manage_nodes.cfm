@@ -28,6 +28,21 @@
 <cfset name.e_distributor 	= ""> --->
 
 <!--- zone --->
+<cfset useLakebaseForzone_binders = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForzone_binders>
+	<cftry>
+		<cfset zone_binders = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForzone_binders = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForzone_binders>
 <cfquery name="zone_binders" datasource="#application.datasource#">
 	SELECT * 
 	FROM user_binder
@@ -36,8 +51,24 @@
 	AND
 	binder_type = 1
 </cfquery>
+</cfif>
 <cfset zone_binder_list = lcase(valuelist(zone_binders.SERVICE_ID))>
 
+<cfset useLakebaseForzone_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForzone_free>
+	<cftry>
+		<cfset zone_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.4"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForzone_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForzone_free>
 <cfquery name="zone_free" datasource="#application.datasource#">
 	SELECT * 
 	FROM user_binder
@@ -46,9 +77,25 @@
 	AND
 	binder_type = 4
 </cfquery>
+</cfif>
 <cfset zone_free_list = lcase(valuelist(zone_free.SERVICE_ID))>
 
 
+<cfset useLakebaseForregion_binders = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForregion_binders>
+	<cftry>
+		<cfset region_binders = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForregion_binders = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForregion_binders>
 <cfquery name="region_binders" datasource="#application.datasource#">
 	SELECT * 
 	FROM user_binder
@@ -57,8 +104,24 @@
 	AND
 	binder_type = 2
 </cfquery>
+</cfif>
 <cfset region_binder_list = lcase(valuelist(region_binders.SERVICE_ID))>
 
+<cfset useLakebaseForregion_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForregion_free>
+	<cftry>
+		<cfset region_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.5"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForregion_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForregion_free>
 <cfquery name="region_free" datasource="#application.datasource#">
 	SELECT * 
 	FROM user_binder
@@ -67,8 +130,24 @@
 	AND
 	binder_type = 5
 </cfquery>
+</cfif>
 <cfset region_free_list = lcase(valuelist(region_free.SERVICE_ID))>
 
+<cfset useLakebaseFormarket_binders = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseFormarket_binders>
+	<cftry>
+		<cfset market_binders = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.3"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormarket_binders = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormarket_binders>
 <cfquery name="market_binders" datasource="#application.datasource#">
 	SELECT * 
 	FROM user_binder
@@ -77,8 +156,24 @@
 	AND
 	binder_type = 3
 </cfquery>
+</cfif>
 <cfset market_binder_list = lcase(valuelist(market_binders.SERVICE_ID))>
 
+<cfset useLakebaseFormarket_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseFormarket_free>
+	<cftry>
+		<cfset market_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.6"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormarket_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormarket_free>
 <cfquery name="market_free" datasource="#application.datasource#">
 	SELECT * 
 	FROM user_binder
@@ -87,6 +182,7 @@
 	AND
 	binder_type = 6
 </cfquery>
+</cfif>
 <cfset market_free_list = lcase(valuelist(market_free.SERVICE_ID))>
 
 
@@ -98,7 +194,22 @@
 		<cfset url.binderID = lcase(url.z)>
 	</cfif>
 
-	<cfquery name="getName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_zones")>
+<cfif useLakebaseForgetName>
+	<cftry>
+		<cfset getName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("service_zones", {
+				"service_zone_id" = "eq.#url.z#",
+				"select" = "zone_name as name"
+			}), "zone_name as name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetName>
+<cfquery name="getName" datasource="#application.datasource#">
 		SELECT
 			Zone_Name AS Name
 		FROM
@@ -106,6 +217,7 @@
 		WHERE 
 			Service_Zone_ID = '#url.z#'
 	</cfquery>
+</cfif>
 	<cfif getName.recordcount EQ 0>
 		<cfset name.a_zone = "Default Name">
 	<cfelse>
@@ -535,11 +647,27 @@ ORDER BY User_Position_Type, Name_Last, Name_First
 	</cfquery>
 	
 	<cfif foundBinder EQ 0>
-		<cfquery name="getSelectedIDS" dbtype="query">
+		<cfset useLakebaseForgetSelectedIDS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("thequery")>
+<cfif useLakebaseForgetSelectedIDS>
+	<cftry>
+		<cfset getSelectedIDS = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("thequery", {
+				"owner_id" = "eq.#The_Owner_ID#",
+				"select" = "id"
+			}), "id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSelectedIDS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSelectedIDS>
+<cfquery name="getSelectedIDS" dbtype="query">
 			SELECT ID
 			FROM theQuery
 			WHERE Owner_ID = '#The_Owner_ID#'
 		</cfquery>
+</cfif>
 		<cfset SelectedIDList = valuelist(getSelectedIDS.ID)>
 	<cfelse>
 		<cfset SelectedIDList = "">

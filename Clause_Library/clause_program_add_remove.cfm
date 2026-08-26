@@ -104,11 +104,27 @@
 		<cfset form.ClauseLibraryId = ValueList(qGetInitPrgmClse.Clause_Library_Id) />
 		
  		<!---see which discount types were checked--->
-		<cfquery name="getGenLibId" dbtype="query">
+		<cfset useLakebaseForgetGenLibId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetinitprgmclse")>
+<cfif useLakebaseForgetGenLibId>
+	<cftry>
+		<cfset getGenLibId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetinitprgmclse", {
+				"clause_type" = "eq.1",
+				"select" = "clause_library_id,clause_category_id"
+			}), "clause_library_id,clause_category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGenLibId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGenLibId>
+<cfquery name="getGenLibId" dbtype="query">
 			SELECT 	Clause_Library_Id, Clause_Category_Id
 			FROM	qGetInitPrgmClse
 			WHERE	Clause_Type = 1
 		</cfquery>
+</cfif>
 		
 		<!---set clause lib id's for clauses assigned to general --->
 		<cfset form.discType_0 = ValueList(getGenLibId.Clause_Library_Id) />
@@ -116,12 +132,29 @@
 		<cfloop query="qGetDiscountTypes">
 
 			<!---see which discount types were checked--->
-			<cfquery name="getDistLibId" dbtype="query">
+			<cfset useLakebaseForgetDistLibId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetinitprgmclse")>
+<cfif useLakebaseForgetDistLibId>
+	<cftry>
+		<cfset getDistLibId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetinitprgmclse", {
+				"clause_type" = "eq.2",
+				"discount_type_id" = "eq.#qGetDiscountTypes.Product_Type_ID#",
+				"select" = "clause_library_id,clause_category_id"
+			}), "clause_library_id,clause_category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistLibId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistLibId>
+<cfquery name="getDistLibId" dbtype="query">
 				SELECT 	CLAUSE_LIBRARY_Id, Clause_Category_Id
 				FROM	qGetInitPrgmClse
 				WHERE	Clause_Type = 2
 				AND		Discount_Type_ID = #qGetDiscountTypes.Product_Type_ID#
 			</cfquery>
+</cfif>
 			
 			<cfset "form.discType_#Product_Type_ID#" = ValueList(getDistLibId.Clause_Library_Id) />
 			<cfset "selectecCatId_#Product_Type_ID#" = ValueList(getDistLibId.Clause_Category_Id) />

@@ -51,7 +51,25 @@
 		<cfargument name="UpdatedByUserId" type="string" required="true" />
 		
 		<!------ Delete all entries ----->
-		<cfquery name="qDeleteGroupUsers" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteGroupUsers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_user_group_member")>
+<cfif useLakebaseForqDeleteGroupUsers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fp_user_group_member",
+			{
+				"fp_user_group_id" = "eq.#arguments.groupId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteGroupUsers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteGroupUsers>
+<cfquery name="qDeleteGroupUsers" datasource="#application.datasource#">
 			UPDATE	FP_User_Group_Member
 			SET		Deleted = 1
 			WHERE
@@ -59,6 +77,7 @@
 					AND
 					Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<!------ insert entries ----->
 		<cfloop list="#arguments.idList#" delimiters="," index="thisUserId">
@@ -128,7 +147,23 @@
 		
 		<cfset returnValue = "" />
 		
-		<cfquery name="qGetGroup" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_user_group")>
+<cfif useLakebaseForqGetGroup>
+	<cftry>
+		<cfset qGetGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_user_group", {
+				"deleted" = "eq.0",
+				"fp_user_group_id" = "eq.#arguments.groupId#",
+				"select" = "fp_user_group_desc"
+			}), "fp_user_group_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroup>
+<cfquery name="qGetGroup" datasource="#application.datasource#">
 			SELECT	FP_User_Group.FP_User_Group_Desc
 			FROM	FP_User_Group					
 			WHERE
@@ -136,6 +171,7 @@
 					AND
 					FP_User_Group.FP_User_Group_ID = #arguments.groupId#
 		</cfquery>
+</cfif>
 		
 		<cfloop query="qGetGroup">
 		

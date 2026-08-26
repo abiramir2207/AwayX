@@ -550,12 +550,28 @@ Processes form information from the previous page.
 	DELETE FROM Currency_Mapping WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
 </cfquery>
 
+<cfset useLakebaseForGetCurrencies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForGetCurrencies>
+	<cftry>
+		<cfset GetCurrencies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrencies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrencies>
 <cfquery name="GetCurrencies" datasource="#application.datasource#">
 	SELECT distinct *
 	FROM Currency
 	WHERE Deleted = 0
 	AND Active = 1
 </cfquery>
+</cfif>
 
 <cfloop query="GetCurrencies">
 	<cfif isDefined("Form.Currency_#Evaluate(Currency_ID)#")>

@@ -1,8 +1,24 @@
+<cfset useLakebaseForGetCompanyName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetCompanyName>
+	<cftry>
+		<cfset GetCompanyName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#",
+				"select" = "company_name"
+			}), "company_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyName>
 <CFQUERY NAME="GetCompanyName" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT Company_Name
 	FROM Company_Main
 	WHERE Company_Main_ID = '#URL.Company_Main_ID#'
 </CFQUERY>
+</cfif>
 
 <CFSET PAGE_TITLE="Company Summary - #GetCompanyName.Company_Name#">
 

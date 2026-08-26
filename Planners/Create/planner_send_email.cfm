@@ -16,12 +16,30 @@
 	<cfset uName = trim(qCurrentUserInfo.User_Full_Name) />
 	<cfset uEmail = trim(qCurrentUserInfo.User_Email) />
 
-	<cfquery name="qSystemAdmin" datasource="#application.datasource#">
+	<cfset useLakebaseForqSystemAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqSystemAdmin>
+	<cftry>
+		<cfset qSystemAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSystemAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSystemAdmin>
+<cfquery name="qSystemAdmin" datasource="#application.datasource#">
 		SELECT	TOP 1 User_Email
 		FROM  	_Users
 		WHERE 	Is_System_Administrator = 1
 		AND		Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfset fromEmailAddress = trim(qSystemAdmin.User_Email) />
 

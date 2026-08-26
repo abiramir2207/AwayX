@@ -151,9 +151,27 @@
 		</CFIF>
 		<TD STYLE="Border-bottom:solid aqua 1px;">#Get_Details.Descr#</TD> 
 		<TD STYLE="Border-bottom:solid aqua 1px;" ALIGN="Right">#DollarFormat(Amount)#</TD>
-		<CFQUERY NAME="Available_GL_Type" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForAvailable_GL_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code")>
+<cfif useLakebaseForAvailable_GL_Type>
+	<cftry>
+		<cfset Available_GL_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code", {
+				"q_brand_id" = "eq.#Q_Brand_ID#",
+				"deleted" = "eq.0",
+				"order" = "gl_type_id.asc",
+				"select" = "gl_type_id,descr"
+			}), "gl_type_id,descr"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAvailable_GL_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAvailable_GL_Type>
+<CFQUERY NAME="Available_GL_Type" DATASOURCE="#Application.Datasource#">
 			SELECT GL_Type_ID,Descr FROM GL_CODE WHERE Q_Brand_ID = '#Q_Brand_ID#' AND DELETED=0 ORDER BY Gl_Type_ID
 		</CFQUERY>
+</cfif>
 		<CFSET AVAIL_GL_Type = #ValueList(Available_GL_Type.GL_Type_ID)#>
 		<TD NOWRAP STYLE="Border-bottom:solid aqua 1px;"><SPAN ID="Err_SP_#Count#_#ReplacedBillback_ID#" Descr="#Get_Details.Descr#">&nbsp;</SPAN></TD>
 		<CFLOOP QUERY="All_GL_Type">

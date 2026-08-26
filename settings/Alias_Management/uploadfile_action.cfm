@@ -54,11 +54,28 @@ code may not work and we may need to comment below code and uncomment the code a
 
 
 <!--- Get the db path where the uploaded file will be copied from the web server  --->
+<cfset useLakebaseForget_DTS_Reference_Path = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_settings")>
+<cfif useLakebaseForget_DTS_Reference_Path>
+	<cftry>
+		<cfset get_DTS_Reference_Path = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dataint_settings", {
+				"order" = "setting_date.desc",
+				"limit" = "1",
+				"select" = "dts_reference_path"
+			}), "dts_reference_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_DTS_Reference_Path = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_DTS_Reference_Path>
 <cfquery name="get_DTS_Reference_Path" datasource="#application.datasource#">
 SELECT TOP 1 DTS_Reference_Path
 FROM DataInt_Settings
 ORDER BY Setting_Date DESC
 </cfquery>
+</cfif>
 
 <!--- We always choose the name '\AliasProducts.csv' for the file.--->
 <cfset Complete_File_Path = get_DTS_Reference_Path.DTS_Reference_Path & "\" & UniqueFileName> 

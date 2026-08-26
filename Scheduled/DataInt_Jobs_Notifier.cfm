@@ -12,10 +12,25 @@
 
 </head>
 
+<cfset useLakebaseForqGetAlertEmails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqGetAlertEmails>
+	<cftry>
+		<cfset qGetAlertEmails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_job_status_email"
+			}), "send_job_status_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAlertEmails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAlertEmails>
 <cfquery name="qGetAlertEmails" datasource="#application.datasource#">
 Select Send_Job_Status_Email
 From general_Settings
 </cfquery>
+</cfif>
 
 <cfset elist = qGetAlertEmails.Send_Job_Status_Email>
 

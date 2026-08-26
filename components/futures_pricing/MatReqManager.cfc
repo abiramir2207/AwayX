@@ -47,7 +47,24 @@
 				<cfif arguments.pagePhase EQ 2>
 					<!------ get volume distribution ----->				
 					<!------ build the volume distribution from db ----->
-					<cfquery name="qGetVolDist" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetVolDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_raw_volume_distribution")>
+<cfif useLakebaseForqGetVolDist>
+	<cftry>
+		<cfset qGetVolDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_raw_volume_distribution", {
+				"deleted" = "eq.0",
+				"fp_request_raw_material_id" = "eq.#FP_Request_Raw_Material_ID#",
+				"order" = "interval_order.asc",
+				"select" = "start_date,end_date,volume,interval_order"
+			}), "start_date,end_date,volume,interval_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVolDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVolDist>
+<cfquery name="qGetVolDist" datasource="#application.datasource#">
 						SELECT	Start_Date,
 								End_Date,
 								Volume,
@@ -57,6 +74,7 @@
 						AND 	FP_Request_Raw_Material_ID = #FP_Request_Raw_Material_ID#
 						ORDER BY Interval_Order
 					</cfquery>
+</cfif>
 					
 					<cfset volumeMultiplier = 1 />
 					<cfif qGetVolDist.recordCount EQ 0>
@@ -425,7 +443,24 @@
 	
 		<cfargument name="requestRawMatId" type="numeric" required="true" />
 	
-		<cfquery name="qGetRequestRawMaterialVolume" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetRequestRawMaterialVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_raw_volume_distribution")>
+<cfif useLakebaseForqGetRequestRawMaterialVolume>
+	<cftry>
+		<cfset qGetRequestRawMaterialVolume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_raw_volume_distribution", {
+				"fp_request_raw_material_id" = "eq.#arguments.requestRawMatId#",
+				"deleted" = "eq.0",
+				"order" = "interval_order.asc",
+				"select" = "start_date,end_date,volume,interval_order"
+			}), "start_date,end_date,volume,interval_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRequestRawMaterialVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRequestRawMaterialVolume>
+<cfquery name="qGetRequestRawMaterialVolume" datasource="#application.datasource#">
 			SELECT	Start_Date, End_Date, Volume, Interval_Order
 			FROM	FP_Raw_Volume_Distribution
 			WHERE
@@ -434,6 +469,7 @@
 					FP_Raw_Volume_Distribution.Deleted = 0
 			ORDER BY Interval_Order
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetRequestRawMaterialVolume />
 		

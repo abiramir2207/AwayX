@@ -22,11 +22,27 @@
 	<!--- Last edited info --->
 <cfif isdefined("qGetCompFixed.Last_Edited_By") AND len(trim(qGetCompFixed.Last_Edited_By)) GT 0 >
 
-	<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
+	<cfset useLakebaseForGetUserLastEdited = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserLastEdited>
+	<cftry>
+		<cfset GetUserLastEdited = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetCompFixed.Last_Edited_By#",
+				"select" = "name_first + ' ' + name_last as userlastedited"
+			}), "name_first + ' ' + name_last as userlastedited"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLastEdited = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLastEdited>
+<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
 	SELECT Name_First + ' ' + Name_Last AS UserLastEdited
 	FROM _Users
 	WHERE User_ID = '#qGetCompFixed.Last_Edited_By#'
 	</cfquery>
+</cfif>
 	<cfif GetUserLastEdited.Recordcount IS 1>
 	<TABLE ID="lastUpdatedBy" BGCOLOR="White" style="border-color:Orange;border-style:solid;margin-top:10px;" CELLPADDING="3" CELLSPACING="0" align="center">
 	<TR>

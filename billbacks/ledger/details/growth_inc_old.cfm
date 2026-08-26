@@ -5,6 +5,23 @@
 
 
 <!---Gets the components for a particular growth program--->
+<cfset useLakebaseForGetComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForGetComponents>
+	<cftry>
+		<cfset GetComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"program_id" = "eq.#ContractID#",
+				"isparent" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_growth_component_id,component_uom,comparison_type,sample_period,rate_type,component_name,program_growth_component_type_id,isparent"
+			}), "program_growth_component_id,component_uom,comparison_type,sample_period,rate_type,component_name,program_growth_component_type_id,isparent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetComponents>
 <cfquery name="GetComponents" datasource="#application.datasource#">
 SELECT Program_Growth_Component_ID, component_uom, Comparison_Type, Sample_Period, Rate_Type, Component_Name, Program_Growth_Component_Type_ID, IsParent
 FROM Program_Growth_Components 
@@ -12,6 +29,7 @@ WHERE Program_ID = '#ContractID#'
 AND IsParent  = 1
 AND Deleted = 0
 </cfquery>
+</cfif>
 
 <table WIDTH="99%" align="center"  border="0"  cellspacing="0" cellpadding="2">
 
@@ -42,7 +60,22 @@ AND Deleted = 0
 	
 		<!---Get rate and lump sums--->
 		
-		<cfquery name="GetItemsForComponent" datasource="#application.datasource#">
+		<cfset useLakebaseForGetItemsForComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getitemsforgrowthcomponent")>
+<cfif useLakebaseForGetItemsForComponent>
+	<cftry>
+		<cfset GetItemsForComponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getitemsforgrowthcomponent", {
+				"program_growth_component_id" = "eq.#Component_ID#",
+				"select" = "bsa_foodservice_items_master_id,product_group_level_id,product_group_id,program_growth_component_product_data_id"
+			}), "bsa_foodservice_items_master_id,product_group_level_id,product_group_id,program_growth_component_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetItemsForComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetItemsForComponent>
+<cfquery name="GetItemsForComponent" datasource="#application.datasource#">
 		SELECT 	BSA_Foodservice_Items_Master_ID, 
 				Product_Group_Level_ID,
 				Product_Group_ID,
@@ -51,14 +84,31 @@ AND Deleted = 0
 		WHERE 	
 				Program_Growth_Component_ID = '#Component_ID#'
 		</cfquery>
+</cfif>
 		
 		<!------ Find if any products is 'All products' ----->
-		<cfquery name="qCheckGroupProducts" dbtype="query">
+		<cfset useLakebaseForqCheckGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getitemsforcomponent")>
+<cfif useLakebaseForqCheckGroupProducts>
+	<cftry>
+		<cfset qCheckGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getitemsforcomponent", {
+				"product_group_level_id" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id,product_group_id,program_growth_component_product_data_id"
+			}), "bsa_foodservice_items_master_id,product_group_id,program_growth_component_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckGroupProducts>
+<cfquery name="qCheckGroupProducts" dbtype="query">
 			SELECT		BSA_Foodservice_Items_Master_ID, Product_Group_ID, Program_Growth_Component_Product_Data_ID
 			FROM		GetItemsForComponent
 			WHERE
 						Product_Group_Level_ID = 1
 		</cfquery>
+</cfif>
 		
 		<cfif qCheckGroupProducts.recordCount>
 		

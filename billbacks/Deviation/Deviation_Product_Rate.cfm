@@ -1482,9 +1482,24 @@ Display the rates across each revision
 		<CFSET check_Date="Invoice_Header.Ship_Date">
 	</CFIF>
 
-	<cfquery NAME="Get_BB_Tolerance_Settings" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForGet_BB_Tolerance_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForGet_BB_Tolerance_Settings>
+	<cftry>
+		<cfset Get_BB_Tolerance_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "auto_deviation_family_level"
+			}), "auto_deviation_family_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_BB_Tolerance_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_BB_Tolerance_Settings>
+<cfquery NAME="Get_BB_Tolerance_Settings" DATASOURCE="#application.datasource#">
 		SELECT Auto_Deviation_Family_Level FROM Billback_Tolerance_Settings
 	</cfquery>
+</cfif>
 
 	<cfif Use_MSA_Data>
 		<cfset Fob_Price_Indicator = "X" />

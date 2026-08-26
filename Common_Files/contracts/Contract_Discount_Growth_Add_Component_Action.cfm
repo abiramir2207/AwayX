@@ -64,11 +64,27 @@
 
 <CFSET Running_Tier_ID_List = "">
 
-	<cfquery name="GetComponentInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetComponentInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components_name")>
+<cfif useLakebaseForGetComponentInfo>
+	<cftry>
+		<cfset GetComponentInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components_name", {
+				"program_growth_components_name_id" = "eq.#FORM.Growth_Component_Name_ID#",
+				"select" = "external_id"
+			}), "external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetComponentInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetComponentInfo>
+<cfquery name="GetComponentInfo" datasource="#application.datasource#">
 		SELECT External_ID
 		FROM Program_Growth_Components_Name
 		WHERE Program_Growth_Components_Name_ID = '#FORM.Growth_Component_Name_ID#'
 	</cfquery>
+</cfif>
 	<cfif Form.Min_Purchase_Requirement EQ 0>
 		<cfset Form.Min_Purchase_Value = "NULL" />
 	</cfif>

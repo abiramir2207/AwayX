@@ -347,7 +347,25 @@ appSettings.getUseItemCustPrice(),getsettings.Discount_Fixed_Prices_Freight)>
 				</cfif>
 				
                       
-			     			 <cfquery name="getfreightratesbyproduct" dbtype="query">
+			     			 <cfset useLakebaseForgetfreightratesbyproduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getfixedpriceproducts")>
+<cfif useLakebaseForgetfreightratesbyproduct>
+	<cftry>
+		<cfset getfreightratesbyproduct = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getfixedpriceproducts", {
+				"bsa_foodservice_items_master_id" = "eq.#product_id#",
+				"customer_id" = "eq.#customer_id#",
+				"component_name_id" = "eq.#compID#",
+				"paid_to" = "eq.#PaidTo#",
+				"select" = "freight_rate"
+			}), "freight_rate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetfreightratesbyproduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetfreightratesbyproduct>
+<cfquery name="getfreightratesbyproduct" dbtype="query">
 								 select Freight_Rate
 								 from getFixedPriceProducts
 								 where BSA_Foodservice_Items_Master_ID = '#product_id#'
@@ -355,6 +373,7 @@ appSettings.getUseItemCustPrice(),getsettings.Discount_Fixed_Prices_Freight)>
 								 and component_name_id = #compID#
 								 and Paid_To = #PaidTo#
 								</cfquery>
+</cfif>
 								
 				
 				

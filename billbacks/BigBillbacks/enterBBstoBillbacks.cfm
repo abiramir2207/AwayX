@@ -1,6 +1,23 @@
 <cfoutput>
 
 
+<cfset useLakebaseForBigBillbackSummaryInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("big_billback_summary")>
+<cfif useLakebaseForBigBillbackSummaryInfo>
+	<cftry>
+		<cfset BigBillbackSummaryInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("big_billback_summary", {
+				"billback_id" = "eq.#Billback_ID#",
+				"big_billback_summary_id" = "eq.#Big_Billback_Summary_ID#",
+				"uploaded" = "eq.0",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBigBillbackSummaryInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBigBillbackSummaryInfo>
 <cfquery name="BigBillbackSummaryInfo" datasource="#application.datasource#">
 SELECT Big_Billback_Summary.*
 	FROM Big_Billback_Summary
@@ -8,7 +25,24 @@ WHERE Billback_ID = '#Billback_ID#'
 AND Big_Billback_Summary.Big_Billback_Summary_ID = '#Big_Billback_Summary_ID#'
 AND Uploaded = 0
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBigBillbackDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("big_billback")>
+<cfif useLakebaseForBigBillbackDetails>
+	<cftry>
+		<cfset BigBillbackDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("big_billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"big_billback_summary_id" = "eq.#Big_Billback_Summary_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBigBillbackDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBigBillbackDetails>
 <cfquery name="BigBillbackDetails" datasource="#application.datasource#">
 SELECT *
 FROM Big_Billback
@@ -16,12 +50,30 @@ WHERE  Billback_ID = '#Billback_ID#'
 AND Big_Billback_Summary_ID = '#Big_Billback_Summary_ID#'
 AND Deleted = 0
 </cfquery>
+</cfif>
 
 
 
 <!--- Insert into billback program --->
 
 <!--- First make sure the program isn't already on the billback --->
+<cfset useLakebaseForIsBillbackProgramAlreadyThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForIsBillbackProgramAlreadyThere>
+	<cftry>
+		<cfset IsBillbackProgramAlreadyThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#BigBillbackSummaryInfo.Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsBillbackProgramAlreadyThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsBillbackProgramAlreadyThere>
 <cfquery name="IsBillbackProgramAlreadyThere" datasource="#application.datasource#">
 SELECT Billback_Program_ID
 FROM Billback_Program
@@ -29,6 +81,7 @@ WHERE Billback_ID = '#Billback_ID#'
 AND Program_ID = '#BigBillbackSummaryInfo.Program_ID#'
 AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset BillbackProgramID = IsBillbackProgramAlreadyThere.Billback_Program_ID>
 
@@ -78,13 +131,31 @@ AND Deleted = 0
 			AND Program_Rebates_Component.Program_Rebates_Component_Name_ID = '#ComponentNameIDs#'
 		</cfquery>
 
-		<cfquery name="GetComponentID" datasource="#application.datasource#">
+		<cfset useLakebaseForGetComponentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForGetComponentID>
+	<cftry>
+		<cfset GetComponentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"program_id" = "eq.#BigBillbackSummaryInfo.Program_ID#",
+				"program_rebates_component_name_id" = "eq.#ComponentNameIDs#",
+				"limit" = "1",
+				"select" = "program_rebates_component_id"
+			}), "program_rebates_component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetComponentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetComponentID>
+<cfquery name="GetComponentID" datasource="#application.datasource#">
 		SELECT TOP 1 Program_Rebates_Component_ID
 		FROM Program_Rebates_Component
 		WHERE Program_Rebates_Component.Program_ID = '#BigBillbackSummaryInfo.Program_ID#'
 		AND Program_Rebates_Component_Name_ID = '#RebateComponentName.Program_Rebates_Component_Name_ID#'
 		AND Program_Rebates_Component.Program_Rebates_Component_Name_ID = '#ComponentNameIDs#'
 		</cfquery>
+</cfif>
 
 
 		<cfquery name="InsertBBProgramRebateComps" datasource="#application.datasource#">
@@ -216,13 +287,31 @@ AND Deleted = 0
 	</cfif>
 	
 	<!--- Is the detail already there? --->
-	<cfquery name="IsProductDetailAlreadyThere" datasource="#application.datasource#">
+	<cfset useLakebaseForIsProductDetailAlreadyThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForIsProductDetailAlreadyThere>
+	<cftry>
+		<cfset IsProductDetailAlreadyThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_product_id" = "eq.#BillbackProductID#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_product_detail_id,bb_rate"
+			}), "billback_product_detail_id,bb_rate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsProductDetailAlreadyThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsProductDetailAlreadyThere>
+<cfquery name="IsProductDetailAlreadyThere" datasource="#application.datasource#">
 	SELECT Billback_Product_Detail_ID, BB_Rate
 	FROM Billback_Product_Detail
 	WHERE Billback_Product_ID = '#BillbackProductID#'
 	AND Billback_ID = '#Billback_ID#'
 	AND Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfset BigBBProdAmount = replace(BigBillbackDetails.Amount, ",", "")>
 	<cfset BigBBProdAmount = replace(BigBBProdAmount, "$", "")>
@@ -273,11 +362,27 @@ AND Deleted = 0
 	
 	<!--- Eligible products --->
 	<cfset DiscountList = "">
-	<cfquery name="DiscountsForProduct" dbtype="query">
+	<cfset useLakebaseForDiscountsForProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alleligibleproducts")>
+<cfif useLakebaseForDiscountsForProduct>
+	<cftry>
+		<cfset DiscountsForProduct = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alleligibleproducts", {
+				"product_id" = "eq.#BigBillbackDetails.Product_ID#",
+				"select" = "discounttypeid"
+			}), "discounttypeid"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDiscountsForProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDiscountsForProduct>
+<cfquery name="DiscountsForProduct" dbtype="query">
 		SELECT DISTINCT DiscountTypeID
 		FROM AllEligibleProducts
 		WHERE Product_ID = '#BigBillbackDetails.Product_ID#'
 	</cfquery>
+</cfif>
 	
 	<cfif DiscountsForProduct.Recordcount GT 0>
 		<cfset DiscountList = valuelist(DiscountsForProduct.DiscountTypeID)>

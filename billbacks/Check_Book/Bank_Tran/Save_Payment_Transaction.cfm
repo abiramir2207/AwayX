@@ -34,12 +34,29 @@
 	</CFIF>
 	
 	<CFIF FORM.Pay_Multi_Billbacks_ID NEQ "">
-		<CFQUERY NAME="GetMultiID" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetMultiID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks_list")>
+<cfif useLakebaseForGetMultiID>
+	<cftry>
+		<cfset GetMultiID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pay_multi_billbacks_list", {
+				"pay_multi_billbacks_id" = "eq.#FORM.Pay_Multi_Billbacks_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMultiID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMultiID>
+<CFQUERY NAME="GetMultiID" DATASOURCE="#Application.Datasource#">
 			SELECT 	Top 1 * 
 			FROM 	Pay_Multi_Billbacks_List
 			WHERE 	Pay_Multi_Billbacks_ID = '#FORM.Pay_Multi_Billbacks_ID#' AND 
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 	</CFIF>
 	
 <CFTRANSACTION ACTION="BEGIN">

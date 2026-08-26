@@ -191,12 +191,28 @@
 	
 	<cffunction name="getPricingOverheadUOM" output="false" returntype="query">
 	
-		<cfquery name="qGetPricingOverheadUOM" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetPricingOverheadUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_overhead_uom")>
+<cfif useLakebaseForqGetPricingOverheadUOM>
+	<cftry>
+		<cfset qGetPricingOverheadUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_overhead_uom", {
+				"deleted" = "eq.0",
+				"select" = "fp_overhead_uom_id,uom_desc"
+			}), "fp_overhead_uom_id,uom_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPricingOverheadUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPricingOverheadUOM>
+<cfquery name="qGetPricingOverheadUOM" datasource="#application.datasource#">
 			SELECT	FP_Overhead_UOM_ID, UOM_Desc
 			FROM	FP_Overhead_UOM
 			WHERE
 					Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetPricingOverheadUOM />
 	
@@ -358,7 +374,25 @@
 			
 			<cfset totalPrice = totalPrice + totalOverhead>	
 			
-			<cfquery name="qUpdatePrice" datasource="#application.datasource#">
+			<cfset useLakebaseForqUpdatePrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_product")>
+<cfif useLakebaseForqUpdatePrice>
+	<cftry>
+		<cfset application.oLakebase.updateRows("fp_product",
+			{
+				"fp_product_id" = "eq.#currentProductId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"final_price" = "#totalPrice#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdatePrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdatePrice>
+<cfquery name="qUpdatePrice" datasource="#application.datasource#">
 				
 				UPDATE	FP_Product
 				SET		Final_Price = #totalPrice#
@@ -368,6 +402,7 @@
 						Deleted = 0
 				
 			</cfquery>
+</cfif>
 
 		</cfloop>	
 		

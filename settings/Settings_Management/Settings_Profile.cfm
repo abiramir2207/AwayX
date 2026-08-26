@@ -138,11 +138,26 @@ function confirmCompletion(disableClickedButton, disableClickedButtonName1,disab
 <cfset appSettings = application.oApplicationAppSettingsManager.getApplicationAppSettings() />
 <cfset UseCustomerType = appSettings.getCustomertype()>
 <cfif UseCustomerType IS 1>
-	<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForGetCustomerTypes>
+	<cftry>
+		<cfset GetCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustomerTypes>
+<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
 	SELECT *
 	FROM Customer_Type
 	WHERE Deleted = 0
 	</cfquery>
+</cfif>
 </cfif>
 
 <center>

@@ -339,11 +339,27 @@
 	<cffunction name="getPerfType" access="public" returntype="any" output="false">
 		<cfargument name="TPO_Perf" required="true"/>
 
-		<cfquery name="qPerfType" datasource="#application.datasource#">
+		<cfset useLakebaseForqPerfType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_perf_types")>
+<cfif useLakebaseForqPerfType>
+	<cftry>
+		<cfset qPerfType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_perf_types", {
+				"tpo_name" = "eq.#arguments.TPO_Perf#",
+				"select" = "description"
+			}), "description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPerfType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPerfType>
+<cfquery name="qPerfType" datasource="#application.datasource#">
 			SELECT 	Description
 			FROM 	Planner_Perf_Types
 			WHERE	TPO_Name = '#arguments.TPO_Perf#'
 		</cfquery>
+</cfif>
 
 		<cfreturn qPerfType.Description>
 	</cffunction>

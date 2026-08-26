@@ -139,13 +139,30 @@
 <cfloop query="qGPV">
 	<cfif qGPV.failed eq "1">
 		<!--- gathering detail --->
-		<cfquery name="gpvDetail" dbtype="query">
+		<cfset useLakebaseForgpvDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("allfixedprice")>
+<cfif useLakebaseForgpvDetail>
+	<cftry>
+		<cfset gpvDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("allfixedprice", {
+				"item" = "eq.#qGPV.Item#",
+				"greatest_program_value" = "eq.1",
+				"case_value" = "eq.#qGPV.Case_Value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgpvDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgpvDetail>
+<cfquery name="gpvDetail" dbtype="query">
 			SELECT *
 			  FROM allFixedPrice
 			 WHERE allFixedPrice.Item = '#qGPV.Item#'
 			   AND allFixedPrice.Greatest_Program_Value = 1
 			   AND allFixedPrice.Case_Value = #qGPV.Case_Value#
 		</cfquery>
+</cfif>
 		<cfquery name="otherDetail" dbtype="query">
 			SELECT *
 			  FROM allFixedPrice

@@ -60,12 +60,29 @@
     <cffunction name="getFixedEZComponents" output="false" returntype="query">
         <cfargument name="programId" required="false" default="" />
 
-        <CFQUERY NAME="qgetFixedEZComponents" datasource="#application.datasource#">
+        <cfset useLakebaseForqgetFixedEZComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqgetFixedEZComponents>
+	<cftry>
+		<cfset qgetFixedEZComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "program_fixed_component_name_id"
+			}), "program_fixed_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetFixedEZComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetFixedEZComponents>
+<CFQUERY NAME="qgetFixedEZComponents" datasource="#application.datasource#">
         select distinct Program_Fixed_Component_Name_Id
         from Program_Fixed_Component
         where deleted = 0
         and program_id = #arguments.programId#
         </CFQUERY>
+</cfif>
 
         <cfreturn qgetFixedEZComponents />
 
@@ -125,12 +142,29 @@
     <cffunction name="getRebateEZComponents" output="false" returntype="query">
         <cfargument name="programId" required="false" default="" />
 
-        <CFQUERY NAME="qgetRebateEZComponents" datasource="#application.datasource#">
+        <cfset useLakebaseForqgetRebateEZComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForqgetRebateEZComponents>
+	<cftry>
+		<cfset qgetRebateEZComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "program_rebates_component_name_id"
+			}), "program_rebates_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetRebateEZComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetRebateEZComponents>
+<CFQUERY NAME="qgetRebateEZComponents" datasource="#application.datasource#">
         select distinct Program_Rebates_Component_Name_Id
         from Program_Rebates_Component
         where deleted = 0
         and program_id = #arguments.programId#
         </CFQUERY>
+</cfif>
 
         <cfreturn qgetRebateEZComponents />
 

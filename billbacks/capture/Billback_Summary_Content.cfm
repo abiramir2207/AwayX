@@ -21,9 +21,24 @@ Description:	This file is responsible for displaying the summary of a billback.
 </cfif>
 <!--- Get default program if printing --->
 <!--- Check to see if default program is on billback D11756--->
+<cfset useLakebaseForGetBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForGetBillbackSettings>
+	<cftry>
+		<cfset GetBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program,use_dflt_prg"
+			}), "default_program,use_dflt_prg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSettings>
 <cfquery name="GetBillbackSettings" datasource="#application.datasource#">
 	SELECT Default_Program,USE_DFLT_PRG FROM Billback_Settings
 </cfquery>
+</cfif>
 
 <cfset BBProgramManager = CreateObject("component", "components.Billback.Programs.BillbackProgramsManager") />
 <cfset LabelComp 			= Createobject("component", "components.settings.labels.labels").init() />
@@ -31,13 +46,31 @@ Description:	This file is responsible for displaying the summary of a billback.
 
 <cfif NOT isDefined("HasDefaultProgram")>
 	<cfif len(trim(GetBillbackSettings.Default_Program)) GT 0>
-		<cfquery name="IsDefaultProgramOnBillback" datasource="#application.datasource#">
+		<cfset useLakebaseForIsDefaultProgramOnBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForIsDefaultProgramOnBillback>
+	<cftry>
+		<cfset IsDefaultProgramOnBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"program_id" = "eq.#GetBillbackSettings.Default_Program#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsDefaultProgramOnBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsDefaultProgramOnBillback>
+<cfquery name="IsDefaultProgramOnBillback" datasource="#application.datasource#">
 			SELECT Billback_Program_ID
 			FROM Billback_Program
 			WHERE Program_ID = '#GetBillbackSettings.Default_Program#'
 			AND Billback_ID = '#Billback_ID#'
 			AND Deleted = 0
 		</cfquery>
+</cfif>
 		<cfif IsDefaultProgramOnBillback.Recordcount GT 0>
 			<cfset HasDefaultProgram = 1>
 		<cfelse>
@@ -379,10 +412,25 @@ This Page generates the Content for Billback Summary
 								D39812: Validate EDI files for potential billback duplicate/Anand Rao/13-Feb-2014
 								Added the below section for displaying EDI duplicate, if it is flagged as duplicate.
 							--->
-							<cfquery name="getBBSettings" datasource="#application.datasource#">
+							<cfset useLakebaseForgetBBSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForgetBBSettings>
+	<cftry>
+		<cfset getBBSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "enable_bb_dup_check"
+			}), "enable_bb_dup_check"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBSettings>
+<cfquery name="getBBSettings" datasource="#application.datasource#">
 								SELECT 	Enable_BB_Dup_Check
 	            				FROM 		Billback_Settings
         					</cfquery>
+</cfif>
 							<cfif Get_Billback_Info.BB_Upload_Dup_Group_ID EQ "">
 								<cfset BBUploadDupGroupID = 0 />
 							<cfelse>
@@ -439,11 +487,27 @@ This Page generates the Content for Billback Summary
 									<cfsilent>
 										<cfparam name="PaymentMethodName" default="None selected">
 										<cfif len(trim(Get_Billback_Info.ClaimMechanics)) IS NOT 0>
-											<cfquery name="GetCMName" datasource="#application.datasource#">
+											<cfset useLakebaseForGetCMName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForGetCMName>
+	<cftry>
+		<cfset GetCMName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#Get_Billback_Info.ClaimMechanics#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCMName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCMName>
+<cfquery name="GetCMName" datasource="#application.datasource#">
 												SELECT Payment_Type.Payment_Type_Name
 												FROM Payment_Type
 												WHERE Payment_Type_ID = '#Get_Billback_Info.ClaimMechanics#'
 											</cfquery>
+</cfif>
 											<cfset PaymentMethodName = GetCMName.Payment_Type_Name>
 										<cfelse>
 											<cfquery name="GetCMName" datasource="#application.datasource#">
@@ -458,11 +522,29 @@ This Page generates the Content for Billback Summary
 
 											<!---If all these conditions are true but no payment type has been set, we sneakily update the payment type here --->
 											<cfif len(trim(GetCMName.Payment_Type_ID)) GT 0>
-												<cfquery name="UpdatePaymentType" datasource="#application.datasource#">
+												<cfset useLakebaseForUpdatePaymentType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdatePaymentType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Get_Billback_Info.Billback_ID#"
+			},
+			{
+				"claimmechanics" = "#GetCMName.Payment_Type_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePaymentType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePaymentType>
+<cfquery name="UpdatePaymentType" datasource="#application.datasource#">
 													UPDATE Billback
 													SET ClaimMechanics = #GetCMName.Payment_Type_ID#
 													WHERE Billback_ID = '#Get_Billback_Info.Billback_ID#'
 												</cfquery>
+</cfif>
 											</cfif>
 											<cfset PaymentMethodName = GetCMName.Payment_Type_Name>
 										</cfif>
@@ -1165,9 +1247,26 @@ This Page generates the Content for Billback Summary
 							</CFQUERY>
 							<CFIF GetVendor.Vendor_master_ID EQ "">
 								<CFIF Get_Billback_Info.Billback_Payee_Type_ID EQ 1>
-									<CFQUERY NAME="GetVendorNum" DATASOURCE="#Application.Datasource#">
+									<cfset useLakebaseForGetVendorNum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForGetVendorNum>
+	<cftry>
+		<cfset GetVendorNum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "uploaded_vendor_id"
+			}), "uploaded_vendor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorNum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorNum>
+<CFQUERY NAME="GetVendorNum" DATASOURCE="#Application.Datasource#">
 										SELECT Uploaded_Vendor_ID FROM Billback_Distributor WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
 									</CFQUERY>
+</cfif>
 								<CFELSEIF Get_Billback_Info.Billback_Payee_Type_ID EQ 2>
 									<CFQUERY NAME="GetVendorNum" DATASOURCE="#Application.Datasource#">
 										SELECT Uploaded_Vendor_ID FROM Billback_Operator WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
@@ -1214,9 +1313,24 @@ This Page generates the Content for Billback Summary
 					<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
 
 					<!--- Dev Notes: Ana 11041 Uploaded Operators --->
-					<cfquery name="DefaultBB" datasource="#application.datasource#">
+					<cfset useLakebaseForDefaultBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForDefaultBB>
+	<cftry>
+		<cfset DefaultBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program,use_dflt_prg"
+			}), "default_program,use_dflt_prg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefaultBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefaultBB>
+<cfquery name="DefaultBB" datasource="#application.datasource#">
 						SELECT Default_Program,USE_DFLT_PRG FROM Billback_Settings
 					</cfquery>
+</cfif>
  					<!--- <CFIF HasDefaultProgram EQ 1 AND AssoOperator.RecordCount GT 0 AND (Get_Billback_Info.Uploaded_Billback EQ 2 OR Get_Billback_Info.Uploaded_Billback EQ 3)> ---><!--- 43579 removed HasDefaultProgram EQ 1 condition--->
 					<CFIF  AssoOperator.RecordCount GT 0>
 					<!--- AND (Get_Billback_Info.Uploaded_Billback EQ 2 OR Get_Billback_Info.Uploaded_Billback EQ 3 OR Get_Billback_Info.Uploaded_Billback EQ 0) -- Removed this condition  50865: Billback copy function not transferring operator info to new billback --->
@@ -1257,7 +1371,22 @@ This Page generates the Content for Billback Summary
 							<cfsilent>
 							<CFIF (isDefined("GetVendor.Vendor_master_ID") AND GetVendor.Vendor_master_ID EQ "")>
 								<CFIF isDefined("GetVendorNum.Uploaded_Vendor_ID") AND GetVendorNum.Uploaded_Vendor_ID NEQ "" AND (Get_Billback_Info.Billback_Payee_Type_ID EQ 1 OR Get_Billback_Info.Billback_Payee_Type_ID EQ 2 OR Get_Billback_Info.Billback_Payee_Type_ID EQ 3)>
-									<CFQUERY NAME="GetVendorInfo" DATASOURCE="#Application.Datasource#">
+									<cfset useLakebaseForGetVendorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGetVendorInfo>
+	<cftry>
+		<cfset GetVendorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#GetVendorNum.Uploaded_Vendor_ID#",
+				"select" = "vendor_name,vendor_id,active_code,address_1,address_2,city,state,zipcode"
+			}), "vendor_name,vendor_id,active_code,address_1,address_2,city,state,zipcode"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorInfo>
+<CFQUERY NAME="GetVendorInfo" DATASOURCE="#Application.Datasource#">
 										SELECT 		Vendor_Name,
 												Vendor_Master.Vendor_ID,
 												Active_Code,
@@ -1270,6 +1399,7 @@ This Page generates the Content for Billback Summary
 									FROM		Vendor_Master
 									WHERE 	Vendor_Master.Vendor_ID = '#GetVendorNum.Uploaded_Vendor_ID#'
 									</CFQUERY>
+</cfif>
 								</CFIF>
 							<CFELSEIF (isDefined("GetVendor.Vendor_master_ID") AND GetVendor.Vendor_master_ID NEQ "")>
 								<CFQUERY NAME="GetVendorInfo" DATASOURCE="#Application.Datasource#">
@@ -1523,9 +1653,24 @@ This Page generates the Content for Billback Summary
 
 	<cfsilent>
 	<CFIF Get_Billback_Info.BB_Is_Child EQ 1>
-		<CFQUERY NAME="GetParentInfo" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetParentInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetParentInfo>
+	<cftry>
+		<cfset GetParentInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Get_Billback_Info.BB_Parent_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetParentInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetParentInfo>
+<CFQUERY NAME="GetParentInfo" DATASOURCE="#Application.Datasource#">
 			SELECT * FROM Billback WHERE Billback_ID = '#Get_Billback_Info.BB_Parent_ID#'
 		</CFQUERY>
+</cfif>
 		<cfset OriginalBBID = Billback_ID>
 		<cfset Billback_ID = Get_Billback_Info.BB_parent_ID>
 	</CFIF>
@@ -1598,13 +1743,28 @@ This Page generates the Content for Billback Summary
 	<TABLE CELLPADDING="2" id="programsproducts" CELLSPACING="0" BORDER="0" WIDTH="98%" <cfif url.SHOW_PRINT_VERSION or url.show_email_version> align="center"</cfif>>
 	<tbody>
 		<cfsilent>
-			<cfquery name="getGroupDistintItemDetails" dbtype="query">
+			<cfset useLakebaseForgetGroupDistintItemDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_program_products")>
+<cfif useLakebaseForgetGroupDistintItemDetails>
+	<cftry>
+		<cfset getGroupDistintItemDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_program_products", {
+				"select" = "item_bb_volume_cs,item_bb_volume_lb,item_expected_volume_cs,item_expected_volume_lb,item_approved_volume_cs,item_approved_volume_lb,group_id,billback_program_id,billback_product_id,dist_id,isproductonprogram,legacy_id"
+			}), "item_bb_volume_cs,item_bb_volume_lb,item_expected_volume_cs,item_expected_volume_lb,item_approved_volume_cs,item_approved_volume_lb,group_id,billback_program_id,billback_product_id,dist_id,isproductonprogram,legacy_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupDistintItemDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupDistintItemDetails>
+<cfquery name="getGroupDistintItemDetails" dbtype="query">
 				select distinct Item_BB_Volume_CS, Item_BB_Volume_LB,
 				Item_Expected_Volume_CS,Item_Expected_Volume_LB,
 				Item_Approved_Volume_CS,Item_Approved_Volume_LB,group_id,billback_program_id,
 				Billback_Product_ID,dist_id,IsProductOnProgram,Legacy_ID
 				from Get_Program_Products
 			</cfquery>
+</cfif>
 		</cfsilent>
 
 		<CFIF Get_Program_Products.RecordCount GT 0>
@@ -2517,9 +2677,25 @@ This Page generates the Content for Billback Summary
 							</tr>
 						<CFOUTPUT QUERY="get_attachments">
 						<cfsilent>
-							<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
+							<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
 								SELECT Name_First, Name_Last FROM _USERS WHERE User_ID = '#Uploaded_By#'
 							</CFQUERY>
+</cfif>
 						</cfsilent>
 							<cfset variables.Uni_Name = Doc_Uni_Name/>
 							<cfif trim(variables.Uni_Name) eq ''>

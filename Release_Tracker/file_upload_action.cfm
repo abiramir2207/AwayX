@@ -23,17 +23,49 @@ Modified Date:
 
 <cfset CFScriptFunctions = CreateObject("component", "components.general.CFScript_Functions") />
 
-	<CFQUERY NAME="getBuildInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForgetBuildInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_installation")>
+<cfif useLakebaseForgetBuildInfo>
+	<cftry>
+		<cfset getBuildInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_installation", {
+				"installed_date" = "is.null",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBuildInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBuildInfo>
+<CFQUERY NAME="getBuildInfo" datasource="#application.datasource#">
 		SELECT TOP 1 * 
 		FROM Application_Installation
 		WHERE Installed_Date IS NULL
 	</CFQUERY>
+</cfif>
 
-	<CFQUERY NAME="getName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetName>
+	<cftry>
+		<cfset getName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"select" = "name_first + ' ' + name_last as name"
+			}), "name_first + ' ' + name_last as name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetName>
+<CFQUERY NAME="getName" datasource="#application.datasource#">
 		SELECT Name_First + ' ' + Name_Last As Name
 		FROM _Users
 		WHERE User_ID = '#request.AccessStructure.user_id#'
 	</CFQUERY>
+</cfif>
 
 	<cfset Name = getName.Name>
 

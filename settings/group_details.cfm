@@ -140,14 +140,45 @@ function getParentObject(thisObj, tagName)
 	}
 </style>
 
+<cfset useLakebaseForget_group = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_labels")>
+<cfif useLakebaseForget_group>
+	<cftry>
+		<cfset get_group = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_labels", {
+				"group_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_group = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_group>
 <CFQUERY NAME = "get_group" DATASOURCE = "#Application.Datasource#">
 	SELECT * from Group_Labels WHERE Group_ID = 1
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#get_group.LastUpdated_UserId#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
 <CFQUERY NAME="getUserName" datasource="#application.datasource#">
 	SELECT _Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 	FROM _Users
 	WHERE User_ID = '#get_group.LastUpdated_UserId#'
 </CFQUERY>
+</cfif>
 <CFOUTPUT>
 <TABLE>
 	<TR>

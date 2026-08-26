@@ -61,12 +61,28 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"hide" = "eq.0",
+				"order" = "display_sequence.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
 <cfquery NAME="Get_Data" datasource="#application.datasource#">
 	SELECT	*
 	FROM  	Billback_Closing_Methods
 	WHERE Hide = 0
 	ORDER BY Display_Sequence
 </cfquery>
+</cfif>
 <!--- change the order to description when display sequences are not yet assigned --->
 <cfif val(get_data.display_sequence) eq 0>
 	<cfquery NAME="Get_Data" datasource="#application.datasource#">
@@ -77,12 +93,30 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 	</cfquery>
 </cfif>
 
+<cfset useLakebaseForgetUpdatedBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForgetUpdatedBy>
+	<cftry>
+		<cfset getUpdatedBy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"hide" = "eq.0",
+				"order" = "updated_on.desc",
+				"limit" = "1",
+				"select" = "updated_on,updated_by"
+			}), "updated_on,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUpdatedBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUpdatedBy>
 <cfquery NAME="getUpdatedBy" datasource="#application.datasource#">
 	SELECT	 top 1 Updated_On,Updated_By
 	FROM  	Billback_Closing_Methods
 	WHERE Hide = 0
 	ORDER BY Updated_On DESC
 </cfquery>
+</cfif>
 <cfoutput>
 <cfif isdefined("getUpdatedBy.Updated_By")>
 	<cfinvoke component="components.user.usermanager" method="getusername" userid="#getUpdatedBy.Updated_By#" returnvariable="SettingsUpdateUser">

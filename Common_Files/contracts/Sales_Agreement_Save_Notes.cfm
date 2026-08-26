@@ -12,7 +12,26 @@
 
 <!--- Save Notes for the product --->
 <cfif SaveNotes eq 1>
-	<CFQUERY NAME="Insert_Notes" datasource="#application.datasource#">
+	<cfset useLakebaseForInsert_Notes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForInsert_Notes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_products",
+			{
+				"bsa_foodservice_items_master_id" = "eq.#Item_ID#",
+				"export_sales_agreement_id" = "eq.#Export_Sales_Agreement_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"export_notes" = "#Form.txtNotes#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsert_Notes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsert_Notes>
+<CFQUERY NAME="Insert_Notes" datasource="#application.datasource#">
 		UPDATE Export_Products
 		SET Export_Notes = '#Form.txtNotes#'
 		WHERE BSA_Foodservice_Items_Master_ID = '#Item_ID#'
@@ -20,8 +39,26 @@
 		AND Deleted = 0
 	</CFQUERY>
 </cfif>
+</cfif>
 
 <!--- Get Notes for the product --->
+<cfset useLakebaseForSelNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForSelNotes>
+	<cftry>
+		<cfset SelNotes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_products", {
+				"bsa_foodservice_items_master_id" = "eq.#Item_ID#",
+				"export_sales_agreement_id" = "eq.#Export_Sales_Agreement_ID#",
+				"deleted" = "eq.0",
+				"select" = "export_notes"
+			}), "export_notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelNotes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelNotes>
 <CFQUERY NAME="SelNotes" datasource="#application.datasource#">
 	SELECT Export_Notes
 	FROM Export_Products
@@ -29,6 +66,7 @@
 	AND Export_Sales_Agreement_ID = '#Export_Sales_Agreement_ID#'
 	AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <form action="sales_agreement_save_Notes.cfm" method="post" name="frmNotes">
 <div align="right">

@@ -52,11 +52,27 @@
 				<tr>	
 				<td align="right"><strong>Selected product:</strong></td>
 				
-				<cfquery name="GetProductInfo" datasource="#application.datasource#">
+				<cfset useLakebaseForGetProductInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetProductInfo>
+	<cftry>
+		<cfset GetProductInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#form.Product_List#",
+				"select" = "description,item,upc"
+			}), "description,item,upc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProductInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProductInfo>
+<cfquery name="GetProductInfo" datasource="#application.datasource#">
 				select description, item, upc 
 				FROM bsa_foodservice_items_master
 				WHERE bsa_foodservice_items_master_ID = '#form.Product_List#'
 				</cfquery>
+</cfif>
 				
 				<td>#trim(GetProductInfo.description)# (#GetProductInfo.item#/#GetProductInfo.UPC#)</td>
 					

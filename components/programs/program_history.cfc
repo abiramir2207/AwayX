@@ -65,11 +65,27 @@
 	<cffunction name="getRebateClaimMechanics" output="false" returntype="query">
 		<cfargument name="ProgramID" type="string" required="true">
 
-			<cfquery name="qgetClaimMechanics" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetClaimMechanics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForqgetClaimMechanics>
+	<cftry>
+		<cfset qgetClaimMechanics = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"program_id" = "eq.#arguments.ProgramID#",
+				"select" = "claim_mechanics"
+			}), "claim_mechanics"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetClaimMechanics = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetClaimMechanics>
+<cfquery name="qgetClaimMechanics" datasource="#application.datasource#">
 				SELECT DISTINCT Claim_Mechanics
 				FROM Program_Rebates_Component
 				WHERE Program_ID = '#arguments.ProgramID#'
 			</cfquery>
+</cfif>
 			<cfreturn qgetClaimMechanics>
 	</cffunction>
 	--->
@@ -236,22 +252,54 @@
 	<cffunction name="getPaymentCycle" output="false" returntype="query">
 		<cfargument name="Payment_Cycle_ID" type="string" required="true">
 
-			<cfquery name="qgetPaymentCycle" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetPaymentCycle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_cycle")>
+<cfif useLakebaseForqgetPaymentCycle>
+	<cftry>
+		<cfset qgetPaymentCycle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_cycle", {
+				"payment_cycle_id" = "eq.#arguments.Payment_Cycle_ID#",
+				"select" = "payment_cycle"
+			}), "payment_cycle"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetPaymentCycle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetPaymentCycle>
+<cfquery name="qgetPaymentCycle" datasource="#application.datasource#">
 				SELECT	Payment_Cycle
 				FROM	Payment_Cycle
 				WHERE	Payment_Cycle_ID ='#arguments.Payment_Cycle_ID#'
 			</cfquery>
+</cfif>
 			<cfreturn qgetPaymentCycle>
 	</cffunction>
 	
 	<cffunction name="getUserName" output="false" returntype="query">	
 		<cfargument name="UserID" type="string" required="true">
 		
-		<cfquery name="qGetUserName" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUserName>
+	<cftry>
+		<cfset qGetUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#UserID#",
+				"select" = "name_first + ' ' + name_last as name"
+			}), "name_first + ' ' + name_last as name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUserName>
+<cfquery name="qGetUserName" datasource="#application.datasource#">
 			SELECT Name_First + ' ' + Name_Last As Name
 			FROM _Users 
 			WHERE User_ID ='#UserID#'
 		</cfquery>
+</cfif>
 		<cfreturn qGetUserName>
 	</cffunction>
 	

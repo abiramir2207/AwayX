@@ -161,35 +161,89 @@ Description:	This file is responsible for gathering certain billback data.
 		</CFIF>
 	</CFIF>
 	<!------ Get the stored deduction id ----->
-	<cfquery name="getAssociatedDeductionID" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAssociatedDeductionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForgetAssociatedDeductionID>
+	<cftry>
+		<cfset getAssociatedDeductionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_closure_id" = "eq.#local_bbid#",
+				"dd_closure_type" = "eq.1",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssociatedDeductionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssociatedDeductionID>
+<cfquery name="getAssociatedDeductionID" datasource="#application.datasource#">
 		SELECT	Deductions.Deduction_ID
 		FROM	Deductions
 		WHERE	DD_Closure_ID = '#local_bbid#'
 		AND		DD_Closure_Type = 1
 	</cfquery>
+</cfif>
 	<CFIF getAssociatedDeductionID.RecordCount GT 0>
 		<CFSET indexSettings.bb_complete_deduction 			= "true">		
 	</CFIF>
 
-	<CFQUERY NAME="IsSplitParent" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForIsSplitParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForIsSplitParent>
+	<cftry>
+		<cfset IsSplitParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#local_bbid#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsSplitParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsSplitParent>
+<CFQUERY NAME="IsSplitParent" DATASOURCE="#Application.Datasource#">
 		SELECT 	Top 1 Billback_ID
 		FROM 	Billback 
 		WHERE 	BB_parent_ID = '#local_bbid#' 
 		AND 	Deleted = 0
 	</CFQUERY>
+</cfif>
 
 	<CFIF getBBStats.Billback_Status_ID GTE 3 AND (getBBStats.BB_Is_Child EQ 1 OR IsSplitParent.Recordcount GT 0)>
 		<CFSET indexSettings.bb_complete_split = "true">
 	</CFIF>
 
 	<cfset indexSettings.bb_is_split_parent = IsSplitParent.recordCount />	
-	<cfquery name="BB_Check_GL_Code_Alloc" datasource="#Application.Datasource#">
+	<cfset useLakebaseForBB_Check_GL_Code_Alloc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForBB_Check_GL_Code_Alloc>
+	<cftry>
+		<cfset BB_Check_GL_Code_Alloc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_allocation", {
+				"billback_id" = "eq.#local_bbid#",
+				"deleted" = "eq.0",
+				"allocation_saved" = "eq.1",
+				"limit" = "1",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Check_GL_Code_Alloc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Check_GL_Code_Alloc>
+<cfquery name="BB_Check_GL_Code_Alloc" datasource="#Application.Datasource#">
 		SELECT 	Top 1 Billback_ID
 		FROM 	Gl_Code_Allocation 
 		WHERE 	Billback_ID = '#local_bbid#'
 		AND 	GL_Code_Allocation.Deleted = 0 
 		AND 	Allocation_Saved = 1	
 	</cfquery>
+</cfif>
 	<cfset indexSettings.bb_complete_gl_code_alloc = BB_Check_GL_Code_Alloc.recordCount />
 	
 	<!--- check agreed info --->

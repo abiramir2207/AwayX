@@ -133,11 +133,26 @@ function massUpdateCheckAll(thisElement)
 <cfset appSettings = application.appSettingsGet>
 <cfset UseCustomerType = appSettings.getCustomertype()>
 <cfif UseCustomerType IS 1>
-	<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForGetCustomerTypes>
+	<cftry>
+		<cfset GetCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustomerTypes>
+<cfquery name="GetCustomerTypes" datasource="#application.datasource#">
 	SELECT *
 	FROM Customer_Type
 	WHERE Deleted = 0
 	</cfquery>
+</cfif>
 </cfif>
 
 <cfinclude template ="profile_qry_include.cfm">
@@ -149,12 +164,28 @@ function massUpdateCheckAll(thisElement)
 	<cfloop query="getProfiles">
 <cfset i = getProfiles.profiles_id>
 	<CFSET Query_Name2="Get_"&i&"_"&j&"_Settings">
-	<CFQUERY NAME="#Query_Name2#" datasource="#application.datasource#">
+	<cfset useLakebaseFor#Query_Name2# = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_customer_type_settings")>
+<cfif useLakebaseFor#Query_Name2#>
+	<cftry>
+		<cfset #Query_Name2# = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_customer_type_settings", {
+				"profiles_id" = "eq.#i#",
+				"customer_type_id" = "eq.#j#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFor#Query_Name2# = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFor#Query_Name2#>
+<CFQUERY NAME="#Query_Name2#" datasource="#application.datasource#">
 		Select		*
 		From		Profile_Customer_Type_Settings
 		Where		Profiles_ID		=		#i#
 		and customer_type_id = #j#
 	</CFQUERY>
+</cfif>
 </CFloop>
 </CFloop>
 </cfif>
@@ -188,11 +219,28 @@ function massUpdateCheckAll(thisElement)
 <CFLOOP INDEX="GroupCount" FROM="1" TO="#application.returned_customer_setting.approval_group_count#" STEP="1">
 		<cfloop query="getProfiles">
 		<cfset i = getProfiles.profiles_id>
-			<CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
+			<cfset useLakebaseForgetApprovalMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetApprovalMargin>
+	<cftry>
+		<cfset getApprovalMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"group_id" = "eq.#GroupCount#",
+				"profile_id" = "eq.#i#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetApprovalMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetApprovalMargin>
+<CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
 				SELECT Amount
 				FROM Margin_Group_Profile_Approval_Margins
 				WHERE Group_ID='#GroupCount#' AND Profile_ID='#i#'
 			</CFQUERY>
+</cfif>
 			<CFSET "FORM.Group_#GroupCount#_Profile_#i#" = getApprovalMargin.Amount>
 
 			<cfif len(trim(getApprovalMargin.Amount)) EQ 0>

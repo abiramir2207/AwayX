@@ -1,5 +1,23 @@
 <!--- D17471 11/06/08 RBL --->
 
+<cfset useLakebaseForgetLatestFiscal = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForgetLatestFiscal>
+	<cftry>
+		<cfset getLatestFiscal = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"deleted" = "eq.0",
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"order" = "fiscal_year.desc",
+				"limit" = "1",
+				"select" = "fiscal_year"
+			}), "fiscal_year"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLatestFiscal = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLatestFiscal>
 <CFQUERY NAME="getLatestFiscal" datasource="#application.datasource#" maxrows="3">
 	SELECT DISTINCT TOP 1 Fiscal_Year
 	FROM Fiscal_Year
@@ -7,6 +25,7 @@
 	AND Company_Main_ID = '#request.AccessStructure.Company_Main_ID#'
 	ORDER BY Fiscal_Year DESC
 </CFQUERY>
+</cfif>
 
 <cfparam name="FORM.fiscalYear" default="#getLatestFiscal.Fiscal_Year#">
 

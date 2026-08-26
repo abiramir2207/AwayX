@@ -34,11 +34,27 @@
 <cfparam NAME="UserCanApproveCriticalBB" DEFAULT="1"> <!--- 69542 --->
 
 <!--- D25219: SOW - Enable mass paying of payables END--->
+<cfset useLakebaseForGetUploadedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetUploadedBB>
+	<cftry>
+		<cfset GetUploadedBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_title,bb_reference,bb_code,billback_status_id,uploaded_billback"
+			}), "bb_title,bb_reference,bb_code,billback_status_id,uploaded_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUploadedBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUploadedBB>
 <cfquery name="GetUploadedBB" datasource="#application.datasource#">
 	SELECT BB_Title,BB_Reference,BB_Code,Billback_Status_ID,Uploaded_Billback
 	FROM Billback
 	WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <cfquery name="getProgramType" datasource="#application.datasource#">
 	SELECT DISTINCT PCPO.Generic_Type, PCPO.Release_Settlement, CM.Released
@@ -1332,11 +1348,26 @@ FROM _Application_Settings
 	<CFELSEIF GetFA_AppSetting.ForbidAllowProfilesInTemplates EQ 0 AND CheckTemplateApprovalRights.RecordCount GT 0>
 			<!--- D57265 :: Billback processed against OI Template
 			Added a query of a query to find out if any record has Forbid_Access_Type = "0" IF query returns records we will prevent user approving the Billback. --->
-		<cfquery name="checkForbidAccess" dbtype="query" >
+		<cfset useLakebaseForcheckForbidAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("checktemplateapprovalrights")>
+<cfif useLakebaseForcheckForbidAccess>
+	<cftry>
+		<cfset checkForbidAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("checktemplateapprovalrights", {
+				"forbid_access_type" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForbidAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForbidAccess>
+<cfquery name="checkForbidAccess" dbtype="query" >
 			SELECT *
 			FROM CheckTemplateApprovalRights
 			WHERE Forbid_Access_Type = 0
 		</cfquery>
+</cfif>
 		<cfif checkForbidAccess.RecordCount EQ 0.>
 			<CFSET TemplateApprovalRight = 1>
 		</cfif>
@@ -1606,10 +1637,25 @@ AND BB_Agreed_Info.user_id = User_Position_Holders.User_ID
 <CFIF Is_BB_Within_Budget NEQ 1>
 
 <!--- 98106 :: Auto Deviations to consider if bb is beyond program budget START--->
+<cfset useLakebaseForqGetToleranceSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForqGetToleranceSettings>
+	<cftry>
+		<cfset qGetToleranceSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "autoprocess_check_bb_beyond_budget"
+			}), "autoprocess_check_bb_beyond_budget"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetToleranceSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetToleranceSettings>
 <CFQUERY NAME="qGetToleranceSettings" DATASOURCE="#Application.Datasource#">
 	SELECT AutoProcess_Check_BB_Beyond_Budget
 	FROM	Billback_Tolerance_Settings
 </CFQUERY>
+</cfif>
 <cfif qGetToleranceSettings.AutoProcess_Check_BB_Beyond_Budget>
 	<CFQUERY NAME="qUpdateBBConsiderations" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback

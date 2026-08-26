@@ -6,11 +6,27 @@
 <CFPARAM NAME="FORM.RID" DEFAULT="">
 <CFIF len(trim(FORM.RID)) GT 0>
 	<cf_cryp type="de" key="#request.key#" string="#FORM.RID#" Return="RuleReturn">
-	<CFQUERY NAME="getSavedRuleInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForgetSavedRuleInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForgetSavedRuleInfo>
+	<cftry>
+		<cfset getSavedRuleInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_formula_pricing_rule_id" = "eq.#RuleReturn.value#",
+				"select" = "rule_name,number_of_comms"
+			}), "rule_name,number_of_comms"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSavedRuleInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSavedRuleInfo>
+<CFQUERY NAME="getSavedRuleInfo" datasource="#application.datasource#">
 		SELECT Rule_Name,Number_Of_Comms
 		FROM Program_Formula_Pricing_Rules
 		WHERE Program_Formula_Pricing_Rule_ID = '#RuleReturn.value#'
 	</CFQUERY>
+</cfif>
 
 	<CFIF getSavedRuleInfo.recordCount GT 0>
 		<CFSET FORM.Rule_Name 		= getSavedRuleInfo.Rule_Name>

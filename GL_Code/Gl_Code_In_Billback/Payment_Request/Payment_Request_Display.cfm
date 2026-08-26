@@ -53,9 +53,25 @@
 	 where Billback_ID = <cfqueryparam cfsqltype="cf_sql_varchar" value="#Billback_ID#" />
 	 </cfquery> --->
 	 
-	<CFQUERY NAME="getPayeeType" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForgetPayeeType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetPayeeType>
+	<cftry>
+		<cfset getPayeeType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "billback_payee_type_id,bb_closing_method"
+			}), "billback_payee_type_id,bb_closing_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeType>
+<CFQUERY NAME="getPayeeType" DATASOURCE="#Application.Datasource#">
 		SELECT Billback_Payee_Type_ID,BB_Closing_Method FROM Billback WHERE Billback_ID = '#Billback_ID#'
 	</CFQUERY>
+</cfif>
 
 	<CFQUERY NAME="ApproveThisPR" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
@@ -94,19 +110,53 @@
 		ORDER BY Log_900_ID DESC
 	</cfquery>
 	
-	<cfquery name="qGetVendorIdFromApproved" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetVendorIdFromApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForqGetVendorIdFromApproved>
+	<cftry>
+		<cfset qGetVendorIdFromApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approved", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "vendor_master_id"
+			}), "vendor_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVendorIdFromApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVendorIdFromApproved>
+<cfquery name="qGetVendorIdFromApproved" datasource="#application.datasource#">
 		select Vendor_Master_ID
 		FROM	BB_Approved
 		WHERE 	Billback_ID = '#Billback_ID#'
 	</cfquery>
+</cfif>
 	<!--- Check 900 first.  Some templates do not populate 900 so look in bb_approved if no data in 900 --->
 	<cfif (qGetVendorIdFrom900Table.RecordCount GT 0 AND qGetVendorIdFrom900Table.Vendor_ID EQ "") OR qGetVendorIdFromApproved.Vendor_Master_ID EQ "">
 		<!----- if vendor id is either null or empty, set the billback to 'vendor id null' status  ----->
-		<cfquery name="qUpdateBillbackToPendingVendorStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateBillbackToPendingVendorStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqUpdateBillbackToPendingVendorStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "7"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateBillbackToPendingVendorStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateBillbackToPendingVendorStatus>
+<cfquery name="qUpdateBillbackToPendingVendorStatus" datasource="#application.datasource#">
 			UPDATE	Billback
 			SET		Billback_Status_ID = 7
 			WHERE	Billback_ID = '#Billback_ID#'
 		</cfquery>
+</cfif>
 	
 	<cfelse>
 	
@@ -169,11 +219,29 @@
 		
 	<!-----
 	<CFIF IsDefined("Deduction_ID")>
-		<cfquery name="SetBillbacktoPaid" datasource="#application.datasource#">
+		<cfset useLakebaseForSetBillbacktoPaid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForSetBillbacktoPaid>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "5"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSetBillbacktoPaid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSetBillbacktoPaid>
+<cfquery name="SetBillbacktoPaid" datasource="#application.datasource#">
 			UPDATE Billback
 			SET Billback_Status_ID = 5
 			WHERE Billback_ID = '#Billback_ID#'
 		</cfquery>
+</cfif>
 		<BR><BR><BR>
 		<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" ALIGN="Center">
 			<TR>
@@ -199,14 +267,47 @@
 	</CFIF>
 	
 	<CFSET ReplacedID = REPLACE(Vendor_Master_ID,"-","_","All")>
-	<CFQUERY NAME="VendorID" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForVendorID>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_approved",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"vendor_master_id" = "#FORM.Vendor_Master_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForVendorID>
+<CFQUERY NAME="VendorID" DATASOURCE="#Application.Datasource#">
 		UPDATE 	BB_Approved
 		SET 	Vendor_Master_ID = '#FORM.Vendor_Master_ID#'
 		WHERE 	Billback_ID = '#Billback_ID#'
 	</CFQUERY>
-	<CFQUERY NAME="CheckParent" DATASOURCE="#Application.Datasource#">
+</cfif>
+	<cfset useLakebaseForCheckParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckParent>
+	<cftry>
+		<cfset CheckParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckParent>
+<CFQUERY NAME="CheckParent" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Billback WHERE Billback_ID = '#Billback_ID#' 
 	</CFQUERY>
+</cfif>
 	<CFIF CheckParent.Billback_Status_ID NEQ 4>
 		<CFQUERY NAME="PaymentRequested" DATASOURCE="#Application.Datasource#">
 			UPDATE 	Billback 
@@ -228,11 +329,29 @@
 	 	</CFQUERY>
 	
 		<CFIF AnyUnclosedSplit.RecordCOunt EQ 0>
-			<CFQUERY NAME="CloseParent" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCloseParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCloseParent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#CheckParent.BB_Parent_ID#"
+			},
+			{
+				"billback_status_id" = "4"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCloseParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCloseParent>
+<CFQUERY NAME="CloseParent" DATASOURCE="#Application.Datasource#">
 				UPDATE Billback
 				SET Billback_Status_ID = 4
 				WHERE Billback_ID = '#CheckParent.BB_Parent_ID#'
 			</CFQUERY>
+</cfif>
 		</CFIF>
 	</CFIF>
 

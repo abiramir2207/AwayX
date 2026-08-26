@@ -22,6 +22,23 @@ TABLE.UNUNDERLINED TD
 	ORDER BY 	Billback_Program.AR_From_Fiscal_Year,Billback_Program.A_R
 </CFQUERY>
 
+<cfset useLakebaseForCheckSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForCheckSaved>
+	<cftry>
+		<cfset CheckSaved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_allocation", {
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.3",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckSaved>
 <CFQUERY NAME="CheckSaved" DATASOURCE="#Application.Datasource#">
 	SELECT Top 1 *
 	FROM GL_Code_Allocation
@@ -29,6 +46,7 @@ TABLE.UNUNDERLINED TD
 			Allocation_Method = 3 AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 </cfsilent>
 <CFOUTPUT>
 <TABLE BORDER="0" CELLPADDING="5" CELLSPACING="0" ALIGN="Center" CLASS="UNDERLINED" WIDTH="700" ID="ForToolTip">
@@ -135,7 +153,27 @@ TABLE.UNUNDERLINED TD
 			</CFQUERY>
 			
 			<CFLOOP QUERY="GetProgramsFund">
-				<CFQUERY NAME="GetBBAmountFund" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetBBAmountFund = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_fund_allocation_cal")>
+<cfif useLakebaseForGetBBAmountFund>
+	<cftry>
+		<cfset GetBBAmountFund = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fixed_fund_allocation_cal", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"allocation_method" = "eq.3",
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBAmountFund = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBAmountFund>
+<CFQUERY NAME="GetBBAmountFund" DATASOURCE="#Application.Datasource#">
 					SELECT 	Top 1 * 
 					FROM 	GL_Code_Fixed_Fund_Allocation_Cal
 					WHERE 	Billback_ID = '#Billback_ID#' AND 
@@ -145,6 +183,7 @@ TABLE.UNUNDERLINED TD
 							Fiscal_Year = '#DISTFY#' AND
 							Deleted = 0
 				</CFQUERY>
+</cfif>
 				
 				<CFSET TotBBAmountFund = TotBBAmountFund + GetBBAmountFund.Approved_Amount>
 
@@ -261,7 +300,25 @@ TABLE.UNUNDERLINED TD
 			<CFSET CheckPercentTot = 0>
 			<CFLOOP QUERY="FundDistinctFund">				
 			<cfsilent>
-				<CFQUERY NAME="GetARFund" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetARFund = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetARFund>
+	<cftry>
+		<cfset GetARFund = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"fund_number" = "eq.#Fund_Number#",
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetARFund = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetARFund>
+<CFQUERY NAME="GetARFund" DATASOURCE="#Application.Datasource#">
 					SELECT 		*											
 					
 					FROM GL_Code_Activation
@@ -272,6 +329,7 @@ TABLE.UNUNDERLINED TD
 								Current_Active_Data = 1 AND
 								deleted = 0
 				</CFQUERY>
+</cfif>
 				<CFQUERY NAME="GetSavedAlloc" DATASOURCE="#Application.Datasource#">
 					SELECT  SUM(ISNULL(Allocated_Amount,0)) AS Allocated_Fund_Amount
 					FROM Gl_Code_Allocation 

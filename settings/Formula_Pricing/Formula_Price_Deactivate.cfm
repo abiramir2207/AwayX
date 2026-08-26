@@ -7,12 +7,28 @@
 <CFSET RID = Trim(FORM.EXISTING_RID)>
 <CFIF Len(RID) GT 0>
 	<CFLOOP LIST="#RID#" INDEX="This_RID">
-		<CFQUERY NAME="Program_Exists" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForProgram_Exists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_rule")>
+<cfif useLakebaseForProgram_Exists>
+	<cftry>
+		<cfset Program_Exists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_rule", {
+				"formula_pricing_rule_id" = "eq.#This_RID#",
+				"select" = "active_code"
+			}), "active_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Exists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Exists>
+<CFQUERY NAME="Program_Exists" DATASOURCE="#application.datasource#">
 			SELECT Formula_Pricing_Rule.Active_Code
 			FROM 	Formula_Pricing_Rule
 			WHERE 
 					Formula_Pricing_Rule.Formula_Pricing_Rule_ID = '#This_RID#'
 		</CFQUERY>
+</cfif>
 		<CFSET Can_DeActivate_Formula = 0>
 		<CFIF Program_Exists.Active_Code EQ 1>
 			<CFSET Can_DeActivate_Formula = 1>

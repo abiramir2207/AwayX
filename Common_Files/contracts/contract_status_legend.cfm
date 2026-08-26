@@ -4,11 +4,27 @@
 <cfset contract_status_legend = ''>
 <!--- ~~~~~~~~~~~~~~~~~~~~~~~ read left panel from html file ~~~~~~~~~~~~~~~~~~~~~~~~ --->
 <cfif request.getProgramLeftPanelHtml>
-    <cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
+    <cfset useLakebaseForisContractCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForisContractCurrentlyLocked>
+	<cftry>
+		<cfset isContractCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CSL_Contract_Main_ID#",
+				"select" = "contract_is_locked,contract_locked_by_user_id"
+			}), "contract_is_locked,contract_locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisContractCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisContractCurrentlyLocked>
+<cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
         SELECT Contract_Is_Locked, Contract_Locked_By_User_ID
           FROM Contract_Main
          WHERE Contract_Main_ID = #CSL_Contract_Main_ID#
     </cfquery>
+</cfif>
     <cfset request.is_in_edit_mode = isContractCurrentlyLocked.Contract_Is_Locked
                                         and isContractCurrentlyLocked.Contract_Locked_By_User_ID eq request.AccessStructure.User_ID>
     <cfset left_panel_output       = application.util.io.getProgramLeftPanelHtml( CSL_Contract_Main_ID, request.is_in_edit_mode )>
@@ -376,11 +392,27 @@
     <CFIF Cannot_Edit_Program_Condition_Y eq 0  AND left(application.returned_customer_setting.Customer_Keyword,6) EQ "Foster">
         <CFIF CSLGetContractInfo.Approved EQ 1 AND CSLGetContractInfo.Sent_To_External_Client NEQ 1>
 
-        <cfquery name="GetDiscountIdentifier" datasource="#application.datasource#">
+        <cfset useLakebaseForGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetDiscountIdentifier>
+	<cftry>
+		<cfset GetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#GetSettings.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountIdentifier>
+<cfquery name="GetDiscountIdentifier" datasource="#application.datasource#">
             SELECT Discount_Identifier_Number, Discount_Identifier_Desc
             FROM Discount_Identifier
             WHERE Discount_Identifier_ID = '#GetSettings.Discount_Identifier_ID#'
         </cfquery>
+</cfif>
 
             <CFIF CSLGetContractInfo.Generic_Type EQ "Distributor Trade/Shelter">
                 <CFSET Cannot_Edit_Program_Condition_Y = 1>
@@ -395,9 +427,27 @@
             </CFIF>
 
             <CFIF Cannot_Edit_Program_Condition_Y EQ 0>
-                <cfquery name="IsALumpsum" datasource="#application.datasource#">
+                <cfset useLakebaseForIsALumpsum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForIsALumpsum>
+	<cftry>
+		<cfset IsALumpsum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#CSLGetContractInfo.contract_main_id#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsALumpsum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsALumpsum>
+<cfquery name="IsALumpsum" datasource="#application.datasource#">
                     SELECT Top 1 Program_ID FROM Program_Lump_Sums	WHERE Program_ID = #CSLGetContractInfo.contract_main_id# AND Program_Lump_Sums.deleted = 0
                 </cfquery>
+</cfif>
                 <CFIF IsALumpsum.RecordCount GT 0>
                     <CFSET Cannot_Edit_Program_Condition_Y = 1>
                     <CFSET Cannot_Edit_Program_Msg = "There is a lump sum component on the program" >
@@ -614,17 +664,48 @@
         <CFIF DisAllowAccessBasedOnLockStatus EQ 1>
             <cfsilent>
             <!--- get the information of the user who locked the program --->
-            <cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
+            <cfset useLakebaseForLookUpTheLockingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLookUpTheLockingUser>
+	<cftry>
+		<cfset LookUpTheLockingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Contract_Locked_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookUpTheLockingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookUpTheLockingUser>
+<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
                 SELECT Name_First, Name_Last
                 FROM _Users
                 WHERE User_ID = '#CSLGetContractInfo.Contract_Locked_By_User_ID#'
             </cfquery>
+</cfif>
 
             <!--- get the database setting for session timeout and use that for now as the program timeout --->
-            <CFQUERY NAME="getSessionTimeoutSetting" datasource="#application.datasource#">
+            <cfset useLakebaseForgetSessionTimeoutSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetSessionTimeoutSetting>
+	<cftry>
+		<cfset getSessionTimeoutSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "session_expiration_length"
+			}), "session_expiration_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSessionTimeoutSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSessionTimeoutSetting>
+<CFQUERY NAME="getSessionTimeoutSetting" datasource="#application.datasource#">
                 SELECT Session_Expiration_Length
                 FROM General_Settings
             </CFQUERY>
+</cfif>
 
             <CFSET PercentageOfTHeDayInactive = getSessionTimeoutSetting.Session_Expiration_Length + 1>
             <!--- get the time the user sent a request to the system last --->
@@ -1070,11 +1151,27 @@
                 <!--- Date_Exclusions_tab --->
                 <cfif GetSettings.Date_Exclusions_ON EQ 1>
                     <cfsilent>
-                        <cfquery name="getExclusioncount" datasource="#application.datasource#">
+                        <cfset useLakebaseForgetExclusioncount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetExclusioncount>
+	<cftry>
+		<cfset getExclusioncount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"original_program_id" = "eq.#CSL_Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExclusioncount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExclusioncount>
+<cfquery name="getExclusioncount" datasource="#application.datasource#">
                             SELECT *
                             FROM Program_Exclusions
                             WHERE Original_Program_ID = '#CSL_Contract_Main_ID#' AND Deleted = 0
                         </cfquery>
+</cfif>
                     <cfset CSL_data = 0>
                     <cfif getExclusioncount.Recordcount GT 0><cfset CSL_data = 1></cfif>
                     <CFSET CSL_ThisPageCode = "pe">
@@ -2159,13 +2256,30 @@
     </cfif>
 
     <!---D38941 :: New Limited User Profile Edit Functionality STARTAND GetSettings.Forbid_Access_Type EQ 7--->
-        <cfquery name="ForbiddenAccess" datasource="#application.datasource#">
+        <cfset useLakebaseForForbiddenAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_template")>
+<cfif useLakebaseForForbiddenAccess>
+	<cftry>
+		<cfset ForbiddenAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_template", {
+				"template_id" = "eq.#GetSettings.ProgramControl_Panel_Options_ID#",
+				"profile_id" = "eq.#Get_Profile_Settings.Profiles_ID #",
+				"forbid_access_type" = "eq.7"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForForbiddenAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForForbiddenAccess>
+<cfquery name="ForbiddenAccess" datasource="#application.datasource#">
             SELECT *
             FROM Profile_Forbidden_Template
             WHERE Template_ID = #GetSettings.ProgramControl_Panel_Options_ID#
             AND Profile_ID = #Get_Profile_Settings.Profiles_ID #
             AND Forbid_Access_Type = 7
         </cfquery>
+</cfif>
     <cfif Get_Profile_Settings.Limited_Revise AND ForbiddenAccess.RecordCount AND CSLGetContractInfo.Contract_Status_Type_IDX GTE 3 AND DisAllowAccessBasedOnLockStatus EQ 0>
             <cfset Mass_Copy_Button_Show = 0>
             <cfset Renew_Button_Show = 0>
@@ -2694,11 +2808,27 @@
             Req.Approval By</cfoutput></TD>
         </TR>
     </CFIF>
-            <cfquery name="ApprovedUser" datasource="#application.datasource#">
+            <cfset useLakebaseForApprovedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForApprovedUser>
+	<cftry>
+		<cfset ApprovedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Approved_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovedUser>
+<cfquery name="ApprovedUser" datasource="#application.datasource#">
                 SELECT Name_First, Name_Last
                 FROM _Users
                 WHERE User_ID = '#CSLGetContractInfo.Approved_By_User_ID#'
     </cfquery>
+</cfif>
     <!--- 	ooooooooooooooooooooooooooooooooooooooooooo
                     Flag that says this is a LSAutoPay template
                     Set in Common_Queries.cfm 	bHideFromLSAutoPay
@@ -2797,9 +2927,25 @@
     <!--- End Dev Note: Clay 11286 --->
     <CFIF CSLGetContractInfo.Contract_Status_Type_IDX IS 7>
     <cfif len(trim(CSLGetContractInfo.Cancelled_Date)) GT 0>
-    <cfquery name="GetCancellingUser" datasource="#application.datasource#">
+    <cfset useLakebaseForGetCancellingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetCancellingUser>
+	<cftry>
+		<cfset GetCancellingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Cancelled_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCancellingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCancellingUser>
+<cfquery name="GetCancellingUser" datasource="#application.datasource#">
     SELECT Name_First, Name_Last from _Users WHERE User_ID = '#CSLGetContractInfo.Cancelled_By#'
     </cfquery>
+</cfif>
         <TR>
             <TD NOWRAP style="cursor:pointer;">
             <IMG BORDER="0" SRC="/images/programs/ball_blue.gif" ALIGN="absmiddle">

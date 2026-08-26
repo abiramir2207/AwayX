@@ -67,6 +67,22 @@
 	</TR>
 </cfoutput>
 
+<cfset useLakebaseForPrior_Entries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("class_code_lump_sum_assoc")>
+<cfif useLakebaseForPrior_Entries>
+	<cftry>
+		<cfset Prior_Entries = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("class_code_lump_sum_assoc", {
+				"class_code_id" = "eq.#form.id#",
+				"deleted" = "eq.0",
+				"order" = "class_code_assoc_value.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPrior_Entries = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPrior_Entries>
 <cfquery name="Prior_Entries" datasource="#application.datasource#">
 	SELECT 	* 
 	FROM 	Class_Code_Lump_Sum_Assoc
@@ -74,6 +90,7 @@
 	AND 	Deleted = 0
 	ORDER BY Class_Code_Assoc_Value
 </cfquery>
+</cfif>
 
 <cfparam name="PercentTotal" default="0">
 <!---- Lump sum allocation --->

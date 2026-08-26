@@ -10,7 +10,24 @@
 </CFIF>
 
 <CFIF is_unknown_program EQ 0>
-	<cfquery name="checkforexistingprogram" datasource="#Application.Datasource#">
+	<cfset useLakebaseForcheckforexistingprogram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForcheckforexistingprogram>
+	<cftry>
+		<cfset checkforexistingprogram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"program_id" = "eq.#form.Program_List#",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckforexistingprogram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckforexistingprogram>
+<cfquery name="checkforexistingprogram" datasource="#Application.Datasource#">
 		SELECT Billback_ID
 		FROM Billback_program
 		WHERE
@@ -20,6 +37,7 @@
 			AND
 			Program_ID = '#form.Program_List#'
 	</cfquery>
+</cfif>
 	<CFIF checkforexistingprogram.recordcount EQ 0>
 		<cfquery name="insertProgram" datasource="#Application.Datasource#">
 			INSERT INTO Billback_Program

@@ -10,12 +10,28 @@ ShowBrokers.cfm
 	<CFSET rDistributors = "-1">
 </CFIF>
 <CFIF rDistributors NEQ -1 AND Len(rDistributors) GT 0>
-	<CFQUERY NAME="q_getDistributors" datasource="#application.datasource#">
+	<cfset useLakebaseForq_getDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_lob_active")>
+<cfif useLakebaseForq_getDistributors>
+	<cftry>
+		<cfset q_getDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_lob_active", {
+				"bsa_foodservice_customers_id" = "eq.#rDistributors#",
+				"select" = "bsa_foodservice_customers_id,name"
+			}), "bsa_foodservice_customers_id,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getDistributors>
+<CFQUERY NAME="q_getDistributors" datasource="#application.datasource#">
 	SELECT 		customer_lob_active.BSA_FoodService_Customers_ID, customer_lob_active.Name
 	FROM		customer_lob_active
 	WHERE
 			customer_lob_active.BSA_FoodService_Customers_ID = '#rDistributors#'
 	</CFQUERY>
+</cfif>
 	<CFIF q_getDistributors.recordCOunt GT 0>
 		<CFSET DistributorName = Left(q_getDistributors.Name, 20)>
 	<CFELSE>

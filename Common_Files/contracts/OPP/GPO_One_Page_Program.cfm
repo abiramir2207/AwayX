@@ -101,7 +101,23 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 				            WHERE 	Contract_Main.Contract_Main_ID = '#variables.ContractMainID#'
 				</cfquery>
 
-				<cfquery name="Program_Auto_Renew" datasource="#application.datasource#">
+				<cfset useLakebaseForProgram_Auto_Renew = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForProgram_Auto_Renew>
+	<cftry>
+		<cfset Program_Auto_Renew = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_auto_renew", {
+				"program_id" = "eq.#GetContractInfo.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_auto_renew_id,ar_notification_date,ar_start_date,ar_end_date,ar_renewal_type,renewal_lead_time,renewed"
+			}), "program_auto_renew_id,ar_notification_date,ar_start_date,ar_end_date,ar_renewal_type,renewal_lead_time,renewed"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Auto_Renew = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Auto_Renew>
+<cfquery name="Program_Auto_Renew" datasource="#application.datasource#">
 					SELECT 	Program_Auto_Renew_ID,
 							AR_Notification_Date,
 							AR_Start_Date,
@@ -114,6 +130,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 					AND		Deleted = 0
 
 				</cfquery>
+</cfif>
 
 				<!--- D26803 : Revise Active/Pre-active PGM's
 				Find if users are allowed to change dates --->
@@ -513,12 +530,28 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 			<cfelse>
 
-				<cfquery name="getExclusionInfo" datasource="#application.datasource#">
+				<cfset useLakebaseForgetExclusionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetExclusionInfo>
+	<cftry>
+		<cfset getExclusionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"revision_program_id" = "eq.#GetContractInfo.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExclusionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExclusionInfo>
+<cfquery name="getExclusionInfo" datasource="#application.datasource#">
 					SELECT 	*
 					FROM 	Program_Exclusions
 					WHERE 	Revision_Program_ID = '#GetContractInfo.Contract_Main_ID#'
 					AND 	Deleted = 0
 				</cfquery>
+</cfif>
 
 				<CFSET FORM.Contract_Number = "#Program_Packet.Basic_Information.Contract_Number#">
 				<CFSET FORM.start_date = "#dateformat(getExclusionInfo.Start_Date, 'mm/dd/yyyy')#">
@@ -779,11 +812,26 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 </cfif>
 
 <!--- LOAD SETTINGS --->
+<cfset useLakebaseForgetFieldSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetFieldSettings>
+	<cftry>
+		<cfset getFieldSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#FORM.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFieldSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFieldSettings>
 <cfquery name="getFieldSettings" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = '#FORM.ProgramType_ID#'
 </cfquery>
+</cfif>
 
 <!---60410 :  Fiscal Year Selection and Auto Renew START--->
 	<cfquery name="AutoRenewOptions" datasource="#application.datasource#">
@@ -921,10 +969,25 @@ summary page and also on the program flex grid's column (volume).
 </cfif>
 
 <!--- Max Length for Program Title --->
+<cfset useLakebaseForqryUsersSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqryUsersSettings>
+	<cftry>
+		<cfset qryUsersSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"select" = "max_program_title_length,pullback_modify_corporate_program_rates"
+			}), "max_program_title_length,pullback_modify_corporate_program_rates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUsersSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUsersSettings>
 <CFQUERY NAME="qryUsersSettings" datasource="#application.datasource#">
 SELECT 	Max_Program_Title_Length, Pullback_Modify_Corporate_Program_Rates
 FROM	_Users_Settings
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="Form.Document_ID" DEFAULT="ContractGeneralInfo">
 

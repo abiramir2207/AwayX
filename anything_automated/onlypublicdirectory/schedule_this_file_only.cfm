@@ -9,13 +9,43 @@
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = genSettingsManager.get()>
 
+<cfset useLakebaseForgetCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForgetCompany>
+	<cftry>
+		<cfset getCompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCompany>
 <cfquery name="getCompany" datasource="#application.datasource#">
 	select company_main_id
 	from company_main
 	where deleted = 0
 </cfquery>
+</cfif>
 <CFSET request.AccessStructure.company_main_id = getCompany.company_main_id>
 <CFSET request.AccessStructure.user_id = "999-999-999">
+<cfset useLakebaseForgetGSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGSettings>
+	<cftry>
+		<cfset getGSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_daily_expiring_email,send_daily_expired_email,send_daily_active_email,send_daily_aging_billback_email,send_broker_email,use_discount_id,number_of_days_for_summarized_weekly_expiring_email,send_program_starting_email,number_of_days_for_program_start"
+			}), "send_daily_expiring_email,send_daily_expired_email,send_daily_active_email,send_daily_aging_billback_email,send_broker_email,use_discount_id,number_of_days_for_summarized_weekly_expiring_email,send_program_starting_email,number_of_days_for_program_start"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGSettings>
 <cfquery name="getGSettings" datasource="#application.datasource#">
 	SELECT
 		send_daily_expiring_email,
@@ -30,6 +60,7 @@
 	FROM
 		General_Settings
 </cfquery>
+</cfif>
 
 <cfset get_profile_settings.approve_freight_programs 	= 0 />
 <cfset get_profile_settings.freight_view_create 		= 0 />

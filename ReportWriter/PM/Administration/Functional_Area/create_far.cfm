@@ -9,11 +9,26 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Far = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_far")>
+<cfif useLakebaseForGet_Far>
+	<cftry>
+		<cfset Get_Far = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_far", {
+				"order" = "pm_far_description.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Far = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Far>
 <CFQUERY NAME="Get_Far" datasource="#application.datasource#">
 	Select		*
 	From		PM_Far
 	Order by	PM_Far_Description
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="URL.RID" DEFAULT="0">
 

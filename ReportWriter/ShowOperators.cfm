@@ -10,12 +10,28 @@ ShowBrokers.cfm
 	<CFSET rOperators = "-1">
 </CFIF>
 <CFIF rOperators NEQ -1 AND Len(rOperators) GT 0>
-	<CFQUERY NAME="q_getOperators" datasource="#application.datasource#">
+	<cfset useLakebaseForq_getOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForq_getOperators>
+	<cftry>
+		<cfset q_getOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#rOperators#",
+				"select" = "bsa_operator_id,operator_name"
+			}), "bsa_operator_id,operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getOperators>
+<CFQUERY NAME="q_getOperators" datasource="#application.datasource#">
 	SELECT 		BSA_Operator.BSA_Operator_ID, BSA_Operator.Operator_Name
 	FROM		BSA_Operator
 	WHERE
 			BSA_Operator.BSA_Operator_ID = '#rOperators#'
 	</CFQUERY>
+</cfif>
 	<CFIF q_getOperators.recordCOunt GT 0>
 		<CFSET OperatorName = Left(q_getOperators.Operator_Name, 20)>
 	<CFELSE>

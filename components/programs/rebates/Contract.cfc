@@ -4,11 +4,26 @@
 		
 		<cfargument name="contractMainId" type="numeric" required="true" default="">
 		
-		<cfquery name="qGetContractInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetContractInfo>
+	<cftry>
+		<cfset qGetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.contractMainId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetContractInfo>
+<cfquery name="qGetContractInfo" datasource="#application.datasource#">
 			SELECT *
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#arguments.contractMainId#'
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetContractInfo />	
 
@@ -18,11 +33,27 @@
 	
 		<cfargument name="programId" type="string" required="true" default="">
 		
-		<CFQUERY NAME="qGetProgramType" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramType>
+	<cftry>
+		<cfset qGetProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramType>
+<CFQUERY NAME="qGetProgramType" datasource="#application.datasource#">
 			SELECT 	ProgramType_ID
 			FROM 	Contract_Main 
 			WHERE Contract_Main_ID = '#arguments.programId#'
 		</CFQUERY>
+</cfif>
 		
 		<cfreturn qGetProgramType />
 		

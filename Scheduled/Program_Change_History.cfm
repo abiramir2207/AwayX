@@ -115,11 +115,27 @@
 	<cfloop query="qGetChangedPrograms">
 		<cfset timeBegin(qGetChangedPrograms.Child_Contract_Main_ID)>
         
-        <cfquery name="CheckParent" datasource="#application.datasource#">
+        <cfset useLakebaseForCheckParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForCheckParent>
+	<cftry>
+		<cfset CheckParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#qGetChangedPrograms.Parent_Revised_Contract_Main_ID#",
+				"select" = "run_program_history"
+			}), "run_program_history"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckParent>
+<cfquery name="CheckParent" datasource="#application.datasource#">
             SELECT Run_Program_History
             FROM Contract_Main_Aux_Data
             WHERE Contract_Main_ID = '#qGetChangedPrograms.Parent_Revised_Contract_Main_ID#'
         </cfquery>
+</cfif>
 
         <cfif CheckParent.Run_Program_History eq 0 or CheckParent.Run_Program_History eq 2>
             <cfset changed_program()>

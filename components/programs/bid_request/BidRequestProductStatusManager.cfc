@@ -42,13 +42,28 @@
 	<cffunction name="getProgramProductInfo" output="false" returntype="query">
 		<cfargument name="productId" required="true" />
 		
-		<cfquery name="qGetProductInfo" dbtype="query">
+		<cfset useLakebaseForqGetProductInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qprogramproductbidinfo")>
+<cfif useLakebaseForqGetProductInfo>
+	<cftry>
+		<cfset qGetProductInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qprogramproductbidinfo", {
+				"product_id" = "eq.#arguments.productId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductInfo>
+<cfquery name="qGetProductInfo" dbtype="query">
 
 			SELECT	*
 			FROM	qProgramProductBidInfo
 			WHERE	Product_ID = '#arguments.productId#'
 		
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetProductInfo />
 		
@@ -282,11 +297,27 @@
 		</cfif>
 		
 		<!---get the status of the bid request at the program level--->
-		<cfquery name="qGetStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_request")>
+<cfif useLakebaseForqGetStatus>
+	<cftry>
+		<cfset qGetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_request", {
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "bid_request_status_id"
+			}), "bid_request_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetStatus>
+<cfquery name="qGetStatus" datasource="#application.datasource#">
 			SELECT	Bid_Request_Status_ID 
 			FROM	Program_Bid_Request
 			WHERE	Program_ID = '#arguments.programId#'
 		</cfquery>
+</cfif>
 		
 		<cfset status = qGetStatus.Bid_Request_Status_ID />
 		

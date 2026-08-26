@@ -7,13 +7,45 @@
 </head>
 
 <body>
+<cfset useLakebaseForCheckForSplit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckForSplit>
+	<cftry>
+		<cfset CheckForSplit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForSplit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForSplit>
 <CFQUERY NAME="CheckForSplit" DATASOURCE="#Application.Datasource#">
 	SELECT Top 1 * FROM Billback WHERE BB_parent_ID = '#Billback_ID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForBBInfoForSplit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBBInfoForSplit>
+	<cftry>
+		<cfset BBInfoForSplit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBInfoForSplit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBInfoForSplit>
 <CFQUERY NAME="BBInfoForSplit" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback WHERE Billback_ID = '#Billback_ID#'
 </CFQUERY>
+</cfif>
 
 <CFIF CheckForSplit.RecordCount GT 0>
 	<CFLOCATION URL="/billbacks/Approval/Split_BB_History.cfm?Billback_ID=#Billback_ID#" ADDTOKEN="No">
@@ -35,12 +67,29 @@
 	ORDER BY 	Billback_Program.Allocation_Method
 </CFQUERY>
 
+<cfset useLakebaseForCheckSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForCheckSaved>
+	<cftry>
+		<cfset CheckSaved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_allocation", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckSaved>
 <CFQUERY NAME="CheckSaved" DATASOURCE="#Application.Datasource#">
 	SELECT Top 1 * 
 	FROM GL_Code_Allocation 
 	WHERE Billback_ID='#Billback_ID#' AND 
 	Deleted = 0
 </CFQUERY>
+</cfif>
 <CFSET SavedAlready = CheckSaved.Allocation_Saved>
 
 <CFLOOP QUERY="GetAllocation">	
@@ -284,11 +333,29 @@ A.headerLink , A.headerLink:LINK, A.headerLink:VISITED , A.headerLink:FOCUS,A.he
 		</CFIF>
 	</TABLE>
 	<CFELSE>
-		<CFQUERY NAME="CheckStatus" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForCheckStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForCheckStatus>
+	<cftry>
+		<cfset CheckStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_allocation", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "approved"
+			}), "approved"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckStatus>
+<CFQUERY NAME="CheckStatus" DATASOURCE="#Application.Datasource#">
 			SELECT Top 1 Approved 
 			FROM Gl_Code_Allocation 
 			WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		<script language="JavaScript">
 		function ApprovePaymentRequest(sUrl, thisObj)
 		{
@@ -415,17 +482,54 @@ A.headerLink , A.headerLink:LINK, A.headerLink:VISITED , A.headerLink:FOCUS,A.he
 
 <CFIF Not IsDefined("FinalAllocationDisp")>
 <CFIF VariationAmt EQ 0>
-	<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateStatus>
+<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback
 		SET Billback_Status_ID = 3
 		WHERE Billback_ID = '#Billback_ID#'
 	</CFQUERY>
-	<CFQUERY NAME="UpdateSaved" DATASOURCE="#Application.Datasource#">
+</cfif>
+	<cfset useLakebaseForUpdateSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForUpdateSaved>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"allocation_saved" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateSaved>
+<CFQUERY NAME="UpdateSaved" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		SET 	Allocation_Saved = 1
 		WHERE 	Billback_ID = '#Billback_ID#' AND
 				Deleted = 0	
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 <CFELSE>
 	<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback

@@ -28,9 +28,25 @@
 		UPDATE OCR_Upload_Log SET XLDownloaded_Count = XLDownloaded_Count + 1 WHERE OCR_Upload_ID = #URL.OCRUploadID#
 	</cfquery>
 	
-	<cfquery name="selXLDownloadedCount" datasource="#application.datasource#">
+	<cfset useLakebaseForselXLDownloadedCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForselXLDownloadedCount>
+	<cftry>
+		<cfset selXLDownloadedCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#URL.OCRUploadID#",
+				"select" = "xldownloaded_count,file_name"
+			}), "xldownloaded_count,file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselXLDownloadedCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselXLDownloadedCount>
+<cfquery name="selXLDownloadedCount" datasource="#application.datasource#">
 		SELECT XLDownloaded_Count,File_Name FROM OCR_Upload_Log WHERE OCR_Upload_ID = #URL.OCRUploadID#
 	</cfquery>
+</cfif>
 
 	<cfif (selXLDownloadedCount.RecordCount GTE 1)>
 		<cfset DownloadFileNameNoQuotes = ListDeleteAt(selXLDownloadedCount.File_Name, ListLen(selXLDownloadedCount.File_Name, "."), ".") & "_Forge_#selXLDownloadedCount.XLDownloaded_Count#.xlsx" >

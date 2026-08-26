@@ -511,19 +511,51 @@ TD.headernotselected
   <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
   <!--- Get the list of Operator_Category																	 --->
   <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-  <CFQUERY NAME="Get_Operator_Category" datasource="#application.datasource#">
+  <cfset useLakebaseForGet_Operator_Category = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_category")>
+<cfif useLakebaseForGet_Operator_Category>
+	<cftry>
+		<cfset Get_Operator_Category = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_category", {
+				"deleted" = "eq.0",
+				"select" = "operator_category_id,category_label"
+			}), "operator_category_id,category_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Category = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Category>
+<CFQUERY NAME="Get_Operator_Category" datasource="#application.datasource#">
 	  Select	Operator_Category_ID, Category_Label
 	  From	Operator_Category
 	  Where	deleted = 0
   </CFQUERY>
+</cfif>
   <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
   <!--- Get the list of Operator_Category																	 --->
   <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
-  <CFQUERY NAME="Get_Operator_Priority" datasource="#application.datasource#">
+  <cfset useLakebaseForGet_Operator_Priority = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_priority")>
+<cfif useLakebaseForGet_Operator_Priority>
+	<cftry>
+		<cfset Get_Operator_Priority = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_priority", {
+				"deleted" = "eq.0",
+				"select" = "operator_priority_id,priority_label"
+			}), "operator_priority_id,priority_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Priority = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Priority>
+<CFQUERY NAME="Get_Operator_Priority" datasource="#application.datasource#">
 	  Select	Operator_Priority_ID, Priority_Label
 	  From	Operator_Priority
 	  Where	deleted = 0
   </CFQUERY>
+</cfif>
   </cfif>
   <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
   <!--- Get the states																				 --->
@@ -1278,7 +1310,23 @@ TD.headernotselected
   <cfelse>
   <!---- TAB SEPARATOR TYPES TAB starts here ---->
 
-    <CFQUERY NAME="getOperatorType" datasource="#application.datasource#">
+    <cfset useLakebaseForgetOperatorType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("awayx_operator_type")>
+<cfif useLakebaseForgetOperatorType>
+	<cftry>
+		<cfset getOperatorType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("awayx_operator_type", {
+				"deleted" = "eq.0",
+				"order" = "operator_type.asc",
+				"select" = "bsa_operator_type_id,operator_type,business_segment_id,active,deleted,created_date,updated_date,last_edited_by,is_default"
+			}), "bsa_operator_type_id,operator_type,business_segment_id,active,deleted,created_date,updated_date,last_edited_by,is_default"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOperatorType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOperatorType>
+<CFQUERY NAME="getOperatorType" datasource="#application.datasource#">
       SELECT	BSA_Operator_Type_ID,
               Operator_Type,
               Business_Segment_ID,
@@ -1292,6 +1340,7 @@ TD.headernotselected
       WHERE Deleted = 0
       ORDER BY Operator_Type
     </CFQUERY>
+</cfif>
 
     <CFQUERY NAME="getUserName" datasource="#application.datasource#">
       SELECT  TOP 1 _Users.Name_First, _Users.Name_Last, Awayx_Operator_Type.Updated_Date
@@ -1376,11 +1425,26 @@ TD.headernotselected
 <CFPARAM NAME="getOperatorType.Last_Edited_By" default="">
 <CFPARAM NAME="getOperatorType.Is_Default" default="0">
 
+<cfset useLakebaseForGetItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("awayx_operator_type")>
+<cfif useLakebaseForGetItem>
+	<cftry>
+		<cfset GetItem = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("awayx_operator_type", {
+				"bsa_operator_type_id" = "eq.#URL.OPID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetItem>
 <CFQUERY NAME="GetItem" datasource="#application.datasource#">
 	SELECT	*
 	FROM Awayx_Operator_Type
 	WHERE		BSA_Operator_Type_ID	= '#URL.OPID#'
 </CFQUERY>
+</cfif>
 <link rel="stylesheet" type="text/css" media="screen" href="/Script/javascript/Ajax_JS/jquery.suggest.css" />
 <SCRIPT SRC="/Script/javascript/dom_common.js"></SCRIPT>
 

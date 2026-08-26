@@ -2,11 +2,26 @@
 
 <cfset FORM.Program_Type_ID = session.programs.properties.CURRENT_PROGRAM_TYPE_ID>
 
+<cfset useLakebaseForgetProgramTypeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetProgramTypeInfo>
+	<cftry>
+		<cfset getProgramTypeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#FORM.Program_Type_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramTypeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramTypeInfo>
 <cfquery name="getProgramTypeInfo" datasource="#application.datasource#">
 	Select *
 	FROM Program_Control_Panel_Options
 	where ProgramControl_Panel_Options_ID = '#FORM.Program_Type_ID#'
 </cfquery>
+</cfif>
 
 
 

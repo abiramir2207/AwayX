@@ -19,11 +19,27 @@
 
 <cfset qGetAnalysts = billbackAssignmentManager.getAnalysts() />
 <cfset qGetAvailableUsers = billbackAssignmentManager.getAvailableUsers() />
+<cfset useLakebaseForqGetDefaultAnalyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetanalysts")>
+<cfif useLakebaseForqGetDefaultAnalyst>
+	<cftry>
+		<cfset qGetDefaultAnalyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetanalysts", {
+				"default_analyst" = "eq.1",
+				"select" = "analyst_user_id"
+			}), "analyst_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultAnalyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultAnalyst>
 <cfquery name="qGetDefaultAnalyst" dbtype="query">
 	SELECT	Analyst_User_ID
 	FROM	qGetAnalysts
 	WHERE	Default_Analyst = 1
 </cfquery>
+</cfif>
 
 <cfset showMessage = "" />
 <cfif qGetAnalysts.recordCount EQ 0>

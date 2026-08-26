@@ -6,10 +6,26 @@
 		
 		<cfif application.returned_customer_setting.discount_identifier_on EQ 1>
 		
-			<cfquery name="qGetGeneralSettings" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqGetGeneralSettings>
+	<cftry>
+		<cfset qGetGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1",
+				"select" = "use_discount_id"
+			}), "use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGeneralSettings>
+<cfquery name="qGetGeneralSettings" datasource="#application.datasource#">
 				SELECT 	TOP 1 	Use_Discount_ID
 				FROM 	General_Settings
 			</cfquery>
+</cfif>
 		
 			<cfif qGetGeneralSettings.Use_Discount_ID>
 				<cfset returnValue = 1>
@@ -79,7 +95,24 @@
 	    Dev Notes: 22308/Anand Rao/04-Feb-10
 	    CAG - multi discount type template/ Added 4 columns to the select statements
       --->
-		<cfquery name="qGetActiveComps" datasource="#application.datasource#" cachedwithin="#cacheSpan#">
+		<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "discount_identifier_desc.asc",
+				"select" = "discount_identifier_id,discount_identifier_number,discount_identifier_desc,isdefault,external_component_type,external_customer_type_id,interface_for_fixedprice,interface_for_rebate,interface_for_lumpsum,interface_for_growth,external_fixedprice_component_type,external_rebate_component_type,external_lumpsum_component_type,external_growth_component_type"
+			}), "discount_identifier_id,discount_identifier_number,discount_identifier_desc,isdefault,external_component_type,external_customer_type_id,interface_for_fixedprice,interface_for_rebate,interface_for_lumpsum,interface_for_growth,external_fixedprice_component_type,external_rebate_component_type,external_lumpsum_component_type,external_growth_component_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+<cfquery name="qGetActiveComps" datasource="#application.datasource#" cachedwithin="#cacheSpan#">
 			SELECT 	Discount_Identifier_ID,
 					Discount_Identifier_Number,
 					Discount_Identifier_Desc,
@@ -99,6 +132,7 @@
 			AND		Active = 1
 			ORDER BY 	Discount_Identifier_Desc
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetActiveComps />
 		
@@ -108,7 +142,22 @@
    
    		<cfargument name="compId" required="false" default=0 />
 		
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#arguments.compId#",
+				"select" = "discount_identifier_id,discount_identifier_number,discount_identifier_desc,isdefault,external_component_type,external_customer_type_id,interface_for_fixedprice,interface_for_rebate,interface_for_lumpsum,interface_for_growth,external_fixedprice_component_type,external_rebate_component_type,external_lumpsum_component_type,external_growth_component_type"
+			}), "discount_identifier_id,discount_identifier_number,discount_identifier_desc,isdefault,external_component_type,external_customer_type_id,interface_for_fixedprice,interface_for_rebate,interface_for_lumpsum,interface_for_growth,external_fixedprice_component_type,external_rebate_component_type,external_lumpsum_component_type,external_growth_component_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	Discount_Identifier_ID,
 					Discount_Identifier_Number,
 					Discount_Identifier_Desc,
@@ -126,6 +175,7 @@
 			FROM 	Discount_Identifier
 			WHERE 	Discount_Identifier_ID = #arguments.compId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 		

@@ -4,11 +4,28 @@
 <cfset pp_ID = url.id>
 
 <!--- basic Info --->
+<cfset useLakebaseForgetBasicInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rules")>
+<cfif useLakebaseForgetBasicInfo>
+	<cftry>
+		<cfset getBasicInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bid_rules", {
+				"bid_rule_id" = "eq.#pp_ID#",
+				"deleted" = "eq.0",
+				"select" = "bid_rule_id,bid_rule_name,bid_rule_desc,bid_rule_uom"
+			}), "bid_rule_id,bid_rule_name,bid_rule_desc,bid_rule_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBasicInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBasicInfo>
 <cfquery name="getBasicInfo" datasource="#application.datasource#">
 	SELECT Bid_Rule_ID, Bid_Rule_Name, Bid_Rule_Desc, Bid_Rule_UOM
 	FROM Bid_Rules
 	WHERE Bid_Rule_ID = '#pp_ID#' AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset form.Bid_Rule_Name 		= getBasicInfo.Bid_Rule_Name>
 <cfset form.Bid_Rule_Desc 		= getBasicInfo.Bid_Rule_Desc>
@@ -20,11 +37,28 @@
 
 
  <!--- type items --->
+<cfset useLakebaseForgetTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
+<cfif useLakebaseForgetTypes>
+	<cftry>
+		<cfset getTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bid_rule_items", {
+				"bid_rule_id" = "eq.#pp_ID#",
+				"deleted" = "eq.0",
+				"select" = "type_item_id,bid_rule_item_id"
+			}), "type_item_id,bid_rule_item_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTypes>
 <cfquery name="getTypes" datasource="#application.datasource#">
 	SELECT Type_Item_ID, Bid_Rule_Item_ID
 	FROM Bid_Rule_Items
 	WHERE Bid_Rule_ID = '#pp_ID#' AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset counter = 1>
 <cfset form.fieldnames = "">
@@ -41,12 +75,30 @@
 
 
 <!--- modifiers --->
+<cfset useLakebaseForgetModifiers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_modifiers")>
+<cfif useLakebaseForgetModifiers>
+	<cftry>
+		<cfset getModifiers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bid_rule_modifiers", {
+				"bid_rule_id" = "eq.#pp_ID#",
+				"deleted" = "eq.0",
+				"order" = "modifier_index.asc",
+				"select" = "bid_rule_modifier_id,modifier_index,modifier_amount,modifier_desc,modifier_uom,iscompound,isindependent"
+			}), "bid_rule_modifier_id,modifier_index,modifier_amount,modifier_desc,modifier_uom,iscompound,isindependent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetModifiers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetModifiers>
 <cfquery name="getModifiers" datasource="#application.datasource#">
 	SELECT Bid_Rule_Modifier_ID, Modifier_Index, Modifier_Amount, Modifier_Desc, Modifier_UOM, iscompound, isindependent
 	FROM Bid_Rule_Modifiers
 	WHERE Bid_Rule_ID = '#pp_ID#' AND Deleted = 0
 	ORDER BY Modifier_Index
 </cfquery>
+</cfif>
 
 <cfset counter = 1>
 <cfset form.fieldnames = "">
@@ -70,12 +122,30 @@
 <cfinclude template="packet_modifier.cfm">
 
 <!--- volume groups --->
+<cfset useLakebaseForgetVolumeGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_volume_groups")>
+<cfif useLakebaseForgetVolumeGroups>
+	<cftry>
+		<cfset getVolumeGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bid_rule_volume_groups", {
+				"bid_rule_id" = "eq.#pp_ID#",
+				"deleted" = "eq.0",
+				"order" = "group_index.asc",
+				"select" = "bid_rule_group_id,group_index,range_start,range_end"
+			}), "bid_rule_group_id,group_index,range_start,range_end"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetVolumeGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetVolumeGroups>
 <cfquery name="getVolumeGroups" datasource="#application.datasource#">
 	SELECT Bid_Rule_Group_ID, Group_Index, Range_Start, Range_End
 	FROM Bid_Rule_Volume_Groups
 	WHERE Bid_Rule_ID = '#pp_ID#' AND Deleted = 0
 	ORDER BY Group_Index
 </cfquery>
+</cfif>
 
 <cfset counter = 1>
 <cfset form.fieldnames = "">
@@ -143,12 +213,29 @@
 	<cfset "form.Inp_Group_#counter#_Bid_Rule_Exception_Group_ID" 	= thisBid_Rule_Exception_Group_ID>
 	
 	
-	<cfquery name="getGroupProducts" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_group_products")>
+<cfif useLakebaseForgetGroupProducts>
+	<cftry>
+		<cfset getGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("exception_group_products", {
+				"exception_group_id" = "eq.#thisException_Group_ID#",
+				"deleted" = "eq.0",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupProducts>
+<cfquery name="getGroupProducts" datasource="#application.datasource#">
 		SELECT Product_ID 
 		FROM  Exception_Group_Products
 		WHERE Exception_Group_ID = '#thisException_Group_ID#'
 		AND Deleted = 0
 	</cfquery>
+</cfif>
 	
 	<cfset "form.Inp_Group_#counter#_ProductList" = valuelist(getGroupProducts.Product_ID)>
 

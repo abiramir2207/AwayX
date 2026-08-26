@@ -1,6 +1,22 @@
 <cf_cryp type="de" key="#request.key#" string="#URL.CID#">
 
 <!--- check for existing Periods --->
+<cfset useLakebaseForcheckForPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForcheckForPeriods>
+	<cftry>
+		<cfset checkForPeriods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_id" = "eq.#cryp.value#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForPeriods>
 <CFQUERY NAME="checkForPeriods" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Formula_Pricing_Periods
@@ -10,6 +26,7 @@
 	AND 
 		Deleted = 0
 </CFQUERY>
+</cfif>
 
 
 <CFSET PAGE_TITLE="">

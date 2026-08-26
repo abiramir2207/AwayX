@@ -7,7 +7,23 @@
 		<cfset requestProduct = requestProductArray[prodIndex]>
 		<cfset currentProductId = requestProduct.getRequestProdId()>
 		<!------ get limited time offer periods for this product ----->
-		<cfquery name="qGetProductLTPPeriods" dbtype="query">
+		<cfset useLakebaseForqGetProductLTPPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductvoldist")>
+<cfif useLakebaseForqGetProductLTPPeriods>
+	<cftry>
+		<cfset qGetProductLTPPeriods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductvoldist", {
+				"limited_time_offer" = "eq.1",
+				"fp_product_id" = "eq.#currentProductId#",
+				"select" = "start_date,end_date,limited_time_offer"
+			}), "start_date,end_date,limited_time_offer"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductLTPPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductLTPPeriods>
+<cfquery name="qGetProductLTPPeriods" dbtype="query">
 			SELECT	Start_Date, End_Date, Limited_Time_Offer
 			FROM	qGetProductVolDist
 			WHERE
@@ -15,6 +31,7 @@
 					AND
 					FP_Product_ID = #currentProductId#
 		</cfquery>
+</cfif>
 		<br>
 		<table cellpadding="2" cellspacing="0" width="90%" border="0" bgcolor="##E8FCFD">
 		<tr>

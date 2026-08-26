@@ -77,6 +77,23 @@ th { text-align: left; }
 	<cfset url.byClassIDs = ValueList(vars.defaultClasses.Budget_Class_ID) />
 </cfif>
 
+<cfset useLakebaseForvars_classes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_class")>
+<cfif useLakebaseForvars_classes>
+	<cftry>
+		<cfset vars.classes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_class", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "created_date.asc",
+				"select" = "budget_class_number,budget_class_desc,budget_class_id,default_filter"
+			}), "budget_class_number,budget_class_desc,budget_class_id,default_filter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvars_classes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvars_classes>
 <cfquery name="vars.classes" datasource="#application.datasource#">
 	SELECT Budget_Class_Number,Budget_Class_Desc,Budget_Class_ID,Default_Filter
 	FROM Budget_Class
@@ -84,6 +101,7 @@ th { text-align: left; }
 	AND Active = 1
 	ORDER BY Created_Date
 </cfquery>
+</cfif>
 
 <!--------------------------------------------------------------------------------------------------------------------->
 <cfoutput>
@@ -136,35 +154,105 @@ th { text-align: left; }
 	</div>	<br><br><br>
 </div>
 
-	<cfquery name="CodeTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForCodeTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget")>
+<cfif useLakebaseForCodeTypes>
+	<cftry>
+		<cfset CodeTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget", {
+				"deleted" = "eq.0",
+				"order" = "budget_code.asc",
+				"select" = "budget_code"
+			}), "budget_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCodeTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCodeTypes>
+<cfquery name="CodeTypes" datasource="#application.datasource#">
 		SELECT Distinct Budget_Code
 		FROM Budget
 		WHERE Deleted = 0
 		ORDER BY Budget_Code ASC
 	</cfquery>
+</cfif>
 
-	<cfquery name="GroupTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForGroupTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_group")>
+<cfif useLakebaseForGroupTypes>
+	<cftry>
+		<cfset GroupTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_group", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "budget_group_desc.asc",
+				"select" = "budget_group_desc as gtype,budget_group_id"
+			}), "budget_group_desc as gtype,budget_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGroupTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGroupTypes>
+<cfquery name="GroupTypes" datasource="#application.datasource#">
 		SELECT Budget_Group_Desc AS GType, Budget_Group_ID
 		FROM Budget_Group
 		WHERE Deleted = 0
 		AND Active = 1
 		ORDER BY Budget_Group_Desc ASC
 	</cfquery>
+</cfif>
 
-	<cfquery name="BudgetTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForBudgetTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_contribution_factor_type")>
+<cfif useLakebaseForBudgetTypes>
+	<cftry>
+		<cfset BudgetTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_contribution_factor_type", {
+				"deleted" = "eq.0",
+				"order" = "contribution_factor_type.asc",
+				"select" = "contribution_factor_type as btype,budget_contribution_factor_type_id"
+			}), "contribution_factor_type as btype,budget_contribution_factor_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBudgetTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBudgetTypes>
+<cfquery name="BudgetTypes" datasource="#application.datasource#">
 		SELECT Contribution_Factor_Type AS BType, Budget_Contribution_Factor_Type_ID
 		FROM Budget_Contribution_Factor_Type
 		WHERE Deleted = 0
 		ORDER BY Contribution_Factor_Type ASC
 	</cfquery>
+</cfif>
 
-	<cfquery name="SegmentTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForSegmentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForSegmentTypes>
+	<cftry>
+		<cfset SegmentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "business_unit_desc.asc",
+				"select" = "business_unit_desc as segment,business_segment_id"
+			}), "business_unit_desc as segment,business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSegmentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSegmentTypes>
+<cfquery name="SegmentTypes" datasource="#application.datasource#">
 		SELECT Business_Unit_Desc AS Segment,  Business_Segment_ID
 		FROM Business_Segment
 		WHERE Deleted = 0
 		AND Active = 1
 		ORDER BY Business_Unit_Desc ASC
 	</cfquery>
+</cfif>
 
 <div style="clear:both;">
 <table id="budgets" class="datagrid" style='table-layout:fixed'>

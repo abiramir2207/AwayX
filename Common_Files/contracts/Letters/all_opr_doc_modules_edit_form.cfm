@@ -44,11 +44,27 @@ FUNCTIONALITY:
 
 <!--- D16774 8/14/08 [begin]
 <!--- XXXXXXXXXX Get info for/from XML Doc [begin] XXXXXXXXXX --->
+<cfset useLakebaseForvariables_qGetLetterInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvariables_qGetLetterInfo>
+	<cftry>
+		<cfset variables.qGetLetterInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#url.lid#",
+				"select" = "letter_path"
+			}), "letter_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qGetLetterInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qGetLetterInfo>
 <cfquery name="variables.qGetLetterInfo" datasource="#application.datasource#">
   SELECT 			letter_path
   FROM 				program_letters
   WHERE 			program_letters.program_letters_id = #url.lid#
 </cfquery>
+</cfif>
 --->
 <cfset variables.currentLetterPath = trim(application.oLetterManager.getLetterPath(url.lid))>
 <!--- D16774 8/14/08 [end] --->

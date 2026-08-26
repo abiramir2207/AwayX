@@ -13,11 +13,27 @@
 
 <CFIF FORM.Submitted EQ 0>
 
-	<cfquery name="getBBStats" datasource="#application.datasource#">
+	<cfset useLakebaseForgetBBStats = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetBBStats>
+	<cftry>
+		<cfset getBBStats = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#BBID#",
+				"select" = "bb_amount,negative_billback"
+			}), "bb_amount,negative_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBStats = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBStats>
+<cfquery name="getBBStats" datasource="#application.datasource#">
 		SELECT    BB_Amount,Negative_Billback
 		FROM      Billback 
 		WHERE     Billback_ID = '#BBID#'
 	</cfquery>
+</cfif>
 	
 	<cfset variables.itemized_total = CreateObject("component", "components.billback.BillbackManager").getBillbackItemizedAmount(BBID) />
 	<cfset BB_Total_Amount = getBBStats.BB_Amount>
@@ -43,9 +59,24 @@
 
 	<cfset CheckTemplateApprovalRights = BBProgramManager.getTemplateApprovalRights(Billback_ID)>
 	
-	<CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetFA_AppSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetFA_AppSetting>
+	<cftry>
+		<cfset GetFA_AppSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "forbidallowprofilesintemplates"
+			}), "forbidallowprofilesintemplates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFA_AppSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFA_AppSetting>
+<CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
 		SELECT ForbidAllowProfilesInTemplates FROM _Application_Settings
 	</CFQUERY>
+</cfif>
 	
 	<CFSET TemplateApprovalRight = 0>
 	
@@ -126,9 +157,27 @@ INSERT INTO BB_Approved
 <!---Update instead of insert--->
 </cfif>
 
+<cfset useLakebaseForUpdateStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateStatus>
 <cfquery name="UpdateStatus" datasource="#application.datasource#">
 	UPDATE Billback SET Billback_Status_ID = 3 WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <!--- simulate button click --->
 <cfset local_bbid = Billback_ID>

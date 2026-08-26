@@ -32,13 +32,30 @@ bb_delete2.cfm
 </CFIF>
 
 <CFIF delete_This_Billback>
-	<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
+	<cfset useLakebaseForBB_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBB_Info>
+	<cftry>
+		<cfset BB_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "bb_code,bb_title,billback_status_id,bb_payment_request_sent,bb_received_ack_type,bb_approved_void_ack_type"
+			}), "bb_code,bb_title,billback_status_id,bb_payment_request_sent,bb_received_ack_type,bb_approved_void_ack_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBB_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBB_Info>
+<CFQUERY name="BB_Info" datasource="#Application.Datasource#">
 		SELECT	BB_Code, BB_Title, Billback_Status_ID,
 				BB_Payment_Request_Sent,BB_Received_Ack_Type,BB_Approved_Void_Ack_Type
 		FROM	Billback
 		WHERE	Billback.Billback_ID = '#Billback_ID#' AND
 				Billback.Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CENTER>
 		<FONT COLOR="#FF0000" SIZE="+1">
 		<CFSET AllowDeleted = 1>

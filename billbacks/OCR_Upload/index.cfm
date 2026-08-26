@@ -11,10 +11,27 @@ Description  :
 
 <cfif isDefined("FORM.deleteOCRUploadID") AND FORM.deleteOCRUploadID NEQ "">
 
-	<cfquery name="qryBBUploadID" datasource="#application.datasource#">
+	<cfset useLakebaseForqryBBUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqryBBUploadID>
+	<cftry>
+		<cfset qryBBUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#FORM.deleteOCRUploadID#",
+				"deleted" = "eq.0",
+				"select" = "bb_upload_id,ocr_step"
+			}), "bb_upload_id,ocr_step"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryBBUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryBBUploadID>
+<cfquery name="qryBBUploadID" datasource="#application.datasource#">
 			SELECT BB_Upload_ID,OCR_Step FROM OCR_Upload_Log 
 			WHERE OCR_Upload_ID = '#FORM.deleteOCRUploadID#' AND Deleted = 0
 	</cfquery>
+</cfif>
 	<cfif (qryBBUploadID.RecordCount NEQ 0 AND qryBBUploadID.BB_Upload_ID NEQ "" AND qryBBUploadID.OCR_Step EQ "11") >
 		<cftry>
 			<cfinvoke component="components.billback.billbackuploadutility" method="purge_upload">
@@ -29,9 +46,26 @@ Description  :
 		</cftry>
 	</cfif>
 	
-	<cfquery name="qGetBBUploadID" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetBBUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqGetBBUploadID>
+	<cftry>
+		<cfset qGetBBUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#FORM.deleteOCRUploadID#",
+				"deleted" = "eq.0",
+				"select" = "bb_upload_id"
+			}), "bb_upload_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBBUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBBUploadID>
+<cfquery name="qGetBBUploadID" datasource="#application.datasource#">
 		SELECT BB_Upload_ID FROM OCR_Upload_Log WHERE OCR_Upload_ID = '#FORM.deleteOCRUploadID#' AND Deleted = 0
 	</cfquery>
+</cfif>
 	<cfif qGetBBUploadID.RecordCount EQ 1 AND qGetBBUploadID.BB_Upload_ID NEQ "">
 		<cfquery name="qUpdBBUploadLog" datasource="#application.datasource#">
 			UPDATE 

@@ -23,13 +23,45 @@
   <cfset form.command = "plan">
   <cfset edit = 1>
 <cfif form.bsid_remove EQ 0>
-  <cfquery name="Pg_groups_info" datasource="#application.datasource#">
+  <cfset useLakebaseForPg_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_planning_groups")>
+<cfif useLakebaseForPg_groups_info>
+	<cftry>
+		<cfset Pg_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_planning_groups", {
+				"vf_plan_id" = "eq.#form.clicked_edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPg_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPg_groups_info>
+<cfquery name="Pg_groups_info" datasource="#application.datasource#">
     SELECT * FROM VF_Planning_Groups WHERE VF_plan_ID = #form.clicked_edit# AND deleted = 0
   </cfquery>
+</cfif>
 
-  <cfquery name="Dist_groups_info" datasource="#application.datasource#">
+  <cfset useLakebaseForDist_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_distributor_planning_groups")>
+<cfif useLakebaseForDist_groups_info>
+	<cftry>
+		<cfset Dist_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_distributor_planning_groups", {
+				"vf_plan_id" = "eq.#form.clicked_edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_groups_info>
+<cfquery name="Dist_groups_info" datasource="#application.datasource#">
     SELECT * FROM VF_Distributor_Planning_Groups WHERE VF_plan_ID = #form.clicked_edit# AND deleted = 0
   </cfquery>
+</cfif>
   
   <cfloop query="Pg_groups_info">
       <cfset pg_id = listappend(pg_id, "#Pg_groups_info.PG_Product_Category_ID#")>
@@ -216,16 +248,62 @@
   <tbody>
   
   <cfloop query="plan_list">
-    <cfquery name="class_name" dbtype="query">
+    <cfset useLakebaseForclass_name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("class_list")>
+<cfif useLakebaseForclass_name>
+	<cftry>
+		<cfset class_name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("class_list", {
+				"vf_class_id" = "eq.#vf_plan_class_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForclass_name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForclass_name>
+<cfquery name="class_name" dbtype="query">
       SELECT * FROM class_list WHERE VF_Class_ID = #vf_plan_class_id#
     </cfquery>
-    <cfquery name="group_name" dbtype="query">
+</cfif>
+    <cfset useLakebaseForgroup_name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_list")>
+<cfif useLakebaseForgroup_name>
+	<cftry>
+		<cfset group_name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_list", {
+				"vf_group_id" = "eq.#vf_plan_group_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgroup_name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgroup_name>
+<cfquery name="group_name" dbtype="query">
       SELECT * FROM group_list WHERE VF_Group_ID = #vf_plan_group_id#
     </cfquery>
+</cfif>
     <cfset qSegments = busSegMgr.obj.getActive( userId = request.AccessStructure.User_ID )>
-    <cfquery name="business_segment_name" dbtype="query" >
+    <cfset useLakebaseForbusiness_segment_name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qsegments")>
+<cfif useLakebaseForbusiness_segment_name>
+	<cftry>
+		<cfset business_segment_name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qsegments", {
+				"business_segment_id" = "eq.#vf_plan_segment_id#",
+				"select" = "business_unit_desc"
+			}), "business_unit_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForbusiness_segment_name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForbusiness_segment_name>
+<cfquery name="business_segment_name" dbtype="query" >
       SELECT Business_Unit_Desc FROM qSegments WHERE Business_Segment_ID = #vf_plan_segment_id#
     </cfquery>
+</cfif>
   <tr <cfif plan_list.Detail_Record_Count eq 0>class="activate"</cfif>>
    <td>#vf_plan_number#</td>
    <td>#vf_plan_desc#</td>

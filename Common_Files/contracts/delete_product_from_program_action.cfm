@@ -33,7 +33,22 @@
 
 
 <cfif NextLocation EQ "contract_formula_add_products.cfm">
-	<cfquery name="getFormData" datasource="#application.datasource#">
+	<cfset useLakebaseForgetFormData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_products")>
+<cfif useLakebaseForgetFormData>
+	<cftry>
+		<cfset getFormData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_products", {
+				"contract_product_id" = "eq.#form.Contract_Products_ID#",
+				"select" = "program_id,program_formula_pricing_rule_id"
+			}), "program_id,program_formula_pricing_rule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFormData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFormData>
+<cfquery name="getFormData" datasource="#application.datasource#">
 			SELECT
 				Program_ID,
 				Program_Formula_Pricing_Rule_ID
@@ -42,6 +57,7 @@
 			WHERE
 				Contract_Product_ID = '#form.Contract_Products_ID#'
 	</cfquery>
+</cfif>
 </cfif>
 
 <cfoutput>

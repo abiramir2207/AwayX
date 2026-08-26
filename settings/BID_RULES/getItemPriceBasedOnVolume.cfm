@@ -8,11 +8,27 @@
 
 
 <cfif len(trim(url.typeid)) GT 0 AND len(trim(url.volume)) GT 0 AND len(trim(url.productid)) GT 0 AND len(trim(url.bidruleid)) GT 0 AND len(trim(url.priceObjectName)) GT 0>
-	<CFQUERY NAME="getProductCurrentCost" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForgetProductCurrentCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForgetProductCurrentCost>
+	<cftry>
+		<cfset getProductCurrentCost = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#url.productid#",
+				"select" = "curr_cost"
+			}), "curr_cost"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductCurrentCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductCurrentCost>
+<CFQUERY NAME="getProductCurrentCost" DATASOURCE="#application.datasource#">
 		SELECT Curr_Cost
 		FROM BSA_Foodservice_Items_Master
 		WHERE BSA_Foodservice_Items_Master_ID = '#url.productid#'
 	</CFQUERY>
+</cfif>
 	
 	<cfset form.FinalPrice = getProductCurrentCost.Curr_Cost>
 	
@@ -112,7 +128,23 @@
 <!--- <!-- get overage for volume range -->
 <cfif len(trim(url.typeid)) NEQ 0 OR len(trim(url.volume)) NEQ 0>
 	<cfset url.volume = trim(numberformat(url.volume, '_________.___'))>
-	<CFQUERY NAME="findRule" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForfindRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
+<cfif useLakebaseForfindRule>
+	<cftry>
+		<cfset findRule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bid_rule_items", {
+				"type_item_id" = "eq.#url.typeid#",
+				"deleted" = "eq.0",
+				"select" = "bid_rule_id,bid_rule_item_id"
+			}), "bid_rule_id,bid_rule_item_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfindRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfindRule>
+<CFQUERY NAME="findRule" DATASOURCE="#application.datasource#">
 		SELECT Bid_Rule_ID, Bid_Rule_Item_ID
 		FROM Bid_Rule_Items
 		WHERE 
@@ -120,6 +152,7 @@
 			AND
 			DELETED = 0
 	</CFQUERY>
+</cfif>
 	
 	<cfif findRule.recordcount GT 0>
 		<CFQUERY NAME="getBidRuleVolumeGroupID" DATASOURCE="#application.datasource#">

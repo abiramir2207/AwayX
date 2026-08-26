@@ -18,11 +18,26 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 	
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfinclude template="/get_access_profile.cfm">
@@ -243,13 +258,29 @@ FROM         dbo.Contract_Main INNER JOIN
 <FIELDSET STYLE="padding:10px; width: 700px; border: 1px solid Blue;">
 	<LEGEND STYLE="font: bold 14px sans-serif; color: Navy;">Component Information</LEGEND>
 
- <cfquery name="GetFixedComponentNames" datasource="#application.datasource#">
+ <cfset useLakebaseForGetFixedComponentNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForGetFixedComponentNames>
+	<cftry>
+		<cfset GetFixedComponentNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFixedComponentNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFixedComponentNames>
+<cfquery name="GetFixedComponentNames" datasource="#application.datasource#">
         SELECT *
 		FROM Program_Fixed_Component_Name 
 		WHERE 
 		Active = 1 
 		AND Deleted = 0 
   </cfquery>
+</cfif>
   
 <table WIDTH="750" border="0" cellpadding="2" cellspacing="0">
 	<tr>

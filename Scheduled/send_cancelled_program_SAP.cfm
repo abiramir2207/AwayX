@@ -19,10 +19,25 @@
 <!--- <cfif getCancelledPrograms.recordcount GT 0> --->
 	<cfloop query="getPrograms">
 	
+<cfset useLakebaseForgetwebservicedetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForgetwebservicedetails>
+	<cftry>
+		<cfset getwebservicedetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"bsa_program_id" = "eq.#getPrograms.bsa_program_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetwebservicedetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetwebservicedetails>
 <CFQUERY NAME="getwebservicedetails" datasource="#application.datasource#">
  	select * from Program_Webservices_Detail
 	where bsa_program_id = '#getPrograms.bsa_program_id#'
  </CFQUERY>
+</cfif>
  
 
  
@@ -31,11 +46,29 @@
 	<cfset xmlDoc = XmlParse(tempxml)>
 <cfelse>
 	<cfinclude template="create_xmlstructure.cfm">
-	<CFQUERY NAME="updatewebservicedetails" datasource="#application.datasource#">
+	<cfset useLakebaseForupdatewebservicedetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForupdatewebservicedetails>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_webservices_detail",
+			{
+				"bsa_program_id" = "eq.#getPrograms.bsa_program_id#"
+			},
+			{
+				"bsa_xml_structure" = "#tempxml#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatewebservicedetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatewebservicedetails>
+<CFQUERY NAME="updatewebservicedetails" datasource="#application.datasource#">
  	update Program_Webservices_Detail
 	set BSA_XML_Structure = #tempxml#
 	where bsa_program_id = '#getPrograms.bsa_program_id#'
  </CFQUERY>
+</cfif>
 </cfif>
 	
 <cfif url.delete EQ 1>
@@ -163,17 +196,53 @@ Message for Pactiv<cfelse>Message for Blacksmith
 		<cfelseif url.delete EQ 2><!------ purge program ----->
 			<cfset program.purgeProgram(url.program_id, url.User_ID) />
 			
-			<CFQUERY NAME="PurgeFutureContracts" datasource="#application.datasource#">
+			<cfset useLakebaseForPurgeFutureContracts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
+<cfif useLakebaseForPurgeFutureContracts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_period_dates",
+			{
+				"program_id" = "eq.#url.program_id#"
+			},
+			{
+				"sap_deleted_status" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPurgeFutureContracts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPurgeFutureContracts>
+<CFQUERY NAME="PurgeFutureContracts" datasource="#application.datasource#">
 					UPDATE program_period_dates
 					Set SAP_Deleted_Status = 1
 					WHERE program_Id = #url.program_id#
 			</CFQUERY>
+</cfif>
 		</cfif>
-		<CFQUERY NAME="CancelContract" datasource="#application.datasource#">
+		<cfset useLakebaseForCancelContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCancelContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#url.program_id#"
+			},
+			{
+				"sent_to_external_client" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCancelContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCancelContract>
+<CFQUERY NAME="CancelContract" datasource="#application.datasource#">
 			UPDATE Contract_Main
 			Set Sent_To_External_Client = 0
 			WHERE Contract_Main_Id = #url.program_id#
 		</CFQUERY>
+</cfif>
 <CFQUERY NAME="PurgeFutureContracts" datasource="#application.datasource#">
 		UPDATE program_period_dates
 		Set SAP_Deleted_Status = 1

@@ -157,11 +157,27 @@ function buildFilter()
 </tr>
 <tr>
 	<cfsilent>
+<cfset useLakebaseForGet_Profiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForGet_Profiles>
+	<cftry>
+		<cfset Get_Profiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"order" = "profiles_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Profiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Profiles>
 <CFQUERY NAME="Get_Profiles" DATASOURCE="#application.datasource#">
 select * from profiles
 where deleted = 0
 Order By Profiles_Desc Asc
-</CFQUERY></cfsilent>
+</CFQUERY>
+</cfif></cfsilent>
 <td><strong>Profile</strong><br />
      <select name="profile_id" onchange="buildFilter()">
 	  <option value="0">**ALL** Profiles</option>

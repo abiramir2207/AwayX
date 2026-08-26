@@ -429,9 +429,25 @@ span.lbl { display:inline-block; width:107px; font-weight: bold; margin:2px 0;}
             <cfloop query="Get_data2">
 
 									<cfif Get_data2.Prod_Var_A_ID NEQ ''>
-										<cfquery name="getDesc" datasource="#application.datasource#">
+										<cfset useLakebaseForgetDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("prod_var_a")>
+<cfif useLakebaseForgetDesc>
+	<cftry>
+		<cfset getDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("prod_var_a", {
+				"prod_var_a_id" = "eq.#Get_data2.Prod_Var_A_ID#",
+				"select" = "prod_var_a_desc as description"
+			}), "prod_var_a_desc as description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDesc>
+<cfquery name="getDesc" datasource="#application.datasource#">
 												SELECT Prod_Var_A_Desc AS Description FROM Prod_Var_A WHERE Prod_Var_A_ID = '#Get_data2.Prod_Var_A_ID#'
 										</cfquery>
+</cfif>
 									<cfelseif Get_data2.Brand_ID NEQ ''>
 										<cfquery name="getDesc" datasource="#application.datasource#">
 												SELECT Brand_Name AS Description FROM Brand WHERE Brand_ID = '#Get_data2.Brand_ID#'

@@ -492,7 +492,24 @@ WHERE 		dbo.BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID IN(#replace(l
 
 <!--- revise button logic --->
 		<!--- check for existing revisions that arent yet active. --->
-		<CFQUERY NAME="checkForRevision" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckForRevision = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckForRevision>
+	<cftry>
+		<cfset checkForRevision = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"revision_of_contract_main_id" = "eq.#CSLGetContractInfo.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"force_expiration_flag" = "eq.0",
+				"flagged_as_purged" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForRevision = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForRevision>
+<CFQUERY NAME="checkForRevision" datasource="#application.datasource#">
 			SELECT *
 			FROM Contract_Main
 			WHERE 	Revision_Of_Contract_Main_ID = '#CSLGetContractInfo.Contract_Main_ID#' 
@@ -500,6 +517,7 @@ WHERE 		dbo.BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID IN(#replace(l
 					AND Force_Expiration_Flag = 0
 					AND Flagged_As_Purged = 0
 		</CFQUERY>
+</cfif>
 		<!--- <CFIF IsProgramTemplateAvailable EQ 1 AND CSLGetContractInfo.Contract_Status_Type_IDX NEQ 7> --->
 <!--- END revise button logic --->
 

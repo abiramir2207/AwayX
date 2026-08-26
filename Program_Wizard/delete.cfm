@@ -45,6 +45,21 @@ Shows all the details for a program.
 </head>
 
 <!---Get all information on a program template--->
+<cfset useLakebaseForGetAllInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetAllInfo>
+	<cftry>
+		<cfset GetAllInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#ID#",
+				"select" = "generic_type,created_type,program_description"
+			}), "generic_type,created_type,program_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllInfo>
 <cfquery name="GetAllInfo" datasource="#application.datasource#">
 SELECT	Generic_Type,
 	Created_Type,
@@ -52,6 +67,7 @@ SELECT	Generic_Type,
 FROM Program_Control_Panel_Options
 WHERE ProgramControl_Panel_Options_ID = #ID#
 </cfquery>
+</cfif>
 
 <!--- <body leftmargin="0" topmargin="0" bottommargin="0" rightmargin="0">
 

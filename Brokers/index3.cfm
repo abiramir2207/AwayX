@@ -28,6 +28,21 @@
 
 
 <!--- Get the operator --->
+<cfset useLakebaseForGet_Operator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator>
+	<cftry>
+		<cfset Get_Operator = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#Operator_ID#",
+				"select" = "operator_name,operator_address,operator_city,operator_state,operator_zip,operator_dba"
+			}), "operator_name,operator_address,operator_city,operator_state,operator_zip,operator_dba"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator>
 <CFQUERY NAME="Get_Operator" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0,24,0,0)#">
 	Select	Operator_Name,
 			Operator_Address,
@@ -38,6 +53,7 @@
 	From	BSA_Operator
 	Where	BSA_Operator_ID	=	#Operator_ID#
 </CFQUERY>
+</cfif>
 
 
 

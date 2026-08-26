@@ -14,7 +14,23 @@
 		
 		<cfif arguments.id>
 		
-			<cfquery name="qGetRawMaterial" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetRawMaterial = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_raw_material")>
+<cfif useLakebaseForqGetRawMaterial>
+	<cftry>
+		<cfset qGetRawMaterial = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_raw_material", {
+				"deleted" = "eq.0",
+				"fp_raw_material_id" = "eq.#arguments.id#",
+				"select" = "fp_raw_material_id,raw_material_number,raw_material_desc"
+			}), "fp_raw_material_id,raw_material_number,raw_material_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRawMaterial = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRawMaterial>
+<cfquery name="qGetRawMaterial" datasource="#application.datasource#">
 				SELECT	FP_Raw_Material_ID, 
 						Raw_Material_Number, 
 						Raw_Material_Desc
@@ -22,6 +38,7 @@
 				WHERE	Deleted = 0
 				AND		FP_Raw_Material_ID = #arguments.id#
 			</cfquery>
+</cfif>
 			
 			<cfloop query="qGetRawMaterial">
 			
@@ -78,7 +95,23 @@
 	
 	<cffunction name="getAll" output="false" returntype="query">
 		
-		<cfquery name="qGetRawMaterials" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetRawMaterials = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_raw_material")>
+<cfif useLakebaseForqGetRawMaterials>
+	<cftry>
+		<cfset qGetRawMaterials = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_raw_material", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "fp_raw_material_id,raw_material_number,raw_material_desc"
+			}), "fp_raw_material_id,raw_material_number,raw_material_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRawMaterials = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRawMaterials>
+<cfquery name="qGetRawMaterials" datasource="#application.datasource#">
 			SELECT	FP_Raw_Material_ID, 
 					Raw_Material_Number, 
 					Raw_Material_Desc
@@ -86,6 +119,7 @@
 			WHERE	Deleted = 0					
 			AND		Active = 1
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetRawMaterials />
 	

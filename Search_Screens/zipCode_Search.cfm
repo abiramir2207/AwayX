@@ -44,11 +44,27 @@
 <!--- Get the list of states from the States table.
 Don't use the list from the Zipcodes table since the list also includes military installation --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_States = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("zipcodes")>
+<cfif useLakebaseForGet_States>
+	<cftry>
+		<cfset Get_States = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("zipcodes", {
+				"order" = "state.asc",
+				"select" = "statecode,state"
+			}), "statecode,state"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_States = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_States>
 <CFQUERY NAME="Get_States" DATASOURCE="#application.datasource#" cachedWithin = "#CreateTimeSpan(30, 0, 0, 0)#">
 	Select		DISTINCT StateCode, State
 	From		zipCodes
 	Order by 	State
 </CFQUERY>
+</cfif>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 <script language="JavaScript">

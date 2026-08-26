@@ -47,11 +47,27 @@
 		Kindly contact your System Administrator!!" />
 	</cfif>
 
-	<cfquery name="qryBillbackLocked" datasource="#application.datasource#">
+	<cfset useLakebaseForqryBillbackLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForqryBillbackLocked>
+	<cftry>
+		<cfset qryBillbackLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_allied", {
+				"billback_id" = "eq.#arguments.bbid#",
+				"select" = "bb_locked_by_user_id,bb_is_locked"
+			}), "bb_locked_by_user_id,bb_is_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryBillbackLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryBillbackLocked>
+<cfquery name="qryBillbackLocked" datasource="#application.datasource#">
 	SELECT BB_LOCKED_BY_USER_ID,BB_IS_LOCKED 
 	FROM Billback_Allied
 	WHERE Billback_id = '#arguments.bbid#'
 	</cfquery>
+</cfif>
 
 	<cfset profile = CreateObject("component","components.user.Profile").init() />
 	<cfset Get_Profile_Settings = profile.getProfileSettings(request.AccessStructure.Profiles_ID)>
@@ -67,11 +83,27 @@
 		<cfset strShowError = " This billback has been locked by another user! Please try later!!" /> 
     <cfelse>
 
-	<cfquery name="qCheckIfDuplicate" datasource="#application.datasource#">
+	<cfset useLakebaseForqCheckIfDuplicate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqCheckIfDuplicate>
+	<cftry>
+		<cfset qCheckIfDuplicate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#arguments.bbid#",
+				"select" = "bb_loc_duplicate"
+			}), "bb_loc_duplicate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfDuplicate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfDuplicate>
+<cfquery name="qCheckIfDuplicate" datasource="#application.datasource#">
 		SELECT	BB_Loc_Duplicate
 		FROM 	Billback                
 		WHERE 	Billback_ID = '#arguments.bbid#'
 	</cfquery>
+</cfif>
 
 	<!--- START: 76536: BB Oper Location Level - dup check --Anand Rao/10-Aug-2018
 	Note: On "flex\billback\BillbackDevAppFX.cfm" (where the code is copied from), we use "NOT isDefined("URL.FromDupScreen")", 
@@ -136,7 +168,26 @@
 							</cfloop>
 						</cfcase>
 						<cfcase value="RESET">
-							<cfquery name="updBBOperatorLocationReset" datasource="#application.datasource#">
+							<cfset useLakebaseForupdBBOperatorLocationReset = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator_location_detail")>
+<cfif useLakebaseForupdBBOperatorLocationReset>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_operator_location_detail",
+			{
+				"billback_id" = "eq.#arguments.bbid#"
+			},
+			{
+				"denied" = "0",
+				"updated_date" = javaCast("null",""),
+				"updated_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBOperatorLocationReset = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBOperatorLocationReset>
+<cfquery name="updBBOperatorLocationReset" datasource="#application.datasource#">
 					            UPDATE Billback_Operator_Location_Detail 
 					            SET 
 									Denied = 0,
@@ -144,6 +195,7 @@
 									Updated_By = NULL
 					            WHERE Billback_ID = '#arguments.bbid#'
 							</cfquery>
+</cfif>
 						</cfcase>
 						<cfcase value="GOTODEV">
 							<cfset displayOperDupScreen = 0 />
@@ -217,14 +269,54 @@
 		<!--- 1) update the record as locked by deviation grid 
 		We don't want users making changes to the billback while working with deviation grid
 		--->
-		<cfquery name="updLockBillback" datasource="#application.datasource#">
+		<cfset useLakebaseForupdLockBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForupdLockBillback>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#arguments.bbid#"
+			},
+			{
+				"bb_locked_by_deviation_grid" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdLockBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdLockBillback>
+<cfquery name="updLockBillback" datasource="#application.datasource#">
 		  UPDATE Billback_Allied
 		  SET    BB_Locked_By_Deviation_Grid = 1
 		  WHERE  Billback_id = '#arguments.bbid#'
 		</cfquery>
+</cfif>
 	<cfelse>
 		<!--- 2) update all the other records in billbacks not locked through match central as unlocked --->
-		<cfquery name="unlockLockedBillbacks" datasource="#application.datasource#">
+		<cfset useLakebaseForunlockLockedBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForunlockLockedBillbacks>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"bb_is_locked" = "eq.1",
+				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"billback_id" = "neq.#arguments.bbid#",
+				"bb_locked_by_match_central" = "eq.0"
+			},
+			{
+				"bb_is_locked" = "0",
+				"bb_locked_by_user_id" = javaCast("null",""),
+				"bb_lock_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlockLockedBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlockLockedBillbacks>
+<cfquery name="unlockLockedBillbacks" datasource="#application.datasource#">
 		  UPDATE Billback_Allied
 		  SET    BB_Is_Locked = 0,
 				 BB_Locked_By_User_ID = NULL,
@@ -234,6 +326,7 @@
 				 Billback_id <> '#arguments.bbid#' AND
 				 BB_Locked_By_Match_Central = 0
 		</cfquery>
+</cfif>
 		
 		<!--- 2) update the record as locked by the current user --->
 		<cfquery name="updLockBillback" datasource="#application.datasource#">
@@ -246,7 +339,22 @@
 		</cfquery>
 	</cfif>
         
-	<cfquery name="getDeviationHistory" datasource="#application.datasource#">
+	<cfset useLakebaseForgetDeviationHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetDeviationHistory>
+	<cftry>
+		<cfset getDeviationHistory = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#arguments.bbid#",
+				"select" = "deviation_ran_by,deviation_ran_date,uploaded_billback,billback_status_id,bb_deviations_override_price as bb_level_deviations_override_price_flag"
+			}), "deviation_ran_by,deviation_ran_date,uploaded_billback,billback_status_id,bb_deviations_override_price as bb_level_deviations_override_price_flag"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDeviationHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDeviationHistory>
+<cfquery name="getDeviationHistory" datasource="#application.datasource#">
 	 SELECT Deviation_Ran_By,
 			Deviation_Ran_Date,
 			Uploaded_Billback,
@@ -255,6 +363,7 @@
 	 FROM Billback                
 	 WHERE Billback_ID = '#arguments.bbid#'
 	</cfquery>
+</cfif>
 	
 	<!--- Tim Ford - 03/28/2016: WR 57983 - Call a function to determine if deviations should run --->
 	<cfset oBillbackDevAppManager = CreateObject("component","mvc.Models.Billback.BillbackDevAppManager") />
@@ -263,17 +372,48 @@
 	<!--- 3) run the deviations--->
 	<!---<cfif (getDeviationHistory.Deviation_Ran_Date EQ "")> --->
 	<cfif bRunDeviations>
-		<CFQUERY NAME="CheckUpdProgress" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckUpdProgress = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckUpdProgress>
+	<cftry>
+		<cfset CheckUpdProgress = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#arguments.bbid#",
+				"select" = "bb_upd_inprogress"
+			}), "bb_upd_inprogress"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckUpdProgress = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckUpdProgress>
+<CFQUERY NAME="CheckUpdProgress" datasource="#application.datasource#">
 			SELECT BB_Upd_InProgress
 			FROM Billback
 			WHERE Billback_ID = '#arguments.bbid#'
 		</CFQUERY>
+</cfif>
 		<CFIF CheckUpdProgress.BB_Upd_InProgress EQ 0>	
-			<CFQUERY NAME="chkIsBBApproved" datasource="#application.datasource#">
+			<cfset useLakebaseForchkIsBBApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForchkIsBBApproved>
+	<cftry>
+		<cfset chkIsBBApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approved", {
+				"billback_id" = "eq.#arguments.bbid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForchkIsBBApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForchkIsBBApproved>
+<CFQUERY NAME="chkIsBBApproved" datasource="#application.datasource#">
 				SELECT *
 				FROM BB_Approved
 				WHERE Billback_ID = '#arguments.bbid#'
 			</CFQUERY>
+</cfif>
 			<cfif ((chkIsBBApproved.RecordCount EQ 0) OR (chkIsBBApproved.Date_Approved EQ ""))>
 				<cftry>
 					<cflock timeout="5" type="Exclusive" name="#request.accessstructure.user_id#_#arguments.bbid#">
@@ -324,12 +464,31 @@
 				  WHERE Billback_ID = '#arguments.bbid#'
 				</cfquery>
 			 <cfelse>
-				<cfquery name="UpdBBItemInvoiceLevel" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdBBItemInvoiceLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_item_invoice_level")>
+<cfif useLakebaseForUpdBBItemInvoiceLevel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_item_invoice_level",
+			{
+				"billback_id" = "eq.#arguments.bbid#"
+			},
+			{
+				"volume_override" = "0",
+				"rate_override" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdBBItemInvoiceLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdBBItemInvoiceLevel>
+<cfquery name="UpdBBItemInvoiceLevel" datasource="#application.datasource#">
 				  UPDATE BB_Item_Invoice_Level
 				  SET Volume_Override = 0,
 				  Rate_Override = 0
 				  WHERE Billback_ID = '#arguments.bbid#'
-				</cfquery>            
+				</cfquery>
+</cfif>            
 			  </cfif>
 		<CFELSE>
 			<CFIF CheckUpdProgress.BB_Upd_InProgress EQ 1>

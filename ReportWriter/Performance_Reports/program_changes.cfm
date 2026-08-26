@@ -500,11 +500,27 @@
 
 
 	<!---32633 - gather program volume information for both parent program & child program--->
-	<cfquery name="programVolume.userSetting" datasource="#application.datasource#">
+	<cfset useLakebaseForprogramVolume_userSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForprogramVolume_userSetting>
+	<cftry>
+		<cfset programVolume.userSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForprogramVolume_userSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForprogramVolume_userSetting>
+<cfquery name="programVolume.userSetting" datasource="#application.datasource#">
 		SELECT Volume_UOT_ID
 		  FROM _Users_Settings
 		 WHERE User_ID = '#request.AccessStructure.Company_Main_ID#'
 	</cfquery>
+</cfif>
 
 	<cfscript>
 		programVolume.component = CreateObject("component", "components.programs.volume.ProgramVolume");

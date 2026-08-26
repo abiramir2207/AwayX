@@ -13,7 +13,26 @@
 <CFPARAM NAME="generateRelease_GeneratePrices" DEFAULT="0">
 
 <CFIF generateRelease_GeneratePrices EQ 0>
-	<CFQUERY NAME="resetrulePrices" datasource="#application.datasource#">
+	<cfset useLakebaseForresetrulePrices = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_products")>
+<cfif useLakebaseForresetrulePrices>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rule_products",
+			{
+				"program_id" = "eq.#generateReleaseProgramID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"price" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForresetrulePrices = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForresetrulePrices>
+<CFQUERY NAME="resetrulePrices" datasource="#application.datasource#">
 		UPDATE Program_Formula_Pricing_Rule_Products
 		SET Price = 0
 		WHERE
@@ -21,8 +40,32 @@
 			AND Active = 1
 			AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
-	<CFQUERY NAME="generateReleasePrograms" datasource="#application.datasource#">
+	<cfset useLakebaseForgenerateReleasePrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForgenerateReleasePrograms>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_id" = "eq.#generateReleaseProgramID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0
+			--AND
+			--Created_By_System = 0
+
+			EXEC PROGRAM_FORMULA_PRICING"
+			},
+			{
+				"process_by_system" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgenerateReleasePrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgenerateReleasePrograms>
+<CFQUERY NAME="generateReleasePrograms" datasource="#application.datasource#">
 		UPDATE Program_Formula_Pricing_Periods
 		SET Process_By_System = 0
 		WHERE 
@@ -36,6 +79,7 @@
 
 			EXEC PROGRAM_FORMULA_PRICING
 	</CFQUERY>
+</cfif>
 <CFELSE>
 
 	<CFSET getInfoForProgramID 	= generateReleaseProgramID>

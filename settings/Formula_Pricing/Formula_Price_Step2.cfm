@@ -86,12 +86,28 @@ Original_Comm_Count----->
 
 <CFIF Trim(Rule_ID) NEQ "">
 	<CFIF NOT isDefined("Form.Number_Of_Comms")>
-		<CFQUERY NAME="getNewRule" datasource="#application.datasource#">
+		<cfset useLakebaseForgetNewRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_rule")>
+<cfif useLakebaseForgetNewRule>
+	<cftry>
+		<cfset getNewRule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_rule", {
+				"formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"select" = "number_of_comms"
+			}), "number_of_comms"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetNewRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetNewRule>
+<CFQUERY NAME="getNewRule" datasource="#application.datasource#">
 			SELECT Number_Of_Comms
 			FROM Formula_Pricing_Rule
 			WHERE
 				Formula_Pricing_Rule_ID = '#Rule_ID#'
 		</CFQUERY>
+</cfif>
 		<CFIF getNewRule.recordCount GT 0>
 			<CFSET Number_Of_Comms=getNewRule.Number_Of_Comms>
 		</CFIF>
@@ -548,7 +564,23 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	</TR>
 	<TR>
 	<TD>
-	<CFQUERY NAME="Get_This_Commodity_Overage" DBTYPE="query">
+	<cfset useLakebaseForGet_This_Commodity_Overage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
+<cfif useLakebaseForGet_This_Commodity_Overage>
+	<cftry>
+		<cfset Get_This_Commodity_Overage = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_commodity_overage", {
+				"program_formula_pricing_rule_comm_data_id" = "eq.#Program_Formula_Pricing_Rule_Comm_Data_ID#",
+				"calc_type" = "eq.2",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_This_Commodity_Overage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_This_Commodity_Overage>
+<CFQUERY NAME="Get_This_Commodity_Overage" DBTYPE="query">
 		SELECT	*
 		FROM	Get_All_Commodity_Overage
 		WHERE
@@ -557,6 +589,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 				Calc_Type = 2
 		ORDER BY Overage_Index
 	</CFQUERY>
+</cfif>
 	<TABLE WIDTH="330" BORDER="0" ALIGN="center" CELLSPACING="0">
 		<TR>
 			<TD VALIGN="bottom"><B>Component Description</B></TD>

@@ -194,11 +194,29 @@
   <cffunction name="saveClaimRateConfig" access="public" returntype="void" output="no" hint="Save config settings based on form parameters.">
 		<!--- If a default setting is being set, remove the previous default setting --->
 		<cfif form.default_setting eq 1>
-			<cfquery name="updSetting" datasource="#application.datasource#">
+			<cfset useLakebaseForupdSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("claim_rates_setting")>
+<cfif useLakebaseForupdSetting>
+	<cftry>
+		<cfset application.oLakebase.updateRows("claim_rates_setting",
+			{
+				"default_setting" = "eq.1"
+			},
+			{
+				"default_setting" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdSetting>
+<cfquery name="updSetting" datasource="#application.datasource#">
 				UPDATE CLAIM_RATES_SETTING
 				SET default_setting = 0
 				WHERE default_setting = 1
 			</cfquery>
+</cfif>
 		</cfif>
 
 		<cfif val(form.config_ID) eq -1>

@@ -23,11 +23,26 @@
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
 
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 	<!--- Do not show the tabs if the contract is approved --->
 	<CFIF GetContractInfo.Contract_Status_Type_IDX GT 2>
@@ -59,11 +74,27 @@
 
 <CFSET FORM.LoadSavedDistributors=0>
 <CFIF FORM.LoadSavedDistributors EQ 1>
-	<cfquery name="CheckForExistingDistributors" datasource="#application.datasource#">
+	<cfset useLakebaseForCheckForExistingDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForCheckForExistingDistributors>
+	<cftry>
+		<cfset CheckForExistingDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForExistingDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForExistingDistributors>
+<cfquery name="CheckForExistingDistributors" datasource="#application.datasource#">
 		SELECT 	*
 		FROM Contract_Distributors
 		WHERE Contract_Main_ID = '#cryp.value#' AND deleted = 0
-	</cfquery>		
+	</cfquery>
+</cfif>		
 	<CFSET FORM.button_caption = "save">
 	<CFSET FORM.FinalItemList = valuelist(CheckForExistingDistributors.BSA_Foodservice_Customers_ID)>	
 </CFIF>
@@ -145,12 +176,28 @@ TABLE.Maintable TD
 				<TR>
 					<TD COLSPAN="2"><!--- Family Name --->
 						<span ID="searchItemLabel"><CFOUTPUT>#application.returned_customer_setting.family_name_label_singular#</CFOUTPUT></span><BR>
-						<cfquery name="GetFamilyNames" datasource="#application.datasource#">
+						<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#">
 							SELECT *
 							FROM Distributor_Family
 							WHERE Deleted = 0
 							ORDER BY Family_Name
 						</cfquery>
+</cfif>
 						<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 						<SELECT NAME="Family_Name" style="width: 200px;">
 							<OPTION VALUE="0">**ALL** <CFOUTPUT>#application.returned_customer_setting.family_name_label_plural#</CFOUTPUT></OPTION>
@@ -159,12 +206,28 @@ TABLE.Maintable TD
 					</TD>
 					<TD><!--- Buying Groups --->
 						<span ID="searchItemLabel"><CFOUTPUT>#application.returned_customer_setting.buying_group_label_singular#</CFOUTPUT></span><BR>
-						<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
+						<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
 							SELECT *
 							FROM Distributor_Buying_Groups
 							WHERE Deleted = 0
 							ORDER BY Buying_Group_Name
 						</cfquery>
+</cfif>
 						<CFPARAM NAME="FORM.Buying_Group" DEFAULT="0">
 						<SELECT NAME="Buying_Group" style="width: 200px;">
 							<OPTION VALUE="0">**ALL** <CFOUTPUT>#application.returned_customer_setting.buying_group_label_plural#</CFOUTPUT></OPTION>
@@ -173,12 +236,28 @@ TABLE.Maintable TD
 					</TD>
 					<TD><!--- Line Of Biz --->
 						<span ID="searchItemLabel"><CFOUTPUT>#application.returned_customer_setting.lob_label_singular#</CFOUTPUT></span><BR>
-						<cfquery name="GetLinesOfBiz" datasource="#application.datasource#">
+						<cfset useLakebaseForGetLinesOfBiz = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLinesOfBiz>
+	<cftry>
+		<cfset GetLinesOfBiz = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"deleted" = "eq.0",
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLinesOfBiz = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLinesOfBiz>
+<cfquery name="GetLinesOfBiz" datasource="#application.datasource#">
 							SELECT *
 							FROM Line_Of_Business
 							WHERE Deleted = 0
 							ORDER BY Line_Of_Business_Name
 						</cfquery>
+</cfif>
 						<CFSET First_Time = NOT Isdefined("FORM.Line_Of_Biz")>
 						<CFPARAM NAME="FORM.Line_Of_Biz" DEFAULT="0">
 						<SELECT NAME="Line_Of_Biz" style="width: 200px;">

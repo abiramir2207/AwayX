@@ -53,12 +53,28 @@
 
 <!---Get state and county for program with only operator--->
 <cfif url.state IS 0 AND url.county IS 0 AND url.operator IS NOT 0>
+<cfset useLakebaseForGetOperatorMap = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_zipcode_map")>
+<cfif useLakebaseForGetOperatorMap>
+	<cftry>
+		<cfset GetOperatorMap = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_zipcode_map", {
+				"bsa_operator_id" = "eq.#url.Operator#",
+				"select" = "statefips,countyfips"
+			}), "statefips,countyfips"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatorMap = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatorMap>
 <cfquery name="GetOperatorMap" datasource="#application.datasource#">
 	SELECT	StateFIPS, CountyFIPS
 	FROM	Operator_ZipCode_Map
 	WHERE 
 	BSA_Operator_ID = '#url.Operator#'
 </cfquery>
+</cfif>
 
 <cfset url.state = GetOperatorMap.StateFIPS>
 <cfset url.county = GetOperatorMap.CountyFIPS>
@@ -316,8 +332,8 @@ Federal regulations require Lamb Weston to verify that your school is receiving 
 Please confirm that your school is receiving the appropriate discounts by using the information from this 
 report and your purchase records.
 <UL>
-	<li>If your school is receiving the proper discounts as shown on this report, select the “I Agree” button.</li>
-	<li>If there is an error with the discount you are receiving, please select the “I Do Not Agree” button
+	<li>If your school is receiving the proper discounts as shown on this report, select the I Agree button.</li>
+	<li>If there is an error with the discount you are receiving, please select the I Do Not Agree button
 and utilize the notes field to communicate the errors you believe are present. This selection will send 
 notification to Lamb Weston for corrective action.</li>
 	<li>Please note that failure to select either choice will be considered a confirmation that you are receiving

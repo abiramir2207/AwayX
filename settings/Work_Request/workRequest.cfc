@@ -185,10 +185,26 @@
 
 
 		<!--- Get user contact info --->
-		<cfquery name="GetUserInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.User_Created#",
+				"select" = "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+			}), "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+<cfquery name="GetUserInfo" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last, User_Email, User_Code, Work_Phone_1, Work_Phone_2, Work_Phone_3
 		FROM _Users WHERE User_ID = '#arguments.User_Created#'
 		</cfquery>
+</cfif>
 
 		<!--- Get Release version --->
 		<cfquery name="GetForgeRelease" datasource="#application.datasource#">
@@ -197,22 +213,54 @@
 			ORDER BY Release_Version DESC
 		</cfquery>
 
-		<cfquery name="SupportEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email,mappunchcompany,wrinsertbymail"
+			}), "ba_support_email,mappunchcompany,wrinsertbymail"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+<cfquery name="SupportEmail" datasource="#application.datasource#">
 			SELECT BA_Support_Email,MapPunchCompany,WRinsertByMail
 			FROM _Application_Settings
 		</cfquery>
+</cfif>
 
 
 		<CFIF application.oApplicationAppSettingsManager.getApplicationAppSettings().getWebserviceOn() EQ 1>
 		<!--- Send to Punchlist db --->
 			<cfif #arguments.MatchAttch# NEQ "">
 
-				<CFQUERY NAME="GetAttachDocs" datasource="#application.datasource#">
+				<cfset useLakebaseForGetAttachDocs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForGetAttachDocs>
+	<cftry>
+		<cfset GetAttachDocs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request_document", {
+				"matchattch" = "eq.#arguments.MatchAttch#",
+				"deleted" = "eq.0",
+				"select" = "wr_document_name,actual_file_name"
+			}), "wr_document_name,actual_file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAttachDocs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAttachDocs>
+<CFQUERY NAME="GetAttachDocs" datasource="#application.datasource#">
 					select 	WR_Document_Name,Actual_File_Name
 					from	Work_Request_Document
 					where 	MatchAttch = '#arguments.MatchAttch#'
 					and 	deleted = 0
 				</CFQUERY>
+</cfif>
 			</cfif>
 			<cfset AttchDocName =  #ValueList(GetAttachDocs.WR_Document_Name, ",")#>
 			<cfset AttchDocActualName =  #ValueList(GetAttachDocs.Actual_File_Name, ",")#>
@@ -262,11 +310,29 @@
 		</cfinvoke>
 
 		<!--- Update with punchlist ID --->
-		<cfquery name="UpdatePunchlist" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdatePunchlist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForUpdatePunchlist>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"work_request_id" = "eq.#InsertWorkRequest.Work_Request_ID#"
+			},
+			{
+				"ba_ticket_number" = "#Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunchlist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunchlist>
+<cfquery name="UpdatePunchlist" datasource="#application.datasource#">
 		UPDATE Work_Request
 		SET BA_Ticket_Number = #Punch_ID#
 		WHERE Work_Request_ID = #InsertWorkRequest.Work_Request_ID#
 		</cfquery>
+</cfif>
 		<!--- end send to punchlist --->
 --->
 		<cfoutput>
@@ -575,26 +641,79 @@
 		FROM _Application_Settings
 		</cfquery>
 		<cfif #arguments.MatchAttch# NEQ "">
-			<CFQUERY NAME="Get_WR_Document" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_WR_Document = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForGet_WR_Document>
+	<cftry>
+		<cfset Get_WR_Document = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request_document", {
+				"matchattch" = "eq.#arguments.MatchAttch#",
+				"deleted" = "eq.0",
+				"select" = "wr_document_name"
+			}), "wr_document_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_WR_Document = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_WR_Document>
+<CFQUERY NAME="Get_WR_Document" datasource="#application.datasource#">
 				select WR_Document_Name
 				from Work_Request_Document
 				where 	MatchAttch = '#arguments.MatchAttch#'
 				and 	deleted = 0
 			</CFQUERY>
+</cfif>
 			<!--- Update Work Request Document --->
 			<cfif Get_WR_Document.recordcount GT 0>
-				<CFQUERY NAME="Save_WR_Document" datasource="#application.datasource#">
+				<cfset useLakebaseForSave_WR_Document = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForSave_WR_Document>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request_document",
+			{
+				"matchattch" = "eq.#arguments.MatchAttch#"
+			},
+			{
+				"work_request_id" = "#InsertWorkRequest.Work_Request_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_WR_Document = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_WR_Document>
+<CFQUERY NAME="Save_WR_Document" datasource="#application.datasource#">
 					update	Work_Request_Document
 					set 	Work_Request_ID = 	'#InsertWorkRequest.Work_Request_ID#'
 					where 	MatchAttch = '#arguments.MatchAttch#'
 				</CFQUERY>
+</cfif>
 				<CFIF application.oApplicationAppSettingsManager.getApplicationAppSettings().getWebserviceOn() EQ 0>
 
-				<cfquery name="UpdatePunch_File" datasource="punchlist">
+				<cfset useLakebaseForUpdatePunch_File = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForUpdatePunch_File>
+	<cftry>
+		<cfset application.oLakebase.updateRows("punch_file",
+			{
+				"matchattch" = "eq.#arguments.MatchAttch#"
+			},
+			{
+				"punch_id" = "#InsertWorkRequestToPunch.Punch_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePunch_File = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePunch_File>
+<cfquery name="UpdatePunch_File" datasource="punchlist">
 					update 	Punch_File
 					set	Punch_ID = '#InsertWorkRequestToPunch.Punch_ID#'
 					where 	MatchAttch = '#arguments.MatchAttch#'
 				</cfquery>
+</cfif>
 				</CFIF>
 			</cfif>
 		</cfif>
@@ -625,11 +744,26 @@
 
    		<cfargument name="compId" required="false" default=0 />
 
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#arguments.compId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Work_Request
 			WHERE 	Work_Request_ID = #arguments.compId#
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 

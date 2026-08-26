@@ -21,7 +21,23 @@
 
 <CFSWITCH expression="#Route_Document_Type#">
 	<CFCASE value="1">
-		<cfquery name="Get_Billback_Info" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Billback_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGet_Billback_Info>
+	<cftry>
+		<cfset Get_Billback_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#Document_ID#",
+				"select" = "bb_code,bb_title,bb_creator_user_position_id,bb_amount,bb_start_date,bb_end_date"
+			}), "bb_code,bb_title,bb_creator_user_position_id,bb_amount,bb_start_date,bb_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Billback_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Billback_Info>
+<cfquery name="Get_Billback_Info" datasource="#application.datasource#">
 		SELECT	  	BB_Code, 
 					BB_Title, 
 					BB_Creator_User_Position_ID, 
@@ -34,6 +50,7 @@
 		AND
 		Billback.Billback_ID = '#Document_ID#'
 		</cfquery>
+</cfif>
 		
 		<CFSET Billback_Payable_Number=Get_Billback_Info.BB_Code>
 		<CFSET Billback_Billback_Title=Get_Billback_Info.BB_Title>

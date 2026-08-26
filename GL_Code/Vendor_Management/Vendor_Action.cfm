@@ -116,7 +116,25 @@
 				</TD>
 			</TR>
 			<CFIF FORM.Distributor NEQ "">
-				<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
+				<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Distributor#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "name.asc",
+				"select" = "bsa_foodservice_customers_id,name,shr_ship_to"
+			}), "bsa_foodservice_customers_id,name,shr_ship_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
 					SELECT BSA_Foodservice_Customers_ID,Name,
 							Shr_Ship_To 
 					FROM BSA_Foodservice_Customers 
@@ -128,6 +146,7 @@
 						BSA_Foodservice_Customers.Active_Code = 'A'
 					ORDER BY Name
 				</CFQUERY>
+</cfif>
 				<CFSET FORM.Shr_Ship_To = Dist_Search_Result.Shr_Ship_To>
 				<CFSET FORM.Visible_Distributor=VAlueList(Dist_Search_Result.Name)>
 			</CFIF>
@@ -159,11 +178,27 @@
 			</TR>
 		
 					<CFIF FORM.Operator_List NEQ "">
-					<CFQUERY NAME="Oper_Search_Result" DATASOURCE = "#Application.Datasource#">
+					<cfset useLakebaseForOper_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForOper_Search_Result>
+	<cftry>
+		<cfset Oper_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_List#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOper_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOper_Search_Result>
+<CFQUERY NAME="Oper_Search_Result" DATASOURCE = "#Application.Datasource#">
 						SELECT Operator_Name
 						FROM	BSA_Operator
 						WHERE 	BSA_Operator_ID = '#FORM.Operator_List#'
 					</CFQUERY>
+</cfif>
 					
 					<cfsilent><!--- 
 						Dev Note: CPM 8259
@@ -269,12 +304,46 @@
 	<CFIF FORM.DeleteRecord EQ 0>		
 		<CFSET ValidEntry = 1>
 		<CFIF FORM.Vendor_ID NEQ "">
-			<CFQUERY NAME="CheckMaster" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCheckMaster = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForCheckMaster>
+	<cftry>
+		<cfset CheckMaster = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#FORM.Vendor_ID#",
+				"active_code" = "eq.A",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckMaster = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckMaster>
+<CFQUERY NAME="CheckMaster" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM Vendor_Master WHERE Vendor_ID = '#FORM.Vendor_ID#' AND Active_Code = 'A' AND Deleted = 0
 			</CFQUERY>
-			<!--- <CFQUERY NAME="CheckVendorID" DATASOURCE="#Application.Datasource#">
+</cfif>
+			<!--- <cfset useLakebaseForCheckVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_dist_oper")>
+<cfif useLakebaseForCheckVendorID>
+	<cftry>
+		<cfset CheckVendorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_dist_oper", {
+				"vendor_id" = "eq.#FORM.Vendor_ID#",
+				"vendor_dist_oper_id" = "neq.#FORM.RID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckVendorID>
+<CFQUERY NAME="CheckVendorID" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM Vendor_Dist_Oper WHERE Vendor_ID = '#FORM.Vendor_ID#' AND Vendor_Dist_Oper_ID <> '#FORM.RID#' AND Deleted = 0
-			</CFQUERY> --->
+			</CFQUERY>
+</cfif> --->
 			<CFIF CheckMaster.RecordCount EQ 0><!--- CheckVendorID.RecordCount GT 0 OR  --->
 				<CFSET ValidEntry = 0>
 				<BR><BR><BR><BR>
@@ -358,12 +427,28 @@
 		</CFIF>	
 		<CFIF FORM.Operator_ID_Number NEQ "">
 			<!--- D12232 -- Ana: To void picking up the BSA_Operator_ID match when there is a Legacy ID Match --->
-			<CFQUERY NAME="ValidOpID" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForValidOpID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForValidOpID>
+	<cftry>
+		<cfset ValidOpID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"legacy_id" = "eq.#FORM.Operator_ID_Number#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForValidOpID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForValidOpID>
+<CFQUERY NAME="ValidOpID" DATASOURCE="#Application.Datasource#">
 				SELECT 	* 
 				FROM 	BSA_Operator
 				WHERE 	legacy_id = '#FORM.Operator_ID_Number#' AND								
 						Deleted = 0
 			</CFQUERY>
+</cfif>
 			<CFIF ValidOpID.RecordCount EQ 0 AND IsNumeric(FORM.Operator_ID_Number)>
 				<CFQUERY NAME="ValidOpID" DATASOURCE="#Application.Datasource#">
 					SELECT 	* 

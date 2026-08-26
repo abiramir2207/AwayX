@@ -1,8 +1,25 @@
 
-		<CFQUERY NAME="AnyAliveProcess" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForAnyAliveProcess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("accrual_upload")>
+<cfif useLakebaseForAnyAliveProcess>
+	<cftry>
+		<cfset AnyAliveProcess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("accrual_upload", {
+				"order" = "accrual_upload_id.desc",
+				"limit" = "1",
+				"select" = "accrual_process_status_id"
+			}), "accrual_process_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAnyAliveProcess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAnyAliveProcess>
+<CFQUERY NAME="AnyAliveProcess" DATASOURCE="#Application.Datasource#">
 			SELECT TOP 1 Accrual_Process_Status_ID FROM Accrual_Upload
 			ORDER BY Accrual_Upload_ID DESC
 		</CFQUERY>
+</cfif>
 		
 		<CFIF AnyAliveProcess.Accrual_Process_Status_ID IS 3>
 			<TABLE ALIGN="Center">
@@ -20,10 +37,25 @@
 			</SCRIPT>			
 		<CFELSE>
 		
-			<cfquery name="GetFilePath" datasource="#application.datasource#">
+			<cfset useLakebaseForGetFilePath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_settings")>
+<cfif useLakebaseForGetFilePath>
+	<cftry>
+		<cfset GetFilePath = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dataint_settings", {
+				"select" = "dts_reference_path"
+			}), "dts_reference_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFilePath = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFilePath>
+<cfquery name="GetFilePath" datasource="#application.datasource#">
 			SELECT DTS_Reference_Path 
 			FROM DataInt_Settings
 			</cfquery>
+</cfif>
 			
 			<cfset filepath = application.Doc_Path & "\data_files\uploaded\CorpData\Transfer\">
 			

@@ -4,12 +4,29 @@
 <cfparam name="HasSeperateVolume" 	default="0">
 <cfparam name="TotalVolume"			default="0">
 
-	<cfquery name="DoesThisCompHaveAChild" datasource="#application.datasource#">
+	<cfset useLakebaseForDoesThisCompHaveAChild = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForDoesThisCompHaveAChild>
+	<cftry>
+		<cfset DoesThisCompHaveAChild = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"parent_id" = "eq.#ComponentID#",
+				"deleted" = "eq.0",
+				"select" = "program_growth_component_id as volume_component_id"
+			}), "program_growth_component_id as volume_component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDoesThisCompHaveAChild = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDoesThisCompHaveAChild>
+<cfquery name="DoesThisCompHaveAChild" datasource="#application.datasource#">
 	SELECT Program_Growth_Component_ID AS Volume_Component_ID
 	FROM Program_Growth_Components
 	WHERE Parent_ID = '#ComponentID#'
 	AND Deleted = 0
-	</cfquery>			
+	</cfquery>
+</cfif>			
 
 	<cfif DoesThisCompHaveAChild.Recordcount GT 0>
 		<cfset HasSeperateVolume = 1>

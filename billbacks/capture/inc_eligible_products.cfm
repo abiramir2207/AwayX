@@ -19,11 +19,27 @@ Ana: D12909 - removed most of the queries in this page and converting them into 
 <!---BJF 12106 - Intelligent product highlighting --->
 
 <!---Payable to--->
+<cfset useLakebaseForGetBillbackInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetBillbackInfo>
+	<cftry>
+		<cfset GetBillbackInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_start_date,bb_end_date,billback_payee_type_id"
+			}), "bb_start_date,bb_end_date,billback_payee_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackInfo>
 <cfquery name="GetBillbackInfo" datasource="#application.datasource#">
 	SELECT 	BB_Start_Date, BB_End_Date, Billback_Payee_Type_ID 
 	FROM 	Billback 
 	WHERE 	Billback_ID = '#Billback_ID#'
-</cfquery> 
+</cfquery>
+</cfif> 
 
 <cfset BB_Start_Date = GetBillbackInfo.BB_Start_Date>
 <cfset BB_End_Date = GetBillbackInfo.BB_End_Date>

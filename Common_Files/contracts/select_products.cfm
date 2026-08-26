@@ -6,11 +6,26 @@
 
 <CFIF len(trim(URL.CID)) GT 0 AND URL.RO EQ 1>
 	<CF_CRYP type="de" string="#URL.CID#" key="#request.key#">
-	<cfquery name="GetProducts" datasource="#application.datasource#">
+	<cfset useLakebaseForGetProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetProducts>
+	<cftry>
+		<cfset GetProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProducts>
+<cfquery name="GetProducts" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Products
 		WHERE Contract_Main_ID = #cryp.value#
 	</cfquery>
+</cfif>
 	
 	<CFSET FORM.FinalUPCList = valuelist(GetProducts.Product_UPC)>
 
@@ -53,24 +68,59 @@
 
 <CFIF FORM.finishedselectingproducts EQ 1>
 	
-		<cfquery name="CheckForProductsInDB" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckForProductsInDB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForCheckForProductsInDB>
+	<cftry>
+		<cfset CheckForProductsInDB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForProductsInDB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForProductsInDB>
+<cfquery name="CheckForProductsInDB" datasource="#application.datasource#">
 			SELECT *
 			FROM Contract_Products
 			WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
-		</cfquery>		
+		</cfquery>
+</cfif>		
 		
 	<CFSET ListOfExistingProductsInDB = valuelist(CheckForProductsInDB.Product_UPC)>
 	<!--- <CFOUTPUT>#ListOfExistingProductsInDB#</CFOUTPUT> --->
 	<CFLOOP INDEX="ListItem" LIST="#listofitemstodelete#" DELIMITERS=",">
 		<!--- The current UPC from DB Does NOT Exists in the new list so delete it--->
 		<!--- <CFOUTPUT>#listfindnocase(FORM.FinalUPCList, ListItem)#</CFOUTPUT> --->
-			<cfquery name="cleartheproducts" datasource="#application.datasource#">
+			<cfset useLakebaseForcleartheproducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForcleartheproducts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"product_upc" = "eq.#ListItem#"
+			},
+			{
+				"deleted" = "1",
+				"editor_id" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcleartheproducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcleartheproducts>
+<cfquery name="cleartheproducts" datasource="#application.datasource#">
 				UPDATE Contract_Products
 				SET deleted = 1,
 				Editor_ID = '#request.AccessStructure.User_ID#'
 				WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#' AND
 				Product_UPC = '#ListItem#'
 			</cfquery>
+</cfif>
 
 			<cfquery name="cleartheproducts" datasource="#application.datasource#">
 				DELETE
@@ -120,25 +170,85 @@
 
 
 
+<cfset useLakebaseForGetQBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetQBrands>
+	<cftry>
+		<cfset GetQBrands = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "q_brand_desc"
+			}), "q_brand_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetQBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetQBrands>
 <CFQUERY NAME="GetQBrands" datasource="#application.datasource#">
 	SELECT DISTINCT Q_brand_desc
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetTypeCodeDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetTypeCodeDesc>
+	<cftry>
+		<cfset GetTypeCodeDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "type_code_desc"
+			}), "type_code_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeCodeDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeCodeDesc>
 <CFQUERY NAME="GetTypeCodeDesc" datasource="#application.datasource#">
 	SELECT DISTINCT Type_Code_Desc
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetTypeGroupDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetTypeGroupDesc>
+	<cftry>
+		<cfset GetTypeGroupDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "type_group_desc"
+			}), "type_group_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeGroupDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeGroupDesc>
 <CFQUERY NAME="GetTypeGroupDesc" datasource="#application.datasource#">
 	SELECT DISTINCT Type_Group_Desc
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetBrands>
+	<cftry>
+		<cfset GetBrands = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "brand"
+			}), "brand"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrands>
 <CFQUERY NAME="GetBrands" datasource="#application.datasource#">
 	SELECT DISTINCT Brand
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
 
 

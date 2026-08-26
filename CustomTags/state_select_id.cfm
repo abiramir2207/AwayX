@@ -17,12 +17,27 @@ Example:
 	<CFELSE></CFIF>
 
 <!--- Retrieve all possible states names for a drop down list. --->
+<cfset useLakebaseForSelectAllStates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("states")>
+<cfif useLakebaseForSelectAllStates>
+	<cftry>
+		<cfset SelectAllStates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("states", {
+				"select" = "state_id,statecode,state"
+			}), "state_id,statecode,state"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelectAllStates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelectAllStates>
 <CFQUERY NAME="SelectAllStates" DATASOURCE="HHSS_DB" DBTYPE="ODBC" BLOCKFACTOR="50">
 SELECT
 	State_ID,
 	StateCode,
 	State
 FROM States</CFQUERY>
+</cfif>
 
 <CFOUTPUT><SELECT NAME="#Attributes.FieldName#"#Attributes.TabIndex#></CFOUTPUT><CFOUTPUT QUERY="SelectAllStates">
 	<OPTION VALUE="#SelectAllStates.State_ID#"#IIf(SelectAllStates.State_ID IS Attributes.DefaultStateID, DE(' SELECTED'), DE(''))#>#IIf(Attributes.Verbose, 'SelectAllStates.State', 'SelectAllStates.StateCode')#</OPTION></CFOUTPUT></SELECT>

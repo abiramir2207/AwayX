@@ -123,9 +123,25 @@
 			<CFSET QBrand_Amount = QBrand_Amount / 100>
 			<CFSET GL_TYPE_ID = #EVALUATE("FORM.GL_Type_#List_Count#_#ReplacedBelongToBB#")#>
 		<CFOUTPUT> ---#GL_TYPE_ID# #BelongToBB#--- </CFOUTPUT>
-		<CFQUERY NAME="GLDesc" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGLDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_type")>
+<cfif useLakebaseForGLDesc>
+	<cftry>
+		<cfset GLDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_type", {
+				"gl_type_id" = "eq.#GL_Type_ID#",
+				"select" = "gl_type_desc"
+			}), "gl_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGLDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGLDesc>
+<CFQUERY NAME="GLDesc" DATASOURCE="#Application.Datasource#">
 			SELECT GL_Type_Desc FROM GL_Type WHERE GL_Type_ID = '#GL_Type_ID#'
-		</CFQUERY>		
+		</CFQUERY>
+</cfif>		
 	
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 	<!--- Insert Data in Payment_Data_Export_2--->

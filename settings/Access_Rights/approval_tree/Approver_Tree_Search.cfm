@@ -160,32 +160,96 @@
 	<CFSET RunningRowNumber = RunningRowNumber + 1>
 </CFLOOP>
 
+<cfset useLakebaseForGOD_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForGOD_UserPositions>
+	<cftry>
+		<cfset GOD_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.GOD",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGOD_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGOD_UserPositions>
 <CFQUERY NAME="GOD_UserPositions" DBTYPE="query">
 	SELECT DISTINCT Position_ID, Geographic_Position
 	FROM Position_List
 	WHERE Geographic_Position = 'GOD'
 </CFQUERY>
+</cfif>
 <CFSET GOD_User_Position_ID_List = ValueList(GOD_UserPositions.Position_ID)>
 
+<cfset useLakebaseForZONE_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForZONE_UserPositions>
+	<cftry>
+		<cfset ZONE_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.ZONE",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForZONE_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForZONE_UserPositions>
 <CFQUERY NAME="ZONE_UserPositions" DBTYPE="query">
 	SELECT DISTINCT Position_ID, Geographic_Position
 	FROM Position_List
 	WHERE Geographic_Position = 'ZONE'
 </CFQUERY>
+</cfif>
 <CFSET ZONE_User_Position_ID_List = ValueList(ZONE_UserPositions.Position_ID)>
 
+<cfset useLakebaseForREGION_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForREGION_UserPositions>
+	<cftry>
+		<cfset REGION_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.REGION",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForREGION_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForREGION_UserPositions>
 <CFQUERY NAME="REGION_UserPositions" DBTYPE="query">
 	SELECT DISTINCT Position_ID, Geographic_Position
 	FROM Position_List
 	WHERE Geographic_Position = 'REGION'
 </CFQUERY>
+</cfif>
 <CFSET REGION_User_Position_ID_List = ValueList(REGION_UserPositions.Position_ID)>
 
+<cfset useLakebaseForMARKET_UserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("position_list")>
+<cfif useLakebaseForMARKET_UserPositions>
+	<cftry>
+		<cfset MARKET_UserPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("position_list", {
+				"geographic_position" = "eq.MARKET",
+				"select" = "position_id,geographic_position"
+			}), "position_id,geographic_position"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForMARKET_UserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForMARKET_UserPositions>
 <CFQUERY NAME="MARKET_UserPositions" DBTYPE="query">
 	SELECT DISTINCT Position_ID, Geographic_Position
 	FROM Position_List
 	WHERE Geographic_Position = 'MARKET'
 </CFQUERY>
+</cfif>
 <CFSET MARKET_User_Position_ID_List = ValueList(MARKET_UserPositions.Position_ID)>
 
 

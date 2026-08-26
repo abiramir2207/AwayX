@@ -38,13 +38,28 @@ programnam:     #CSLGetContractInfo.Contract_Title#
 <!--- We do not need  "thin_contract_general_display.cfm" for copy. Also, we only need the query below for Copy and not
 			all the queries in /common_files/contracts/commonqueries.cfm
 --->
-	<cfquery name="GetSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#URL.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
+<cfquery name="GetSettings" datasource="#application.datasource#">
 		SELECT *
 		FROM 
 		Program_Control_Panel_Options
 	WHERE 
 		ProgramControl_Panel_Options_ID = '#URL.Contract_Main_ID#'
 	</cfquery>
+</cfif>
 </cfif>
 
 <!---(start) We do not need any of the code below for copy --->

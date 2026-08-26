@@ -15,9 +15,25 @@ Notes:
 <cfset appSettings = application.oApplicationAppSettingsManager.getApplicationAppSettings() />
 <CFOUTPUT>
 <BR><BR>
+<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
 <CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
 	SELECT Billback_Status_ID FROM Billback WHERE Billback_ID = '#FORM.Billback_ID#'
 </CFQUERY>
+</cfif>
 <CFIF GetStatus.Billback_Status_ID GTE 3> 
 	<!--- 17302 - Redirect to Summary --->
 	<CFSET Billback_Status_ID = GetStatus.Billback_Status_ID>
@@ -43,6 +59,25 @@ Notes:
 <CFPARAM NAME="RebateUpdateAllowed" DEFAULT="0" />
 
 <!--- Ana: D15311 -- Set the Deviation Ran Details --->
+<cfset useLakebaseForClearDev = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForClearDev>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"deviation_ran_date" = javaCast("null",""),
+				"auto_deviation_on" = javaCast("null",""),
+				"deviation_ran_by" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForClearDev = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForClearDev>
 <cfquery name="ClearDev" datasource="#application.datasource#">
 	UPDATE 	Billback 
 	SET 	Deviation_Ran_Date = NULL,
@@ -50,14 +85,33 @@ Notes:
 			Deviation_Ran_By = NULL
 	WHERE	Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 <!--- If the profile and program template allow rebate update and the program has rebate as a discount type --->
  <cfif RebateUpdateAllowed eq 1>
 		<cfif TotalRebate neq 0 AND Form.Billback_ID neq 0>
-				<cfquery name="updBBAmount" datasource="#application.datasource#">
+				<cfset useLakebaseForupdBBAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdBBAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"bb_amount" = "#TotalRebate#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBAmount>
+<cfquery name="updBBAmount" datasource="#application.datasource#">
 					UPDATE Billback
 					SET BB_Amount = '#TotalRebate#'
 					WHERE Billback_ID = '#FORM.Billback_ID#'
 				</cfquery>
+</cfif>
 		</cfif>
  </cfif>
 
@@ -258,15 +312,48 @@ Notes:
 <CFSET Program_Product_Count = 0>
 
 
+<cfset useLakebaseForCheckCopied = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckCopied>
+	<cftry>
+		<cfset CheckCopied = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckCopied = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckCopied>
 <CFQUERY NAME="CheckCopied" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback WHERE Billback_ID = '#FORM.Billback_ID#'	
 </CFQUERY>
+</cfif>
 <CFIF CheckCopied.CopiedBB NEQ "">
-	<CFQUERY NAME="UpdateBit" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"volumeratesaved" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBit>
+<CFQUERY NAME="UpdateBit" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback 
 		SET VolumeRateSaved = 1
 		WHERE Billback_ID = '#FORM.Billback_ID#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 <!--- 
@@ -279,11 +366,29 @@ EXEC Billback_Products_Insert '#FORM.Billback_ID#','#Param1_50#','#Param51_100#'
 	<cfif Left(ItemName,13) eq "LumpsumcompID">
 		<cfset Billback_Program_Lumpsum_Component_ID = 	replace(replaceNoCase(ItemName,"LumpsumcompID_",""), "_", "-", "ALL") />
 		<cfif val(Form[ItemName]) eq 0>
-			<cfquery name="UpdateLS" datasource="#application.datasource#">
+			<cfset useLakebaseForUpdateLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForUpdateLS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_program_lumpsum_component_id" = "eq.#Billback_Program_Lumpsum_Component_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLS>
+<cfquery name="UpdateLS" datasource="#application.datasource#">
 			 UPDATE Billback_Program_Lumpsum_Component
 			 SET Deleted = 1
 			 WHERE Billback_Program_Lumpsum_Component_ID = '#Billback_Program_Lumpsum_Component_ID#'
 			</cfquery>
+</cfif>
 		<cfelse>
 			<cfquery name="UpdateLS" datasource="#application.datasource#">
 			 UPDATE Billback_Program_Lumpsum_Component

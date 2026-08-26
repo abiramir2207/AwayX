@@ -6,6 +6,22 @@
 
 <BODY>
 
+<cfset useLakebaseFortodo_list = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("todolist")>
+<cfif useLakebaseFortodo_list>
+	<cftry>
+		<cfset todo_list = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("todolist", {
+				"users_id" = "eq.#request.AccessStructure.user_id#",
+				"status" = "eq.0",
+				"order" = "priority_level.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFortodo_list = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFortodo_list>
 <CFQUERY NAME="todo_list" datasource="#application.datasource#">
 	SELECT *
 	FROM todolist
@@ -16,6 +32,7 @@
 	Order by
 		Priority_Level desc
 </CFQUERY>
+</cfif>
 
 <!--- <CFMAIL
 	to="#Form.email_address#"

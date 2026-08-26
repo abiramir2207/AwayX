@@ -277,13 +277,32 @@
 
 		</cfloop>
 
-		<cfquery name="qDeleteCat" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteCat = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_category")>
+<cfif useLakebaseForqDeleteCat>
+	<cftry>
+		<cfset application.oLakebase.updateRows("clause_category",
+			{
+				"deleted" = "eq.0",
+				"clause_category_id" = "eq.#arguments.categoryId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteCat = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteCat>
+<cfquery name="qDeleteCat" datasource="#application.datasource#">
 
 			UPDATE 	Clause_Category
 			SET		Deleted = 1
 			WHERE	Deleted = 0
 			AND		Clause_Category_ID = #arguments.categoryId#
 		</cfquery>
+</cfif>
 
 	</cffunction>
 
@@ -291,7 +310,23 @@
 
 		<cfargument name="catId" required="true" type="numeric" />
 
-		<cfquery name="qGetClause" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetClause = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("clause_library")>
+<cfif useLakebaseForqGetClause>
+	<cftry>
+		<cfset qGetClause = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("clause_library", {
+				"deleted" = "eq.0",
+				"clause_category_id" = "eq.#arguments.catId#",
+				"select" = "clause_library_id"
+			}), "clause_library_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClause = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClause>
+<cfquery name="qGetClause" datasource="#application.datasource#">
 
 			SELECT	Clause_Library_ID
 			FROM 	Clause_Library
@@ -299,6 +334,7 @@
 			AND		Clause_Category_ID = #arguments.catId#
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetClause />
 

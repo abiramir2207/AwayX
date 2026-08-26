@@ -141,6 +141,23 @@
 <!--- get "program qualification" info --->
 <cfset qGetProgramQualificationDocs = program.getProgramQualificationDocs(url.Program_ID) />
 
+<cfset useLakebaseForGet_LastUpdated_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications_info")>
+<cfif useLakebaseForGet_LastUpdated_Details>
+	<cftry>
+		<cfset Get_LastUpdated_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_qualifications_info", {
+				"program_id" = "eq.#url.Program_ID#",
+				"deleted" = "eq.0",
+				"order" = "date_updated.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_LastUpdated_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_LastUpdated_Details>
 <CFQUERY NAME="Get_LastUpdated_Details" datasource="#application.datasource#">
 	SELECT		TOP 1 *
 	FROM			Program_Qualifications_Info
@@ -148,13 +165,30 @@
 	AND 			deleted = 0
 	ORDER BY	Date_Updated DESC
 </CFQUERY>
+</cfif>
 
 <CFIF Get_LastUpdated_Details.Recordcount GT 0>
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_LastUpdated_Details.Updated_By#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT 	_Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 		FROM 	_Users
 		WHERE 	User_ID = '#Get_LastUpdated_Details.Updated_By#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 

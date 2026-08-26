@@ -79,7 +79,25 @@
 		
 		<cfloop list="#arguments.idList#" delimiters="," index="ThisZipCode">
 	 	
-	 	<cfquery name="delete_zip_code_entry" datasource="#application.datasource#">
+	 	<cfset useLakebaseFordelete_zip_code_entry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("market_zipcode")>
+<cfif useLakebaseFordelete_zip_code_entry>
+	<cftry>
+		<cfset application.oLakebase.updateRows("market_zipcode",
+			{
+				"deleted" = "eq.0",
+				"zipcode" = "eq.#ThisZipCode#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_zip_code_entry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_zip_code_entry>
+<cfquery name="delete_zip_code_entry" datasource="#application.datasource#">
 			UPDATE	Market_ZipCode
 			SET 	Deleted = 1
 			WHERE
@@ -87,6 +105,7 @@
 					AND
 					Market_ZipCode.ZipCode = '#ThisZipCode#'
 		</cfquery>
+</cfif>
 		<cfquery name="insert_zip_code_entry" datasource="#application.datasource#">
 			INSERT INTO	Market_ZipCode 
 					(ZipCode, Service_Market_ID, Assigned_By_User_ID)

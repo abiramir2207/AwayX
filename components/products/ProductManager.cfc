@@ -103,11 +103,27 @@
 		</cfquery>
 
 		<cfif GetRuleID.Recordcount IS 1 AND NOT GetRuleID.Distributor_Product_Integrity_Rule_ID AND NOT len(trim(GetRuleID.Distributor_Product_Integrity_Rule_ID))>
-			<cfquery name="GetIntegrityRuleType" datasource="#application.datasource#">
+			<cfset useLakebaseForGetIntegrityRuleType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForGetIntegrityRuleType>
+	<cftry>
+		<cfset GetIntegrityRuleType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"distributor_product_integrity_rule_id" = "eq.#GetRuleID.Distributor_Product_Integrity_Rule_ID#",
+				"select" = "inclusive_restriction"
+			}), "inclusive_restriction"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetIntegrityRuleType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetIntegrityRuleType>
+<cfquery name="GetIntegrityRuleType" datasource="#application.datasource#">
 			SELECT Inclusive_Restriction
 			FROM Distributor_Product_Integrity_Rule
 			WHERE Distributor_Product_Integrity_Rule_ID = #GetRuleID.Distributor_Product_Integrity_Rule_ID#
 			</cfquery>
+</cfif>
 			<!--- You only restrict the search if the rule is inclusive, otherwise your just pick it up on RFA --->
 			<cfif GetIntegrityRuleType.Inclusive_Restriction EQ 1>
 				<cfset RestrictByRule = 1>
@@ -1034,12 +1050,31 @@
 	<cffunction name="setDeleteSimilarExistingProduct" output="false">
 		<cfargument name="ProgramID" type="string" required="true"/>
 		<cfargument name="ProductID" required="true"/>
-			<cfquery name="qsetDeleteSimilarExistingProduct" datasource="#application.datasource#">
+			<cfset useLakebaseForqsetDeleteSimilarExistingProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("similar_existing_product")>
+<cfif useLakebaseForqsetDeleteSimilarExistingProduct>
+	<cftry>
+		<cfset application.oLakebase.updateRows("similar_existing_product",
+			{
+				"contract_main_id" = "eq.#arguments.ProgramID#",
+				"bsa_foodservice_items_master_id" = "eq.#arguments.ProductID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqsetDeleteSimilarExistingProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqsetDeleteSimilarExistingProduct>
+<cfquery name="qsetDeleteSimilarExistingProduct" datasource="#application.datasource#">
 			  UPDATE Similar_Existing_Product
 			  SET Deleted = 1
 			  WHERE Contract_Main_ID = '#arguments.ProgramID#'
 			  AND BSA_Foodservice_Items_Master_ID = '#arguments.ProductID#'
 		   </cfquery>
+</cfif>
 	</cffunction>
 
 	<cffunction name="setSimilarExistingProduct" output="false">

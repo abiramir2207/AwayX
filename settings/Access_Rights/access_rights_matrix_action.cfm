@@ -3,11 +3,26 @@
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = application.appSettingsGet>
 <!--- establish default values for the checkboxes --->
+<cfset useLakebaseForGetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForGetCustomerTypes>
+	<cftry>
+		<cfset GetCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustomerTypes>
 <cfquery name="GetCustomerTypes" datasource="#application.datasource#">
 SELECT *
 FROM Customer_Type
 WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 <CFSET getProfiles = CreateObject("component", "components.settings.profiles.profile").getAllProfiles()>
 
@@ -137,13 +152,30 @@ WHERE Deleted = 0
 			<cfparam name="FORM.#ApprovalValueFileName#" 	default="0">
 			<cfif isdefined("FORM.#ApprovalValueFileName#")>
 				<cfset ApprovalValue = Evaluate("FORM.#ApprovalValueFileName#")>
-				<cfquery name="DoesPairingExist" datasource="#application.datasource#">
+				<cfset useLakebaseForDoesPairingExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForDoesPairingExist>
+	<cftry>
+		<cfset DoesPairingExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"group_id" = "eq.#GroupCount#",
+				"profile_id" = "eq.#ProfileCount#",
+				"approval_method" = "eq.#ThisApprovalType#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDoesPairingExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDoesPairingExist>
+<cfquery name="DoesPairingExist" datasource="#application.datasource#">
 					SELECT 	*
 					FROM 	Margin_Group_Profile_Approval_Margins
 					WHERE 	Group_ID = '#GroupCount#'
 							AND Profile_ID= '#ProfileCount#'
 							AND Approval_Method = #ThisApprovalType#
 				</cfquery>
+</cfif>
 
 				<cfif DoesPairingExist.Recordcount GT 0>
 					<CFQUERY NAME="updateApprovalAmt" datasource="#application.datasource#">

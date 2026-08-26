@@ -4,10 +4,25 @@
 
 <cfset getDiscountTypeRates = WebservicesManager.getProgramRates(url.Program_ID,getwebservicedetails.program_discount_type_id,getProgramheader.template_code,getwebservicedetails.component_name_id)>
 
+<cfset useLakebaseForgetprogramdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_period_dates")>
+<cfif useLakebaseForgetprogramdetails>
+	<cftry>
+		<cfset getprogramdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_period_dates", {
+				"bsa_program_id" = "eq.#getwebservicedetails.bsa_program_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetprogramdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetprogramdetails>
 <CFQUERY NAME="getprogramdetails" datasource="#application.datasource#">
  	select * from Program_period_dates
 	where bsa_program_id = '#getwebservicedetails.bsa_program_id#'
  </CFQUERY>
+</cfif>
 
 <cfif getDiscountTypeRates.recordcount GT 0>
 <cfset Discount_Type_ID = getwebservicedetails.program_discount_type_id>
@@ -48,10 +63,25 @@
 
 <cfset i=0>
 <cfset product_family = "">
+<cfset useLakebaseForitemcount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForitemcount>
+	<cftry>
+		<cfset itemcount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemcount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemcount>
 <CFQUERY NAME="itemcount" DBTYPE="query">
 select distinct * from getDiscountTypeRates
 where Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 </CFQUERY>
+</cfif>
 
 <cfset totaldetailcount  = itemcount.recordcount>
 
@@ -81,10 +111,26 @@ where Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 <cfset tempxml = tempxml & "<CalculationType>#UOM#</CalculationType>">
 
 <cfif Discount_Type_ID EQ 3>
+<cfset useLakebaseForfamilycount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForfamilycount>
+	<cftry>
+		<cfset familycount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#",
+				"select" = "product_group"
+			}), "product_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfamilycount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfamilycount>
 <CFQUERY NAME="familycount" DBTYPE="query">
 select distinct Product_group from getDiscountTypeRates
 where Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 </CFQUERY>
+</cfif>
 <cfset currentlump = Numberformat(getDiscountTypeRates.rate/familycount.recordcount,"_________.__")>
 
 <cfif getDiscountTypeRates.Product_group NEQ product_family>

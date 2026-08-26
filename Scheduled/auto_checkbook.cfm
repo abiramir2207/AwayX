@@ -10,26 +10,77 @@ AND Contract_Number NOT IN (SELECT DISTINCT Contract_Number FROM Contract_Main W
 </cfquery>
 
 <cfloop query="CheckforRevisions">
-	<Cfquery name="GetNewContractMain" datasource="#application.datasource#">
+	<cfset useLakebaseForGetNewContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetNewContractMain>
+	<cftry>
+		<cfset GetNewContractMain = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#CheckforRevisions.Contract_Number#",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNewContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNewContractMain>
+<Cfquery name="GetNewContractMain" datasource="#application.datasource#">
 	SELECT Contract_Main_ID FROM Contract_Main WHERE Contract_Number = #CheckforRevisions.Contract_Number# AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	<cfif GetNewContractMain.Recordcount IS 1>
-		<cfquery name="UpdateAutoCheckbook" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateAutoCheckbook = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForUpdateAutoCheckbook>
+	<cftry>
+		<cfset application.oLakebase.updateRows("auto_checkbook",
+			{
+				"program_id" = "eq.#CheckforRevisions.Contract_Main_ID#"
+			},
+			{
+				"program_id" = "#GetNewContractMain.Contract_Main_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAutoCheckbook = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAutoCheckbook>
+<cfquery name="UpdateAutoCheckbook" datasource="#application.datasource#">
 		UPDATE Auto_Checkbook
 		SET Program_ID = '#GetNewContractMain.Contract_Main_ID#'
 		WHERE Program_ID = '#CheckforRevisions.Contract_Main_ID#'
 		</cfquery>
+</cfif>
 	
 	</cfif>
 </cfloop>
 <!---Stops housecleaning, starts real work--->
 
 <!---Get eligible auto checkbooks--->
+<cfset useLakebaseForGetEligibleAutoCheckbooks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForGetEligibleAutoCheckbooks>
+	<cftry>
+		<cfset GetEligibleAutoCheckbooks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_checkbook", {
+				"deleted" = "eq.0",
+				"select" = "program_id,distributor_id,send_to"
+			}), "program_id,distributor_id,send_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetEligibleAutoCheckbooks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetEligibleAutoCheckbooks>
 <cfquery name="GetEligibleAutoCheckbooks" datasource="#application.datasource#">
 SELECT Program_ID, Distributor_ID, Send_To
 FROM Auto_Checkbook
 WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 <!---Gets correct "From" address--->
 <cfinclude template="/get_Contact_Admin_Email_Address.cfm">
@@ -97,11 +148,29 @@ FROM Auto_Checkbook
 </cfquery>
 
 <cfloop query="GetProgramstoRetire">
-	<cfquery name="RetirePrograms" datasource="#application.datasource#">
+	<cfset useLakebaseForRetirePrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_checkbook")>
+<cfif useLakebaseForRetirePrograms>
+	<cftry>
+		<cfset application.oLakebase.updateRows("auto_checkbook",
+			{
+				"auto_checkbook_id" = "eq.#GetProgramstoRetire.Auto_Checkbook_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRetirePrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRetirePrograms>
+<cfquery name="RetirePrograms" datasource="#application.datasource#">
 	UPDATE Auto_Checkbook
 	SET Deleted = 1
 	WHERE Auto_Checkbook_ID = '#GetProgramstoRetire.Auto_Checkbook_ID#'
 	</cfquery>
+</cfif>
 
 </cfloop>
 Executed

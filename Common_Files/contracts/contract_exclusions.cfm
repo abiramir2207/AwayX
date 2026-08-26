@@ -11,10 +11,26 @@
 <!--- set page code ID --->
 <cfset CSL_CallingPageCode = "pe">
 
+<cfset useLakebaseForcheckifparentisRFA = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckifparentisRFA>
+	<cftry>
+		<cfset checkifparentisRFA = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CSL_Contract_Main_ID#",
+				"select" = "contract_status_type_idx"
+			}), "contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckifparentisRFA = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckifparentisRFA>
 <cfquery name="checkifparentisRFA" datasource="#application.datasource#">
 	select contract_status_type_idx from contract_main
 	where contract_main_id = #CSL_Contract_Main_ID#
 </cfquery>
+</cfif>
 
 <cfswitch expression="#lcase(form.pagemode)#">
 	<cfcase value="add"> 
@@ -103,23 +119,75 @@
 	</cfcase>
 	
 	<cfcase value="delete">
-		<cfquery name="getExclusionProgramID" datasource="#application.datasource#">
+		<cfset useLakebaseForgetExclusionProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetExclusionProgramID>
+	<cftry>
+		<cfset getExclusionProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"program_exclusion_id" = "eq.#form.delProgram_Exclusion_ID#",
+				"select" = "revision_program_id"
+			}), "revision_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExclusionProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExclusionProgramID>
+<cfquery name="getExclusionProgramID" datasource="#application.datasource#">
 			SELECT Revision_Program_ID
 			FROM Program_Exclusions	
 			WHERE Program_Exclusion_ID = '#form.delProgram_Exclusion_ID#'
 		</cfquery>
+</cfif>
 		
-		<cfquery name="deleteExclusion" datasource="#application.datasource#">
+		<cfset useLakebaseFordeleteExclusion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseFordeleteExclusion>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_exclusions",
+			{
+				"program_exclusion_id" = "eq.#form.delProgram_Exclusion_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteExclusion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteExclusion>
+<cfquery name="deleteExclusion" datasource="#application.datasource#">
 			UPDATE Program_Exclusions
 			SET Deleted = 1
 			WHERE Program_Exclusion_ID = '#form.delProgram_Exclusion_ID#'
 		</cfquery>
+</cfif>
 		
-		<cfquery name="deleteProgramWithIt" datasource="#application.datasource#">
+		<cfset useLakebaseFordeleteProgramWithIt = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFordeleteProgramWithIt>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#getExclusionProgramID.Revision_Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteProgramWithIt = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteProgramWithIt>
+<cfquery name="deleteProgramWithIt" datasource="#application.datasource#">
 			UPDATE Contract_Main
 			SET Deleted = 1
 			WHERE Contract_Main_ID = #getExclusionProgramID.Revision_Program_ID#
 		</cfquery>
+</cfif>
 		
 		<cflocation url="contract_exclusions.cfm?CID=#URL.CID#">
 	</cfcase>
@@ -151,13 +219,31 @@ FROM         dbo.Program_Exclusions INNER JOIN
 		AND revision_version = 1
 	</CFQUERY>
 	
-	<CFQUERY NAME="getRevisionVersion" datasource="#application.datasource#">
+	<cfset useLakebaseForgetRevisionVersion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetRevisionVersion>
+	<cftry>
+		<cfset getRevisionVersion = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#getContractNumber.Contract_number#",
+				"isexclusionrevision" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "contract_number,revision_version"
+			}), "contract_number,revision_version"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRevisionVersion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRevisionVersion>
+<CFQUERY NAME="getRevisionVersion" datasource="#application.datasource#">
 		SELECT contract_number,revision_version
 		FROM Contract_Main
 		WHERE contract_number = '#getContractNumber.Contract_number#'
 		AND IsExclusionRevision  = 1
 		AND Deleted = 0
 	</CFQUERY>
+</cfif>
 </cfif>
 
 
@@ -381,11 +467,26 @@ FROM         dbo.Program_Exclusions INNER JOIN
 <cfset tmpExEnd = CSLGETCONTRACTINFO.CONTRACT_END_DATE>
 
 <cfif getExclusions.recordcount GT 0>
-	<cfquery name="getLastEndDate" dbtype="query">
+	<cfset useLakebaseForgetLastEndDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getexclusions")>
+<cfif useLakebaseForgetLastEndDate>
+	<cftry>
+		<cfset getLastEndDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getexclusions", {
+				"order" = "end_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLastEndDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLastEndDate>
+<cfquery name="getLastEndDate" dbtype="query">
 			SELECT *
 			FROM getExclusions
 			ORDER BY End_Date DESC
 	</cfquery>
+</cfif>
 	<cfset tmpExStart = DateAdd('d',1,getLastEndDate.End_Date)>
 </cfif>
 

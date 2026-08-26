@@ -14,19 +14,49 @@
 <CFLOOP INDEX="ListItem" LIST="#FORM.Contract_List#" DELIMITERS=",">
 
 	<!--- Get the contract info --->
-	<CFQUERY NAME="GetContractData" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractData>
+	<cftry>
+		<cfset GetContractData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#ListItem#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractData>
+<CFQUERY NAME="GetContractData" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#ListItem#'
 	</CFQUERY>
+</cfif>
 
 
 	<!--- Get the contract products --->
-	<CFQUERY NAME="GetContractProducts" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetContractProducts>
+	<cftry>
+		<cfset GetContractProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#ListItem#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractProducts>
+<CFQUERY NAME="GetContractProducts" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Products
 		WHERE Contract_Main_ID = '#ListItem#'
 	</CFQUERY>
+</cfif>
 	<!--- Save the UPC list the a list --->
 	<CFSET ContractUPCList = valuelist(GetContractProducts.Product_UPC)>
 	<CFSET PricingRuleList = valuelist(GetContractProducts.Pricing_Rule)>

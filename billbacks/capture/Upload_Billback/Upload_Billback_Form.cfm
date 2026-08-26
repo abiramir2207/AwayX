@@ -1,17 +1,55 @@
 
 
 <CFIF IsDefined("URL.KillProcess")>
-	<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_master")>
+<cfif useLakebaseForUpdateStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_upload_master",
+			{
+				"process_status_id" = "eq.2",
+				"deleted" = "eq.0"
+			},
+			{
+				"process_status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateStatus>
+<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback_Upload_Master
 		SET Process_Status_ID = 3
 		WHERE Process_Status_ID = 2 AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
-	<CFQUERY NAME="UpdateAlive" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateAlive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_master")>
+<cfif useLakebaseForUpdateAlive>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_upload_master",
+			{
+				"alive_upload" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"alive_upload" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAlive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAlive>
+<CFQUERY NAME="UpdateAlive" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback_Upload_Master
 		SET Alive_Upload = 0
 		WHERE Alive_Upload = 1 AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback_Upload_Details
@@ -68,12 +106,28 @@
 	
 	<CFSET ShowLog = 0>
 
-	<CFQUERY NAME="CheckForLog" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckForLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_log")>
+<cfif useLakebaseForCheckForLog>
+	<cftry>
+		<cfset CheckForLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_upload_log", {
+				"script_log" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForLog>
+<CFQUERY NAME="CheckForLog" DATASOURCE="#Application.Datasource#">
 		SELECT 	Top 1 * 
 		FROM 	Billback_Upload_Log 
 		
 		WHERE 	Script_Log = 0 
 	</CFQUERY>
+</cfif>
 
 	<CFIF CheckForLog.RecordCount GT 0>	
 		<CFSET ShowLog = 1>

@@ -64,11 +64,26 @@
 <CFSET FORM.Contract_Main_ID = cryp.value>
 
 
-	 <cfquery name="GetContractInfo" datasource="#application.datasource#">
+	 <cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
 	</cfquery>
+</cfif>
 	
 <cfif form.generatexlsreport EQ 0>
 	<CFINCLUDE TEMPLATE="/includes/top_header.cfm">
@@ -96,11 +111,27 @@
  </CFIF>
  
  <!---Show values from db or not?--->
- <cfquery name="SavedValues" datasource="#application.datasource#">
+ <cfset useLakebaseForSavedValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sysco_deal_sheet_programs")>
+<cfif useLakebaseForSavedValues>
+	<cftry>
+		<cfset SavedValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("sysco_deal_sheet_programs", {
+				"contract_main_id" = "eq.#form.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSavedValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSavedValues>
+<cfquery name="SavedValues" datasource="#application.datasource#">
 SELECT * FROM Sysco_Deal_Sheet_Programs
 WHERE Contract_Main_ID = '#form.Contract_Main_ID#'
 AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfif SavedValues.Recordcount GT 0 and blnSubmit IS 0>
 	<cfset UseDBValues = 1>
@@ -109,23 +140,57 @@ AND Deleted = 0
 <!---End values from db logic--->
 
  
+<cfset useLakebaseForIsFixedThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_price_product_data")>
+<cfif useLakebaseForIsFixedThere>
+	<cftry>
+		<cfset IsFixedThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_price_product_data", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsFixedThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsFixedThere>
 <cfquery name="IsFixedThere" datasource="#application.datasource#">
 SELECT Program_Fixed_Price_Product_Data.Program_ID
 FROM Program_Fixed_Price_Product_Data
 WHERE Program_Fixed_Price_Product_Data.Program_ID = '#FORM.Contract_Main_ID#'
 AND Program_Fixed_Price_Product_Data.Deleted = 0
 </cfquery>
+</cfif>
 
 <Cfif IsFixedThere.Recordcount GT 0>
 	<cfset contract_price = 1>
 </CFIF>
 
+<cfset useLakebaseForIsRebateThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data")>
+<cfif useLakebaseForIsRebateThere>
+	<cftry>
+		<cfset IsRebateThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_product_data", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsRebateThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsRebateThere>
 <cfquery name="IsRebateThere" datasource="#application.datasource#">
 SELECT Program_Rebates_Product_Data.Program_ID
 FROM Program_Rebates_Product_Data
 WHERE Program_Rebates_Product_Data.Program_ID =  '#FORM.Contract_Main_ID#'
 AND Program_Rebates_Product_Data.Deleted = 0
 </cfquery>
+</cfif>
 
 <Cfif IsRebateThere.Recordcount GT 0>
 	<cfset deviated_allowance = 1>
@@ -153,12 +218,29 @@ AND Program_Rebates_Product_Data.Deleted = 0
 
 	
 <cfif GetContractInfo.Is_A_Revision EQ 1>
- <cfquery name="getParentDates" datasource="#application.datasource#">
+ <cfset useLakebaseForgetParentDates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetParentDates>
+	<cftry>
+		<cfset getParentDates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#GetContractInfo.Revision_of_Contract_Main_ID#",
+				"select" = "contract_start_date,contract_end_date"
+			}), "contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentDates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentDates>
+<cfquery name="getParentDates" datasource="#application.datasource#">
 			select contract_start_date, contract_end_date
 			from Contract_main
 			where Contract_main.deleted = 0
 			and Contract_main.contract_main_id = #GetContractInfo.Revision_of_Contract_Main_ID#
 </cfquery>
+</cfif>
 <cfset startdate = getParentDates.contract_start_date>
 <cfset enddate = getParentDates.contract_end_date>
 <cfelse>

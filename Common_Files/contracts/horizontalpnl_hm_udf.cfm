@@ -12,10 +12,25 @@
   * ====================================================================================================
  -->
 
+<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
 <cfquery name="getGlobalUOM" datasource="#application.datasource#">
     SELECT Global_Target_UOM
     FROM General_Settings
 </cfquery>
+</cfif>
 
 <cfset UOMdisplay = 'CS'>
 <cfsavecontent variable="body_content">
@@ -219,10 +234,25 @@
         <!--- mass approve --->
         <cfset itemCheckBoxDisabled = 0>
 
-        <cfquery name="getGroupvalues" dbtype="query">
+        <cfset useLakebaseForgetGroupvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForgetGroupvalues>
+	<cftry>
+		<cfset getGroupvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getAllProductMargins.Type_Code_Desc_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupvalues>
+<cfquery name="getGroupvalues" dbtype="query">
             select * from getAllGroupMargins
             where Type_Code_Desc_Id = '#getAllProductMargins.Type_Code_Desc_Id#'
         </cfquery>
+</cfif>
         <!--- add variation to group margin --->
         <cfif trim(getGroupvalues.Group_ID_Margin) eq "">
             <cfset getGroupvalues.Group_ID_Margin = 0>
@@ -728,9 +758,24 @@
     </cfsavecontent>
 
 
- <!---    <cfquery name="local.detail" dbtype="query">
+ <!---    <cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+<cfquery name="local.detail" dbtype="query">
         SELECT * FROM qCostDetail WHERE Product_ID = '#getAllProductMargins.Product_ID#'
-    </cfquery> --->
+    </cfquery>
+</cfif> --->
 
     <!--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --->
     <!--- ~~~~~ Requested Case Volume ~~~~~~ --->
@@ -823,7 +868,25 @@
     <!--- check if the program is RFA only then display the check boxes --->
     <cfif getProgramInfo.Contract_Status_Type_IDX eq 2>
         <!--- get all the previous approved items  --->
-        <cfquery name="getitemapprovedvalues" dbtype="query">
+        <cfset useLakebaseForgetitemapprovedvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettypecodeapprovalinfo")>
+<cfif useLakebaseForgetitemapprovedvalues>
+	<cftry>
+		<cfset getitemapprovedvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettypecodeapprovalinfo", {
+				"product_id" = "eq.#BSA_Foodservice_Items_Master_Id#",
+				"system_agreement" = "eq.0",
+				"approve" = "eq.1",
+				"order" = "system_agreement.asc",
+				"select" = "approve as item_approve,name_last,name_first"
+			}), "approve as item_approve,name_last,name_first"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetitemapprovedvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetitemapprovedvalues>
+<cfquery name="getitemapprovedvalues" dbtype="query">
             select approve as item_approve,Name_Last,Name_First
             from getTypeCodeApprovalInfo
             where product_id = '#BSA_Foodservice_Items_Master_Id#'
@@ -831,6 +894,7 @@
             and approve = 1
             order by System_Agreement
         </cfquery>
+</cfif>
 
         <cfquery name="getitemagreedcount" dbtype="query">
             select count(Product_ID) as agreecount
@@ -1025,12 +1089,29 @@
 
 
         <cfif getProgramInfo.Contract_Status_Type_IDX eq 2>
-            <cfquery name="getgroupapprovedvalues" dbtype="query">
+            <cfset useLakebaseForgetgroupapprovedvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettypecodeapprovalinfo")>
+<cfif useLakebaseForgetgroupapprovedvalues>
+	<cftry>
+		<cfset getgroupapprovedvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettypecodeapprovalinfo", {
+				"type_code_desc_id" = "eq.#getGroupvalues.Type_Code_Desc_Id#",
+				"approve" = "eq.1",
+				"select" = "approve as group_approve,name_last,name_first"
+			}), "approve as group_approve,name_last,name_first"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetgroupapprovedvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetgroupapprovedvalues>
+<cfquery name="getgroupapprovedvalues" dbtype="query">
                 select approve as group_approve, Name_Last, Name_First
                 from getTypeCodeApprovalInfo
                 where Type_Code_Desc_Id = '#getGroupvalues.Type_Code_Desc_Id#'
                 and approve = 1
             </cfquery>
+</cfif>
 
             <cfquery name="getgroupagreedcount" dbtype="query">
                 select count(Type_Code_Desc_Id) as agreecount

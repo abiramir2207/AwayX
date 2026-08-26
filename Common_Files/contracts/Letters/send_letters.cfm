@@ -8,11 +8,27 @@
 <cfset appSettings = genSettingsManager.get()>
 
 
+<cfset useLakebaseForgetuseremail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetuseremail>
+	<cftry>
+		<cfset getuseremail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetuseremail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetuseremail>
 <cfquery name="getuseremail" datasource="#application.datasource#">
 select user_email from
 _users
 where user_id = '#request.AccessStructure.user_id#'
 </cfquery>
+</cfif>
 
 <cfset fromemail = getuseremail.user_email>
 <cfset subject = appSettings.getletterssubject()>

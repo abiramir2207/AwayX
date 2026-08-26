@@ -3,10 +3,26 @@
 <CFPARAM NAME="form.command" 	DEFAULT="">
 <CFPARAM NAME="form.returnTo" 	DEFAULT="">
 <cfparam name="form.External_Component_Type" default="" />
+<cfset useLakebaseForGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGeneralSettings>
+	<cftry>
+		<cfset GeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1",
+				"select" = "use_discount_id"
+			}), "use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGeneralSettings>
 <cfquery name="GeneralSettings" datasource="#application.datasource#">
 SELECT TOP 1 Use_Discount_ID
 FROM General_Settings
 </cfquery>
+</cfif>
 <cfset selectedIndex = 99>
 <cfif GeneralSettings.Use_Discount_ID IS 1>
 	<cfswitch expression="#form.display#">

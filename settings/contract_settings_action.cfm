@@ -111,11 +111,29 @@ all the statuses. "Program_Status" holds the checked statuses (form page) only.
 		<cfset PrgStatusExist = 1>
 	</cfif>
 
-		<cfquery name="UpdateStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_search_options")>
+<cfif useLakebaseForUpdateStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_search_options",
+			{
+				"contract_status_type_id" = "eq.#i#"
+			},
+			{
+				"contract_status_type_selected" = "#PrgStatusExist#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateStatus>
+<cfquery name="UpdateStatus" datasource="#application.datasource#">
 			UPDATE Contract_Search_Options
 			SET Contract_Status_Type_Selected = '#PrgStatusExist#'
 			WHERE Contract_Status_Type_ID = '#i#'
 		</cfquery>
+</cfif>
 </cfloop>
 
 <CFSET tempfilepath = APPLICATIONPATH & "\Common_Files\contracts\Program_Releaser\Nightly_Emailer_Data.cfm">

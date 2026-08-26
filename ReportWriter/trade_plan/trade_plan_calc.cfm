@@ -557,12 +557,28 @@
 				--->
 				<cfif CompareNoCase(action, "edit,copy,create") and not isDefined("form.action")>
 					<!---Query on qGetProductList to get computed values--->
-					<cfquery name="qGetCompVals" dbtype="query">
+					<cfset useLakebaseForqGetCompVals = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductlist")>
+<cfif useLakebaseForqGetCompVals>
+	<cftry>
+		<cfset qGetCompVals = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductlist", {
+				"product_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "proposed_price,quantity"
+			}), "proposed_price,quantity"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCompVals = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCompVals>
+<cfquery name="qGetCompVals" dbtype="query">
 						SELECT 	Proposed_Price,
 								Quantity
 						FROM 	qGetProductList
 						WHERE 	Product_ID = '#BSA_Foodservice_Items_Master_ID#'
 					</cfquery>
+</cfif>
 
 					<cfif qGetCompVals.RecordCount>
 

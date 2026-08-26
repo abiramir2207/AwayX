@@ -50,14 +50,44 @@ thead th, thead th.locked {
 <cfset approvalGroupType = approvalGroupManager.getGroupTypeInfo(productGroupLevelId=appSettings.getTemplateRestrictGroupLevel()) />
 <cfparam name="Form.price_protection_on" 		default="0">
 
+<cfset useLakebaseForgetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGeneralSettings>
+	<cftry>
+		<cfset getGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGeneralSettings>
 <cfquery name="getGeneralSettings" datasource="#application.datasource#">
 	SELECT TOP 1 *
 	FROM General_Settings
 </cfquery>
+</cfif>
+<cfset useLakebaseForqCheckOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqCheckOptions>
+	<cftry>
+		<cfset qCheckOptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckOptions>
 <cfquery name="qCheckOptions" datasource="#application.datasource#">
 	SELECT 	TOP 1 *
 	FROM 	Program_Control_Panel_Options
 </cfquery>
+</cfif>
 <cfsilent>
 <cfset fromSettings_management = 1>
 

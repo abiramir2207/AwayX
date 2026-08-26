@@ -469,13 +469,30 @@ Purpose      : Import programs from Excel XLSX file
 			}
 
 			// Query for Currency
-			<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
+			<cfset useLakebaseForGetCurrencyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForGetCurrencyTypes>
+	<cftry>
+		<cfset GetCurrencyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "currency_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrencyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrencyTypes>
+<cfquery name="GetCurrencyTypes" datasource="#application.datasource#">
 				SELECT 	*
 				FROM 	Currency
 				WHERE 	Deleted = 0
 				AND 	Active = 1
 				ORDER BY Currency_Name
 			</cfquery>
+</cfif>
 
 
 			// handlers for clicking section headers

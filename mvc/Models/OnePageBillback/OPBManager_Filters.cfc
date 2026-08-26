@@ -48,11 +48,27 @@
 	</cffunction>
 
 	<cffunction name="getDDReasonCode" output="false" returntype="query">
-		<cfquery name="qGetDDReasonCodes" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDDReasonCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_reason_code")>
+<cfif useLakebaseForqGetDDReasonCodes>
+	<cftry>
+		<cfset qGetDDReasonCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_reason_code", {
+				"deleted" = "eq.0",
+				"select" = "dd_reason_code_id,dd_reason_code_description"
+			}), "dd_reason_code_id,dd_reason_code_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDDReasonCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDDReasonCodes>
+<cfquery name="qGetDDReasonCodes" datasource="#application.datasource#">
 			SELECT DD_Reason_Code_ID, DD_Reason_Code_Description
 			FROM DD_Reason_Code
 			WHERE Deleted = 0
 		</cfquery>
+</cfif>
 		<cfreturn qGetDDReasonCodes />
 	</cffunction>
 

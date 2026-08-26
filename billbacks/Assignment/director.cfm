@@ -33,11 +33,27 @@ form.command: #form.command#<br>
 --->
 <cfset qGetAvailableSupervisors = billbackAssignmentManager.getSupervisors(bNonDirector=1) />
 </cfif>
+<cfset useLakebaseForqGetDefaultDirector = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetdirectors")>
+<cfif useLakebaseForqGetDefaultDirector>
+	<cftry>
+		<cfset qGetDefaultDirector = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetdirectors", {
+				"is_default_director" = "eq.1",
+				"select" = "analyst_user_id"
+			}), "analyst_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultDirector = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultDirector>
 <cfquery name="qGetDefaultDirector" dbtype="query">
 	SELECT	Analyst_User_ID
 	FROM	qGetDirectors
 	WHERE	Is_Default_Director = 1
 </cfquery>
+</cfif>
 
 <cfset showMessage = "" />
 <!--- removed by 32466

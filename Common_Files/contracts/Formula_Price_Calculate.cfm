@@ -65,13 +65,29 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 <CFOUTPUT QUERY="Commodity_Data" GROUP="Program_Formula_Pricing_Rule_ID">	
 	<CFSET Proper_Commodity = 1>
 	<CFSET SubTotal_Weighted_Cost=0>
-	<CFQUERY NAME="Get_All_Commodity_Overage" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForGet_All_Commodity_Overage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_commodity_overage")>
+<cfif useLakebaseForGet_All_Commodity_Overage>
+	<cftry>
+		<cfset Get_All_Commodity_Overage = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_commodity_overage", {
+				"program_formula_pricing_rule_id" = "eq.#Program_Formula_Pricing_Rule_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_All_Commodity_Overage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_All_Commodity_Overage>
+<CFQUERY NAME="Get_All_Commodity_Overage" DATASOURCE="#application.datasource#">
 		SELECT	*
 		FROM	Formula_Pricing_Commodity_Overage
 		WHERE
 				Program_Formula_Pricing_Rule_ID = '#Program_Formula_Pricing_Rule_ID#' AND
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFOUTPUT GROUP="Program_Formula_Pricing_Rule_Comm_Data_ID">		
 		<CFSET comm_symbol = Commodity_Data.Symbol>
 		<CFSET comm_avg = "">
@@ -133,7 +149,25 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 		<CFSET Fully_loaded_First = Fully_loaded>
 		<!------------ add overages ------------------>
 		<!------ Commodity level Compunded Calculations Overage calculations----->
-		<CFQUERY NAME="This_Overage_Data" DBTYPE="Query">
+		<cfset useLakebaseForThis_Overage_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
+<cfif useLakebaseForThis_Overage_Data>
+	<cftry>
+		<cfset This_Overage_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_commodity_overage", {
+				"program_formula_pricing_rule_comm_data_id" = "eq.#Program_Formula_Pricing_Rule_Comm_Data_ID#",
+				"calc_type" = "eq.2",
+				"deleted" = "eq.0",
+				"order" = "overage_index.asc",
+				"select" = "overage_index,amount,uom,description,calc_type"
+			}), "overage_index,amount,uom,description,calc_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Overage_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Overage_Data>
+<CFQUERY NAME="This_Overage_Data" DBTYPE="Query">
 			SELECT			Overage_Index, Amount, UOM, Description, Calc_Type
 			FROM			Get_All_Commodity_Overage
 			WHERE	
@@ -143,6 +177,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 							And Deleted = 0
 			ORDER BY		Overage_Index
 		</CFQUERY>
+</cfif>
 		<CFLOOP QUERY="This_Overage_Data">
 			<CFIF UOM EQ "%">
 				<CFIF Calc_Type EQ 1><!---- independent --->

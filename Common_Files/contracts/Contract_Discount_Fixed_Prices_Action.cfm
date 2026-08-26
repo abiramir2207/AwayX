@@ -10,11 +10,29 @@
 <CFINCLUDE TEMPLATE="LockChecker.cfm">
 <!--- lock checker --->
 
+<cfset useLakebaseForsaveRebateType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForsaveRebateType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#cryp.value#"
+			},
+			{
+				"fixed_price_rebate_type" = "#FORM.Fixed_Price_Rebate_Type#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveRebateType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveRebateType>
 <CFQUERY NAME="saveRebateType" datasource="#application.datasource#">
 	UPDATE Contract_Main
 	SET Fixed_Price_Rebate_Type = '#FORM.Fixed_Price_Rebate_Type#'
 	WHERE Contract_Main_ID = '#cryp.value#'
 </CFQUERY>
+</cfif>
 
 
 
@@ -167,11 +185,27 @@ WHERE
 			
 </CFTRANSACTION>
 
+<cfset useLakebaseForgetProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramType>
+	<cftry>
+		<cfset getProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramType>
 <CFQUERY NAME="getProgramType" datasource="#application.datasource#">
 	SELECT ProgramType_ID
 	FROM Contract_Main 
 	WHERE Contract_Main_ID = #FORM.Program_ID#
 </CFQUERY>
+</cfif>
 
 <!------ Start Clause Code ----->
 <cfset discountTypeId = 1>

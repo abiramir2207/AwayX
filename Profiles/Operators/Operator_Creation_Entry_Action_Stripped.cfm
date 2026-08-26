@@ -145,11 +145,29 @@
 				This is useful in the flex operator alias tool.
 				--->
 				<cfif application.returned_customer_setting.operator_legacy_id_on eq 0>
-					<cfquery name="UpdateOperator" datasource="#application.datasource#">
+					<cfset useLakebaseForUpdateOperator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForUpdateOperator>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bsa_operator",
+			{
+				"bsa_operator_id" = "eq.#BSA_Operator_ID#"
+			},
+			{
+				"legacy_id" = "BSA_Operator_ID"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateOperator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateOperator>
+<cfquery name="UpdateOperator" datasource="#application.datasource#">
 						UPDATE BSA_Operator
 							SET Legacy_ID = BSA_Operator_ID
 						WHERE BSA_Operator_ID = #BSA_Operator_ID#
 					</cfquery>
+</cfif>
 				</cfif>
 
 		<!---Legacy ID is turned on and there is a duplicate --->
@@ -339,11 +357,28 @@ not be saved because duplicates cannot be created.</b>
 
 	<cfif appSettings.getOperatorQBrandLegacy() neq "0">
 		<cfoutput>
-		<cfquery name="variables.qBrand" datasource="#application.datasource#">
+		<cfset useLakebaseForvariables_qBrand = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("q_brand_desc")>
+<cfif useLakebaseForvariables_qBrand>
+	<cftry>
+		<cfset variables.qBrand = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("q_brand_desc", {
+				"deleted" = "eq.0",
+				"q_brand_legacy" = "eq.#form.q_brand_legacy#",
+				"select" = "q_brand"
+			}), "q_brand"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qBrand = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qBrand>
+<cfquery name="variables.qBrand" datasource="#application.datasource#">
 			SELECT Q_Brand
 		  	  FROM Q_BRAND_DESC
 		     WHERE Deleted = 0 AND Q_Brand_Legacy = '#form.q_brand_legacy#'
 		</cfquery>
+</cfif>
 		<tr>
 		   	<TD valign="top"><B>#application.returned_customer_setting.Q_Brand_Label_Singular#:</B></TD>
     	   	<TD>#(variables.qBrand.recordCount gt 0 ? variables.qBrand.Q_Brand : "NOT SELECTED")#</TD>

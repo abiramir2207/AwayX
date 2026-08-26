@@ -1,9 +1,27 @@
 <cfif isDefined("BB_Reimbursement_ID")>
+<cfset useLakebaseForDeleteReimbursement = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement")>
+<cfif useLakebaseForDeleteReimbursement>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_reimbursement",
+			{
+				"bb_reimbursement_id" = "eq.#BB_Reimbursement_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteReimbursement = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteReimbursement>
 <cfquery name="DeleteReimbursement" datasource="#application.datasource#">
 UPDATE BB_Reimbursement
 SET Deleted = 1
 WHERE BB_Reimbursement_ID = '#BB_Reimbursement_ID#'
 </cfquery>
+</cfif>
 <!--- <CFOUTPUT>#Form.Referer#</CFOUTPUT> --->
 <div align="Center">
 

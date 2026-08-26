@@ -378,6 +378,22 @@ and contract_products.Product_Type_ID IN (2,3,4)
 <cffunction name="getProgramStatus" access="public" returntype="query">
 	<cfargument name="program_id" type="string" required="true" />
 	<cfargument name="product_type_id" type="string" required="true" />
+<cfset useLakebaseForqgetProgramStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForqgetProgramStatus>
+	<cftry>
+		<cfset qgetProgramStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"program_id" = "eq.#arguments.Program_ID#",
+				"program_discount_type_id" = "eq.#arguments.product_type_id#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetProgramStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetProgramStatus>
 <CFQUERY NAME="qgetProgramStatus" datasource="#application.datasource#">
 select *
 from Program_WebServices_Detail
@@ -385,6 +401,7 @@ where program_id = '#arguments.Program_ID#'
 and Program_Discount_Type_ID = '#arguments.product_type_id#'
 and deleted = 0
 </CFQUERY>
+</cfif>
 <cfreturn qgetProgramStatus />
 </cffunction>
 

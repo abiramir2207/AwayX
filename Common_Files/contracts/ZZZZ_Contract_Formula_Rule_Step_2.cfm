@@ -19,7 +19,23 @@
 
 
 <CFIF FORM.UPDATE EQ 0>
-	<CFQUERY NAME="getNewRule" datasource="#application.datasource#">
+	<cfset useLakebaseForgetNewRule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForgetNewRule>
+	<cftry>
+		<cfset getNewRule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0",
+				"active" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetNewRule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetNewRule>
+<CFQUERY NAME="getNewRule" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Formula_Pricing_Rules
 		WHERE 
@@ -29,6 +45,7 @@
 		AND 
 			Active = 0
 	</CFQUERY>
+</cfif>
 	
 	<CFSET getCommData = QueryNew("deleted")>
 	<CFSET getOverageData = QueryNew("deleted")>
@@ -53,7 +70,24 @@
 	</CFIF>
 	<cfparam name="Number_Of_Comms" 	default=0>
 
-	<CFQUERY NAME="getCommData" datasource="#application.datasource#">
+	<cfset useLakebaseForgetCommData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_comm_data")>
+<cfif useLakebaseForgetCommData>
+	<cftry>
+		<cfset getCommData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_comm_data", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "comm_count.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCommData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCommData>
+<CFQUERY NAME="getCommData" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Formula_Pricing_Rule_Comm_Data
 		WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
@@ -61,6 +95,7 @@
 		AND Active = 1
 		ORDER BY COMM_COUNT
 	</CFQUERY>
+</cfif>
 
 	<CFLOOP QUERY="getCommData">
 		<CFSET i = getCommData.Comm_Count>
@@ -73,7 +108,24 @@
 		<CFSET "default_weight_#i#"			 	= getCommData.weight>		
 	</CFLOOP>
 	
-	<CFQUERY NAME="getOverageData" datasource="#application.datasource#">
+	<cfset useLakebaseForgetOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
+<cfif useLakebaseForgetOverageData>
+	<cftry>
+		<cfset getOverageData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_overage", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOverageData>
+<CFQUERY NAME="getOverageData" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Formula_Pricing_Rule_Overage
 		WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#'
@@ -81,6 +133,7 @@
 		AND Active = 1
 		Order By Overage_Index
 	</CFQUERY>
+</cfif>
 	<CFLOOP QUERY="getOverageData" endrow="4">
 		<CFSET i = getOverageData.Overage_Index>
 		<CFSET "INDEPENDENT_DESC_CALC#i#_1" 				= getOverageData.Description>

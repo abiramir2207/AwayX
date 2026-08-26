@@ -379,9 +379,24 @@ Description:	This file is responsible for splitting Billback data.
 				
 				<CFIF PayeeType EQ 1 OR PayeeType EQ 5>
 				
-					<CFQUERY NAME="Parent_Payee_Data" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForParent_Payee_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForParent_Payee_Data>
+	<cftry>
+		<cfset Parent_Payee_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#Parent_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForParent_Payee_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForParent_Payee_Data>
+<CFQUERY NAME="Parent_Payee_Data" DATASOURCE="#Application.Datasource#">
 						SELECT * FROM Billback_Distributor WHERE Billback_ID = '#Parent_ID#'
 					</CFQUERY>
+</cfif>
 					
 					<CFQUERY NAME="InsertPayeeData" DATASOURCE="#Application.Datasource#">
 						INSERT INTO 
@@ -555,9 +570,25 @@ Description:	This file is responsible for splitting Billback data.
 				<CFSET ProgValueLoopCount = 0>
 			
 				
-				<CFQUERY NAME="Parent_Prog_Data" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForParent_Prog_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForParent_Prog_Data>
+	<cftry>
+		<cfset Parent_Prog_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Parent_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForParent_Prog_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForParent_Prog_Data>
+<CFQUERY NAME="Parent_Prog_Data" DATASOURCE="#Application.Datasource#">
 					SELECT * FROM Billback_Program WHERE Billback_ID = '#Parent_ID#' AND Billback_Program.Deleted = 0
 				</CFQUERY>
+</cfif>
 								
 				<CFQUERY NAME="InsertProgData" DATASOURCE="#Application.Datasource#">
 					INSERT INTO 

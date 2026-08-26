@@ -20,10 +20,25 @@
 <CFIF COMM_GetSettings.Discount_Formula_Pricing EQ 1>
 
 <CFIF User_Existing_Query>
-	<CFQUERY NAME="getCommodities" dbtype="query">
+	<cfset useLakebaseForgetCommodities = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrules")>
+<cfif useLakebaseForgetCommodities>
+	<cftry>
+		<cfset getCommodities = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrules", {
+				"select" = "rule_name,formula_pricing_rule_id"
+			}), "rule_name,formula_pricing_rule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCommodities = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCommodities>
+<CFQUERY NAME="getCommodities" dbtype="query">
 		SELECT     	DISTINCT Rule_Name, Formula_Pricing_Rule_ID
 		FROM        getRules
 	</CFQUERY>
+</cfif>
 <CFELSE>
 	<CFQUERY NAME="getCommodities" datasource="#application.datasource#">
 		SELECT     	DISTINCT 
@@ -65,12 +80,28 @@
 			<CFIF getCommodities.recordcount GT 0>				
 				<CFLOOP QUERY="getCommodities">
 					<CFIF User_Existing_Query>
-						<CFQUERY NAME="Get_Show_Details" dbtype="query">
+						<cfset useLakebaseForGet_Show_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrules")>
+<cfif useLakebaseForGet_Show_Details>
+	<cftry>
+		<cfset Get_Show_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrules", {
+				"formula_pricing_rule_id" = "eq.#getCommodities.Formula_Pricing_Rule_ID#",
+				"select" = "show_details"
+			}), "show_details"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Show_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Show_Details>
+<CFQUERY NAME="Get_Show_Details" dbtype="query">
 							SELECT	Show_Details
 							FROM	getRules
 							WHERE
 									Formula_Pricing_Rule_ID = '#getCommodities.Formula_Pricing_Rule_ID#'
 						</CFQUERY>
+</cfif>
 						<CFSET show_Details = Get_Show_Details.show_Details>
 					<CFELSE>
 						<CFSET show_Details = getCommodities.show_Details>

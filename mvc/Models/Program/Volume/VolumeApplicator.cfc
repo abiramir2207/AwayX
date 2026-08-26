@@ -43,9 +43,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
     <cfargument name="UserID" default="0">
 
     <cfset companyMainID = "" />
-    <CFQUERY NAME="qryGetProfileID" DATASOURCE="#application.datasource#">
+    <cfset useLakebaseForqryGetProfileID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqryGetProfileID>
+	<cftry>
+		<cfset qryGetProfileID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.UserID#",
+				"select" = "profiles_id"
+			}), "profiles_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetProfileID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetProfileID>
+<CFQUERY NAME="qryGetProfileID" DATASOURCE="#application.datasource#">
     	SELECT Profiles_ID FROM _Users WHERE User_ID = '#arguments.UserID#'
     </CFQUERY>
+</cfif>
     <cfset profile = CreateObject("component","components.user.Profile").init() />
     <cfset Get_Profile_Settings = profile.getProfileSettings(#qryGetProfileID.Profiles_ID#)>
 
@@ -56,9 +72,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
     </cfif>
 
 
-    <CFQUERY NAME="qryGetCompanyID" DATASOURCE="#application.datasource#">
+    <cfset useLakebaseForqryGetCompanyID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForqryGetCompanyID>
+	<cftry>
+		<cfset qryGetCompanyID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetCompanyID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetCompanyID>
+<CFQUERY NAME="qryGetCompanyID" DATASOURCE="#application.datasource#">
       SELECT company_main_id FROM Company_Main WHERE Deleted = 0
     </CFQUERY>
+</cfif>
     <cfset companyMainID = qryGetCompanyID.company_main_id />
     <CFQUERY NAME="qryGetProgramDetails" DATASOURCE="#application.datasource#">
 			SELECT
@@ -953,11 +985,26 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		</cfscript>
 
 		<!--- TODO: Remove this query of a query hack and let the volue applicator set product as the default --->
-		<cfquery name="qProductGroupsOrderBy" dbtype="query">
+		<cfset useLakebaseForqProductGroupsOrderBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductgrouptypes")>
+<cfif useLakebaseForqProductGroupsOrderBy>
+	<cftry>
+		<cfset qProductGroupsOrderBy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductgrouptypes", {
+				"order" = "list_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqProductGroupsOrderBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqProductGroupsOrderBy>
+<cfquery name="qProductGroupsOrderBy" dbtype="query">
 			SELECT	*
 			FROM	qGetProductGroupTypes
 			ORDER BY List_Order
 		</cfquery>
+</cfif>
 
 		<cfscript>
 			//set and return product group types

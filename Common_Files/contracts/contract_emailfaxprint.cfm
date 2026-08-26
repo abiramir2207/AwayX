@@ -6,11 +6,28 @@
 <CFSET EMAIL_TEMP_FILE_FOLDER = "\Temp_Files\EmailFaxPrint">
 
 
+<cfset useLakebaseForgetcontracttitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetcontracttitle>
+	<cftry>
+		<cfset getcontracttitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#url.contract_number#",
+				"limit" = "1",
+				"select" = "contract_title"
+			}), "contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcontracttitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcontracttitle>
 <cfquery name="getcontracttitle" datasource="#application.datasource#">
 select top 1 contract_title
 from contract_main
 where contract_number = '#url.contract_number#'
 </cfquery>
+</cfif>
 
 
 <CFSET EMAIL_datetimestamp="#numberformat(month(now()),'00')##numberformat(day(now()),'00')##numberformat(year(now()),'0000')##numberformat(hour(now()),'00')##numberformat(minute(now()),'00')##numberformat(second(now()),'00')#">

@@ -28,11 +28,28 @@ Update Description: Made major structural changes to trade checkbook. Instead of
 <CFPARAM name="CalledFrom"							default="Checkbook">
 
 <!---Gets the current user's position--->
-<!--- <CFQUERY NAME="getUserPosition" DATASOURCE="#application.datasource#">
+<!--- <cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+<CFQUERY NAME="getUserPosition" DATASOURCE="#application.datasource#">
 SELECT User_Positions_ID
 FROM User_Position_Holders
 WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <!---Includes approval rights stuff--->
 <CFSET GP_Supplied_Position = getUserPosition.User_Positions_ID>
@@ -288,22 +305,54 @@ OR&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 
 <!---Shows the name if they have selected a distributor--->
 <cfif isDefined("form.Distributor_list") AND len(trim(form.Distributor_list)) GT 0>
- <cfquery name="GetDistributorName" datasource="#application.datasource#">
+ <cfset useLakebaseForGetDistributorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistributorName>
+	<cftry>
+		<cfset GetDistributorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Form.Distributor_List#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorName>
+<cfquery name="GetDistributorName" datasource="#application.datasource#">
 	SELECT Name
 	FROM BSA_Foodservice_Customers
 	WHERE BSA_Foodservice_Customers_ID = '#Form.Distributor_List#'
 	</cfquery>
+</cfif>
 	<cfset FinalDistributorList = form.Distributor_List>
 	<cfset DistributorName = GetDistributorName.Name>
 </cfif>
 
 <!---Shows the name if they have selected a distributor--->
 <cfif isDefined("form.Distributor_list2") AND len(trim(form.Distributor_list2)) GT 0>
-	<cfquery name="GetDistributorName2" datasource="#application.datasource#">
+	<cfset useLakebaseForGetDistributorName2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistributorName2>
+	<cftry>
+		<cfset GetDistributorName2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Form.Distributor_List2#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorName2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorName2>
+<cfquery name="GetDistributorName2" datasource="#application.datasource#">
 	SELECT Name
 	FROM BSA_Foodservice_Customers
 	WHERE BSA_Foodservice_Customers_ID = '#Form.Distributor_List2#'
 	</cfquery>
+</cfif>
 	<cfset FinalDistributorList = form.Distributor_List2>
 	<cfset DistributorName = GetDistributorName2.Name>
 </cfif>

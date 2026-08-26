@@ -9,12 +9,27 @@
 		<cfparam name="to_address" default="kcullom@bigredflame.com">
 		<cfparam name="from_address" default="support@bigredflame.com">
 
-		<cfquery name="getEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForgetEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetEmail>
+	<cftry>
+		<cfset getEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "send_program_error_ack_emailaddress,use_different_from_address,different_from_address"
+			}), "send_program_error_ack_emailaddress,use_different_from_address,different_from_address"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEmail>
+<cfquery name="getEmail" datasource="#application.datasource#">
 			SELECT send_Program_Error_Ack_emailaddress,
 				Use_Different_From_Address,
 				Different_From_Address
 			FROM _Application_Settings
 		</cfquery>
+</cfif>
 		<cfset to_address = "#getEmail.send_Program_Error_Ack_emailaddress#" />
 		<cfif Len(getEmail.Use_Different_From_Address)>
 			<cfset from_address = "#getEmail.Different_From_Address#" />

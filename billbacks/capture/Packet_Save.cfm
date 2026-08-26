@@ -46,11 +46,30 @@
 	<CFSET PNF = 0>
 </CFIF>
 
+<cfset useLakebaseForUpdatePNF = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdatePNF>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#LoadBillbackID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"bb_pnf" = "#PNF#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdatePNF = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdatePNF>
 <cfquery name="UpdatePNF" datasource="#Application.Datasource#">
 	UPDATE Billback
 	SET BB_PNF = #PNF#
 	WHERE Billback_ID = '#LoadBillbackID#' AND Deleted = 0
 </cfquery>
+</cfif>
 <!--- init lump sum structs --->
 <CFSET LumpSumComp_Insert 		= StructNew()>
 <CFSET LumpSumComp_Insert.Count = 0>
@@ -458,14 +477,34 @@
 										</CFIF>
 										<CFLOOP LIST="#Billback_Product_ID_List#" INDEX="BBProdID">
 										
-											<CFQUERY NAME="GetDetailInfo" DATASOURCE="#Application.Datasource#">
+											<cfset useLakebaseForGetDetailInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForGetDetailInfo>
+	<cftry>
+		<cfset GetDetailInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_id" = "eq.#Billback.Billback_ID#",
+				"billback_product_id" = "eq.#BBProdID#",
+				"bb_product_type_id" = "eq.#tempRateData[2]#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "distributor_id_earned,customer_group_id,earned_from_group"
+			}), "distributor_id_earned,customer_group_id,earned_from_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDetailInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDetailInfo>
+<CFQUERY NAME="GetDetailInfo" DATASOURCE="#Application.Datasource#">
 												SELECT 	top 1 Distributor_ID_Earned, Customer_Group_ID, Earned_From_Group
 												FROM 	Billback_Product_Detail
 												WHERE 	Billback_ID = '#Billback.Billback_ID#' AND 
 														Billback_Product_ID = '#BBProdID#' AND 
 														BB_Product_Type_ID = '#tempRateData[2]#' AND
 														Deleted = 0
-											</CFQUERY> 
+											</CFQUERY>
+</cfif> 
 											<!--- No --->
 											<cfquery name="InsertProductdet" datasource="#Application.Datasource#">
 												INSERT INTO Billback_Product_Detail
@@ -823,9 +862,26 @@
 			
 		<!--- <CFIF evaluate("Program_#Program.Program_ID#_ShowProductsInGroupLevel") EQ 1> --->
 				<!--- OLD XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-					<CFQUERY NAME="GetProdCount" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForGetProdCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForGetProdCount>
+	<cftry>
+		<cfset GetProdCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"product_hierarchy_id" = "eq.#Product.Billback_Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProdCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProdCount>
+<CFQUERY NAME="GetProdCount" DATASOURCE="#Application.Datasource#">
 					SELECT * FROM Billback_Product WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0 AND Product_Hierarchy_ID = '#Product.Billback_Product_ID#'
-				</CFQUERY> --->
+				</CFQUERY>
+</cfif> --->
 			<cfif Scheduled_Auto_BB eq 0>
 				<!---set up above...use that else reset <CFSET StructLocationPerRateType = "fixed_1,rebate_2,lump_sum_3,growth_4,formula_5,unknown_6,claimadjust_10"> --->
 			<cfelse><!---  AUTO BB CHECK...rates are not modified if Sched Auto BB, ONLY Adjustments can be made...these queries need to adjust for group by Product.Distributor_ID_Earned  ********************* --->
@@ -1213,15 +1269,48 @@ AND Billback_ID = '#Billback_ID#'
 </cfquery>
 --->
 
+<cfset useLakebaseForCheckCopied = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckCopied>
+	<cftry>
+		<cfset CheckCopied = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckCopied = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckCopied>
 <CFQUERY NAME="CheckCopied" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback WHERE Billback_ID = '#FORM.Billback_ID#'	
 </CFQUERY>
+</cfif>
 <CFIF CheckCopied.CopiedBB NEQ "">
-	<CFQUERY NAME="UpdateBit" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#"
+			},
+			{
+				"volumeratesaved" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBit>
+<CFQUERY NAME="UpdateBit" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback 
 		SET VolumeRateSaved = 1
 		WHERE Billback_ID = '#FORM.Billback_ID#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 </cfsilent> 
 

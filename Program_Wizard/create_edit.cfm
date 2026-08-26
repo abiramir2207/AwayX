@@ -82,10 +82,25 @@ If you added a new setting to this file, please also add the new setting to belo
 		<cfsilent>
 		<cfparam name="pullback_template_type" 	default="0">
 		<!---Find out if they have discount identifiers--->
-		<cfquery name="getGeneralSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForgetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGeneralSettings>
+	<cftry>
+		<cfset getGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGeneralSettings>
+<cfquery name="getGeneralSettings" datasource="#application.datasource#">
 			SELECT TOP 1 *
 			FROM General_Settings
 		</cfquery>
+</cfif>
 
 		<cfquery name="GetUserSettings" datasource="#application.datasource#">
 			SELECT * FROM _Users_Settings
@@ -2353,12 +2368,29 @@ If you added a new setting to this file, please also add the new setting to belo
 <CFELSEIF url.DownloadSettings>
 	<cfset SettingsToExcel (Setting_Name='Optional Dates for Program', Setting_Field_Name='Optional_Dates_Program')>
 	<cfif Form.Optional_Dates_Program IS 1>
-		<cfquery name="currentOptinalDate" datasource="#application.datasource#">
+		<cfset useLakebaseForcurrentOptinalDate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_optional_dates")>
+<cfif useLakebaseForcurrentOptinalDate>
+	<cftry>
+		<cfset currentOptinalDate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_optional_dates", {
+				"first_parent_id" = "eq.#SelectBasic.First_Parent_ID#",
+				"deleted" = "eq.0",
+				"select" = "start_date,end_date,description"
+			}), "start_date,end_date,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcurrentOptinalDate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcurrentOptinalDate>
+<cfquery name="currentOptinalDate" datasource="#application.datasource#">
 			SELECT Start_Date, End_Date, Description
 			FROM Template_Optional_dates
 			WHERE first_parent_id = #SelectBasic.First_Parent_ID#
 			AND Deleted = 0
 		</cfquery>
+</cfif>
 		<cfloop query="currentOptinalDate">
 			<cfset SettingsToExcel (Setting_Name='Program Start Date', Setting_Field_Name='Optional_Dates_Program', Setting_Value='#dateformat(Start_Date,'MM/DD/YYYY')#', Is_Child_Of='Optional_Dates_Program')>
 			<cfset SettingsToExcel (Setting_Name='Program End Date', Setting_Field_Name='Optional_Dates_Program', Setting_Value='#dateformat(End_Date,'MM/DD/YYYY')#', Is_Child_Of='Optional_Dates_Program')>
@@ -3017,20 +3049,70 @@ If you added a new setting to this file, please also add the new setting to belo
 
 	<!--- 28271 Template settings for Price List selection --->
 <cfif appSettings.getPriceListByTemplate() EQ 1>
-	<cfquery name="GetPriceList" datasource="#application.datasource#">
+	<cfset useLakebaseForGetPriceList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForGetPriceList>
+	<cftry>
+		<cfset GetPriceList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_description.asc",
+				"select" = "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+			}), "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPriceList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPriceList>
+<cfset useLakebaseForgetPriceList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForgetPriceList>
+	<cftry>
+		<cfset getPriceList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_description.asc",
+				"select" = "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+			}), "price_list_header_id,price_list_id + '-' + price_list_description as price_list_diplay_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPriceList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPriceList>
+<cfquery name="GetPriceList" datasource="#application.datasource#">
 	select      price_list_header_id, Price_List_ID + '-' + Price_List_Description as Price_List_Diplay_Desc
 		from        price_list_header
 		where       deleted = 0
 		order by    Price_List_Description
 	</cfquery>
+</cfif>
+</cfif>
 		<CFIF fromSettings_management eq 1>
 			<cfset SettingsTemplateForm(NameField="Margin_Price_List_Header_ID",NameFieldDesc="Margin Price List")>
 		<CFELSEIF url.DownloadSettings>
-			<cfquery name="PLDescription" dbtype="query">
+			<cfset useLakebaseForPLDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpricelist")>
+<cfif useLakebaseForPLDescription>
+	<cftry>
+		<cfset PLDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpricelist", {
+				"price_list_header_id" = "eq.#form.Margin_Price_List_Header_ID#",
+				"select" = "price_list_diplay_desc"
+			}), "price_list_diplay_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPLDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPLDescription>
+<cfquery name="PLDescription" dbtype="query">
 				SELECT Price_List_Diplay_Desc
 				FROM GetPriceList
 				WHERE price_list_header_id = '#form.Margin_Price_List_Header_ID#'
 			</cfquery>
+</cfif>
 			<cfset SettingsToExcel (Setting_Name='Margin Price List', Setting_Field_Name='Margin_Price_List_Header_ID', Setting_Value='#PLDescription.Price_List_Diplay_Desc#', Is_Child_Of='')>
 		<CFELSE>
 			<tr class="componentrules" <cfif SettingsManagerTemplate.Margin_Price_List_Header_ID EQ 0> style="display:none"</cfif>>
@@ -4118,11 +4200,27 @@ Dev Notes: D18996
 	<cfset SettingsTemplateForm(NameField="Billback_Status_if_Below_Deviation",NameFieldDesc="Billback Status if Below Deviation")>
 <CFELSEIF url.DownloadSettings>
 		<cfloop query="qGetClosingMethods">
-			<cfquery name ="BBS_Description" dbtype="query">
+			<cfset useLakebaseForBBS_Description = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetbillbackstatus")>
+<cfif useLakebaseForBBS_Description>
+	<cftry>
+		<cfset BBS_Description = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetbillbackstatus", {
+				"billback_status_id" = "eq.#qGetClosingMethods.Auto_Dev_BB_Status_Below#",
+				"select" = "bb_status_description"
+			}), "bb_status_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBS_Description = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBS_Description>
+<cfquery name ="BBS_Description" dbtype="query">
   			SELECT BB_Status_Description
   			FROM qGetBillbackStatus
   			WHERE Billback_Status_ID = #qGetClosingMethods.Auto_Dev_BB_Status_Below#
 			</cfquery>
+</cfif>
 			<cfset form.Auto_Dev_BB_Status_Below  = '#BBS_Description.BB_Status_Description#'>
 			<cfset SettingsToExcel (Setting_Name='#qGetClosingMethods.vchBillback_Closing_Method_Desc#', Setting_Field_Name='Auto_Dev_BB_Status_Below', SkipQuery = 1, Setting_Value='#BBS_Description.BB_Status_Description#', Is_Child_Of='BB_D_Template_Overrides_Deviation_Tolerances')>
 		</cfloop>.
@@ -4767,11 +4865,27 @@ Dev Notes: D18996
 		<cfset SettingsTemplateForm(NameField="Approval_Considerations_ID",NameFieldDesc="Approval Considerations")>
 	<CFELSEIF url.DownloadSettings>
 		<cfif isDefined("Form.Approval_Considerations_ID")>
-		<cfquery name="ApprovalConsiderations" dbtype="query">
+		<cfset useLakebaseForApprovalConsiderations = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetapprovalconsiderations")>
+<cfif useLakebaseForApprovalConsiderations>
+	<cftry>
+		<cfset ApprovalConsiderations = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetapprovalconsiderations", {
+				"approval_considerations_id" = "eq.#form.Approval_Considerations_ID#",
+				"select" = "approval_considerations_name"
+			}), "approval_considerations_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovalConsiderations = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovalConsiderations>
+<cfquery name="ApprovalConsiderations" dbtype="query">
 			SELECT Approval_Considerations_Name
 			FROM qGetApprovalConsiderations
 			WHERE Approval_Considerations_ID = #form.Approval_Considerations_ID#
 		</cfquery>
+</cfif>
 		<cfset ACN = '#ApprovalConsiderations.Approval_Considerations_Name#'>
 	<cfelse>
 		<cfset ACN = 'Select an Approval Consideration'>
@@ -4905,11 +5019,27 @@ Dev Notes: D18996
 <cfelseif url.DownloadSettings>
 	<cfif SettingsManagerTemplate.Price_List_ID>
 	<cfif isDefined("form.Price_List_ID") AND len(form.Price_List_ID)>
-		<cfquery name="PLID" dbtype="query">
+		<cfset useLakebaseForPLID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpricelist")>
+<cfif useLakebaseForPLID>
+	<cftry>
+		<cfset PLID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpricelist", {
+				"price_list_id" = "eq.#form.Price_List_ID#",
+				"select" = "price_list_description"
+			}), "price_list_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPLID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPLID>
+<cfquery name="PLID" dbtype="query">
 			SELECT Price_List_Description
 			FROM getPriceList
 			WHERE Price_List_ID = #form.Price_List_ID#
 		</cfquery>
+</cfif>
 		<cfset PLD = '#PLID.Price_List_Description#'>
 	<cfelse>
 		<cfset PLD = 'Select Price List'>

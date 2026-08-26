@@ -1,8 +1,24 @@
+<cfset useLakebaseForusageAgreementConfirmation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usdanoi_agreements")>
+<cfif useLakebaseForusageAgreementConfirmation>
+	<cftry>
+		<cfset usageAgreementConfirmation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usdanoi_agreements", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"select" = "user_id"
+			}), "user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForusageAgreementConfirmation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForusageAgreementConfirmation>
 <cfquery name="usageAgreementConfirmation" datasource="#application.datasource#">
 	SELECT User_ID
 	FROM usdanoi_agreements
 	WHERE User_ID = '#request.AccessStructure.user_id#'
 </cfquery>
+</cfif>
 <cfif usageAgreementConfirmation.recordcount NEQ 123>
 <br>
 <table bgcolor="#808080" align="center" cellspacing="0" cellpadding="1">

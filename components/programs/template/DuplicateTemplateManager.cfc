@@ -437,11 +437,29 @@
 		<cfargument name="id" required="true" type="numeric" />
 		<cfargument name="DuplicateCheckForRevisions" required="true" type="numeric" />
 
-		<cfquery name="qsaveTemplateDuplicateCheckInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqsaveTemplateDuplicateCheckInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqsaveTemplateDuplicateCheckInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#arguments.id#"
+			},
+			{
+				"disable_duplicate_check_for_revisions" = "#arguments.DuplicateCheckForRevisions#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqsaveTemplateDuplicateCheckInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqsaveTemplateDuplicateCheckInfo>
+<cfquery name="qsaveTemplateDuplicateCheckInfo" datasource="#application.datasource#">
 			UPDATE	Program_Control_Panel_Options
 			SET	Disable_Duplicate_Check_For_Revisions = '#arguments.DuplicateCheckForRevisions#'
 			WHERE	ProgramControl_Panel_Options_ID = '#arguments.id#'				
 		</cfquery>
+</cfif>
 
 	</cffunction>
 	

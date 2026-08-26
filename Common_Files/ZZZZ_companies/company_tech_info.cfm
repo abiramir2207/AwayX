@@ -3,11 +3,26 @@
 <CFPARAM NAME="Form.Document_ID" DEFAULT="TechnologyInformation">
 <CFPARAM NAME="URL.Company_Main_ID" DEFAULT="">
 
+<cfset useLakebaseForGetCompanyTechnologyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_technology")>
+<cfif useLakebaseForGetCompanyTechnologyInfo>
+	<cftry>
+		<cfset GetCompanyTechnologyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_technology", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyTechnologyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyTechnologyInfo>
 <CFQUERY NAME="GetCompanyTechnologyInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Company_Technology
 	WHERE Company_Main_ID = '#URL.Company_Main_ID#'
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="ButtonCaption" DEFAULT="Save Changes">
 <CFPARAM NAME="Form.Company_Main_ID" DEFAULT="#URL.Company_Main_ID#">
@@ -32,29 +47,89 @@
 		<CFPARAM NAME="Form.SSL_Port" DEFAULT="443">
 	</CFIF>
 
+<cfset useLakebaseForGetCompanyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetCompanyInfo>
+	<cftry>
+		<cfset GetCompanyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyInfo>
 <CFQUERY NAME="GetCompanyInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Company_Main
 	WHERE Company_Main_ID ='#URL.Company_Main_ID#'
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetDataSamplingRates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_sampliing_rates")>
+<cfif useLakebaseForGetDataSamplingRates>
+	<cftry>
+		<cfset GetDataSamplingRates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_sampliing_rates", {
+				"order" = "display_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDataSamplingRates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDataSamplingRates>
 <CFQUERY NAME="GetDataSamplingRates" datasource="#application.datasource#" DBTYPE="ODBC" CACHEDWITHIN="#CreateTimeSpan(24, 0, 0, 0)#">
 	SELECT *
 	FROM Data_Sampliing_Rates
 	ORDER BY Display_Order ASC
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetDatabasePlatforms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("database_platforms")>
+<cfif useLakebaseForGetDatabasePlatforms>
+	<cftry>
+		<cfset GetDatabasePlatforms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("database_platforms", {
+				"order" = "display_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDatabasePlatforms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDatabasePlatforms>
 <CFQUERY NAME="GetDatabasePlatforms" datasource="#application.datasource#" DBTYPE="ODBC" CACHEDWITHIN="#CreateTimeSpan(24, 0, 0, 0)#">
 	SELECT *
 	FROM Database_Platforms
 	ORDER BY Display_Order ASC
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetOperatingSystems = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operating_systems")>
+<cfif useLakebaseForGetOperatingSystems>
+	<cftry>
+		<cfset GetOperatingSystems = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operating_systems", {
+				"order" = "display_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatingSystems = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatingSystems>
 <CFQUERY NAME="GetOperatingSystems" datasource="#application.datasource#" DBTYPE="ODBC" CACHEDWITHIN="#CreateTimeSpan(24, 0, 0, 0)#">
 	SELECT *
 	FROM Operating_Systems
 	ORDER BY Display_Order ASC
 </CFQUERY>
+</cfif>
 
 <HTML>
 <HEAD>

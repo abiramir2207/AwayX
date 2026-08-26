@@ -37,10 +37,25 @@
 		</CFQUERY>
 <cfset day_cont = Get_PreviousSettings.Phase_2_Period>
 
+<cfset useLakebaseForget_phaseI_log = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("purge_log")>
+<cfif useLakebaseForget_phaseI_log>
+	<cftry>
+		<cfset get_phaseI_log = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("purge_log", {
+				"select" = "contract_main_id,contract_number,contract_title,contract_start_date,contract_end_date,system_date"
+			}), "contract_main_id,contract_number,contract_title,contract_start_date,contract_end_date,system_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_phaseI_log = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_phaseI_log>
 <cfquery name="get_phaseI_log" datasource="#application.datasource#">	
 SELECT Contract_Main_ID,CONTRACT_NUMBER,CONTRACT_TITLE,CONTRACT_START_DATE,CONTRACT_END_DATE,SYSTEM_DATE 
  FROM PURGE_LOG
-</cfquery>	
+</cfquery>
+</cfif>	
 
 
 <BR><BR>	

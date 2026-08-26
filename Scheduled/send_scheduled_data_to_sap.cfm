@@ -183,10 +183,25 @@
 					created header <cfflush> --->
 					<cfset i=0>
 					<cfset product_family = "">
-					<CFQUERY NAME="itemcount" DBTYPE="query">
+					<cfset useLakebaseForitemcount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForitemcount>
+	<cftry>
+		<cfset itemcount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemcount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemcount>
+<CFQUERY NAME="itemcount" DBTYPE="query">
 						select distinct * from getDiscountTypeRates
 						where Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 					</CFQUERY>
+</cfif>
 					
 					<cfset totaldetailcount  = itemcount.recordcount>
 					
@@ -223,11 +238,27 @@
 					<cfif Discount_Type_ID EQ 3>
 					<cfif getlumpprodvolume.recordcount GT 0>
 					<cfset product_family = getDiscountTypeRates.Product_group>
-						<CFQUERY NAME="getfamilylumpvol" DBTYPE="query">
+						<cfset useLakebaseForgetfamilylumpvol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getlumpprodvolume")>
+<cfif useLakebaseForgetfamilylumpvol>
+	<cftry>
+		<cfset getfamilylumpvol = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getlumpprodvolume", {
+				"product_group_id" = "eq.#product_family#",
+				"select" = "volume_cs as family_volume"
+			}), "volume_cs as family_volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetfamilylumpvol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetfamilylumpvol>
+<CFQUERY NAME="getfamilylumpvol" DBTYPE="query">
 							select  volume_cs as family_volume
 							from getlumpprodvolume
 							where product_group_id = '#product_family#'
 						</CFQUERY>
+</cfif>
 						<cfif getfamilylumpvol.recordcount EQ 0>
 							<cfset familyvol = 0>
 						<cfelse>
@@ -248,10 +279,26 @@
 						</cfif>
 					</cfif> --->
 					<cfelse>
-						 <CFQUERY NAME="familycount" DBTYPE="query">
+						 <cfset useLakebaseForfamilycount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getdiscounttyperates")>
+<cfif useLakebaseForfamilycount>
+	<cftry>
+		<cfset familycount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getdiscounttyperates", {
+				"component_name_id" = "eq.#getDiscountTypeRates.Component_Name_ID#",
+				"select" = "product_group"
+			}), "product_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfamilycount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfamilycount>
+<CFQUERY NAME="familycount" DBTYPE="query">
 							select distinct Product_group from getDiscountTypeRates
 							where Component_Name_ID = #getDiscountTypeRates.Component_Name_ID#
 						</CFQUERY>
+</cfif>
 						<cfset currentlump = Numberformat(getDiscountTypeRates.rate/familycount.recordcount,"_________.__")>
 					
 						<cfif getDiscountTypeRates.Product_group NEQ product_family>
@@ -473,11 +520,28 @@
 																WHERE BSA_Program_Id ='#component[i].BlackSmithRebateNumber.XmlText#'
 															</CFQUERY>
 													<CFELSE>
-															<CFQUERY NAME="selectSettledRecord" datasource="#application.datasource#">
+															<cfset useLakebaseForselectSettledRecord = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_webservices_detail")>
+<cfif useLakebaseForselectSettledRecord>
+	<cftry>
+		<cfset selectSettledRecord = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_webservices_detail", {
+				"bsa_program_id" = "eq.#component[i].BlackSmithRebateNumber.XmlText#",
+				"program_status" = "eq.D",
+				"select" = "program_status"
+			}), "program_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselectSettledRecord = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselectSettledRecord>
+<CFQUERY NAME="selectSettledRecord" datasource="#application.datasource#">
 																SELECT Program_Status FROM Program_WebServices_Detail 
 																WHERE 	BSA_Program_Id ='#component[i].BlackSmithRebateNumber.XmlText#' 
 																		AND program_status ='D'
 															</CFQUERY>
+</cfif>
 														<CFIF trim(selectSettledRecord.Program_Status) EQ 'D'>
 															<!--- If it is already settled, ignore further error messages --->
 														<CFELSE>
@@ -530,12 +594,31 @@
 </cfif>
 <cfif nomessagereceived EQ "true">
 	<br><div align="center"><font size="2" color="red"><B>No Response from SAP</B></font></div>
-	  	<CFQUERY NAME="ApproveContract" datasource="#application.datasource#">
+	  	<cfset useLakebaseForApproveContract = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForApproveContract>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"sent_to_external_client" = "0",
+				"error_from_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproveContract = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproveContract>
+<CFQUERY NAME="ApproveContract" datasource="#application.datasource#">
 			UPDATE Contract_Main
 			Set Sent_To_External_Client = 0,
 			Error_From_External_Client = 1
 			WHERE Contract_Main_Id = #program_id#
 		</CFQUERY>
+</cfif>
 </cfif>
 <cfif dateerrors EQ "true">
 	<br><div align="center"><font size="2" color="red"><B>Please check the dates and payment cycles selected.</B></font></div>
@@ -556,11 +639,27 @@
 	
 		<cfset new_revision_version = 1 />
 		<!---- check if program is a revision ---->
-		<CFQUERY NAME="Program_Detail" datasource="#application.datasource#">
+		<cfset useLakebaseForProgram_Detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForProgram_Detail>
+	<cftry>
+		<cfset Program_Detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#program_id#",
+				"select" = "contract_number,is_a_revision"
+			}), "contract_number,is_a_revision"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Detail>
+<CFQUERY NAME="Program_Detail" datasource="#application.datasource#">
 			SELECT	contract_number, Is_A_Revision
 			FROM	Contract_Main
 			WHERE 	Contract_Main_Id = #program_id#
 		</CFQUERY>
+</cfif>
 		
 		<cfif Program_Detail.Is_A_Revision EQ 1>
 			<!--- now get the maximum version of all the approved programs of this contract number and then update the current approved program with max(revision_number) + 1 --->
@@ -599,10 +698,26 @@
 	<cfset request.AccessStructure.user_id = user_id>
 		<cfsilent>
 <cfif not isdefined("request.AccessStructure.Company_Main_ID")>
-				<cfquery name="Getcompany" datasource="#application.datasource#">
+				<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 					SELECT Top 1 Company_Main_ID
 					FROM Company_Main
 				</cfquery>
+</cfif>
 <cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 			</cfif>
 			<cfif url.is_autorenew EQ 0>

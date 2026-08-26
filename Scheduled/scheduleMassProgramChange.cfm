@@ -28,9 +28,26 @@
 	
 	<!--- decide if cancel or revise/revise-copy --->
 	<cfif  lcase(variables.updateType) eq "cancel">
-		<cfquery name="programsToCancel" datasource="#application.datasource#">
+		<cfset useLakebaseForprogramsToCancel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mass_program_change_header")>
+<cfif useLakebaseForprogramsToCancel>
+	<cftry>
+		<cfset programsToCancel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("mass_program_change_header", {
+				"skip" = "eq.0",
+				"complete" = "eq.0",
+				"select" = "contract_main_id,notes"
+			}), "contract_main_id,notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForprogramsToCancel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForprogramsToCancel>
+<cfquery name="programsToCancel" datasource="#application.datasource#">
 			Select distinct contract_main_ID, Notes from Mass_Program_Change_Header where skip = 0 and complete = 0
 		</cfquery>
+</cfif>
 		
 		<cfloop query="programsToCancel">
 			<!--- program settings --->

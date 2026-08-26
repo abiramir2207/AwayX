@@ -17,9 +17,39 @@
 <!---Gets pricing floor stuff--->
 <!--- <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = genSettingsManager.get()> --->
-	<cfquery name="getfloor" datasource="#application.datasource#">
+	<cfset useLakebaseForgetfloor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetfloor>
+	<cftry>
+		<cfset getfloor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "floor_price"
+			}), "floor_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetfloor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetfloor>
+<cfset useLakebaseForGetFloor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetFloor>
+	<cftry>
+		<cfset GetFloor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "floor_price"
+			}), "floor_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFloor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFloor>
+<cfquery name="getfloor" datasource="#application.datasource#">
 		select floor_price from _application_settings
 	</cfquery>
+</cfif>
+</cfif>
 <cfif getfloor.floor_price IS 1>
 	<cfset UseFloorPrice = 1>
 <cfelse>
@@ -89,12 +119,28 @@
 <!---if display details then show discount types for just this product--->
 <cfif DisplayDetails IS 1>
 
-	<cfquery name="ItemDetails" datasource="#application.datasource#">
+	<cfset useLakebaseForItemDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForItemDetails>
+	<cftry>
+		<cfset ItemDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "item,description"
+			}), "item,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForItemDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForItemDetails>
+<cfquery name="ItemDetails" datasource="#application.datasource#">
 		SELECT 	BSA_Foodservice_Items_Master.Item, 
 				BSA_Foodservice_Items_Master.Description
 		FROM 	BSA_Foodservice_Items_Master 
 		WHERE	BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
 	</cfquery>
+</cfif>
 
 	<table border="0"  width="98%">
 		<tr>
@@ -129,6 +175,21 @@
 		
 </cfif>
 
+<cfset useLakebaseForGetItemInformation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetItemInformation>
+	<cftry>
+		<cfset GetItemInformation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "item,description,net_weight"
+			}), "item,description,net_weight"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetItemInformation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetItemInformation>
 <cfquery name="GetItemInformation" datasource="#application.datasource#">
 	SELECT 	BSA_Foodservice_Items_Master.Item, 
 			BSA_Foodservice_Items_Master.Description, 
@@ -136,6 +197,7 @@
 	FROM 	BSA_Foodservice_Items_Master
 	WHERE 	BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
 </cfquery>
+</cfif>
 
 <cfquery name="GetContractProductInfo" datasource="#application.datasource#">
 	SELECT 	Contract_Products.Contract_Products_ID, 
@@ -270,11 +332,26 @@ WHERE 	PRODUCT_ID = '#BSA_Foodservice_Items_Master_ID#'
 	<!---Fixed Price number 1--->
 	
 	<!---Get just fixed price product data -- query of a query--->
-	<cfquery name="getFixedPriceCosts" dbtype="query">
+	<cfset useLakebaseForgetFixedPriceCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetFixedPriceCosts>
+	<cftry>
+		<cfset getFixedPriceCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedPriceCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedPriceCosts>
+<cfquery name="getFixedPriceCosts" dbtype="query">
 		SELECT 	*
 		FROM 	GetContractProductInfo
 		WHERE 	Product_Type_ID = 1
 	</cfquery>
+</cfif>
 	
 	<cfif isNumeric(getFixedPriceCosts.FPR_LB) AND getFixedPriceCosts.Recordcount GT 0>
 	
@@ -319,11 +396,26 @@ WHERE 	PRODUCT_ID = '#BSA_Foodservice_Items_Master_ID#'
 	<!---Formula Price number 5--->
 	
 	<!---Get just formula price product data -- query of a query--->
-	<cfquery name="getFormulaPriceCosts" dbtype="query">
+	<cfset useLakebaseForgetFormulaPriceCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetFormulaPriceCosts>
+	<cftry>
+		<cfset getFormulaPriceCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.5"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFormulaPriceCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFormulaPriceCosts>
+<cfquery name="getFormulaPriceCosts" dbtype="query">
 		SELECT 	*
 		FROM 	GetContractProductInfo
 		WHERE 	Product_Type_ID = 5
 	</cfquery>
+</cfif>
 
 	<cfif isNumeric(getFormulaPriceCosts.KPR_LB) AND getFormulaPriceCosts.Recordcount GT 0>
 	
@@ -370,11 +462,26 @@ WHERE 	PRODUCT_ID = '#BSA_Foodservice_Items_Master_ID#'
 	<!---Off Invoice number 8 OER_LB --->
 	
 	<!---Get just off invoice product data -- query of a query--->
-	<cfquery name="getOffInvoiceCosts" dbtype="query">
+	<cfset useLakebaseForgetOffInvoiceCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetOffInvoiceCosts>
+	<cftry>
+		<cfset getOffInvoiceCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.8"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOffInvoiceCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOffInvoiceCosts>
+<cfquery name="getOffInvoiceCosts" dbtype="query">
 		SELECT 	*
 		FROM 	GetContractProductInfo
 		WHERE 	Product_Type_ID = 8
 	</cfquery>
+</cfif>
 	
 	<cfif isNumeric(getOffInvoiceCosts.OER_LB)  AND getOffInvoiceCosts.Recordcount GT 0>
 	
@@ -433,11 +540,26 @@ WHERE 	PRODUCT_ID = '#BSA_Foodservice_Items_Master_ID#'
 	<!---Rebate number 2--->
 	
 	<!---Get just rebate product data -- query of a query--->
-	<cfquery name="getRebateCosts" dbtype="query">
+	<cfset useLakebaseForgetRebateCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetRebateCosts>
+	<cftry>
+		<cfset getRebateCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRebateCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRebateCosts>
+<cfquery name="getRebateCosts" dbtype="query">
 		SELECT 	*
 		FROM 	GetContractProductInfo
 		WHERE 	Product_Type_ID = 2
 	</cfquery>
+</cfif>
 	
 	<cfif isNumeric(getRebateCosts.RER_LB) AND getRebateCosts.Recordcount GT 0>
 	
@@ -462,11 +584,26 @@ WHERE 	PRODUCT_ID = '#BSA_Foodservice_Items_Master_ID#'
 	<!---Growth number 4--->
 	
 	<!---Get just growth product data -- query of a query--->
-	<cfquery name="getGrowthCosts" dbtype="query">
+	<cfset useLakebaseForgetGrowthCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcontractproductinfo")>
+<cfif useLakebaseForgetGrowthCosts>
+	<cftry>
+		<cfset getGrowthCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcontractproductinfo", {
+				"product_type_id" = "eq.4"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGrowthCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGrowthCosts>
+<cfquery name="getGrowthCosts" dbtype="query">
 		SELECT 	*
 		FROM 	GetContractProductInfo
 		WHERE 	Product_Type_ID = 4
 	</cfquery>
+</cfif>
 	
 	<cfif isNumeric(getGrowthCosts.GRR_LB) AND getGrowthCosts.Recordcount GT 0>
 	

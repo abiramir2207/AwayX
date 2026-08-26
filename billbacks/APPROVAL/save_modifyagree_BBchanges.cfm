@@ -15,6 +15,26 @@
 <cfset newprogram_list = "">
 <cfset newprogramnum_list = "">
 </cfif>
+<cfset useLakebaseForupdateBBModifyAgreeprogramList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_modifyagree_programchanges")>
+<cfif useLakebaseForupdateBBModifyAgreeprogramList>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_modifyagree_programchanges",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"active" = "eq.1"
+			},
+			{
+				"to_programid_list" = "#newprogram_list#",
+				"to_programnum_list" = "#newprogramnum_list#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateBBModifyAgreeprogramList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateBBModifyAgreeprogramList>
 <cfquery name="updateBBModifyAgreeprogramList" datasource="#Application.Datasource#">
 	update BB_ModifyAgree_ProgramChanges
 	set To_ProgramId_List = '#newprogram_list#',
@@ -23,6 +43,7 @@
 	and User_Id = '#request.AccessStructure.user_id#'
 	and active = 1
 </cfquery>
+</cfif>
 
 <cfquery name="updateBBModifyAgreeprogramList" datasource="#Application.Datasource#">
 <!--- products updated or deleted --->
@@ -145,6 +166,25 @@
 </cfquery>
 
  
+<cfset useLakebaseForUpdateModifyPrgInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_modifyagree_programchanges")>
+<cfif useLakebaseForUpdateModifyPrgInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_modifyagree_programchanges",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"active" = "eq.1"
+			},
+			{
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateModifyPrgInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateModifyPrgInfo>
 <CFQUERY NAME="UpdateModifyPrgInfo" DATASOURCE="#Application.Datasource#">
 	update BB_ModifyAgree_ProgramChanges
 	set active = 0
@@ -152,3 +192,4 @@
 	and user_id ='#request.AccessStructure.user_id#'
 	and active = 1
 </CFQUERY>
+</cfif>

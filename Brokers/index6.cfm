@@ -29,27 +29,74 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForGetPlanData>
-	<CFQUERY NAME="Get_Plan_Data" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0, 24, 0, 0)#">
+	<cfset useLakebaseForGet_Plan_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_action_plan")>
+<cfif useLakebaseForGet_Plan_Data>
+	<cftry>
+		<cfset Get_Plan_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("broker_action_plan", {
+				"broker_action_plan_id" = "eq.#APID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Plan_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Plan_Data>
+<CFQUERY NAME="Get_Plan_Data" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0, 24, 0, 0)#">
 		Select	*
 		From	Broker_Action_Plan
 		Where	Broker_Action_Plan_ID	=	#APID#
 	</CFQUERY>
 </cfif>
+</cfif>
 
 <!--- Get the name of the operator --->
+<cfset useLakebaseForGet_Operator_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Name>
+	<cftry>
+		<cfset Get_Operator_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#Get_Plan_Data.BSA_Operator_ID#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Name>
 <CFQUERY NAME="Get_Operator_Name" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0, 24, 0, 0)#">
 	Select		Operator_Name
 	From		BSA_Operator
 	Where		BSA_Operator_ID	=	#Get_Plan_Data.BSA_Operator_ID#
 </CFQUERY>
+</cfif>
 
 <!--- Get the name of the user that created this broker plan --->
+<cfset useLakebaseForGet_User_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_User_Name>
+	<cftry>
+		<cfset Get_User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Plan_Data.User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_User_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_User_Name>
 <CFQUERY NAME="Get_User_Name" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0, 24, 0, 0)#">
 	Select		Name_First,
 				Name_Last
 	From		_Users
 	Where		User_ID	=	'#Get_Plan_Data.User_ID#'
 </CFQUERY>
+</cfif>
 
 <!--- Get the product data --->
 <cfset useLakebaseForGetProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_action_plan_products")>
@@ -65,11 +112,26 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForGetProducts>
-	<CFQUERY NAME="Get_Products" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_action_plan_products")>
+<cfif useLakebaseForGet_Products>
+	<cftry>
+		<cfset Get_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("broker_action_plan_products", {
+				"broker_action_plan_id" = "eq.#APID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Products>
+<CFQUERY NAME="Get_Products" datasource="#application.datasource#">
 		Select	*
 		From	Broker_Action_Plan_Products
 		Where	Broker_Action_Plan_ID	=	#APID#
 	</CFQUERY>
+</cfif>
 </cfif>
 
 

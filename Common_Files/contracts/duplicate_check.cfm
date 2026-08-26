@@ -77,11 +77,27 @@
 
 <cfif checkDuplicateProgram>
 
-	<CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"select" = "contract_start_date,contract_end_date,revision_of_contract_main_id"
+			}), "contract_start_date,contract_end_date,revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
 		SELECT Contract_Start_Date, Contract_End_Date, Revision_Of_Contract_Main_ID
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#Program_ID#'
 	</CFQUERY>
+</cfif>
 
 	<CFINCLUDE Template="/includes/progress_bar.cfm" />
 	<CFINCLUDE Template="duplicate_program_check.cfm" />

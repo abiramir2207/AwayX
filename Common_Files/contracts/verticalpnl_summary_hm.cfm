@@ -81,9 +81,25 @@
         </cfoutput>
         <td class="summary"><!--- <b>Grand Total</b> ---></td><!---  Grand Total Col --->
         <cfoutput query="qParent" group="Type_Code_Desc_ID">
-                <cfquery name="local.detail" dbtype="query">
+                <cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qparent")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qparent", {
+				"type_code_desc_id" = "eq.#qParent.Type_Code_Desc_ID#",
+				"select" = "type_code_desc"
+			}), "type_code_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+<cfquery name="local.detail" dbtype="query">
                     SELECT  Type_Code_Desc FROM qParent WHERE Type_Code_Desc_ID = '#qParent.Type_Code_Desc_ID#'
                 </cfquery>
+</cfif>
                 <cfset data = local.detail.Type_Code_Desc>
                 <td class="summary"><b>#application.util.string.wrapText(data,25)#</b></td>
         </cfoutput>
@@ -153,10 +169,25 @@
     <cfset ApprovalProgramManager = CreateObject("component","components.programs.Approval.layered_program_approval")>
 
     <cfif appSettings.getApprovalMarginType() eq 3>
-        <cfquery name="getGlobalUOM" datasource="#application.datasource#">
+        <cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+<cfquery name="getGlobalUOM" datasource="#application.datasource#">
             SELECT Global_Target_UOM
                 FROM General_Settings
         </cfquery>
+</cfif>
       <cfset Global_Target_UOM = getGlobalUOM.Global_Target_UOM>
     <cfelse>
         <cfset Global_Target_UOM = 0>

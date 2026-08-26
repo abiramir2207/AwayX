@@ -64,10 +64,25 @@
 			Deleted = 0
 </CFQUERY>
 
+<cfset useLakebaseForTET = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForTET>
+	<cftry>
+		<cfset TET = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "bb_tolerance_tet"
+			}), "bb_tolerance_tet"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTET = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTET>
 <CFQUERY NAME="TET" DATASOURCE="#Application.Datasource#">
 	SELECT 	BB_Tolerance_TET
 	FROM 	Billback_Settings
 </CFQUERY>
+</cfif>
 	
 <CFQUERY NAME="GetContractNumber" DATASOURCE="#Application.Datasource#">
 	SELECT 	Contract_Number,Contract_Quantity_UOM_IDX

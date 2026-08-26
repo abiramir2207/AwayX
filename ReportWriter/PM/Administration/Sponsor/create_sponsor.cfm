@@ -9,11 +9,26 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Sponsor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_sponsor")>
+<cfif useLakebaseForGet_Sponsor>
+	<cftry>
+		<cfset Get_Sponsor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_sponsor", {
+				"order" = "pm_sponsor_name_last.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Sponsor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Sponsor>
 <CFQUERY NAME="Get_Sponsor" datasource="#application.datasource#">
 	Select		*
 	From		PM_Sponsor
 	Order by	PM_Sponsor_Name_Last
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="URL.RID" DEFAULT="0">
 <CFQUERY NAME="Get_LastUpdated_Details" datasource="#application.datasource#">

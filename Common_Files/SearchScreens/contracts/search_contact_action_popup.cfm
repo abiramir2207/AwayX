@@ -1,8 +1,26 @@
+<cfset useLakebaseForgetProgramTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetProgramTypes>
+	<cftry>
+		<cfset getProgramTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_main_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "created_type,programcontrol_panel_options_id"
+			}), "created_type,programcontrol_panel_options_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramTypes>
 <CFQUERY NAME="getProgramTypes" datasource="#application.datasource#">
 SELECT Created_Type, ProgramControl_Panel_Options_ID
 FROM Program_Control_Panel_Options
 WHERE Company_main_ID = '#request.AccessStructure.Company_main_ID#' and Deleted = 0 AND Active = 1
 </CFQUERY>
+</cfif>
 
 <STYLE TYPE="text/css">
 	.red
@@ -75,11 +93,26 @@ WHERE Company_main_ID = '#request.AccessStructure.Company_main_ID#' and Deleted 
 			<TD><B><SPAN CLASS="title2"><cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput>(s):</SPAN></B><BR>
 				<INPUT type="text" name="Distributor" size="34" CLASS="red"></TD>
 			<TD><B><SPAN CLASS="title2"><cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput> Family:</SPAN></B><BR>
-				<cfquery name="GetFamilyNames" datasource="#application.datasource#">
+				<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#">
 					SELECT *
 					FROM Distributor_Family
 					ORDER BY Family_Name
 				</cfquery>
+</cfif>
 				<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 				<SELECT NAME="Family_Name" style="width: 200px;">
 					<OPTION VALUE="0">**ALL** Family Names</OPTION>

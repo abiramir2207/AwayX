@@ -3,7 +3,27 @@
 <CFSET Rule_ID = FORM.Program_Formula_Pricing_Rule_ID>
 
 <CFIF FORM.UPDATE EQ 1>
-	<CFQUERY NAME="deleteOldNewCommData" datasource="#application.datasource#">
+	<cfset useLakebaseFordeleteOldNewCommData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_comm_data")>
+<cfif useLakebaseFordeleteOldNewCommData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rule_comm_data",
+			{
+				"program_id" = "eq.#cryp.value#",
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteOldNewCommData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteOldNewCommData>
+<CFQUERY NAME="deleteOldNewCommData" datasource="#application.datasource#">
 		UPDATE Program_Formula_Pricing_Rule_Comm_Data
 		SET Deleted = 1
 		WHERE 
@@ -15,6 +35,7 @@
 			AND
 			Deleted = 0
 	</CFQUERY>
+</cfif>
 <CFELSE>
 	<CFQUERY NAME="deleteOldNewCommData" datasource="#application.datasource#">
 		UPDATE Program_Formula_Pricing_Rule_Comm_Data
@@ -30,6 +51,26 @@
 	</CFQUERY>
 </CFIF>
 
+<cfset useLakebaseFordeleteOldNewOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_overage")>
+<cfif useLakebaseFordeleteOldNewOverageData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rule_overage",
+			{
+				"program_id" = "eq.#cryp.value#",
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"active" = "eq.0",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteOldNewOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteOldNewOverageData>
 <CFQUERY NAME="deleteOldNewOverageData" datasource="#application.datasource#">
 	UPDATE Program_Formula_Pricing_Rule_Overage
 	SET Deleted = 1
@@ -42,9 +83,29 @@
 		AND
 		Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFIF FORM.UPDATE EQ 1>
-	<CFQUERY NAME="updateRules" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForupdateRules>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_rules",
+			{
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"number_of_comms" = "#FORM.Number_Of_Comms#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateRules>
+<CFQUERY NAME="updateRules" datasource="#application.datasource#">
 		UPDATE Program_Formula_Pricing_Rules
 		SET 
 			Number_Of_Comms = '#FORM.Number_Of_Comms#'
@@ -56,6 +117,7 @@
 			Deleted = 0
 		
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 <CFLOOP INDEX="i" FROM="1" TO="#FORM.Number_Of_Comms#" STEP="1">

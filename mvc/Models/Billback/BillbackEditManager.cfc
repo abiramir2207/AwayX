@@ -19,9 +19,25 @@ Usage:			N/A
 	<cffunction name="checkBillbackStatus" output="false" access="remote" returnformat="JSON">
 		<cfargument name="billbackidint" 	required="true" type="numeric">
 
-		<cfquery name="qCheckBBStatus" datasource="#application.datasource#" >
+		<cfset useLakebaseForqCheckBBStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqCheckBBStatus>
+	<cftry>
+		<cfset qCheckBBStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id_int" = "eq.#arguments.billbackidint#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckBBStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckBBStatus>
+<cfquery name="qCheckBBStatus" datasource="#application.datasource#" >
 			Select Billback_Status_ID from Billback Where Billback_ID_Int = #arguments.billbackidint#
 		</cfquery>
+</cfif>
 
 		<cfreturn application.util.struct.structSortLowerCase(serializeJSON(qCheckBBStatus, "struct")) />
 

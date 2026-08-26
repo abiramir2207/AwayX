@@ -76,7 +76,24 @@
 
 	<cffunction name="getActive" output="false" returntype="query">
    
-		<cfquery name="qGetActiveCurrencies" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveCurrencies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForqGetActiveCurrencies>
+	<cftry>
+		<cfset qGetActiveCurrencies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "currency_name.asc",
+				"select" = "currency_id,currency_name,currency_code"
+			}), "currency_id,currency_name,currency_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveCurrencies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveCurrencies>
+<cfquery name="qGetActiveCurrencies" datasource="#application.datasource#">
 			SELECT	Currency_ID,
 					Currency_Name,
 					Currency_Code
@@ -85,6 +102,7 @@
 			AND		Active = 1
 			ORDER BY 	Currency_Name
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetActiveCurrencies />
 		
@@ -94,11 +112,26 @@
    
    		<cfargument name="currencyId" required="false" default=0 />
 		
-		<cfquery name="qGetCurrency" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCurrency = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForqGetCurrency>
+	<cftry>
+		<cfset qGetCurrency = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"currency_id" = "eq.#arguments.currencyId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCurrency = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCurrency>
+<cfquery name="qGetCurrency" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Currency
 			WHERE 	Currency_ID = #arguments.currencyId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetCurrency />
 		

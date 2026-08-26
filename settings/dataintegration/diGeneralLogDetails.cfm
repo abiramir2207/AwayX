@@ -59,11 +59,26 @@
 <cfset anyRecord=false>
 		
 		<!---------------Show the whole list of entry in tables------------------>
-		<CFQUERY NAME="q_diLogData" datasource="#application.datasource#">
+		<cfset useLakebaseForq_diLogData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_log")>
+<cfif useLakebaseForq_diLogData>
+	<cftry>
+		<cfset q_diLogData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_integration_log", {
+				"data_integration_msgtype" = "eq.user"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_diLogData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_diLogData>
+<CFQUERY NAME="q_diLogData" datasource="#application.datasource#">
 			SELECT *
 		    FROM Data_Integration_Log
 			Where Data_Integration_MsgType='user'
 		</CFQUERY>
+</cfif>
 		<CFIF q_diLogData.recordCount GT 0>
 			<cfset pageLen=50>
 			<cfset thisPage=Val(URL.thisPage)>

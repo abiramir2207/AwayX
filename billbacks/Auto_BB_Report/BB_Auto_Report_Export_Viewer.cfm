@@ -11,15 +11,45 @@
 <cfset qExportPullLabels = application.oBBReportGet.getExportPullLabels() />
 <cfset qExportPullLabelsColumnList = valueList(qExportPullLabels.DB_Col_Name) >
 
+<cfset useLakebaseForqExportBBDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qexportbbdetails")>
+<cfif useLakebaseForqExportBBDetails>
+	<cftry>
+		<cfset qExportBBDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qexportbbdetails", {
+				"select" = "#qexportbblabelscolumnlist#,unit_of_measure_desc"
+			}), "#qexportbblabelscolumnlist#,unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqExportBBDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqExportBBDetails>
 <cfquery name="qExportBBDetails" dbtype="query">
 	SELECT #qExportBBLabelsColumnList#,Unit_Of_Measure_Desc
 	FROM qExportBBDetails
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForqExportPullDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qexportpulldetails")>
+<cfif useLakebaseForqExportPullDetails>
+	<cftry>
+		<cfset qExportPullDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qexportpulldetails", {
+				"select" = "#qexportpulllabelscolumnlist#,unit_of_measure_desc"
+			}), "#qexportpulllabelscolumnlist#,unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqExportPullDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqExportPullDetails>
 <cfquery name="qExportPullDetails" dbtype="query">
 	SELECT #qExportPullLabelsColumnList#,Unit_Of_Measure_Desc
 	FROM qExportPullDetails
 </cfquery>
+</cfif>
 
 <!--- Create list of columns to pull data in the order desired --->
 <cfset BBcolList = qExportBBLabelsColumnList>

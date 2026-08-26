@@ -30,9 +30,27 @@ function redirectToSummaryPage()
 <!--- <cfparam name="URL.DISTID" default="0" > --->
 <cfoutput>
 	<!---
-	<cfquery name="qGetDSChannels" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetDSChannels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDSChannels>
+	<cftry>
+		<cfset qGetDSChannels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"bs_var_2" = "not.is.null",
+				"select" = "bs_var_2"
+			}), "bs_var_2"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDSChannels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDSChannels>
+<cfquery name="qGetDSChannels" datasource="#application.datasource#">
 		SELECT DISTINCT BS_Var_2 FROM Business_Segment WHERE Active = 1 AND Deleted = 0 AND BS_Var_2 IS NOT NULL
 	</cfquery>
+</cfif>
 	--->
 	<cfquery name="getDSChannelForProgram" datasource="#application.datasource#">
 		SELECT 
@@ -190,9 +208,24 @@ wrapper {
 				BSA_Foodservice_Customers_ID = '#getDSChannelForDist.Distributor_ID#'
 			ORDER BY Distribution_Channel
 		</cfquery>
-		<cfquery name="qGetDSChannelFromUnion" dbtype="query">
+		<cfset useLakebaseForqGetDSChannelFromUnion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetdschannelfromdistmapping")>
+<cfif useLakebaseForqGetDSChannelFromUnion>
+	<cftry>
+		<cfset qGetDSChannelFromUnion = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetdschannelfromdistmapping", {
+				"select" = "distribution_channel as bs_var_2"
+			}), "distribution_channel as bs_var_2"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDSChannelFromUnion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDSChannelFromUnion>
+<cfquery name="qGetDSChannelFromUnion" dbtype="query">
 			SELECT Distribution_Channel AS BS_Var_2 FROM qGetDSChannelFromDistMapping
 		</cfquery>
+</cfif>
 		<tr>
 			<td>#getDSChannelForDist.Name#(#getDSChannelForDist.Ship_To#)</td>
 		<!--- 	<td align="right"><B>Pick the #qGetBSVar2Label.General_Labels_Label# for this Distributor: </td> --->

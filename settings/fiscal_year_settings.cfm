@@ -1,9 +1,26 @@
+<cfset useLakebaseForgetFiscalCalendar = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForgetFiscalCalendar>
+	<cftry>
+		<cfset getFiscalCalendar = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"deleted" = "eq.0",
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "last_updated,last_updated_by_user_id"
+			}), "last_updated,last_updated_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFiscalCalendar = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFiscalCalendar>
 <cfquery name="getFiscalCalendar" datasource="#application.datasource#" MAXROWS=1>
 	SELECT Last_Updated,Last_Updated_By_User_ID
 	FROM Fiscal_Year
 	WHERE Deleted = 0
 	AND	Company_Main_ID = '#request.AccessStructure.Company_Main_ID#'
 </cfquery>
+</cfif>
 <cfset CompanyMainID = request.AccessStructure.Company_Main_ID>
 
 <cfif getFiscalCalendar.recordcount GT 0>

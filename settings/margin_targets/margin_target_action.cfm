@@ -25,12 +25,28 @@ FUNCTIONALITY:- This action page updates the DB with user input margin target da
 <cfset appSettings = genSettingsManager.get()>
 
 <cfif appSettings.getlocalcostvariables() eq 1>
+<cfset useLakebaseForgetcostvariables = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForgetcostvariables>
+	<cftry>
+		<cfset getcostvariables = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cost_sequence", {
+				"deleted" = "eq.0",
+				"order" = "cost_sequence_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcostvariables = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcostvariables>
 <cfquery name="getcostvariables" datasource="#application.datasource#">
 	SELECT *
 	FROM cost_sequence
 	WHERE	Deleted = 0
 	ORDER BY Cost_Sequence_Order
 </cfquery>
+</cfif>
 <cfif getcostvariables.recordcount GT 0>
 <cfset costvariableslist = valuelist(getcostvariables.cost_sequence_id)>
 <cfset costvariablessequence = valuelist(getcostvariables.cost_sequence_order)>

@@ -200,12 +200,28 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 
 	<cffunction name="loadDDActionInfo" returntype="void" output="false">
 		<cfargument name="ddActionID" required="true" type="string" />
-		<cfquery name="qLoadDDActionInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqLoadDDActionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_ded_actions")>
+<cfif useLakebaseForqLoadDDActionInfo>
+	<cftry>
+		<cfset qLoadDDActionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_ded_actions", {
+				"deleted" = "eq.0",
+				"dd_ded_action_id" = "eq.#arguments.ddActionID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLoadDDActionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLoadDDActionInfo>
+<cfquery name="qLoadDDActionInfo" datasource="#application.datasource#">
 			select *
 			from DD_Ded_Actions
 			where deleted = 0
 			and DD_Ded_Action_ID = '#arguments.ddActionID#'
 		</cfquery>
+</cfif>
 		<cfset setDDActionID(qLoadDDActionInfo.DD_Stage_ID) />
 		<cfset setDDActionCreatedDate(qLoadDDActionInfo.Created_Date) />
 		<cfset setDDActionCompletedDate(qLoadDDActionInfo.Date_Completed) />
@@ -214,12 +230,31 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 	<cffunction name="updateAction" output="false" returntype="void">
 		<cfargument name="DD_Ded_Action_ID" required="true" type="string" />
 		<cfargument name="DD_Reminder_ID" 	required="true" type="string" />
-		<cfquery name="qUpdateAction" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateAction = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_ded_actions")>
+<cfif useLakebaseForqUpdateAction>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_ded_actions",
+			{
+				"dd_ded_action_id" = "eq.#arguments.DD_Ded_Action_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"dd_reminder_id" = "#arguments.DD_Reminder_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateAction = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateAction>
+<cfquery name="qUpdateAction" datasource="#application.datasource#">
 			Update DD_Ded_Actions
 			set DD_Reminder_ID = '#arguments.DD_Reminder_ID#'
 			where DD_Ded_Action_ID = '#arguments.DD_Ded_Action_ID#'
 			and deleted = 0
 		</cfquery>
+</cfif>
 
 	</cffunction>
 
@@ -392,21 +427,57 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 				<CFSET LoopCount = LoopCount + 1>
 				<!---Insert into reason code and  relocate to closure--->
 				<CFIF LoopCount EQ 1>
-					<cfquery name="AddReason" datasource="#application.datasource#">
+					<cfset useLakebaseForAddReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForAddReason>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#"
+			},
+			{
+				"dd_closure_id" = "#BBIDItem#",
+				"dd_closure_type" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAddReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAddReason>
+<cfquery name="AddReason" datasource="#application.datasource#">
 						UPDATE 	Deductions
 						Set 	DD_Closure_ID = '#BBIDItem#',
 								DD_Closure_Type = 1
 						WHERE 	Deduction_ID = '#arguments.Deduction_ID#'
 					</cfquery>
+</cfif>
 				</CFIF>
 				<!--- Check for existing entry in DD_Closure_Detail for this given Deduction/Billback Combination to prevent duplicate entries --->
-				<CFQUERY NAME="qCheckIfExists" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForqCheckIfExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForqCheckIfExists>
+	<cftry>
+		<cfset qCheckIfExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure_detail", {
+				"deduction_id" = "eq.#arguments.Deduction_ID#",
+				"dd_closure_id" = "eq.#BBIDItem#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfExists>
+<CFQUERY NAME="qCheckIfExists" DATASOURCE="#Application.Datasource#">
 					SELECT	*
 					FROM	DD_Closure_Detail
 					WHERE	Deduction_ID 	= '#arguments.Deduction_ID#'
 					AND		DD_Closure_ID 	= '#BBIDItem#'
 					AND		Deleted			= 0
 				</CFQUERY>
+</cfif>
 				<cfif not qCheckIfExists.RecordCount>
 					<CFQUERY NAME="InsData" DATASOURCE="#Application.Datasource#">
 						INSERT INTO DD_Closure_Detail (arguments.Deduction_ID,arguments.DD_Closure_ID)
@@ -540,22 +611,75 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			}
 		</cfscript>
 
-		<cfquery name="GetDeductionInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForGetDeductionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetDeductionInfo>
+	<cftry>
+		<cfset GetDeductionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#arguments.Deduction_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDeductionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDeductionInfo>
+<cfquery name="GetDeductionInfo" datasource="#application.datasource#">
 			SELECT *
 			FROM Deductions
 			WHERE Deduction_ID = '#arguments.Deduction_ID#'
 		</cfquery>
+</cfif>
 
-		<cfquery name="GetClosureInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForGetClosureInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetClosureInfo>
+	<cftry>
+		<cfset GetClosureInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#arguments.Deduction_ID#",
+				"select" = "dd_closure_id,dd_closure_type,distributor_id,dd_amount"
+			}), "dd_closure_id,dd_closure_type,distributor_id,dd_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetClosureInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetClosureInfo>
+<cfquery name="GetClosureInfo" datasource="#application.datasource#">
 			SELECT DD_Closure_ID, DD_Closure_Type, Distributor_ID, DD_Amount
 			FROM Deductions
 			WHERE Deduction_ID = '#arguments.Deduction_ID#'
 		</cfquery>
+</cfif>
 
 		<cftry>
 
 		<!---Update some deduction info--->
-		<CFQUERY NAME="UpdateFalgs" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForUpdateFalgs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateFalgs>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#"
+			},
+			{
+				"dd_closure_sent" = "0",
+				"ack_received_closure" = "0",
+				"ack_received_reopen" = "0",
+				"reopened" = "0",
+				"dd_reopened_sent" = "0/*",
+				"log_processing" = "1*/"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateFalgs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateFalgs>
+<CFQUERY NAME="UpdateFalgs" DATASOURCE="#Application.Datasource#">
 			UPDATE Deductions
 			SET DD_Closure_Sent = 0,
 			Ack_received_Closure = 0,
@@ -565,13 +689,34 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			Log_Processing = 1*/
 			WHERE Deduction_ID = '#arguments.Deduction_ID#'
 		</CFQUERY>
+</cfif>
 
-		<CFQUERY NAME="ResetBB_Credit" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForResetBB_Credit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForResetBB_Credit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_closure_detail",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"interfaced_on" = javaCast("null",""),
+				"ack_received" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetBB_Credit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetBB_Credit>
+<CFQUERY NAME="ResetBB_Credit" DATASOURCE="#Application.Datasource#">
 			UPDATE DD_Closure_Detail
 			SET Interfaced_On = NULL,
 			Ack_Received = NULL
 			WHERE Deduction_ID = '#arguments.Deduction_ID#' AND Deleted = 0
 		</CFQUERY>
+</cfif>
 
 		<cfquery name="UpdateDeduction" datasource="#application.datasource#">
 		UPDATE Deductions
@@ -676,9 +821,24 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 				</CFIF>
 			</CFIF>
 
-			<CFQUERY NAME="CheckParent" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForCheckParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckParent>
+	<cftry>
+		<cfset CheckParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckParent>
+<CFQUERY NAME="CheckParent" DATASOURCE="#Application.Datasource#">
 				SELECT * FROM Billback WHERE Billback_ID = '#Billback_ID#'
 			</CFQUERY>
+</cfif>
 			<CFIF CheckParent.BB_parent_ID NEQ "">
 				<CFQUERY NAME="AnyUnclosedSplit" DATASOURCE="#Application.Datasource#">
 					SELECT 	*
@@ -1090,15 +1250,50 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			<!---- release any billback which is already linked to this deduction ----->
 			<cfset RemoveAssociatedBB(arguments.deductionId) />
 			<!---
-			<CFQUERY NAME="IsAnyAssociatedBB" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForIsAnyAssociatedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForIsAnyAssociatedBB>
+	<cftry>
+		<cfset IsAnyAssociatedBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#arguments.deductionId#",
+				"dd_closure_type" = "eq.1",
+				"select" = "dd_closure_id"
+			}), "dd_closure_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsAnyAssociatedBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsAnyAssociatedBB>
+<CFQUERY NAME="IsAnyAssociatedBB" DATASOURCE="#Application.Datasource#">
 				SELECT DD_Closure_ID FROM Deductions WHERE Deduction_ID = '#arguments.deductionId#' AND DD_Closure_Type = 1
 			</CFQUERY>
+</cfif>
 			<CFIF IsAnyAssociatedBB.RecordCount GT 0 AND IsAnyAssociatedBB.DD_Closure_ID NEQ "">
-			<CFQUERY NAME="UnAssociateBBIfAny" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForUnAssociateBBIfAny = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUnAssociateBBIfAny>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#IsAnyAssociatedBB.DD_Closure_ID#"
+			},
+			{
+				"bb_associated_to_dd" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnAssociateBBIfAny = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnAssociateBBIfAny>
+<CFQUERY NAME="UnAssociateBBIfAny" DATASOURCE="#Application.Datasource#">
 				UPDATE Billback
 				SET BB_Associated_To_DD = 0
 				WHERE Billback_ID = '#IsAnyAssociatedBB.DD_Closure_ID#'
 			</CFQUERY>
+</cfif>
 			</CFIF>
 			--->
 
@@ -1110,7 +1305,28 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			as we already have existing code which removes existing billback/credit association,
 			it is easier and less risk to do the same way to re-set the write-off
 			----->
-			<CFQUERY NAME="ResetWriteOff" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForResetWriteOff = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForResetWriteOff>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.deductionId#",
+				"is_write_off" = "eq.1"
+			},
+			{
+				"is_write_off" = "0",
+				"write_off_by" = javaCast("null",""),
+				"write_off_date" = javaCast("null",""),
+				"write_off_toopen_reason" = "Deduction is getting associated to credit"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetWriteOff = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetWriteOff>
+<CFQUERY NAME="ResetWriteOff" DATASOURCE="#Application.Datasource#">
 				UPDATE 	Deductions
 				SET 	Is_Write_Off = 0,
 						Write_Off_By = NULL,
@@ -1119,6 +1335,7 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 				WHERE 	Deduction_ID = '#arguments.deductionId#'
 				AND		Is_Write_Off = 1
 			</CFQUERY>
+</cfif>
 
 
 			<cfset RemoveClosureFromCreditForThisDeduction(arguments.deductionId) />

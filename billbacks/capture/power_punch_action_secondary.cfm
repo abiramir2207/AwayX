@@ -15,9 +15,29 @@
 	<cfset Contract_Main_ID = left(Row_CM_Partnering, UnderscoreLocation - 1)>
 
 	<!---GetBBContractNumber--->
-	<cfquery name="GetBBContractNumber" datasource="#application.datasource#">
+	<cfset useLakebaseForGetBBContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetBBContractNumber>
+	<cftry>
+		<cfset GetBBContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"program_id" = "eq.#Contract_Main_ID#",
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"order" = "created_date.desc",
+				"limit" = "1",
+				"select" = "billback_program_id"
+			}), "billback_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBContractNumber>
+<cfquery name="GetBBContractNumber" datasource="#application.datasource#">
 	SELECT TOP 1 Billback_Program_ID FROM Billback_Program WHERE Program_ID = '#Contract_Main_ID#' AND Billback_ID = '#Billback_ID#' AND Deleted = 0 ORDER BY Created_Date DESC
 	</cfquery>
+</cfif>
 	
 	<cfset Billback_Program_ID = GetBBContractNumber.Billback_Program_ID>
 	
@@ -85,11 +105,29 @@
 					</cfif>
 					
 					<!---Update--->
-					<cfquery name="UpdateConvertedVolume" datasource="#application.datasource#">
+					<cfset useLakebaseForUpdateConvertedVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForUpdateConvertedVolume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_product_id" = "eq.#ItemIsAlreadyThere.Billback_Product_ID#"
+			},
+			{
+				"bb_product_quantity" = "#NewConvertedVolume#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateConvertedVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateConvertedVolume>
+<cfquery name="UpdateConvertedVolume" datasource="#application.datasource#">
 					UPDATE Billback_Product
 					SET BB_Product_Quantity = '#NewConvertedVolume#'
 					WHERE Billback_Product_ID = '#ItemIsAlreadyThere.Billback_Product_ID#'
 					</cfquery>
+</cfif>
 				
 				<!---Updating different uom--->	
 				</cfif>
@@ -187,13 +225,31 @@
 			</cfif>
 				
 				<cfif listfind(DiscountList, '2')>
-					<cfquery name="GetRebatePayeeTo" datasource="#application.datasource#">
+					<cfset useLakebaseForGetRebatePayeeTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
+<cfif useLakebaseForGetRebatePayeeTo>
+	<cftry>
+		<cfset GetRebatePayeeTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component", {
+				"component_paid_to" = "eq.#Payee_Type#",
+				"program_id" = "eq.#ProductOnProgram.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "component_paid_to"
+			}), "component_paid_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRebatePayeeTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRebatePayeeTo>
+<cfquery name="GetRebatePayeeTo" datasource="#application.datasource#">
 					SELECT Program_Rebates_Component.Component_Paid_To
 					FROM Program_Rebates_Component
 					WHERE Program_Rebates_Component.Component_Paid_To = #Payee_Type#
 					AND Program_Rebates_Component.Program_ID = #ProductOnProgram.Contract_Main_ID#
 					AND Program_Rebates_Component.Deleted = 0
 					</cfquery>
+</cfif>
 					
 					<cfif GetRebatePayeeTo.RecordCount IS 0>
 						<cfset RebateLocation = listfind(DiscountList, '2')>
@@ -236,22 +292,58 @@
 			
 			
 			<!---Is there already an entry in Billback_Product_Data?--->		
-			<cfquery name="AlreadyInBBProductData" datasource="#application.datasource#">
+			<cfset useLakebaseForAlreadyInBBProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForAlreadyInBBProductData>
+	<cftry>
+		<cfset AlreadyInBBProductData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_product_detail", {
+				"billback_product_id" = "eq.#Billback_Product_ID#",
+				"bb_product_type_id" = "eq.#Product_Type_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlreadyInBBProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlreadyInBBProductData>
+<cfquery name="AlreadyInBBProductData" datasource="#application.datasource#">
 			SELECT TOP 1 *  FROM Billback_Product_Detail
 			WHERE Billback_Product_ID = '#Billback_Product_ID#'
 			AND	BB_Product_Type_ID = '#Product_Type_ID#'
 			AND Deleted = 0
 			</cfquery>
+</cfif>
 			
 			<!---Update the product if it already exists--->
 			<cfif AlreadyInBBProductData.Recordcount GT 0>
 			
 			<cfset NewAmountClaimed = AlreadyInBBProductData.BB_Rate + AmountforThisDiscount>
-				<cfquery name="UpdateBBProductData" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdateBBProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
+<cfif useLakebaseForUpdateBBProductData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product_detail",
+			{
+				"billback_product_detail_id" = "eq.#AlreadyInBBProductData.Billback_Product_Detail_ID#"
+			},
+			{
+				"bb_rate" = "#NewAmountClaimed#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBBProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBBProductData>
+<cfquery name="UpdateBBProductData" datasource="#application.datasource#">
 				UPDATE Billback_Product_Detail
 				SET BB_Rate = #NewAmountClaimed#
 				WHERE Billback_Product_Detail_ID = '#AlreadyInBBProductData.Billback_Product_Detail_ID#'
 				</cfquery>
+</cfif>
 			
 			<cfelse>
 			<!---Just insert--->

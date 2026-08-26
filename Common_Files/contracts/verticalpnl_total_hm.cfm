@@ -63,9 +63,25 @@
          <tr class="GridViewScrollItem">
             <td class="une82">&nbsp; &nbsp; &nbsp;CM $</td>
             <cfoutput query="getAllProductMargins">
-                     <cfquery name="local.detail" dbtype="query">
+                     <cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetpreviousmargins")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetpreviousmargins", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "product_program_volume,contribution_margin_alt"
+			}), "product_program_volume,contribution_margin_alt"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+<cfquery name="local.detail" dbtype="query">
                         SELECT  Product_Program_Volume, Contribution_Margin_Alt FROM qGetPreviousMargins WHERE Product_ID = '#getAllProductMargins.Product_ID#'
                     </cfquery>
+</cfif>
                     <cfscript>
                         data = 0;
                         if(local.detail.recordcount){

@@ -91,7 +91,23 @@ DESCRIPTION: Tag used to maintain the costs section
 	<cfelse>
 
 		<!---Query for all costs from database--->
-		<cfquery name="qGetCosts" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("trade_plan_costs")>
+<cfif useLakebaseForqGetCosts>
+	<cftry>
+		<cfset qGetCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("trade_plan_costs", {
+				"trade_plan_id" = "eq.#Trade_Plan_ID#",
+				"trade_plan_cost_type_id" = "eq.#attributes.CostType#",
+				"select" = "name,cost,trade_plan_cost_percent_id,trade_plan_costs_id,program_rebates_component_name_id,program_lump_sum_name_id"
+			}), "name,cost,trade_plan_cost_percent_id,trade_plan_costs_id,program_rebates_component_name_id,program_lump_sum_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCosts>
+<cfquery name="qGetCosts" datasource="#application.datasource#">
 			SELECT 	Name,
 					Cost,
 					Trade_Plan_Cost_Percent_ID,
@@ -102,6 +118,7 @@ DESCRIPTION: Tag used to maintain the costs section
 			WHERE	Trade_Plan_ID = '#Trade_Plan_ID#'
 			AND		Trade_Plan_Cost_Type_ID = '#attributes.CostType#'
 		</cfquery>
+</cfif>
 		
 	</cfif>
 	
@@ -198,12 +215,29 @@ DESCRIPTION: Tag used to maintain the costs section
 			
 					<cfelse>
 		
-						<cfquery name="qGetCheckBit" datasource="#application.datasource#">
+						<cfset useLakebaseForqGetCheckBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("trade_plan_item_cost")>
+<cfif useLakebaseForqGetCheckBit>
+	<cftry>
+		<cfset qGetCheckBit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("trade_plan_item_cost", {
+				"type_group_desc_id" = "eq.#Type_Group_Desc_ID#",
+				"trade_plan_costs_id" = "eq.#trdePlnCstId#",
+				"select" = "check_bit"
+			}), "check_bit"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCheckBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCheckBit>
+<cfquery name="qGetCheckBit" datasource="#application.datasource#">
 							SELECT	Check_Bit
 							FROM	Trade_Plan_Item_Cost
 							WHERE	Type_Group_Desc_ID = '#Type_Group_Desc_ID#'
 							AND		Trade_Plan_Costs_ID = '#trdePlnCstId#'
 						</cfquery>
+</cfif>
 		
 						<cfset isChecked = qGetCheckBit.Check_Bit />
 			

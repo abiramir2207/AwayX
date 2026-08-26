@@ -5,11 +5,27 @@
 --->
 <cffile action="WRITE" file="#Application.Doc_Path#\temp_files\WddxPackets\#url.sg#.ddx" output="#BidRule_Serialized#" addnewline="Yes">
 
+<cfset useLakebaseForgetUOMDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUOMDescription>
+	<cftry>
+		<cfset getUOMDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#BidRule.Basic.Bid_Rule_UOM#",
+				"select" = "unit_of_measure_desc"
+			}), "unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUOMDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUOMDescription>
 <cfquery name="getUOMDescription" datasource="#application.datasource#">
 	SELECT Unit_Of_Measure_Desc
 	FROM Units_Of_Measure
 	WHERE Unit_Of_Measure_ID = '#BidRule.Basic.Bid_Rule_UOM#'
 </cfquery>
+</cfif>
 <cfset uomDesc = getUOMDescription.Unit_Of_Measure_Desc>
 <cfif BidRule.Basic.Bid_Rule_UOM EQ 0>
 	<cfset uomDesc = "NOT PROVIDED">

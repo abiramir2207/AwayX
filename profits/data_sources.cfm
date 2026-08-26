@@ -1996,15 +1996,43 @@ function Expand_Collapse(aObj)
 	Order by	Commodity_Exchange_Type.Commodity_Exchange_Type_Description, Commodities_Exchange_Detail.Exchange_Detail_Name
 </CFQUERY>
 
+<cfset useLakebaseForDistinct_Exchange_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_ub_data")>
+<cfif useLakebaseForDistinct_Exchange_Type>
+	<cftry>
+		<cfset Distinct_Exchange_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_ub_data", {
+				"select" = "commodity_exchange_type_id,commodity_exchange_type_description"
+			}), "commodity_exchange_type_id,commodity_exchange_type_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistinct_Exchange_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistinct_Exchange_Type>
 <CFQUERY NAME="Distinct_Exchange_Type" DBTYPe="query">
 	SELECT	DISTINCT	Commodity_Exchange_Type_ID, Commodity_Exchange_Type_Description
 	FROM	Get_UB_Data
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGet_All_Commodity_Symbols = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_symbol")>
+<cfif useLakebaseForGet_All_Commodity_Symbols>
+	<cftry>
+		<cfset Get_All_Commodity_Symbols = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_symbol", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_All_Commodity_Symbols = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_All_Commodity_Symbols>
 <CFQUERY NAME="Get_All_Commodity_Symbols" DATASOURCE="#application.datasource#">
 	SELECT	*
 	FROM	Commodities_Symbol
 </CFQUERY>
+</cfif>
 
 <CFLOOP QUERY="Distinct_Exchange_Type">		
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
@@ -2025,12 +2053,28 @@ function Expand_Collapse(aObj)
 			IsClosed="#IsClosed#"
 			Width="#width#">
 				<DIV STYLE="margin-left: 12px;">
-					<CFQUERY NAME="Distinct_Exchange_Detail" DBTYPe="query">
+					<cfset useLakebaseForDistinct_Exchange_Detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_ub_data")>
+<cfif useLakebaseForDistinct_Exchange_Detail>
+	<cftry>
+		<cfset Distinct_Exchange_Detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_ub_data", {
+				"commodity_exchange_type_id" = "eq.#Commodity_Exchange_Type_ID#",
+				"select" = "exchange_detail_name,exchange_detail_abrev"
+			}), "exchange_detail_name,exchange_detail_abrev"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistinct_Exchange_Detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistinct_Exchange_Detail>
+<CFQUERY NAME="Distinct_Exchange_Detail" DBTYPe="query">
 						SELECT	DISTINCT	Exchange_Detail_Name, Exchange_Detail_Abrev
 						FROM	Get_UB_Data
 						WHERE
 								Commodity_Exchange_Type_ID = #Commodity_Exchange_Type_ID#
 					</CFQUERY>
+</cfif>
 				
 					<CFLOOP QUERY="Distinct_Exchange_Detail">
 						<CF_openLayer
@@ -2048,12 +2092,27 @@ function Expand_Collapse(aObj)
 							IsClosed="#IsClosed#"
 							Width="#width#">
 								<DIV STYLE="margin-left: 12px;">
-									<CFQUERY NAME="Get_Commodity_Symbols" DBTYPE="query">
+									<cfset useLakebaseForGet_Commodity_Symbols = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_symbols")>
+<cfif useLakebaseForGet_Commodity_Symbols>
+	<cftry>
+		<cfset Get_Commodity_Symbols = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_commodity_symbols", {
+				"exchange_detail_abrev" = "eq.#Exchange_Detail_Abrev#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Commodity_Symbols = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Commodity_Symbols>
+<CFQUERY NAME="Get_Commodity_Symbols" DBTYPE="query">
 										SELECT	*
 										FROM	Get_All_Commodity_Symbols
 										WHERE
 												Exchange_Detail_Abrev = '#Exchange_Detail_Abrev#'
 									</CFQUERY>
+</cfif>
 									<CFLOOP QUERY="Get_Commodity_Symbols">
 									<CFOUTPUT>
 									<A HREF="view_commodity_chart.cfm?Symbol=#Symbol#&datasize=30" onclick="NewWindow(this.href,'name','#Window_Width#','#Window_Height#','No', 'No');return false;">#Symbol_Description#</A><BR>

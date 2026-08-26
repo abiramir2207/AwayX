@@ -41,11 +41,26 @@
 			var a = arguments;
 			var qRediLockData	= queryNew("");
 		</cfscript>
-		 <cfquery name="qgetRediLockByMe" datasource="#application.datasource#">
+		 <cfset useLakebaseForqgetRediLockByMe = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("redi_ec_header")>
+<cfif useLakebaseForqgetRediLockByMe>
+	<cftry>
+		<cfset qgetRediLockByMe = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("redi_ec_header", {
+				"user_id_locked" = "eq.#request.AccessStructure.User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetRediLockByMe = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetRediLockByMe>
+<cfquery name="qgetRediLockByMe" datasource="#application.datasource#">
 			 SELECT * FROM
 			 	REDI_EC_Header
 			 WHERE User_Id_Locked = '#request.AccessStructure.User_ID#'
 	    </cfquery>
+</cfif>
 	    
 	    <cfreturn qRediLockData />
 	</cffunction>
@@ -144,13 +159,33 @@
 			var Detail = createobject('mvc.Models.Admin.Redi.vos.RediCorrectionDetail');
 			Detail = D;
 		</cfscript>
-		 <cfquery name="qSaveRediEditDetailData" datasource="#application.datasource#">	
+		 <cfset useLakebaseForqSaveRediEditDetailData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("redi_ec_detail")>
+<cfif useLakebaseForqSaveRediEditDetailData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("redi_ec_detail",
+			{
+				"redi_d_id" = "eq.#Detail.rediCorrectionDetailId#",
+				"redi_h_id" = "eq.#Detail.rediCorrectionHeaderId#",
+				"upload_id" = "eq.#arguments.UploadID#"
+			},
+			{
+				"item_number" = "#Detail.item#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSaveRediEditDetailData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSaveRediEditDetailData>
+<cfquery name="qSaveRediEditDetailData" datasource="#application.datasource#">	
 			UPDATE REDI_EC_Detail
 			SET Item_Number = '#Detail.item#'
 			WHERE REDI_D_ID = #Detail.rediCorrectionDetailId# AND
 			REDI_H_ID 		= #Detail.rediCorrectionHeaderId# AND
 			upload_ID 		= #arguments.UploadID#
 	    </cfquery>
+</cfif>
 	  <!---  <cfset s = Detail.item & '  ::  ' & Detail.rediCorrectionDetailId />
 	   		<cfset this.dmp(s)/>---> 
 	

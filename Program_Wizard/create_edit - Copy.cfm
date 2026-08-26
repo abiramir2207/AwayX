@@ -23,10 +23,25 @@ If you added a new setting to this file, please also add the new setting to belo
 <cfsilent>
 <cfparam name="pullback_template_type" 	default="0">
 <!---Find out if they have discount identifiers--->
+<cfset useLakebaseForgetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGeneralSettings>
+	<cftry>
+		<cfset getGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGeneralSettings>
 <cfquery name="getGeneralSettings" datasource="#application.datasource#">
 	SELECT TOP 1 *
 	FROM General_Settings
 </cfquery>
+</cfif>
 
 <cfquery name="GetUserSettings" datasource="#application.datasource#">
 	SELECT * FROM _Users_Settings
@@ -2888,12 +2903,29 @@ function expandTable(objectID)
 			<td>&nbsp; </td>
 			<TD align="left" valign="top">
 
-			<cfquery name="GetRules" datasource="#application.datasource#">
+			<cfset useLakebaseForGetRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForGetRules>
+	<cftry>
+		<cfset GetRules = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"deleted" = "eq.0",
+				"order" = "rule_name.asc",
+				"select" = "distributor_product_integrity_rule_id,rule_name"
+			}), "distributor_product_integrity_rule_id,rule_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRules>
+<cfquery name="GetRules" datasource="#application.datasource#">
 				SELECT Distributor_Product_Integrity_Rule_ID, Rule_Name
 				FROM Distributor_Product_Integrity_Rule
 				WHERE Deleted = 0
 				ORDER BY Rule_Name
 			</cfquery>
+</cfif>
 
 			<select name="Distributor_Product_Integrity_Rule_ID" #FormStatus# >
 				<option value="" <cfif len(trim(form.Distributor_Product_Integrity_Rule_ID)) IS 0>selected</cfif>>None</option>
@@ -4264,11 +4296,27 @@ Dev Notes: D18996
 
 		<td align="left" bgcolor="##eeeeee">
 		&nbsp;<span id="err_Category"></span>
-		<cfquery name="GetCategories" datasource="#application.datasource#">
+		<cfset useLakebaseForGetCategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_category")>
+<cfif useLakebaseForGetCategories>
+	<cftry>
+		<cfset GetCategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_category", {
+				"deleted" = "eq.0",
+				"select" = "program_category_id,program_category"
+			}), "program_category_id,program_category"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCategories>
+<cfquery name="GetCategories" datasource="#application.datasource#">
 			SELECT	Program_Category_ID, Program_Category
 			FROM	Program_Category
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfset iMaxCols = 9>
 		<table cellpadding="0" cellspacing="0" border="0"><tr>

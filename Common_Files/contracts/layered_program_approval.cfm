@@ -169,10 +169,25 @@ DEPENDENCIES:
 </cfsavecontent>
 
 <cfif appSettings.getApprovalMarginType() eq 3>
-  <cfquery name="getGlobalUOM" datasource="#application.datasource#">
+  <cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+<cfquery name="getGlobalUOM" datasource="#application.datasource#">
     SELECT Global_Target_UOM
     FROM General_Settings
   </cfquery>
+</cfif>
   <cfset Global_Target_UOM = getGlobalUOM.Global_Target_UOM>
 <cfelse>
   <cfset Global_Target_UOM = 0>
@@ -600,12 +615,44 @@ DEPENDENCIES:
          WHERE Contract_Main_Id = #getProgramInfo.contract_main_id#
       </cfquery>
 
-      <cfquery name="local.Item_Deliverytype1" dbtype="query">
+      <cfset useLakebaseForlocal_Item_Deliverytype1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_Item_Deliverytype1>
+	<cftry>
+		<cfset local.Item_Deliverytype1 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"item_deliverytype" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_Item_Deliverytype1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_Item_Deliverytype1>
+<cfquery name="local.Item_Deliverytype1" dbtype="query">
         SELECT 1 FROM qCostDetail WHERE Item_Deliverytype = '1'
       </cfquery>
-      <cfquery name="local.Item_Deliverytype2" dbtype="query">
+</cfif>
+      <cfset useLakebaseForlocal_Item_Deliverytype2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_Item_Deliverytype2>
+	<cftry>
+		<cfset local.Item_Deliverytype2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"item_deliverytype" = "eq.2",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_Item_Deliverytype2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_Item_Deliverytype2>
+<cfquery name="local.Item_Deliverytype2" dbtype="query">
         SELECT 1 FROM qCostDetail WHERE Item_Deliverytype = '2'
       </cfquery>
+</cfif>
 
       <cfquery name="qTradeDetail" datasource="#application.datasource#">
         IF Object_Id( 'tempdb..##tmp_cp' ) IS NOT NULL
@@ -693,9 +740,24 @@ DEPENDENCIES:
 
         <!--- Products & Type Code --->
         <cfoutput query="getAllProductMargins" group="Type_Code_Desc_ID">
-          <cfquery name="local.getGroupValues" dbtype="query" maxRows="1">
+          <cfset useLakebaseForlocal_getGroupValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForlocal_getGroupValues>
+	<cftry>
+		<cfset local.getGroupValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getallproductmargins.type_code_desc_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getGroupValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getGroupValues>
+<cfquery name="local.getGroupValues" dbtype="query" maxRows="1">
             select * from getAllGroupMargins where type_code_desc_id = '#getallproductmargins.type_code_desc_id#'
           </cfquery>
+</cfif>
           <cfset variables.noApprovalClass = (local.getGroupValues.Group_ID_Approval eq 0 ? " noar" : "")>
           <cfset variables.disabled2       = (local.getGroupValues.Group_ID_Approval eq 0 ? "disabled=disabled" : "")>
           <cfif url.showProducts eq "1">
@@ -746,9 +808,25 @@ DEPENDENCIES:
 
           <cfoutput query="getAllProductMargins" group="Type_Code_Desc_ID">
               <cfif url.showProducts eq "1">
-                <cfquery name="local.detail" dbtype="query">
+                <cfset useLakebaseForlocal_detail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcostdetail")>
+<cfif useLakebaseForlocal_detail>
+	<cftry>
+		<cfset local.detail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcostdetail", {
+				"product_id" = "eq.#getAllProductMargins.Product_ID#",
+				"select" = "net_weight,fixed_price_cs"
+			}), "net_weight,fixed_price_cs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_detail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_detail>
+<cfquery name="local.detail" dbtype="query">
                   SELECT Net_weight,Fixed_Price_CS FROM qCostDetail WHERE Product_ID = '#getAllProductMargins.Product_ID#'
                 </cfquery>
+</cfif>
 
                 <cfscript>
                   multiplier     = "*";
@@ -2923,10 +3001,25 @@ DEPENDENCIES:
     <!--- mass approve --->
     <cfset itemCheckBoxDisabled = 0 />
 
-    <CFQUERY name="getGroupvalues" dbtype="query">
+    <cfset useLakebaseForgetGroupvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallgroupmargins")>
+<cfif useLakebaseForgetGroupvalues>
+	<cftry>
+		<cfset getGroupvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallgroupmargins", {
+				"type_code_desc_id" = "eq.#getAllProductMargins.Type_Code_Desc_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupvalues>
+<CFQUERY name="getGroupvalues" dbtype="query">
       select * from getAllGroupMargins
       where Type_Code_Desc_Id = '#getAllProductMargins.Type_Code_Desc_Id#'
     </CFQUERY>
+</cfif>
     <!--- add variation to group margin --->
     <cfif trim(getGroupvalues.Group_ID_Margin) eq "">
       <cfset getGroupvalues.Group_ID_Margin = 0>
@@ -3421,11 +3514,27 @@ DEPENDENCIES:
         #application.util.string.cellFormat(value=Operating_Income,decimalplaces = request.dollar_format)#
         <!---Tim Ford - Label 19381: Show if the Program is a revision and Operating Income is different from Revised program--->
         <cfif Program_Is_A_Revision and isDefined("getProductPreviousVersionMargins")>
-          <cfquery name="qGetPreviousOperatingIncome" dbtype="query">
+          <cfset useLakebaseForqGetPreviousOperatingIncome = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproductpreviousversionmargins")>
+<cfif useLakebaseForqGetPreviousOperatingIncome>
+	<cftry>
+		<cfset qGetPreviousOperatingIncome = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproductpreviousversionmargins", {
+				"product_id" = "eq.#Product_ID#",
+				"select" = "operating_income,operatingmargin_percent"
+			}), "operating_income,operatingmargin_percent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPreviousOperatingIncome = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPreviousOperatingIncome>
+<cfquery name="qGetPreviousOperatingIncome" dbtype="query">
             SELECT  Operating_Income, OperatingMargin_percent
             FROM  getProductPreviousVersionMargins
             WHERE Product_ID = '#Product_ID#'
           </cfquery>
+</cfif>
           <cfif qGetPreviousOperatingIncome.RecordCount>
             <cfif DecimalFormat(qGetPreviousOperatingIncome.Operating_Income) neq DecimalFormat(Operating_Income)>
         <i class="tooltip" title="Previous Version #trim(replace(replace(appsettings.getMarginColHeader11(),'%',''),'$',''))#: &nbsp; #UnitNumberFormat(qGetPreviousOperatingIncome.Operating_Income,form.Margin_Type)# &nbsp; #round(qGetPreviousOperatingIncome.OperatingMargin_percent)#%">&bigstar;</i>

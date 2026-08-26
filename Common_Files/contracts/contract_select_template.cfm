@@ -17,12 +17,28 @@
 <CFINCLUDE TEMPLATE="/includes/top_header.cfm">
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <BLOCKQUOTE><BLOCKQUOTE>
+<cfset useLakebaseForGetTemplates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetTemplates>
+	<cftry>
+		<cfset GetTemplates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"template" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplates>
 <CFQUERY NAME="GetTemplates" datasource="#application.datasource#">
 SELECT *
 FROM Contract_Main
 WHERE Template = 1
 and DELETED = 0
 </CFQUERY>
+</cfif>
 
 <table border="0" cellspacing="0" cellpadding="2" align="center">
 	<TR>

@@ -143,6 +143,23 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
   the settings in the settings panel 
   -Anand Rao/29-May-09
   ------------------------------------------------------------------------------>
+<cfset useLakebaseForgetClosingMethods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForgetClosingMethods>
+	<cftry>
+		<cfset getClosingMethods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"deleted" = "eq.0",
+				"benabled" = "eq.1",
+				"order" = "vchbillback_closing_method_desc.asc",
+				"select" = "ibillback_closing_method_id,vchbillback_closing_method_desc,benabled,tiautopay_bb_status,deleted,abbreviation"
+			}), "ibillback_closing_method_id,vchbillback_closing_method_desc,benabled,tiautopay_bb_status,deleted,abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetClosingMethods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetClosingMethods>
 <cfquery NAME="getClosingMethods" datasource="#application.datasource#">
   SELECT  iBillback_Closing_Method_ID,
         	vchBillback_Closing_Method_Desc,
@@ -154,6 +171,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
   AND bEnabled = 1
   ORDER BY vchBillback_Closing_Method_Desc 
 </cfquery>
+</cfif>
               
 <FORM ACTION="index.cfm" METHOD="post" NAME="DataForm">
 

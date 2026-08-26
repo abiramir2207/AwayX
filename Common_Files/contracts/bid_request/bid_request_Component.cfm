@@ -26,11 +26,26 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 	<!--- Do not show the tabs if the contract is approved --->
 	<CFIF GetContractInfo.Contract_Status_Type_IDX GT 2>
 		<script>
@@ -890,12 +905,29 @@ function verifyData()
 				Set product restriction query here so there are fewer iterations	--->
 		<cfif appsettings.getComponent_Product_Restrictions_On()>
 	
-			<cfquery name="Query_#GetBidrequestComponentNames.Program_BidRequest_Component_Name_ID#" datasource="#application.datasource#">
+			<cfset useLakebaseForQuery_#GetBidrequestComponentNames_Program_BidRequest_Component_Name_ID# = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
+<cfif useLakebaseForQuery_#GetBidrequestComponentNames_Program_BidRequest_Component_Name_ID#>
+	<cftry>
+		<cfset Query_#GetBidrequestComponentNames.Program_BidRequest_Component_Name_ID# = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_products_restricted", {
+				"discount_type_id" = "eq.10 --Bid Request",
+				"component_id" = "eq.#GetBidrequestComponentNames.Program_BidRequest_Component_Name_ID#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForQuery_#GetBidrequestComponentNames_Program_BidRequest_Component_Name_ID# = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForQuery_#GetBidrequestComponentNames_Program_BidRequest_Component_Name_ID#>
+<cfquery name="Query_#GetBidrequestComponentNames.Program_BidRequest_Component_Name_ID#" datasource="#application.datasource#">
 			SELECT Product_ID
 			FROM Component_Products_Restricted
 			WHERE Discount_Type_ID = 10 --Bid Request
 			AND Component_ID = '#GetBidrequestComponentNames.Program_BidRequest_Component_Name_ID#'
 			</cfquery>
+</cfif>
 		
 		</cfif>
   
@@ -1113,13 +1145,30 @@ Discount
 		<CFSET comp_id = Left(#i#, (#comp_id_start#-1))>
 		<CFSET paid_to = Mid(#i#,comp_id_start + 1,Len(comp_id))>
 
-		<CFQUERY NAME="getBidrequestComponentName" datasource="#application.datasource#">
+		<cfset useLakebaseForgetBidrequestComponentName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bidrequest_component_name")>
+<cfif useLakebaseForgetBidrequestComponentName>
+	<cftry>
+		<cfset getBidrequestComponentName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bidrequest_component_name", {
+				"program_bidrequest_component_name_id" = "eq.#comp_id#",
+				"deleted" = "eq.0",
+				"select" = "program_bidrequest_component_name,program_bidrequest_component_name_id"
+			}), "program_bidrequest_component_name,program_bidrequest_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBidrequestComponentName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBidrequestComponentName>
+<CFQUERY NAME="getBidrequestComponentName" datasource="#application.datasource#">
 			SELECT	Program_Bidrequest_Component_Name.Program_Bidrequest_Component_Name,
 					Program_Bidrequest_Component_Name_Id
 			FROM 	Program_Bidrequest_Component_Name
 			WHERE 	Program_Bidrequest_Component_Name_Id = #comp_id#
 			AND 	Program_Bidrequest_Component_Name.DELETED = 0
 		</CFQUERY>
+</cfif>
 	
 		<td ID="header" width="#component_width#" nowrap  STYLE="font-size:9px;">
 			<cfif EzButton_Disable EQ 0><A STYLE="cursor: pointer;" ONCLICK="verifyDelete('#getBidrequestComponentName.Program_Bidrequest_Component_Name_Id#', '#replace(getBidrequestComponentName.Program_Bidrequest_Component_Name, "'", "\'")#',#j#)">

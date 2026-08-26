@@ -231,12 +231,29 @@ Added/Changed: Added if condition to check BIDREQOBJ isdefined id not we will de
 									</TD>
 								<!--- D38536  :: Alternate recapture rates per component START--->
 									<cfif (isDefined("qCompName.Alternate_Recapture_Rate") AND qCompName.Alternate_Recapture_Rate EQ 1) AND not summaryView>
-												<cfquery name="AlternateRateSettings" datasource="#application.datasource#">
+												<cfset useLakebaseForAlternateRateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForAlternateRateSettings>
+	<cftry>
+		<cfset AlternateRateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#qCompName.Program_Rebates_Component_Name_ID#",
+				"status" = "eq.0",
+				"select" = "alternate_recapture_rate_label"
+			}), "alternate_recapture_rate_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAlternateRateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAlternateRateSettings>
+<cfquery name="AlternateRateSettings" datasource="#application.datasource#">
 														SELECT Alternate_Recapture_Rate_Label
 														FROM Alternate_Recapture_Rate_Setting
 														WHERE Program_Rebates_Component_Name_ID = #qCompName.Program_Rebates_Component_Name_ID#
 														AND Status = 0
 												</cfquery>
+</cfif>
 
 												<cfloop query="AlternateRateSettings">
 													<TD ID="header" valign="top">

@@ -155,11 +155,27 @@ Updated_By
 </cfquery>
 
 <cfif get_lastupdated_details.recordcount gt 0>
-	<cfquery name="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_LastUpdated_Details.Updated_By#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<cfquery name="getUserName" datasource="#application.datasource#">
 		SELECT 	_Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 		FROM 	_Users
 		WHERE 	User_ID = '#Get_LastUpdated_Details.Updated_By#'
 	</cfquery>
+</cfif>
 </cfif>
 
 <cfset URL.pagetitle="Competitive Data">
@@ -238,6 +254,22 @@ Updated_By
 <cfif get_lastupdated_details.recordcount gt 0>
 	<font size="2"><b>This <cfif URL.CD_ID neq 0>Item <cfelse> setting</cfif> was last updated on <cfoutput>#dateformat(Get_LastUpdated_Details.Updated_Date, 'm/d/yyy')# #timeformat(Get_LastUpdated_Details.Updated_Date, 'h:mm:ss TT')#</cfoutput> by <cfoutput>#getUserName.User_FullName#</cfoutput></b></font></td></tr></table>
 </cfif>
+<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"deleted" = "eq.0",
+				"order" = "program_bid_won_by_description.asc",
+				"select" = "program_bid_won_by_id,program_bid_won_by_code,program_bid_won_by_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_won_by_id,program_bid_won_by_code,program_bid_won_by_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
 <cfquery name="Get_Data" datasource="#application.datasource#">
 	SELECT		Program_Bid_Won_By_ID,
             Program_Bid_Won_By_Code,
@@ -252,6 +284,7 @@ Updated_By
 	ORDER BY	Program_Bid_Won_By_Description
   
 </cfquery>
+</cfif>
 <table border="0" cellspacing="10" cellpadding="0" width="750">
 	<tr>
 		<td valign="top">
@@ -294,11 +327,26 @@ Updated_By
  
 			<cfparam name="Get_Item.Deleted" default="0">
 
-			<cfquery name="Get_Item" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_Item = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForGet_Item>
+	<cftry>
+		<cfset Get_Item = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_id" = "eq.#URL.CD_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Item = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Item>
+<cfquery name="Get_Item" datasource="#application.datasource#">
 				SELECT		*
 				FROM		Program_Bid_Won_By
 				WHERE		Program_Bid_Won_By_ID	= #URL.CD_ID#
 			</cfquery>
+</cfif>
 
 			<cfset FORM.ProgramBidWonByCode 	= get_item.Program_Bid_Won_By_Code />
 			<cfset FORM.ProgramBidWonByDescription 	= get_item.Program_Bid_Won_By_Description />

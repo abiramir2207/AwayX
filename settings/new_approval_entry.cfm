@@ -9,11 +9,28 @@
 
 <CFLOOP INDEX="GroupCount" FROM="1" TO="5" STEP="1">
 	<CFLOOP INDEX="ProfileCount" FROM="1" TO="6" STEP="1">
-		<CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
+		<cfset useLakebaseForgetApprovalMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetApprovalMargin>
+	<cftry>
+		<cfset getApprovalMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"group_id" = "eq.#GroupCount#",
+				"profile_id" = "eq.#ProfileCount#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetApprovalMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetApprovalMargin>
+<CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
 			SELECT Amount
 			FROM Margin_Group_Profile_Approval_Margins
 			WHERE Group_ID='#GroupCount#' AND Profile_ID='#ProfileCount#'
 		</CFQUERY>
+</cfif>
 		<CFSET "FORM.Group_#GroupCount#_Profile_#ProfileCount#" = getApprovalMargin.Amount>
 	</CFLOOP>
 </CFLOOP>

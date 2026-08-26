@@ -245,10 +245,23 @@ Claim #currentClaimCounter# of #totalForVendorCount# for vendor #currentVendorId
 		<cfdirectory action="list" directory="#logPath#" name="fileList" sort="datelastmodified" filter="*.txt">
 		<cfif fileList.recordcount GT fileLimit>
 			<cfset overflow = fileList.recordcount - fileLimit>
-			<cfquery name="fileList" dbtype="query" maxrows="#overflow#">
+			<cfset useLakebaseForfileList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("filelist")>
+<cfif useLakebaseForfileList>
+	<cftry>
+		<cfset fileList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("filelist", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForfileList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForfileList>
+<cfquery name="fileList" dbtype="query" maxrows="#overflow#">
 				SELECT *
 				FROM fileList
 			</cfquery>
+</cfif>
 			<cfloop query="fileList">
 				<cfset fileName = logpath & "\" & fileList.name>
 				<cffile action="delete" file="#fileName#">

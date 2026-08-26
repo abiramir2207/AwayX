@@ -12,11 +12,28 @@
 		<cfargument name="budgetReferenceId" required="Yes" type="numeric">
 		<cfset boolIsActive = 0>
 		
-		<cfquery name="qGetActive" dbtype="query">
+		<cfset useLakebaseForqGetActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetmappings")>
+<cfif useLakebaseForqGetActive>
+	<cftry>
+		<cfset qGetActive = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetmappings", {
+				"budget_reference_id" = "eq.#arguments.budgetReferenceId#",
+				"template_parent_id" = "eq.#arguments.templateParentId#",
+				"select" = "active"
+			}), "active"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActive>
+<cfquery name="qGetActive" dbtype="query">
 			select active from qGetMappings
 			where 	budget_reference_id = #arguments.budgetReferenceId#
 			and 	template_parent_id = #arguments.templateParentId#
 		</cfquery>
+</cfif>
 		
 		<cfif qGetActive.RecordCount GTE 1>
 			<cfset boolIsActive = qGetActive.active>

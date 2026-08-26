@@ -54,9 +54,26 @@ Usage:			N/A
 	</cffunction>
 	
 	<cffunction name="GetDDClassification" output="false" access="public">
-		<cfquery name="getClassification" datasource="#application.datasource#">
+		<cfset useLakebaseForgetClassification = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForgetClassification>
+	<cftry>
+		<cfset getClassification = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_classification", {
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "dd_classification_id"
+			}), "dd_classification_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetClassification = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetClassification>
+<cfquery name="getClassification" datasource="#application.datasource#">
 			SELECT TOP 1 DD_Classification_ID FROM DD_Classification WHERE Deleted = 0
 		</cfquery>
+</cfif>
 	<cfreturn getClassification />
 
 	</cffunction>
@@ -487,7 +504,24 @@ Usage:			N/A
 			/*AND	
 				DD_Closure_ID = '#arguments.Billback_ID#'*/
 		</cfquery>
-		<cfquery name="UpdUnAssociateDDStep3" datasource="#Application.Datasource#">
+		<cfset useLakebaseForUpdUnAssociateDDStep3 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdUnAssociateDDStep3>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#arguments.Billback_ID#"
+			},
+			{
+				"bb_associated_to_dd" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdUnAssociateDDStep3 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdUnAssociateDDStep3>
+<cfquery name="UpdUnAssociateDDStep3" datasource="#Application.Datasource#">
 			UPDATE 
 				Billback
 			SET 
@@ -495,6 +529,7 @@ Usage:			N/A
 			WHERE 
 				Billback_ID = '#arguments.Billback_ID#'
 		</cfquery>
+</cfif>
 		
 		<cfreturn />
 	</cffunction>
@@ -508,13 +543,30 @@ Usage:			N/A
 			b) If it is a child then find the parent Billback and do step a.
 		--->		
 		
-		<cfquery name="qryCheckBBIDIsParent" datasource="#Application.Datasource#"> 
+		<cfset useLakebaseForqryCheckBBIDIsParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqryCheckBBIDIsParent>
+	<cftry>
+		<cfset qryCheckBBIDIsParent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_is_child" = "eq.1",
+				"billback_id" = "eq.#arguments.Billback_ID#",
+				"select" = "bb_parent_id"
+			}), "bb_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCheckBBIDIsParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCheckBBIDIsParent>
+<cfquery name="qryCheckBBIDIsParent" datasource="#Application.Datasource#"> 
 			SELECT 
 				BB_Parent_ID 
 			FROM 
 				Billback 
 			WHERE BB_IS_Child = 1 AND Billback_ID = '#arguments.Billback_ID#'
 		</cfquery>
+</cfif>
 		
 		<cfif (qryCheckBBIDIsParent.RecordCount GTE 1)>
 			<cfset BillbackID = qryCheckBBIDIsParent.BB_Parent_ID />
@@ -522,7 +574,25 @@ Usage:			N/A
 			<cfset BillbackID = arguments.Billback_ID />
 		</cfif> 
 		
-		<cfquery name="delSplitChildren" datasource="#Application.Datasource#"> 
+		<cfset useLakebaseFordelSplitChildren = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseFordelSplitChildren>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"bb_parent_id" = "eq.#BillbackID#",
+				"bb_is_child" = "eq.1"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelSplitChildren = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelSplitChildren>
+<cfquery name="delSplitChildren" datasource="#Application.Datasource#"> 
 			UPDATE 
 				Billback
 			SET 
@@ -530,6 +600,7 @@ Usage:			N/A
 			WHERE 
 				BB_Parent_ID = '#BillbackID#' AND BB_IS_Child = 1
 		</cfquery>
+</cfif>
 		<!--- 
 			a) No change to status of the billback is made here as the approveBillback settlement will split this BB again and set the status for the Child BBs 
 			b) No change to the BB_Approved table 
@@ -1172,11 +1243,29 @@ Usage:			N/A
 	
 		<cfif getBBInfo.BB_Modify_Agree EQ 1>
 		<cfinclude template="save_modifyagree_BBchanges.cfm">
-		<cfquery NAME="UpdateModifyAgreeInfo" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForUpdateModifyAgreeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateModifyAgreeInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"bb_modify_agree" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateModifyAgreeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateModifyAgreeInfo>
+<cfquery NAME="UpdateModifyAgreeInfo" DATASOURCE="#Application.Datasource#">
 		update Billback
 		set BB_modify_agree = 0
 		where Billback_Id = '#Billback_ID#'
 		</cfquery>
+</cfif>
 		</cfif>
 	</cfif>		
 	
@@ -1192,7 +1281,23 @@ Usage:			N/A
 	<cffunction name="updateParentBBID" output="false" returntype="void">
 		<cfargument name="Billback_ID" type="string"> 
 		
-		<cfquery name="checkForSplits" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckForSplits = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForcheckForSplits>
+	<cftry>
+		<cfset checkForSplits = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#arguments.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "bb_closing_method,billback_status_id,bb_parent_id"
+			}), "bb_closing_method,billback_status_id,bb_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForSplits = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForSplits>
+<cfquery name="checkForSplits" datasource="#application.datasource#">
 			SELECT 
 				BB_Closing_Method, 
 				Billback_Status_ID,
@@ -1202,7 +1307,8 @@ Usage:			N/A
 			WHERE 
 				BB_Parent_ID = '#arguments.Billback_ID#' AND 
 				Deleted = 0
-		</cfquery>	
+		</cfquery>
+</cfif>	
 		
 		<cfif isDefined("checkForSplits.RecordCount") AND checkForSplits.RecordCount GTE 1>
 			<cfquery name="qSelSplits" datasource="#application.datasource#">
@@ -1235,7 +1341,23 @@ Usage:			N/A
 		</cfif>				
 		
 		<!--- Code below is for setting up the vendor id on the BB_approved table  --->
-		<cfquery name="selPayeeType"  datasource="#application.datasource#">
+		<cfset useLakebaseForselPayeeType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForselPayeeType>
+	<cftry>
+		<cfset selPayeeType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#arguments.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_payee_type_id"
+			}), "billback_payee_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselPayeeType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselPayeeType>
+<cfquery name="selPayeeType"  datasource="#application.datasource#">
 			SELECT Billback_Payee_Type_ID
 			FROM
 				Billback
@@ -1243,10 +1365,27 @@ Usage:			N/A
 				Billback_ID = '#arguments.Billback_ID#' AND
 				Deleted = 0
 		</cfquery>
+</cfif>
 		<cfif (isDefined("selPayeeType.RecordCount") AND selPayeeType.RecordCount GTE 1)>
 			<!--- Check if the payee is Distributor --->
 			<cfif (selPayeeType.Billback_Payee_Type_ID EQ 1)>
-				<cfquery name="selVendorID"  datasource="#application.datasource#">
+				<cfset useLakebaseForselVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForselVendorID>
+	<cftry>
+		<cfset selVendorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#arguments.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "uploaded_vendor_id"
+			}), "uploaded_vendor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselVendorID>
+<cfquery name="selVendorID"  datasource="#application.datasource#">
 					SELECT Uploaded_Vendor_ID
 					FROM
 						Billback_Distributor
@@ -1254,6 +1393,7 @@ Usage:			N/A
 						Billback_ID = '#arguments.Billback_ID#' AND
 						Deleted = 0
 				</cfquery>
+</cfif>
 			<!--- Check if the payee is Operator --->
 			<cfelseif (selPayeeType.Billback_Payee_Type_ID EQ 2)>
 				<cfquery name="selVendorID"  datasource="#application.datasource#">
@@ -1266,7 +1406,23 @@ Usage:			N/A
 				</cfquery>
 			</cfif>
 			<cfif (isDefined("selVendorID") AND selVendorID.RecordCount GTE 1)>
-				<cfquery name="selVendorMasterID"  datasource="#application.datasource#">
+				<cfset useLakebaseForselVendorMasterID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForselVendorMasterID>
+	<cftry>
+		<cfset selVendorMasterID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#selVendorID.Uploaded_Vendor_ID#",
+				"deleted" = "eq.0",
+				"select" = "vendor_master_id"
+			}), "vendor_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselVendorMasterID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselVendorMasterID>
+<cfquery name="selVendorMasterID"  datasource="#application.datasource#">
 		 			SELECT 
 						Vendor_Master_ID 
 					FROM 
@@ -1275,9 +1431,27 @@ Usage:			N/A
 						Vendor_ID = '#selVendorID.Uploaded_Vendor_ID#'
 						AND Deleted = 0
 				</cfquery>
+</cfif>
 			</cfif>
 			<cfif (isDefined("selVendorMasterID") AND selVendorMasterID.RecordCount GTE 1)>
-				<cfquery name="updVendorMasterID"  datasource="#application.datasource#">
+				<cfset useLakebaseForupdVendorMasterID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForupdVendorMasterID>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_approved",
+			{
+				"billback_id" = "eq.#arguments.Billback_ID#"
+			},
+			{
+				"vendor_master_id" = "#selVendorMasterID.Vendor_Master_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdVendorMasterID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdVendorMasterID>
+<cfquery name="updVendorMasterID"  datasource="#application.datasource#">
 					UPDATE 
 							BB_Approved
 					SET 	
@@ -1285,6 +1459,7 @@ Usage:			N/A
 					WHERE 
 							Billback_ID = '#arguments.Billback_ID#'  
 				</cfquery>
+</cfif>
 			</cfif> <!--- <cfif isDefined("selVendorMasterID") AND selVendorMasterID.RecordCount GTE 1> --->
 		</cfif>	<!--- <cfif (isDefined("selPayeeType.RecordCount") AND selPayeeType.RecordCount GTE 1)> --->
 		
@@ -1310,7 +1485,26 @@ Usage:			N/A
 	<cffunction name="getAnyClosingMethodChildBB" output="false" returntype="query">
 		<cfargument name="BBParentID" type="string">
 
-		<cfquery name="qAnyClosingMethodChildBB" datasource="#application.datasource#">
+		<cfset useLakebaseForqAnyClosingMethodChildBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqAnyClosingMethodChildBB>
+	<cftry>
+		<cfset qAnyClosingMethodChildBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#arguments.BBParentID#",
+				"deleted" = "eq.0",
+				"bb_is_child" = "eq.1",
+				"order" = "bb_closing_method.asc",
+				"limit" = "1",
+				"select" = "bb_closing_method"
+			}), "bb_closing_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyClosingMethodChildBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyClosingMethodChildBB>
+<cfquery name="qAnyClosingMethodChildBB" datasource="#application.datasource#">
 			SELECT TOP 1 BB_Closing_Method
 			FROM 
 				Billback
@@ -1320,6 +1514,7 @@ Usage:			N/A
 				BB_Is_Child = 1
 			ORDER BY BB_Closing_Method
 		</cfquery>
+</cfif>
 
 		<cfreturn qAnyClosingMethodChildBB>
 

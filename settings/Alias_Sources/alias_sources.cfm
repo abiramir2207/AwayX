@@ -95,12 +95,29 @@ alias_sources.cfm
 </SCRIPT>	
 
 <!--- ************************* GET DATA *************************--->
+<cfset useLakebaseForGetBB_Upload_Source_Type_Lookup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_source_type_lookup")>
+<cfif useLakebaseForGetBB_Upload_Source_Type_Lookup>
+	<cftry>
+		<cfset GetBB_Upload_Source_Type_Lookup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_source_type_lookup", {
+				"active" = "eq.1  --deleted = 0",
+				"order" = "source_type_desc.asc",
+				"select" = "source_type,source_type_desc,source_category"
+			}), "source_type,source_type_desc,source_category"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBB_Upload_Source_Type_Lookup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBB_Upload_Source_Type_Lookup>
 <CFQUERY NAME="GetBB_Upload_Source_Type_Lookup" datasource="#application.datasource#">
 	select Source_Type,Source_Type_Desc,Source_Category
 	from BB_Upload_Source_Type_Lookup
 	where Active = 1  --deleted = 0
 	order by Source_Type_Desc
 </CFQUERY>
+</cfif>
 
 <cfset qGetAliasSourceTypes = AliasSourcesManager.getAliasSourceTypes(			
 			SearchSourceCode = Form.Search_Source_Code,
@@ -116,20 +133,53 @@ alias_sources.cfm
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 <!--- ************************* DISPALY LAST UPDATED BY INFO *************************--->
+<cfset useLakebaseForGetLastUpdatedDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_claim_source_xref")>
+<cfif useLakebaseForGetLastUpdatedDetails>
+	<cftry>
+		<cfset GetLastUpdatedDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_claim_source_xref", {
+				"order" = "updated_date.desc",
+				"limit" = "1",
+				"select" = "updated_by,updated_date"
+			}), "updated_by,updated_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLastUpdatedDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLastUpdatedDetails>
 <CFQUERY NAME="GetLastUpdatedDetails" datasource="#application.datasource#">
 		Select		TOP 1 Updated_By, Updated_Date
 		From		BB_Claim_Source_XREF
 		Order by	Updated_Date Desc
 </CFQUERY>
+</cfif>
 <CFSET Last_Updated_By = GetLastUpdatedDetails.Updated_By />
 <CFSET Last_Updated_Date = GetLastUpdatedDetails.Updated_Date />
 
 <CFIF Last_Updated_By NEQ "">
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Last_Updated_By#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT 	_Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 		FROM 	_Users
 		WHERE 	User_ID = '#Last_Updated_By#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 

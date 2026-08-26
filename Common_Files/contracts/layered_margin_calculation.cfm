@@ -208,11 +208,27 @@
 		<cfset form.margin_type = url.margin_type>
 	</cfif>
 <cfelse>
-	<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "margin_uot_id"
+			}), "margin_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
+<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 		Select		Margin_UOT_ID
 		From		_Users_Settings
 		Where		User_ID		=		'#request.AccessStructure.Company_Main_ID#'
 	</CFQUERY>
+</cfif>
 	<cfset url.UoT = Get_Settings.Margin_UOT_ID>
 </cfif>
 
@@ -307,12 +323,28 @@
 							Program_Fixed_Price_Product_Data.Fixed_Price_Value
 				--->
 				<cfoutput query="qgetMarginOverRide">
-                    <cfquery name="qgetConProdMarg" datasource="#application.datasource#">
+                    <cfset useLakebaseForqgetConProdMarg = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForqgetConProdMarg>
+	<cftry>
+		<cfset qgetConProdMarg = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_main_id" = "eq.#contract_main_id#",
+				"product_id" = "eq.#qgetMarginOverRide.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetConProdMarg = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetConProdMarg>
+<cfquery name="qgetConProdMarg" datasource="#application.datasource#">
                         SELECT *
                         FROM Contract_Product_Margin
                         WHERE Contract_Main_ID = #contract_main_id# AND
                             Product_Id =  '#qgetMarginOverRide.BSA_Foodservice_Items_Master_ID#'
                     </cfquery>
+</cfif>
 					<cfif isNumeric(qgetMarginOverRide.New_Value) and qgetConProdMarg.recordCount>
 						<cfset bRunFreight = 1 >   <!--- CM% OverRide will update the fixed price so we need to run the freight routine after fixed price is updated --->
 

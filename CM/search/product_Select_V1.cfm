@@ -569,10 +569,25 @@ function save_Documents()
 						<cfset restrictOnProductGroupList = ValueList(qGetProductHierarchyMaxLevel.Product_Group_ID)>
 					</cfif>
 				</cfif>
-				<cfquery name="qGetDistinctLevels" dbtype="query">
+				<cfset useLakebaseForqGetDistinctLevels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproducthierarchy")>
+<cfif useLakebaseForqGetDistinctLevels>
+	<cftry>
+		<cfset qGetDistinctLevels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproducthierarchy", {
+				"select" = "hierarchy_level"
+			}), "hierarchy_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistinctLevels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistinctLevels>
+<cfquery name="qGetDistinctLevels" dbtype="query">
 					SELECT	DISTINCT Hierarchy_Level
 					FROM	qGetProductHierarchy
 				</cfquery>
+</cfif>
 				<cfset productHierarchyLevelList = ValueList(qGetDistinctLevels.Hierarchy_Level, ",") />
 				<cfset maxProductHierarchyLevel = 0>
 				<cfoutput query="qGetProductHierarchy" group="Hierarchy_Level">
@@ -635,11 +650,27 @@ function save_Documents()
 				<cfif application.returned_customer_setting.lob_search_switch NEQ application.returned_customer_setting.customer_setting_error_string>
 				<cfoutput><span ID="searchItemLabel"><B>#application.returned_customer_setting.lob_label_singular#</B></span><BR></cfoutput>
 				</cfif></cfif>
-				<cfquery name="GetLinesOfBiz" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
+				<cfset useLakebaseForGetLinesOfBiz = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLinesOfBiz>
+	<cftry>
+		<cfset GetLinesOfBiz = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"deleted" = "eq.0",
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLinesOfBiz = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLinesOfBiz>
+<cfquery name="GetLinesOfBiz" datasource="#application.datasource#" CACHEDWITHIN="#cacheSpan#">
 					SELECT *
 					FROM Line_Of_Business WHERE Deleted = 0
 					ORDER BY Line_Of_Business_Name
 				</cfquery>
+</cfif>
 				<CFQUERY NAME="getFoodserviceLOBID" dbtype="query">
 					SELECT Line_Of_Business_ID
 					FROM GetLinesOfBiz

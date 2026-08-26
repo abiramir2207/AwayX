@@ -57,7 +57,24 @@
 			
 			
 			<!--- check for the data combination i'm about to insert --->
-			<cfquery name="checkForThisCombo" datasource="#application.datasource#">
+			<cfset useLakebaseForcheckForThisCombo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_product_category_product_rates_volumes")>
+<cfif useLakebaseForcheckForThisCombo>
+	<cftry>
+		<cfset checkForThisCombo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_product_category_product_rates_volumes", {
+				"program_id" = "eq.#FORM.Program_ID#",
+				"bsa_foodservice_items_master_id" = "eq.#product_BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_product_category_id"
+			}), "program_product_category_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForThisCombo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForThisCombo>
+<cfquery name="checkForThisCombo" datasource="#application.datasource#">
 				SELECT Program_Product_Category_ID
 				FROM Program_Product_Category_Product_Rates_Volumes
 				WHERE
@@ -67,6 +84,7 @@
 					AND 
 					Deleted 								= 0
 			</CFQUERY>
+</cfif>
 			
 			<cfoutput>#checkForThisCombo.recordcount#</cfoutput>
 			<!--- INSERT NEW RECORD --->

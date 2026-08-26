@@ -38,9 +38,24 @@
 
 
 
+<cfset useLakebaseForApproval = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForApproval>
+	<cftry>
+		<cfset Approval = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approved", {
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApproval = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApproval>
 <CFQUERY name = "Approval" datasource="awayx">
 	SELECT BillBack_ID from bb_approved
 </CFQUERY>
+</cfif>
 
 
 	

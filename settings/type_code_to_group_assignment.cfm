@@ -10,6 +10,22 @@ etc.
  ----->
 <cfset approvalGroupType = CreateObject("component", "components.settings.ApprovalGroupManager").getGroupTypeInfo() />
 
+<cfset useLakebaseForgetMarginGroupGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_any_group")>
+<cfif useLakebaseForgetMarginGroupGroups>
+	<cftry>
+		<cfset getMarginGroupGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_any_group", {
+				"margin_group_id" = "eq.#URL.Group_ID#",
+				"deleted" = "eq.0",
+				"group_type" = "eq.#application.returned_customer_setting.approval_on_type_code#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarginGroupGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarginGroupGroups>
 <CFQUERY NAME="getMarginGroupGroups" datasource="#application.datasource#">
 	SELECT 	*
 	FROM 	Margin_Group_Any_Group
@@ -17,8 +33,25 @@ etc.
 			AND 	Deleted = 0
 			AND		Group_Type = #application.returned_customer_setting.approval_on_type_code#
 </CFQUERY>
+</cfif>
 <CFSET ExistingGroups = valuelist(getMarginGroupGroups.Group_ID)>
 
+<cfset useLakebaseForgetOccupiedMarginGroupGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_any_group")>
+<cfif useLakebaseForgetOccupiedMarginGroupGroups>
+	<cftry>
+		<cfset getOccupiedMarginGroupGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_any_group", {
+				"margin_group_id" = "neq.#URL.Group_ID#",
+				"deleted" = "eq.0",
+				"group_type" = "eq.#application.returned_customer_setting.approval_on_type_code#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOccupiedMarginGroupGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOccupiedMarginGroupGroups>
 <CFQUERY NAME="getOccupiedMarginGroupGroups" datasource="#application.datasource#">
 	SELECT 	*
 	FROM 	Margin_Group_Any_Group
@@ -26,6 +59,7 @@ etc.
 			AND 	Deleted = 0
 			AND		Group_Type = #application.returned_customer_setting.approval_on_type_code#
 </CFQUERY>
+</cfif>
 
 <CFSET ExcludedGroups = valuelist(getOccupiedMarginGroupGroups.Group_ID)>
 

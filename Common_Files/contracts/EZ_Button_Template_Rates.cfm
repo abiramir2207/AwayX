@@ -143,7 +143,26 @@
 	<cfif form.IS_Group EQ 1>
 		<cfset PricingLevelID =0>
 		<cfset TotalLevels = request.AccessStructure.numberOfProductGroupLevels>
-		<cfquery name="check4ItemPricingLevel" datasource="#application.datasource#">
+		<cfset useLakebaseForcheck4ItemPricingLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForcheck4ItemPricingLevel>
+	<cftry>
+		<cfset check4ItemPricingLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"product_type_id" = "eq.2",
+				"is_group" = "eq.0",
+				"deleted" = "eq.0",
+				"captured_from_group" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck4ItemPricingLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck4ItemPricingLevel>
+<cfquery name="check4ItemPricingLevel" datasource="#application.datasource#">
 			SELECT 1
 			FROM Contract_Products
 			WHERE Contract_Main_ID = #Contract_Main_ID#
@@ -152,6 +171,7 @@
 			AND Deleted = 0
 			AND Captured_From_Group = 0
 		</cfquery>
+</cfif>
 
 			<cfif check4ItemPricingLevel.recordCount>
 				<cfset TotalLevels = TotalLevels -1>
@@ -171,7 +191,27 @@
 		</cfloop>
 
 		<cfif check4ItemPricingLevel.recordCount>
-			<cfquery name="upItemPricingLevel" datasource="#application.datasource#">
+			<cfset useLakebaseForupItemPricingLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForupItemPricingLevel>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"is_group" = "eq.0",
+				"captured_from_group" = "eq.0",
+				"deleted" = "eq.0"
+			},
+			{
+				"pricing_level_id" = "#PricingLevelID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupItemPricingLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupItemPricingLevel>
+<cfquery name="upItemPricingLevel" datasource="#application.datasource#">
 				UPDATE Contract_Products
 				SET Pricing_Level_ID = #PricingLevelID#
 				WHERE Contract_Main_ID = #Contract_Main_ID#
@@ -179,6 +219,7 @@
 				AND Captured_From_Group = 0
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 		</cfif>
 
 	<cfelse>

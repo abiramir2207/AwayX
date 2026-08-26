@@ -10,11 +10,27 @@
 <cfparam  name="form.Update_distributors" default="1">
 <cfparam  name="form.save" default="0">
 
-	<cfquery name="getCurrentValue" datasource="#application.datasource#">
+	<cfset useLakebaseForgetCurrentValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForgetCurrentValue>
+	<cftry>
+		<cfset getCurrentValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#url.Contract_main_id#",
+				"select" = "autoadd_distributor_thirdpartyclaims"
+			}), "autoadd_distributor_thirdpartyclaims"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentValue>
+<cfquery name="getCurrentValue" datasource="#application.datasource#">
 		SELECT AutoAdd_Distributor_ThirdPartyClaims
 		FROM Contract_Main_Aux_Data
 		WHERE Contract_Main_ID = #url.Contract_main_id#
 	</cfquery>
+</cfif>
 <cfif form.save AND (getCurrentValue.AutoAdd_Distributor_ThirdPartyClaims NEQ form.Update_distributors)>
 	<cfquery name="" datasource="#application.datasource#">
 		UPDATE Contract_Main_Aux_Data

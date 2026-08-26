@@ -261,12 +261,29 @@ select
 		</cfif>
 
 		<cfif appSettings.getGL_Account_On()>
-		<cfquery name="GLQuery" datasource="#application.datasource#">
+		<cfset useLakebaseForGLQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForGLQuery>
+	<cftry>
+		<cfset GLQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"deleted" = "eq.0",
+				"is_active" = "eq.1",
+				"select" = "gl_account,gl_account_desc,gl_account_id"
+			}), "gl_account,gl_account_desc,gl_account_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGLQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGLQuery>
+<cfquery name="GLQuery" datasource="#application.datasource#">
 			SELECT GL_Account, GL_Account_Desc, GL_Account_ID
 			FROM GL_Account
 			WHERE Deleted = 0
 			AND Is_Active = 1
 		</cfquery>
+</cfif>
 		<cfif GLQuery.recordCount GT 1>
 		<TR id="ShowGLSearch" >
 			<td ALIGN="right" class="Orangline"><strong><cfoutput>#Application.GLAccountLabel#</cfoutput>s</strong></td><!---D42774 --->

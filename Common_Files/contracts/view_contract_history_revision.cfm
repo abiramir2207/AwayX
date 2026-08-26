@@ -1,11 +1,27 @@
 <CFIF len(trim(ParentContractMainId)) GT 0>
 	<!--- there is parent assigned to this Program--->
-	<CFQUERY NAME="ParentContractHistory" datasource="#application.datasource#">
+	<cfset useLakebaseForParentContractHistory = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("temp_history")>
+<cfif useLakebaseForParentContractHistory>
+	<cftry>
+		<cfset ParentContractHistory = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("temp_history", {
+				"temp_id" = "eq.#ParentContractMainId#",
+				"order" = "changed_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForParentContractHistory = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForParentContractHistory>
+<CFQUERY NAME="ParentContractHistory" datasource="#application.datasource#">
 		SELECT *
 		FROM Temp_History
 		WHERE temp_id = '#ParentContractMainId#'
 		ORDER BY Changed_Date desc
 	</CFQUERY>
+</cfif>
 	
 	<CFLOOP QUERY="ParentContractHistory">
 		<!--- if the length of the ParentHistory if gt 0 then preappend the history data to the main history query --->

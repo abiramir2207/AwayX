@@ -105,12 +105,29 @@ FUNCTIONALITY:
     
         <cfargument name="program_id" required="true" type="STRING" />
         
-        <cfquery name="qgetBASEPRICE" datasource="#application.datasource#">
+        <cfset useLakebaseForqgetBASEPRICE = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForqgetBASEPRICE>
+	<cftry>
+		<cfset qgetBASEPRICE = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_main_id" = "eq.#ARGUMENTS.program_id#",
+				"deleted" = "eq.0",
+				"select" = "base_sales_cs,base_sales_lb,product_id"
+			}), "base_sales_cs,base_sales_lb,product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetBASEPRICE = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetBASEPRICE>
+<cfquery name="qgetBASEPRICE" datasource="#application.datasource#">
             select base_sales_cs,base_sales_lb,product_id
             from contract_product_margin
             where contract_main_id = '#ARGUMENTS.program_id#'
             and deleted = 0
         </cfquery>
+</cfif>
         
         <cfreturn QgetBASEPRICE />
 	
@@ -398,11 +415,27 @@ FUNCTIONALITY:
 
 		<cftry>
 
-            <cfquery name="var_qLetterXML" datasource="#application.datasource#">
+            <cfset useLakebaseForvar_qLetterXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvar_qLetterXML>
+	<cftry>
+		<cfset var_qLetterXML = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#arguments.program_letter_id#",
+				"select" = "letter_xml"
+			}), "letter_xml"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_qLetterXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_qLetterXML>
+<cfquery name="var_qLetterXML" datasource="#application.datasource#">
               SELECT	Letter_xml
               FROM		Program_Letters
               WHERE 	Program_Letters.Program_Letters_ID = #arguments.program_letter_id#
             </cfquery>
+</cfif>
             
             <cfif var_qLetterXML.recordCount EQ 1 AND len(trim(var_qLetterXML.Letter_xml[1]))>
             

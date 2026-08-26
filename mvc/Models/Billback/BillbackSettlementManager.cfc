@@ -432,11 +432,27 @@ Usage:			N/A
 		--->
 		<cfif arguments.bAllClosingMethods eq 1>
 			<!--- Check to see if there are any more deductions for the given Billback_ID --->
-			<cfquery name="chkForOtherDDs" datasource="#application.datasource#">
+			<cfset useLakebaseForchkForOtherDDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForchkForOtherDDs>
+	<cftry>
+		<cfset chkForOtherDDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"split_by_billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForchkForOtherDDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForchkForOtherDDs>
+<cfquery name="chkForOtherDDs" datasource="#application.datasource#">
 				SELECT * FROM
 				Deductions WHERE
 				Split_By_Billback_ID = '#Billback_ID#' AND Deleted = 0
 			</cfquery>
+</cfif>
 
 			<cfset arrDedIdsToAdd = ArrayNew(1) />
 			<cfif isDefined("chkForOtherDDs") AND chkForOtherDDs.RecordCount GTE 2>
@@ -1262,17 +1278,52 @@ Usage:			N/A
 					<cfif totalClosedWithoutDed GT 0 AND bDeductionExists EQ 1 AND OriginalDDAttached NEQ "">
 
 						<!---
-							<cfquery name="qrySplitBBs" datasource="#application.datasource#">
+							<cfset useLakebaseForqrySplitBBs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqrySplitBBs>
+	<cftry>
+		<cfset qrySplitBBs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#Parent_ID#",
+				"bb_closing_method" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrySplitBBs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrySplitBBs>
+<cfquery name="qrySplitBBs" datasource="#application.datasource#">
 								SELECT * FROM Billback
 								WHERE BB_Parent_ID = '#Parent_ID#' AND BB_Closing_Method = 2
 							</cfquery>
+</cfif>
 						--->
-						<cfquery name="updBBSplit" datasource="#application.datasource#">
+						<cfset useLakebaseForupdBBSplit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForupdBBSplit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"bb_parent_id" = "eq.#Parent_ID#",
+				"bb_closing_method" = "eq.2"
+			},
+			{
+				"bb_amount" = "#newDedAmount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdBBSplit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdBBSplit>
+<cfquery name="updBBSplit" datasource="#application.datasource#">
 							UPDATE	Billback
 							SET		BB_Amount = #newDedAmount#
 							WHERE 	BB_Parent_ID = '#Parent_ID#'
 							AND 	BB_Closing_Method = 2
 						</cfquery>
+</cfif>
 
 					</cfif>
 
@@ -1792,11 +1843,29 @@ Usage:			N/A
 		<cfset BBWorkFlowManager 	= createObject("component", "components.workflow.BillbackWorkFlowManager")>
 	  	<cfset appSettings 			= CreateObject("component", "components.settings.ApplicationSettingsManager").get() />
 
-		<cfquery name="UpdateAgreeBB" datasource="#Application.Datasource#">
+		<cfset useLakebaseForUpdateAgreeBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateAgreeBB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#arguments.Billback_ID#"
+			},
+			{
+				"billback_status_id" = "2"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateAgreeBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateAgreeBB>
+<cfquery name="UpdateAgreeBB" datasource="#Application.Datasource#">
     		UPDATE 	Billback
       		SET 	Billback_Status_ID = 2
 			WHERE 	Billback_Id = '#arguments.Billback_ID#'
   		</cfquery>
+</cfif>
 
 		<cfset Billback_ID = arguments.Billback_ID />
 		<cfset profile = CreateObject("component","components.user.Profile").init() />
@@ -1979,11 +2048,29 @@ Usage:			N/A
 			</cfquery>
 			<cfif getBBInfo.BB_Modify_Agree EQ 1>
 				<cfinclude template="/billbacks/Approval/save_modifyagree_BBchanges.cfm">
-				<cfquery name="UpdateModifyAgreeInfo" datasource="#Application.Datasource#">
+				<cfset useLakebaseForUpdateModifyAgreeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateModifyAgreeInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"bb_modify_agree" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateModifyAgreeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateModifyAgreeInfo>
+<cfquery name="UpdateModifyAgreeInfo" datasource="#Application.Datasource#">
 					UPDATE	Billback
 					SET 	BB_modify_agree = 0
 					WHERE 	Billback_Id = '#Billback_ID#'
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfif>
 
@@ -2026,9 +2113,24 @@ Usage:			N/A
 			var CheckTemplateApprovalRights = QueryNew('temp');
 			var TemplateApprovalRight = 0;
 		</cfscript>
-		<CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetFA_AppSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetFA_AppSetting>
+	<cftry>
+		<cfset GetFA_AppSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "forbidallowprofilesintemplates"
+			}), "forbidallowprofilesintemplates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFA_AppSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFA_AppSetting>
+<CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
 			SELECT ForbidAllowProfilesInTemplates FROM _Application_Settings
 		</CFQUERY>
+</cfif>
 		<cfscript>
 			CheckTemplateApprovalRights = this.BBSettlementDAO.checkTemplateApprovalRights(	arguments.billbackId,
 																							arguments.profilesId,

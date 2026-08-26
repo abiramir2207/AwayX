@@ -547,11 +547,26 @@
 	variable Item_Allocation_Tot is holding the child paid amount.
 	Fix: Find the parent paid amount and set ti to a new variable which can be used in the calcualtion so that we can allocate the appropriate percentage per each item
 	------>
-	<CFQUERY NAME="GetParentPaidAmount" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetParentPaidAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForGetParentPaidAmount>
+	<cftry>
+		<cfset GetParentPaidAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approved", {
+				"billback_id" = "eq.#CheckIsChild.BB_Parent_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetParentPaidAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetParentPaidAmount>
+<CFQUERY NAME="GetParentPaidAmount" DATASOURCE="#Application.Datasource#">
 		SELECT 		* 
 		FROM 		BB_Approved 
 		WHERE 		Billback_ID = '#CheckIsChild.BB_Parent_ID#'
 	</CFQUERY>
+</cfif>
 	<cfset ParentPaidAmount = GetParentPaidAmount.Paid_Amount />
 	<cfif NOT IsNumeric(ParentPaidAmount) OR ParentPaidAmount EQ 0>
 		<cfset ParentPaidAmount = 1 /> <!---- we don't want divide by 0 error or cannot convert from string error when it is NULL ---->
@@ -613,19 +628,53 @@
 	
 	<!--- <CFSET TemplateManager = CreateObject("component","components.programs.template.TemplateManager")> --->
 	<CFLOOP LIST = "#Program_List#" INDEX = "Item">
-		<!--- <CFQUERY NAME="GetProTemplate" DATASOURCE="#Application.Datasource#">
+		<!--- <cfset useLakebaseForGetProTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetProTemplate>
+	<cftry>
+		<cfset GetProTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Item#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProTemplate>
+<CFQUERY NAME="GetProTemplate" DATASOURCE="#Application.Datasource#">
 			SELECT ProgramType_ID 
 			FROM Contract_main
 			WHERE Contract_Main_ID = '#Item#'
 		</CFQUERY>
+</cfif>
 	
 		<CFSET TemplateID = TemplateManager.getLatestTemplateId(GetProTemplate.ProgramType_ID )> --->
-		 <CFQUERY NAME="GetARFY" DATASOURCE="#Application.Datasource#">
+		 <cfset useLakebaseForGetARFY = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForGetARFY>
+	<cftry>
+		<cfset GetARFY = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#item#",
+				"deleted" = "eq.0",
+				"select" = "ar_from_fiscal_year,a_r"
+			}), "ar_from_fiscal_year,a_r"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetARFY = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetARFY>
+<CFQUERY NAME="GetARFY" DATASOURCE="#Application.Datasource#">
 			SELECT 	AR_From_Fiscal_Year,
 					A_R
 			FROM 	Billback_Program
 			WHERE 	Billback_ID = '#Billback_ID#' AND Program_ID = '#item#' AND Deleted = 0 
 		</CFQUERY>
+</cfif>
 		
 		<!--- <CFQUERY NAME="GetARFY" DATASOURCE="#Application.Datasource#">
 			SELECT AR_From_Fiscal_Year,A_R
@@ -633,7 +682,27 @@
 			WHERE ProgramControl_Panel_Options_ID = '#TemplateID#'
 		</CFQUERY> --->
 		
-		<CFQUERY NAME="UpdateFYA_R" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForUpdateFYA_R = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_item_allocation_cal")>
+<cfif useLakebaseForUpdateFYA_R>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_item_allocation_cal",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#item#",
+				"deleted" = "eq.0"
+			},
+			{
+				"fiscal_year" = "#GetARFY.AR_From_Fiscal_Year#",
+				"a_r" = "#GetARFY.A_R#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateFYA_R = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateFYA_R>
+<CFQUERY NAME="UpdateFYA_R" DATASOURCE="#Application.Datasource#">
 			UPDATE 	GL_Code_Item_Allocation_Cal
 			SET 	Fiscal_Year = '#GetARFY.AR_From_Fiscal_Year#',
 					A_R = '#GetARFY.A_R#'
@@ -641,6 +710,7 @@
 					Program_ID = '#item#' AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 	</CFLOOP>
 	
 	

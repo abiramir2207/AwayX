@@ -2066,10 +2066,23 @@
 <!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
 	<cffunction name="loadBudgetLabels" output="false" returntype="void">
 	
-		<cfquery name="qGetBudgetLabels" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBudgetLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("simple_budget_labels")>
+<cfif useLakebaseForqGetBudgetLabels>
+	<cftry>
+		<cfset qGetBudgetLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("simple_budget_labels", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBudgetLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBudgetLabels>
+<cfquery name="qGetBudgetLabels" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Simple_Budget_Labels 
 		</cfquery>
+</cfif>
 	
 		<cfset this.budgetDollarLabel = qGetBudgetLabels.Budget_Dollar_Label />
 		<cfset this.committedDollarLabel = qGetBudgetLabels.Committed_Dollar_Label />

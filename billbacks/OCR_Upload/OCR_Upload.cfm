@@ -54,11 +54,29 @@ Description  :  Upload from home page
 			</table>
 			<!--- <cffile action="delete" file="#Application.Doc_Path#\data_files\uploaded\documents\uploaded_doc\#form.Single_File#" /> --->
 		<cfelse>
-			<cfquery name="getDuplicateOCRUpload" datasource="#application.datasource#">
+			<cfset useLakebaseForgetDuplicateOCRUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForgetDuplicateOCRUpload>
+	<cftry>
+		<cfset getDuplicateOCRUpload = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"file_name" = "eq.#strFileName#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "file_name"
+			}), "file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDuplicateOCRUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDuplicateOCRUpload>
+<cfquery name="getDuplicateOCRUpload" datasource="#application.datasource#">
 				SELECT  top 1 File_Name
 				FROM OCR_Upload_log
 				WHERE 	File_Name = '#strFileName#'	and deleted = 0
 			</cfquery>
+</cfif>
 			<cfif getDuplicateOCRUpload.RecordCount GTE 1>
 				<!--- <cffile action="delete" file="#cffile.serverDirectory#\#cffile.serverFile#"> --->
 				<!--- <!--- <BR><b><u>Upload Failed due to the below reason:</u></b><BR> ---> --->

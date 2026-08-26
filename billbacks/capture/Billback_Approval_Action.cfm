@@ -51,10 +51,25 @@
 		and billback_status_id <=2
 </cfquery>
 <cfif statuscheck.recordcount>
-		<cfquery name="emailevent" datasource="#application.datasource#">
+		<cfset useLakebaseForemailevent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForemailevent>
+	<cftry>
+		<cfset emailevent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "bb_agree_email,billback_rfa_agree_email_event"
+			}), "bb_agree_email,billback_rfa_agree_email_event"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForemailevent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForemailevent>
+<cfquery name="emailevent" datasource="#application.datasource#">
 				select BB_Agree_Email,billback_rfa_agree_email_event
 				from _application_Settings
 		</cfquery>
+</cfif>
 			<cfif emailevent.BB_Agree_Email AND (emailevent.billback_rfa_agree_email_event EQ 1 OR emailevent.billback_rfa_agree_email_event EQ 3)>	
 					<cfset AgreeEmailBillbackId = form.billback_id>
 					<cfset AgreeEmailUserId = request.accessstructure.user_id>

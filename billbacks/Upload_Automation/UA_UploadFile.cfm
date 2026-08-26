@@ -38,11 +38,27 @@ Description  :  Upload the file for the upload automation process
 		<cfset sFullPath  =  "#destPath#\#sFileName#" />
 		<cfset userID	 = request.AccessStructure.user_ID />
 
-		<cfquery name="getDTSPath" datasource="#application.datasource#">
+		<cfset useLakebaseForgetDTSPath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_settings")>
+<cfif useLakebaseForgetDTSPath>
+	<cftry>
+		<cfset getDTSPath = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dataint_settings", {
+				"order" = "dataint_setting_id.asc",
+				"select" = "dtspath = dts_reference_path+'\extract'"
+			}), "dtspath = dts_reference_path+'\extract'"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDTSPath = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDTSPath>
+<cfquery name="getDTSPath" datasource="#application.datasource#">
 			SELECT DTSPATH = DTS_Reference_Path+'\Extract'
 			FROM   DataInt_Settings
 			ORDER BY Dataint_setting_ID
 		</cfquery>
+</cfif>
 
 		<cfset desDBPath = getDTSPath.DTSPATH & "\" />
 
@@ -56,9 +72,27 @@ Description  :  Upload the file for the upload automation process
 		destination = "#desDBPath#\Clorox_3000_Rebate_Intake_Validate_Extract_Update_HLV.xlsx">
 
 		<cfoutput>
-		<cfquery name="qUpdFileName" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdFileName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("upload_automation_log")>
+<cfif useLakebaseForqUpdFileName>
+	<cftry>
+		<cfset application.oLakebase.updateRows("upload_automation_log",
+			{
+				"upload_automation_log_id" = "eq.#URL.UploadAutomationLogID#"
+			},
+			{
+				"update_hlv_filename" = "#sFileName#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdFileName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdFileName>
+<cfquery name="qUpdFileName" datasource="#application.datasource#">
 			UPDATE Upload_Automation_Log SET Update_HLV_FileName = '#sFileName#' WHERE Upload_Automation_Log_ID = #URL.UploadAutomationLogID#
 		</cfquery>
+</cfif>
 
 	  	<cfstoredproc procedure = "Upload_3000_UA_Log" dataSource="#application.datasource#">
 			<cfprocparam type="in" cfsqltype = "cf_sql_varchar"	value="3_0" dbvarname="@Upload_Status">

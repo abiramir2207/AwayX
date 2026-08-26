@@ -363,13 +363,30 @@ Get Program Types from DB
 								
 								<TD NOWRAP><span ID="searchItemLabel">Buying Groups</span></TD>
 								<TD>
-								<cfquery name="GetBuyingGroups" DATASOURCE="#Application.Datasource#">
+								<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+<cfquery name="GetBuyingGroups" DATASOURCE="#Application.Datasource#">
 									SELECT *
 									FROM Distributor_Buying_Groups
 									WHERE Deleted = 0
 									AND	Active_Code = 'A'
 									ORDER BY Buying_Group_Name
 								</cfquery>
+</cfif>
 								<CFPARAM NAME="FORM.Buying_Group" DEFAULT="0">
 								<SPAN ID="SP_Buying_Group">
 								<SELECT NAME="Buying_Group" style="width: 200px;">
@@ -556,11 +573,28 @@ Add Sort By
 
 
 <!--- <!--- Distributor --->
-				<cfquery name="getPayeeFilter" datasource="#Application.Datasource#">
+				<cfset useLakebaseForgetPayeeFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForgetPayeeFilter>
+	<cftry>
+		<cfset getPayeeFilter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"bsa_foodservice_customers_id" = "eq.#FORM.FilterDataList#",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeFilter>
+<cfquery name="getPayeeFilter" datasource="#Application.Datasource#">
 					SELECT Contract_Main_ID
 					FROM Contract_Distributors
 					WHERE BSA_Foodservice_Customers_ID = '#FORM.FilterDataList#' AND Deleted = 0
 				</cfquery>
+</cfif>
 				<CFIF getPayeeFilter.recordcount EQ 0>
 					<CFSET Filter_CID_List = 0>
 				<CFELSE>

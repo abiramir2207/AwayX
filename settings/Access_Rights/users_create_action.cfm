@@ -378,13 +378,32 @@ URL on email notifications
 		</CFQUERY>
 		<cfif form.ClassCodesOn EQ 0>
 			<!------ update business segments ----->
-			<cfquery name="qDeleteUserBusinessSegment" datasource="#application.datasource#">
+			<cfset useLakebaseForqDeleteUserBusinessSegment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
+<cfif useLakebaseForqDeleteUserBusinessSegment>
+	<cftry>
+		<cfset application.oLakebase.updateRows("user_business_segment",
+			{
+				"user_id" = "eq.#FORM.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteUserBusinessSegment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteUserBusinessSegment>
+<cfquery name="qDeleteUserBusinessSegment" datasource="#application.datasource#">
 				UPDATE	User_Business_Segment
 				SET		Deleted = 1
 				WHERE
 				User_ID = '#FORM.User_ID#'
 				AND DELETED = 0
 			</cfquery>
+</cfif>
 			<cfloop list="#FORM.User_Business_Segment_ID#" index="thisBusinessSegmentID">
 				<cfquery name="qInsertUserBusinessSegment" datasource="#application.datasource#">
 					INSERT INTO User_Business_Segment (Business_Segment_ID, User_ID)
@@ -501,26 +520,87 @@ URL on email notifications
 				</CFIF>
 		</CFIF>
 		<!--- update position --->
-		<CFQUERY NAME="getProfileDescription" datasource="#application.datasource#">
+		<cfset useLakebaseForgetProfileDescription = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForgetProfileDescription>
+	<cftry>
+		<cfset getProfileDescription = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"profiles_id" = "eq.#USER_PROFILE_ID#",
+				"select" = "profiles_desc"
+			}), "profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProfileDescription = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProfileDescription>
+<CFQUERY NAME="getProfileDescription" datasource="#application.datasource#">
 			SELECT 	Profiles_Desc
 			FROM 	Profiles
 			WHERE 	Profiles_ID = '#USER_PROFILE_ID#'
 		</CFQUERY>
-		<CFQUERY NAME="getCompanyInfo" datasource="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForgetCompanyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForgetCompanyInfo>
+	<cftry>
+		<cfset getCompanyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#COMPANY_MAIN_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCompanyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCompanyInfo>
+<CFQUERY NAME="getCompanyInfo" datasource="#application.datasource#">
 			SELECT *
 			FROM Company_Main
 			WHERE Company_Main_ID = '#COMPANY_MAIN_ID#'
 		</CFQUERY>
-		<CFQUERY NAME="getStateCode" datasource="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForgetStateCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_states")>
+<cfif useLakebaseForgetStateCode>
+	<cftry>
+		<cfset getStateCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_states", {
+				"state_id" = "eq.#WORK_STATE#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetStateCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetStateCode>
+<CFQUERY NAME="getStateCode" datasource="#application.datasource#">
 			SELECT *
 			FROM _states
 			WHERE State_ID = '#WORK_STATE#'
 		</CFQUERY>
-		<CFQUERY NAME="getPositionInfo" datasource="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForgetPositionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetPositionInfo>
+	<cftry>
+		<cfset getPositionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#USER_POSITIONS_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPositionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPositionInfo>
+<CFQUERY NAME="getPositionInfo" datasource="#application.datasource#">
 			SELECT *
 			FROM User_Positions
 			WHERE User_Positions_ID = '#USER_POSITIONS_ID#'
 			</CFQUERY>
+</cfif>
 			<!--- ||||||||||||||| CREATE XML LOG OF CHANGES |||||||||||||||
 			<cfif appSettings.getAuditTrailStorage() NEQ 0>
 				<cfset createLog = createObject("component", "components.settings.AuditTrail.AuditTrail").init()>

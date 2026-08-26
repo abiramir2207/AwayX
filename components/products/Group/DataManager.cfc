@@ -139,7 +139,22 @@
 	<!--- START:  D29684 - Planning Groups and Search Tools/Anand Rao/04-Jan-2012 ---->
 	<cffunction name="getProductGroupsDataNoPG" output="false" returntype="query">
 		<cfset qGetProductGroupTypesMain = this.getProductGroupsData() />
-		<cfquery name="qGetProductGroupTypesNoPG" dbtype="query">
+		<cfset useLakebaseForqGetProductGroupTypesNoPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductgrouptypesmain")>
+<cfif useLakebaseForqGetProductGroupTypesNoPG>
+	<cftry>
+		<cfset qGetProductGroupTypesNoPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductgrouptypesmain", {
+				"is_pg" = "eq.0",
+				"order" = "list_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductGroupTypesNoPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductGroupTypesNoPG>
+<cfquery name="qGetProductGroupTypesNoPG" dbtype="query">
 			SELECT
 				*
 			FROM
@@ -149,6 +164,7 @@
 			ORDER BY
 				List_Order
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetProductGroupTypesNoPG />
 	</cffunction>
@@ -1022,7 +1038,26 @@
 		<!---if program was passed then check to see if this is dynamic. if it is then set is dynamic to high--->
 		<cfif trim(arguments.programId) neq "">
 
-			<cfquery name="qCheckDynamic" datasource="#application.datasource#">
+			<cfset useLakebaseForqCheckDynamic = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqCheckDynamic>
+	<cftry>
+		<cfset qCheckDynamic = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"is_group" = "eq.1",
+				"dynamic_static_groups" = "eq.1",
+				"limit" = "1",
+				"select" = "contract_products_id"
+			}), "contract_products_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckDynamic = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckDynamic>
+<cfquery name="qCheckDynamic" datasource="#application.datasource#">
 				SELECT TOP 1 Contract_Products_ID
 				FROM	Contract_Products
 				WHERE	Deleted = 0
@@ -1030,6 +1065,7 @@
 				AND		Is_Group = 1
 				AND		Dynamic_Static_Groups = 1
 			</cfquery>
+</cfif>
 
 			<!---if we get a record then we know it's dynamic, so set it to 1--->
 			<cfif qCheckDynamic.RecordCount>
@@ -1044,12 +1080,29 @@
 			<!---if lob is on then get the lob id--->
 			<cfif lobOn eq 1>
 
-				<cfquery name="qGetProgramLob" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetProgramLob = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramLob>
+	<cftry>
+		<cfset qGetProgramLob = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "line_of_business_id"
+			}), "line_of_business_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLob = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLob>
+<cfquery name="qGetProgramLob" datasource="#application.datasource#">
 					SELECT	Line_Of_Business_ID
 					FROM	Contract_Main
 					WHERE	Deleted = 0
 					AND		Contract_Main_ID = '#arguments.programId#'
 				</cfquery>
+</cfif>
 
 				<cfset lineOfBusiness = qGetProgramLob.Line_Of_Business_ID />
 
@@ -1062,12 +1115,29 @@
 			<!---if it's enabled then get the business segment id--->
 			<cfif busSegEnabled>
 
-				<cfquery name="qGetProgramBusSegId" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetProgramBusSegId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramBusSegId>
+	<cftry>
+		<cfset qGetProgramBusSegId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramBusSegId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramBusSegId>
+<cfquery name="qGetProgramBusSegId" datasource="#application.datasource#">
 					SELECT	Business_Segment_ID
 					FROM	Contract_Main
 					WHERE	Deleted = 0
 					AND		Contract_Main_ID = '#arguments.programId#'
 				</cfquery>
+</cfif>
 
 				<cfset businessSegment = qGetProgramBusSegId.Business_Segment_ID />
 
@@ -1541,12 +1611,29 @@
 		<cfargument name="groupLevelId" required="false" default="0" />
 		<cfargument name="childParent" required="no" default="1" hint="1=child, 2=parent, 3=child of top level" />
 
-		<cfquery name="qGetHierarchyLevel" datasource="#application.datasource#" cachedwithin="#this.timeSpan#">
+		<cfset useLakebaseForqGetHierarchyLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqGetHierarchyLevel>
+	<cftry>
+		<cfset qGetHierarchyLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"deleted" = "eq.0",
+				"product_group_level_id" = "eq.#arguments.groupLevelId#",
+				"select" = "hierarchy_level"
+			}), "hierarchy_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetHierarchyLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetHierarchyLevel>
+<cfquery name="qGetHierarchyLevel" datasource="#application.datasource#" cachedwithin="#this.timeSpan#">
 			SELECT 	Hierarchy_Level
 			FROM	Product_Group_Level
 			WHERE	Deleted = 0
 			AND  	Product_Group_Level_ID = #arguments.groupLevelId#
 		</cfquery>
+</cfif>
 
 		<!---if childParent is 1 then get the child id--->
 		<cfif arguments.childParent eq 1>
@@ -1559,12 +1646,29 @@
 			<cfset hierarchyLevel = 2 />
 		</cfif>
 
-		<cfquery name="qGetGroupLevelId" datasource="#application.datasource#" cachedwithin="#this.timeSpan#">
+		<cfset useLakebaseForqGetGroupLevelId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqGetGroupLevelId>
+	<cftry>
+		<cfset qGetGroupLevelId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"deleted" = "eq.0",
+				"hierarchy_level" = "eq.#hierarchyLevel#",
+				"select" = "product_group_level_id"
+			}), "product_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupLevelId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupLevelId>
+<cfquery name="qGetGroupLevelId" datasource="#application.datasource#" cachedwithin="#this.timeSpan#">
 			SELECT 	Product_Group_Level_ID
 			FROM	Product_Group_Level
 			WHERE	Deleted = 0
 			AND  	Hierarchy_Level = #hierarchyLevel#
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetGroupLevelId.Product_Group_Level_ID />
 

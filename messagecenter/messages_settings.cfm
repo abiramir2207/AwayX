@@ -67,10 +67,23 @@ var targetWin = window.open (pageURL, title.replace(/\s/g, ''), 'toolbar=no, loc
 <!--- ----------------------------------------------------------------------------------------- --->
 <!--- retrieve the settings from db --->
 <!--- ----------------------------------------------------------------------------------------- --->
+<cfset useLakebaseForget_settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("msg_ctr_settings")>
+<cfif useLakebaseForget_settings>
+	<cftry>
+		<cfset get_settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("msg_ctr_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_settings>
 <cfquery name="get_settings" datasource="#db_connection#">
 	 SELECT		*
 	 FROM		msg_ctr_settings
 </cfquery>
+</cfif>
 
 
 
@@ -456,9 +469,22 @@ document.getElementById(id).style.display = visibility;
 
 <!--- get the messages saved in the db --->
 
+<cfset useLakebaseForget_admin_msgs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("msg_ctr_admin_msgs")>
+<cfif useLakebaseForget_admin_msgs>
+	<cftry>
+		<cfset get_admin_msgs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("msg_ctr_admin_msgs", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_admin_msgs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_admin_msgs>
 <cfquery name="get_admin_msgs" datasource="#db_connection#">
 	 Select * from msg_ctr_admin_msgs
 </cfquery>
+</cfif>
 
 
 

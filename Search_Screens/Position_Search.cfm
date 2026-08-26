@@ -194,12 +194,46 @@ SELECT
 <CFSET Input_Select_Width = 160>
 <!---BJF D10171 more powerful reset for search criteria --->
 <!---  initial user position--->
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForgetUserPrimaryPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPrimaryPosition>
+	<cftry>
+		<cfset getUserPrimaryPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"deleted" = "eq.0",
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"user_position_type" = "eq.P",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPrimaryPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPrimaryPosition>
 <CFQUERY NAME="getUserPrimaryPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
@@ -207,6 +241,7 @@ SELECT
 	AND  User_ID = '#request.AccessStructure.user_id#'
 	AND User_Position_Type ='P'
 </CFQUERY>
+</cfif>
 
 <SCRIPT LANGUAGE="JavaScript">
 	function sortByThisItem(thisObj, thisSortItem, thisSortOrder)

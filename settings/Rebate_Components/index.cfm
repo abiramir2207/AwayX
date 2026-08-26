@@ -144,13 +144,31 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 		AND LEN(LTRIM(RTRIM(GL_Account))) > 0
 		ORDER BY GL_Account.Gl_Account
 	</cfquery>
-	<cfquery name="GetClaimMechInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetClaimMechInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForGetClaimMechInfo>
+	<cftry>
+		<cfset GetClaimMechInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"is_auto_pay" = "eq.0",
+				"select" = "payment_type_id,payment_type_name"
+			}), "payment_type_id,payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetClaimMechInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetClaimMechInfo>
+<cfquery name="GetClaimMechInfo" datasource="#application.datasource#">
 		SELECT Payment_Type_ID, Payment_Type_Name
 		FROM Payment_Type
 		WHERE active = 1
 		AND deleted = 0
 		AND Is_Auto_Pay = 0
 	</cfquery>
+</cfif>
 <!---D79237:  Rebate - OI and Redi END---->
 
 <!---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx--->

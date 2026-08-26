@@ -11,11 +11,29 @@
 
 
 <!--- update rate type --->
+<cfset useLakebaseForupdateRateType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdateRateType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#form.Program_ID#"
+			},
+			{
+				"bid_price_rebate_type" = "#form.Bid_Price_Rebate_Type#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateRateType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateRateType>
 <cfquery name="updateRateType" datasource="#application.datasource#">
 UPDATE Contract_Main
 SET Bid_Price_Rebate_Type = '#form.Bid_Price_Rebate_Type#'
 WHERE Contract_Main_ID = '#form.Program_ID#'
 </cfquery>
+</cfif>
 
 
 <CFQUERY NAME="getProductsToDelete" datasource="#application.datasource#">
@@ -119,11 +137,27 @@ WHERE
 </CFTRANSACTION>
 
 
+<cfset useLakebaseForgetProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramType>
+	<cftry>
+		<cfset getProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramType>
 <CFQUERY NAME="getProgramType" datasource="#application.datasource#">
 	SELECT ProgramType_ID
 	FROM Contract_Main 
 	WHERE Contract_Main_ID = #FORM.Program_ID#
 </CFQUERY>
+</cfif>
 
 <CFSET redirector_Program_ID = getProgramType.ProgramType_ID>
 <CFSET redirector_FromPage_ID = 10>

@@ -293,9 +293,25 @@ function toaction()
 			</CFIF>
 
 			<CFOUTPUT QUERY = "Display_Attach">
-			<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
 				SELECT Name_First, Name_Last FROM _USERS WHERE User_ID = '#Uploaded_By#'
 			</CFQUERY>
+</cfif>
 				<TR BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#">
 					<TD WIDTH="3%"><INPUT TYPE="Checkbox" NAME="Doc_ID" VALUE="#Doc_ID#"<CFIF ListFindNoCase(Recently_Selected_Attach_List, Doc_ID, ",")>CHECKED</CFIF>></TD>
 					<TD WIDTH="13%">#DateFormat(Uploaded_Date,"mm/dd/yyyy")#<br>#User_Name.Name_First# #User_Name.Name_Last#</TD>
@@ -363,11 +379,26 @@ function toaction()
 			<CFSET count=0>
 			<CFLOOP INDEX="item" LIST="#Form.Attachment_List#">
 			<CFIF NOT ListFindNoCase(Saved_Attachment_List, item, ",")>
-				<CFQUERY NAME="Get_Document_Selected" DBTYPE="query">
+				<cfset useLakebaseForGet_Document_Selected = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("new_attachments")>
+<cfif useLakebaseForGet_Document_Selected>
+	<cftry>
+		<cfset Get_Document_Selected = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("new_attachments", {
+				"doc_id" = "eq.#Item#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Document_Selected = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Document_Selected>
+<CFQUERY NAME="Get_Document_Selected" DBTYPE="query">
 					Select		*
 					From		New_Attachments
 					Where		Doc_ID	=	'#Item#'
 				</CFQUERY>
+</cfif>
 			<CFOUTPUT QUERY="Get_Document_Selected">
 				<CFSET count = count + 1>
 				<TR BGCOLOR="#IIf(count Mod 2, DE('ffffff'), DE('C6FFC6'))#">

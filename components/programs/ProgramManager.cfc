@@ -2519,10 +2519,25 @@ and contract_products.deleted = 0
 	</cffunction>
 
 	<cffunction name="getagreedtprogramsettings" output="false" returntype="query">
-		<cfquery name="qgetagreedtprogramsettings" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetagreedtprogramsettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqgetagreedtprogramsettings>
+	<cftry>
+		<cfset qgetagreedtprogramsettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "edit_basic_info,edit_operators,edit_opr_basinfo"
+			}), "edit_basic_info,edit_operators,edit_opr_basinfo"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetagreedtprogramsettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetagreedtprogramsettings>
+<cfquery name="qgetagreedtprogramsettings" datasource="#application.datasource#">
 			select edit_basic_info, edit_operators,edit_opr_basinfo
 			from general_settings
 		</cfquery>
+</cfif>
 		<cfreturn qgetagreedtprogramsettings />
 
 	</cffunction>
@@ -2564,11 +2579,27 @@ and contract_products.deleted = 0
 	<cffunction name="getParentProgramInfo" output="false" returntype="query">
 	<cfargument name="programId" required="true" type="string">
 
-		<cfquery name="qgetParentProgramInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetParentProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetParentProgramInfo>
+	<cftry>
+		<cfset qGetParentProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.ProgramID#",
+				"select" = "revision_of_contract_main_id"
+			}), "revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetParentProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetParentProgramInfo>
+<cfquery name="qgetParentProgramInfo" datasource="#application.datasource#">
 			SELECT Revision_of_Contract_Main_ID
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#arguments.ProgramID#'
 		</cfquery>
+</cfif>
 		<cfreturn qgetParentProgramInfo  />
 	</cffunction>
 
@@ -2740,11 +2771,28 @@ and contract_products.deleted = 0
 		<cfargument name="user_id" type="uuid" required="yes">
 		<cfset var frm = arraylen(items)>
 		<cfloop index="i" from="#frm#" to="1" step="-1">
-			<cfquery name="qgetFav" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetFav = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_favorites")>
+<cfif useLakebaseForqgetFav>
+	<cftry>
+		<cfset qgetFav = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_favorites", {
+				"user_id" = "eq.#arguments.user_id#",
+				"program_id" = "eq.#items[i].data#",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetFav = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetFav>
+<cfquery name="qgetFav" datasource="#application.datasource#">
 				select Program_id from Program_Favorites
 					where User_ID = '#arguments.user_id#' and
 					program_id = '#items[i].data#'
 			</cfquery>
+</cfif>
 			<cfif qgetFav.recordcount eq 0> <!--- if not there, insert record --->
 				<cfquery name="qInsFav" datasource="#application.datasource#">
 					insert into Program_Favorites (Program_id, User_Id, Program_Number)
@@ -2906,11 +2954,29 @@ and contract_products.deleted = 0
 				<cfset val = #appsettings.getProgramLockTypeID()#>
 			</cfif>
 				<!---set the Program_Lock_Type_ID in Contract_Main_Aux_Data--->
-				<cfquery name="qUpdateProgramLockTypeID" datasource="#application.datasource#">
+				<cfset useLakebaseForqUpdateProgramLockTypeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqUpdateProgramLockTypeID>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main_aux_data",
+			{
+				"contract_main_id" = "eq.#programId#"
+			},
+			{
+				"program_lock_type_id" = "#val#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateProgramLockTypeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateProgramLockTypeID>
+<cfquery name="qUpdateProgramLockTypeID" datasource="#application.datasource#">
 					UPDATE	Contract_Main_Aux_Data
 					SET			Program_Lock_Type_ID = #val#
 					WHERE	Contract_Main_ID = #programId#
 				</cfquery>
+</cfif>
 		</cfif>
 	</cffunction>
 	<!--- Check if the program has lock components --->
@@ -3107,7 +3173,24 @@ and contract_products.deleted = 0
 
 		<cfset var qGetCompetitorSource = "" />
 
-		<cfquery name="qGetCompetitorSource" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCompetitorSource = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_source")>
+<cfif useLakebaseForqGetCompetitorSource>
+	<cftry>
+		<cfset qGetCompetitorSource = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_source", {
+				"deleted" = "eq.0",
+				"active" = "eq.#arguments.Active#",
+				"order" = "program_bid_source_description.asc",
+				"select" = "program_bid_source_id,program_bid_source_code,program_bid_source_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_source_id,program_bid_source_code,program_bid_source_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCompetitorSource = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCompetitorSource>
+<cfquery name="qGetCompetitorSource" datasource="#application.datasource#">
 		 SELECT	Program_Bid_Source_ID,
 			Program_Bid_Source_Code,
 			Program_Bid_Source_Description,
@@ -3121,6 +3204,7 @@ and contract_products.deleted = 0
 		 AND Active = #arguments.Active#
 		 ORDER BY Program_Bid_Source_Description
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetCompetitorSource />
 	</cffunction>
@@ -3129,7 +3213,24 @@ and contract_products.deleted = 0
 
 		<cfset var qGetCompetitorSourceType = "" />
 
-		<cfquery name="qGetCompetitorSourceType" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCompetitorSourceType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_source_type")>
+<cfif useLakebaseForqGetCompetitorSourceType>
+	<cftry>
+		<cfset qGetCompetitorSourceType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_source_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_source_type_description.asc",
+				"select" = "program_bid_source_type_id,program_bid_source_type_code,program_bid_source_type_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_source_type_id,program_bid_source_type_code,program_bid_source_type_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCompetitorSourceType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCompetitorSourceType>
+<cfquery name="qGetCompetitorSourceType" datasource="#application.datasource#">
 		 SELECT	Program_Bid_Source_Type_ID,
 			Program_Bid_Source_Type_Code,
 			Program_Bid_Source_Type_Description,
@@ -3143,6 +3244,7 @@ and contract_products.deleted = 0
 		 AND Active = 1
 		 ORDER BY Program_Bid_Source_Type_Description
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetCompetitorSourceType />
 	</cffunction>
@@ -3151,11 +3253,27 @@ and contract_products.deleted = 0
 	<cffunction name="getPriceListBracketForProgram" access="public" returntype="query" output="false">
 		<cfargument name="programID" type="string" required="true" />
 
-		<cfquery name="qGetPriceListBracketForProgram" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetPriceListBracketForProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqGetPriceListBracketForProgram>
+	<cftry>
+		<cfset qGetPriceListBracketForProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "price_list_id,pricebracket_update,pricebracket_update_by,pricebracket_update_date"
+			}), "price_list_id,pricebracket_update,pricebracket_update_by,pricebracket_update_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceListBracketForProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceListBracketForProgram>
+<cfquery name="qGetPriceListBracketForProgram" datasource="#application.datasource#">
 		  SELECT Price_List_ID,PriceBracket_Update,PriceBracket_Update_By,PriceBracket_Update_Date
 		  FROM Contract_Main_Aux_Data
 		  WHERE Contract_Main_ID = '#arguments.programID#'
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetPriceListBracketForProgram>
 
@@ -3166,11 +3284,27 @@ and contract_products.deleted = 0
 
 		  	<!--- Dev Note: drachala; D28504: Update bracket drop down list to remove price list ID  START
               Changed/Added: changed Select statement to get distinct Bracket value.--->
-		<cfquery name="qGetAllPriceListBrackets" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAllPriceListBrackets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("v_price_list_bracket")>
+<cfif useLakebaseForqGetAllPriceListBrackets>
+	<cftry>
+		<cfset qGetAllPriceListBrackets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("v_price_list_bracket", {
+				"order" = "bracket.asc",
+				"select" = "bracket"
+			}), "bracket"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllPriceListBrackets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllPriceListBrackets>
+<cfquery name="qGetAllPriceListBrackets" datasource="#application.datasource#">
 		  SELECT distinct Bracket
 		  FROM V_Price_List_Bracket
 		  ORDER BY Bracket
 		</cfquery>
+</cfif>
 		<!--- End Dev Note: drachala; D28504: Update bracket drop down list to remove price list ID  --->
 		<cfreturn qGetAllPriceListBrackets>
 
@@ -3187,11 +3321,27 @@ and contract_products.deleted = 0
 
 	       <!--- Check whether the price bracket is updated in the db. We do not check this when the "price bracket" is saved into the db. --->
 	      <cfif arguments.selectedPriceBracket eq 0>
-		<CFQUERY NAME="qIsPriceListBracketOverridden" datasource="#application.datasource#">
+		<cfset useLakebaseForqIsPriceListBracketOverridden = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqIsPriceListBracketOverridden>
+	<cftry>
+		<cfset qIsPriceListBracketOverridden = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "pricebracket_update"
+			}), "pricebracket_update"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsPriceListBracketOverridden = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsPriceListBracketOverridden>
+<CFQUERY NAME="qIsPriceListBracketOverridden" datasource="#application.datasource#">
 		  SELECT PriceBracket_Update
 		  FROM Contract_Main_Aux_Data
 		  WHERE contract_Main_ID = '#arguments.programID#'
 		</CFQUERY>
+</cfif>
 
 		<cfset priceBracketUpdate = qIsPriceListBracketOverridden.PriceBracket_Update>
 
@@ -3475,13 +3625,32 @@ and contract_products.deleted = 0
 		<cfset var bBidFeatureOn = 0>
 
 		<!--- Check for at least one template which has Bid feature ON. --->
-		<cfquery name="qIsBidTemplate" datasource="#application.datasource#">
+		<cfset useLakebaseForqIsBidTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqIsBidTemplate>
+	<cftry>
+		<cfset qIsBidTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"isdominant" = "eq.1",
+				"bidrequeststatuson" = "eq.1",
+				"limit" = "1",
+				"select" = "programcontrol_panel_options_id"
+			}), "programcontrol_panel_options_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsBidTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsBidTemplate>
+<cfquery name="qIsBidTemplate" datasource="#application.datasource#">
 			SELECT TOP 1 ProgramControl_Panel_Options_ID
 			FROM Program_Control_Panel_Options
 			WHERE deleted = 0
 			AND IsDominant = 1
 			AND BidRequestStatusOn = 1
 		</cfquery>
+</cfif>
 
 		<cfset bBidFeatureOn = qIsBidTemplate.recordcount>
 

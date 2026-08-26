@@ -8,13 +8,31 @@ Route_Close_Action.cfm
 
 <CFLOOP LIST="#FORM.Message_ID#" INDEX="this_Message_ID">
 	<CFOUTPUT>
-	<CFQUERY NAME="Update_As_Closed" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForUpdate_As_Closed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("route_message")>
+<cfif useLakebaseForUpdate_As_Closed>
+	<cftry>
+		<cfset application.oLakebase.updateRows("route_message",
+			{
+				"route_message_id" = "eq.#this_Message_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_As_Closed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_As_Closed>
+<CFQUERY NAME="Update_As_Closed" DATASOURCE="#application.datasource#">
 		UPDATE	Route_Message
 		SET
 			Deleted = 1
 		WHERE
 			Route_Message.Route_Message_ID = #this_Message_ID#
 	</CFQUERY>
+</cfif>
 	
 		</CFOUTPUT>
 </CFLOOP>

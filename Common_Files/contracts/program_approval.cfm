@@ -53,11 +53,26 @@ WHERE Contract_Main.Contract_Main_ID = '#Contract_Main_ID#'
 </cfquery>
 
 <!---Gets settings for the template--->
+<cfset useLakebaseForgetProgramSettngs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetProgramSettngs>
+	<cftry>
+		<cfset getProgramSettngs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#BasicProgramInformation.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramSettngs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramSettngs>
 <CFQUERY NAME="getProgramSettngs" datasource="#application.datasource#">
 	SELECT	*
 	FROM    Program_Control_Panel_Options
 	WHERE 	ProgramControl_Panel_Options_ID = '#BasicProgramInformation.ProgramType_ID#'
 </CFQUERY>
+</cfif>
 
 <cfset getSettings = getProgramSettngs>
 <cfset GETPROGRAMINFO = BasicProgramInformation>	
@@ -85,11 +100,26 @@ WHERE Contract_Main.Contract_Main_ID = '#Contract_Main_ID#'
 <cfparam name="FailedFloorTest" default="0">
 
 <!---Get growth lump sum and inactive LS approval amounts--->
+<cfset useLakebaseForApprovalAmounts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForApprovalAmounts>
+	<cftry>
+		<cfset ApprovalAmounts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles_settings", {
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovalAmounts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovalAmounts>
 <cfquery name="ApprovalAmounts" datasource="#application.datasource#">
 SELECT *
 FROM Profiles_Settings
 WHERE Profiles_ID = '#request.AccessStructure.Profiles_ID#'
 </cfquery>
+</cfif>
 
 <cfset SpendingCapVersion = appSettings.getSpendingCapVersion() />
 <cfset doPaging = 0 />
@@ -611,12 +641,28 @@ AND Program_Growth_Component_Tiers.Program_ID = #Contract_Main_ID#
 <FORM ACTION="contract_Approve_Action.cfm" METHOD="post" NAME="MyForm" ID="MyForm">
 
 <CFOUTPUT>		
+<cfset useLakebaseForGetRevisionParentInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetRevisionParentInfo>
+	<cftry>
+		<cfset GetRevisionParentInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#BasicProgramInformation.Revision_of_Contract_Main_ID#",
+				"select" = "contract_end_date,contract_start_date"
+			}), "contract_end_date,contract_start_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRevisionParentInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRevisionParentInfo>
 <CFQUERY NAME="GetRevisionParentInfo" datasource="#application.datasource#">
 		SELECT 	Contract_End_Date, 
 				Contract_Start_Date
 		FROM 	Contract_Main
 		WHERE 	Contract_Main_ID = '#BasicProgramInformation.Revision_of_Contract_Main_ID#'
-	</CFQUERY>		
+	</CFQUERY>
+</cfif>		
  <CFIF Program_Is_A_Revision EQ 1>
 			
 		

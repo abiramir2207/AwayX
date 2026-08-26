@@ -51,11 +51,27 @@ Modified Date:
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
+<cfset useLakebaseForGet_Category_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_category")>
+<cfif useLakebaseForGet_Category_Info>
+	<cftry>
+		<cfset Get_Category_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_category", {
+				"order" = "deleted.asc",
+				"select" = "program_category,program_category_id,deleted"
+			}), "program_category,program_category_id,deleted"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Category_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Category_Info>
 <CFQUERY NAME="Get_Category_Info" datasource="#application.datasource#">
 	SELECT	Program_Category, Program_Category_ID, Deleted
 	FROM		Program_Category
 	ORDER BY Deleted
 </CFQUERY>
+</cfif>
 
 	<TABLE BORDER="0" CELLSPACING="10" CELLPADDING="0" WIDTH="765">
 		<TR>

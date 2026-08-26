@@ -26,7 +26,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 <!--- If the "distributor" payee exists.
 It will exist when the user selects a distributor from the popup page. --->
 <CFIF Form.Distributor_id NEQ "">
-	<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Form.Distributor_id#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "name.asc",
+				"select" = "bsa_foodservice_customers_id,name,ship_to,business_segment_id"
+			}), "bsa_foodservice_customers_id,name,ship_to,business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
 		SELECT	BSA_Foodservice_Customers_ID, Name, Ship_To, Business_Segment_ID
 		FROM 	BSA_Foodservice_Customers
 		WHERE	BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID = '#Form.Distributor_id#'
@@ -34,6 +52,7 @@ It will exist when the user selects a distributor from the popup page. --->
 		AND		BSA_Foodservice_Customers.Active_Code = 'A'
 		ORDER BY Name
 	</CFQUERY>
+</cfif>
 	<cfset FORM.BusinessSegmentID = Dist_Search_Result.Business_Segment_ID />
 	<!--- Get the distributor's name --->
 	<!--- D47749: Customer Planning Group - Need Payee Nbr displayed/ Anand Rao / 22-Jan-2015 --->
@@ -48,11 +67,27 @@ It will exist when the user selects a distributor from the popup page. --->
 <!--- If the "vendor" payee exists.
 It will exist when the user selects a vendor from the popup page. --->
 <CFIF Form.Vendor_ID NEQ "">
-	<CFQUERY NAME="GetVendorID" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForGetVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGetVendorID>
+	<cftry>
+		<cfset GetVendorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#Vendor_ID#",
+				"select" = "vendor_master_id,vendor_id,vendor_name"
+			}), "vendor_master_id,vendor_id,vendor_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorID>
+<CFQUERY NAME="GetVendorID" DATASOURCE = "#Application.Datasource#">
 		SELECT Vendor_Master_ID, Vendor_ID, Vendor_Name
 		FROM Vendor_Master
 		WHERE Vendor_ID = '#Vendor_ID#'
 	</CFQUERY>
+</cfif>
 	<!--- Get the vendor's name --->
 	<!--- D47749: Customer Planning Group - Need Payee Nbr displayed/ Anand Rao / 22-Jan-2015 --->
 	<cfif GetVendorID.Vendor_ID EQ "">

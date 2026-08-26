@@ -13,11 +13,29 @@ TABLE.Underlined TD
 }
 </STYLE>
 <CFIF application.returned_customer_setting.Show_Fund_Settings EQ 1 AND application.returned_customer_setting.Upload_GL_Code EQ 1>		
+<cfset useLakebaseForPendingVendor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForPendingVendor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"billback_status_id" = "7"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPendingVendor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPendingVendor>
 <CFQUERY NAME="PendingVendor" DATASOURCE="#Application.Datasource#">
 	UPDATE Billback 
 	SET Billback_Status_ID = 7
 	WHERE Billback_ID = '#Billback_ID#'
 </CFQUERY>
+</cfif>
 </CFIF>	
 <CFIF PayeeType EQ 1>
 	<CFQUERY NAME="GetPayeeInfo" DATASOURCE="#Application.Datasource#">

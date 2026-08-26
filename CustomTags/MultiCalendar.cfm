@@ -36,10 +36,25 @@ daydisplay.opener.name = "CalendarDisplay";
 
 <CFIF isdefined('attributes.showremote')>
 
+<cfset useLakebaseForGETSITE = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("site_table")>
+<cfif useLakebaseForGETSITE>
+	<cftry>
+		<cfset GETSITE = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("site_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGETSITE = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGETSITE>
 <CFQUERY name="GETSITE" datasource="#attributes.MultiCalDSN#">
 SELECT * from SITE_TABLE
 WHERE SITEID = #attributes.siteid#
 </cfquery>
+</cfif>
 
 <CFIF #attributes.showremote# eq 'showallevents'>
 
@@ -75,11 +90,26 @@ AND			RECUR_TABLE.RECURTYPEID = RECURTYPE_TABLE.RECURTYPEID
 <br>
 <CFIF #GetEvent.recordcount# lte 0 AND #GetRecur.recordcount# lte 0>
 <CFIF #attributes.categories# neq 0>
+<cfset useLakebaseForGetCat = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetCat>
+	<cftry>
+		<cfset GetCat = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"id" = "eq.#attributes.categories#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCat = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCat>
 <CFQUERY name="GetCat" DATASOURCE="#attributes.MultiCalDSN#">
 SELECT 		* 
 FROM 		CATEGORY_TABLE
 WHERE		CATEGORY_TABLE.id = #attributes.categories#
 </CFQUERY>
+</cfif>
 </cfif>
 <b><font>Sorry, there are no <CFIF #attributes.categories# neq 0><cfoutput><font color="#GetCat.Textcolor#">"#GetCat.title#"</cfoutput></font><cfelse>events</cfif> listed for today.</font></b><br><br>
 <CFELSE>
@@ -182,17 +212,47 @@ AND		e.Category = c.id
 	<CFSET phone12 = "">
 	<CFSET phone13 = "">
 	
+<cfset useLakebaseForGetCalColors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("site_table")>
+<cfif useLakebaseForGetCalColors>
+	<cftry>
+		<cfset GetCalColors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("site_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCalColors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCalColors>
 <CFQUERY name="GetCalColors" datasource="#attributes.MultiCalDSN#">
 SELECT  *
 FROM    SITE_TABLE
 WHERE   SiteID = #attributes.siteid#
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForGetcategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetcategories>
+	<cftry>
+		<cfset Getcategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcategories>
 <CFQUERY name="Getcategories" datasource="#attributes.MultiCalDSN#">
 SELECT * 
 FROM 	CATEGORY_TABLE
 WHERE	siteid = #attributes.siteid#
 </CFQUERY>
+</cfif>
 
 <CFFORM action="#attributes.pagename#" Method="POST" name="addeventform">
 <cfoutput>
@@ -251,9 +311,22 @@ Please note that times should be entered using the 24 hour clock or military tim
 <td width="50%" align="right" valign="top"><font>End Time: </font><font color="red"><b>*</b></font></td>
 <td width="50%"><cfinput type="Text" name="endtime" value="#timeformat(now(), 'HH:mm')#" message="You must enter an ending time." validate="time" required="Yes" size="30" tabindex="16"></td>
 </tr>
+<cfset useLakebaseForGetRecurType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("recurtype_table")>
+<cfif useLakebaseForGetRecurType>
+	<cftry>
+		<cfset GetRecurType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("recurtype_table", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRecurType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRecurType>
 <CFQUERY name="GetRecurType" datasource="#attributes.MultiCalDSN#">
 SELECT * FROM RECURTYPE_TABLE
 </cfquery>
+</cfif>
 <tr>
 <td width="50%" align="right" valign="top"><font>Recurring Events: </font></td>
 <td width="50%"><font><cfselect name="RecurType" query="GetRecurType" value="RecurTypeID" display="RecurType">
@@ -395,12 +468,28 @@ WHERE   SiteID = #attributes.siteid#
     AND     id <> #attributes.categories#
     ORDER BY TITLE
     </CFQUERY>
-    <CFQUERY name="GetSelectedType" datasource="#attributes.MultiCalDSN#">
+    <cfset useLakebaseForGetSelectedType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("category_table")>
+<cfif useLakebaseForGetSelectedType>
+	<cftry>
+		<cfset GetSelectedType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("category_table", {
+				"id" = "eq.#attributes.categories#",
+				"siteid" = "eq.#attributes.siteid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSelectedType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSelectedType>
+<CFQUERY name="GetSelectedType" datasource="#attributes.MultiCalDSN#">
     SELECT  *
     FROM    CATEGORY_TABLE
     WHERE   id = #attributes.categories#
     AND     siteid = #attributes.siteid#
     </CFQUERY>
+</cfif>
     <cfelse>
         <CFQUERY name="Getcategories" datasource="#attributes.MultiCalDSN#">
         SELECT  *

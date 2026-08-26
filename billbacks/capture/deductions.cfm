@@ -12,18 +12,51 @@
 
 <cfif FORM.state EQ 0>
 	<!------ Get the stored deduction id ----->
-	<cfquery name="getAssociatedDeductionID" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAssociatedDeductionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForgetAssociatedDeductionID>
+	<cftry>
+		<cfset getAssociatedDeductionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"dd_closure_id" = "eq.#URL.BBID#",
+				"dd_closure_type" = "eq.1",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssociatedDeductionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssociatedDeductionID>
+<cfquery name="getAssociatedDeductionID" datasource="#application.datasource#">
 		SELECT	Deductions.Deduction_ID
 		FROM	Deductions
 		WHERE	DD_Closure_ID = '#URL.BBID#'
 		AND		DD_Closure_Type = 1
 	</cfquery>
+</cfif>
 	<cfset FORM.Deduction_ID = ValueList(getAssociatedDeductionID.Deduction_ID) />	
 </cfif>
 
+<cfset useLakebaseForGetPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForGetPayee>
+	<cftry>
+		<cfset GetPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayee>
 <CFQUERY NAME="GetPayee" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Billback_Distributor WHERE Billback_ID = '#URL.BBID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 <!------ Get Billback Approved for Payment Amount ----->
 <cfquery name="getBBApprovedAmount" datasource="#application.datasource#">
 	SELECT		BB_Approved.Paid_Amount,Billback.BB_Closing_Method

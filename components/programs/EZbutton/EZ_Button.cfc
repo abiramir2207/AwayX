@@ -58,7 +58,27 @@
 					<cfloop from="#arguments.Pricing_Level_ID#" to="#request.AccessStructure.numberOfProductGroupLevels#" index="PL">
 						<cfset NextPL = #PL# + 1>
 					<!---	<cfif PL EQ arguments.Pricing_Level_ID>
-							<cfquery name="updPL" datasource="#application.datasource#">
+							<cfset useLakebaseForupdPL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForupdPL>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"product_type_id" = "eq.2",
+				"pricing_level_id" = "eq.#NextPL#",
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"pricing_level_id" = "#arguments.Pricing_Level_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdPL = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdPL>
+<cfquery name="updPL" datasource="#application.datasource#">
 								UPDATE Contract_Products
 								SET Pricing_Level_ID = #arguments.Pricing_Level_ID#
 								WHERE Product_Type_ID = 2
@@ -66,6 +86,7 @@
 								AND Contract_Main_ID = #arguments.Contract_Main_ID#
 								AND Deleted = 0
 						</cfquery>
+</cfif>
 						<cfelse> </cfif>---->
 						<cfquery name="updPL" datasource="#application.datasource#">
 								UPDATE Contract_Products
@@ -166,12 +187,29 @@
 
 		<cfset defaultUOM = 1>
 		<cfif arguments.Is_Group>
-			<cfquery name="getGroupLevelID" datasource="#application.datasource#">
+			<cfset useLakebaseForgetGroupLevelID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("all_product_group_types")>
+<cfif useLakebaseForgetGroupLevelID>
+	<cftry>
+		<cfset getGroupLevelID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("all_product_group_types", {
+				"group_guid" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"deleted" = "eq.0",
+				"select" = "product_group_level_id"
+			}), "product_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupLevelID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupLevelID>
+<cfquery name="getGroupLevelID" datasource="#application.datasource#">
 				SELECT Product_Group_Level_ID
 				FROM All_Product_Group_Types
 				WHERE Group_GUID = '#arguments.BSA_Foodservice_Items_Master_ID#'
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 			<cfset Product_Group_Level_ID = getGroupLevelID.Product_Group_Level_ID>
 		<cfelse>
 			<cfquery name="InvUOM" datasource="#application.datasource#">

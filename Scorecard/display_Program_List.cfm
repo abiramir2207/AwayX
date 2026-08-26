@@ -451,11 +451,27 @@ function showrevisiondetails(contractid,status)
 			<!--- show a lock for locked contracts, or contracts under modify agree --->
 			<CFIF TheQuery.Contract_Is_Locked EQ 1 OR (TheQuery.modifying_user_id NEQ request.AccessStructure.User_ID and TheQuery.modifying_program EQ 1)>
 				<cfif TheQuery.Contract_Is_Locked EQ 1>
-					<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
+					<cfset useLakebaseForLookUpTheLockingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLookUpTheLockingUser>
+	<cftry>
+		<cfset LookUpTheLockingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#TheQuery.Contract_Locked_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookUpTheLockingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookUpTheLockingUser>
+<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
 						SELECT Name_First, Name_Last
 						FROM _Users
 						WHERE User_ID = '#TheQuery.Contract_Locked_By_User_ID#'
 					</cfquery>
+</cfif>
 
 					<IMG SRC="/images/lock.gif" TITLE="This program is currently being viewed by #ucase(LookUpTheLockingUser.Name_First)# #ucase(LookUpTheLockingUser.Name_Last)#" height="16" width="12">
 				<cfelse>

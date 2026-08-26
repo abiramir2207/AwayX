@@ -99,11 +99,27 @@
 </cffunction>
 
 <cffunction name="getClaimReportProgramTypes" output="false" returntype="query">
-	<CFQUERY NAME="qryGetClaimReportProgramTypes" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForqryGetClaimReportProgramTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_type")>
+<cfif useLakebaseForqryGetClaimReportProgramTypes>
+	<cftry>
+		<cfset qryGetClaimReportProgramTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_type", {
+				"order" = "generic_type.asc",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetClaimReportProgramTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetClaimReportProgramTypes>
+<CFQUERY NAME="qryGetClaimReportProgramTypes" DATASOURCE="#application.datasource#">
 		Select	Generic_Type
 		From 	Generic_Type
 		Order By Generic_Type
 	</CFQUERY>
+</cfif>
 	<cfreturn qryGetClaimReportProgramTypes />
 </cffunction>
 

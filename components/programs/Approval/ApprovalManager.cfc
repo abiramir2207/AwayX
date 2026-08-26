@@ -347,12 +347,28 @@
 			bReturnVal	= 0;
 		</cfscript>
 
-		<cfquery name="qGetProgramApprovalByProfile" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramApprovalByProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_approval_by_profile")>
+<cfif useLakebaseForqGetProgramApprovalByProfile>
+	<cftry>
+		<cfset qGetProgramApprovalByProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_approval_by_profile", {
+				"program_id" = "eq.#nProgramID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramApprovalByProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramApprovalByProfile>
+<cfquery name="qGetProgramApprovalByProfile" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Program_Approval_By_Profile
 			WHERE	Program_ID = '#nProgramID#'
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfif qGetProgramApprovalByProfile.RecordCount>
 			<cfset bReturnVal = 1 />
@@ -442,13 +458,30 @@
 			bReturnVal	= 0;
 		</cfscript>
 
-		<cfquery name="qCheckProgramApprovalByProfile" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckProgramApprovalByProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_approval_by_profile")>
+<cfif useLakebaseForqCheckProgramApprovalByProfile>
+	<cftry>
+		<cfset qCheckProgramApprovalByProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_approval_by_profile", {
+				"program_id" = "eq.#nProgramID#",
+				"approved_by_user" = "eq.0",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckProgramApprovalByProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckProgramApprovalByProfile>
+<cfquery name="qCheckProgramApprovalByProfile" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Program_Approval_By_Profile
 			WHERE	Program_ID = '#nProgramID#'
 			AND		Approved_By_User = 0
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfif (qCheckProgramApprovalByProfile.RecordCount eq 1 and qCheckProgramApprovalByProfile.Approved_By_User_ID eq strUserID) OR qCheckProgramApprovalByProfile.RecordCount eq 0>
 			<cfset bReturnVal = 1 />

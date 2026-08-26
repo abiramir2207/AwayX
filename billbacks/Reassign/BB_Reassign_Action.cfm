@@ -12,34 +12,117 @@
 <CFSET Unavailable = "">
 <CFSET UnSuccessful = "">
 <CFLOOP LIST="#FORM.Selected_Billback_ID#" INDEX="Item">
-	<cfquery NAME="CheckLock" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckLock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForCheckLock>
+	<cftry>
+		<cfset CheckLock = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_allied", {
+				"billback_id" = "eq.#Item#",
+				"select" = "bb_is_locked"
+			}), "bb_is_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckLock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckLock>
+<cfquery NAME="CheckLock" DATASOURCE="#Application.Datasource#">
 		SELECT BB_Is_Locked FROM Billback_Allied WHERE Billback_ID = '#Item#'
 	</cfquery>
+</cfif>
 
 	<CFIF CheckLock.BB_Is_Locked EQ 0>
-		<cfquery NAME="LockBillback" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForLockBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForLockBillback>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#Item#"
+			},
+			{
+				"bb_is_locked" = "1",
+				"bb_locked_by_user_id" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLockBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLockBillback>
+<cfquery NAME="LockBillback" DATASOURCE="#Application.Datasource#">
 			UPDATE	Billback_Allied
 			SET		BB_Is_Locked = 1,
 					BB_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 			WHERE 	Billback_ID = '#Item#'
 		</cfquery>
+</cfif>
 
-		<cfquery NAME="IsAvailable" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForIsAvailable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForIsAvailable>
+	<cftry>
+		<cfset IsAvailable = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Item#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsAvailable = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsAvailable>
+<cfquery NAME="IsAvailable" DATASOURCE="#Application.Datasource#">
 			SELECT * FROM Billback WHERE Billback_ID = '#Item#'
 		</cfquery>
+</cfif>
 
-		<cfquery NAME="GetSourceAnalyst"  DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetSourceAnalyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetSourceAnalyst>
+	<cftry>
+		<cfset GetSourceAnalyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#IsAvailable.Analyst_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSourceAnalyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSourceAnalyst>
+<cfquery NAME="GetSourceAnalyst"  DATASOURCE="#Application.Datasource#">
 			SELECT 	Name_First, Name_Last
 			FROM 	_Users
 			WHERE 	User_ID='#IsAvailable.Analyst_User_ID#'
 		</cfquery>
+</cfif>
 
-		<cfquery NAME="GetTargetAnalyst"  DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetTargetAnalyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetTargetAnalyst>
+	<cftry>
+		<cfset GetTargetAnalyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#FORM.Tar_Analyst#",
+				"deleted" = "eq.0",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTargetAnalyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTargetAnalyst>
+<cfquery NAME="GetTargetAnalyst"  DATASOURCE="#Application.Datasource#">
 			SELECT 	Name_First, Name_Last
 			FROM 	_Users
 			WHERE 	User_ID = '#FORM.Tar_Analyst#'
 			AND 	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<CFIF IsAvailable.Recordcount GT 0 AND GetSourceAnalyst.Recordcount GT 0>
 

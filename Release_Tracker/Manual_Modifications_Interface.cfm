@@ -15,12 +15,28 @@ Modified By:
 Modified Date:
 ***********************************************************************
 --->
+<cfset useLakebaseForqrygetClientList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("client_list")>
+<cfif useLakebaseForqrygetClientList>
+	<cftry>
+		<cfset qrygetClientList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("client_list", {
+				"deleted" = "eq.0",
+				"order" = "client_url.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetClientList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetClientList>
 <CFQUERY NAME="qrygetClientList" datasource="PunchList">
 	SELECT *
 	FROM Client_List
 	WHERE Deleted = 0
 	ORDER BY Client_URL
-</CFQUERY> 
+</CFQUERY>
+</cfif> 
 
 <cfparam name="PageTitle" default="">
 <cfparam name="Success" default="0">

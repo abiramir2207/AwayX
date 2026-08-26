@@ -108,11 +108,30 @@
 		</CFIF>
 	</cfquery>
 
-	<CFQUERY NAME="deletedCurrentBrokers" datasource="#application.datasource#">
+	<cfset useLakebaseFordeletedCurrentBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseFordeletedCurrentBrokers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_brokers",
+			{
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"auto_selection" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletedCurrentBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletedCurrentBrokers>
+<CFQUERY NAME="deletedCurrentBrokers" datasource="#application.datasource#">
 		UPDATE Contract_Brokers
 		SET Deleted = 1
 		WHERE Contract_Main_ID = '#Form.Contract_Main_ID#' AND Auto_Selection = 0
 	</CFQUERY>
+</cfif>
 
 	<CFLOOP INDEX="ListBroker_ID" LIST="#trim(FORM.FinalItemList)#" DELIMITERS=",">
 		<cfquery name="SaveBroker" datasource="#application.datasource#">
@@ -146,11 +165,27 @@
 
 	<CFIF CheckForExistingBrokers_reset.Recordcount EQ 0>
 		<!--- REDIRECTOR --->
-		<cfquery name="getContractProgramID" datasource="#application.datasource#">
+		<cfset useLakebaseForgetContractProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetContractProgramID>
+	<cftry>
+		<cfset getContractProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractProgramID>
+<cfquery name="getContractProgramID" datasource="#application.datasource#">
 			SELECT ProgramType_ID
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#Form.Contract_Main_ID#'
 		</cfquery>
+</cfif>
 		<CFSET redirector_Program_ID = getContractProgramID.ProgramType_ID>
 		<CFSET redirector_FromPage_ID = 3>
 		<cfinclude template="internal_redirector_based_on_settings.cfm">
@@ -497,10 +532,25 @@ function reset_Form_Fields()
 		AND deleted = 0
 	</CFQUERY>
 
-	<CFQUERY name="GetBrokerName" dbtype="query">
+	<cfset useLakebaseForGetBrokerName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getbrokerinfomaster")>
+<cfif useLakebaseForGetBrokerName>
+	<cftry>
+		<cfset GetBrokerName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getbrokerinfomaster", {
+				"select" = "broker_name"
+			}), "broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokerName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokerName>
+<CFQUERY name="GetBrokerName" dbtype="query">
 		SELECT DISTINCT Broker_Name
 		FROM GetBrokerInfoMaster
 	</CFQUERY>
+</cfif>
 	<CFOUTPUT>
 	<FIELDSET STYLE="padding:8px; width: 800px; border: 1px solid Blue;margin-top:10px;display:table;">
 	    <LEGEND STYLE="font: bold 14px sans-serif; color: Red;">currently selected <cfoutput>#application.returned_customer_setting.broker_label_plural#</cfoutput></LEGEND>
@@ -508,11 +558,27 @@ function reset_Form_Fields()
 				<TABLE border="0" cellspacing="3" cellpadding="3" align="left" WIDTH="775" BGCOLOR="white">
 					<TR height="22">
 					<CFLOOP QUERY="GetBrokerName">
-						<CFQUERY name="GetBrokerInfo" dbtype="query">
+						<cfset useLakebaseForGetBrokerInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getbrokerinfomaster")>
+<cfif useLakebaseForGetBrokerInfo>
+	<cftry>
+		<cfset GetBrokerInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getbrokerinfomaster", {
+				"broker_name" = "eq.#GetBrokerName.Broker_name#",
+				"select" = "bsa_foodservice_brokers_id,broker_name"
+			}), "bsa_foodservice_brokers_id,broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokerInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokerInfo>
+<CFQUERY name="GetBrokerInfo" dbtype="query">
 							SELECT BSA_Foodservice_Brokers_ID, Broker_name
 							FROM GetBrokerInfoMaster
 							WHERE Broker_Name = '#GetBrokerName.Broker_name#'
 						</CFQUERY>
+</cfif>
 							<cfloop query="GetBrokerInfo">
 								<cfset brokerList = valueList(GetBrokerInfo.BSA_Foodservice_Brokers_ID,",")>
 							</cfloop>

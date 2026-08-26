@@ -3,19 +3,51 @@
 </cfif>
  --->
 
+<cfset useLakebaseForisUSDANOI_enabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForisUSDANOI_enabled>
+	<cftry>
+		<cfset isUSDANOI_enabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "usdanoi_enabled"
+			}), "usdanoi_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisUSDANOI_enabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisUSDANOI_enabled>
 <cfquery name="isUSDANOI_enabled" datasource="#application.datasource#">
 	SELECT usdanoi_enabled
 	FROM _Application_Settings
 </cfquery>
+</cfif>
 <cfset usdanoi_on = 0>
 <cfset usdanoi_component_id = "0">
 <cfif isUSDANOI_enabled.recordcount GT 0>
 	<cfif isUSDANOI_enabled.usdanoi_enabled EQ 1>
-		<cfquery name="getusdanoicomponentid" datasource="#application.datasource#">
+		<cfset useLakebaseForgetusdanoicomponentid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForgetusdanoicomponentid>
+	<cftry>
+		<cfset getusdanoicomponentid = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"is_usda_noi_comp" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_name_id"
+			}), "program_rebates_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetusdanoicomponentid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetusdanoicomponentid>
+<cfquery name="getusdanoicomponentid" datasource="#application.datasource#">
 			SELECT Program_Rebates_Component_Name_ID
 			FROM Program_Rebates_Component_Name
 			WHERE Is_USDA_NOI_Comp = 1 AND Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfif getusdanoicomponentid.recordcount GT 0>
 			<cfset usdanoi_on = 1>
@@ -81,11 +113,27 @@ SELECT DISTINCT StateCode, State, StateFIPS
 
 <cfset GetOperators = QueryNew("Operator_Name")>
 <CFIF GetCounties.recordcount GT 0 AND url.state NEQ 0>
+<cfset useLakebaseForGetOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getoperatormap")>
+<cfif useLakebaseForGetOperators>
+	<cftry>
+		<cfset GetOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getoperatormap", {
+				"order" = "operator_name.asc",
+				"select" = "bsa_operator_id,operator_name"
+			}), "bsa_operator_id,operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperators>
 <cfquery name="GetOperators" dbtype="query">
 	SELECT DISTINCT BSA_operator_id, Operator_Name
 	FROM GetOperatorMap
 	ORDER BY Operator_Name
 </cfquery>
+</cfif>
 </CFIF>
 
 

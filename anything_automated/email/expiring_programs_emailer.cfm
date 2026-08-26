@@ -56,10 +56,25 @@
 </cfquery>
 
 
+<cfset useLakebaseForgetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetSettings>
+	<cftry>
+		<cfset getSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "number_of_days_for_summarized_weekly_expiring_email,send_daily_expiring_email,use_discount_id"
+			}), "number_of_days_for_summarized_weekly_expiring_email,send_daily_expiring_email,use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSettings>
 <cfquery name="getSettings" datasource="#application.datasource#">
 	SELECT Number_Of_Days_For_Summarized_Weekly_Expiring_Email,send_daily_expiring_email,Use_Discount_ID
 	FROM General_Settings
 </cfquery>
+</cfif>
 
 <cfset DailyExpiringEmail = getSettings.send_daily_expiring_email>
 <cfset NumberOfDaysForWeeklyNotification = getSettings.Number_Of_Days_For_Summarized_Weekly_Expiring_Email>

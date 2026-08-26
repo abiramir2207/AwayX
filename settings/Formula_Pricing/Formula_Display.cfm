@@ -13,6 +13,21 @@
 	<CFABORT>
 </CFIF>
 
+<cfset useLakebaseForFormula_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_rule")>
+<cfif useLakebaseForFormula_Details>
+	<cftry>
+		<cfset Formula_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_rule", {
+				"formula_pricing_rule_id" = "eq.#URL.Formula_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForFormula_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForFormula_Details>
 <CFQUERY NAME="Formula_Details" DATASOURCE="#application.datasource#">
 	SELECT	*
 	FROM	Formula_Pricing_Rule
@@ -21,6 +36,7 @@
 			AND
 			Formula_Pricing_Rule.Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFIF Formula_Details.Active_Code EQ 0>
 	<CFSET EDIT_RULE = false>
@@ -238,7 +254,23 @@
 					Calc_Type = 1
 			ORDER BY Overage_Index
 		</CFQUERY>
-		<CFQUERY NAME="Commodities_Overage_2" DBTYPE="query">
+		<cfset useLakebaseForCommodities_Overage_2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
+<cfif useLakebaseForCommodities_Overage_2>
+	<cftry>
+		<cfset Commodities_Overage_2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_commodity_overage", {
+				"program_formula_pricing_rule_comm_data_id" = "eq.#Program_Formula_Pricing_Rule_Comm_Data_ID#",
+				"calc_type" = "eq.2",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCommodities_Overage_2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCommodities_Overage_2>
+<CFQUERY NAME="Commodities_Overage_2" DBTYPE="query">
 			SELECT	*
 			FROM	Get_All_Commodity_Overage
 			WHERE
@@ -247,6 +279,7 @@
 					Calc_Type = 2
 			ORDER BY Overage_Index
 		</CFQUERY>
+</cfif>
 		
 		<CFIF Commodities_Overage_1.RecordCount GT 0 OR Commodities_Overage_2.RecordCount GT 0>
 		<TR>
@@ -303,18 +336,48 @@
 	</CFOUTPUT>
 	</CFIF>
 	<HR COLOR="Orange">
-	<CFQUERY NAME="Formula_Details_Overage_1" DBTYPE="query">
+	<cfset useLakebaseForFormula_Details_Overage_1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_details_overage")>
+<cfif useLakebaseForFormula_Details_Overage_1>
+	<cftry>
+		<cfset Formula_Details_Overage_1 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_details_overage", {
+				"calc_type" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForFormula_Details_Overage_1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForFormula_Details_Overage_1>
+<CFQUERY NAME="Formula_Details_Overage_1" DBTYPE="query">
 		SELECT	*
 		FROM	Formula_Details_Overage
 		WHERE
 				Calc_Type = 1
 	</CFQUERY>
-	<CFQUERY NAME="Formula_Details_Overage_2" DBTYPE="query">
+</cfif>
+	<cfset useLakebaseForFormula_Details_Overage_2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_details_overage")>
+<cfif useLakebaseForFormula_Details_Overage_2>
+	<cftry>
+		<cfset Formula_Details_Overage_2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_details_overage", {
+				"calc_type" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForFormula_Details_Overage_2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForFormula_Details_Overage_2>
+<CFQUERY NAME="Formula_Details_Overage_2" DBTYPE="query">
 		SELECT	*
 		FROM	Formula_Details_Overage
 		WHERE
 				Calc_Type = 2
 	</CFQUERY>
+</cfif>
 	<CFIF Formula_Details_Overage.RecordCount GT 0>
 		<TABLE CELLPADDING="0" CELLSPACING="2" WIDTH="100%" BORDER="0">
 			<TR BGCOLOR="FFCE84" VALIGN="bottom">		

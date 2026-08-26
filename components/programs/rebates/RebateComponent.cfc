@@ -222,11 +222,27 @@
 
    		<cfargument name="payToId" required="false" default=0 />
 
-		<cfquery name="qGetCompPayTo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCompPayTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_paid_to_types")>
+<cfif useLakebaseForqGetCompPayTo>
+	<cftry>
+		<cfset qGetCompPayTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_paid_to_types", {
+				"payment_paid_to_id" = "eq.#arguments.payToId#",
+				"select" = "payment_paid_to_type_name"
+			}), "payment_paid_to_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCompPayTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCompPayTo>
+<cfquery name="qGetCompPayTo" datasource="#application.datasource#">
 			SELECT 	Payment_Paid_To_Type_name
 			FROM 	Payment_Paid_To_Types
 			WHERE 	Payment_Paid_To_ID = #arguments.payToId#
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetCompPayTo />
 
@@ -1030,11 +1046,26 @@
 
 	<cffunction name="getPercentOptions" output="false" returntype="query">
 
-		<cfquery name="qPercentOption" datasource="#application.datasource#">
+		<cfset useLakebaseForqPercentOption = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rebate_percent_option")>
+<cfif useLakebaseForqPercentOption>
+	<cftry>
+		<cfset qPercentOption = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rebate_percent_option", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPercentOption = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPercentOption>
+<cfquery name="qPercentOption" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Rebate_Percent_Option
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qPercentOption />
 
@@ -1042,11 +1073,26 @@
 
 	<cffunction name="getMarginPercentOptions" output="false" returntype="query">
 
-		<cfquery name="qMarginPercentOption" datasource="#application.datasource#">
+		<cfset useLakebaseForqMarginPercentOption = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rebate_margin_percent_option")>
+<cfif useLakebaseForqMarginPercentOption>
+	<cftry>
+		<cfset qMarginPercentOption = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rebate_margin_percent_option", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqMarginPercentOption = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqMarginPercentOption>
+<cfquery name="qMarginPercentOption" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Rebate_Margin_Percent_Option
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qMarginPercentOption />
 
@@ -1058,7 +1104,23 @@
 		<cfparam name="request.componentNameID_isUSDANOIComp" default="0" />
 
 		<CFIF request.componentNameID_isUSDANOIComp EQ arguments.componentNameID>
-			<cfquery name="checkCompUSDAStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForcheckCompUSDAStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForcheckCompUSDAStatus>
+	<cftry>
+		<cfset checkCompUSDAStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"program_rebates_component_name_id" = "eq.#arguments.componentNameID#",
+				"deleted" = "eq.0",
+				"select" = "is_usda_noi_comp"
+			}), "is_usda_noi_comp"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckCompUSDAStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckCompUSDAStatus>
+<cfquery name="checkCompUSDAStatus" datasource="#application.datasource#">
 				SELECT Is_USDA_NOI_Comp
 				FROM Program_Rebates_Component_Name
 				WHERE
@@ -1066,6 +1128,7 @@
 				AND
 				DELETED = 0
 			</cfquery>
+</cfif>
 
 			<CFIF checkCompUSDAStatus.Is_USDA_NOI_Comp EQ 1 AND checkCompUSDAStatus.recordcount GT 0>
 				<cfset request.isUSDANOIComp = 1>

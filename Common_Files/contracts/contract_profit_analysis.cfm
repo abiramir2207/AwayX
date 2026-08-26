@@ -238,10 +238,25 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 <CFSET LetUserApprove = 0>
 
 
+<cfset useLakebaseForgetApprovalMethod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetApprovalMethod>
+	<cftry>
+		<cfset getApprovalMethod = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_target_enabled"
+			}), "program_margin_target_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetApprovalMethod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetApprovalMethod>
 <cfquery name="getApprovalMethod" datasource="#application.datasource#">
 	SELECT program_margin_target_enabled
 	FROM General_Settings
 </cfquery>
+</cfif>
 
 <!---Which approval scheme should we show?--->
 <cfset approval_method 		= Get_Profile_Settings.program_margin_approval_method>
@@ -527,11 +542,28 @@ WHERE     (dbo.Contract_Products.Product_Type_ID = 4) AND (dbo.Program_Growth_Co
 <CFSET ShowTPA = getProgramSettngs.Include_Trade>
 
 
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFSET GP_Supplied_Position = ValueList(getUserPosition.User_Positions_ID)>
 <CFINCLUDE TEMPLATE="\settings\Access_Rights\approval_tree\get_positions_underneath_supplied_position.cfm">
@@ -541,7 +573,23 @@ WHERE     (dbo.Contract_Products.Product_Type_ID = 4) AND (dbo.Program_Growth_Co
 <CFSET AdjustTPA = 0>
 <CFIF Program_Is_A_Revision EQ 1 AND getProgramInfo.Contract_Status_Type_IDX EQ 2>
     <!---  is this a trade shelter program --->
-    <cfquery name="getThisProgramsGenericProgramType" datasource="#application.datasource#">
+    <cfset useLakebaseForgetThisProgramsGenericProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetThisProgramsGenericProgramType>
+	<cftry>
+		<cfset getThisProgramsGenericProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#getProgramInfo.PROGRAMTYPE_ID#",
+				"generic_type" = "eq.Distributor Trade/Shelter",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProgramsGenericProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProgramsGenericProgramType>
+<cfquery name="getThisProgramsGenericProgramType" datasource="#application.datasource#">
         SELECT
 			Generic_Type
         FROM
@@ -551,6 +599,7 @@ WHERE     (dbo.Contract_Products.Product_Type_ID = 4) AND (dbo.Program_Growth_Co
             AND
             Generic_Type = 'Distributor Trade/Shelter'
     </cfquery>
+</cfif>
 
 
     <!--- program is a Revision, Is RFA, And is a Trade/Shelter program --->
@@ -640,11 +689,27 @@ WHERE     (dbo.Contract_Products.Product_Type_ID = 4) AND (dbo.Program_Growth_Co
 
 			<CFSET thisCurrentRow = 1>
 			<cfloop query="getGrowthProductsInformationForThisProgram">
-				<cfquery name="getParentGRRLB" dbtype="query">
+				<cfset useLakebaseForgetParentGRRLB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getgrowthproductsinformationforparentprogram")>
+<cfif useLakebaseForgetParentGRRLB>
+	<cftry>
+		<cfset getParentGRRLB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getgrowthproductsinformationforparentprogram", {
+				"bsa_foodservice_items_master_id" = "eq.#getGrowthProductsInformationForThisProgram.BSA_Foodservice_Items_Master_ID#",
+				"select" = "grr_lb"
+			}), "grr_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentGRRLB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentGRRLB>
+<cfquery name="getParentGRRLB" dbtype="query">
 					SELECT GRR_LB
 					FROM getGrowthProductsInformationForParentProgram
 					WHERE BSA_Foodservice_Items_Master_ID = '#getGrowthProductsInformationForThisProgram.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 
 				<CFIF getParentGRRLB.recordcount GT 0>
 					<CFSET temp = QuerySetCell(getGrowthProductsInformationForThisProgram,"Parent_GRR_LB",getParentGRRLB.GRR_LB,thisCurrentRow)>
@@ -806,10 +871,23 @@ WHERE     (dbo.Contract_Products.Product_Type_ID = 4) AND (dbo.Program_Growth_Co
 
 
 <!---What to multiply by in order to get the appropriate display--->
+<cfset useLakebaseForGetMarginView = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_view")>
+<cfif useLakebaseForGetMarginView>
+	<cftry>
+		<cfset GetMarginView = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_view", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMarginView = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMarginView>
 <cfquery name="GetMarginView" datasource="#application.datasource#">
 SELECT *
 FROM Margin_View
 </cfquery>
+</cfif>
 
 <Cfset MarginViewType = GetMarginView.Margin_View_Type>
 
@@ -845,11 +923,26 @@ FROM Margin_View
 
 
 <!--- START OffInvoice --->
+<cfset useLakebaseForgetOffInvoiceProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetOffInvoiceProducts>
+	<cftry>
+		<cfset getOffInvoiceProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.8"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOffInvoiceProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOffInvoiceProducts>
 <CFQUERY NAME="getOffInvoiceProducts" DBTYPE="query">
 	SELECT *
 	FROM getProducts
 	WHERE Product_Type_ID = 8
 </CFQUERY>
+</cfif>
 
 <CFIF getProgramSettngs.Generic_Type IS "Distributor Off-Invoice">
 	<cfif getOffInvoiceProducts.recordcount GT 0>
@@ -881,11 +974,27 @@ FROM Margin_View
 					</cfif>
 				</tr>
 			<CFLOOP QUERY="getOffInvoiceProducts">
-				<CFQUERY NAME="getOffInvoiceMargins" datasource="#application.datasource#">
+				<cfset useLakebaseForgetOffInvoiceMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetOffInvoiceMargins>
+	<cftry>
+		<cfset getOffInvoiceMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getOffInvoiceProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOffInvoiceMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOffInvoiceMargins>
+<CFQUERY NAME="getOffInvoiceMargins" datasource="#application.datasource#">
 				SELECT *
 				FROM Contract_Product_Margin
 				WHERE Contract_Product_ID = '#getOffInvoiceProducts.Contract_Products_ID#' AND Deleted = 0
 				</CFQUERY>
+</cfif>
 
 				<CFSET ThisContractProductID = getOffInvoiceProducts.Contract_Products_ID>
 
@@ -1064,11 +1173,26 @@ FROM Margin_View
 <!--- End Off Invoice --->
 
 <!--- START Fixed Price --->
+<cfset useLakebaseForgetFixedPriceProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetFixedPriceProducts>
+	<cftry>
+		<cfset getFixedPriceProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedPriceProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedPriceProducts>
 <CFQUERY NAME="getFixedPriceProducts" DBTYPE="query">
 	SELECT *
 	FROM getProducts
 	WHERE Product_Type_ID = 1
 </CFQUERY>
+</cfif>
 
 <CFIF getProgramSettngs.Discount_Fixed_Prices EQ 1>
 <cfif getFixedPriceProducts.recordcount GT 0>
@@ -1096,11 +1220,27 @@ FROM Margin_View
 		<cfset ThisMultiplier = Multiplier>
 	</CFIF>
 
-		<CFQUERY NAME="getFixedPriceMargins" datasource="#application.datasource#">
+		<cfset useLakebaseForgetFixedPriceMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetFixedPriceMargins>
+	<cftry>
+		<cfset getFixedPriceMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getFixedPriceProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedPriceMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedPriceMargins>
+<CFQUERY NAME="getFixedPriceMargins" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Product_Margin
 		WHERE Contract_Product_ID = '#getFixedPriceProducts.Contract_Products_ID#' AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		<CFSET ThisContractProductID = getFixedPriceProducts.Contract_Products_ID>
 		<CFOUTPUT>
 		<CFSET MarginOutOfRangeColumnID = "Row_"&replace(createuuid(), "-","_","ALL")>
@@ -1258,11 +1398,26 @@ FROM Margin_View
 
 <!--- START Rebate --->
 <CFIF getProgramSettngs.Discount_Rebates EQ 1>
-	<CFQUERY NAME="getRebateProducts" DBTYPE="query">
+	<cfset useLakebaseForgetRebateProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetRebateProducts>
+	<cftry>
+		<cfset getRebateProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRebateProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRebateProducts>
+<CFQUERY NAME="getRebateProducts" DBTYPE="query">
 		SELECT *
 		FROM getProducts
 		WHERE Product_Type_ID = 2
 	</CFQUERY>
+</cfif>
 	<cfif getRebateProducts.recordcount GT 0>
 		<DIV STYLE="font-size: 15px; font-weight:bold; color: Navy;"><CFOUTPUT>#Current_Rebate_Label#</CFOUTPUT></DIV>
 		<HR COLOR="orange">
@@ -1289,11 +1444,27 @@ FROM Margin_View
 				</TR>
 
 			<CFLOOP QUERY="getRebateProducts">
-				<CFQUERY NAME="getRebateMargins" datasource="#application.datasource#">
+				<cfset useLakebaseForgetRebateMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetRebateMargins>
+	<cftry>
+		<cfset getRebateMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getRebateProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRebateMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRebateMargins>
+<CFQUERY NAME="getRebateMargins" datasource="#application.datasource#">
 				SELECT *
 				FROM Contract_Product_Margin
 				WHERE Contract_Product_ID = '#getRebateProducts.Contract_Products_ID#' AND Deleted = 0
 				</CFQUERY>
+</cfif>
 				<CFSET ThisContractProductID = getRebateProducts.Contract_Products_ID>
 				<!---set the item master id before going into the loop--->
 				<cfset itemMasterID = getRebateProducts.BSA_Foodservice_Items_Master_ID />
@@ -1395,11 +1566,27 @@ FROM Margin_View
 							<CFIF len(trim(getRebateMargins.TPA)) GT 0>
 								<A STYLE="cursor:pointer;" ONCLICK="showTradeCalculation(#ThisContractProductID#)">
 								<CFSET this = (makeNumeric(getRebateMargins.TPA) * ThisMultiplier)>
-								<cfquery name="getTPAadjstment" dbtype="query">
+								<cfset useLakebaseForgetTPAadjstment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrebateproductsinformationforthisprogram")>
+<cfif useLakebaseForgetTPAadjstment>
+	<cftry>
+		<cfset getTPAadjstment = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrebateproductsinformationforthisprogram", {
+				"contract_products_id" = "eq.#ThisContractProductID#",
+				"select" = "parent_rer_lb"
+			}), "parent_rer_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTPAadjstment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTPAadjstment>
+<cfquery name="getTPAadjstment" dbtype="query">
 									SELECT Parent_RER_LB
 									FROM getRebateProductsInformationForThisProgram
 									WHERE Contract_Products_ID = #ThisContractProductID#
 								</cfquery>
+</cfif>
 
 								<CFIF getTPAadjstment.recordcount GT 0>
 									<CFSET this = this - (makeNumeric(getTPAadjstment.Parent_RER_LB) * ThisMultiplier)>
@@ -1503,11 +1690,26 @@ FROM Margin_View
 
 <!--- START Growth --->
 <CFIF getProgramSettngs.Discount_Growth EQ 1>
-	<CFQUERY NAME="getGrowthProducts" DBTYPE="query">
+	<cfset useLakebaseForgetGrowthProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetGrowthProducts>
+	<cftry>
+		<cfset getGrowthProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.4"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGrowthProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGrowthProducts>
+<CFQUERY NAME="getGrowthProducts" DBTYPE="query">
 		SELECT *
 		FROM getProducts
 		WHERE Product_Type_ID = 4
 	</CFQUERY>
+</cfif>
 
 	<cfif getGrowthProducts.recordcount GT 0>
 		<DIV STYLE="font-size: 15px; font-weight:bold; color: Navy;">Growth Rate (Tier 1)</DIV>
@@ -1534,11 +1736,27 @@ FROM Margin_View
 					<!--- margin target ---><cfif margin_target_status EQ 1><TD ID="header" align="center" nowrap><B>Target %</B></TD></cfif>
 				</TR>
 				<CFLOOP QUERY="getGrowthProducts">
-					<CFQUERY NAME="getGrowthMargins" datasource="#application.datasource#">
+					<cfset useLakebaseForgetGrowthMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetGrowthMargins>
+	<cftry>
+		<cfset getGrowthMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getGrowthProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGrowthMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGrowthMargins>
+<CFQUERY NAME="getGrowthMargins" datasource="#application.datasource#">
 						SELECT *
 						FROM Contract_Product_Margin
 						WHERE Contract_Product_ID = '#getGrowthProducts.Contract_Products_ID#' AND Deleted = 0
 					</CFQUERY>
+</cfif>
 
 					<CFSET ThisContractProductID = getGrowthProducts.Contract_Products_ID>
 
@@ -1761,11 +1979,26 @@ FROM Margin_View
 	</CFQUERY>
 
 	<cfif getRules.recordcount GT 0>
-		<CFQUERY NAME="getFPProducts" DBTYPE="query">
+		<cfset useLakebaseForgetFPProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetFPProducts>
+	<cftry>
+		<cfset getFPProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.5"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFPProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFPProducts>
+<CFQUERY NAME="getFPProducts" DBTYPE="query">
 			SELECT *
 			FROM getProducts
 			WHERE Product_Type_ID = 5
 		</CFQUERY>
+</cfif>
 
 		<DIV STYLE="font-size: 15px; font-weight:bold; color: Navy;">Formula Pricing</DIV>
 		<HR COLOR="orange">
@@ -1787,7 +2020,23 @@ FROM Margin_View
 				<TD height="10" COLSPAN="100%"></TD>
 			</TR>
 
-			<CFQUERY NAME="getRuleProducts" datasource="#application.datasource#">
+			<cfset useLakebaseForgetRuleProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_products")>
+<cfif useLakebaseForgetRuleProducts>
+	<cftry>
+		<cfset getRuleProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_products", {
+				"program_formula_pricing_rule_id" = "eq.#getRules.Program_Formula_Pricing_Rule_Mapped_ID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRuleProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRuleProducts>
+<CFQUERY NAME="getRuleProducts" datasource="#application.datasource#">
 				SELECT *
 				FROM Program_Formula_Pricing_Rule_Products
 				WHERE
@@ -1797,6 +2046,7 @@ FROM Margin_View
 					AND
 					Deleted = 0
 			</CFQUERY>
+</cfif>
 
 			<CFSET ListOfCTIDs = valuelist(getRuleProducts.Contract_Product_ID)>
 
@@ -2007,11 +2257,26 @@ FROM Margin_View
 <cfoutput>
 
 	<!---get bid request products--->
-	<CFQUERY NAME="getBidRequestProducts" DBTYPE="query">
+	<cfset useLakebaseForgetBidRequestProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetBidRequestProducts>
+	<cftry>
+		<cfset getBidRequestProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"product_type_id" = "eq.10"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBidRequestProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBidRequestProducts>
+<CFQUERY NAME="getBidRequestProducts" DBTYPE="query">
 		SELECT *
 		FROM getProducts
 		WHERE Product_Type_ID = 10
 	</CFQUERY>
+</cfif>
 
 	<DIV STYLE="font-size: 15px; font-weight:bold; color: Navy;">Proposal</DIV>
 	<HR COLOR="orange">
@@ -2036,12 +2301,28 @@ FROM Margin_View
 
 			<CFLOOP QUERY="getBidRequestProducts">
 
-				<CFQUERY NAME="getBidRequestMargins" datasource="#application.datasource#">
+				<cfset useLakebaseForgetBidRequestMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin")>
+<cfif useLakebaseForgetBidRequestMargins>
+	<cftry>
+		<cfset getBidRequestMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin", {
+				"contract_product_id" = "eq.#getBidRequestProducts.Contract_Products_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBidRequestMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBidRequestMargins>
+<CFQUERY NAME="getBidRequestMargins" datasource="#application.datasource#">
 					SELECT 	*
 					FROM 	Contract_Product_Margin
 					WHERE 	Contract_Product_ID = '#getBidRequestProducts.Contract_Products_ID#'
 					AND 	Deleted = 0
 				</CFQUERY>
+</cfif>
 
 				<Cfif Multiplier IS "Net_Weight">
 					<cfset ThisMultiplier = getBidRequestProducts.Net_Weight>
@@ -2210,11 +2491,27 @@ FROM Margin_View
 </CFIF>
 <!--- End Bid Request --->
 
-			<CFQUERY NAME="getProgramMargins" datasource="#application.datasource#">
+			<cfset useLakebaseForgetProgramMargins = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramMargins>
+	<cftry>
+		<cfset getProgramMargins = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"select" = "ptrm,pttm,tls,pter"
+			}), "ptrm,pttm,tls,pter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramMargins = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramMargins>
+<CFQUERY NAME="getProgramMargins" datasource="#application.datasource#">
 				SELECT PTRM, PTTM, TLS, PTER
 				FROM Contract_Main
 				WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
 			</CFQUERY>
+</cfif>
 			<CFOUTPUT>
 				<BR>
 				<DIV STYLE="font-size: 15px; font-weight:bold; color: Navy;" class="forceLeft">Program Summary</DIV>
@@ -2324,13 +2621,31 @@ FROM Margin_View
 			<CFSET "g#x#_List" = dyn_valuelist("tempquery.Group_ID")>
 			<CFSET "g#x#_MarginTargetList" = dyn_valuelist("tempquery.target_margin")>
 
-			<CFQUERY NAME="getProfileMargin" datasource="#application.datasource#">
+			<cfset useLakebaseForgetProfileMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetProfileMargin>
+	<cftry>
+		<cfset getProfileMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"profile_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"group_id" = "eq.#x#",
+				"approval_method" = "eq.#approval_method#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProfileMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProfileMargin>
+<CFQUERY NAME="getProfileMargin" datasource="#application.datasource#">
 				SELECT 	Amount
 				FROM 	Margin_Group_Profile_Approval_Margins
 				WHERE 	Profile_ID = #request.AccessStructure.Profiles_ID#
 						AND Group_ID = #x#
 						AND Approval_Method = #approval_method#
 			</CFQUERY>
+</cfif>
 			<CFSET "g#x#_Margin" = getProfileMargin.Amount>
 		</cfloop>
 

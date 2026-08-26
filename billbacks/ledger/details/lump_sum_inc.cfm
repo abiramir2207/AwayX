@@ -92,10 +92,26 @@ SELECT DISTINCT Billback.Billback_ID, Billback.BB_Date, Billback.BB_Code
 
 <cfloop query="GetAllBillbacks">
 
+<cfset useLakebaseForGetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetBBInfo>
+	<cftry>
+		<cfset GetBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#GetAllBillbacks.Billback_ID#",
+				"select" = "bb_title,bb_date,bb_code,bb_reference"
+			}), "bb_title,bb_date,bb_code,bb_reference"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBInfo>
 <cfquery name="GetBBInfo" datasource="#application.datasource#">
 	SELECT BB_Title, BB_Date, BB_Code, BB_Reference FROM Billback
 	WHERE Billback_ID = '#GetAllBillbacks.Billback_ID#'
 </cfquery>
+</cfif>
 
 <cfquery name="GetLS" datasource="#application.datasource#">
 SELECT BB_Lump_Sums.LS_Paid_Amount, Contract_Title

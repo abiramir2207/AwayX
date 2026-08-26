@@ -519,12 +519,28 @@ Processes form information from the previous page.
 	DELETE FROM Payment_Template_Mapping WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
 </cfquery>
 
+<cfset useLakebaseForGetPaymentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForGetPaymentTypes>
+	<cftry>
+		<cfset GetPaymentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPaymentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPaymentTypes>
 <cfquery name="GetPaymentTypes" datasource="#application.datasource#">
 	SELECT distinct *
 	FROM Payment_Type
 	WHERE Deleted = 0
 	AND Active = 1
 </cfquery>
+</cfif>
 
 <cfloop query="GetPaymentTypes">
 	<cfif isDefined("Form.Payment_Type_#Evaluate(Payment_Type_ID)#")>
@@ -549,12 +565,28 @@ Processes form information from the previous page.
 	DELETE FROM Currency_Mapping WHERE Template_ID = <cfqueryparam value="#ID#" cfsqltype="cf_sql_integer">
 </cfquery>
 
+<cfset useLakebaseForGetCurrencies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForGetCurrencies>
+	<cftry>
+		<cfset GetCurrencies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrencies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrencies>
 <cfquery name="GetCurrencies" datasource="#application.datasource#">
 	SELECT distinct *
 	FROM Currency
 	WHERE Deleted = 0
 	AND Active = 1
 </cfquery>
+</cfif>
 
 <cfloop query="GetCurrencies">
 	<cfif isDefined("Form.Currency_#Evaluate(Currency_ID)#")>

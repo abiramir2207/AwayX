@@ -36,6 +36,22 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the list of products																		 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGet_Products>
+	<cftry>
+		<cfset Get_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"deleted" = "eq.0",
+				"order" = "type_code_desc.asc",
+				"select" = "item,upc,type_code_desc,description"
+			}), "item,upc,type_code_desc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Products>
 <CFQUERY NAME="Get_Products" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(24, 0, 0, 0)#">
 	Select		item,
 				UPC,
@@ -45,6 +61,7 @@
 	Where		Deleted = 0
 	Order by	Type_Code_Desc
 </CFQUERY>
+</cfif>
 
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->

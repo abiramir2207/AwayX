@@ -6,11 +6,27 @@
 <!--- Last edited info --->
 <cfif isdefined("qGetCompRebates.Last_Edited_By") AND len(trim(qGetCompRebates.Last_Edited_By)) GT 0 >
 
-	<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
+	<cfset useLakebaseForGetUserLastEdited = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserLastEdited>
+	<cftry>
+		<cfset GetUserLastEdited = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetCompRebates.Last_Edited_By#",
+				"select" = "name_first + ' ' + name_last as userlastedited"
+			}), "name_first + ' ' + name_last as userlastedited"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLastEdited = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLastEdited>
+<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
 	SELECT Name_First + ' ' + Name_Last AS UserLastEdited
 	FROM _Users
 	WHERE User_ID = '#qGetCompRebates.Last_Edited_By#'
 	</cfquery>
+</cfif>
 	<cfif GetUserLastEdited.Recordcount IS 1>
 	<TABLE ID="lastUpdatedBy" BGCOLOR="White" style="border-color:Orange;border-style:solid;margin-top:10px;" CELLPADDING="3" CELLSPACING="0" align="center">
 	<TR>
@@ -107,14 +123,14 @@
   			      <img src="/images/help_small.gif" />
             </span>
             <div id="dist_Tip" class="tip">
-  					  <p align="left">The setting called Program Lock Type is set to ‘Do Not Lock’, therefore you cannot change this claim mechanic setting</p>
+  					  <p align="left">The setting called Program Lock Type is set to Do Not Lock, therefore you cannot change this claim mechanic setting</p>
         		</div>
           <cfelse>
             Yes<span onmouseout="popUpTip(event,'dist_Tip');" onmouseover="popUpTip(event,'dist_Tip');">
   			      <img src="/images/help_small.gif" />
             </span>
             <div id="dist_Tip" class="tip">
-  					  <p align="left">The setting called Program Lock Type is set to ‘Do Not Lock’, therefore you cannot change this claim mechanic setting</p>
+  					  <p align="left">The setting called Program Lock Type is set to Do Not Lock, therefore you cannot change this claim mechanic setting</p>
         		</div>
           </cfif>
         <input type="hidden"  name = "Program_Lock_Type_ID"  value= "<cfoutput>#qGetCompRebates.Program_Lock_Type_ID#</cfoutput>" />

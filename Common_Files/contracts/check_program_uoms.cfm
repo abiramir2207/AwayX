@@ -128,9 +128,27 @@ SELECT	Program_Bid_Request_Product.*
 </cfif>
 
 <cfif checkuom EQ 0>
+<cfset useLakebaseForupdatecontractinfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdatecontractinfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#program_id#"
+			},
+			{
+				"check_program_uom" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatecontractinfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatecontractinfo>
 <cfquery name="updatecontractinfo" datasource="#application.datasource#">
 	update contract_main
 	set check_program_uom = 0
 	where contract_main_id = #program_id#
 </cfquery>
+</cfif>
 </cfif>

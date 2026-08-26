@@ -306,12 +306,31 @@
 	<!---if it's a group then flag to process when applying volume--->
 	<cfif trim(form.Level_1) neq "">
 	
-		<cfquery name="qFlagGroup" datasource="#application.datasource#">
+		<cfset useLakebaseForqFlagGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqFlagGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#"
+			},
+			{
+				"group_processed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFlagGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFlagGroup>
+<cfquery name="qFlagGroup" datasource="#application.datasource#">
 			UPDATE	Contract_Main
 			SET		Group_Processed = 1
 			WHERE	Deleted = 0
 			AND 	Contract_Main_ID = #Form.Contract_Main_ID#
 		</cfquery>
+</cfif>
 				
 	</cfif>
 	

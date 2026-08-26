@@ -33,11 +33,27 @@ function resumeVerification(BillbackID,BigBillbackID)
 </cfif>
 
 <!---Queries regarding this page --->
+<cfset useLakebaseForgetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetPayeeInfo>
+	<cftry>
+		<cfset getPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_payee_type_id"
+			}), "billback_payee_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeInfo>
 <cfquery name="getPayeeInfo" datasource="#Application.Datasource#">
 	SELECT 	Billback_Payee_Type_ID
 	FROM 	Billback
 	WHERE 	Billback_ID = '#FORM.Billback_ID#'
 </cfquery>
+</cfif>
 
 <cfset getPayeeID.Payee_ID = billbackProgramManager.getPayeeID(form.Billback_ID,getPayeeInfo.Billback_Payee_Type_ID) />
 <cfif getPayeeInfo.Billback_Payee_Type_ID EQ 4 AND getPayeeID.Payee_ID NEQ "">
@@ -88,10 +104,26 @@ function resumeVerification(BillbackID,BigBillbackID)
 </td></tr>
 <cfelse>
 <!---We have selected the program --->
+<cfset useLakebaseForGetBasicProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetBasicProgramInfo>
+	<cftry>
+		<cfset GetBasicProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#form.Program_List#",
+				"select" = "contract_number,contract_title,contract_start_date,contract_end_date"
+			}), "contract_number,contract_title,contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBasicProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBasicProgramInfo>
 <cfquery name="GetBasicProgramInfo" datasource="#application.datasource#">
 Select Contract_Number, Contract_Title, Contract_Start_Date, Contract_End_Date
 FROM Contract_Main WHERE Contract_Main_ID = '#form.Program_List#'
 </cfquery>
+</cfif>
 
 <tr><td valign="top">
 <span class="legend">Program:</span><br>

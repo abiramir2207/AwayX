@@ -12,16 +12,47 @@
 <cfif isDefined("URL.CID") AND len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
 
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
-	 <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+</cfif>
+	 <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,base_sales_equal_to_lowest_bracket,custom_fixed_price_options"
+			}), "first_parent_id,base_sales_equal_to_lowest_bracket,custom_fixed_price_options"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT First_parent_ID, Base_Sales_Equal_To_Lowest_Bracket, Custom_Fixed_Price_Options
 		FROM Program_Control_Panel_Options
 		WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
 	 </cfquery>
+</cfif>
 
 	<cfset TemplateFiltersId = GetContractInfo.Template_Filters_Id />
 	<cfset form.Line_Of_Business_ID = GetContractInfo.Line_Of_Business_ID>
@@ -223,9 +254,25 @@
 			<cfset sort_order_present = 0 />
 			<cfset UseCustomerType = appSettings.getCustomertype()>
 			<cfif (isDefined("form.plannerID") AND form.plannerID NEQ 0)>
-				<cfquery name="qGetCustID"  datasource="#application.datasource#">
+				<cfset useLakebaseForqGetCustID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planners")>
+<cfif useLakebaseForqGetCustID>
+	<cftry>
+		<cfset qGetCustID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planners", {
+				"planner_id" = "eq.#form.plannerID#",
+				"select" = "distributor_group_level_id"
+			}), "distributor_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCustID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCustID>
+<cfquery name="qGetCustID"  datasource="#application.datasource#">
 					SELECT Distributor_Group_Level_ID FROM planners WHERE planner_id = #form.plannerID#
 				</cfquery>
+</cfif>
 				<cfset plannerCUstID = qGetCustID.Distributor_Group_Level_ID />
 			</cfif>
 <p>

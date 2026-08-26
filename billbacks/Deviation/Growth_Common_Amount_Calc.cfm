@@ -551,23 +551,55 @@ Get Which Program to consider for Growth
 												Tier_Attained_Multi = 1
 										</CFQUERY>
 										<CFSET Max_Attained_Tier_Number = Max_Attained_Tier.Max_Tier_Number>
-										<CFQUERY NAME="Max_Attained_Tier_Rate" DBTYPE="Query">
+										<cfset useLakebaseForMax_Attained_Tier_Rate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_tier_info")>
+<cfif useLakebaseForMax_Attained_Tier_Rate>
+	<cftry>
+		<cfset Max_Attained_Tier_Rate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_tier_info", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"tier_number" = "eq.#Max_Attained_Tier_Number#",
+				"select" = "rate_per_cs,rate_per_lb,real_rate"
+			}), "rate_per_cs,rate_per_lb,real_rate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForMax_Attained_Tier_Rate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForMax_Attained_Tier_Rate>
+<CFQUERY NAME="Max_Attained_Tier_Rate" DBTYPE="Query">
 											SELECT	Rate_Per_CS, Rate_Per_LB, Real_Rate
 											FROM	Get_Tier_Info
 											WHERE
 												BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
 												AND
 												Tier_Number = '#Max_Attained_Tier_Number#'										
-										</CFQUERY>								
+										</CFQUERY>
+</cfif>								
 									</CFIF>
 									<CFOUTPUT GROUP="Tier_Number">
 										<!---- Get This Tier Range Info ------>
-										<CFQUERY NAME="Get_This_Tier_Range_Info" DBTYPE="query">
+										<cfset useLakebaseForGet_This_Tier_Range_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_tier_range_info")>
+<cfif useLakebaseForGet_This_Tier_Range_Info>
+	<cftry>
+		<cfset Get_This_Tier_Range_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_tier_range_info", {
+				"tier_number" = "eq.#Tier_Number#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_This_Tier_Range_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_This_Tier_Range_Info>
+<CFQUERY NAME="Get_This_Tier_Range_Info" DBTYPE="query">
 											SELECT	*
 											FROM	Get_Tier_Range_Info
 											WHERE
 													Tier_Number = #Tier_Number#
-										</CFQUERY>								
+										</CFQUERY>
+</cfif>								
 										<CFSET BGCOLOR="FFFFFF">
 										<!-------
 									The following code is so that single rate can be done in the way as of multi
@@ -595,12 +627,28 @@ Get Which Program to consider for Growth
 										<CFSET A_END = "">
 										<CFIF Rate_UOM EQ 3>
 											<CFSET this_Tier_Rate_Per_Component_UOM_Product = 0>
-											<CFQUERY NAME="Total_Invoice_Rate_For_This_Product" DBTYPE="query">
+											<cfset useLakebaseForTotal_Invoice_Rate_For_This_Product = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distinct_product_for_percent")>
+<cfif useLakebaseForTotal_Invoice_Rate_For_This_Product>
+	<cftry>
+		<cfset Total_Invoice_Rate_For_This_Product = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distinct_product_for_percent", {
+				"bsa_foodservice_items_master_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "total_rate"
+			}), "total_rate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTotal_Invoice_Rate_For_This_Product = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTotal_Invoice_Rate_For_This_Product>
+<CFQUERY NAME="Total_Invoice_Rate_For_This_Product" DBTYPE="query">
 												SELECT	TOTAL_RATE
 												FROM	Distinct_Product_For_Percent
 												WHERE
 														BSA_Foodservice_Items_Master_ID = '#BSA_Foodservice_Items_Master_ID#'
 											</CFQUERY>
+</cfif>
 											<CFSET this_Tier_Rate_Per_Component_UOM_Product = (Total_Invoice_Rate_For_This_Product.TOTAL_RATE * val(Real_Rate)) / 100>
 											<CFSET this_Tier_Rate_Per_Component_UOM = (Total_Invoice_Rate_For_This_Product.TOTAL_RATE * val(Product_Percent_Value)) / 100>
 											

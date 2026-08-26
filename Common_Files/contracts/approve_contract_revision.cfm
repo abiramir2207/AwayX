@@ -4,11 +4,27 @@
 	
 		<CFOUTPUT>
 		
-		<CFQUERY NAME="GetRevisionParentInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForGetRevisionParentInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetRevisionParentInfo>
+	<cftry>
+		<cfset GetRevisionParentInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#parent_program_id#",
+				"select" = "contract_end_date,contract_start_date"
+			}), "contract_end_date,contract_start_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRevisionParentInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRevisionParentInfo>
+<CFQUERY NAME="GetRevisionParentInfo" datasource="#application.datasource#">
 			SELECT Contract_End_Date, Contract_Start_Date
 			FROM Contract_Main
 			WHERE Contract_Main_ID = #parent_program_id#
-		</CFQUERY>			
+		</CFQUERY>
+</cfif>			
 	
 		<table ALIGN="center">
 			<TR>

@@ -2243,9 +2243,26 @@ Data provided by Blacksmith Applications</cfsavecontent>
 			<cfset Business_Segment_On = 0>
 			<cfset UserSegmentFiltersAutopayResults = 0>
 		</cfif>		
-		<cfquery name="qUserSegments" datasource="#application.datasource#">
+		<cfset useLakebaseForqUserSegments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_business_segment")>
+<cfif useLakebaseForqUserSegments>
+	<cftry>
+		<cfset qUserSegments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_business_segment", {
+				"user_id" = "eq.#request.accessStructure.User_Id#",
+				"deleted" = "eq.0",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUserSegments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUserSegments>
+<cfquery name="qUserSegments" datasource="#application.datasource#">
 			SELECT Business_Segment_ID FROM User_Business_Segment WHERE USER_ID = '#request.accessStructure.User_Id#' AND deleted = 0
 		</cfquery>
+</cfif>
 		<cfset userSegmentIds = ValueList(qUserSegments.Business_Segment_ID) />
 
 		<cfquery name="qAutoPayExtractComplete" datasource="#application.datasource#">

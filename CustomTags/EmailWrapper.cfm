@@ -38,11 +38,26 @@ ATTRIBUTES:
     <cfparam name="attributes.claimRatesReportEmail" default="0">
 
     <!--- need to select directly from application settings table --->
-    <cfquery name="AppSettings" datasource="#application.datasource#">
+    <cfset useLakebaseForAppSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForAppSettings>
+	<cftry>
+		<cfset AppSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAppSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAppSettings>
+<cfquery name="AppSettings" datasource="#application.datasource#">
     SELECT TOP 1
     *
     FROM _application_Settings
     </cfquery>
+</cfif>
 
     <!--- do validation for userId--->
 

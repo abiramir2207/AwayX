@@ -192,10 +192,25 @@ DEPENDENCIES:
 </cfsavecontent>
 
 <cfif appSettings.getApprovalMarginType() eq 3>
-	<cfquery name="getGlobalUOM" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
+<cfquery name="getGlobalUOM" datasource="#application.datasource#">
 		SELECT Global_Target_UOM
 			FROM General_Settings
 	</cfquery>
+</cfif>
   <cfset Global_Target_UOM = getGlobalUOM.Global_Target_UOM>
 <cfelse>
 	<cfset Global_Target_UOM = 0>

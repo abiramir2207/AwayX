@@ -104,11 +104,27 @@
 	</tr>
 	<!---Only display if there are discount identifiers--->
 	<cfif getGeneralSettings.Use_Discount_ID IS 1 AND len(trim(GetSettings.Discount_Identifier_ID)) GT 0>
-	<cfquery name="GetDiscountIdentifier" datasource="#application.datasource#">
+	<cfset useLakebaseForGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetDiscountIdentifier>
+	<cftry>
+		<cfset GetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#GetSettings.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountIdentifier>
+<cfquery name="GetDiscountIdentifier" datasource="#application.datasource#">
 		SELECT Discount_Identifier_Number, Discount_Identifier_Desc
 		FROM Discount_Identifier
 		WHERE Discount_Identifier_ID = '#GetSettings.Discount_Identifier_ID#'
 	</cfquery>
+</cfif>
 	<tr>
 		<td width="#col1Width#"><font size="2">Discount Identifier</font></td>
 		<td width="#col2Width#" style="#colMidStyle#">
@@ -174,10 +190,26 @@
 	<td width="#col2Width#" style="#colMidStyle#">
 		<cfset getpositionabove = CreateObject("component", "components.geography.position").getFirstPositionAbove(CSLGetContractInfo.Creating_User_Position_ID) />
 <cfif getpositionabove neq -1>
+<cfset useLakebaseForPositionDescforManager = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforManager>
+	<cftry>
+		<cfset PositionDescforManager = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#getpositionabove#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforManager = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforManager>
 <cfquery name="PositionDescforManager" datasource="#application.datasource#">
 				SELECT Position_Label FROM User_Positions
 				WHERE User_Positions_ID = '#getpositionabove#'
 </cfquery>
+</cfif>
 <cfif PositionDescforManager.recordcount GT 0>
 <cfquery name="getManagerDetails" datasource="#application.datasource#">
 				SELECT top 1 name_first, name_last,Work_Phone,Work_Phone_Ext,user_email,title  from

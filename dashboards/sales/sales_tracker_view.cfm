@@ -182,10 +182,23 @@ th.right, td.right {text-align: right;}
 <!--- ----------------------------------------------------------------------------------------- --->
 <!--- get the dates for the column headers                                                      --->
 <!--- ----------------------------------------------------------------------------------------- --->
+<cfset useLakebaseForbudget_dates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("salestr_dashboard_dates")>
+<cfif useLakebaseForbudget_dates>
+	<cftry>
+		<cfset budget_dates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("salestr_dashboard_dates", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForbudget_dates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForbudget_dates>
 <CFQUERY NAME="budget_dates" datasource="#Application.Datasource#">
   select      *
   from        SalesTR_Dashboard_Dates 
 </CFQUERY>
+</cfif>
 
 <cfset month_reported     =   budget_dates.Month_description>
 <cfset year_report_prv    =   budget_dates.previous_fiscal_year>

@@ -18,12 +18,27 @@ Description:	This file is responsible for interfacing to Program Lock Types.
 
 		<cfset var var_returnQuery = "" />
 		
-		<cfquery name="qGetProgramLockType" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramLockType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lock_type")>
+<cfif useLakebaseForqGetProgramLockType>
+	<cftry>
+		<cfset qGetProgramLockType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lock_type", {
+				"select" = "program_lock_type_id,description,lock_type_message"
+			}), "program_lock_type_id,description,lock_type_message"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLockType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLockType>
+<cfquery name="qGetProgramLockType" datasource="#application.datasource#">
 			SELECT	Program_Lock_Type_ID,
 					Description,
 					Lock_Type_Message
 			FROM	Program_Lock_Type
 		</cfquery>
+</cfif>
 		
 		<cfset var_returnQuery = qGetProgramLockType />
 		

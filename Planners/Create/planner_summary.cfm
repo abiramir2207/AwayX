@@ -41,11 +41,28 @@ Description  :  Displays Planner Summary on the planner_scorecard.cfm page. This
 	<cfif form.indirect_planner>
         <cfset summaryCol1 = "lastCol" />
 
-        <cfquery name="qParentPlanner" datasource="#application.datasource#">
+        <cfset useLakebaseForqParentPlanner = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planners")>
+<cfif useLakebaseForqParentPlanner>
+	<cftry>
+		<cfset qParentPlanner = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planners", {
+				"planner_id" = "eq.#getPlanner.parent_planner_id#",
+				"limit" = "1",
+				"select" = "planner_number,planner_id"
+			}), "planner_number,planner_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqParentPlanner = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqParentPlanner>
+<cfquery name="qParentPlanner" datasource="#application.datasource#">
             SELECT TOP 1 Planner_Number, Planner_ID
               FROM Planners
              WHERE Planner_ID = #getPlanner.parent_planner_id#
         </cfquery>
+</cfif>
 	</cfif>
 
 
@@ -97,9 +114,24 @@ Description  :  Displays Planner Summary on the planner_scorecard.cfm page. This
 
                             <cfif not form.indirect_planner>
                                 <!--- gather setting for TO GO --->
-                                <cfquery name="qSettingLabel" datasource="#application.datasource#">
+                                <cfset useLakebaseForqSettingLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_scorecard_settings")>
+<cfif useLakebaseForqSettingLabel>
+	<cftry>
+		<cfset qSettingLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_scorecard_settings", {
+				"blacksmith_label" = "eq.To Go"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSettingLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSettingLabel>
+<cfquery name="qSettingLabel" datasource="#application.datasource#">
                                     SELECT * FROM Planner_Scorecard_Settings WHERE Blacksmith_Label = 'To Go'
                                 </cfquery>
+</cfif>
                                 <!--- AOP is enabled --->
                                 <cfif qSettingLabel.enabled eq '1'>
                                     <cfsavecontent variable="summary_content">
@@ -474,9 +506,24 @@ Description  :  Displays Planner Summary on the planner_scorecard.cfm page. This
                         #br_element#<a id="refresh" class="hand opaque-m" title="click to refresh summary">#application.util.string.linkFormat("refresh summary")#</a>
                     </cfif>
 
-					<cfquery name="qSlotting" dbtype="query">
+					<cfset useLakebaseForqSlotting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qplannerprograms")>
+<cfif useLakebaseForqSlotting>
+	<cftry>
+		<cfset qSlotting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qplannerprograms", {
+				"slotting" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSlotting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSlotting>
+<cfquery name="qSlotting" dbtype="query">
 						SELECT * FROM qPlannerPrograms WHERE Slotting = 1
 					</cfquery>
+</cfif>
 
                     <cfif val(request.planner_targets_enabled) eq 0 and qSlotting.recordCount>
 						<br><br><input type="checkbox" name="include_slotting" id="include_slotting" <cfif form.include_slotting neq "0">checked value="1"</cfif>> <label for="include_slotting" class="cursor">Include Slotting</label>

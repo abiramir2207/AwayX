@@ -1,16 +1,46 @@
 <CF_CRYP type="de" string="#URL.CID#" key="#request.key#">
 
+<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
 <CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Main
 	WHERE Contract_Main_ID = #cryp.value#
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetContractProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetContractProducts>
+	<cftry>
+		<cfset GetContractProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractProducts>
 <CFQUERY NAME="GetContractProducts" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Products
 	WHERE Contract_Main_ID = #cryp.value#
 </CFQUERY>
+</cfif>
 
 <CFSET ColumnList = GetContractInfo.columnlist>
 <CFSET Values = "">

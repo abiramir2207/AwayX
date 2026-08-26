@@ -106,13 +106,30 @@
 	<P CLASS="BreakHere">
 	</CFOUTPUT>
 	
-	<CFQUERY NAME="Get_Tables" DATASOURCE="#Attributes.Datasource#" USERNAME="#Attributes.Username#" PASSWORD="#Attributes.Password#">
+	<cfset useLakebaseForGet_Tables = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sysobjects")>
+<cfif useLakebaseForGet_Tables>
+	<cftry>
+		<cfset Get_Tables = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("sysobjects", {
+				"type" = "eq.U",
+				"order" = "name.asc",
+				"select" = "name,crdate"
+			}), "name,crdate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Tables = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Tables>
+<CFQUERY NAME="Get_Tables" DATASOURCE="#Attributes.Datasource#" USERNAME="#Attributes.Username#" PASSWORD="#Attributes.Password#">
 		SELECT		sysObjects.Name,
 					sysObjects.Crdate
 		FROM		sysObjects
 		WHERE		sysObjects.Type		=	'U'
 		ORDER BY	sysObjects.Name
 	</CFQUERY>
+</cfif>
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 	
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->

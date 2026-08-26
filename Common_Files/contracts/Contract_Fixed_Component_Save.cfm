@@ -665,11 +665,27 @@ and  Program ID into column Program_Bid_Won_By_Code which later used to Update D
 	</script>
 	<cfabort />
 </cfif>
+<cfset useLakebaseForgetProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramType>
+	<cftry>
+		<cfset getProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramType>
 <CFQUERY NAME="getProgramType" datasource="#application.datasource#">
 	SELECT ProgramType_ID
 	FROM Contract_Main
 	WHERE Contract_Main_ID = #FORM.Program_ID#
 </CFQUERY>
+</cfif>
 <!--- 	used for business_rule_popup...url could not handle size of list...reset session varto keep things tidy--->
 <cfset session.fix_Product_List = "">
 <!------ Start Clause Code ----->

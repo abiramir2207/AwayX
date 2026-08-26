@@ -11,11 +11,29 @@
 
 <cf_cryp type="de" key="#request.key#" string="#FORM.Program_ID#">
 <cfset FORM.Program_ID = cryp.value>
+<cfset useLakebaseFordeleteCurrentProgramProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseFordeleteCurrentProgramProducts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"contract_main_id" = "eq.#FORM.Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteCurrentProgramProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteCurrentProgramProducts>
 <CFQUERY NAME="deleteCurrentProgramProducts" datasource="#application.datasource#">
 	UPDATE Contract_Products
 	SET Deleted = 1
 	WHERE Contract_Main_ID = '#FORM.Program_ID#'
 </CFQUERY>
+</cfif>
 
 <CFLOOP INDEX="Product_ID" LIST="#FORM.Product_List#" DELIMITERS=",">
 	<CFQUERY NAME="saveContractProducts" datasource="#application.datasource#">

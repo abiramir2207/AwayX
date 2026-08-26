@@ -106,12 +106,28 @@
 		<cfargument name="Dollars" 				required="yes">
 		<cfargument name="ReasonCode" 			required="yes">
 		
-  		<cfquery name="check_DD_Non_Trade" datasource="#application.Datasource#">
+  		<cfset useLakebaseForcheck_DD_Non_Trade = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_non_trade_product")>
+<cfif useLakebaseForcheck_DD_Non_Trade>
+	<cftry>
+		<cfset check_DD_Non_Trade = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_non_trade_product", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Item_Master_ID#",
+				"deduction_id" = "eq.#arguments.DeductionID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck_DD_Non_Trade = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck_DD_Non_Trade>
+<cfquery name="check_DD_Non_Trade" datasource="#application.Datasource#">
 			SELECT * 
 			FROM DD_Non_Trade_Product
 			WHERE BSA_Foodservice_Items_Master_ID = '#arguments.BSA_Item_Master_ID#'
 			AND Deduction_ID = '#arguments.DeductionID#'
 		</cfquery>
+</cfif>
 		
 		<cfif check_DD_Non_Trade.recordcount>
 			<cfquery name="check_DD_Non_Trade" datasource="#application.Datasource#">
@@ -162,18 +178,54 @@
 		<cfargument name="User_ID" required="yes">
 		<cfargument name="DeductionID" required="yes">
 		
-		<cfquery name="Closer_Type" datasource="#application.Datasource#">
+		<cfset useLakebaseForCloser_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure")>
+<cfif useLakebaseForCloser_Type>
+	<cftry>
+		<cfset Closer_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure", {
+				"dd_closure_desc" = "eq.Non Trade",
+				"select" = "dd_closure_type_id"
+			}), "dd_closure_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCloser_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCloser_Type>
+<cfquery name="Closer_Type" datasource="#application.Datasource#">
 			SELECT DD_Closure_Type_ID
 			FROM DD_Closure 
 			WHERE DD_Closure_Desc='Non Trade'  	
 		</cfquery>
-	  	<cfquery name="Update_Deductions" datasource="#application.Datasource#">
+</cfif>
+	  	<cfset useLakebaseForUpdate_Deductions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdate_Deductions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.DeductionID#"
+			},
+			{
+				"non_trade_updated_by" = "#arguments.User_ID#",
+				"dd_closure_id" = "#arguments.BSA_Item_Master_ID#",
+				"dd_closure_type" = "#Closer_Type.DD_Closure_Type_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Deductions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Deductions>
+<cfquery name="Update_Deductions" datasource="#application.Datasource#">
 		  	UPDATE Deductions
 			SET Non_Trade_Updated_By = '#arguments.User_ID#',
 			DD_Closure_ID = '#arguments.BSA_Item_Master_ID#',
 			DD_Closure_Type = #Closer_Type.DD_Closure_Type_ID#
 			WHERE Deduction_ID = '#arguments.DeductionID#'
 		</cfquery>
+</cfif>
 	</cffunction>
 
 	<cffunction name="NonTradeOpen" output="false" hint="will update necessary table to re open deduction">
@@ -193,11 +245,27 @@
 	</cffunction>
 	
 	<cffunction name="Closure_Type" output="false" returntype="query">
-		<cfquery name="DDCloser_Type" datasource="#application.Datasource#">
+		<cfset useLakebaseForDDCloser_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure")>
+<cfif useLakebaseForDDCloser_Type>
+	<cftry>
+		<cfset DDCloser_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure", {
+				"dd_closure_desc" = "eq.Non Trade",
+				"select" = "dd_closure_type_id"
+			}), "dd_closure_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDDCloser_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDDCloser_Type>
+<cfquery name="DDCloser_Type" datasource="#application.Datasource#">
 			SELECT DD_Closure_Type_ID
 			FROM DD_Closure 
 			WHERE DD_Closure_Desc ='Non Trade'  	
 		</cfquery>
+</cfif>
 		<cfreturn DDCloser_Type />	
 	</cffunction>
 	

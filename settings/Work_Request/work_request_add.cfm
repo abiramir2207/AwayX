@@ -138,12 +138,29 @@ select
 					<option value="VANTAGE">VANTAGE</option>
 				</select>
 			        <cfelse>
-					<cfquery name="getPunch_function" datasource="punchlist">
+					<cfset useLakebaseForgetPunch_function = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_function")>
+<cfif useLakebaseForgetPunch_function>
+	<cftry>
+		<cfset getPunch_function = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("punch_function", {
+				"displayonappworkrequest" = "eq.1",
+				"order" = "punch_function_desc.asc",
+				"select" = "punch_function_id,punch_function_desc"
+			}), "punch_function_id,punch_function_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPunch_function = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPunch_function>
+<cfquery name="getPunch_function" datasource="punchlist">
 						select 	Punch_function_ID,Punch_function_Desc
 						from 	Punch_function
 						where 	DisplayOnAppWorkRequest = 1
 						order by 	Punch_function_Desc
 					</cfquery>
+</cfif>
 					<select name="App_Area">
 						<option value="0">Select Function</option>					
 						<cfloop query="getPunch_function">

@@ -1,11 +1,27 @@
 <cfparam name="fromSettings_management" default=0>
 <cfparam name="url.DownloadSettings" default=0>
 
+<cfset useLakebaseForEachInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForEachInfo>
+	<cftry>
+		<cfset EachInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.5",
+				"select" = "unit_of_measure_desc,abbreviation,unit_of_measure_desc_singular"
+			}), "unit_of_measure_desc,abbreviation,unit_of_measure_desc_singular"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEachInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEachInfo>
 <cfquery name="EachInfo" datasource="#application.datasource#">
 	SELECT Unit_Of_Measure_Desc,Abbreviation,Unit_of_Measure_Desc_Singular
 	FROM Units_of_Measure
 	WHERE Unit_Of_Measure_ID= 5
 </cfquery>
+</cfif>
 
 <cfif url.DownloadSettings EQ 0>
 	<cfset TemplatePage = 'Details'>
@@ -609,13 +625,30 @@ function confirmCompletion(){
 		}
 	<cfif Generic_Type IS NOT "Distributor Off-Invoice" AND Generic_Type NEQ "LSAutoPay">
 
-		<cfquery name="GetPaymentTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForGetPaymentTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForGetPaymentTypes>
+	<cftry>
+		<cfset GetPaymentTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "payment_type_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPaymentTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPaymentTypes>
+<cfquery name="GetPaymentTypes" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Payment_Type
 			WHERE 	Deleted = 0
 			AND 	Active = 1
 			ORDER BY Payment_Type_Name
 		</cfquery>
+</cfif>
 
 		<cfset DefaultValue = 0>
 
@@ -3202,11 +3235,26 @@ function confirmCompletion(){
 	</cfif>
 
 					<!---Get all Performance Requirements--->
-					<cfquery name="GetPerformanceRequirements" datasource="#application.datasource#">
+					<cfset useLakebaseForGetPerformanceRequirements = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_perf_req")>
+<cfif useLakebaseForGetPerformanceRequirements>
+	<cftry>
+		<cfset GetPerformanceRequirements = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_perf_req", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPerformanceRequirements = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPerformanceRequirements>
+<cfquery name="GetPerformanceRequirements" datasource="#application.datasource#">
 						SELECT 	*
 						FROM 	Program_Perf_Req
 						WHERE 	Deleted = 0
 					</cfquery>
+</cfif>
 
 					<cfquery dbtype="query" name="qmgmtSettingProgram_Perf_Req">
 						select Setting_Display_Value
@@ -3265,12 +3313,29 @@ function confirmCompletion(){
 								</cfquery>
 
 								<cfif InThisTemplate.Recordcount>
-									<cfquery name="InPerfReqName" dbtype="query">
+									<cfset useLakebaseForInPerfReqName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("inperfreq")>
+<cfif useLakebaseForInPerfReqName>
+	<cftry>
+		<cfset InPerfReqName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("inperfreq", {
+				"perf_req_label_id" = "eq.#InThisTemplate.Program_Perf_Req_Checked#",
+				"deleted" = "eq.0",
+				"select" = "perf_req_label"
+			}), "perf_req_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForInPerfReqName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInPerfReqName>
+<cfquery name="InPerfReqName" dbtype="query">
 										select Perf_Req_Label
 										from InPerfReq
 										where Perf_Req_Label_ID = #InThisTemplate.Program_Perf_Req_Checked#
 										and deleted = 0
 									</cfquery>
+</cfif>
 									<cfset SDefault = '#InPerfReqName.Perf_Req_Label#'>
 								<cfelse>
 										<cfif selReqVal EQ 1><cfset SDefault = 'Yes (default)'></cfif>
@@ -3329,22 +3394,56 @@ function confirmCompletion(){
 
 	<cfif NOT ListFindNoCase("Distributor Off-Invoice,Bid Request,USDA NOI,LSAutoPAy", Generic_Type)>
 	<cfif appsettings.gettemplatecodes_on()>
-		<cfquery name="getTemplateCodes" datasource="#application.datasource#">
+		<cfset useLakebaseForgetTemplateCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_codes")>
+<cfif useLakebaseForgetTemplateCodes>
+	<cftry>
+		<cfset getTemplateCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_codes", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "template_code.asc",
+				"select" = "template_code,template_code_id"
+			}), "template_code,template_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateCodes>
+<cfquery name="getTemplateCodes" datasource="#application.datasource#">
 			select 	template_code,template_code_id
 			from	template_codes
 			where 	deleted = 0
 			and 	active = 1
 			order by template_code
 		</cfquery>
+</cfif>
 
 		<cfif url.DownloadSettings>
 				<cfset SDValue = 'None'>
 				<cfif form.Program_Spending_Type>
-					<cfquery name="PST_Name" dbtype="query">
+					<cfset useLakebaseForPST_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettemplatecodes")>
+<cfif useLakebaseForPST_Name>
+	<cftry>
+		<cfset PST_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettemplatecodes", {
+				"template_code_id" = "eq.#form.Program_Spending_Type#",
+				"select" = "template_code"
+			}), "template_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPST_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPST_Name>
+<cfquery name="PST_Name" dbtype="query">
 						SELECT template_code
 						FROM getTemplateCodes
 						WHERE template_code_id = #form.Program_Spending_Type#
 					</cfquery>
+</cfif>
 					<cfset SDValue = '#PST_Name.template_code#'>
 				</cfif>
 				<cfset SettingsToExcel (Setting_Name='Program Spending Type', Setting_Field_Name='Program_Spending_Type', Setting_Value='#SDValue#', page='2')>
@@ -3398,13 +3497,31 @@ function confirmCompletion(){
 	<tr id="Qualifications_heading_2"<cfif url.DownloadSettings> Style="display:none"</cfif>><th colspan="3"><hr><br>Qualifications</th></tr>
 		<cfif fromSettings_management eq 1>
 			<cfset SettingsTemplateForm(NameField="Enable_Program_Qualifications",NameFieldDesc="Display Qualifications")>
-			<cfquery name="qQualifications" datasource="#application.datasource#">
+			<cfset useLakebaseForqQualifications = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications")>
+<cfif useLakebaseForqQualifications>
+	<cftry>
+		<cfset qQualifications = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_qualifications", {
+				"deleted" = "eq.0",
+				"isactive" = "eq.1",
+				"order" = "qualification_name.asc",
+				"select" = "program_qualification_id,qualification_name,setting_display_value,settingsmanagement_id"
+			}), "program_qualification_id,qualification_name,setting_display_value,settingsmanagement_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqQualifications = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqQualifications>
+<cfquery name="qQualifications" datasource="#application.datasource#">
 				SELECT   Program_Qualification_Id, Qualification_Name, Setting_Display_Value, SettingsManagement_ID
 				FROM Program_Qualifications
 				WHERE Deleted = 0
 				AND IsActive = 1
 				ORDER BY Qualification_Name
 			</cfquery>
+</cfif>
 		<cfelseif url.DownloadSettings>
 			<cfquery name="qQualifications" datasource="#application.datasource#">
 				SELECT  a.Program_Qualification_Id

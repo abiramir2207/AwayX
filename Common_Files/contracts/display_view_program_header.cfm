@@ -199,10 +199,26 @@
 			<cfsilent>
 			<!---if summary view, show detail information of user such as email, phone no--->
 			<cfset qUser = CreateObject("component", "components.user.UserManager").getUser(CSLGetContractInfo.Responsible_User_ID) />
-			<cfquery name="PositionDescforCreating" datasource="#application.datasource#">
+			<cfset useLakebaseForPositionDescforCreating = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforCreating>
+	<cftry>
+		<cfset PositionDescforCreating = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#CSLGetContractInfo.Creating_User_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforCreating = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforCreating>
+<cfquery name="PositionDescforCreating" datasource="#application.datasource#">
 				SELECT Position_Label FROM User_Positions
 				WHERE User_Positions_ID = '#CSLGetContractInfo.Creating_User_Position_ID#'
 			</cfquery>
+</cfif>
 			<cfset displaySPRAddress2 = "" />
 			<cfif appSettings.getPgmViewDisplaySPRAddress2() AND Trim(qUser.Work_Address_2) NEQ "">
 				<cfset displaySPRAddress2 = ", #Trim(qUser.Work_Address_2)#" />
@@ -233,10 +249,26 @@
 	<td width="#col2Width#" style="#colMidStyle#">
 	<cfset getpositionabove = CreateObject("component", "components.geography.position").getFirstPositionAbove(CSLGetContractInfo.Creating_User_Position_ID) />
 	<cfif getpositionabove neq -1>
-		<cfquery name="PositionDescforManager" datasource="#application.datasource#">
+		<cfset useLakebaseForPositionDescforManager = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforManager>
+	<cftry>
+		<cfset PositionDescforManager = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#getpositionabove#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforManager = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforManager>
+<cfquery name="PositionDescforManager" datasource="#application.datasource#">
 			SELECT Position_Label FROM User_Positions
 			WHERE User_Positions_ID = '#getpositionabove#'
 		</cfquery>
+</cfif>
 		<cfif PositionDescforManager.recordcount GT 0>
 			<cfquery name="getManagerDetails" datasource="#application.datasource#">
 				SELECT top 1 name_first, name_last,Work_Phone,Work_Phone_Ext,user_email,title  from
@@ -292,9 +324,24 @@
 	<tr>
 			<td width="#col1Width#"><font size="2">Rebate Recipient</font></TD>
 			<cfif CSLGetContractInfo.Rebate_Recipient_Customer_ID NEQ "">
-			 <CFQUERY NAME="GetRebateRecipient" DATASOURCE="#Application.Datasource#">
+			 <cfset useLakebaseForGetRebateRecipient = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetRebateRecipient>
+	<cftry>
+		<cfset GetRebateRecipient = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#CSLGetContractInfo.Rebate_Recipient_Customer_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRebateRecipient = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRebateRecipient>
+<CFQUERY NAME="GetRebateRecipient" DATASOURCE="#Application.Datasource#">
 					SELECT * FROM BSA_Foodservice_Customers WHERE BSA_Foodservice_Customers_ID ='#CSLGetContractInfo.Rebate_Recipient_Customer_ID#'
-			</CFQUERY> -
+			</CFQUERY>
+</cfif> -
 			<!---FILTER: Do if it's pending--->
 			<td width="#col2Width#" style="#colMidStyle#"><font size="2"><CFIF GetRebateRecipient.Recordcount GT 0><CFOUTPUT>#GetRebateRecipient.Name# (#GetRebateRecipient.Shr_Ship_To#)</CFOUTPUT></CFIF>&nbsp;&nbsp;&nbsp;</TD> 
 	<cfelse>

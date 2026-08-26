@@ -47,12 +47,31 @@ function OpenDoc(file)
 		inner join Work_Request on Work_Request.Work_Request_ID = Work_Request_Document.Work_Request_ID
 		and Work_Request_Document_ID = #URL.Work_Request_Document_ID#
 	</CFQUERY>
-	<CFQUERY NAME="DeleteWR_AttachedDoc" datasource="#application.datasource#">
+	<cfset useLakebaseForDeleteWR_AttachedDoc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForDeleteWR_AttachedDoc>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request_document",
+			{
+				"work_request_document_id" = "eq.#URL.Work_Request_Document_ID#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "#request.accessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteWR_AttachedDoc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteWR_AttachedDoc>
+<CFQUERY NAME="DeleteWR_AttachedDoc" datasource="#application.datasource#">
 		update 	Work_Request_Document
 		set 	Deleted = 1,
 		Deleted_By = '#request.accessStructure.User_ID#'
 		where 	Work_Request_Document_ID = #URL.Work_Request_Document_ID#
 	</CFQUERY>
+</cfif>
 	<cfif application.oApplicationAppSettingsManager.getApplicationAppSettings().getWebserviceOn() EQ 1>
 			<cfset Punchlist_URL = "http://tools.awayx.com/components/webservices/Work_Requests.cfc?wsdl">
 			<cfset createObject("java", "coldfusion.server.ServiceFactory").XmlRpcService.refreshWebService("#Punchlist_URL#")>
@@ -68,14 +87,35 @@ function OpenDoc(file)
 			</cfinvoke>		
 			
 	<cfelse>
-			<cfquery name="DeleteWR_AttachedDoc_Punch" datasource="punchlist">
+			<cfset useLakebaseForDeleteWR_AttachedDoc_Punch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_file")>
+<cfif useLakebaseForDeleteWR_AttachedDoc_Punch>
+	<cftry>
+		<cfset application.oLakebase.updateRows("punch_file",
+			{
+				"punch_id" = "eq.#getDeletedWR_AttachedDoc.BA_Ticket_Number#",
+				"punch_file_name" = "eq.#getDeletedWR_AttachedDoc.WR_Document_Name#",
+				"punch_file_name_saved_as" = "eq.#getDeletedWR_AttachedDoc.Actual_File_Name#"
+			},
+			{
+				"deleted" = "1",
+				"deleted_by" = "#request.accessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteWR_AttachedDoc_Punch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteWR_AttachedDoc_Punch>
+<cfquery name="DeleteWR_AttachedDoc_Punch" datasource="punchlist">
 				Update 	Punch_File
 				set 	deleted = 1,
 						Deleted_By = '#request.accessStructure.User_ID#'
 				where 	Punch_ID = '#getDeletedWR_AttachedDoc.BA_Ticket_Number#'
 				and 	Punch_File_Name ='#getDeletedWR_AttachedDoc.WR_Document_Name#'
 				and 	Punch_File_Name_Saved_As ='#getDeletedWR_AttachedDoc.Actual_File_Name#'
-			</cfquery>	
+			</cfquery>
+</cfif>	
 	</cfif> 
 	<CFLOCATION URL="work_request_documents.cfm?Work_Request_ID=#getDeletedWR_AttachedDoc.Work_Request_ID#" ADDTOKEN="No">
 	<CFABORT>
@@ -87,20 +127,53 @@ function OpenDoc(file)
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
+<cfset useLakebaseForPunchID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForPunchID>
+	<cftry>
+		<cfset PunchID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"work_request_id" = "eq.#Work_Request_ID#",
+				"select" = "ba_ticket_number"
+			}), "ba_ticket_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPunchID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPunchID>
 <CFQUERY NAME="PunchID" datasource="#application.datasource#">
 	Select	BA_Ticket_Number
 	From	Work_Request
 	Where 	Work_Request_ID = #Work_Request_ID#
 </CFQUERY>
+</cfif>
 
 <cfif URL.MatchAttch NEQ "">
-	<CFQUERY NAME="Get_Doc_Details" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Doc_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseForGet_Doc_Details>
+	<cftry>
+		<cfset Get_Doc_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request_document", {
+				"matchattch" = "eq.#MatchAttch#",
+				"deleted" = "eq.0",
+				"order" = "wr_document_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Doc_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Doc_Details>
+<CFQUERY NAME="Get_Doc_Details" datasource="#application.datasource#">
 		Select	*
 		From	Work_Request_Document
 		Where 	MatchAttch = '#MatchAttch#'
 		And deleted = 0
 		Order by	WR_Document_Name
 	</CFQUERY>
+</cfif>
 <cfelse> 
 	<CFQUERY NAME="Get_Doc_Details" datasource="#application.datasource#">
 		Select		*
@@ -148,9 +221,25 @@ function OpenDoc(file)
 					<TR>
 						<TD WIDTH="60%"><A HREF="" onclick="OpenDoc('#siteURL#/GetDocument.cfm?FilePath=#WR_Document_Location#');return false;">#WR_Document_Name# &nbsp;</A></TD>
 						<TD NOWRAP>
-							<cfquery name="CreatedUserInfo" datasource="#application.datasource#">
+							<cfset useLakebaseForCreatedUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCreatedUserInfo>
+	<cftry>
+		<cfset CreatedUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreatedUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreatedUserInfo>
+<cfquery name="CreatedUserInfo" datasource="#application.datasource#">
 								SELECT Name_First, Name_Last FROM _Users WHERE User_ID = '#Uploaded_By#'
 							</cfquery>
+</cfif>
 							#CreatedUserInfo.Name_First# #CreatedUserInfo.Name_Last#<BR>#DateFormat(Uploaded_Date, 'MM/DD/YYYY')#
 						</TD>
 									

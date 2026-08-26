@@ -57,11 +57,28 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 
 <!--- ************************* DISPALY LAST UPDATED BY INFO *************************--->
 <CFIF URL.RID LTE 0>
-	<CFQUERY NAME="GetLastUpdatedDetails" datasource="#application.datasource#">
+	<cfset useLakebaseForGetLastUpdatedDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("approval_considerations")>
+<cfif useLakebaseForGetLastUpdatedDetails>
+	<cftry>
+		<cfset GetLastUpdatedDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("approval_considerations", {
+				"order" = "updated_date.desc",
+				"limit" = "1",
+				"select" = "updated_by,updated_date"
+			}), "updated_by,updated_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLastUpdatedDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLastUpdatedDetails>
+<CFQUERY NAME="GetLastUpdatedDetails" datasource="#application.datasource#">
 		Select		TOP 1 Updated_By, Updated_Date
 		From		Approval_Considerations
 		Order by	Updated_Date Desc
 	</CFQUERY>
+</cfif>
 	<CFSET Last_Updated_By = GetLastUpdatedDetails.Updated_By />
 	<CFSET Last_Updated_Date = GetLastUpdatedDetails.Updated_Date />
 <CFELSE>
@@ -70,11 +87,27 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 </CFIF>
 
 <CFIF Last_Updated_By NEQ "">
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Last_Updated_By#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT 	_Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 		FROM 	_Users
 		WHERE 	User_ID = '#Last_Updated_By#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 <CFIF Last_Updated_By NEQ "">
 	<TABLE BGCOLOR="White" style="border-color:Orange;border-style:solid;" CELLPADDING="3" CELLSPACING="0">

@@ -11,12 +11,31 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 			
 ------------------------------------------------------------------------------> 
 <cfset stDeductionLabels = createObject("component", "components.settings.Labels.Labels").init().GetDeductionLabelsStruct() />
+<cfset useLakebaseForgetAllRebillPackages = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_hdr")>
+<cfif useLakebaseForgetAllRebillPackages>
+	<cftry>
+		<cfset getAllRebillPackages = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_rebill_package_hdr", {
+				"dd_rebill_package_hdr_id" = "eq.#rebillPakID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "rebill_package_title.asc",
+				"select" = "rebill_package_msg,default_message"
+			}), "rebill_package_msg,default_message"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllRebillPackages = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllRebillPackages>
 <cfquery name="getAllRebillPackages" datasource="#application.datasource#">
 	SELECT 		Rebill_Package_Msg, Default_Message	
 	FROM 		DD_Rebill_Package_Hdr
 	WHERE		DD_Rebill_Package_Hdr_ID = #rebillPakID# AND Active = 1 AND Deleted = 0
 	ORDER BY 	Rebill_Package_Title
 </cfquery>
+</cfif>
 
 <cfquery name="getAllRebillClass" datasource="#application.datasource#">	
 SELECT		DD_Rebill_Package_Dtl.DD_Classification_ID,

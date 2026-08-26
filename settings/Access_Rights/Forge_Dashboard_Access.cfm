@@ -30,12 +30,28 @@ Description  :  Forge Dashboard Access settings
 	<cfparam name="form.save" default="0">
 
 	<cfif form.save>
-		<cfquery name="qDashboardAccessInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqDashboardAccessInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("home_dashboard_access")>
+<cfif useLakebaseForqDashboardAccessInfo>
+	<cftry>
+		<cfset qDashboardAccessInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("home_dashboard_access", {
+				"profiles_id" = "eq.#url.profileId#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDashboardAccessInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDashboardAccessInfo>
+<cfquery name="qDashboardAccessInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Home_Dashboard_Access
 		WHERE Profiles_ID = #url.profileId#
 		AND Deleted = 0
 		</cfquery>
+</cfif>
 
 <cfquery name="qDashboardSave" datasource="#application.datasource#">
 		<cfif qDashboardAccessInfo.recordCount>

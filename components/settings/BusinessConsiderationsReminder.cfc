@@ -9,9 +9,24 @@
 <cfcomponent displayname="BusinessConsiderationsReminder" hint="Contains Functions for Accessing Business Consideration Reminders">
 
 	<cffunction name="get" access="public" hint="returns Business Considerations Reminders" returntype="query">
-		<cfquery name="qGetBizConReminders" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBizConReminders = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_considerations_reminders")>
+<cfif useLakebaseForqGetBizConReminders>
+	<cftry>
+		<cfset qGetBizConReminders = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_considerations_reminders", {
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBizConReminders = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBizConReminders>
+<cfquery name="qGetBizConReminders" datasource="#application.datasource#">
 			SELECT TOP 1 * from business_considerations_reminders
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetBizConReminders />
 	</cffunction>

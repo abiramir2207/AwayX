@@ -41,17 +41,47 @@ IsClosed="Yes";
 
 
 <!--- Get the data for the template generic type "filter" dropdown. --->
+<cfset useLakebaseForqGetType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcomponents")>
+<cfif useLakebaseForqGetType>
+	<cftry>
+		<cfset qGetType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcomponents", {
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetType>
 <cfquery name="qGetType" dbtype="query">
 SELECT DISTINCT Generic_Type
 FROM qComponents
 </cfquery>
+</cfif>
 
 <!--- All paid to's --->
+<cfset useLakebaseForGetPaymentPaidToTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_paid_to_types")>
+<cfif useLakebaseForGetPaymentPaidToTypes>
+	<cftry>
+		<cfset GetPaymentPaidToTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_paid_to_types", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPaymentPaidToTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPaymentPaidToTypes>
 <cfquery name="GetPaymentPaidToTypes" datasource="#application.datasource#">
 SELECT distinct *
 FROM Payment_Paid_To_Types
 WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 <cfscript>
 	listPaidToTypes = valueList(GetPaymentPaidToTypes.Payment_Paid_To_ID);
@@ -98,12 +128,29 @@ WHERE Deleted = 0
 	</cfif>
 
 	<!--- All paid to's on a template --->
-	<cfquery name="qPaymentPaidToOnTemplate" datasource="#application.datasource#">
+	<cfset useLakebaseForqPaymentPaidToOnTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_paid_to_template_mapping")>
+<cfif useLakebaseForqPaymentPaidToOnTemplate>
+	<cftry>
+		<cfset qPaymentPaidToOnTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_paid_to_template_mapping", {
+				"template_id" = "eq.#qComponents.Template_ID#",
+				"deleted" = "eq.0",
+				"select" = "payment_paid_to_id"
+			}), "payment_paid_to_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPaymentPaidToOnTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPaymentPaidToOnTemplate>
+<cfquery name="qPaymentPaidToOnTemplate" datasource="#application.datasource#">
 	SELECT Payment_Paid_To_ID
 	FROM Payment_Paid_To_Template_Mapping
 	WHERE Template_ID = '#qComponents.Template_ID#'
 	AND Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfset listPaidToTypesInThisTemplate = valueList(qPaymentPaidToOnTemplate.Payment_Paid_To_ID)>
 

@@ -405,11 +405,27 @@
 <cfset DuplicateHeaders ='Duplicate Setting,Setting Value,Selected'>
 
 <!--- CLAUSE LIBRARY --->
+<cfset useLakebaseForqGetDistinctClause = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettemplateclause")>
+<cfif useLakebaseForqGetDistinctClause>
+	<cftry>
+		<cfset qGetDistinctClause = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettemplateclause", {
+				"order" = "clause_category_name.asc",
+				"select" = "clause_category_name"
+			}), "clause_category_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistinctClause = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistinctClause>
 <cfquery name="qGetDistinctClause" dbtype="query">
 	SELECT 	DISTINCT Clause_Category_Name
 	FROM	getTemplateClause
 	ORDER BY Clause_Category_Name
 </cfquery>
+</cfif>
 
 <!--- REVISION --->
 

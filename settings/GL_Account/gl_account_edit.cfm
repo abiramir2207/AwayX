@@ -8,11 +8,27 @@
 </cfif>
 
 <CFIF qGetCompRebates.Last_Updated_By NEQ "">
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetCompRebates.Last_Updated_By#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT 	_Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 		FROM 	_Users
 		WHERE 	User_ID = '#qGetCompRebates.Last_Updated_By#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 <CFIF qGetCompRebates.Last_Updated_By NEQ "">
 	<div  width="800">

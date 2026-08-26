@@ -11,11 +11,27 @@
 
 <cfparam name="URL.fileParam" default="" />
 
+<cfset useLakebaseForgetDTSPath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_settings")>
+<cfif useLakebaseForgetDTSPath>
+	<cftry>
+		<cfset getDTSPath = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dataint_settings", {
+				"order" = "dataint_setting_id.asc",
+				"select" = "dtspath = dts_reference_path+'\extract'"
+			}), "dtspath = dts_reference_path+'\extract'"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDTSPath = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDTSPath>
 <cfquery name="getDTSPath" datasource="#application.datasource#">
 	SELECT DTSPATH = DTS_Reference_Path+'\Extract'
 	FROM   DataInt_Settings
 	ORDER BY Dataint_setting_ID
 </cfquery>
+</cfif>
 
 <cfset pathFileName = getDTSPath.DTSPATH  />		
 <cfif (URL.fileParam EQ "DownloadHLV")>

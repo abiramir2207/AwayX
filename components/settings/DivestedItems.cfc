@@ -70,11 +70,27 @@
 		
 		<cfset var qgetAllDivestedItemIDs = "" />
 		
-		<cfquery name="qgetAllDivestedItemIDs" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetAllDivestedItemIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqgetAllDivestedItemIDs>
+	<cftry>
+		<cfset qgetAllDivestedItemIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"is_divested" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id"
+			}), "bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetAllDivestedItemIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetAllDivestedItemIDs>
+<cfquery name="qgetAllDivestedItemIDs" datasource="#application.datasource#">
 			SELECT DISTINCT BSA_Foodservice_Items_Master_ID 
 			FROM 	BSA_Foodservice_Items_Master
 			WHERE 	Is_Divested = 1
 		</cfquery>
+</cfif>
 		
 		<cfreturn qgetAllDivestedItemIDs />	
 	</cffunction>

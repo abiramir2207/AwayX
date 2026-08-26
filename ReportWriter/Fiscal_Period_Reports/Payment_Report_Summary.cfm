@@ -82,19 +82,49 @@ AND RP_Mapping_Table.FP_End_Date = '#Fiscal_Period_End_Date#'
 
 </cfloop>
 
-<!--- <cfquery name="GetAllPaymentvalues" datasource="#application.datasource#">
+<!--- <cfset useLakebaseForGetAllPaymentvalues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_payment_report_summary")>
+<cfif useLakebaseForGetAllPaymentvalues>
+	<cftry>
+		<cfset GetAllPaymentvalues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_payment_report_summary", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllPaymentvalues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllPaymentvalues>
+<cfquery name="GetAllPaymentvalues" datasource="#application.datasource#">
 SELECT * FROM RP_Payment_Report_Summary
 </cfquery>
+</cfif>
 <cfdump var="#GetAllPaymentvalues#"> --->
 	
 	<!---Billbacks per distributor/item/type--->
 	
-	<cfquery name="GetSumofBillbacks" datasource="#application.datasource#">
+	<cfset useLakebaseForGetSumofBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_billback_table")>
+<cfif useLakebaseForGetSumofBillbacks>
+	<cftry>
+		<cfset GetSumofBillbacks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_billback_table", {
+				"fiscal_period_start_date" = "eq.#Fiscal_Period_Start_Date#",
+				"fiscal_period_end_date" = "eq.#Fiscal_Period_End_Date#",
+				"select" = "legacy_ship_to,shared_ship_to,qbrand_id,item_number"
+			}), "legacy_ship_to,shared_ship_to,qbrand_id,item_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSumofBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSumofBillbacks>
+<cfquery name="GetSumofBillbacks" datasource="#application.datasource#">
 	SELECT DISTINCT Legacy_Ship_To, Shared_Ship_To, QBrand_ID, Item_Number
 	FROM RP_Billback_Table
 	WHERE RP_Billback_Table.Fiscal_Period_Start_Date = '#Fiscal_Period_Start_Date#'
 AND RP_Billback_Table.Fiscal_Period_End_Date = '#Fiscal_Period_End_Date#'
 	</cfquery>
+</cfif>
 	
 	<cfloop query="GetSumofBillbacks">
 				

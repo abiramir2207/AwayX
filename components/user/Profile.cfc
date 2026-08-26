@@ -144,11 +144,27 @@
 			var qGtProfileName = '';
 		</cfscript>
 
-		<cfquery name="qGtProfileName" datasource="#application.datasource#">
+		<cfset useLakebaseForqGtProfileName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqGtProfileName>
+	<cftry>
+		<cfset qGtProfileName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"profiles_id" = "eq.#arguments.profileId#",
+				"select" = "profiles_desc,profiles_short_desc"
+			}), "profiles_desc,profiles_short_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGtProfileName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGtProfileName>
+<cfquery name="qGtProfileName" datasource="#application.datasource#">
 			SELECT 	Profiles_Desc, Profiles_Short_Desc
 			FROM    Profiles
 			WHERE	Profiles_ID = #arguments.profileId#
 		</cfquery>
+</cfif>
 
 		<cfset sName = qGtProfileName.Profiles_Desc>
 
@@ -163,11 +179,27 @@
 		<cfscript>
 			var qGetSettings_Panel = '';
 		</cfscript>
-		<cfquery name="qGetSettings_Panel" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetSettings_Panel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForqGetSettings_Panel>
+	<cftry>
+		<cfset qGetSettings_Panel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles_settings", {
+				"profiles_id" = "eq.#arguments.profileId#",
+				"select" = "settings_panel"
+			}), "settings_panel"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSettings_Panel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSettings_Panel>
+<cfquery name="qGetSettings_Panel" datasource="#application.datasource#">
 			SELECT Settings_Panel
 			FROM    Profiles_Settings
 			Where	Profiles_ID	=	#arguments.profileId#
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetSettings_Panel />
 	</cffunction>

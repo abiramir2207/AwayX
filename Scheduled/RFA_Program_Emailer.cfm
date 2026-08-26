@@ -1,7 +1,22 @@
+<cfset useLakebaseForgetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetSettings>
+	<cftry>
+		<cfset getSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "rfa_email"
+			}), "rfa_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSettings>
 <cfquery name="getSettings" datasource="#application.datasource#">
 	SELECT RFA_Email
 	FROM general_Settings
 </cfquery>
+</cfif>
 
 <cfif getSettings.RFA_Email EQ 2>
 		<cfquery name="getRFAEmailPrograms" datasource="#application.datasource#">

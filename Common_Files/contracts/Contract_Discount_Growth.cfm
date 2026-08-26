@@ -6,11 +6,26 @@
 <cfset templateManager = CreateObject("component", "components.programs.template.TemplateManager").init() />
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 		
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfinclude template="/get_access_profile.cfm">
@@ -96,13 +111,30 @@
 </script>
 
 	<!--- D45016 :: Restrict access at component level for all discount types START--->	
-	<cfquery name="getAllGrowthComponentsAccess" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllGrowthComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_profile")>
+<cfif useLakebaseForgetAllGrowthComponentsAccess>
+	<cftry>
+		<cfset getAllGrowthComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"allow_user_to_view" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllGrowthComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllGrowthComponentsAccess>
+<cfquery name="getAllGrowthComponentsAccess" datasource="#application.datasource#">
 			SELECT 	*
 			FROM		Program_Growth_Component_Profile
 			WHERE	Deleted = 0
 			AND 		Profiles_ID = #request.AccessStructure.Profiles_ID#
 			AND 		Allow_User_To_View = 1
-	</cfquery> 
+	</cfquery>
+</cfif> 
 	<cfset restictList = valuelist(getAllGrowthComponentsAccess.Program_Growth_Component_Name_ID)>
 
 	<!--- D45016 :: Restrict access at component level for all discount types END--->	
@@ -198,12 +230,29 @@
 			  = #getGrowthComponents.Program_Growth_Component_Type_ID # 
 			  </cfquery>
 			</cfif>
-			<CFQUERY NAME="ItemsForComponent" datasource="#application.datasource#">
+			<cfset useLakebaseForItemsForComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
+<cfif useLakebaseForItemsForComponent>
+	<cftry>
+		<cfset ItemsForComponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_product_data", {
+				"program_growth_component_id" = "eq.#getGrowthComponents.Program_Growth_Component_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_growth_component_product_data_id"
+			}), "program_growth_component_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForItemsForComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForItemsForComponent>
+<CFQUERY NAME="ItemsForComponent" datasource="#application.datasource#">
 			SELECT Program_Growth_Component_Product_Data_ID 
 			FROM Program_Growth_Component_Product_Data 
 			WHERE Program_Growth_Component_ID = '#getGrowthComponents.Program_Growth_Component_ID#' 
 			AND Deleted = 0 
 			</CFQUERY>
+</cfif>
 			<TR BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#" VALIGN="top"> 
 			  <td><cfif ItemsForComponent.Recordcount GT 0>
 				  <img src="../../Images/yes_small.gif" width="12" height="12" alt="" border="0">

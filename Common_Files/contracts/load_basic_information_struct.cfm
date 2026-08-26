@@ -17,16 +17,49 @@ Output:			Program_Packet
 
 	<cfset this.ProgramType_ID = getContractInfo.ProgramType_ID />
 
-	<cfquery name="gettemplateparent" datasource="#application.datasource#">
+	<cfset useLakebaseForgettemplateparent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgettemplateparent>
+	<cftry>
+		<cfset gettemplateparent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#this.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgettemplateparent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgettemplateparent>
+<cfquery name="gettemplateparent" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Control_Panel_Options
 		WHERE ProgramControl_Panel_Options_ID = '#this.ProgramType_ID#'
 	</cfquery>
+</cfif>
 
 	<cfif gettemplateparent.isdominant EQ 1>
 		<cfset getContractTemplateDetails = gettemplateparent />
 	<cfelse>
-		<cfquery name="getContractTemplateDetails" datasource="#application.datasource#">
+		<cfset useLakebaseForgetContractTemplateDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractTemplateDetails>
+	<cftry>
+		<cfset getContractTemplateDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#gettemplateparent.first_parent_id#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractTemplateDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractTemplateDetails>
+<cfquery name="getContractTemplateDetails" datasource="#application.datasource#">
 			SELECT top 1 * 
 			FROM Program_Control_Panel_Options
 			WHERE first_parent_id = #gettemplateparent.first_parent_id#
@@ -34,6 +67,7 @@ Output:			Program_Packet
 			and deleted = 0
 			ORDER BY ProgramControl_Panel_Options_ID desc
 		</cfquery>
+</cfif>
 		<cfif getContractTemplateDetails.recordcount EQ 0>
 			<cfset getContractTemplateDetails = gettemplateparent />
 		</cfif>

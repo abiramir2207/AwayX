@@ -36,7 +36,24 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 
 
 <CFIF URL.RID NEQ "">
-	<CFQUERY NAME="Saved_Formula_Info" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForSaved_Formula_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_rule")>
+<cfif useLakebaseForSaved_Formula_Info>
+	<cftry>
+		<cfset Saved_Formula_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_rule", {
+				"formula_pricing_rule_id" = "eq.#URL.RID#",
+				"deleted" = "eq.0",
+				"order" = "rule_name.asc",
+				"select" = "rule_name,number_of_comms,show_details"
+			}), "rule_name,number_of_comms,show_details"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaved_Formula_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaved_Formula_Info>
+<CFQUERY NAME="Saved_Formula_Info" DATASOURCE="#application.datasource#">
 		SELECT	Rule_Name,Number_Of_Comms, Show_Details
 		FROM	Formula_Pricing_Rule
 		WHERE
@@ -45,6 +62,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 				Deleted = 0
 		ORDER BY	RULE_NAME
 	</CFQUERY>
+</cfif>
 	<CFQUERY NAME="Get_All_Commodities" DATASOURCE="#application.datasource#">
 		SELECT 	LTRIM(RTRIM(Symbol)) AS Symbol
 		FROM 	Program_Formula_Pricing_Rule_Comm_Data

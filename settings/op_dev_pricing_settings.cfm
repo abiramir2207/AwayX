@@ -9,10 +9,23 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <BR><BR>
 
+<cfset useLakebaseForgetDistOpPricing = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForgetDistOpPricing>
+	<cftry>
+		<cfset getDistOpPricing = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistOpPricing = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistOpPricing>
 <cfquery name="getDistOpPricing" datasource="#application.datasource#">
 SELECT *
 FROM BSA_Foodservice_Customers
 </cfquery>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 

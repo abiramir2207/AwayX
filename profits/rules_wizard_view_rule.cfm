@@ -24,21 +24,53 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the rule data set for the passed ID														 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Rule_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodity_pricing_rules")>
+<cfif useLakebaseForGet_Rule_Data>
+	<cftry>
+		<cfset Get_Rule_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodity_pricing_rules", {
+				"commodity_pricing_id" = "eq.#URL.ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Rule_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Rule_Data>
 <CFQUERY NAME="Get_Rule_Data" datasource="#application.datasource#">
 Select	Commodity_Pricing_Rules.*
 From	Commodity_Pricing_Rules
 Where	Commodity_Pricing_ID	=	#URL.ID#
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the name of the creator																	 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Creator_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_Creator_Name>
+	<cftry>
+		<cfset Get_Creator_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Rule_Data.Creator_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Creator_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Creator_Name>
 <CFQUERY NAME="Get_Creator_Name" datasource="#application.datasource#">
 Select	Name_First,
 		Name_Last
 From	_Users
 Where	User_ID	=	'#Get_Rule_Data.Creator_ID#'
 </CFQUERY>
+</cfif>
 
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
@@ -62,11 +94,27 @@ Where 	Exchange_Detail_ID	=	'#Get_Rule_Data.Exchange#'
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the name of the commodity																	 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Commodity = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_symbol")>
+<cfif useLakebaseForGet_Commodity>
+	<cftry>
+		<cfset Get_Commodity = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_symbol", {
+				"symbol" = "eq.#Get_Rule_Data.Commodity#",
+				"select" = "symbol_description"
+			}), "symbol_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Commodity = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Commodity>
 <CFQUERY NAME="Get_Commodity" datasource="#application.datasource#">
 Select	Symbol_Description
 From	Commodities_Symbol
 Where	Symbol	=	'#Get_Rule_Data.Commodity#'
 </CFQUERY>
+</cfif>
 
 
 <style>

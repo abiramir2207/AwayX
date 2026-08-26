@@ -12,11 +12,26 @@
 <cfset cost_calc_process = "">
 
 <!--- get all the rules --->
+<cfset useLakebaseForgetCommodityRuleForProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodity_pricing_rules")>
+<cfif useLakebaseForgetCommodityRuleForProduct>
+	<cftry>
+		<cfset getCommodityRuleForProduct = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodity_pricing_rules", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCommodityRuleForProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCommodityRuleForProduct>
 <cfquery name="getCommodityRuleForProduct" datasource="#application.datasource#">
 	SELECT *
 	FROM Commodity_Pricing_Rules
 	WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 
 <!--- loop through the rules inorder to loop through the products of the rule --->

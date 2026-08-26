@@ -4,7 +4,30 @@
 
 <!---edit--->
 <cfif action IS "edit">
-	<cfquery name="EditValues" datasource="#application.datasource#">
+	<cfset useLakebaseForEditValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement")>
+<cfif useLakebaseForEditValues>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_reimbursement",
+			{
+				"bb_reimbursement_id" = "eq.#BB_Reimbursement_ID#"
+			},
+			{
+				"distributor_id" = "#Distributor_ID#",
+				"contract_main_id" = "#Contract_Main_ID#",
+				"reimbursement_type" = "#ReimbursementType#",
+				"reimbursement_amount" = "#ReimbursementAmount#",
+				"reimbursement_number" = "#ReimbursementNumber#",
+				"reimbursement_date" = "#ReimbursementDate#",
+				"reimbursement_comments" = "#ReimbursementComments#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEditValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEditValues>
+<cfquery name="EditValues" datasource="#application.datasource#">
 	UPDATE BB_Reimbursement
 	SET Distributor_ID = '#Distributor_ID#', 
 	Contract_Main_ID = '#Contract_Main_ID#',
@@ -15,6 +38,7 @@
 	Reimbursement_Comments = '#ReimbursementComments#'
 	WHERE BB_Reimbursement_ID = '#BB_Reimbursement_ID#'
 	</cfquery>
+</cfif>
 
 	<cfset BB_Reimbursement_ID = form.BB_Reimbursement_ID>
 

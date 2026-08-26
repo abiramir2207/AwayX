@@ -183,11 +183,27 @@ WHERE Contract_Main_ID = #ContractID#
 <cfset Contract_Number = GetProgramNumber.Contract_Number>
 
 <!---Get the rates on the date on the invoice--->
-	<cfquery name="GetContractMain" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_info")>
+<cfif useLakebaseForGetContractMain>
+	<cftry>
+		<cfset GetContractMain = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_program_info", {
+				"contract_number" = "eq.#Contract_Number#",
+				"select" = "contract_main_id,approval_start_date,approval_end_date"
+			}), "contract_main_id,approval_start_date,approval_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractMain>
+<cfquery name="GetContractMain" datasource="#application.datasource#">
 	SELECT DISTINCT Contract_Main_ID, Approval_Start_Date, Approval_End_Date 
 	FROM BB_Program_Info
 	WHERE Contract_Number = '#Contract_Number#'
 	</cfquery>
+</cfif>
 
 <cfset ContractMainList = GetContractMain.Contract_Main_ID>
 

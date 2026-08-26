@@ -795,7 +795,22 @@
     <cffunction name="getSlotting" output="false" access="remote">
         <cfargument name="id" required="true">
 
-        <cfquery name="local.qSlottingHeader" datasource="#application.datasource#">
+        <cfset useLakebaseForlocal_qSlottingHeader = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_target_header")>
+<cfif useLakebaseForlocal_qSlottingHeader>
+	<cftry>
+		<cfset local.qSlottingHeader = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_target_header", {
+				"planner_target_header_id" = "eq.#arguments.id#",
+				"select" = "'not_released' as user_positions_id,'not released' as position_label,slotting_position_type,not_released_slotting_fund as slotting_fund,not_released_slotting_fund_final as slotting_fund_final,not_released_slotting_fund_override as slotting_fund_override,not_released_slotting_fund as x_slotting_fund,not_released_slotting_fund_final as x_slotting_fund_final,not_released_slotting_fund_override as x_slotting_fund_override,0 as slotting_fund_approved_final"
+			}), "'not_released' as user_positions_id,'not released' as position_label,slotting_position_type,not_released_slotting_fund as slotting_fund,not_released_slotting_fund_final as slotting_fund_final,not_released_slotting_fund_override as slotting_fund_override,not_released_slotting_fund as x_slotting_fund,not_released_slotting_fund_final as x_slotting_fund_final,not_released_slotting_fund_override as x_slotting_fund_override,0 as slotting_fund_approved_final"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qSlottingHeader = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qSlottingHeader>
+<cfquery name="local.qSlottingHeader" datasource="#application.datasource#">
 			SELECT	'NOT_RELEASED' AS User_Positions_ID
                     ,'NOT RELEASED' AS Position_Label
                     ,Slotting_Position_Type
@@ -809,6 +824,7 @@
 			FROM	Planner_Target_Header
 			WHERE	Planner_Target_Header_ID = #arguments.id#
         </cfquery>
+</cfif>
 
 		<cfset local.slottingLevel = Val(local.qSlottingHeader.Slotting_Position_Type) />
 

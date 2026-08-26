@@ -8,7 +8,24 @@ CREATED:  	04/27/2011 - Tim Ford
 	<!--------------------------------------------------------------------------------------------------------------------------------->
 
 	<cffunction name="getSources" output="false" returntype="query" hint="Returns a query of sources">
-		<cfquery name="local.sources" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_sources = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_source")>
+<cfif useLakebaseForlocal_sources>
+	<cftry>
+		<cfset local.sources = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_source", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_source_description.asc",
+				"select" = "program_bid_source_id,program_bid_source_code,program_bid_source_description"
+			}), "program_bid_source_id,program_bid_source_code,program_bid_source_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_sources = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_sources>
+<cfquery name="local.sources" datasource="#application.datasource#">
 			SELECT Program_Bid_Source_Id
 			       ,Program_Bid_Source_Code
 			       ,Program_Bid_Source_Description
@@ -17,13 +34,31 @@ CREATED:  	04/27/2011 - Tim Ford
 			       AND Active = 1
 			 ORDER BY Program_Bid_Source_Description
 		</cfquery>
+</cfif>
 		<cfreturn local.sources>
 	</cffunction>
 
 	<!--------------------------------------------------------------------------------------------------------------------------------->
 
 	<cffunction name="getSourceTypes" output="false" returntype="query" hint="Returns a query of source types">
-		<cfquery name="local.sourceTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_sourceTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_source_type")>
+<cfif useLakebaseForlocal_sourceTypes>
+	<cftry>
+		<cfset local.sourceTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_source_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_source_type_description.asc",
+				"select" = "program_bid_source_type_id,program_bid_source_type_code,program_bid_source_type_description"
+			}), "program_bid_source_type_id,program_bid_source_type_code,program_bid_source_type_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_sourceTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_sourceTypes>
+<cfquery name="local.sourceTypes" datasource="#application.datasource#">
 			SELECT Program_Bid_Source_Type_Id
 			       ,Program_Bid_Source_Type_Code
 			       ,Program_Bid_Source_Type_Description
@@ -32,13 +67,31 @@ CREATED:  	04/27/2011 - Tim Ford
 			       AND Active = 1
 			 ORDER BY Program_Bid_Source_Type_Description
 		</cfquery>
+</cfif>
 		<cfreturn local.sourceTypes>
 	</cffunction>
 
 	<!--------------------------------------------------------------------------------------------------------------------------------->
 
 	<cffunction name="getPackages" output="false" returntype="query" hint="Returns a query of packages">
-		<cfquery name="local.packages" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_packages = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_package")>
+<cfif useLakebaseForlocal_packages>
+	<cftry>
+		<cfset local.packages = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_package", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_package_description.asc",
+				"select" = "program_bid_package_id,program_bid_package_code,program_bid_package_description"
+			}), "program_bid_package_id,program_bid_package_code,program_bid_package_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_packages = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_packages>
+<cfquery name="local.packages" datasource="#application.datasource#">
 			SELECT Program_Bid_Package_Id
 			       ,Program_Bid_Package_Code
 			       ,Program_Bid_Package_Description
@@ -47,13 +100,31 @@ CREATED:  	04/27/2011 - Tim Ford
 			       AND Active = 1
 			 ORDER BY Program_Bid_Package_Description
 		</cfquery>
+</cfif>
 		<cfreturn local.packages>
 	</cffunction>
 
 	<!--------------------------------------------------------------------------------------------------------------------------------->
 
 	<cffunction name="getCategories" output="false" returntype="query" hint="Returns a query of categories">
-		<cfquery name="local.categories" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_categories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_category")>
+<cfif useLakebaseForlocal_categories>
+	<cftry>
+		<cfset local.categories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_category", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_category_description.asc",
+				"select" = "program_bid_category_id,program_bid_category_code,program_bid_category_description"
+			}), "program_bid_category_id,program_bid_category_code,program_bid_category_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_categories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_categories>
+<cfquery name="local.categories" datasource="#application.datasource#">
 			SELECT Program_Bid_Category_Id
 			       ,Program_Bid_Category_Code
 			       ,Program_Bid_Category_Description
@@ -62,13 +133,31 @@ CREATED:  	04/27/2011 - Tim Ford
 			       AND Active = 1
 			 ORDER BY Program_Bid_Category_Description
 		</cfquery>
+</cfif>
 		<cfreturn local.categories>
 	</cffunction>
 
 	<!--------------------------------------------------------------------------------------------------------------------------------->
 
 	<cffunction name="getCompetitors" output="false" returntype="query" hint="Returns a query of competitors">
-		<cfquery name="local.competitors" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_competitors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForlocal_competitors>
+	<cftry>
+		<cfset local.competitors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_won_by_description.asc",
+				"select" = "program_bid_won_by_id,program_bid_won_by_description"
+			}), "program_bid_won_by_id,program_bid_won_by_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_competitors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_competitors>
+<cfquery name="local.competitors" datasource="#application.datasource#">
 			 SELECT Program_Bid_Won_By_Id
 			        ,Program_Bid_Won_By_Description
 			    FROM PROGRAM_BID_WON_BY
@@ -76,6 +165,7 @@ CREATED:  	04/27/2011 - Tim Ford
 			         AND Active = 1
 			   ORDER BY Program_Bid_Won_By_Description
    	</cfquery>
+</cfif>
 		<cfreturn local.competitors>
 	</cffunction>
 
@@ -1531,11 +1621,27 @@ DROP TABLE ##TMP_Comp_Won_By_Data
 			var qGetClientBidDesc	= "";
 		</cfscript>
 
-		<cfquery name="qGetClientBidDesc" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetClientBidDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForqGetClientBidDesc>
+	<cftry>
+		<cfset qGetClientBidDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"is_client" = "eq.1",
+				"select" = "program_bid_won_by_description"
+			}), "program_bid_won_by_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClientBidDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClientBidDesc>
+<cfquery name="qGetClientBidDesc" datasource="#application.datasource#">
 			SELECT	Program_Bid_Won_By_Description
 			FROM	PROGRAM_BID_WON_BY
 			WHERE	Is_Client = 1
 		</cfquery>
+</cfif>
 
 		<cfset strClientBidDesc = qGetClientBidDesc.Program_Bid_Won_By_Description />
 
@@ -1557,11 +1663,27 @@ DROP TABLE ##TMP_Comp_Won_By_Data
 			nProgramBidWonByID = arguments.programBidWonByID;
 		</cfscript>
 
-		<cfquery name="qGetWonByBidDesc" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetWonByBidDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForqGetWonByBidDesc>
+	<cftry>
+		<cfset qGetWonByBidDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_id" = "eq.#nProgramBidWonByID#",
+				"select" = "program_bid_won_by_description"
+			}), "program_bid_won_by_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetWonByBidDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetWonByBidDesc>
+<cfquery name="qGetWonByBidDesc" datasource="#application.datasource#">
 			SELECT	Program_Bid_Won_By_Description
 			FROM	PROGRAM_BID_WON_BY
 			WHERE	Program_Bid_Won_By_ID = '#nProgramBidWonByID#'
 		</cfquery>
+</cfif>
 
 		<cfset strWonByBidDesc = qGetWonByBidDesc.Program_Bid_Won_By_Description />
 

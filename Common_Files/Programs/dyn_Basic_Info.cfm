@@ -4,11 +4,26 @@
 <cfset FORM.PROGRAM_TYPE_ID = SESSION.PROGRAMS.PROPERTIES.CURRENT_PROGRAM_TYPE_ID>
 
 
+<cfset useLakebaseForgetTabFields = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options_map_to_menu_tab")>
+<cfif useLakebaseForgetTabFields>
+	<cftry>
+		<cfset getTabFields = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options_map_to_menu_tab", {
+				"menu_tab_id" = "eq.#URL.tab_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTabFields = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTabFields>
 <cfquery name="getTabFields" datasource="#application.datasource#">
 	SELECT * 
 	FROM Program_Control_Panel_Options_MAP_TO_Menu_Tab
 	WHERE Menu_Tab_ID = '#URL.tab_ID#'
 </cfquery>
+</cfif>
 
 <cfquery name="getFieldSettings" datasource="#application.datasource#">
 	SELECT #ValueList(getTabFields.Program_Control_Panel_Option_Column_Name)# 

@@ -137,7 +137,27 @@
 
 			<cfif check4Levels.RecordCount EQ 0>
 				<cfloop from="#qGetContractProds.Pricing_Level_ID#" to="8" index="levels">
-				<cfquery name="updLevels" datasource="#application.datasource#">
+				<cfset useLakebaseForupdLevels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForupdLevels>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_products",
+			{
+				"pricing_level_id" = "eq.#levels# + 1",
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"deleted" = "eq.0",
+				"product_type_id" = "eq.3"
+			},
+			{
+				"pricing_level_id" = "#levels#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdLevels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdLevels>
+<cfquery name="updLevels" datasource="#application.datasource#">
 						UPDATE Contract_Products
 						SET Pricing_Level_ID = #levels#
 						WHERE Pricing_Level_ID = #levels# + 1
@@ -145,28 +165,65 @@
 						AND deleted = 0
 						AND product_type_id = 3
 				</cfquery>
+</cfif>
 				</cfloop>
 			</cfif>
 
 		</cfif>
 
-		<cfquery name="DeleteItem" datasource="#application.datasource#">
+		<cfset useLakebaseForDeleteItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_product_data")>
+<cfif useLakebaseForDeleteItem>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_lump_sum_product_data",
+			{
+				"program_lump_sum_product_data_id" = "eq.#product_id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteItem>
+<cfquery name="DeleteItem" datasource="#application.datasource#">
 			UPDATE 	Program_Lump_Sum_Product_Data
 			SET 	Deleted = 1
 			WHERE 	Program_Lump_Sum_Product_Data_ID = '#product_id#'
 		</cfquery>
+</cfif>
 
 	</cfloop>
 
 	<!--- Dev Note: KAL;  9896 : Lumpsum page to handle for samples: --->
 	<cfif form.updateItems eq 1>
-		<cfquery name="qGetProgramLumpSumProductData" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramLumpSumProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_product_data")>
+<cfif useLakebaseForqGetProgramLumpSumProductData>
+	<cftry>
+		<cfset qGetProgramLumpSumProductData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_product_data", {
+				"program_lump_sum_id" = "eq.#FORM.Program_Lump_Sum_ID#",
+				"deleted" = "eq.0",
+				"order" = "contract_products_id.asc",
+				"select" = "program_lump_sum_product_data_id"
+			}), "program_lump_sum_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLumpSumProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLumpSumProductData>
+<cfquery name="qGetProgramLumpSumProductData" datasource="#application.datasource#">
 			SELECT 	Program_Lump_Sum_Product_Data_ID
 			FROM 	Program_Lump_Sum_Product_Data
 			WHERE 	Program_Lump_Sum_ID = '#FORM.Program_Lump_Sum_ID#'
 			AND 	Deleted = 0
 			ORDER BY contract_products_Id
 		</cfquery>
+</cfif>
 
 		<!--- Get the products for the lumpsum component --->
 		<cfset LumpSumDataManager = CreateObject("component", "components.programs.lump_sum_components.DataManager").init() />
@@ -573,7 +630,25 @@
 	<!---flag groups to be processed if adding groups--->
 	<cfif Has_Groups>
 
-		<cfquery name="qFlagGroup" datasource="#application.datasource#">
+		<cfset useLakebaseForqFlagGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqFlagGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#FORM.Program_ID#"
+			},
+			{
+				"group_processed" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFlagGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFlagGroup>
+<cfquery name="qFlagGroup" datasource="#application.datasource#">
 
 			UPDATE	Contract_Main
 			SET		Group_Processed = 1
@@ -581,6 +656,7 @@
 			AND 	Contract_Main_ID = #FORM.Program_ID#
 
 		</cfquery>
+</cfif>
 
 	</cfif>
 

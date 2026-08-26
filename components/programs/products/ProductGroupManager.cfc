@@ -46,7 +46,25 @@
 		
 		<cfif arguments.groupLevel NEQ 0 AND isNumeric(arguments.groupLevel)>
 	
-			<cfquery name="qGetAllProductsProductID" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetAllProductsProductID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_product")>
+<cfif useLakebaseForqGetAllProductsProductID>
+	<cftry>
+		<cfset qGetAllProductsProductID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_product", {
+				"deleted" = "eq.0",
+				"product_group_level_id" = "eq.#arguments.groupLevel#",
+				"product_group_id" = "eq.#arguments.groupID#",
+				"limit" = "1",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllProductsProductID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllProductsProductID>
+<cfquery name="qGetAllProductsProductID" datasource="#application.datasource#">
 				SELECT	TOP 1 Product_ID
 				FROM	Product_Group_Product
 				WHERE
@@ -54,6 +72,7 @@
 						AND Product_Group_Level_ID = #arguments.groupLevel#
 						AND Product_Group_ID = '#arguments.groupID#'
 			</cfquery>
+</cfif>
 			
 			<cfloop query="qGetAllProductsProductID">
 			
@@ -77,7 +96,25 @@
 		<cfset groupLevel = 0>
 		<cfset groupId = "">
 		<cfif arguments.selectedRebateType gt 0>
-		<cfquery name="qGetProductGroup" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProductGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqGetProductGroup>
+	<cftry>
+		<cfset qGetProductGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"deleted" = "eq.0",
+				"bsa_foodservice_items_master_id" = "eq.#arguments.productId#",
+				"product_type_id" = "eq.#arguments.selectedRebateType#",
+				"contract_main_id" = "eq.#arguments.contact_main_id#",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductGroup>
+<cfquery name="qGetProductGroup" datasource="#application.datasource#">
 			SELECT top 1 *
 			FROM	Contract_Products
 			WHERE	Deleted = 0
@@ -85,6 +122,7 @@
 			and 	product_type_id = #arguments.selectedRebateType#
 			and 	contract_main_id = #arguments.contact_main_id#
 		</cfquery>
+</cfif>
 		<cfelse>
 		<cfquery name="qGetProductGroup" datasource="#application.datasource#">
 			SELECT	Product_Group_Level_ID, Product_Group_ID
@@ -180,7 +218,23 @@
 		
 			<cfif isNumeric(arguments.productGroupID) AND arguments.productGroupID NEQ 0>
 			
-				<cfquery name="prodGroupDetails" datasource="#application.datasource#">
+				<cfset useLakebaseForprodGroupDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForprodGroupDetails>
+	<cftry>
+		<cfset prodGroupDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"business_segment_id" = "eq.#arguments.productGroupID#",
+				"select" = "'' as item,'' as upc,'all ' + business_unit_desc + ' products' as description,'' as bsa_foodservice_items_master_id"
+			}), "'' as item,'' as upc,'all ' + business_unit_desc + ' products' as description,'' as bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForprodGroupDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForprodGroupDetails>
+<cfquery name="prodGroupDetails" datasource="#application.datasource#">
 				
 					SELECT 	'' AS item,
 							'' AS upc,
@@ -193,6 +247,7 @@
 							Business_Segment.Business_Segment_ID = #arguments.productGroupID#
 							
 				</cfquery>
+</cfif>
 			
 			</cfif>
 		

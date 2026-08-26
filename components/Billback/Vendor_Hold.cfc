@@ -9,12 +9,29 @@
 <cfcomponent output="false">
 
     <cffunction name="getSegments" access="public" output="false" hint="Return all business segments">
-        <cfquery name="local.data" datasource="#application.datasource#">
+        <cfset useLakebaseForlocal_data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForlocal_data>
+	<cftry>
+		<cfset local.data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"order" = "business_unit_id.asc",
+				"select" = "business_unit_id"
+			}), "business_unit_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_data>
+<cfquery name="local.data" datasource="#application.datasource#">
             SELECT Business_Unit_Id
               FROM Business_Segment
              WHERE Deleted = 0
              ORDER BY Business_Unit_Id
         </cfquery>
+</cfif>
 
         <cfreturn local.data>
     </cffunction>

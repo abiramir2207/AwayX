@@ -63,11 +63,26 @@ NULL
 	</CFOUTPUT>
 <CFELSE>
 <CFIF isdefined("qAnyErrors")>
-	<CFQUERY name="Errors" dbtype="query">
+	<cfset useLakebaseForErrors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qanyerrors")>
+<cfif useLakebaseForErrors>
+	<cftry>
+		<cfset Errors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qanyerrors", {
+				"itemsnotfound" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForErrors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForErrors>
+<CFQUERY name="Errors" dbtype="query">
 		select * from 
 		qAnyErrors
 		where ItemsNotFound = 0
 	</CFQUERY>
+</cfif>
 	<CFIF Errors.recordcount GT 0>
 	<CFOUTPUT QUERY="Errors">
 		<TR BGCOLOR="#IIf(CurrentRow Mod 2, DE('ffffff'), DE('C6FFC6'))#">
@@ -82,11 +97,26 @@ NULL
 		</TR>
 	</CFOUTPUT>
 	</CFIF>
-	<CFQUERY name="ItemErrors" dbtype="query">
+	<cfset useLakebaseForItemErrors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qanyerrors")>
+<cfif useLakebaseForItemErrors>
+	<cftry>
+		<cfset ItemErrors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qanyerrors", {
+				"itemsnotfound" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForItemErrors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForItemErrors>
+<CFQUERY name="ItemErrors" dbtype="query">
 		select * from 
 		qAnyErrors
 		where ItemsNotFound = 1
 	</CFQUERY>
+</cfif>
 <CFIF ItemErrors.recordcount GT 0>
 	<cfset qItemsNotFound = uploadmargintargetManager.ItemsNotFound(url.filetype,Generic_Files_Upload_ID)>
 <CFIF qItemsNotFound.recordcount GT 0>

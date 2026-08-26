@@ -17,7 +17,23 @@
 		<cfif arguments.id>
 			
 			<!---get the activity--->
-			<cfquery name="qGetActivityTemplate" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetActivityTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_template")>
+<cfif useLakebaseForqGetActivityTemplate>
+	<cftry>
+		<cfset qGetActivityTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_template", {
+				"deleted" = "eq.0",
+				"cm_activity_template_id" = "eq.#arguments.id#",
+				"select" = "cm_activity_template_id,activity_template_name,activity_template_notes,created_by_user_id,updated_by_user_id"
+			}), "cm_activity_template_id,activity_template_name,activity_template_notes,created_by_user_id,updated_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityTemplate>
+<cfquery name="qGetActivityTemplate" datasource="#application.datasource#">
 				SELECT 	CM_Activity_Template_ID,	
 						Activity_Template_Name,
 						Activity_Template_Notes,
@@ -27,6 +43,7 @@
 				WHERE	Deleted = 0
 				AND		CM_Activity_Template_ID = #arguments.id#
 			</cfquery>
+</cfif>
 			
 			<!---set for activity--->
 			<cfloop query="qGetActivityTemplate">
@@ -40,7 +57,23 @@
 			</cfloop>
 			
 			<!---get questions--->
-			<cfquery name="qGetActivityQuestions" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetActivityQuestions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_question")>
+<cfif useLakebaseForqGetActivityQuestions>
+	<cftry>
+		<cfset qGetActivityQuestions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_question", {
+				"deleted" = "eq.0",
+				"cm_activity_template_id" = "eq.#qGetActivityTemplate.CM_Activity_Template_ID#",
+				"select" = "cm_activity_question_id,activity_question,cm_activity_qa_type_id"
+			}), "cm_activity_question_id,activity_question,cm_activity_qa_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQuestions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQuestions>
+<cfquery name="qGetActivityQuestions" datasource="#application.datasource#">
 				SELECT 	CM_Activity_Question_ID,	
 						Activity_Question,
 						CM_Activity_QA_Type_ID
@@ -48,6 +81,7 @@
 				WHERE	Deleted = 0
 				AND		CM_Activity_Template_ID = #qGetActivityTemplate.CM_Activity_Template_ID#		
 			</cfquery>
+</cfif>
 			
 			<!---loop through and set for questions--->
 			<cfloop query="qGetActivityQuestions">
@@ -63,12 +97,29 @@
 				<cfif CM_Activity_QA_Type_ID eq 2>
 					
 					<!---get questions of option type --->
-					<cfquery name="qGetActivityQAOption" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetActivityQAOption = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_option")>
+<cfif useLakebaseForqGetActivityQAOption>
+	<cftry>
+		<cfset qGetActivityQAOption = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_option", {
+				"deleted" = "eq.0",
+				"cm_activity_question_id" = "eq.#CM_Activity_Question_ID#",
+				"select" = "activity_qa_option"
+			}), "activity_qa_option"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQAOption = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQAOption>
+<cfquery name="qGetActivityQAOption" datasource="#application.datasource#">
 						SELECT 	Activity_QA_Option	
 						FROM 	CM_Activity_QA_Option
 						WHERE	Deleted = 0
 						AND		CM_Activity_Question_ID = #CM_Activity_Question_ID#
 					</cfquery>
+</cfif>
 
 					<cfset aOptions = ArrayNew(1) />
 					<cfloop query="qGetActivityQAOption">
@@ -90,12 +141,29 @@
 				<cfif CM_Activity_QA_Type_ID eq 3>
 					
 					<!---get the unit of measure data for quantitative type--->
-					<cfquery name="qGetActivityQAQty" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetActivityQAQty = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_qty")>
+<cfif useLakebaseForqGetActivityQAQty>
+	<cftry>
+		<cfset qGetActivityQAQty = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_qty", {
+				"deleted" = "eq.0",
+				"cm_activity_question_id" = "eq.#CM_Activity_Question_ID#",
+				"select" = "cm_qa_uom_id"
+			}), "cm_qa_uom_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQAQty = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQAQty>
+<cfquery name="qGetActivityQAQty" datasource="#application.datasource#">
 						SELECT 	CM_QA_UOM_ID
 						FROM 	CM_Activity_QA_Qty
 						WHERE	Deleted = 0
 						AND		CM_Activity_Question_ID = #CM_Activity_Question_ID#
 					</cfquery>
+</cfif>
 					
 					<!---set temp array--->
 					<cfset aUom = ArrayNew(1) />
@@ -104,12 +172,29 @@
 					</cfloop>
 					
 					<!---get the unit of time data--->
-					<cfquery name="qGetActivityQATime" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetActivityQATime = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_time")>
+<cfif useLakebaseForqGetActivityQATime>
+	<cftry>
+		<cfset qGetActivityQATime = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_time", {
+				"deleted" = "eq.0",
+				"cm_activity_question_id" = "eq.#CM_Activity_Question_ID#",
+				"select" = "cm_qa_uot_id"
+			}), "cm_qa_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActivityQATime = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActivityQATime>
+<cfquery name="qGetActivityQATime" datasource="#application.datasource#">
 						SELECT 	CM_QA_UOT_ID
 						FROM 	CM_Activity_QA_Time
 						WHERE	Deleted = 0
 						AND		CM_Activity_Question_ID = #CM_Activity_Question_ID#
 					</cfquery>
+</cfif>
 					
 					<!---set temp array--->
 					<cfset aUot = ArrayNew(1) />
@@ -153,12 +238,28 @@
 	
 	<cffunction name="getActivityQuestionType" output="false" returntype="query">
 	
-		<cfquery name="qGetActQuestType" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActQuestType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_activity_qa_type")>
+<cfif useLakebaseForqGetActQuestType>
+	<cftry>
+		<cfset qGetActQuestType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_activity_qa_type", {
+				"deleted" = "eq.0",
+				"select" = "cm_activity_qa_type_id,activity_qa_type_name"
+			}), "cm_activity_qa_type_id,activity_qa_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActQuestType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActQuestType>
+<cfquery name="qGetActQuestType" datasource="#application.datasource#">
 			SELECT 	CM_Activity_QA_Type_ID,
 					Activity_QA_Type_Name 
 			FROM 	CM_Activity_QA_Type
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetActQuestType />
 		

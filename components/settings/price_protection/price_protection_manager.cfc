@@ -135,11 +135,29 @@
 	
 	<cffunction name="deletejob" output="false">
 	<cfargument name="jobid" type="numeric" required="true" default="0" />
-	<cfquery name="deletejob" datasource="#application.datasource#">
+	<cfset useLakebaseFordeletejob = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_protection_schedule")>
+<cfif useLakebaseFordeletejob>
+	<cftry>
+		<cfset application.oLakebase.updateRows("price_protection_schedule",
+			{
+				"price_protection_schedule_id" = "eq.#arguments.jobid#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletejob = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletejob>
+<cfquery name="deletejob" datasource="#application.datasource#">
 		update Price_Protection_Schedule
 		set deleted = 1
 		where Price_Protection_Schedule_id = '#arguments.jobid#'
 	</cfquery>
+</cfif>
 	<cfquery name="update_contracts" datasource="#application.datasource#">
 		update contract_main
 		set price_protection_scheduled = 0

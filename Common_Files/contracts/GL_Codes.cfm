@@ -1,7 +1,20 @@
+<cfset useLakebaseForGetCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_programs_and_gl_reason_codes")>
+<cfif useLakebaseForGetCodes>
+	<cftry>
+		<cfset GetCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_programs_and_gl_reason_codes", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCodes>
 <cfquery name="GetCodes" datasource="#application.datasource#">
 	SELECT *
 	FROM Deduction_programs_and_GL_reason_codes
 </cfquery>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>

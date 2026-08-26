@@ -24,7 +24,22 @@ Usage:			N/A
 			strPayeeId	= arguments.payeeId;
 		</cfscript>
 	
-		<cfquery name="qSearch" datasource="#application.datasource#">
+		<cfset useLakebaseForqSearch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForqSearch>
+	<cftry>
+		<cfset qSearch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#strPayeeId#",
+				"select" = "vendor_name as name,vendor_id as payeeid,address_1 as addressline1,address_2 as addressline2,city as city,state as state,zipcode as zipcode"
+			}), "vendor_name as name,vendor_id as payeeid,address_1 as addressline1,address_2 as addressline2,city as city,state as state,zipcode as zipcode"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSearch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSearch>
+<cfquery name="qSearch" datasource="#application.datasource#">
 			SELECT	Vendor_Name AS name,
 					Vendor_ID AS payeeId,
 					Address_1 AS addressLine1,
@@ -35,6 +50,7 @@ Usage:			N/A
 			FROM	Vendor_Master
 			WHERE	Vendor_ID = '#strPayeeId#'
 		</cfquery>
+</cfif>
 	
 		<cfscript>
 			qReturn = qSearch;

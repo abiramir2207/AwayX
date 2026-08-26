@@ -16,11 +16,27 @@ SELECT DISTINCT RP_Type_ID FROM RP_Type WHERE Deleted = 0
 <cfset TYPEID = GetTypes.RP_Type_ID>
 
 <!---Get distributor summary--->
+<cfset useLakebaseForGetDistributorSummary = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_mapping_table")>
+<cfif useLakebaseForGetDistributorSummary>
+	<cftry>
+		<cfset GetDistributorSummary = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_mapping_table", {
+				"record_type" = "eq.#TYPEID#",
+				"select" = "legacy_ship_to,shared_ship_to,distributor_id"
+			}), "legacy_ship_to,shared_ship_to,distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorSummary = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorSummary>
 <cfquery name="GetDistributorSummary" datasource="#application.datasource#">
 SELECT DISTINCT Legacy_Ship_To, Shared_Ship_To, Distributor_ID
 FROM RP_Mapping_Table
 WHERE Record_Type = #TYPEID#
 </cfquery>
+</cfif>
 <!--- 
 Distributor Summary:
 <cfdump var="#GetDistributorSummary#"> --->

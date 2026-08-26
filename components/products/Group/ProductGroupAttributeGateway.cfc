@@ -37,10 +37,25 @@
 <cffunction name="getAllClaimLabels" access="public" output="false" returntype="Query">
   <cfset var getClaimSummaryLabels = "" />
    
-   <cfquery name="getClaimSummaryLabels" datasource="#application.datasource#">
+   <cfset useLakebaseForgetClaimSummaryLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("claim_summary_labels")>
+<cfif useLakebaseForgetClaimSummaryLabels>
+	<cftry>
+		<cfset getClaimSummaryLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("claim_summary_labels", {
+				"select" = "claim_summaryid,balabel,client_label,created_date,deleted"
+			}), "claim_summaryid,balabel,client_label,created_date,deleted"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetClaimSummaryLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetClaimSummaryLabels>
+<cfquery name="getClaimSummaryLabels" datasource="#application.datasource#">
    	Select Claim_SummaryID,BALabel,Client_Label,Created_date, deleted
 	From Claim_Summary_Labels
    </cfquery>
+</cfif>
 
    <cfreturn getClaimSummaryLabels />
 </cffunction>

@@ -27,19 +27,51 @@
 	
 	<SCRIPT language="JavaScript" src="invoiceCommon.js"></SCRIPT>
 	<!---- Query information ---->
-	<cfquery name="GetFamilyNames" datasource="#application.datasource#">
+	<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#">
 		SELECT *
 		FROM Distributor_Family
 		WHERE Deleted = 0
 		ORDER BY Family_Name
 	</cfquery>
+</cfif>
 	<!--- Buying Groups --->
-	<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
+	<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
 		SELECT *
 		FROM Distributor_Buying_Groups
 		WHERE Deleted = 0
 		ORDER BY Buying_Group_Name
 	</cfquery>
+</cfif>
 	<!--- Zone --->
 	<CFQUERY NAME="GetZones" datasource="#application.datasource#">
 		SELECT distinct *

@@ -6,11 +6,29 @@
 <CFIF Form.IgnoreConnection>
 <CFIF ISNumeric(Form.XM_Connect_ID)>
 	<CFIF Form.XM_Connect_ID GT 0>		
-		<CFQUERY NAME="set_Ignore" datasource="#application.datasource#">
+		<cfset useLakebaseForset_Ignore = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("xmconnect")>
+<cfif useLakebaseForset_Ignore>
+	<cftry>
+		<cfset application.oLakebase.updateRows("xmconnect",
+			{
+				"xm_connect_id" = "eq.#Form.XM_Connect_ID#"
+			},
+			{
+				"xm_connect" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForset_Ignore = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForset_Ignore>
+<CFQUERY NAME="set_Ignore" datasource="#application.datasource#">
 			UPDATE	XMConnect
 			SET		XM_Connect=0
 			WHERE	XM_Connect_ID=#Form.XM_Connect_ID#
 		</CFQUERY>
+</cfif>
 		<CFLOCATION addtoken="No" url="Message_Find.cfm">
 	</CFIF>
 </CFIF>

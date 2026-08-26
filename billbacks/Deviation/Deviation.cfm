@@ -58,11 +58,27 @@ Deviation.cfm
         that the grid can be used only for the uploaded_billbacks and not for all
         types. This was to avaoid getting the lumpsum into the flex grid.
     --->
-    <cfquery name="GetUploadedBB" datasource="#application.datasource#">
+    <cfset useLakebaseForGetUploadedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetUploadedBB>
+	<cftry>
+		<cfset GetUploadedBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_title,bb_reference,bb_code,billback_status_id,uploaded_billback"
+			}), "bb_title,bb_reference,bb_code,billback_status_id,uploaded_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUploadedBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUploadedBB>
+<cfquery name="GetUploadedBB" datasource="#application.datasource#">
 	   SELECT BB_Title,BB_Reference,BB_Code,Billback_Status_ID,Uploaded_Billback
      FROM Billback
      WHERE Billback_ID = '#Billback_ID#'
 	  </cfquery>
+</cfif>
  <!---  <cfif appSettings.get_Setting('BB_Deviation_Format') is 'Flex' AND GetUploadedBB.Uploaded_Billback NEQ 0> --->
 <!---  <cfif (((Billback_Status_ID EQ 2) OR((Billback_Status_ID EQ 3) AND(appSettings.getUpdate_BB_Approve_Amt() EQ 1)))  AND (appSettings.get_Setting('BB_Deviation_Format') is 'Flex') )>
  --->
@@ -396,9 +412,25 @@ Deviation.cfm
 <cfelse>
 	<cfset showCountNoCount = 0 />
 </cfif>
+<cfset useLakebaseForBBStatus_Check = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBBStatus_Check>
+	<cftry>
+		<cfset BBStatus_Check = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBStatus_Check = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBStatus_Check>
 <cfquery name="BBStatus_Check" datasource="#application.datasource#">
 SELECT Billback_Status_ID FROM Billback WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 
 <CFIF BBStatus_Check.Billback_Status_ID GT 2>
 	<cfset showCountNoCount = 1 />

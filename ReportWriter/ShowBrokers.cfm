@@ -10,13 +10,30 @@ ShowBrokers.cfm
 	<CFSET rBrokers = "-1">
 </CFIF>
 <CFIF rBrokers NEQ -1 AND Len(rBrokers) GT 0>
-	<CFQUERY NAME="q_getBrokers" datasource="#application.datasource#">
+	<cfset useLakebaseForq_getBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_lob_active")>
+<cfif useLakebaseForq_getBrokers>
+	<cftry>
+		<cfset q_getBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("broker_lob_active", {
+				"bsa_foodservice_brokers_id" = "eq.#rBrokers#",
+				"order" = "broker_name.asc",
+				"select" = "bsa_foodservice_brokers_id,broker_name"
+			}), "bsa_foodservice_brokers_id,broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getBrokers>
+<CFQUERY NAME="q_getBrokers" datasource="#application.datasource#">
 		SELECT	BSA_Foodservice_Brokers_ID, Broker_Name
 		FROM 	broker_lob_active
 		WHERE
 				broker_lob_active.BSA_Foodservice_Brokers_ID = '#rBrokers#'
 		Order By Broker_Name
 	</CFQUERY>
+</cfif>
 	<CFIF q_getBrokers.recordCount GT 0>
 		<CFSET BrokerName = Left(q_getBrokers.Broker_Name, 25)>
 	<CFELSE>

@@ -3,13 +3,33 @@
 
 <!--- UnLock all Programs By This User --->
 <CFIF FORM.Programs_Unlocked EQ 1>
-	<CFQUERY NAME="UnlockProgramsLockedByThisUser" datasource="#application.datasource#">
+	<cfset useLakebaseForUnlockProgramsLockedByThisUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForUnlockProgramsLockedByThisUser>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"sales_agreement_is_locked" = "eq.1",
+				"sales_agreement_locked_by_user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0"
+			},
+			{
+				"sales_agreement_is_locked" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlockProgramsLockedByThisUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlockProgramsLockedByThisUser>
+<CFQUERY NAME="UnlockProgramsLockedByThisUser" datasource="#application.datasource#">
 		UPDATE Export_Sales_Agreement
 		SET Sales_Agreement_Is_Locked = 0
 		WHERE Sales_Agreement_Is_Locked = 1
 		AND Sales_Agreement_Locked_By_User_ID 	= '#request.AccessStructure.user_id#'
 		AND Deleted = 0
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 <cfquery name="getProgramLockedByUser" datasource="#application.datasource#">
@@ -208,18 +228,49 @@
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
 	<CFSET CTLKR_Sales_Agreement_ID = cryp.value>
 	
+<cfset useLakebaseForCSLGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForCSLGetContractInfo>
+	<cftry>
+		<cfset CSLGetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#CTLKR_Sales_Agreement_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCSLGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCSLGetContractInfo>
 <CFQUERY NAME="CSLGetContractInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Export_Sales_Agreement
 	WHERE Export_Sales_Agreement_ID = '#CTLKR_Sales_Agreement_ID#'
 </CFQUERY>
+</cfif>
 
 
-	<cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
+	<cfset useLakebaseForisContractCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForisContractCurrentlyLocked>
+	<cftry>
+		<cfset isContractCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#CTLKR_Sales_Agreement_ID#",
+				"select" = "sales_agreement_is_locked,sales_agreement_locked_by_user_id"
+			}), "sales_agreement_is_locked,sales_agreement_locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisContractCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisContractCurrentlyLocked>
+<cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
 		SELECT Sales_Agreement_Is_Locked, Sales_Agreement_Locked_By_User_ID
 		FROM Export_Sales_Agreement
 		WHERE Export_Sales_Agreement_ID ='#CTLKR_Sales_Agreement_ID#'
 	</cfquery>
+</cfif>
 	
 <!--- Lock that particular contract --->
 	<CFIF isContractCurrentlyLocked.Sales_Agreement_Is_Locked EQ 0>

@@ -407,9 +407,27 @@ Description  :  Manager for Planner Program
 						<cfset form.AltCustomers = 0 />
 				</cfif>
 			<cfelse>
-				<cfquery name="qDelAllDists" datasource="#application.datasource#">
+				<cfset useLakebaseForqDelAllDists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForqDelAllDists>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_distributors",
+			{
+				"contract_main_id" = "eq.#New_Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDelAllDists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDelAllDists>
+<cfquery name="qDelAllDists" datasource="#application.datasource#">
 					UPDATE Contract_Distributors SET Deleted = 1 WHERE Contract_Main_ID = '#New_Contract_Main_ID#'
 				</cfquery>
+</cfif>
 			</cfif>
 
 			<cfquery name="qUpdate" datasource="#application.datasource#">
@@ -555,11 +573,27 @@ Description  :  Manager for Planner Program
 					SET NOCOUNT OFF
 			</cfquery>
 
-			<cfquery name="recordCheck" datasource="#application.datasource#">
+			<cfset useLakebaseForrecordCheck = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForrecordCheck>
+	<cftry>
+		<cfset recordCheck = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#insert.Contract_Main_ID#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrecordCheck = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrecordCheck>
+<cfquery name="recordCheck" datasource="#application.datasource#">
 				SELECT	Contract_Main_ID
 				FROM 	Contract_Main_Aux_Data
 				WHERE 	Contract_Main_ID = '#insert.Contract_Main_ID#'
 			</cfquery>
+</cfif>
 
 			<cfif recordCheck.recordcount EQ 0>
 				<cfquery name="insertRecord" datasource="#application.datasource#">
@@ -1208,9 +1242,25 @@ Description  :  Manager for Planner Program
 					</cfif>
 					<cfset sLumpSumCompId = qAddLumpSumComp.Program_Lump_Sum_ID />
 
-					<cfquery name="qGetLumpSumExtId" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetLumpSumExtId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqGetLumpSumExtId>
+	<cftry>
+		<cfset qGetLumpSumExtId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_lump_sum_id" = "eq.#sLumpSumCompId#",
+				"select" = "program_lumps_sum_ext_id"
+			}), "program_lumps_sum_ext_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLumpSumExtId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLumpSumExtId>
+<cfquery name="qGetLumpSumExtId" datasource="#application.datasource#">
 						SELECT Program_Lumps_Sum_Ext_ID from Program_Lump_Sums WHERE Program_Lump_Sum_ID = '#sLumpSumCompId#'
 					</cfquery>
+</cfif>
 
 					<cfset iLumpSumCompId = qGetLumpSumExtId.Program_Lumps_Sum_Ext_ID />
 
@@ -2737,12 +2787,29 @@ Description  :  Manager for Planner Program
 
 		</cfscript>
 
-		<cfquery name="qCheckEDLPExists" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckEDLPExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_perf_types")>
+<cfif useLakebaseForqCheckEDLPExists>
+	<cftry>
+		<cfset qCheckEDLPExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_perf_types", {
+				"everyday_price" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckEDLPExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckEDLPExists>
+<cfquery name="qCheckEDLPExists" datasource="#application.datasource#">
 			SELECT	1
 			FROM	Planner_Perf_Types
 			WHERE	Everyday_Price = 1
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfif qCheckEDLPExists.RecordCount>
 			<cfset bExistsEDLP = 1 />
@@ -2756,12 +2823,29 @@ Description  :  Manager for Planner Program
 		<cfargument name="plannerid" required="true" type="numeric" />
 		<cfargument name="contract_main_id" required="true" type="numeric" />
 
-		<cfquery name="local.qGetDates" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_qGetDates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForlocal_qGetDates>
+	<cftry>
+		<cfset local.qGetDates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.contract_main_id#",
+				"planner_id" = "eq.#arguments.plannerid#",
+				"select" = "contract_start_date,contract_end_date,delivery_start_date,delivery_end_date"
+			}), "contract_start_date,contract_end_date,delivery_start_date,delivery_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qGetDates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qGetDates>
+<cfquery name="local.qGetDates" datasource="#application.datasource#">
 			SELECT  Contract_Start_Date, Contract_End_Date, Delivery_Start_Date, Delivery_End_Date
 			FROM    Contract_Main
 			WHERE	Contract_Main_ID 		= '#arguments.contract_main_id#'
 			AND     Planner_Id 				= '#arguments.plannerid#'
 		</cfquery>
+</cfif>
 
 		<cfreturn local.qGetDates />
 
@@ -3309,13 +3393,30 @@ Description  :  Manager for Planner Program
 
 		<cfset rQualificationValid = 1 />
 
-		<cfquery name="qCheckTemplate" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qualification_template_mapping")>
+<cfif useLakebaseForqCheckTemplate>
+	<cftry>
+		<cfset qCheckTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qualification_template_mapping", {
+				"template_id" = "eq.#arguments.templateId#",
+				"answer_required" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckTemplate>
+<cfquery name="qCheckTemplate" datasource="#application.datasource#">
 		 	SELECT 	*
 			FROM  	Qualification_Template_Mapping
 			WHERE 	Template_Id = '#arguments.templateId#'
 			AND 	Answer_Required = 1
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfif qCheckTemplate.RecordCount>
 			<cfquery name="qCheckRequiredQualification" datasource="#application.datasource#">

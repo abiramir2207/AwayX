@@ -151,12 +151,28 @@ FUNCTIONALITY:
 
 		<cfset uomDesc = "">
 
-		<cfquery name="getUOMDesc" datasource="#application.datasource#">
+		<cfset useLakebaseForgetUOMDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUOMDesc>
+	<cftry>
+		<cfset getUOMDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#arguments.uomId#",
+				"select" = "unit_of_measure_desc,abbreviation"
+			}), "unit_of_measure_desc,abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUOMDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUOMDesc>
+<cfquery name="getUOMDesc" datasource="#application.datasource#">
 			SELECT	Unit_Of_Measure_Desc, Abbreviation
 			FROM	Units_of_Measure
 			WHERE
 					Unit_Of_Measure_ID = #arguments.uomId#
 		</cfquery>
+</cfif>
 		<cfif getUOMDesc.recordCount GT 0>
 			<cfif arguments.longDesc>
 				<cfset uomDesc = getUOMDesc.Unit_Of_Measure_Desc>
@@ -211,10 +227,26 @@ FUNCTIONALITY:
 
 	</cffunction>
 	<cffunction name="getBBToTET" output="true" returntype="numeric">
-		<cfquery name="getBBToTET" datasource="#application.datasource#">
+		<cfset useLakebaseForgetBBToTET = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForgetBBToTET>
+	<cftry>
+		<cfset getBBToTET = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "bb_tolerance_tet"
+			}), "bb_tolerance_tet"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBToTET = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBToTET>
+<cfquery name="getBBToTET" datasource="#application.datasource#">
 			select top 1 BB_Tolerance_TET
 			from Billback_Settings
 		</cfquery>
+</cfif>
 		<cfreturn getBBToTET.BB_Tolerance_TET>
 	</cffunction>
 	<cffunction name="getBBToTETLabel" output="true" returntype="string">

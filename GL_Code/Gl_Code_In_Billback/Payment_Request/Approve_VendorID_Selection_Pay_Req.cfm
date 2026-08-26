@@ -164,8 +164,8 @@ Since we are using the "getSkipVendorSelectionOnBBApproval" app setting and skip
 screens, we need to either set the BB to "hold" or "release" status without user interaction.
 
 The rules are as follows (For "payment" closing method)
-- When "bb payment hold/release" app setting is ON and “Skip vendor selection on approval, if BB already has vendor associated to it" app setting is ON. set BB to "HOLD".
-- When "bb payment hold/release" app setting is OFF and “Skip vendor selection on approval, if BB already has vendor associated to it" app setting is ON. set BB to "RELEASE".
+- When "bb payment hold/release" app setting is ON and Skip vendor selection on approval, if BB already has vendor associated to it" app setting is ON. set BB to "HOLD".
+- When "bb payment hold/release" app setting is OFF and Skip vendor selection on approval, if BB already has vendor associated to it" app setting is ON. set BB to "RELEASE".
 --->
 <CFIF (
 		(IsDefined("URL.Approve") OR url.NextAction IS "Approve"))
@@ -335,11 +335,27 @@ The rules are as follows (For "payment" closing method)
 					WHERE 		Billback.Billback_ID = '#Billback_ID#'
 				</CFQUERY>
 
-				<CFQUERY NAME="qbillback" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForqbillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqbillback>
+	<cftry>
+		<cfset qbillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_closing_method"
+			}), "bb_closing_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqbillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqbillback>
+<CFQUERY NAME="qbillback" DATASOURCE="#Application.Datasource#">
 				SELECT 	BB_Closing_Method
 				FROM		Billback
 				WHERE 	Billback.Billback_ID = '#Billback_ID#'
 				</CFQUERY>
+</cfif>
 					<!--- Dev Note: 44393. - This code is applicable for "payment" only. On "VendorID_Selection.cfm", the JS code  is automatically called without user interaction and 
 					the billback behavior is such as if the user is "saving" (column:  "BB_Payment_Request_Prepared") the payment request. So, the payment request is automatically 
 					set to "HOLD:"

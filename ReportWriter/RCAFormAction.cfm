@@ -9,20 +9,53 @@
 	<cfloop list="#form.fieldnames#" index="fName">
 	
 			<cfif fName NEQ "submit">
-				<cfquery name="qGetRCAModule" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetRCAModule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_central_access")>
+<cfif useLakebaseForqGetRCAModule>
+	<cftry>
+		<cfset qGetRCAModule = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("report_central_access", {
+				"report_id" = "eq.#fName#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRCAModule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRCAModule>
+<cfquery name="qGetRCAModule" datasource="#application.datasource#">
 					SELECT *  
 					FROM Report_Central_Access
 					WHERE report_id = '#fName#'
 				</cfquery>
+</cfif>
 				
 				<cfif qGetRCAModule.recordcount gt 0>
 				    <cfset fVar = "form."&fName>
 				    <cfset level = evaluate(fVar)>
-					<cfquery name="qUpdRCAModule" datasource="#application.datasource#">
+					<cfset useLakebaseForqUpdRCAModule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_central_access")>
+<cfif useLakebaseForqUpdRCAModule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("report_central_access",
+			{
+				"report_id" = "eq.#fName#"
+			},
+			{
+				"level_code" = "#level#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdRCAModule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdRCAModule>
+<cfquery name="qUpdRCAModule" datasource="#application.datasource#">
 						Update Report_Central_Access
 						set level_code = #level#
 						WHERE report_id = '#fName#'
 					</cfquery>
+</cfif>
 				
 				</cfif>
 			</cfif>

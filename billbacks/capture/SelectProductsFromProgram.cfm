@@ -185,11 +185,27 @@ AND Program_ID = '#OriginalProgram_ID#'
 	 <cfset Product_ID = left(ProductID, 36)>
 	<cfset DiscountList = "">
 
-	<cfquery name="DiscountsForProduct" dbtype="query">
+	<cfset useLakebaseForDiscountsForProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alleligibleproducts")>
+<cfif useLakebaseForDiscountsForProduct>
+	<cftry>
+		<cfset DiscountsForProduct = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alleligibleproducts", {
+				"product_id" = "eq.#Product_ID#",
+				"select" = "discounttypeid"
+			}), "discounttypeid"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDiscountsForProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDiscountsForProduct>
+<cfquery name="DiscountsForProduct" dbtype="query">
 		SELECT DISTINCT DiscountTypeID
 		FROM AllEligibleProducts
 		WHERE Product_ID = '#Product_ID#'
 	</cfquery>
+</cfif>
 	
 	<cfif DiscountsForProduct.Recordcount GT 0>
 		<cfset DiscountList = valuelist(DiscountsForProduct.DiscountTypeID)>
@@ -689,11 +705,27 @@ AND Program_ID = '#OriginalProgram_ID#'
 			<CFOUTPUT QUERY="searchProducts" startrow="#StartRow#" maxrows="#MaxRows#">
 								
 				<!--- This query in inc_eligible_products.cfm --->
-				<cfquery name="IsProductEligible" dbtype="Query">
+				<cfset useLakebaseForIsProductEligible = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alleligibleproducts")>
+<cfif useLakebaseForIsProductEligible>
+	<cftry>
+		<cfset IsProductEligible = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alleligibleproducts", {
+				"product_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsProductEligible = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsProductEligible>
+<cfquery name="IsProductEligible" dbtype="Query">
 				SELECT DISTINCT Product_ID
 				FROM AllEligibleProducts
 				WHERE Product_ID = '#BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 				<cfif IsProductEligible.Recordcount GT 0>
 					<cfset ProductIsEligible = 1>
 				<cfelse>

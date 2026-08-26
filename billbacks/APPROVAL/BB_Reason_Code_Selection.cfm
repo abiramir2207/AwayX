@@ -28,11 +28,27 @@ Currently included in:
 	ORDER BY	DD_Reason_Code_Description
 </CFQUERY>
 
+<cfset useLakebaseForGetReasonCodeSelected = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_reasoncode")>
+<cfif useLakebaseForGetReasonCodeSelected>
+	<cftry>
+		<cfset GetReasonCodeSelected = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_reasoncode", {
+				"is_selected" = "eq.1",
+				"select" = "dd_reason_code_id"
+			}), "dd_reason_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetReasonCodeSelected = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetReasonCodeSelected>
 <CFQUERY NAME="GetReasonCodeSelected" dbtype="query">
 	SELECT 		DD_Reason_Code_ID
 	FROM 		Get_ReasonCode
 	WHERE 		Is_Selected = 1	
 </CFQUERY>
+</cfif>
 </cfsilent>
 
 <SCRIPT SRC="/Script/javascript/dom_common.js"></SCRIPT>

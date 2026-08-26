@@ -88,9 +88,26 @@ FROM Billback_Settings
 <CFSET InfoBar_BBID = Billback_ID>
 <cfinclude template="billback_load_infobar.cfm">
 
+<cfset useLakebaseForCheckSplit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckSplit>
+	<cftry>
+		<cfset CheckSplit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckSplit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckSplit>
 <CFQUERY NAME="CheckSplit" DATASOURCE="#Application.Datasource#">
 	SELECT Top 1 * FROM Billback WHERE BB_parent_ID = '#URL.BBID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 <cfset Split_Parent = CheckSplit.recordCount />
 
 <SCRIPT language="JavaScript">
@@ -151,13 +168,29 @@ function modify_agreeaproval()
 		</cfquery>
 	</CFIF>
 
-	<cfquery name="GetLockStatus" datasource="#Application.Datasource#">
+	<cfset useLakebaseForGetLockStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForGetLockStatus>
+	<cftry>
+		<cfset GetLockStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_allied", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_is_locked,bb_locked_by_user_id"
+			}), "bb_is_locked,bb_locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockStatus>
+<cfquery name="GetLockStatus" datasource="#Application.Datasource#">
 		SELECT BB_Is_Locked,BB_Locked_By_User_ID
 		FROM
 			Billback_Allied
 		WHERE
 			Billback_ID = '#Billback_ID#'
 	</cfquery>
+</cfif>
 
 
 	<CFIF GetLockStatus.BB_Is_Locked EQ 1>
@@ -181,9 +214,26 @@ function modify_agreeaproval()
 <!--- START: 77469	Display Dist Channel at BB_Program Distributor Level   [ CF work ] - Anand Rao/28-Jun-2018 --->
 <cfset DCsFailed = 0 />
 <cfif  (appSettings.get_Setting('BB_Display_Dist_Channel_Per_Program_Distributor'))>
-		<cfquery name="getDCDistCount" datasource="#application.datasource#">
+		<cfset useLakebaseForgetDCDistCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distribution_channel")>
+<cfif useLakebaseForgetDCDistCount>
+	<cftry>
+		<cfset getDCDistCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distribution_channel", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"bs_var_2" = "eq."
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDCDistCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDCDistCount>
+<cfquery name="getDCDistCount" datasource="#application.datasource#">
 			SELECT * from Billback_Distribution_Channel where Billback_ID = '#Billback_ID#' AND Deleted = 0 and BS_VAR_2 = ''
 		</cfquery>
+</cfif>
 		<cfif (getDCDistCount.Recordcount NEQ 0)>
 			<cfset DCsFailed = 1>
 		</cfif>
@@ -198,7 +248,22 @@ function modify_agreeaproval()
 <cfset BusinessSegmentMessageOn = 0 />
 <cfset BusinessSegmentMessage = "" />
 	<cfif businessSegManager.isEnabledForVendorType() NEQ 0>
-		<cfquery name="LoadBillbackData" datasource="#Application.Datasource#">
+		<cfset useLakebaseForLoadBillbackData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForLoadBillbackData>
+	<cftry>
+		<cfset LoadBillbackData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_title,bb_date,bb_start_date,bb_end_date,bb_amount,bb_reference,bb_creator_id,bb_creator_notes,bb_code,bb_creator_user_position_id,billback_status_id,billback_payee_type_id,bb_up,bb_pnf,created_date,deleted,scheduled_auto_bb,bb_closing_method,vendor_only_billback"
+			}), "bb_title,bb_date,bb_start_date,bb_end_date,bb_amount,bb_reference,bb_creator_id,bb_creator_notes,bb_code,bb_creator_user_position_id,billback_status_id,billback_payee_type_id,bb_up,bb_pnf,created_date,deleted,scheduled_auto_bb,bb_closing_method,vendor_only_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLoadBillbackData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLoadBillbackData>
+<cfquery name="LoadBillbackData" datasource="#Application.Datasource#">
 			SELECT
 				BB_Title,
 				BB_Date,
@@ -222,6 +287,7 @@ function modify_agreeaproval()
 			FROM Billback
 			WHERE Billback_ID = '#Billback_ID#'
 		</cfquery>
+</cfif>
 		<!--- <cfset savedPayeeType = LoadBillbackData.Billback_Payee_Type_ID /> --->
 		<cfset lsVendorBusinessSegmentID = ""/>
 		<cfswitch expression="#LoadBillbackData.Billback_Payee_Type_ID#">
@@ -271,9 +337,25 @@ function modify_agreeaproval()
 		<CFSET StatusDisplay_CELLBGCOLOR	= "orange">
 
 		<cfif HasDefaultProgram IS 1 AND Get_Profile_Settings.Allow_RFA_With_Default_Program EQ 0>
-			<cfquery name="GetDefaultProgramInfo" datasource="#application.datasource#">
+			<cfset useLakebaseForGetDefaultProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetDefaultProgramInfo>
+	<cftry>
+		<cfset GetDefaultProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#GetBillbackSettings.Default_Program#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDefaultProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDefaultProgramInfo>
+<cfquery name="GetDefaultProgramInfo" datasource="#application.datasource#">
 			SELECT Contract_Number FROM Contract_Main WHERE Contract_Main_ID = '#GetBillbackSettings.Default_Program#'
 			</cfquery>
+</cfif>
 			<CFSET IncompleteMessage = IncompleteMessage & "\n\n" & "Billback has the default program (#GetDefaultProgramInfo.Contract_Number#) associated with it. Please transfer all records off of the default program to continue." />
 		</cfif>
 		<cfif HasUnknownProduct IS 1>

@@ -186,11 +186,26 @@ Description:	This file is responsible for selecting the products to switch in Bi
 	WHERE	Contract_Main_ID = '#form.Program_ID#'
 </cfquery>
 
+<cfset useLakebaseForqGetProductsToSwitch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("searchproducts")>
+<cfif useLakebaseForqGetProductsToSwitch>
+	<cftry>
+		<cfset qGetProductsToSwitch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("searchproducts", {
+				"bsa_foodservice_items_master_id" = "neq.#form.Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductsToSwitch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductsToSwitch>
 <cfquery name="qGetProductsToSwitch" dbtype="query">
 	SELECT	*
 	FROM	searchProducts
 	WHERE	BSA_Foodservice_Items_Master_ID != '#form.Product_ID#'
 </cfquery>
+</cfif>
 
 <!------ reset the progran id to the original one program id, because now it may be a list of program iss ----->
 <cfset form.Program_ID = OriginalProgram_ID>
@@ -237,11 +252,27 @@ Description:	This file is responsible for selecting the products to switch in Bi
 	</tr>
 	<cfloop query="qGetProductsToSwitch">
 		<!--- This query in inc_eligible_products.cfm --->
-		<cfquery name="IsProductEligible" dbtype="Query">
+		<cfset useLakebaseForIsProductEligible = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alleligibleproducts")>
+<cfif useLakebaseForIsProductEligible>
+	<cftry>
+		<cfset IsProductEligible = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alleligibleproducts", {
+				"product_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsProductEligible = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsProductEligible>
+<cfquery name="IsProductEligible" dbtype="Query">
 			SELECT 	DISTINCT Product_ID
 			FROM 	AllEligibleProducts
 			WHERE 	Product_ID = '#BSA_Foodservice_Items_Master_ID#'
 		</cfquery>
+</cfif>
 		<cfif IsProductEligible.Recordcount GT 0>
 			<cfset ProductIsEligible = 1>
 		<cfelse>

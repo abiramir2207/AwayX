@@ -44,12 +44,28 @@
 <table class="datagrid" >
 	<thead>
 <CFIF GetSettings.Discount_Fixed_Prices EQ 1 and GetSettings.Fixed_Rebate_Grid_Option neq 1>
-	<CFQUERY NAME="doesProgramHasFixedPrice" datasource="#application.datasource#">
+	<cfset useLakebaseFordoesProgramHasFixedPrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseFordoesProgramHasFixedPrice>
+	<cftry>
+		<cfset doesProgramHasFixedPrice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordoesProgramHasFixedPrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordoesProgramHasFixedPrice>
+<CFQUERY NAME="doesProgramHasFixedPrice" datasource="#application.datasource#">
 		SELECT 	*
 		FROM 		Program_Fixed_Component
 		WHERE 	Program_ID = #cryp.value#
 		AND 		Deleted = 0 			
 	</CFQUERY>
+</cfif>
 	<tr>
 		<th align="left">
 			<input type="checkbox" name="fixedPrice"  value=" " <cfif doesProgramHasFixedPrice.recordcount>Checked</cfif> disabled> 
@@ -58,12 +74,28 @@
 	</tr>
 </CFIF>
 <CFIF GetSettings.Discount_Lump_Sums EQ 1>
-	<CFQUERY NAME="doesProgramHasLumpSum" datasource="#application.datasource#">
+	<cfset useLakebaseFordoesProgramHasLumpSum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseFordoesProgramHasLumpSum>
+	<cftry>
+		<cfset doesProgramHasLumpSum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordoesProgramHasLumpSum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordoesProgramHasLumpSum>
+<CFQUERY NAME="doesProgramHasLumpSum" datasource="#application.datasource#">
 		SELECT 	*
 		FROM 		Program_Lump_Sums
 		WHERE 	Program_ID = #cryp.value#
 		AND 		Deleted = 0 	
 	</CFQUERY>
+</cfif>
 	<tr><td style="height:4px;"></td></tr>
 	<tr>
 		<th align="left">

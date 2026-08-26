@@ -35,13 +35,45 @@
       variables.columnSizes = application.util.array.dtColumnSizeInPercent( variables.columnSizes );
     </cfscript>
 
-    <cfquery name="variables.qFamily" datasource="#application.datasource#">
+    <cfset useLakebaseForvariables_qFamily = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForvariables_qFamily>
+	<cftry>
+		<cfset variables.qFamily = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qFamily = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qFamily>
+<cfquery name="variables.qFamily" datasource="#application.datasource#">
         SELECT * FROM Distributor_Family WHERE Deleted = 0 ORDER BY Family_Name
     </cfquery>
+</cfif>
 
-    <cfquery name="variables.qBuyingGroup" datasource="#application.datasource#">
+    <cfset useLakebaseForvariables_qBuyingGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForvariables_qBuyingGroup>
+	<cftry>
+		<cfset variables.qBuyingGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qBuyingGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qBuyingGroup>
+<cfquery name="variables.qBuyingGroup" datasource="#application.datasource#">
         SELECT * FROM Distributor_Buying_Groups WHERE Deleted = 0 ORDER BY Buying_Group_Name
     </cfquery>
+</cfif>
 
     <cfsavecontent variable="variables.bodyText">
         <!--- distributors --->

@@ -26,11 +26,27 @@ Select		Login_Attempts, LA_Changed_Date, LA_Changed_By
 From		General_Settings
 </cfquery>
 
+<cfset useLakebaseForGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserName>
+	<cftry>
+		<cfset GetUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetCurrentSetting.LA_Changed_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserName>
 <cfquery name="GetUserName" datasource="#application.datasource#">
 SELECT Name_First, Name_Last
 FROM _Users
 WHERE User_ID = '#GetCurrentSetting.LA_Changed_By#'
 </cfquery>
+</cfif>
 
 <BLOCKQUOTE>
 <CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">

@@ -71,11 +71,27 @@ function LockUnLock()
 
 <CFIF Not IsDefined("Pay_Multi_Billbacks_ID")>
 	<CFIF IsDefined("FORM.RID")>
-		<CFQUERY NAME="GetMultiID" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetMultiID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForGetMultiID>
+	<cftry>
+		<cfset GetMultiID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"ledger_id" = "eq.#FORM.RID#",
+				"select" = "pay_multi_billbacks_id"
+			}), "pay_multi_billbacks_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetMultiID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetMultiID>
+<CFQUERY NAME="GetMultiID" DATASOURCE="#Application.Datasource#">
 			SELECT 	Pay_Multi_Billbacks_ID 
 			FROM 	Ledger_Table
 			WHERE 	Ledger_ID = '#FORM.RID#'
 		</CFQUERY>
+</cfif>
 	</CFIF>
 </CFIF>
 <CFIF FORM.Lock_Status EQ 0>

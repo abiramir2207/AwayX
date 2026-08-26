@@ -236,11 +236,27 @@
 		    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 		    <td>
 	  		<cfif #CSLGetContractInfo.Manual_Cancel# eq 1>
-				<CFQUERY NAME="qGetUserCancelled" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetUserCancelled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUserCancelled>
+	<cftry>
+		<cfset qGetUserCancelled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Cancelled_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUserCancelled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUserCancelled>
+<CFQUERY NAME="qGetUserCancelled" datasource="#application.datasource#">
 					select name_first,name_last
 					from _users
 					where User_ID = '#CSLGetContractInfo.Cancelled_By#'
 				</CFQUERY>
+</cfif>
 				<font color="red">Program cancelled by  #qGetUserCancelled.name_first# #qGetUserCancelled.name_last# on #DateFormat(CSLGetContractInfo.Cancelled_Date,"mm/dd/yyyy")#. The user cancelled the program using the option
 				<cfif #CSLGetContractInfo.Cancel_And_End_Dated# eq 0>
 					'Cancel as if it never existed'
@@ -303,11 +319,27 @@
 	</cfif>
 
 	<!--- Get the default Unit of time (uot) settings being used in the control panel-programs-settings--->
-	<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
+<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 		SELECT	Volume_UOT_ID
 		FROM		 _Users_Settings
 		WHERE	User_ID		=		'#request.AccessStructure.Company_Main_ID#'
 	</CFQUERY>
+</cfif>
 
 	<cfset program_Span = Datediff('d',CSLGetContractInfo.Contract_Start_Date, CSLGetContractInfo.Contract_End_Date) + 1>
 	<!--- Dev Note: KAL; 8337 --->
@@ -525,11 +557,27 @@
 						<cfsilent>
 								<!---if summary view, show detail information of user such as email, phone no--->
 								<cfset qUser = CreateObject("component", "components.user.UserManager").getUser(CSLGetContractInfo.Responsible_User_ID) />
-								<cfquery name="PositionDescforCreating" datasource="#application.datasource#">
+								<cfset useLakebaseForPositionDescforCreating = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforCreating>
+	<cftry>
+		<cfset PositionDescforCreating = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#CSLGetContractInfo.Creating_User_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforCreating = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforCreating>
+<cfquery name="PositionDescforCreating" datasource="#application.datasource#">
 										SELECT Position_Label
 										FROM User_Positions
 										WHERE User_Positions_ID = '#CSLGetContractInfo.Creating_User_Position_ID#'
 								</cfquery>
+</cfif>
 								<!--- Changed this control to display RSP Company_Name instead of Work_Address_2 --->
 								<cfset displaySPRAddress2 = "" />
 								<cfif appSettings.getPgmViewDisplaySPRAddress2() AND Trim(qUser.Company_Name) NEQ "">
@@ -995,9 +1043,24 @@
 				<!--- START:: 116758: Performance Type for non-retail programs / Anand Rao / 25-Aug-2022 --->
 					<cfif (CSLGetContractInfo.Planner_Perf_Type_ID NEQ 0)>
 						<cfoutput>
-							<cfquery name="getPlannerPerfType" datasource="#application.datasource#">
+							<cfset useLakebaseForgetPlannerPerfType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_perf_types")>
+<cfif useLakebaseForgetPlannerPerfType>
+	<cftry>
+		<cfset getPlannerPerfType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_perf_types", {
+				"planner_perf_types_id" = "eq.#CSLGetContractInfo.Planner_Perf_Type_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPlannerPerfType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPlannerPerfType>
+<cfquery name="getPlannerPerfType" datasource="#application.datasource#">
 								SELECT * FROM Planner_Perf_Types WHERE Planner_Perf_Types_ID = #CSLGetContractInfo.Planner_Perf_Type_ID#
 							</cfquery>
+</cfif>
 						</cfoutput>
 						<tr>
 							<td width="#col1width#" style="#col1style#">Performance Type</td>

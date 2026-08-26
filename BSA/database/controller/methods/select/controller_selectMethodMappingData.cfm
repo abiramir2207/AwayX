@@ -16,12 +16,25 @@ Usage:			N/A
 	<!--- Attempt to run the function code --->
 	<cftry>
 	
-		<cfquery name="var_selectQuery" datasource="#application.datasource#">
+		<cfset useLakebaseForvar_selectQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_mapping")>
+<cfif useLakebaseForvar_selectQuery>
+	<cftry>
+		<cfset var_selectQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_mapping", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_selectQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_selectQuery>
+<cfquery name="var_selectQuery" datasource="#application.datasource#">
 		
 			SELECT	*
 			FROM	BSA_Mapping
 		
 		</cfquery>
+</cfif>
 		
 		<cfset var_returnQuery = var_selectQuery />
 		

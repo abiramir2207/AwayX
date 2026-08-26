@@ -102,17 +102,48 @@ MM_reloadPage(true);
 	<CFIF DisAllowAccessBasedOnLockStatus EQ 1>
 		<cfsilent>
 		<!--- get the information of the user who locked the program --->
-		<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
+		<cfset useLakebaseForLookUpTheLockingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLookUpTheLockingUser>
+	<cftry>
+		<cfset LookUpTheLockingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Sales_Agreement_Locked_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookUpTheLockingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookUpTheLockingUser>
+<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
 			SELECT Name_First, Name_Last
 			FROM _Users
 			WHERE User_ID = '#CSLGetContractInfo.Sales_Agreement_Locked_By_User_ID#'
 		</cfquery>
+</cfif>
 	
 		<!--- get the database setting for session timeout and use that for now as the program timeout --->
-		<CFQUERY NAME="getSessionTimeoutSetting" datasource="#application.datasource#">
+		<cfset useLakebaseForgetSessionTimeoutSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetSessionTimeoutSetting>
+	<cftry>
+		<cfset getSessionTimeoutSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "session_expiration_length"
+			}), "session_expiration_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSessionTimeoutSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSessionTimeoutSetting>
+<CFQUERY NAME="getSessionTimeoutSetting" datasource="#application.datasource#">
 			SELECT Session_Expiration_Length
 			FROM General_Settings
 		</CFQUERY>
+</cfif>
 		
 		<CFSET PercentageOfTHeDayInactive = getSessionTimeoutSetting.Session_Expiration_Length + 1>
 
@@ -485,11 +516,27 @@ MM_reloadPage(true);
 
 <cfset createdByString = "" />
 <!------ get the created by user name ----->
+<cfset useLakebaseForCreatedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCreatedUser>
+	<cftry>
+		<cfset CreatedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Creator_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreatedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreatedUser>
 <cfquery name="CreatedUser" datasource="#application.datasource#">
 	SELECT Name_First, Name_Last
 	FROM _Users
 	WHERE User_ID = '#CSLGetContractInfo.Creator_ID#'
 </cfquery>
+</cfif>
 <CFIF CreatedUser.recordcount GT 0>
 	<cfset createdByString = "#CreatedUser.Name_First# #CreatedUser.Name_Last# #Dateformat(CSLGetContractInfo.Agreement_Created_Date,'mm/dd/yyyy')#" />
 </CFIF>
@@ -516,11 +563,27 @@ MM_reloadPage(true);
 		created by</cfoutput></TD>
 	</TR>
 </CFIF>
-		<cfquery name="ApprovedUser" datasource="#application.datasource#">
+		<cfset useLakebaseForApprovedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForApprovedUser>
+	<cftry>
+		<cfset ApprovedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Approved_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovedUser>
+<cfquery name="ApprovedUser" datasource="#application.datasource#">
 			SELECT Name_First, Name_Last
 			FROM _Users
 			WHERE User_ID = '#CSLGetContractInfo.Approved_By_User_ID#'
 </cfquery>
+</cfif>
 <CFIF ApprovedUser.recordcount GT 0>
 	<TR>
 		<TD NOWRAP style="cursor:hand;">

@@ -13,6 +13,23 @@ Called from		:
 ----->
 
 <!------ for each child version created, loop thru and do the fund allocation inserts ----->
+<cfset useLakebaseForqGetAllChildBillbacks = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqGetAllChildBillbacks>
+	<cftry>
+		<cfset qGetAllChildBillbacks = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"deleted" = "eq.0",
+				"bb_parent_id" = "eq.#Parent_ID#",
+				"order" = "bb_code.desc",
+				"select" = "billback_id child_bb_id,bb_amount,bb_code"
+			}), "billback_id child_bb_id,bb_amount,bb_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllChildBillbacks = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllChildBillbacks>
 <cfquery name="qGetAllChildBillbacks" datasource="#application.datasource#">
 	SELECT	Billback_ID Child_BB_ID, BB_Amount, BB_Code
 	FROM	Billback
@@ -20,12 +37,30 @@ Called from		:
 	AND		BB_Parent_ID = '#Parent_ID#'
 	Order By BB_Code desc
 </cfquery>
+</cfif>
+<cfset useLakebaseForqGetParentAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqGetParentAmount>
+	<cftry>
+		<cfset qGetParentAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#Parent_ID#",
+				"select" = "bb_amount"
+			}), "bb_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetParentAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetParentAmount>
 <cfquery name="qGetParentAmount" datasource="#application.datasource#">
 	SELECT	BB_Amount
 	FROM	Billback
 	WHERE	Deleted = 0
 	AND		Billback_ID = '#Parent_ID#'
 </cfquery>
+</cfif>
 
 <cfset fromSplitBillbackPage = 1 />
 <!------ Keep the variable value to be reset at the bottom of the page ----->
@@ -44,21 +79,61 @@ Called from		:
 	<cfset FORM.FundSubmit = 1 />
 	<cfset AppendVar_List = "" />
 	<!------ Delete previous entries, new entries will be inserted below ----->
-	<CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDeletePrevious = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_fund_allocation_cal")>
+<cfif useLakebaseForDeletePrevious>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_fixed_fund_allocation_cal",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.3",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrevious = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrevious>
+<CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
 		UPDATE 	GL_Code_Fixed_Fund_Allocation_Cal
 		SET 	Deleted = 1
 		WHERE 	Billback_ID = '#Billback_ID#' 
 		AND		Allocation_Method = 3 
 		AND 	Deleted = 0
 	</CFQUERY>
+</cfif>
 	
-	<CFQUERY NAME="DeleteAllo" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForDeleteAllo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForDeleteAllo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.3",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteAllo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteAllo>
+<CFQUERY NAME="DeleteAllo" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		SET 	Deleted = 1
 		WHERE 	Billback_ID = '#Billback_ID#' 
 		AND		Allocation_Method = 3
 		AND 	Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<!------ this query will be used in the file /GL_Code/GL_Code_IN_Billback/Fixed_Fund_Allocation_Cal.cfm ----->
 	<CFQUERY NAME="CheckIsChild" DATASOURCE="#Application.Datasource#">
@@ -157,7 +232,27 @@ Called from		:
 			</CFQUERY>
 			
 			<CFLOOP QUERY="GetProgramsFund">
-				<CFQUERY NAME="GetBBAmountFund" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetBBAmountFund = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_fund_allocation_cal")>
+<cfif useLakebaseForGetBBAmountFund>
+	<cftry>
+		<cfset GetBBAmountFund = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fixed_fund_allocation_cal", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"allocation_method" = "eq.3",
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBAmountFund = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBAmountFund>
+<CFQUERY NAME="GetBBAmountFund" DATASOURCE="#Application.Datasource#">
 					SELECT 	Top 1 * 
 					FROM 	GL_Code_Fixed_Fund_Allocation_Cal
 					WHERE 	Billback_ID = '#Billback_ID#' AND 
@@ -167,6 +262,7 @@ Called from		:
 							Fiscal_Year = '#DISTFY#' AND
 							Deleted = 0
 				</CFQUERY>
+</cfif>
 				
 				<CFSET TotBBAmountFund = TotBBAmountFund + GetBBAmountFund.Approved_Amount>
 			</CFLOOP>
@@ -203,7 +299,26 @@ Called from		:
 				<CFSET SOCA_Fund = "#GetARFund.COMPANY#-#GetARFund.LOCATION#-#GetARFund.COST_CENTER#-#GetARFund.NATURAL_ACCT#-#GetARFund.CHANNEL#-#GetARFund.PRODUCT_GROUP#-#GetARFund.FUND_NUMBER#">
 				
 				<!------ Get the allocated value from parent ----->
-				<cfquery name="qGetParentAllocationValue" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetParentAllocationValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_fund_allocation_cal")>
+<cfif useLakebaseForqGetParentAllocationValue>
+	<cftry>
+		<cfset qGetParentAllocationValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fixed_fund_allocation_cal", {
+				"billback_id" = "eq.#Parent_ID#",
+				"program_id" = "eq.#Current_Program_ID#",
+				"fund_number" = "eq.#Fund_Number#",
+				"allocation_method" = "eq.3",
+				"deleted" = "eq.0",
+				"select" = "allocated_fund_amount"
+			}), "allocated_fund_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetParentAllocationValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetParentAllocationValue>
+<cfquery name="qGetParentAllocationValue" datasource="#application.datasource#">
 					SELECT	Allocated_Fund_Amount
 					FROM	GL_Code_Fixed_Fund_Allocation_Cal
 					WHERE 	Billback_ID = '#Parent_ID#'
@@ -212,6 +327,7 @@ Called from		:
 					AND		Allocation_Method = 3 
 					AND		Deleted = 0
 				</cfquery>
+</cfif>
 				<cfset parentAllocationValue = qGetParentAllocationValue.Allocated_Fund_Amount />
 				<cfset childAllocationValue = parentAllocationValue * childPercentage />
 				
@@ -227,12 +343,31 @@ Called from		:
 	<!------ all the necessary form variables are populated, now we can call the action page which will process teh form values ----->
 	<cfinclude template="/GL_Code/GL_Code_IN_Billback/Display_Fund_Allocation_Action.cfm" />
 	
-	<CFQUERY NAME="UpdateSaved" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForUpdateSaved>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"allocation_saved" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateSaved>
+<CFQUERY NAME="UpdateSaved" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		SET 	Allocation_Saved = 1
 		WHERE 	Billback_ID = '#Billback_ID#'
 		AND		Deleted = 0	
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 	
 </cfloop>
 <cfif isDefined("currentBillback_IDInVarScope")>

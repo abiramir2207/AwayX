@@ -19,11 +19,28 @@
 
 
 <!---Gets the current user's position--->
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" DATASOURCE="#application.datasource#">
 SELECT User_Positions_ID
 FROM User_Position_Holders
 WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <!---Includes approval rights stuff--->
 <CFSET GP_Supplied_Position = ValueList(getUserPosition.User_Positions_ID)>

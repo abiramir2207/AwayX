@@ -11,17 +11,51 @@
 <CFSET UnAvailable = "">
 
 <CFLOOP LIST="#FORM.PM_Item_Master_ID#" INDEX="Item">
-	<CFQUERY NAME="IsCurrentlyLocked" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForIsCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForIsCurrentlyLocked>
+	<cftry>
+		<cfset IsCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_item_master", {
+				"pm_item_master_id" = "eq.#Item#",
+				"select" = "pm_locked"
+			}), "pm_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsCurrentlyLocked>
+<CFQUERY NAME="IsCurrentlyLocked" DATASOURCE="#Application.Datasource#">
 		SELECT PM_Locked FROM PM_Item_master WHERE PM_Item_Master_ID = '#Item#'
 	</CFQUERY>
+</cfif>
 	
 	<CFIF IsCurrentlyLocked.PM_Locked EQ 0>
 		
-		<CFQUERY NAME="Lock_Project" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForLock_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForLock_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Item#"
+			},
+			{
+				"pm_locked" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLock_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLock_Project>
+<CFQUERY NAME="Lock_Project" DATASOURCE="#Application.Datasource#">
 			UPDATE PM_Item_master
 			SET PM_Locked = 1
 			WHERE PM_Item_Master_ID = '#Item#'
 		</CFQUERY>
+</cfif>
 		
 		<CFQUERY NAME="IsAvailable" DATASOURCE="#Application.Datasource#">
 			SELECT * 
@@ -44,33 +78,85 @@
 		
 		<CFIF IsAvailable.recordcount GT 0>
 			<CFIF FORM.To_PM_Sponsor_ID NEQ "">
-				<CFQUERY NAME="Update_Sponsor" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForUpdate_Sponsor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForUpdate_Sponsor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Item#"
+			},
+			{
+				"pm_sponsor_id" = "#FORM.To_PM_Sponsor_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Sponsor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Sponsor>
+<CFQUERY NAME="Update_Sponsor" DATASOURCE="#Application.Datasource#">
 					UPDATE 		PM_Item_master
 					SET 		PM_Sponsor_ID = '#FORM.To_PM_Sponsor_ID#'
 					
 					WHERE 		PM_Item_Master_ID = '#Item#' 												
-				</CFQUERY>				
+				</CFQUERY>
+</cfif>				
 			</CFIF>
 	
 			<CFIF FORM.To_PM_Far_ID NEQ "">
-				<CFQUERY NAME="Update_FAR" DATASOURCE="#Application.Datasource#">					
+				<cfset useLakebaseForUpdate_FAR = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForUpdate_FAR>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#Item#"
+			},
+			{
+				"pm_far_id" = "#FORM.To_PM_Far_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_FAR = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_FAR>
+<CFQUERY NAME="Update_FAR" DATASOURCE="#Application.Datasource#">					
 					UPDATE 		PM_Item_master
 					SET 		PM_Far_ID = '#FORM.To_PM_Far_ID#'
 					
 					WHERE 		PM_Item_Master_ID = '#Item#'					
-				</CFQUERY> 
+				</CFQUERY>
+</cfif> 
 				
 			</CFIF>
 			
 	
 			<CFIF FORM.To_Owner_Position_ID NEQ "">
-				<CFQUERY NAME="IsExist_Already" DATASOURCE="#Application.Datasource#">					
+				<cfset useLakebaseForIsExist_Already = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_owner_position")>
+<cfif useLakebaseForIsExist_Already>
+	<cftry>
+		<cfset IsExist_Already = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_owner_position", {
+				"pm_item_master_id" = "eq.#Item#",
+				"user_positions_id" = "eq.#FORM.To_Owner_Position_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsExist_Already = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsExist_Already>
+<CFQUERY NAME="IsExist_Already" DATASOURCE="#Application.Datasource#">					
 					SELECT 	* 
 					FROM 	PM_Owner_Position 
 					
 					WHERE 	PM_Item_Master_ID = '#Item#' AND  
 							User_Positions_ID = '#FORM.To_Owner_Position_ID#'
 				</CFQUERY>
+</cfif>
 			</CFIF>		
 			
 			

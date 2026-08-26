@@ -362,7 +362,25 @@
 
 
 		 <!------ get the HQ position id ----->
-		<cfquery NAME="qGetHQ" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetHQ = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForqGetHQ>
+	<cftry>
+		<cfset qGetHQ = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"deleted" = "eq.0",
+				"service_market_id" = "is.null",
+				"service_region_id" = "is.null",
+				"service_zone_id" = "is.null",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetHQ = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetHQ>
+<cfquery NAME="qGetHQ" datasource="#application.datasource#">
 			SELECT     User_Positions_ID
 			FROM       User_Positions
 			WHERE
@@ -371,6 +389,7 @@
 						AND Service_Region_ID IS NULL
 						AND Service_Zone_ID IS NULL
 		</cfquery>
+</cfif>
 
 		<Cfif arguments.AddCurrentPosition IS 1 OR NOT Listfind(arguments.positionIdList, qGetHQ.User_Positions_ID)>
 

@@ -1,10 +1,26 @@
 <CFSET PAGE_TITLE="User Logon Information">
 
+<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#URL.User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
 <CFQUERY NAME="GetUserInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT Name_First, Name_Last
 	FROM _Users
 	WHERE User_ID = '#URL.User_ID#'
 </CFQUERY>
+</cfif>
 
 <CFSET alphastring = "ABCDEFGHIJKLMNOPQRSTUVWXYZ">
 <cfset tempPassword ="">

@@ -42,11 +42,26 @@ function initTheTooltip(ToolTipText)
 	<td>
 	<cfif Update_Type NEQ 0>
 	<cfset showSubmit = 1 />
-	<cfquery name="qGetTemplatePostApprovalStatusType" dbtype="query">
+	<cfset useLakebaseForqGetTemplatePostApprovalStatusType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgettemplateprogrampostapprovalstatus")>
+<cfif useLakebaseForqGetTemplatePostApprovalStatusType>
+	<cftry>
+		<cfset qGetTemplatePostApprovalStatusType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgettemplateprogrampostapprovalstatus", {
+				"template_id" = "eq.#ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplatePostApprovalStatusType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplatePostApprovalStatusType>
+<cfquery name="qGetTemplatePostApprovalStatusType" dbtype="query">
 	SELECT	*
 	FROM	qGetTemplateProgramPostApprovalStatus
 	WHERE	Template_ID = #ProgramType_ID#
 	</cfquery>
+</cfif>
 	<cfif qGetTemplatePostApprovalStatusType.recordCount><input type="Text" name="TXT_REF_NUMBER_#Program_ID#" value="#Contract_Reference_Number#" maxlength="200"><cfelse><input type="Checkbox" name="CHK_UPDATE_STATUS_#Program_ID#"></cfif>
 	</cfif>&nbsp;
 	</td>

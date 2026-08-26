@@ -64,10 +64,25 @@
 	AND		Deleted = 0
 </CFQUERY>
 
+<cfset useLakebaseForTET = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForTET>
+	<cftry>
+		<cfset TET = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "bb_tolerance_tet"
+			}), "bb_tolerance_tet"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTET = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTET>
 <CFQUERY NAME="TET" DATASOURCE="#Application.Datasource#">
 	SELECT 	BB_Tolerance_TET
 	FROM 	Billback_Settings
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="GetContractNumber" DATASOURCE="#Application.Datasource#">
 	SELECT 	Contract_Number,Contract_Quantity_UOM_IDX
@@ -501,11 +516,31 @@ GetProgramSpan
 </CFQUERY>
 
 <!---
+<cfset useLakebaseForDeleteLumpsum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForDeleteLumpsum>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"component_type_id" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteLumpsum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteLumpsum>
 <CFQUERY NAME="DeleteLumpsum" DATASOURCE="#Application.Datasource#">
 	UPDATE Billback_Program_Lumpsum_Component
 	SET	Deleted = 1
 	WHERE Billback_ID = '#Billback_ID#' AND Component_Type_ID = 1 AND Deleted = 0
 </CFQUERY>
+</cfif>
  --->
 <CFLOOP LIST="#ProgramList#" INDEX="Item">
 	<CFQUERY NAME="CallThisStoredProcedure" DATASOURCE="#Application.Datasource#">

@@ -71,9 +71,24 @@
 <cfparam name="Segment"					default="#url.ProgramBusinessSegmentID#">
 
 <cfif Action IS "Edit">
-	<cfquery name="SelectOperatorInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForSelectOperatorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForSelectOperatorInfo>
+	<cftry>
+		<cfset SelectOperatorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#BSA_Operator_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelectOperatorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelectOperatorInfo>
+<cfquery name="SelectOperatorInfo" datasource="#application.datasource#">
 		SELECT * FROM BSA_Operator WHERE BSA_Operator_ID = '#BSA_Operator_ID#'
 	</cfquery>
+</cfif>
 
 	<cfif SelectOperatorInfo.Recordcount IS 1>
 		<cfscript>
@@ -377,18 +392,49 @@ where 0=0
 	ORDER BY  isnull(c.Country_Sort_Order, c.country_id)
 </CFQUERY>
 <!--- Country code --->
+<cfset useLakebaseForgetCountry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForgetCountry>
+	<cftry>
+		<cfset getCountry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {
+				"order" = "country_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCountry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCountry>
 <CFQUERY NAME="getCountry" datasource="#application.datasource#">
 	SELECT *
 	FROM _Country
 	ORDER BY Country_id ASC
 </CFQUERY>
+</cfif>
 
 <!--- Max Length for legacy ID --->
+<cfset useLakebaseForqryMaxLengthOprLegacy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqryMaxLengthOprLegacy>
+	<cftry>
+		<cfset qryMaxLengthOprLegacy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "max_operator_id_length"
+			}), "max_operator_id_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryMaxLengthOprLegacy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryMaxLengthOprLegacy>
 <CFQUERY NAME="qryMaxLengthOprLegacy" datasource="#application.datasource#">
 SELECT Max_Operator_ID_Length
 FROM	_Users_Settings
 Where	User_ID		=		'#request.AccessStructure.Company_Main_ID#'
 </CFQUERY>
+</cfif>
 
 <style>
 body, table, td
@@ -426,14 +472,48 @@ blockquote { margin:0; padding:0px 5px 5px 5px; }
   <!--- <p>&nbsp;</p> --->
 <div id="header">
 <cfif Action IS "Edit"><SPAN CLASS="title2">Change This #application.util.string.fCase(application.returned_customer_setting.operator_label_singular)#'s Information</Span>
+<cfset useLakebaseForCreatorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForCreatorName>
+	<cftry>
+		<cfset CreatorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Added_By#",
+				"limit" = "1",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCreatorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCreatorName>
 <cfquery name="CreatorName" datasource="#application.datasource#">
 SELECT TOP 1 Name_First, Name_Last FROM _Users WHERE User_ID = '#Added_By#'
 </cfquery>
+</cfif>
 <div id="track48">
 	Added <cfif creatorName.recordCount>by #CreatorName.Name_First# #CreatorName.Name_Last#</cfif> on #application.util.datetime.DateTimeFormat(User_Added_Date)#
-	<cfquery name="EditorName" datasource="#application.datasource#">
+	<cfset useLakebaseForEditorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForEditorName>
+	<cftry>
+		<cfset EditorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Edited_By#",
+				"limit" = "1",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEditorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEditorName>
+<cfquery name="EditorName" datasource="#application.datasource#">
 		SELECT TOP 1 Name_First, Name_Last FROM _Users WHERE User_ID = '#Edited_By#'
 	</cfquery>
+</cfif>
 	<cfif EditorName.Recordcount GT 0>
 		<Br>Last edited by #EditorName.Name_First# #EditorName.Name_Last# on #application.util.datetime.DateTimeFormat(User_Date_Edited)#
 	</cfif>
@@ -471,12 +551,29 @@ Commented this code so that user can edit operator name which are created throug
 	</TR>
 
 	<cfif appSettings.getOperatorQBrandLegacy() neq "0">
-		<cfquery name="variables.qBrand" datasource="#application.datasource#">
+		<cfset useLakebaseForvariables_qBrand = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("q_brand_desc")>
+<cfif useLakebaseForvariables_qBrand>
+	<cftry>
+		<cfset variables.qBrand = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("q_brand_desc", {
+				"deleted" = "eq.0",
+				"order" = "q_brand.asc",
+				"select" = "q_brand,q_brand_legacy"
+			}), "q_brand,q_brand_legacy"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qBrand = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qBrand>
+<cfquery name="variables.qBrand" datasource="#application.datasource#">
 			 SELECT Q_Brand, Q_Brand_Legacy
 		  	  FROM Q_BRAND_DESC
 		     WHERE Deleted = 0
 		     ORDER BY q_Brand
 		</cfquery>
+</cfif>
 		<tr>
 		   	<TD valign="top" ALIGN="right" nowrap><span ID="error_q_brand_legacy"></span>&nbsp;<B>#application.returned_customer_setting.Q_Brand_Label_Singular#</B></TD>
     	   	<TD>

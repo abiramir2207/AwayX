@@ -36,11 +36,32 @@
 </SPAN>
 
 <!--- unlock this users contracts --->
+<cfset useLakebaseForunlockTheirPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForunlockTheirPrograms>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_is_locked" = "eq.1",
+				"contract_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0",
+				"flagged_as_purged" = "eq.0"
+			},
+			{
+				"contract_is_locked" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlockTheirPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlockTheirPrograms>
 <cfquery name="unlockTheirPrograms" datasource="#application.datasource#">
 	UPDATE Contract_Main
 	Set Contract_Is_Locked = 0 
 	WHERE Contract_Is_Locked = 1 AND Contract_Locked_By_User_ID = '#request.AccessStructure.User_ID#' and DELETED = 0 and Flagged_As_Purged = 0
 </cfquery>
+</cfif>
 
 <CFFLUSH>
 
@@ -48,11 +69,28 @@
 document.all.PleaseWaitMessage.style.display='none';
 </SCRIPT>
 
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFSET GP_Supplied_Position = ValueList(getUserPosition.User_Positions_ID)>
 <CFINCLUDE TEMPLATE="\settings\Access_Rights\approval_tree\get_positions_underneath_supplied_position.cfm">
@@ -136,20 +174,52 @@ ORDER BY #sql_Sort_By# ASC
 <!--- GET P_ACTIVE COUNT --->
 <!--- find programs with distributors in positions that concern me --->
 <CFIF listlen(GP_Position_List_From_My_Position_Down)GT 0>
-	<cfquery name="getProgramsWithDistributorsInMyPositionBranch" dbtype="query">
+	<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithdistributorsinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithDistributorsInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithdistributorsinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithDistributorsInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithDistributorsInMyPositionBranch>
+<cfquery name="getProgramsWithDistributorsInMyPositionBranch" dbtype="query">
 		SELECT Contract_Main_ID FROM getAllConcernedProgramsWithDistributorsInMyPositionBranch
 		WHERE Contract_Status_Type_IDX = 4
 	</cfquery>
+</cfif>
 <CFSET ProgramsWithDistributorsInPositionsThatConcernMe = valuelist(getProgramsWithDistributorsInMyPositionBranch.Contract_Main_ID)>
 <CFELSE>
 	<CFSET ProgramsWithDistributorsInPositionsThatConcernMe = "">
 </CFIF>
 <!--- find programs with brokers in positions that concern me --->
 <CFIF listlen(GP_Position_List_From_My_Position_Down)GT 0>
-	<cfquery name="getProgramsWithBrokersInMyPositionBranch" dbtype="query">
+	<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallconcernedprogramswithbrokersinmypositionbranch")>
+<cfif useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+	<cftry>
+		<cfset getProgramsWithBrokersInMyPositionBranch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallconcernedprogramswithbrokersinmypositionbranch", {
+				"contract_status_type_idx" = "eq.4",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramsWithBrokersInMyPositionBranch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramsWithBrokersInMyPositionBranch>
+<cfquery name="getProgramsWithBrokersInMyPositionBranch" dbtype="query">
 		SELECT Contract_Main_ID FROM getAllConcernedProgramsWithBrokersInMyPositionBranch
 		WHERE Contract_Status_Type_IDX = 4
 	</cfquery>
+</cfif>
 <CFSET ProgramsWithBrokersInPositionsThatConcernMe = valuelist(getProgramsWithBrokersInMyPositionBranch.Contract_Main_ID)>
 <CFELSE>
 	<CFSET ProgramsWithBrokersInPositionsThatConcernMe = "">
@@ -443,11 +513,27 @@ ORDER BY #sql_Sort_By# ASC
 
 			<!--- show a lock for locked contracts --->
 			<CFIF getWIPCount.Contract_Is_Locked EQ 1>
-				<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
+				<cfset useLakebaseForLookUpTheLockingUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForLookUpTheLockingUser>
+	<cftry>
+		<cfset LookUpTheLockingUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#getWIPCount.Contract_Locked_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookUpTheLockingUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookUpTheLockingUser>
+<cfquery name="LookUpTheLockingUser" datasource="#application.datasource#">
 					SELECT Name_First, Name_Last
 					FROM _Users
 					WHERE User_ID = '#getWIPCount.Contract_Locked_By_User_ID#'
 				</cfquery>
+</cfif>
 				<IMG SRC="/images/lock.gif" TITLE="This program is currently being viewed by #ucase(LookUpTheLockingUser.Name_First)# #ucase(LookUpTheLockingUser.Name_Last)#" height="16" width="12">
 			</CFIF>
 		</TD>

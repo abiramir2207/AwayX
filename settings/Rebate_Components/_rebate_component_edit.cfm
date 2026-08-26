@@ -42,11 +42,27 @@ ul.rebate_type > li {
 <!--- Last edited info --->
 <cfif isdefined("qGetCompRebates.Last_Edited_By") AND len(trim(qGetCompRebates.Last_Edited_By)) GT 0 >
 
-	<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
+	<cfset useLakebaseForGetUserLastEdited = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserLastEdited>
+	<cftry>
+		<cfset GetUserLastEdited = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetCompRebates.Last_Edited_By#",
+				"select" = "name_first + ' ' + name_last as userlastedited"
+			}), "name_first + ' ' + name_last as userlastedited"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLastEdited = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLastEdited>
+<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
 	SELECT Name_First + ' ' + Name_Last AS UserLastEdited
 	FROM _Users
 	WHERE User_ID = '#qGetCompRebates.Last_Edited_By#'
 	</cfquery>
+</cfif>
 	<cfif GetUserLastEdited.Recordcount IS 1>
 	<TABLE ID="lastUpdatedBy" BGCOLOR="White" style="border-color:Orange;border-style:solid;margin-top:10px;" CELLPADDING="3" CELLSPACING="0" align="center">
 	<TR>
@@ -294,12 +310,29 @@ ul.rebate_type > li {
 		 AND Alternate_Recapture_Rate_Index = #i#
 		</cfquery>
 
-		<cfquery name="alternateRateTemplateList" datasource="#application.datasource#">
+		<cfset useLakebaseForalternateRateTemplateList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_template")>
+<cfif useLakebaseForalternateRateTemplateList>
+	<cftry>
+		<cfset alternateRateTemplateList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_template", {
+				"program_rebates_component_name_id" = "eq.#form.compid#",
+				"alternate_recapture_rate_index" = "eq.#i#",
+				"select" = "first_parent_id"
+			}), "first_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForalternateRateTemplateList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForalternateRateTemplateList>
+<cfquery name="alternateRateTemplateList" datasource="#application.datasource#">
 				SELECT First_Parent_ID
 				FROM Alternate_Recapture_Rate_Template
 				WHERE Program_Rebates_Component_Name_ID = #form.compid#
 				AND Alternate_Recapture_Rate_Index = #i#
 		</cfquery>
+</cfif>
 
 		<cfset TRID = 1 />
 		<cfif i GT 1>
@@ -750,12 +783,29 @@ ul.rebate_type > li {
 						</cfquery>
 				</cfloop>
 			</cfif>
-	<cfquery name="GLQuery" datasource="#application.datasource#">
+	<cfset useLakebaseForGLQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForGLQuery>
+	<cftry>
+		<cfset GLQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"deleted" = "eq.0",
+				"is_active" = "eq.1",
+				"select" = "gl_account,gl_account_desc,gl_account_id"
+			}), "gl_account,gl_account_desc,gl_account_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGLQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGLQuery>
+<cfquery name="GLQuery" datasource="#application.datasource#">
 		SELECT GL_Account, GL_Account_Desc ,GL_Account_ID
 		FROM GL_Account
 		WHERE Deleted = 0
 		AND Is_Active = 1
 	</cfquery>
+</cfif>
 	<cfif GLQuery.recordCount GT 1>
 			<TR>
 				<td ALIGN="right" class="Orangline"><strong><cfoutput>#Application.GLAccountLabel#</cfoutput>s</strong></td><!---D42774 --->

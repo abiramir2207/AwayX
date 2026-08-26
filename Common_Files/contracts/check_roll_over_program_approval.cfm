@@ -1,8 +1,24 @@
+<cfset useLakebaseForgetParentProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetParentProgram>
+	<cftry>
+		<cfset getParentProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"select" = "renewal_of_contract_main_id"
+			}), "renewal_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentProgram>
 <CFQUERY NAME="getParentProgram" datasource="#application.datasource#">
 			SELECT Renewal_Of_Contract_Main_ID
 			FROM Contract_main
 			WHERE Contract_main_ID = '#Program_ID#'
 </CFQUERY>
+</cfif>
 
 
 <CFIF getParentProgram.recordcount GT 0>
@@ -74,13 +90,29 @@
 <CFSET qRebatePriceProducts = ValueList(qRebatePrices.BSA_Foodservice_Items_Master_Id,",")>
 
 	<CFLOOP query="qFixedPrices">
-		<cfquery name="GetRebatePrice" dbtype="query">
+		<cfset useLakebaseForGetRebatePrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qrebateprices")>
+<cfif useLakebaseForGetRebatePrice>
+	<cftry>
+		<cfset GetRebatePrice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qrebateprices", {
+				"bsa_foodservice_items_master_id" = "eq.#qFixedPrices.BSA_Foodservice_Items_Master_Id#",
+				"select" = "currentprogramrebateprice,parentprogramrebateprice"
+			}), "currentprogramrebateprice,parentprogramrebateprice"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRebatePrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRebatePrice>
+<cfquery name="GetRebatePrice" dbtype="query">
 		SELECT CurrentProgramRebatePrice,ParentProgramRebatePrice
 		FROM 
 		qRebatePrices
 		WHERE 
 		BSA_Foodservice_Items_Master_Id = '#qFixedPrices.BSA_Foodservice_Items_Master_Id#'
 </cfquery>
+</cfif>
 
 <CFIF GetRebatePrice.recordcount GT 0>
 <CFSET currentprogramnetprice = qFixedPrices.CurrentProgramFixedPrice - GetRebatePrice.CurrentProgramRebatePrice>

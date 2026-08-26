@@ -15,12 +15,29 @@ TABLE.Maintable TD
 <SCRIPT SRC="/script/javascript/string_functions.js"></SCRIPT>
 <script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery-1.5.1-min.js"></script>   <!---26298--->
 
+<cfset useLakebaseForGet_All_Vendor_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGet_All_Vendor_Data>
+	<cftry>
+		<cfset Get_All_Vendor_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"select" = "vendor_id"
+			}), "vendor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_All_Vendor_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_All_Vendor_Data>
 <CFQUERY NAME="Get_All_Vendor_Data" DATASOURCE = "#Application.Datasource#">
 	SELECT 	Vendor_ID
 	FROM 	Vendor_Master
 	WHERE 	Deleted = 0
 	AND		Active_Code = 'A'
 </CFQUERY>
+</cfif>
 
 <cfset VendorList = ValueList(Get_All_Vendor_Data.Vendor_ID)>
 

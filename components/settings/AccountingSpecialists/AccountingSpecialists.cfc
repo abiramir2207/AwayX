@@ -64,7 +64,25 @@
 		<cfargument name="paymentTypeId" required="true" default="" />
 		
 		<!---delete first--->
-		<cfquery name="qDeletePaymentTypeProcessor" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeletePaymentTypeProcessor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type_payment_processor")>
+<cfif useLakebaseForqDeletePaymentTypeProcessor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("payment_type_payment_processor",
+			{
+				"deleted" = "eq.0",
+				"payment_type_id" = "eq.#arguments.paymentTypeId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeletePaymentTypeProcessor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeletePaymentTypeProcessor>
+<cfquery name="qDeletePaymentTypeProcessor" datasource="#application.datasource#">
 		
 			UPDATE 	Payment_Type_Payment_Processor
 			SET		Deleted = 1
@@ -72,6 +90,7 @@
 			AND		Payment_Type_ID = #arguments.paymentTypeId#
 
 		</cfquery>
+</cfif>
 		
 		<cfquery name="qInsertPaymentTypeProcessor" datasource="#application.datasource#">
 		
@@ -130,12 +149,28 @@
 	<cffunction name="getProfiles" output="false">
 		
 		<!---get all profiles --->
-		<cfquery name="qGetProfiles" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProfiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqGetProfiles>
+	<cftry>
+		<cfset qGetProfiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"select" = "profiles_id,profiles_desc"
+			}), "profiles_id,profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProfiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProfiles>
+<cfquery name="qGetProfiles" datasource="#application.datasource#">
 			SELECT 	DISTINCT Profiles_ID, 
 					Profiles_Desc 
 			FROM 	Profiles 
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetProfiles />
 		

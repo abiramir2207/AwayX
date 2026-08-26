@@ -106,9 +106,25 @@ Modes: URL.Mode Sets the Eval Action of the Form.
 
 <!--- Decrypt Contract ID, Retrieve Contract_Number, and Get Evaluation Notes --->
 <cfif isDefined("FORM.BBID")>
-	<!--- <cfquery name="GetBBInfo" datasource="#application.datasource#">
+	<!--- <cfset useLakebaseForGetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetBBInfo>
+	<cftry>
+		<cfset GetBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "contract_number,is_a_revision"
+			}), "contract_number,is_a_revision"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBInfo>
+<cfquery name="GetBBInfo" datasource="#application.datasource#">
 		select contract_number,Is_A_Revision from contract_main where contract_main_id = '#cryp.value#'
-	</cfquery> --->
+	</cfquery>
+</cfif> --->
 
 	<cfif FORM.FormSubmit EQ 1>
 		<cfif trim(form.notes) neq "">
@@ -236,12 +252,29 @@ Modes: URL.Mode Sets the Eval Action of the Form.
 
 <!--- Query which gets the details of the record which needs to be updated. --->
 <cfif editRecord gt 0>
-	<cfquery name="GetBB_BusiConsi_Edit" datasource="#application.datasource#">
+	<cfset useLakebaseForGetBB_BusiConsi_Edit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_business_consideration")>
+<cfif useLakebaseForGetBB_BusiConsi_Edit>
+	<cftry>
+		<cfset GetBB_BusiConsi_Edit = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_business_consideration", {
+				"billback_id" = "eq.#FORM.BBID#",
+				"bb_business_consideration_id" = "eq.#editRecord#",
+				"select" = "bb_business_consideration_id,notes"
+			}), "bb_business_consideration_id,notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBB_BusiConsi_Edit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBB_BusiConsi_Edit>
+<cfquery name="GetBB_BusiConsi_Edit" datasource="#application.datasource#">
 		SELECT 	BB_Business_Consideration_ID, Notes
 		FROM 	BB_Business_Consideration
 		WHERE 	Billback_ID = '#FORM.BBID#'
 		AND BB_Business_Consideration_ID = #editRecord#
 	</cfquery>
+</cfif>
 </cfif>
  <!--- Query which gets all the records. --->
 	<cfquery name="GetBB_BusiConsi" datasource="#application.datasource#">

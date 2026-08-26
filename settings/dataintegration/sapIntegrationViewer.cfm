@@ -128,11 +128,27 @@ TABLE.UnderLine TD
 		<TR BGCOLOR="#IIf(i Mod 2, DE('ffffff'), DE('C6FFC6'))#">
 		<TD STYLE="font-size:10px">#bsa_program_id#&nbsp;</TD>
 		
-		<CFQUERY NAME="itemcount" DBTYPE="query">
+		<cfset useLakebaseForitemcount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getsettlementhistory")>
+<cfif useLakebaseForitemcount>
+	<cftry>
+		<cfset itemcount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getsettlementhistory", {
+				"bsa_program_id" = "eq.#bsa_program_id#",
+				"message_type" = "eq.S"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemcount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemcount>
+<CFQUERY NAME="itemcount" DBTYPE="query">
 			select * from getSettlementHistory
 			where bsa_program_id = '#bsa_program_id#'
 			and message_type = 'S'
 		</CFQUERY>
+</cfif>
 		<cfif itemcount.recordcount GT 0>
 			<TD STYLE="font-size:10px" align="center">#itemcount.pactiv_program_id#&nbsp;</TD>
 			<TD STYLE="font-size:10px" align="center">Success</TD>

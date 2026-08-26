@@ -53,11 +53,27 @@
 	<CFSET sessionOK=false>
 	<CFSET thisSessionID=Session.SessionID>
 	
-	<CFQUERY NAME="Get_Session_Status" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
+<cfif useLakebaseForGet_Session_Status>
+	<cftry>
+		<cfset Get_Session_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("session_tracker", {
+				"session_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "session_id"
+			}), "session_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Status>
+<CFQUERY NAME="Get_Session_Status" datasource="#application.datasource#">
 		Select		Session_ID
 		From		Session_Tracker
 		Where		Session_User_ID	= '#request.AccessStructure.User_ID#'
 	</CFQUERY>
+</cfif>
 
 
 	<CFIF Get_Session_Status.recordCount GT 0>

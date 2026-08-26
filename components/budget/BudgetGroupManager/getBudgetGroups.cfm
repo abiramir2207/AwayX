@@ -11,11 +11,26 @@ Usage:			N/A
 	<!--- Initialize variables --->
 	<cfset var var_returnVal = "" />
 			
-	<cfquery name="var_returnVal" datasource="#application.datasource#">
+	<cfset useLakebaseForvar_returnVal = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_group")>
+<cfif useLakebaseForvar_returnVal>
+	<cftry>
+		<cfset var_returnVal = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_group", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_returnVal = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_returnVal>
+<cfquery name="var_returnVal" datasource="#application.datasource#">
 		SELECT	*
 		FROM	Budget_Group
 		WHERE	Deleted = 0
 	</cfquery>
+</cfif>
 	
 	<cfreturn var_returnVal />	
 		

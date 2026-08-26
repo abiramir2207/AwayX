@@ -102,11 +102,26 @@ function OnSelectMenu(dropdown)
 
 			<cfloop list="#colLoopList#" index="i">
 				<cfif actionEdit EQ 1>
-					<cfquery name="getCustColNames" dbtype="query">
+					<cfset useLakebaseForgetCustColNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallcolnames")>
+<cfif useLakebaseForgetCustColNames>
+	<cftry>
+		<cfset getCustColNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallcolnames", {
+				"db_col_name" = "eq.#i#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCustColNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCustColNames>
+<cfquery name="getCustColNames" dbtype="query">
 						SELECT *
 						FROM getAllColNames
 						WHERE DB_Col_Name = '#i#'
 					</cfquery>
+</cfif>
 				</cfif>
 			<cfset rowCounter = rowCounter + 1>
 			<cfif rowCounter MOD 2>
@@ -272,7 +287,7 @@ function OnSelectMenu(dropdown)
 	}
 
 //	var errFunc = function(t) {
-//	alert("Error " + t.status + " — " + t.statusText);
+//	alert("Error " + t.status + "  " + t.statusText);
 //	}
 
 </script>

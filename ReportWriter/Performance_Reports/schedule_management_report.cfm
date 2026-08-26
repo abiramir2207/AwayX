@@ -9,6 +9,22 @@
 
 
 <cfif url.report_id NEQ "">
+<cfset useLakebaseForgetReportDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("management_report_details")>
+<cfif useLakebaseForgetReportDetails>
+	<cftry>
+		<cfset getReportDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("management_report_details", {
+				"report_id" = "eq.#url.report_id#",
+				"deleted" = "eq.0",
+				"select" = "report_name,report_interval,report_start_date,report_end_date,report_start_time,report_users_email,report_path,report_schedule_path"
+			}), "report_name,report_interval,report_start_date,report_end_date,report_start_time,report_users_email,report_path,report_schedule_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetReportDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetReportDetails>
 <cfquery name="getReportDetails" datasource="#application.datasource#">
 select 
 Report_Name,Report_Interval,Report_Start_Date,Report_End_Date,Report_Start_Time,
@@ -17,6 +33,7 @@ from management_report_details
 where report_id = #url.report_id#
 and deleted = 0
 </cfquery>
+</cfif>
 
 <cfset StartDate = getReportDetails.Report_Start_Date>
 <cfset EndDate = getReportDetails.Report_End_Date>

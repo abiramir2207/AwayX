@@ -14,11 +14,29 @@
 	<CFSET URL.Contract_Main_ID = cryp.value>
 </cfif>
 <cfif (isDefined ("URL.unlockProgram") AND URL.unlockProgram EQ 1 AND isDefined("URL.unlockProgramID") AND URL.unlockProgramID NEQ "")>
-	<cfquery name="updDontAllowEdit" datasource="#application.datasource#">
+	<cfset useLakebaseForupdDontAllowEdit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdDontAllowEdit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#URL.unlockProgramID#"
+			},
+			{
+				"dont_allow_edit" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdDontAllowEdit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdDontAllowEdit>
+<cfquery name="updDontAllowEdit" datasource="#application.datasource#">
 		UPDATE Contract_Main
 		SET Dont_Allow_Edit = 0
 		WHERE Contract_Main_ID = #URL.unlockProgramID#
 	</cfquery>
+</cfif>
 </cfif>
 <cfmodule template="/customTags/include.cfm" file_to_include="/script/javascript/default.js" />
 <BODY>

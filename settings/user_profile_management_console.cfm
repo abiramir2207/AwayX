@@ -51,11 +51,27 @@ tr { height: 25px; }
 
 <!--- Dev Note: drachala; D28010: Profile Setting Modifications  START
 What I did: Added Query to pull who locked the profile console and set Variable LOCKED = 0 or 1 based on profile lock using this variable we will display message who is viewing console currently --->
-	<cfquery name="Profile_lock" datasource="#application.datasource#">
+	<cfset useLakebaseForProfile_lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForProfile_lock>
+	<cftry>
+		<cfset Profile_lock = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"select" = "is_locked,locked_by_user_id"
+			}), "is_locked,locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProfile_lock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProfile_lock>
+<cfquery name="Profile_lock" datasource="#application.datasource#">
 	 SELECT is_locked, Locked_By_User_ID
 	 FROM Profiles
 	 WHERE deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfif profile_lock.is_locked>
 	<cfset locked = 1>

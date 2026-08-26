@@ -30,11 +30,28 @@
 				</TR>
 				
 				
-				<!--- <cfquery name="qGetDistList" datasource="#Application.Datasource#">		
+				<!--- <cfset useLakebaseForqGetDistList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>
+<cfif useLakebaseForqGetDistList>
+	<cftry>
+		<cfset qGetDistList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor_list", {
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistList>
+<cfquery name="qGetDistList" datasource="#Application.Datasource#">		
 					select Distributor_ID from billback_distributor_list 
 					where deleted = 0
 					and Billback_ID = '#Form.Billback_ID#' 
 				</cfquery>
+</cfif>
 				<cfset form.multiDistList = valuelist(qGetDistList.Distributor_ID)> --->
 				<CFSET x = 0>
 				

@@ -45,11 +45,27 @@
 		
 		<cfparam name="rCode" default="0">
 		
-		<cfquery name="qGetReportLevel" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetReportLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_central_access")>
+<cfif useLakebaseForqGetReportLevel>
+	<cftry>
+		<cfset qGetReportLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("report_central_access", {
+				"reportid" = "eq.#arguments.reportID#",
+				"select" = "level_code,"
+			}), "level_code,"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetReportLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetReportLevel>
+<cfquery name="qGetReportLevel" datasource="#application.datasource#">
 			SELECT level_code,  
 			FROM report_central_access
 			WHERE reportID = '#arguments.reportID#'
 		</cfquery>
+</cfif>
 		
 		<cfif qGetReportLevel GT 0>
 			<cfset rCode = qGetReportLevel.level_code />

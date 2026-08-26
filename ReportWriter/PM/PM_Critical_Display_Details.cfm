@@ -136,9 +136,25 @@
 		ORDER BY PM_Notes.Created_Date DESC 				
 	</CFQUERY>
 	
-	<CFQUERY NAME="Check_attachments" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheck_attachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForCheck_attachments>
+	<cftry>
+		<cfset Check_attachments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"project_id" = "eq.#PM_Item_Master_ID#",
+				"select" = "doc_id"
+			}), "doc_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_attachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_attachments>
+<CFQUERY NAME="Check_attachments" DATASOURCE="#Application.Datasource#">
 		SELECT Doc_ID FROM Contract_Attachments WHERE Project_ID = '#PM_Item_Master_ID#'
 	</CFQUERY>
+</cfif>
 	
 	<TR BGCOLOR="##C6FFC6">
 		<TD colspan="100%" width="100%" STYLE="border-bottom: solid 1px blue;"><CFIF isdefined("URL.Print")><BR><BR></CFIF>

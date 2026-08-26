@@ -71,13 +71,31 @@
 	
 	<cffunction name="getASAssigned" output="false" returntype="query">
 		<cfargument name="HQ_Position_ID" type="numeric" required="false" default="0">
-			<cfquery name="qgetASAssigned" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetASAssigned = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqgetASAssigned>
+	<cftry>
+		<cfset qgetASAssigned = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("authority_sequence", {
+				"deleted" = "eq.0",
+				"hq_position_id" = "eq.#arguments.HQ_Position_ID#",
+				"order" = "authority_sequence_order.asc",
+				"select" = "authority_sequence_id"
+			}), "authority_sequence_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetASAssigned = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetASAssigned>
+<cfquery name="qgetASAssigned" datasource="#application.datasource#">
 			SELECT	Authority_Sequence_ID
 			FROM	Authority_Sequence
 			WHERE	Deleted = 0
 			and HQ_Position_ID = #arguments.HQ_Position_ID#
 			ORDER BY Authority_Sequence_Order
 		</cfquery>
+</cfif>
 	
 		<cfreturn qgetASAssigned />
 	</cffunction>
@@ -85,11 +103,29 @@
 	<cffunction name="InsertAssignAS" output="false">
 		<cfargument name="HQ_Position_ID" type="numeric" required="false" default="0">
 		<cfargument name="Authority_Sequence_ID" type="string" required="false" default="">
-		<cfquery name="qDeleteAssignAS" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteAssignAS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqDeleteAssignAS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("authority_sequence",
+			{
+				"hq_position_id" = "eq.#arguments.HQ_Position_ID#"
+			},
+			{
+				"hq_position_id" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteAssignAS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteAssignAS>
+<cfquery name="qDeleteAssignAS" datasource="#application.datasource#">
 			update Authority_Sequence
 			set HQ_Position_ID =  0
 			where HQ_Position_ID =  #arguments.HQ_Position_ID#
 		</cfquery>
+</cfif>
 		<cfif LEN(arguments.Authority_Sequence_ID) GT 0>
 		<cfquery name="qInsertAssignAS" datasource="#application.datasource#">
 			update Authority_Sequence
@@ -113,12 +149,29 @@
 	
 		<cfargument name="HQPositionId" type="numeric" required="true">
 	
-		<cfquery name="qGetHQPositionLevel" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetHQPositionLevel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("hq_positions")>
+<cfif useLakebaseForqGetHQPositionLevel>
+	<cftry>
+		<cfset qGetHQPositionLevel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("hq_positions", {
+				"deleted" = "eq.0",
+				"hq_position_id" = "eq.#arguments.HQPositionId#",
+				"select" = "hq_position_order"
+			}), "hq_position_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetHQPositionLevel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetHQPositionLevel>
+<cfquery name="qGetHQPositionLevel" datasource="#application.datasource#">
 			SELECT	HQ_Position_Order
 			FROM	HQ_Positions
 			WHERE	Deleted = 0
 					AND HQ_Position_ID = #arguments.HQPositionId#			
 		</cfquery>
+</cfif>
 	
 		<cfreturn qGetHQPositionLevel />
 		
@@ -133,13 +186,30 @@
 		
 		<cfset returnValue = "">
 		<!------ Find if same desc exist for other record ----->
-		<cfquery name="qGetSameName" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetSameName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("hq_positions")>
+<cfif useLakebaseForqGetSameName>
+	<cftry>
+		<cfset qGetSameName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("hq_positions", {
+				"deleted" = "eq.0",
+				"hq_position_id" = "neq.#arguments.HQPositionId#",
+				"hq_position_name" = "eq.#arguments.HQPositionDesc#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSameName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSameName>
+<cfquery name="qGetSameName" datasource="#application.datasource#">
 			SELECT	*
 			FROM	HQ_Positions
 			WHERE	HQ_Positions.Deleted = 0
 					AND HQ_Positions.HQ_Position_ID <> #arguments.HQPositionId#
 					AND HQ_Positions.HQ_Position_Name = '#arguments.HQPositionDesc#'
 		</cfquery>
+</cfif>
 		
 		<cfif NOT qGetSameName.recordCount>
 		
@@ -214,11 +284,27 @@
 		<cfif NOT qgetASAssosiated.recordCount>
 		
 			<!------ Get current order ----->
-			<cfquery name="qGetAuthOrder" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetAuthOrder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("hq_positions")>
+<cfif useLakebaseForqGetAuthOrder>
+	<cftry>
+		<cfset qGetAuthOrder = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("hq_positions", {
+				"hq_position_id" = "eq.#arguments.HQPositionId#",
+				"select" = "hq_position_order"
+			}), "hq_position_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAuthOrder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAuthOrder>
+<cfquery name="qGetAuthOrder" datasource="#application.datasource#">
 				SELECT	HQ_Position_Order
 				FROM	HQ_Positions
 				WHERE	HQ_Position_ID = #arguments.HQPositionId#
 			</cfquery>
+</cfif>
 			
 			<cfif qGetAuthOrder.recordCount>
 			

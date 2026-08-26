@@ -70,11 +70,27 @@
 			</cfquery>
 		</CFIF>
 		<Cfif GetBillbackData.Billback_Status_ID IS 2 OR GetBillbackData.Billback_Status_ID IS 3 OR GetBillbackData.Billback_Status_ID IS 4 >
-			<cfquery name="BillbacksToPay" datasource="#application.datasource#">
+			<cfset useLakebaseForBillbacksToPay = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForBillbacksToPay>
+	<cftry>
+		<cfset BillbacksToPay = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_code,bb_title,bb_amount,bb_date,auto_billback"
+			}), "bb_code,bb_title,bb_amount,bb_date,auto_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbacksToPay = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbacksToPay>
+<cfquery name="BillbacksToPay" datasource="#application.datasource#">
 				SELECT BB_Code, BB_Title, BB_Amount, BB_Date, Auto_Billback
 				FROM Billback
 				WHERE Billback_ID = '#Billback_ID#'
 			</cfquery>
+</cfif>
 		
 			<cfoutput>
             	<tr BGCOLOR="#IIf(counter Mod 2, DE('ffffff'), DE('C6FFC6'))#">

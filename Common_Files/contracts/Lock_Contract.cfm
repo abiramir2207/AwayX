@@ -19,11 +19,27 @@
 		WHERE Contract_Main_ID = '#CTLKR_Contract_Main_ID#'
 	</CFQUERY>
 
-	<cfquery name="GetSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#CSLGetContractInfo.ProgramType_ID#",
+				"select" = "date_exclusions_on,market_price"
+			}), "date_exclusions_on,market_price"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
+<cfquery name="GetSettings" datasource="#application.datasource#">
 		SELECT Date_Exclusions_ON, Market_Price
 		  FROM Program_Control_Panel_Options
 		 WHERE ProgramControl_Panel_Options_ID = '#CSLGetContractInfo.ProgramType_ID#'
 	</cfquery>
+</cfif>
 
 	<cfset variables.contract_number = ''>
 	<!--- If the Program has Date Exclusions turned on --->

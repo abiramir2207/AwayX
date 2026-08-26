@@ -301,11 +301,26 @@ function reset_Form_Fields()
 			<TR>
 				<TD><!--- Line Of Biz --->
 					<span ID="searchItemLabel"><B><CFOUTPUT>#application.returned_customer_setting.lob_label_singular#</CFOUTPUT><!--- Line Of Business ---></B></span><BR>
-					<cfquery name="GetLinesOfBiz" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0,24,0,0)#">
+					<cfset useLakebaseForGetLinesOfBiz = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLinesOfBiz>
+	<cftry>
+		<cfset GetLinesOfBiz = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLinesOfBiz = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLinesOfBiz>
+<cfquery name="GetLinesOfBiz" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0,24,0,0)#">
 						SELECT *
 						FROM Line_Of_Business
 						ORDER BY Line_Of_Business_Name
 					</cfquery>
+</cfif>
 					<CFQUERY NAME="getFoodserviceLOBID" DBTYPE="query">
 						SELECT Line_Of_Business_ID
 						FROM GetLinesOfBiz

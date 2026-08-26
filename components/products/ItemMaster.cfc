@@ -213,29 +213,77 @@
     </cffunction>  
 
 	<cffunction name="getDistributorsType" access="remote"  output="false" returntype="query" hint="get Distributor Types" >
-		<cfquery name="DistributorsType" datasource="#application.datasource#" >
+		<cfset useLakebaseForDistributorsType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_type")>
+<cfif useLakebaseForDistributorsType>
+	<cftry>
+		<cfset DistributorsType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_type", {
+				"deleted" = "eq.0",
+				"select" = "distributor_type_name,distributor_type_id"
+			}), "distributor_type_name,distributor_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistributorsType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistributorsType>
+<cfquery name="DistributorsType" datasource="#application.datasource#" >
 		SELECT 	Distributor_Type_name, Distributor_type_id
 		FROM 	Distributor_Type
 		WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
    	 <cfreturn  DistributorsType>    
 	</cffunction>
 	
 	<cffunction name="getDistributorsTypeB" access="remote"  output="false" returntype="query" hint="get Distributor B Types" >
-		<cfquery name="DistributorsTypeB" datasource="#application.datasource#" >
+		<cfset useLakebaseForDistributorsTypeB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_type_b")>
+<cfif useLakebaseForDistributorsTypeB>
+	<cftry>
+		<cfset DistributorsTypeB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_type_b", {
+				"deleted" = "eq.0",
+				"select" = "distributor_type_b_id,distributor_type_b,distributor_type_b_desc"
+			}), "distributor_type_b_id,distributor_type_b,distributor_type_b_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistributorsTypeB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistributorsTypeB>
+<cfquery name="DistributorsTypeB" datasource="#application.datasource#" >
 			SELECT 	Distributor_Type_B_ID, Distributor_Type_B, Distributor_Type_B_Desc
 			FROM 	Distributor_Type_B
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
    	 <cfreturn  DistributorsTypeB>    
 	</cffunction>
 	
 	<cffunction name="getDistributorsTypeH" access="remote"  output="false" returntype="query" hint="get Distributor H Types" >
-		<cfquery name="DistributorsTypeH" datasource="#application.datasource#" >
+		<cfset useLakebaseForDistributorsTypeH = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_type_h")>
+<cfif useLakebaseForDistributorsTypeH>
+	<cftry>
+		<cfset DistributorsTypeH = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_type_h", {
+				"deleted" = "eq.0",
+				"select" = "distributor_type_h_id,distributor_type_h,distributor_type_h_desc"
+			}), "distributor_type_h_id,distributor_type_h,distributor_type_h_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistributorsTypeH = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistributorsTypeH>
+<cfquery name="DistributorsTypeH" datasource="#application.datasource#" >
 			SELECT 	Distributor_Type_H_ID, Distributor_Type_H, Distributor_Type_H_Desc
 			FROM 	Distributor_Type_H
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
    	 <cfreturn  DistributorsTypeH>    
 	</cffunction>
 	
@@ -267,11 +315,27 @@
     
 	<cffunction name="getTypeC"  access="remote"  output="false" hint="get Distributor Type C Desc">   
 		<cfargument name="suggestvalue" required="true">
-		<cfquery name="TypeC" datasource="#application.datasource#" >
+		<cfset useLakebaseForTypeC = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_type_c")>
+<cfif useLakebaseForTypeC>
+	<cftry>
+		<cfset TypeC = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_type_c", {
+				"deleted" = "eq.0",
+				"select" = "distributor_type_c_desc"
+			}), "distributor_type_c_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTypeC = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTypeC>
+<cfquery name="TypeC" datasource="#application.datasource#" >
     		SELECT 	Distributor_Type_C_Desc
 			FROM 	Distributor_Type_C
 			WHERE 	Deleted = 0
 		</cfquery>
+</cfif>
 		<cfset TypeC = ListToArray(ValueList(TypeC.Distributor_Type_C_Desc)) />    
     	<cfreturn  TypeC>
     </cffunction> 

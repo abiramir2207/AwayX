@@ -21,19 +21,54 @@
 	
 	
 	<!--- update components table --->
-	<cfquery name="chk4USDAComp" datasource="#application.datasource#">
+	<cfset useLakebaseForchk4USDAComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForchk4USDAComp>
+	<cftry>
+		<cfset chk4USDAComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"is_usda_noi_comp" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForchk4USDAComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForchk4USDAComp>
+<cfquery name="chk4USDAComp" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Rebates_Component_Name
 		WHERE Is_USDA_NOI_Comp = 1
 	</cfquery>
+</cfif>
 			
 	<cfif theBit EQ 1><!--- enabled --->
 		<cfif chk4USDAComp.recordcount GT 0>
-			<cfquery name="Activate" datasource="#application.datasource#">
+			<cfset useLakebaseForActivate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForActivate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_rebates_component_name",
+			{
+				"program_rebates_component_name_id" = "eq.#chk4USDAComp.Program_Rebates_Component_Name_ID#"
+			},
+			{
+				"donot_delete" = "1",
+				"active" = "1",
+				"deleted" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForActivate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForActivate>
+<cfquery name="Activate" datasource="#application.datasource#">
 				UPDATE Program_Rebates_Component_Name
 				SET Donot_Delete = 1, Active = 1, Deleted = 0
 				WHERE Program_Rebates_Component_Name_ID = '#chk4USDAComp.Program_Rebates_Component_Name_ID#'
-			</cfquery>		
+			</cfquery>
+</cfif>		
 		<cfelse>
 			<cfquery name="ActivateViaINSERT" datasource="#application.datasource#">
 				INSERT INTO Program_Rebates_Component_Name
@@ -49,11 +84,29 @@
 				WHERE Program_Rebates_Component_Name_ID = '#chk4USDAComp.Program_Rebates_Component_Name_ID#'
 			</cfquery>	
 
-			<cfquery name="Delete" datasource="#application.datasource#">
+			<cfset useLakebaseForDelete = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForDelete>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_rebates_component_name",
+			{
+				"program_rebates_component_name_id" = "eq.#chk4USDAComp.Program_Rebates_Component_Name_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete>
+<cfquery name="Delete" datasource="#application.datasource#">
 				UPDATE Program_Rebates_Component_Name
 				SET Deleted = 1
 				WHERE Program_Rebates_Component_Name_ID = '#chk4USDAComp.Program_Rebates_Component_Name_ID#'
 			</cfquery>
+</cfif>
 	</cfif>
 	
 	<CFLOCATION URL="index.cfm" ADDTOKEN="No">

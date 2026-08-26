@@ -255,10 +255,25 @@ End - Get DataIntegration Basic Information from database
 <!--------------------------------------
 Check whether there is entry for brokers, distributors and products
 ----------------------------------->
+<cfset useLakebaseForq_Data_Integration_Exists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration")>
+<cfif useLakebaseForq_Data_Integration_Exists>
+	<cftry>
+		<cfset q_Data_Integration_Exists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_integration", {
+				"select" = "integration_type"
+			}), "integration_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_Data_Integration_Exists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_Data_Integration_Exists>
 <CFQUERY NAME="q_Data_Integration_Exists" datasource="#application.datasource#">
 		select distinct Integration_Type
 		From Data_Integration
 	</CFQUERY>
+</cfif>
 	
 	<cfloop query="q_Data_Integration_Exists">
 		<cfswitch expression="#Integration_Type#">

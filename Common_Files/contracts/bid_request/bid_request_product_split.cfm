@@ -12,7 +12,24 @@ FUNCTIONALITY:
    Dev Notes: 23635/Anand Rao/04-Jun-10
    Competitive Data, Forge changes
   --->
-  <cfquery name="Get_Won_By_Data" datasource="#application.datasource#">
+  <cfset useLakebaseForGet_Won_By_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForGet_Won_By_Data>
+	<cftry>
+		<cfset Get_Won_By_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_won_by_description.asc",
+				"select" = "program_bid_won_by_id,program_bid_won_by_code,program_bid_won_by_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_won_by_id,program_bid_won_by_code,program_bid_won_by_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Won_By_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Won_By_Data>
+<cfquery name="Get_Won_By_Data" datasource="#application.datasource#">
   	SELECT		Program_Bid_Won_By_ID,
               Program_Bid_Won_By_Code,
               Program_Bid_Won_By_Description,
@@ -25,8 +42,26 @@ FUNCTIONALITY:
     WHERE Deleted = 0  AND Active = 1
   	ORDER BY	Program_Bid_Won_By_Description
   </cfquery>
+</cfif>
 
-  <cfquery name="Get_Category_Data" datasource="#application.datasource#">
+  <cfset useLakebaseForGet_Category_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_category")>
+<cfif useLakebaseForGet_Category_Data>
+	<cftry>
+		<cfset Get_Category_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_category", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_category_description.asc",
+				"select" = "program_bid_category_id,program_bid_category_code,program_bid_category_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_category_id,program_bid_category_code,program_bid_category_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Category_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Category_Data>
+<cfquery name="Get_Category_Data" datasource="#application.datasource#">
   	SELECT		Program_Bid_Category_ID,
               Program_Bid_Category_Code,
               Program_Bid_Category_Description,
@@ -39,8 +74,26 @@ FUNCTIONALITY:
     WHERE Deleted = 0  AND Active = 1
   	ORDER BY	Program_Bid_Category_Description
   </cfquery>
+</cfif>
 
-  <cfquery name="Get_Package_Data" datasource="#application.datasource#">
+  <cfset useLakebaseForGet_Package_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_package")>
+<cfif useLakebaseForGet_Package_Data>
+	<cftry>
+		<cfset Get_Package_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_package", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "program_bid_package_description.asc",
+				"select" = "program_bid_package_id,program_bid_package_code,program_bid_package_description,active,deleted,created_date,updated_date,updated_by"
+			}), "program_bid_package_id,program_bid_package_code,program_bid_package_description,active,deleted,created_date,updated_date,updated_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Package_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Package_Data>
+<cfquery name="Get_Package_Data" datasource="#application.datasource#">
   	SELECT		Program_Bid_Package_ID,
               Program_Bid_Package_Code,
               Program_Bid_Package_Description,
@@ -52,7 +105,8 @@ FUNCTIONALITY:
   	FROM		Program_Bid_Package 
     WHERE Deleted = 0  AND Active = 1
   	ORDER BY	Program_Bid_Package_Description
-  </cfquery>    
+  </cfquery>
+</cfif>    
   
   <cfset LabelComp 			    = Createobject("component", "components.settings.labels.labels").init() />
   <cfset qGetWonByLabel 	  = LabelComp.getGeneralLabels('Won By') />

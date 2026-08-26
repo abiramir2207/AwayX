@@ -631,11 +631,27 @@ function sort_by_this_order(fieldName, sOrder)
 			<td colspan="100%">
 				<table border="0" width="100%" ALIGN="center" CELLSPACING="0">
 					<cfif From_Position NEQ "" AND Reassign_Type EQ "1">
-						<cfquery name="Check_Program" datasource="#Application.Datasource#">
+						<cfset useLakebaseForCheck_Program = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCheck_Program>
+	<cftry>
+		<cfset Check_Program = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"creating_user_position_id" = "eq.#From_Position#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Program = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Program>
+<cfquery name="Check_Program" datasource="#Application.Datasource#">
 							SELECT 	Contract_Main_ID
 							FROM 	Contract_Main
 							WHERE 	Creating_User_Position_ID = #From_Position#
 						</cfquery>
+</cfif>
 						<cfif Check_Program.recordcount EQ 0>
 							<script language="JavaScript">
 								alert("There are no program(s) under this position. Please select some other position.");
@@ -881,12 +897,29 @@ function sort_by_this_order(fieldName, sOrder)
 									<cfset stStruct.CheckUserClassCodeList = CheckUserClassCodeList />
 									<cfset qUsers = UserManager.search(stStruct) />
 							</cfif>
-								<cfquery name="isActive_Business_Segment_ID" datasource="#Application.Datasource#">
+								<cfset useLakebaseForisActive_Business_Segment_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForisActive_Business_Segment_ID>
+	<cftry>
+		<cfset isActive_Business_Segment_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"business_segment_id" = "eq.#List_Program.Business_Segment_ID#",
+				"active" = "eq.1",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisActive_Business_Segment_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisActive_Business_Segment_ID>
+<cfquery name="isActive_Business_Segment_ID" datasource="#Application.Datasource#">
 									select Business_Segment_ID
 									from Business_Segment
 									where Business_Segment_ID = '#List_Program.Business_Segment_ID#'
 									and active = 1
 								</cfquery>
+</cfif>
 
 								<cfif  isActive_Business_Segment_ID.recordcount GT 0>
 									<cfset stStruct.Contract_Business_Segment_ID  = '#isActive_Business_Segment_ID.Business_Segment_ID#'>

@@ -45,11 +45,26 @@
 <!--- ----------------------------------------------------------------------------------------- --->
 <!--- get the control panel settings --->
 <!--- ----------------------------------------------------------------------------------------- --->
+<cfset useLakebaseForget_settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("msg_ctr_settings")>
+<cfif useLakebaseForget_settings>
+	<cftry>
+		<cfset get_settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("msg_ctr_settings", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_settings>
 <cfquery name="get_settings" datasource="#db_connection#">
 	 SELECT		*
 	 FROM		msg_ctr_settings
 	 WHERE		deleted = 0
 </cfquery>
+</cfif>
 
 <!---<cfdump var="#cgi#">--->
 

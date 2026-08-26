@@ -363,11 +363,28 @@
 
 			<cfif getAllChildBBs.RecordCount GTE 1>
 				<cfloop query="getAllChildBBs">
-					<cfquery name="getAssociatedDeductionID" datasource="#application.datasource#">
+					<cfset useLakebaseForgetAssociatedDeductionID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_closure_detail")>
+<cfif useLakebaseForgetAssociatedDeductionID>
+	<cftry>
+		<cfset getAssociatedDeductionID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_closure_detail", {
+				"dd_closure_id" = "eq.#getAllChildBBs.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "deduction_id"
+			}), "deduction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssociatedDeductionID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssociatedDeductionID>
+<cfquery name="getAssociatedDeductionID" datasource="#application.datasource#">
 						SELECT	Deduction_ID
 						FROM	DD_Closure_Detail
 						WHERE	DD_Closure_ID = '#getAllChildBBs.Billback_ID#' AND Deleted = 0
 					</cfquery>
+</cfif>
 					<cfif (getAssociatedDeductionID.RecordCount GTE 1)>
 						<cfloop query="getAssociatedDeductionID">
 							<cfset createobject("component", "mvc.Models.Billback.BillbackSettlementDAO").fnUnAssociateDeductionOnDDIDDAO(Deduction_ID = getAssociatedDeductionID.Deduction_ID, Billback_ID = getAllChildBBs.Billback_ID) />

@@ -83,16 +83,46 @@
 	<CFTRANSACTION ACTION="COMMIT">
 </CFTRANSACTION>
 
+<cfset useLakebaseForgetCurrentAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetCurrentAdmin>
+	<cftry>
+		<cfset getCurrentAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentAdmin>
 <CFQUERY NAME="getCurrentAdmin" datasource="#application.datasource#">
 	SELECT *
 	FROm _Users
 	WHERE Is_System_Administrator = 1
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForgetCurrentAdminContact = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetCurrentAdminContact>
+	<cftry>
+		<cfset getCurrentAdminContact = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"contact_administrator" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentAdminContact = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentAdminContact>
 <CFQUERY NAME="getCurrentAdminContact" datasource="#application.datasource#">
 	SELECT *
 	FROm _Users
 	WHERE Contact_Administrator = 1
 </CFQUERY>
+</cfif>
 
 
 

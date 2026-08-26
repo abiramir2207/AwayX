@@ -8,11 +8,27 @@
 
 <CFIF len(trim(URL.CID)) GT 0 AND URL.RO EQ 1>
 		<CF_CRYP type="de" string="#URL.CID#" key="#request.key#">
-		<cfquery name="CheckForExistingDistributors" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckForExistingDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCheckForExistingDistributors>
+	<cftry>
+		<cfset CheckForExistingDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "distributor_ids"
+			}), "distributor_ids"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForExistingDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForExistingDistributors>
+<cfquery name="CheckForExistingDistributors" datasource="#application.datasource#">
 			SELECT 	Distributor_IDs
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#cryp.value#'
-		</cfquery>		
+		</cfquery>
+</cfif>		
 	<CFSET FORM.button_caption = "save">
 
 	<CFIF listfind(CheckForExistingDistributors.Distributor_IDs, 0, ",") EQ 0>
@@ -64,11 +80,29 @@
 		<CFIF len(trim(FORM.FinalItemList)) EQ 0><CFSET FORM.FinalItemList = "0"></CFIF>
 
 
-		<CFQUERY NAME="SaveDistributors" datasource="#application.datasource#">
+		<cfset useLakebaseForSaveDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForSaveDistributors>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			},
+			{
+				"distributor_ids" = "#FORM.FinalItemList#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaveDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaveDistributors>
+<CFQUERY NAME="SaveDistributors" datasource="#application.datasource#">
 			UPDATE Contract_MAIN
 			SET Distributor_IDs = '#FORM.FinalItemList#'
 			WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
-		</CFQUERY>		
+		</CFQUERY>
+</cfif>		
 
 	<CF_CRYP type="en" string="#FORM.Contract_Main_ID#" key="#request.key#">	
 	<CFIF CheckForExistingDistributors.Distributor_IDs EQ 0>
@@ -131,10 +165,25 @@ TABLE.Maintable TD
 			<TABLE>
 				<TR>
 					<TD>
-						<cfquery name="GetFamilyNames" datasource="#application.datasource#">
+						<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"select" = "family_name"
+			}), "family_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#">
 							SELECT DISTINCT Family_Name
 							FROM BSA_Foodservice_Customers
 						</cfquery>
+</cfif>
 						<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 						<SELECT NAME="Family_Name" style="width: 200px;">
 							<OPTION VALUE="0">**ALL** Family Names</OPTION>
@@ -142,11 +191,27 @@ TABLE.Maintable TD
 						</SELECT>					
 					</TD>
 					<TD>
-						<cfquery name="GetBrokers" datasource="#application.datasource#">
+						<cfset useLakebaseForGetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForGetBrokers>
+	<cftry>
+		<cfset GetBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"order" = "broker_name.asc",
+				"select" = "broker_legcy_shard,broker_name"
+			}), "broker_legcy_shard,broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokers>
+<cfquery name="GetBrokers" datasource="#application.datasource#">
 							SELECT DISTINCT Broker_Legcy_Shard, Broker_Name
 							FROM BSA_Foodservice_Brokers
 							ORDER BY Broker_Name
 						</cfquery>
+</cfif>
 						<CFPARAM NAME="FORM.Broker" DEFAULT="0">
 						<SELECT NAME="Broker" style="width: 190px;">
 							<OPTION VALUE="0">**ALL** Brokers</OPTION>
@@ -154,10 +219,25 @@ TABLE.Maintable TD
 						</SELECT>	
 					</TD>
 					<TD>
-						<cfquery name="GetStates" datasource="#application.datasource#">
+						<cfset useLakebaseForGetStates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetStates>
+	<cftry>
+		<cfset GetStates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"select" = "state"
+			}), "state"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStates>
+<cfquery name="GetStates" datasource="#application.datasource#">
 							SELECT DISTINCT State
 							FROM BSA_Foodservice_Customers
 						</cfquery>
+</cfif>
 						<CFPARAM NAME="FORM.State" DEFAULT="0">
 						<SELECT NAME="State" style="width: 182px;">
 							<OPTION VALUE="0">**ALL** States</OPTION>

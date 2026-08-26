@@ -11,7 +11,28 @@
 	<CFPARAM NAME="FORM.FID" 	DEFAULT="#URL.FID#">
 	<CFIF PRESENT_LOCK_STATUS EQ 1>
 	<!----- unlock it if locked by me ----->
-		<CFQUERY NAME="Lock_Project" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForLock_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForLock_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_item_master_id" = "eq.#FORM.LOCK_RID#",
+				"pm_locked" = "eq.1",
+				"pm_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"pm_locked" = "0",
+				"pm_locked_by_user_id" = javaCast("null",""),
+				"pm_locked_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLock_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLock_Project>
+<CFQUERY NAME="Lock_Project" DATASOURCE="#application.datasource#">
 			UPDATE	PM_Item_Master
 			SET		PM_Locked	=	0,
 					PM_Locked_By_User_ID = NULL,
@@ -23,11 +44,32 @@
 					AND
 					PM_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 		</CFQUERY>
+</cfif>
 	<CFELSE>
 	<!---- lock it --->
 	
 	<!---- first unlock others which are locked by me ---->
-		<CFQUERY NAME="unlock_Other_Project" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForunlock_Other_Project = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_item_master")>
+<cfif useLakebaseForunlock_Other_Project>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pm_item_master",
+			{
+				"pm_locked" = "eq.1",
+				"pm_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#"
+			},
+			{
+				"pm_locked" = "0",
+				"pm_locked_by_user_id" = javaCast("null",""),
+				"pm_locked_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlock_Other_Project = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlock_Other_Project>
+<CFQUERY NAME="unlock_Other_Project" DATASOURCE="#application.datasource#">
 			UPDATE	PM_Item_Master
 			SET		PM_Locked	=	0,
 					PM_Locked_By_User_ID = NULL,
@@ -37,6 +79,7 @@
 					AND
 					PM_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 		</CFQUERY>
+</cfif>
 		
 	<!---- unlock it, if some one who has locked has invalid session ---->			
 		<CFQUERY NAME="Unlock_Project" DATASOURCE="#application.datasource#">

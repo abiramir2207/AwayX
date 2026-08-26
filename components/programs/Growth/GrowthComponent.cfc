@@ -259,13 +259,30 @@ Added/Changed: Added this function to SaveCredit TypeExclusion--->
 		<cfreturn qGetActiveComps />
    	</cffunction>
 	<cffunction name="getInActive" output="false" returntype="query">	
-		<cfquery name="qGetInActiveComps" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetInActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components_name")>
+<cfif useLakebaseForqGetInActiveComps>
+	<cftry>
+		<cfset qGetInActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components_name", {
+				"deleted" = "eq.0",
+				"active" = "eq.0",
+				"order" = "program_growth_components_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInActiveComps>
+<cfquery name="qGetInActiveComps" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_Growth_Components_Name
 			WHERE 	Deleted = 0
 			AND		Active = 0
 			ORDER BY Program_Growth_Components_Name
 		</cfquery>
+</cfif>
 		<cfreturn qGetInActiveComps />
    	</cffunction>
 	<!--- activate/deactivate --->
@@ -297,11 +314,26 @@ Added/Changed: Added this function to SaveCredit TypeExclusion--->
 	<!--- getComponent--->
 	<cffunction name="getComp" output="false" returntype="query">	
    		<cfargument name="compId" required="false" default=0 />
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components_name")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components_name", {
+				"program_growth_components_name_id" = "eq.#arguments.compId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_Growth_Components_Name
 			WHERE 	Program_Growth_Components_Name_Id = #arguments.compId#	
 		</cfquery>
+</cfif>
 		<cfreturn qGetComp />
    	</cffunction>
 	

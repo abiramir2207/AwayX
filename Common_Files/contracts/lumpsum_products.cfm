@@ -306,17 +306,49 @@ because it causes the lump sum products to not dispaly when printing.--->
 <cfset SimilarExistingProductList = ValueList(SimilarExistingProduct.BSA_Foodservice_Items_Master_ID)>
 
 
+<cfset useLakebaseForgetContractProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetContractProgramID>
+	<cftry>
+		<cfset getContractProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractProgramID>
 <cfquery name="getContractProgramID" datasource="#application.datasource#">
 	SELECT ProgramType_ID
 	FROM Contract_Main
 	WHERE COntract_Main_ID = '#Form.Contract_Main_ID#'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#getContractProgramID.ProgramType_ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
 <cfquery name="GetSettings" datasource="#application.datasource#">
 	SELECT 	Program_Control_Panel_Options.*
 	FROM 	Program_Control_Panel_Options
 	WHERE 	ProgramControl_Panel_Options_ID = '#getContractProgramID.ProgramType_ID#'
 </cfquery>
+</cfif>
 
 <!------ Get pricing level descriptions ----->
 <cfset qGetPricingLevel = GroupDataManager.getPricingLevel() />
@@ -335,13 +367,31 @@ because it causes the lump sum products to not dispaly when printing.--->
 
 		<cfset form.component_id = URL.Program_Lump_Sum_ID>
 
-		<CFQUERY NAME="qGetLumpSums" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetLumpSums = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqGetLumpSums>
+	<cftry>
+		<cfset qGetLumpSums = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"program_lump_sum_id" = "eq.#URL.Program_Lump_Sum_ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLumpSums = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLumpSums>
+<CFQUERY NAME="qGetLumpSums" datasource="#application.datasource#">
 			SELECT 	Program_Lump_Sums.*
 			FROM 	Program_Lump_Sums
 			WHERE 	Program_ID = '#FORM.Contract_Main_ID#'
 			AND 	Program_Lump_Sums.DELETED = 0
 			AND 	Program_Lump_Sums.Program_Lump_Sum_ID = '#URL.Program_Lump_Sum_ID#'
 		</CFQUERY>
+</cfif>
 
 		<cfif qGetLumpSums.recordcount GT 0>
 			<cfset FORM.new_lump_sum_amount = qGetLumpSums.Lump_Sum_Amount>
@@ -395,11 +445,27 @@ because it causes the lump sum products to not dispaly when printing.--->
 			<cfset Form.Product_List = valuelist(getLumpSumProducts.BSA_Foodservice_Items_Master_ID, ",") />
 	</cfif>
 
-		<cfquery name="qGetLevel_1_Products" dbtype="query">
+		<cfset useLakebaseForqGetLevel_1_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getlumpsumproducts")>
+<cfif useLakebaseForqGetLevel_1_Products>
+	<cftry>
+		<cfset qGetLevel_1_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getlumpsumproducts", {
+				"product_group_level_id" = "eq.1",
+				"select" = "product_group_id"
+			}), "product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLevel_1_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLevel_1_Products>
+<cfquery name="qGetLevel_1_Products" dbtype="query">
 			SELECT	Product_Group_ID
 			FROM	getLumpSumProducts
 			WHERE Product_Group_Level_ID = 1
 		</cfquery>
+</cfif>
 
 		<cfset FORM.Product_Level_1 = ValueList(qGetLevel_1_Products.Product_Group_ID) />
 
@@ -484,12 +550,29 @@ because it causes the lump sum products to not dispaly when printing.--->
 			getsettings.Discount_Lump_Sums_Item_Mandated EQ 1, there is no error --->
  <Cfif appsettings.getComponent_Product_Restrictions_On() IS 1 AND IsDefined("getComponent.Program_Lump_Sum_Name_ID")>
 
-	<cfquery name="ComponentForbiddenProducts" datasource="#application.datasource#">
+	<cfset useLakebaseForComponentForbiddenProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
+<cfif useLakebaseForComponentForbiddenProducts>
+	<cftry>
+		<cfset ComponentForbiddenProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_products_restricted", {
+				"discount_type_id" = "eq.3 --Growth",
+				"component_id" = "eq.#getComponent.Program_Lump_Sum_Name_ID#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForComponentForbiddenProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForComponentForbiddenProducts>
+<cfquery name="ComponentForbiddenProducts" datasource="#application.datasource#">
 		SELECT Product_ID
 		FROM Component_Products_Restricted
 		WHERE Discount_Type_ID = 3 --Growth
 		AND Component_ID = '#getComponent.Program_Lump_Sum_Name_ID#'
 	</cfquery>
+</cfif>
 
 	<cfset ProductForbiddenList = valuelist(ComponentForbiddenProducts.Product_ID)>
 	<cfset exclusionProductListForLumpSum = listappend(exclusionProductListForLumpSum,ProductForbiddenList)>

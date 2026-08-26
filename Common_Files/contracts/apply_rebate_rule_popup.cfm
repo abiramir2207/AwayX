@@ -189,13 +189,28 @@
 	</cfif>
 	<!---get just selected rules then query that record set to get a distinct list--->
 	<cfset qGetRulesToQuery = rebateRules.getComponentRules(variables.tempComponentRuleIds,1) />
-	<cfquery name="qGetRules" dbtype="query">
+	<cfset useLakebaseForqGetRules = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetrulestoquery")>
+<cfif useLakebaseForqGetRules>
+	<cftry>
+		<cfset qGetRules = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetrulestoquery", {
+				"select" = "program_rebates_component_rule_id,rebates_component_rule_desc,unit_of_measure_id,joined_rule_id"
+			}), "program_rebates_component_rule_id,rebates_component_rule_desc,unit_of_measure_id,joined_rule_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRules = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRules>
+<cfquery name="qGetRules" dbtype="query">
 		SELECT	DISTINCT Program_Rebates_Component_Rule_ID,
 				Rebates_Component_Rule_Desc,
 				Unit_Of_Measure_ID,
 				Joined_Rule_Id
 		FROM	qGetRulesToQuery
 	</cfquery>
+</cfif>
 	<!---TSF: Label 10125 - Grab a list of rule id's from this query of a query to perform extra validation below when building the business rule matrix below--->
 	<cfset form.programRebateComponentRuleIds = valueList(qGetRules.Program_Rebates_Component_Rule_ID) />
 	<font color="##000066" size="3"><b>Apply Business Rules</b></font> 

@@ -17,7 +17,22 @@ Date Created:	10/05/2006
 		
 		<cfset var sampleDatas = "" />
 			
-		<cfquery name="qGetSamples" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetSamples = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sample_type")>
+<cfif useLakebaseForqGetSamples>
+	<cftry>
+		<cfset qGetSamples = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("sample_type", {
+				"deleted" = "eq.0",
+				"select" = "sample_type_id,sample_type_desc,sample_label,sample_type_detailed_desc"
+			}), "sample_type_id,sample_type_desc,sample_label,sample_type_detailed_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSamples = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSamples>
+<cfquery name="qGetSamples" datasource="#application.datasource#">
 			SELECT	Sample_Type_ID,
 					Sample_Type_Desc,
 					Sample_Label,
@@ -25,6 +40,7 @@ Date Created:	10/05/2006
 			FROM	Sample_Type
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfloop query="qGetSamples">
 		

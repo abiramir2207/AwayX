@@ -65,11 +65,26 @@ FUNCTIONALITY:
 		
     <cfset var xml_file = "">
     
-		<cfquery name="qGetProgramLetterXML" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramLetterXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForqGetProgramLetterXML>
+	<cftry>
+		<cfset qGetProgramLetterXML = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#arguments.program_letters_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLetterXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLetterXML>
+<cfquery name="qGetProgramLetterXML" datasource="#application.datasource#">
 		  SELECT 			*
 		  FROM 				program_letters
 		  WHERE 			program_letters.program_letters_id = #arguments.program_letters_id#
 		</cfquery>
+</cfif>
 		
 		<cfset xml_file = qGetProgramLetterXML.Letter_xml[1]>
 

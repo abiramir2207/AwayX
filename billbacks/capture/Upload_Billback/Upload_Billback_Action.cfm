@@ -110,17 +110,53 @@
 		<CFSET TimeStamp = REPLACE(TimeStamp,":","_","All")>					
 		<CFSET DateStampedBBUpload = "BB_Upload_#DateStamp#_#TimeStamp#">
 		
-		<CFQUERY NAME="UpdateLatest" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForUpdateLatest = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_master")>
+<cfif useLakebaseForUpdateLatest>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_upload_master",
+			{
+				"latest_upload" = "eq.1"
+			},
+			{
+				"latest_upload" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLatest = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLatest>
+<CFQUERY NAME="UpdateLatest" DATASOURCE="#Application.Datasource#">
 			UPDATE Billback_Upload_Master
 			SET Latest_Upload = 0
 			WHERE Latest_Upload = 1
 		</CFQUERY>
+</cfif>
 		
-		<CFQUERY NAME="UpdateLatest1" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForUpdateLatest1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_details")>
+<cfif useLakebaseForUpdateLatest1>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_upload_details",
+			{
+				"latest_upload" = "eq.1"
+			},
+			{
+				"latest_upload" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLatest1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLatest1>
+<CFQUERY NAME="UpdateLatest1" DATASOURCE="#Application.Datasource#">
 			UPDATE Billback_Upload_Details
 			SET Latest_Upload = 0
 			WHERE Latest_Upload = 1
 		</CFQUERY>
+</cfif>
 				
 		<CFQUERY NAME="HeaderInsert" DATASOURCE="#Application.Datasource#">
 			INSERT INTO 
@@ -201,11 +237,29 @@
 			WHERE 	DATEDIFF(d, Activation_Date, '#FORM.Activation_Date#') = 0 AND 
 					Deleted = 0 AND GL_Code_Upload_ID <> '#RID#'
 		</CFQUERY>
-		<CFQUERY NAME="UpdateUpload" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForUpdateUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForUpdateUpload>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"gl_code_upload_id" = "eq.#RID#"
+			},
+			{
+				"activation_date" = "#FORM.Activation_Date#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateUpload>
+<CFQUERY NAME="UpdateUpload" DATASOURCE="#Application.Datasource#">
 			UPDATE GL_Code_Upload
 			SET Activation_Date = '#FORM.Activation_Date#'
 			WHERE GL_Code_Upload_ID = '#RID#'
-		</CFQUERY>		
+		</CFQUERY>
+</cfif>		
 	</CFIF>
 	<CFLOCATION URL="index.cfm?Show_Tab=3" ADDTOKEN="No">
  --->

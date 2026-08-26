@@ -250,10 +250,25 @@
 	</BLOCKQUOTE>
 	<CFABORT>
 </cfif>
+<cfset useLakebaseForgetGlobalUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGlobalUOM>
+	<cftry>
+		<cfset getGlobalUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "global_target_uom"
+			}), "global_target_uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGlobalUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGlobalUOM>
 <cfquery name="getGlobalUOM" datasource="#application.datasource#">
     SELECT Global_Target_UOM
     FROM General_Settings
 </cfquery>
+</cfif>
 <cfif appSettings.getApprovalMarginType() NEQ 3>
     <cfset UOMdisplay = '%'>
 <cfelse>
@@ -642,9 +657,24 @@
 		</tr>
 		</CFLOOP>
 		</table>
-		<CFQUERY NAME="getcustcost" dbtype="query">
+		<cfset useLakebaseForgetcustcost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("thequery")>
+<cfif useLakebaseForgetcustcost>
+	<cftry>
+		<cfset getcustcost = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("thequery", {
+				"select" = "cust_cost"
+			}), "cust_cost"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcustcost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcustcost>
+<CFQUERY NAME="getcustcost" dbtype="query">
 			select distinct cust_cost from TheQuery
 		</CFQUERY>
+</cfif>
 		<table BORDER="0" CELLPADDING="3" CELLSPACING="0" ALIGN="Center">
 		<tr>
 			<td COLSPAN="2">&nbsp;</td>
@@ -1093,11 +1123,27 @@
 					</OPTION>
 				</cfloop>
 				<cfif not_other eq "" and isNumeric(arguments.Saved_Competitor_Name_ID) and arguments.Saved_Competitor_Name_ID neq 0><!--- none of the above options are selected, but there one in the TABLE --->
-					<cfquery name="qGetOtherCompetitor" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetOtherCompetitor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForqGetOtherCompetitor>
+	<cftry>
+		<cfset qGetOtherCompetitor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_id" = "eq.#arguments.Saved_Competitor_Name_ID#",
+				"select" = "program_bid_won_by_description"
+			}), "program_bid_won_by_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOtherCompetitor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOtherCompetitor>
+<cfquery name="qGetOtherCompetitor" datasource="#application.datasource#">
 					SELECT 	Program_Bid_Won_By_Description
 					FROM	Program_Bid_Won_By
 					WHERE 	Program_Bid_Won_By_ID = #arguments.Saved_Competitor_Name_ID#
 					</cfquery>
+</cfif>
 					<cfif qGetOtherCompetitor.recordCount>
 						<cfset other_value = qGetOtherCompetitor.Program_Bid_Won_By_Description />
 						<cfset bOtherSelected = 1 />

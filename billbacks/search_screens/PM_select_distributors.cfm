@@ -164,11 +164,26 @@ Currently, it is being used only to set vednors for distributors --->
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
 
-	<cfquery name="GetContractInfo" Datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" Datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 	<!--- Do not show the tabs if the contract is approved --->
 	<CFIF GetContractInfo.Contract_Status_Type_IDX GT 2>
@@ -244,11 +259,27 @@ Currently, it is being used only to set vednors for distributors --->
 <!---If there are existing saved distributors--->
 <CFSET FORM.LoadSavedDistributors=0>
 <CFIF FORM.LoadSavedDistributors EQ 1>
-	<cfquery name="CheckForExistingDistributors" Datasource="#application.datasource#">
+	<cfset useLakebaseForCheckForExistingDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForCheckForExistingDistributors>
+	<cftry>
+		<cfset CheckForExistingDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForExistingDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForExistingDistributors>
+<cfquery name="CheckForExistingDistributors" Datasource="#application.datasource#">
 		SELECT 	*
 		FROM Contract_Distributors
 		WHERE Contract_Main_ID = '#cryp.value#' AND deleted = 0
 	</cfquery>
+</cfif>
 	<CFSET FORM.button_caption = "save">
 	<CFSET FORM.FinalItemList = valuelist(CheckForExistingDistributors.BSA_Foodservice_Customers_ID)>
 </CFIF>
@@ -735,12 +766,29 @@ TABLE.Maintable TD
 						<SELECT NAME="Broker" style="width: 200px;"  onkeydown="if (event.keyCode == 13) doSearchNow();">
 							<OPTION VALUE="0">**ALL** <CFOUTPUT>#application.returned_customer_setting.broker_label_plural#</CFOUTPUT></OPTION>
 							<CFOUTPUT QUERY="GetBrokers">
-								<cfquery name="GetBrokerIDs" dbtype="query">
+								<cfset useLakebaseForGetBrokerIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallbrokers")>
+<cfif useLakebaseForGetBrokerIDs>
+	<cftry>
+		<cfset GetBrokerIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallbrokers", {
+				"broker_name" = "eq.#GetBrokers.Broker_Name#",
+				"order" = "broker_name.asc",
+				"select" = "bsa_foodservice_brokers_id"
+			}), "bsa_foodservice_brokers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokerIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokerIDs>
+<cfquery name="GetBrokerIDs" dbtype="query">
 									SELECT BSA_Foodservice_Brokers_ID
 									FROM GetAllBrokers
 									WHERE Broker_Name = '#GetBrokers.Broker_Name#'
 									ORDER BY Broker_Name
 								</cfquery>
+</cfif>
 								<cfset IDList = valueList(GetBrokerIDs.BSA_Foodservice_Brokers_ID)>
 								<OPTION
 									VALUE="#trim(IDList)#"

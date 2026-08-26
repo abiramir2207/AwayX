@@ -34,11 +34,27 @@
 			<cfset CID = cryp.value>
 		</cfif>
 
-		<cfquery name="prgStatusCheck" datasource="#application.datasource#">
+		<cfset useLakebaseForprgStatusCheck = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForprgStatusCheck>
+	<cftry>
+		<cfset prgStatusCheck = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#URL.Program_ID#",
+				"select" = "deleted"
+			}), "deleted"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForprgStatusCheck = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForprgStatusCheck>
+<cfquery name="prgStatusCheck" datasource="#application.datasource#">
 		SELECT deleted
 		FROM Contract_Main
 		WHERE Contract_Main_ID = #URL.Program_ID#
 		</cfquery>
+</cfif>
 <!--- 61496 : View Program Versions link does not show program vesions
 when app setting "Display all versions in program search" is ON we display deleted program in search when user click preview and 'view program version' above query causing to show error invalid number
 due to program is set DELETED = 1 added code to set deleted = 0 when app setting in ON 

@@ -28,6 +28,21 @@
 	</cfoutput>
 </cfif>		
 
+<cfset useLakebaseForqGetProductPricingOverheads = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetpricingoverheads")>
+<cfif useLakebaseForqGetProductPricingOverheads>
+	<cftry>
+		<cfset qGetProductPricingOverheads = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetpricingoverheads", {
+				"fp_product_id" = "eq.#Attributes.currentProductId#",
+				"componded_independent" = "eq.#Attributes.compondedIndependent#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductPricingOverheads = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductPricingOverheads>
 <cfquery name="qGetProductPricingOverheads" dbtype="query">
 	SELECT	*
 	FROM	qGetPricingOverheads
@@ -36,6 +51,7 @@
 			AND
 			Componded_Independent = #Attributes.compondedIndependent#
 </cfquery>
+</cfif>
 <cfif bForm>
 	<cfset QueryAddRow(qGetProductPricingOverheads)>
 </cfif>

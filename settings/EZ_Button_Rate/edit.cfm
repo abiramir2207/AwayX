@@ -168,7 +168,23 @@ function selectAllLike(thisObj, objToChk)
     </cfquery>
     <cfset NewEZButtonRateID = local.query.EZ_Button_Rate_ID />
 
-    <cfquery name="EzTemplateExists" datasource="#application.datasource#">
+    <cfset useLakebaseForEzTemplateExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForEzTemplateExists>
+	<cftry>
+		<cfset EzTemplateExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"program_description" = "eq.EZ Button Rate Template",
+				"isdominant" = "eq.0",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEzTemplateExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEzTemplateExists>
+<cfquery name="EzTemplateExists" datasource="#application.datasource#">
         SELECT
             *
         FROM
@@ -178,6 +194,7 @@ function selectAllLike(thisObj, objToChk)
             AND Program_Control_Panel_Options.IsDominant = 0
             AND Program_Control_Panel_Options.Deleted = 0
     </cfquery>
+</cfif>
 
     <cfif (EzTemplateExists.RecordCount EQ 0)>
         <!--- EZ Button Rate Template does not exist, Insert a new row in the table. --->
@@ -271,12 +288,28 @@ function selectAllLike(thisObj, objToChk)
       <cfset contractMainID = CreateEZButtonProgram.Contract_main_ID />
 </cfif>
 </cfoutput>
-    <cfquery name="qGetDiscountType" datasource="#application.datasource#">
+    <cfset useLakebaseForqGetDiscountType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_type")>
+<cfif useLakebaseForqGetDiscountType>
+	<cftry>
+		<cfset qGetDiscountType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_type", {
+				"discount_type_id" = "eq.2",
+				"select" = "discount_type_id,discount_type_desc"
+			}), "discount_type_id,discount_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountType>
+<cfquery name="qGetDiscountType" datasource="#application.datasource#">
         SELECT
             Discount_Type_ID, Discount_Type_Desc
         FROM
             Discount_Type WHERE Discount_Type_ID = 2
     </cfquery>
+</cfif>
 
 <cfif cgi.request_method eq "post">
     <cfset saveSettings()>

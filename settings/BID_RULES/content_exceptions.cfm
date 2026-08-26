@@ -5,12 +5,29 @@
 
 <cfset form.ExistingProductList = form.Product_List>
 
+<cfset useLakebaseForgetGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_groups")>
+<cfif useLakebaseForgetGroups>
+	<cftry>
+		<cfset getGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("exception_groups", {
+				"deleted" = "eq.0",
+				"order" = "group_name.asc",
+				"select" = "group_name,exception_group_id"
+			}), "group_name,exception_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroups>
 <cfquery name="getGroups" datasource="#application.datasource#">
 	SELECT Group_Name, Exception_Group_ID
 	FROM Exception_Groups
 	WHERE Deleted = 0
 	ORDER BY Group_Name
 </cfquery>
+</cfif>
 
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">

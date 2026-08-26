@@ -1210,11 +1210,27 @@
 
     <cffunction name="getCompanyID" returntype="query">
         <cfset var qgetCompanyID = 0>
-        <cfquery NAME="qgetCompanyID" datasource="#application.datasource#">
+        <cfset useLakebaseForqgetCompanyID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForqgetCompanyID>
+	<cftry>
+		<cfset qgetCompanyID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetCompanyID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetCompanyID>
+<cfquery NAME="qgetCompanyID" datasource="#application.datasource#">
           SELECT Company_Main_ID
           FROM Company_Main
           WHERE Deleted  = 0
         </cfquery>
+</cfif>
 
         <cfreturn qgetCompanyID />
     </cffunction>
@@ -2189,12 +2205,28 @@
 
     <!--- Setting to show/hide columns in program search grid --->
     <cffunction name="getProgramLevelSettings" output="false" returntype="query">
-        <cfquery NAME="qgetProgramLevelSettings" datasource="#application.datasource#">
+        <cfset useLakebaseForqgetProgramLevelSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForqgetProgramLevelSettings>
+	<cftry>
+		<cfset qgetProgramLevelSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "display_trade_dollars,display_payment_dollars,display_volume,display_trade_dollars_type,display_volume_type,display_operator_info"
+			}), "display_trade_dollars,display_payment_dollars,display_volume,display_trade_dollars_type,display_volume_type,display_operator_info"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetProgramLevelSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetProgramLevelSettings>
+<cfquery NAME="qgetProgramLevelSettings" datasource="#application.datasource#">
         SELECT   Display_Trade_Dollars,Display_Payment_Dollars, Display_Volume,
             Display_Trade_Dollars_Type, Display_Volume_Type,Display_Operator_Info
         FROM    _Users_Settings
         WHERE   User_ID ='#request.AccessStructure.Company_Main_ID#'
         </cfquery>
+</cfif>
         <cfreturn qgetProgramLevelSettings>
     </cffunction>
 

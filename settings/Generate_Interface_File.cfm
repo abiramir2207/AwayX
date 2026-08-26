@@ -2,12 +2,31 @@
 <cfparam name="form.generateNow" 	default="0">
 <cfparam name="url.action" 	default="">
 <cfif url.action eq "reset">
-	<cfquery name="qResetStatus" datasource="#application.datasource#">
+	<cfset useLakebaseForqResetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("icm_program_interface")>
+<cfif useLakebaseForqResetStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("icm_program_interface",
+			{
+				"status_id" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqResetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqResetStatus>
+<cfquery name="qResetStatus" datasource="#application.datasource#">
 		UPDATE	ICM_Program_Interface	
 		SET		Status_ID = 3
 		WHERE	Status_ID = 1
 				AND Deleted = 0
 	</cfquery>
+</cfif>
 	<cflocation addtoken="No" url="Generate_Interface_File.cfm" />
 </cfif>
 <cfoutput>
@@ -39,11 +58,27 @@
 	</cfquery>
 	
 	<!------ get the latest id, I don't want to use trigger :(, so assuming there will be only one with status = 1 ----->
-	<cfquery name="qGetLatestId" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetLatestId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("icm_program_interface")>
+<cfif useLakebaseForqGetLatestId>
+	<cftry>
+		<cfset qGetLatestId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("icm_program_interface", {
+				"status_id" = "eq.1",
+				"select" = "icm_program_interface_id"
+			}), "icm_program_interface_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLatestId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLatestId>
+<cfquery name="qGetLatestId" datasource="#application.datasource#">
 		SELECT	ICM_Program_Interface_ID
 		FROM	ICM_Program_Interface
 		WHERE	Status_ID = 1
 	</cfquery>
+</cfif>
 	
 	<cfset uploadId = qGetLatestId.ICM_Program_Interface_ID>
 	
@@ -106,12 +141,28 @@
 
 <br><br>
 <!------ get last successful ----->
+<cfset useLakebaseForqGetLastSuccessful = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetexistingprograminterface")>
+<cfif useLakebaseForqGetLastSuccessful>
+	<cftry>
+		<cfset qGetLastSuccessful = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetexistingprograminterface", {
+				"status_id" = "eq.2",
+				"order" = "created_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLastSuccessful = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLastSuccessful>
 <cfquery name="qGetLastSuccessful" dbtype="query">
 	SELECT	*
 	FROM	qGetExistingProgramInterface
 	WHERE	Status_ID = 2
 	Order By Created_Date DESC
 </cfquery>
+</cfif>
 <cfif qGetLastSuccessful.recordCount>
 	<cfset qUser = CreateObject("component", "components.user.UserManager").getUser(qGetLastSuccessful.Created_By)>
 	<!------ TODO: ----->

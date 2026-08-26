@@ -185,12 +185,28 @@ Description  :
 		<!--- unchecked checkboxes are not included in the submitted form so create them & assigned to off (not allowed)--->
 		<cfparam name="form.Allow_Access_#qProfiles.Profiles_ID#" default="off">
 
-		<cfquery name ="qCheckEntryExists" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckEntryExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_planner")>
+<cfif useLakebaseForqCheckEntryExists>
+	<cftry>
+		<cfset qCheckEntryExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_planner", {
+				"profile_id" = "eq.#qProfiles.Profiles_ID#",
+				"planner_template_id" = "eq.#form.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckEntryExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckEntryExists>
+<cfquery name ="qCheckEntryExists" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Profile_Forbidden_Planner
 			WHERE	Profile_ID = #qProfiles.Profiles_ID#
 			AND 	Planner_Template_ID = #form.id#
 		</cfquery>
+</cfif>
 
 		<cfif qCheckEntryExists.RecordCount>
 

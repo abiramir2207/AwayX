@@ -273,12 +273,28 @@ FUNCTIONALITY:
                       </cfselect>
                       <!--- <cfinput type="text" name="user_id" label="User ID" width="200" required="yes" validateat="onsubmit" validate="noblanks" message="Please enter your valid User ID" onChange="#requireInfo#" value="#form.user_id#" style="font-size:8px;"> --->
                       <!--- notification_type MUST be 2 --->
-                      <cfquery name="variables.qGetUserOptions" datasource="#application.datasource#">
+                      <cfset useLakebaseForvariables_qGetUserOptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForvariables_qGetUserOptions>
+	<cftry>
+		<cfset variables.qGetUserOptions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"profiles_id" = "is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qGetUserOptions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qGetUserOptions>
+<cfquery name="variables.qGetUserOptions" datasource="#application.datasource#">
                         SELECT *
                         FROM _Users
                         WHERE Deleted = 0
                         AND Profiles_ID IS NULL
                       </cfquery>
+</cfif>
                       <cfselect name="user_id" label="User ID" width="200" required="yes" onChange="#requireInfo#" validateat="onsubmit" validate="noblanks" message="Please select a valid User ID">
                       		<option value="#form.user_id#">#form.first_name# #form.last_name#</option>
                       	<cfloop query="variables.qGetUserOptions">

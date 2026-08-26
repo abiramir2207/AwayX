@@ -13,11 +13,29 @@
 	<cffunction name="unLockAll" access="public" output="true" hint="Unlock all locked records based on user ID">
 		<cfargument name="user_id" type="string" required="true">
 
-		<cfquery name="local.whatif" datasource="#application.datasource#">
+		<cfset useLakebaseForlocal_whatif = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("whatif")>
+<cfif useLakebaseForlocal_whatif>
+	<cftry>
+		<cfset application.oLakebase.updateRows("whatif",
+			{
+				"locked_by" = "eq.#arguments.user_id#"
+			},
+			{
+				"locked_by" = ""
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_whatif = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_whatif>
+<cfquery name="local.whatif" datasource="#application.datasource#">
 			UPDATE WhatIF
 			   SET Locked_By = ''
 			 WHERE Locked_By = '#arguments.user_id#'
 		</cfquery>
+</cfif>
 	</cffunction>
 
 	<!--------------------------------------------------------------------------------------------------------------------------------------------------->

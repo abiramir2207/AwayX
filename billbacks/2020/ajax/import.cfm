@@ -17,9 +17,25 @@
 	
 	<cffile action="upload" destination="#uploadTempFilePath#" nameconflict="overwrite" result="upload" />
 	
-	<cfquery name="qryFileCheck" datasource="#Application.Datasource#">
+	<cfset useLakebaseForqryFileCheck = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_log")>
+<cfif useLakebaseForqryFileCheck>
+	<cftry>
+		<cfset qryFileCheck = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_log", {
+				"header_file_name" = "eq.#upload.serverFile#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryFileCheck = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryFileCheck>
+<cfquery name="qryFileCheck" datasource="#Application.Datasource#">
 		SELECT * FROM BB_upload_log WHERE header_file_name = '#upload.serverFile#' AND Deleted = 0
 	</cfquery>
+</cfif>
 	<cfif (qryFileCheck.RecordCount EQ 0)>
 		<cfset proceedProcess = 1 />
 		<cffile action="COPY" source = "#uploadTempFilePath#\#upload.serverFile#" destination = "#uploadFilePath#">

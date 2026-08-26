@@ -380,9 +380,25 @@ function openDetails(BBID){
 				 --->
 				<A TARGET="_parent" HREF="/billbacks/capture/INDEX.CFM?bbid=#BB_parent_ID#" STYLE="FONT-SIZE:10PX;" ><img src="/Images/child_New.gif" title="Click to view original billback." width="13" height="13" border="0"></A>
 			<CFELSE>
-				<CFQUERY NAME="CheckForChild" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForCheckForChild = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckForChild>
+	<cftry>
+		<cfset CheckForChild = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#Billback_ID#",
+				"select" = "bb_parent_id"
+			}), "bb_parent_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForChild = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForChild>
+<CFQUERY NAME="CheckForChild" DATASOURCE="#Application.Datasource#">
 				SELECT BB_Parent_ID FROM Billback WHERE BB_Parent_ID = '#Billback_ID#'
 				</CFQUERY>
+</cfif>
 				<CFIF CheckForChild.RecordCount GT 0>
 					<cfset bb_parent = 1> <!--- D25219: SOW - Enable mass paying of payables --->
 					<img src="/Images/parent_New.gif" title="Split into #CheckForChild.RecordCount# billbacks." width="13" height="13" border="0">
@@ -748,9 +764,25 @@ function openDetails(BBID){
 		<!--- D32285 : Manually Set BB Status to Paid 			................................................................. --->
 		<!--- ................................................................................................................... --->
 		<Cfif NOT isDefined("Get_Profile_Settings.Mass_Billback_Pay")>
-			<cfquery name="Get_Profile_Settings" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_Profile_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_profiles_settings")>
+<cfif useLakebaseForGet_Profile_Settings>
+	<cftry>
+		<cfset Get_Profile_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_profiles_settings", {
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"select" = "mass_billback_pay,bb_approve"
+			}), "mass_billback_pay,bb_approve"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Profile_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Profile_Settings>
+<cfquery name="Get_Profile_Settings" datasource="#application.datasource#">
 				SELECT Mass_Billback_Pay, BB_Approve FROM BB_Profiles_Settings WHERE Profiles_ID = 	'#request.AccessStructure.Profiles_ID#'
 			</cfquery>
+</cfif>
 		</CFIF>
 
 		<!---Which status billbacks to show? --->

@@ -51,19 +51,54 @@
 		</cfif>
 
 		<cfif NOT useLakebaseForTaxInfo>
-			<cfquery name="Get_Tax_Info" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForGet_Tax_Info>
+	<cftry>
+		<cfset Get_Tax_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_tax_info", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Tax_Info>
+<cfquery name="Get_Tax_Info" datasource="#application.datasource#">
 				SELECT *
 				FROM BB_Tax_Info
 				where Billback_ID = '#Billback_ID#'
 				and deleted = 0
 			</cfquery>
+</cfif>
 			<cfif Get_Tax_Info.Recordcount>
-				<cfquery name="Update_Tax_Info" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdate_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForUpdate_Tax_Info>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_tax_info",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"tax_code_1_id" = "#form.Billbacks_Sales_Tax#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Tax_Info>
+<cfquery name="Update_Tax_Info" datasource="#application.datasource#">
 				UPDATE BB_Tax_Info
 				SET Tax_Code_1_ID = #form.Billbacks_Sales_Tax#
 				WHERE Billback_ID = '#Billback_ID#'
 				AND deleted = 0
 				</cfquery>
+</cfif>
 			<cfelse>
 				<cfquery name="Insert_Tax_Info" datasource="#application.datasource#">
 					INSERT INTO BB_Tax_Info (Billback_ID, Tax_Code_1_ID)
@@ -145,27 +180,76 @@
 
 	<cfif appsettings.getBillbackModifyAgree() EQ 1>
 		<!--- Check If modify agree is 1 --->
-		<cfquery name="getBBInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForgetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetBBInfo>
+	<cftry>
+		<cfset getBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_modify_agree"
+			}), "bb_modify_agree"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBInfo>
+<cfquery name="getBBInfo" datasource="#application.datasource#">
 			select BB_Modify_Agree
 			from billback
 			where Billback_Id = '#Billback_ID#'
 		</cfquery>
+</cfif>
 
 		<cfif getBBInfo.BB_Modify_Agree EQ 1>
 			<cfinclude template="save_modifyagree_BBchanges.cfm">
-			<cfquery name="UpdateModifyAgreeInfo" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForUpdateModifyAgreeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateModifyAgreeInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"bb_modify_agree" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateModifyAgreeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateModifyAgreeInfo>
+<cfquery name="UpdateModifyAgreeInfo" DATASOURCE="#Application.Datasource#">
 				update Billback
 				set BB_modify_agree = 0
 				where Billback_Id = '#Billback_ID#'
 			</cfquery>
+</cfif>
 		</cfif>
 	</cfif>
 	<!------ If BB Agree Email, send email ----->
 	<!--- D38427 : Billback email notifications START --->
-	<cfquery name="emailevent" datasource="#application.datasource#">
+	<cfset useLakebaseForemailevent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForemailevent>
+	<cftry>
+		<cfset emailevent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "billback_rfa_agree_email_event"
+			}), "billback_rfa_agree_email_event"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForemailevent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForemailevent>
+<cfquery name="emailevent" datasource="#application.datasource#">
 			select billback_rfa_agree_email_event
 			from _application_Settings
 	</cfquery>
+</cfif>
 	<cfif appSettings.getBBAgreeEmail() AND (emailevent.billback_rfa_agree_email_event EQ 2 OR emailevent.billback_rfa_agree_email_event EQ 3)>
 			<cfset AgreeEmailBillbackId = Billback_ID>
 			<cfset AgreeEmailUserId = request.AccessStructure.User_ID>
@@ -1179,10 +1263,25 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	<!--- Update budget actual dollar --->
 	<cfset CreateObject("component", "mvc.Models.AdvancedBudget.BudgetManager").addBillbackToBudget(billbackId=Billback_ID) />
 
-	<cfquery name="GetBillbackEmail" datasource="#application.datasource#">
+	<cfset useLakebaseForGetBillbackEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetBillbackEmail>
+	<cftry>
+		<cfset GetBillbackEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "bb_approved_email"
+			}), "bb_approved_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackEmail>
+<cfquery name="GetBillbackEmail" datasource="#application.datasource#">
 		SELECT BB_Approved_Email
 		FROM _application_settings
 	</cfquery>
+</cfif>
 	<cfif Len(GetPayeeType.BB_Request_Approval_User_ID) GT 0 AND GetBillbackEmail.BB_Approved_Email EQ 1>
 		<CFINCLUDE TEMPLATE="/get_Contact_Admin_Email_Address.cfm">
 		<cfquery name="Get_Email_Addresses" DATASOURCE="#application.datasource#">

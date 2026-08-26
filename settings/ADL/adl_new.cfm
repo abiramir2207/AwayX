@@ -12,12 +12,29 @@
 <cfset duplicate_found_in_save = 0>
 
 <cfif cgi.request_method is "post">
-    <cfquery name="qADL" datasource="#application.datasource#">
+    <cfset useLakebaseForqADL = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authorized_distribution_list_header")>
+<cfif useLakebaseForqADL>
+	<cftry>
+		<cfset qADL = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("authorized_distribution_list_header", {
+				"distributor_group_id" = "eq.#form.adl_customer#",
+				"title" = "eq.#form.adl_title#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqADL = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqADL>
+<cfquery name="qADL" datasource="#application.datasource#">
 		SELECT 	1
 		FROM 	Authorized_Distribution_List_Header
 		WHERE 	Distributor_Group_ID = '#form.adl_customer#'
 		AND 	Title = '#form.adl_title#'
     </cfquery>
+</cfif>
 
     <cfif qADL.recordCount and form.overwrite neq "1">
         <cfset duplicate_found_in_save = 1>

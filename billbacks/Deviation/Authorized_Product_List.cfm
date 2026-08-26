@@ -71,11 +71,27 @@ document.all.PleaseWaitMessage.style.display='none';
 	
 </CFQUERY>
 
+<cfset useLakebaseForqBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqBillback>
+	<cftry>
+		<cfset qBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_This_Discount_Type_Product_Detail.Billback_ID#",
+				"select" = "bb_start_date,bb_end_date"
+			}), "bb_start_date,bb_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBillback>
 <CFQUERY NAME="qBillback" dataSource="#application.datasource#">
 	SELECT	BB_Start_Date, BB_End_Date
 	FROM	Billback
 	WHERE	Billback_ID = '#Billback_This_Discount_Type_Product_Detail.Billback_ID#'
 </CFQUERY>
+</cfif>
 
 <cfset billback_start_date = qBillback.BB_Start_Date />
 <cfset billback_end_date = qBillback.BB_End_Date />

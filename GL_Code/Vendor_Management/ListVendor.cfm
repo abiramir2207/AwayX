@@ -7,12 +7,29 @@
 </head>
 </cfoutput>
 <body>
+<cfset useLakebaseForGet_Vendor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGet_Vendor>
+	<cftry>
+		<cfset Get_Vendor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"deleted" = "eq.0",
+				"order" = "vendor_id.asc",
+				"select" = "vendor_id,vendor_name"
+			}), "vendor_id,vendor_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Vendor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Vendor>
 <CFQUERY NAME="Get_Vendor" datasource="#application.datasource#">
 	SELECT	DISTINCT Vendor_ID,Vendor_Name
 	FROM	Vendor_Master
 	WHERE 	Deleted = 0  
 	ORDER BY Vendor_ID
 </CFQUERY>
+</cfif>
 <!--- none
 hidden
 dotted

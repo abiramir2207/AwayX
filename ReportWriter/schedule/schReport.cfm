@@ -29,11 +29,27 @@
 		<!-----------------------------------------------------------------------
 		Get Email Address from DB
 		--------------------------------------------------------------------------->
-		<CFQUERY NAME="q_getOwnerEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForq_getOwnerEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForq_getOwnerEmail>
+	<cftry>
+		<cfset q_getOwnerEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#q_getReportDetails.User_ID#",
+				"select" = "user_email,name_first + ' ' + name_last as uname,company_main_id"
+			}), "user_email,name_first + ' ' + name_last as uname,company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getOwnerEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getOwnerEmail>
+<CFQUERY NAME="q_getOwnerEmail" datasource="#application.datasource#">
 		Select	User_Email,Name_First + ' ' + Name_Last as uName,company_main_id
 		From	_Users
 		Where	User_ID='#q_getReportDetails.User_ID#'
 		</CFQUERY>
+</cfif>
 		<!-----------------------------------------------------------------------
 		End - Get Email Address from DB
 		--------------------------------------------------------------------------->

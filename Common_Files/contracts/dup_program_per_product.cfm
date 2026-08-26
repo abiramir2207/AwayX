@@ -29,11 +29,27 @@
 		<cfset dupTemplateManager = CreateObject("component","components.programs.template.DuplicateTemplateManager").init(form.TemplateID,trim(PageName)) />
 		<cfset currentDuplicateDef = dupTemplateManager.getDupProgramDefinition() >
 
-		<cfquery name="disChecked" dbtype="query">
+		<cfset useLakebaseFordisChecked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currentduplicatedef")>
+<cfif useLakebaseFordisChecked>
+	<cftry>
+		<cfset disChecked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currentduplicatedef", {
+				"item_name" = "eq.Distributors",
+				"select" = "ischecked"
+			}), "ischecked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordisChecked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordisChecked>
+<cfquery name="disChecked" dbtype="query">
 		 SELECT Ischecked 
 		 FROM currentDuplicateDef
 		 WHERE Item_Name = 'Distributors'
 		</cfquery>
+</cfif>
 
 <cfscript>
 	param name="form.uom" default="2";

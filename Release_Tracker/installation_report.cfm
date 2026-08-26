@@ -246,19 +246,52 @@ PunchListObject = document.getElementById('PunchList_'+i)
 	</cfoutput>
 		<cfoutput query="getAllLabels">
 			<cfset Label_Number = getAllLabels.Label_Number>
-				<CFQUERY NAME="getMissingLabels" datasource="#application.datasource#">
+				<cfset useLakebaseForgetMissingLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_installation")>
+<cfif useLakebaseForgetMissingLabels>
+	<cftry>
+		<cfset getMissingLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_installation", {
+				"release_version" = "eq.#ReleaseVersion#",
+				"label_number" = "not.is.null",
+				"select" = "label_number as label_number"
+			}), "label_number as label_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMissingLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMissingLabels>
+<CFQUERY NAME="getMissingLabels" datasource="#application.datasource#">
 					SELECT DISTINCT Label_Number AS Label_Number 
 					FROM Application_Installation
 					WHERE Release_Version = '#ReleaseVersion#'
 					AND Label_Number = '#Label_Number#'
 					AND Label_Number IS NOT NULL
 				</CFQUERY>
+</cfif>
 					<cfif getMissingLabels.recordcount eq 0>
-						<CFQUERY NAME="getPunchTitle" datasource="punchlist">
+						<cfset useLakebaseForgetPunchTitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch")>
+<cfif useLakebaseForgetPunchTitle>
+	<cftry>
+		<cfset getPunchTitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("punch", {
+				"punch_id" = "eq.#Label_Number#",
+				"select" = "punch_title"
+			}), "punch_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPunchTitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPunchTitle>
+<CFQUERY NAME="getPunchTitle" datasource="punchlist">
 							SELECT Punch_Title
 							FROM Punch
 							WHERE Punch_ID = '#Label_Number#'
 						</CFQUERY>
+</cfif>
 						<cfset Punch_Title = getPunchTitle.Punch_Title>
 						<cfset UniqueObjectID = getAllLabels.currentrow>
 						<tr id="PunchList_#UniqueObjectID#" style="display:none;">

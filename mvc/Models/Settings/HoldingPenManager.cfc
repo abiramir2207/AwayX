@@ -63,11 +63,27 @@ Usage:			N/A
 		<<cfquery name="qToggleInterface" datasource="#application.datasource#">
 			UPDATE _Settings SET Value = '#b#' WHERE Input_Name = 'Interface_700_Is_On'
 		</cfquery> 
-		<cfquery name="qGetInterfaceOn" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetInterfaceOn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_settings")>
+<cfif useLakebaseForqGetInterfaceOn>
+	<cftry>
+		<cfset qGetInterfaceOn = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_settings", {
+				"input_name" = "eq.Interface_700_Is_On",
+				"select" = "value"
+			}), "value"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetInterfaceOn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetInterfaceOn>
+<cfquery name="qGetInterfaceOn" datasource="#application.datasource#">
 			SELECT Value
             FROM _Settings
             WHERE Input_Name = 'Interface_700_Is_On'
 		</cfquery>
+</cfif>
 		<cfdump var='#qGetInterfaceOn#' output='c:\dump.log'>
 		<cfscript>
 			Return '#qGetInterfaceOn.value#';

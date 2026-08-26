@@ -1016,24 +1016,61 @@
 		 <cfset paidToArgs = arguments.paidTo />
 	  </cfif>
 
-	  <cfquery name="delComponent" datasource="#application.datasource#">
+	  <cfset useLakebaseFordelComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_freight_rates")>
+<cfif useLakebaseFordelComponent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_freight_rates",
+			{
+				"component_name_id" = "eq.#arguments.componentId#",
+				"program_id" = "eq.#arguments.programId#",
+				"paid_to" = "eq.#paidToArgs#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelComponent>
+<cfquery name="delComponent" datasource="#application.datasource#">
 	  	Update Program_Fixed_Freight_Rates
 	  	Set Deleted = 1
 	  	Where Component_Name_Id = #arguments.componentId#
 	  	And   program_id = #arguments.programId#
 	  	And   Paid_To = #paidToArgs#
 	 </cfquery>
+</cfif>
 
 	</cffunction>
 
 	<cffunction name="getFixedComponentType" output="false" returntype="query">
 
-	<cfquery name="qrygetFixedComponentType" datasource="#application.datasource#">
+	<cfset useLakebaseForqrygetFixedComponentType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("delivery_type")>
+<cfif useLakebaseForqrygetFixedComponentType>
+	<cftry>
+		<cfset qrygetFixedComponentType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("delivery_type", {
+				"deleted" = "eq.0",
+				"order" = "delivery_type_desc.asc",
+				"select" = "delivery_type_id,delivery_type_desc"
+			}), "delivery_type_id,delivery_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetFixedComponentType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetFixedComponentType>
+<cfquery name="qrygetFixedComponentType" datasource="#application.datasource#">
 		SELECT Delivery_Type_ID,Delivery_Type_Desc
 		FROM Delivery_Type
 		WHERE Deleted = 0
 		ORDER BY Delivery_Type_Desc
 	</cfquery>
+</cfif>
 
 		<cfreturn qrygetFixedComponentType />
    	</cffunction>

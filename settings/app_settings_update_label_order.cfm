@@ -24,12 +24,31 @@
 		<cfset activeSequence = row>
 	</cfif>
 
-	<cfquery name="updateOrder" datasource="#application.datasource#">
+	<cfset useLakebaseForupdateOrder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_auto_report_export_labels")>
+<cfif useLakebaseForupdateOrder>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_auto_report_export_labels",
+			{
+				"bb_auto_report_export_labels_id" = "eq.#id#",
+				"table_code" = "eq.#tableCode#"
+			},
+			{
+				"sequence" = "#activeSequence#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOrder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOrder>
+<cfquery name="updateOrder" datasource="#application.datasource#">
 		UPDATE BB_Auto_Report_Export_Labels
 		SET sequence = '#activeSequence#'
 		WHERE BB_Auto_Report_Export_Labels_ID = '#id#'
 			AND Table_code = '#tableCode#'
 	</cfquery>
+</cfif>
 
 	<cfset row = row + 1>
 

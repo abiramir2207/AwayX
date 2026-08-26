@@ -45,7 +45,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 	
  
 	<cffunction name="getHQPosition" output="false" returntype="query">
-		<cfquery name="qryHQPosition" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqryHQPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForqryHQPosition>
+	<cftry>
+		<cfset qryHQPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"service_zone_id" = "is.null",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryHQPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryHQPosition>
+<cfquery name="qryHQPosition" datasource="#Application.Datasource#">
 			SELECT 	User_Positions_ID 
 			FROM 	User_Positions 
 			WHERE 	Service_Zone_ID IS NULL AND 
@@ -53,6 +71,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 					Service_Market_ID IS NULL AND 
 					Deleted = 0
 		</cfquery>
+</cfif>
 		<cfreturn qryHQPosition />
 		
 	</cffunction>
@@ -96,12 +115,40 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 			<cfset UserIsASupervisor = 1>
 		</cfif>		
 		
-		<cfquery name="DeductionsProfilesSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForDeductionsProfilesSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions_profiles_settings")>
+<cfif useLakebaseForDeductionsProfilesSettings>
+	<cftry>
+		<cfset DeductionsProfilesSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions_profiles_settings", {
+				"profiles_id" = "eq.#Get_Profile_Settings.Profiles_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeductionsProfilesSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeductionsProfilesSettings>
+<cfquery name="DeductionsProfilesSettings" datasource="#application.datasource#">
 			SELECT * FROM Deductions_Profiles_Settings WHERE Profiles_ID = '#Get_Profile_Settings.Profiles_ID#'
 		</cfquery>
-		<cfquery name="DeductionSettings" datasource="#application.datasource#">
+</cfif>
+		<cfset useLakebaseForDeductionSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForDeductionSettings>
+	<cftry>
+		<cfset DeductionSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeductionSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeductionSettings>
+<cfquery name="DeductionSettings" datasource="#application.datasource#">
 			SELECT * FROM Deduction_Settings
 		</cfquery>
+</cfif>
 		<cfparam name="SrchByAnalystAllowed" default="false">
 		<cfif DeductionsProfilesSettings.DD_Search_By_Analyst>
 			<cfset SrchByAnalystAllowed = true>

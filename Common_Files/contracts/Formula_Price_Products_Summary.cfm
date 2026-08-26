@@ -15,12 +15,28 @@
 		Contract_Main.Contract_Main_ID = '#Program_ID#'
 </cfquery>
 
+<cfset useLakebaseForGet_Program_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGet_Program_Info>
+	<cftry>
+		<cfset Get_Program_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID#",
+				"select" = "contract_number,contract_title"
+			}), "contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Program_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Program_Info>
 <CFQUERY NAME="Get_Program_Info" DATASOURCE="#application.datasource#">
 	SELECT	Contract_Number, Contract_Title
 	FROM	Contract_Main
 	WHERE
 			Contract_Main.Contract_Main_ID = #Program_ID#
 </CFQUERY>
+</cfif>
 <CFIF COMM_GetSettings.Discount_Formula_Pricing EQ 1>
 	
 	<CFQUERY NAME="getRules" datasource="#application.datasource#">

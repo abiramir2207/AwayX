@@ -395,10 +395,25 @@ TSF - Label 16253: Code to handle Billback Analyst search form
 		Added a new field in the Billback Search for searching on the Duplicates.
 	--->
 	<tr>
-		<cfquery name="getBBSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForgetBBSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForgetBBSettings>
+	<cftry>
+		<cfset getBBSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "enable_bb_dup_check"
+			}), "enable_bb_dup_check"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBSettings>
+<cfquery name="getBBSettings" datasource="#application.datasource#">
 			SELECT 	Enable_BB_Dup_Check
             FROM 		Billback_Settings
         </cfquery>
+</cfif>
 		<cfif (getBBSettings.Enable_BB_Dup_Check EQ 1)>
 
 				<td >
@@ -603,11 +618,27 @@ TSF - Label 16253: Code to handle Billback Analyst search form
       <!--- 8.) Date [moved] --->
       <td>
       	<cfsilent>
-          <cfquery NAME="Get_Billback_Dates" datasource="#application.datasource#">
+          <cfset useLakebaseForGet_Billback_Dates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_date_type")>
+<cfif useLakebaseForGet_Billback_Dates>
+	<cftry>
+		<cfset Get_Billback_Dates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_date_type", {
+				"deleted" = "eq.0",
+				"select" = "bb_date_type,bb_date_field"
+			}), "bb_date_type,bb_date_field"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Billback_Dates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Billback_Dates>
+<cfquery NAME="Get_Billback_Dates" datasource="#application.datasource#">
             SELECT BB_Date_Type,BB_Date_Field
             FROM 	BB_Date_Type
             WHERE Deleted = 0
           </cfquery>
+</cfif>
         </cfsilent>
 	<table cellpadding="1" cellspacing="0" border="0" width="100%">
           <tr>
@@ -991,11 +1022,27 @@ TSF - Label 16253: Code to handle Billback Analyst search form
       </td>
 	<cfif Source IS "Deductions">
 	<cfsilent>
-       <cfquery name="GetDeductionDetails" datasource="#Application.Datasource#">
+       <cfset useLakebaseForGetDeductionDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetDeductionDetails>
+	<cftry>
+		<cfset GetDeductionDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "dd_amount,distributor_id,distributor_bill_to_id"
+			}), "dd_amount,distributor_id,distributor_bill_to_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDeductionDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDeductionDetails>
+<cfquery name="GetDeductionDetails" datasource="#Application.Datasource#">
          SELECT	DD_Amount, Distributor_ID, Distributor_Bill_To_ID
          FROM	Deductions
          WHERE 	Deduction_ID = '#Deduction_ID#'
        </cfquery>
+</cfif>
      </cfsilent>
 	</cfif>
       <td>

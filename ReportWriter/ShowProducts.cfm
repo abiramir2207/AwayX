@@ -10,13 +10,30 @@ ShowProducts.cfm
 	<CFSET rProducts = "-1">
 </CFIF>
 <CFIF rProducts NEQ -1 AND Len(rProducts) GT 0>
-	<CFQUERY NAME="q_getProducts" datasource="#application.datasource#">
+	<cfset useLakebaseForq_getProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForq_getProducts>
+	<cftry>
+		<cfset q_getProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#rProducts#",
+				"order" = "description.asc",
+				"select" = "bsa_foodservice_items_master_id,description product_name"
+			}), "bsa_foodservice_items_master_id,description product_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getProducts>
+<CFQUERY NAME="q_getProducts" datasource="#application.datasource#">
 		SELECT	BSA_Foodservice_Items_Master_ID, Description Product_name
 		FROM 	BSA_Foodservice_Items_Master
 		WHERE
 				BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = '#rProducts#'
 		Order By Description
 	</CFQUERY>
+</cfif>
 	<CFIF q_getProducts.recordCount GT 0>
 		<CFSET ProductName = Left(q_getProducts.Product_Name, 25)>
 	<CFELSE>

@@ -38,12 +38,31 @@
 			WHERE 		Billback_ID = '#Billback_ID#'
 		</CFQUERY>
 			<!---D55703 :: Vendor required setting in closing method settings panel START--->	
-		<cfquery name="UpdateBillbackStatus" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateBillbackStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateBillbackStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"billback_status_id" = "eq.7"
+			},
+			{
+				"billback_status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateBillbackStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateBillbackStatus>
+<cfquery name="UpdateBillbackStatus" datasource="#application.datasource#">
 			UPDATE 	Billback 
 			SET 			Billback_Status_ID = 3
 			WHERE  	Billback_Id = '#Billback_ID#'
 			AND 		Billback_Status_ID = 7
-		</cfquery>	
+		</cfquery>
+</cfif>	
 	
 		<CFIF IsDefined("Deduction_ID")><!--- If coming from deduction, go back to deduction --->
 			<cflocation addtoken="no" url="/deductions/billback_select_vendor.cfm?Billback_ID=#Billback_ID#&Deduction_ID=#Deduction_ID#&NextAction=VendorSaved" />	
@@ -159,12 +178,29 @@
 	<cfset PayeeName = GetPayeeInfo.PayeeName />
 	<!------ Get the other payee name ----->
 	<CFIF PayeeType EQ 4 AND ConsiderThisassociatedDistributorToBeThePayee NEQ "">
-		<CFQUERY NAME="GetOtherPayeeInfo" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetOtherPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_unidentified_payee")>
+<cfif useLakebaseForGetOtherPayeeInfo>
+	<cftry>
+		<cfset GetOtherPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_unidentified_payee", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "bb_up_name			payeename"
+			}), "bb_up_name			payeename"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOtherPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOtherPayeeInfo>
+<CFQUERY NAME="GetOtherPayeeInfo" DATASOURCE="#Application.Datasource#">
 			SELECT 		BB_UP_Name			PayeeName
 			FROM 		Billback_Unidentified_Payee
 			WHERE 		Billback_Unidentified_Payee.Billback_ID = '#Billback_ID#' 
 			AND			Billback_Unidentified_Payee.Deleted = 0
 		</CFQUERY>
+</cfif>
 		<cfset PayeeName = GetOtherPayeeInfo.PayeeName />
 	</CFIF>
 
@@ -178,12 +214,28 @@
 
 <!--- Payee is operator --->	
 <CFELSEIF PayeeType EQ 2>
-	<CFQUERY NAME="GetAssociatedShipTo" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetAssociatedShipTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator")>
+<cfif useLakebaseForGetAssociatedShipTo>
+	<cftry>
+		<cfset GetAssociatedShipTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_operator", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAssociatedShipTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAssociatedShipTo>
+<CFQUERY NAME="GetAssociatedShipTo" DATASOURCE="#Application.Datasource#">
 		SELECT * 
 		FROM 		Billback_Operator 
 		WHERE 		Billback_ID = '#Billback_ID#' 
 		AND 		Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFIF appSettings.getVendorSearchInBBPayeePage() NEQ 1>
 		<CFQUERY NAME="GetPayeeInfo" DATASOURCE="#Application.Datasource#">
 			SELECT 		Operator_Name	PayeeName,
@@ -403,11 +455,27 @@ Note: (WR 60998) - Now a different app setting is being used below - "getSkipVen
 						<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0">							
 							<CFIF appSettings.getBBAllowVendorMasterSearch()>								
 								<!--- D13783 See if there's a match between ship to and vendor ID --->
-								<cfquery name="FindVendorMatch" datasource="#application.datasource#">
+								<cfset useLakebaseForFindVendorMatch = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForFindVendorMatch>
+	<cftry>
+		<cfset FindVendorMatch = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#GetPayeeID.Payee_ID#",
+				"select" = "vendor_master_id,vendor_id"
+			}), "vendor_master_id,vendor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForFindVendorMatch = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForFindVendorMatch>
+<cfquery name="FindVendorMatch" datasource="#application.datasource#">
 									SELECT Vendor_Master_ID, Vendor_ID 
 									FROM Vendor_Master
 									WHERE Vendor_ID = '#GetPayeeID.Payee_ID#'
-								</cfquery>								
+								</cfquery>
+</cfif>								
 								<cfif FindVendorMatch.Recordcount IS 1 and len(trim(FORM.Vendor_ID)) LT 1>
 									<cfset FORM.Vendor_ID = FindVendorMatch.Vendor_ID>
 									<CFQUERY NAME="SetVendorID" DATASOURCE="#Application.Datasource#">	
@@ -457,13 +525,30 @@ Note: (WR 60998) - Now a different app setting is being used below - "getSkipVen
 									</TD>
 								</TR>
 								<CFIF FORM.Vendor_ID NEQ "">
-									<CFQUERY NAME="GetVendorMaster" DATASOURCE="#Application.Datasource#">
+									<cfset useLakebaseForGetVendorMaster = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGetVendorMaster>
+	<cftry>
+		<cfset GetVendorMaster = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#FORM.Vendor_ID#",
+				"active_code" = "eq.A",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorMaster = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorMaster>
+<CFQUERY NAME="GetVendorMaster" DATASOURCE="#Application.Datasource#">
 										SELECT * 
 										FROM Vendor_Master 
 										WHERE Vendor_ID = '#FORM.Vendor_ID#' 
 										AND Active_Code = 'A' 
 										AND Deleted = 0
 									</CFQUERY>
+</cfif>
 									<CFSET FORM.Vendor_Master_ID = GetVendorMaster.Vendor_Master_ID>
 									<TR BGCOLOR="FFE083">
 										<TD>&nbsp;</TD>

@@ -10,11 +10,27 @@
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
+<cfset useLakebaseForGet_Reports = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("management_report_details")>
+<cfif useLakebaseForGet_Reports>
+	<cftry>
+		<cfset Get_Reports = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("management_report_details", {
+				"deleted" = "eq.0",
+				"select" = "report_id,report_name,report_path"
+			}), "report_id,report_name,report_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Reports = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Reports>
 <CFQUERY NAME="Get_Reports" DATASOURCE="#application.datasource#">
 select report_id,report_name,Report_Path
 from management_report_details
 where deleted = 0
 </CFQUERY>
+</cfif>
 <CFQUERY NAME="GetLastupdatedby" DATASOURCE="#application.datasource#" maxrows="1">
 Select		management_report_details.Last_Changed_Date,
 					management_report_details.Updated_User_id,

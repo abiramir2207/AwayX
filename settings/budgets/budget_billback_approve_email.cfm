@@ -8,11 +8,26 @@ Send a summary email for billbacks that are approved beyond budget dollars
 	<cfset BudgetManager = CreateObject("component", "components.budgets.BudgetManager").init() />
 	<cfset BudgetManager.loadBudgetLabels() />
 	<cfset qBudgetsForBillback = CreateObject("component", "components.budgets.BudgetBillbackManager").getBudgetsForBillback(billbackID = arguments.billbackID) />
-	<cfquery name="qBudgetsForCurrentBillback" dbtype="query">
+	<cfset useLakebaseForqBudgetsForCurrentBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qbudgetsforbillback")>
+<cfif useLakebaseForqBudgetsForCurrentBillback>
+	<cftry>
+		<cfset qBudgetsForCurrentBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qbudgetsforbillback", {
+				"actual_allocated_percent" = "not.is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBudgetsForCurrentBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBudgetsForCurrentBillback>
+<cfquery name="qBudgetsForCurrentBillback" dbtype="query">
 		SELECT	*
 		FROM	qBudgetsForBillback
 		WHERE	Actual_Allocated_Percent IS NOT NULL
 	</cfquery>
+</cfif>
 	<cfinclude template="/get_Contact_Admin_Email_Address.cfm">
 	<CF_EMAILWRAPPER 
 		TO			=	"#budgetsBillbackApproveEmailAddress#"

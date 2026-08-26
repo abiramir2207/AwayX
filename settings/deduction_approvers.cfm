@@ -11,11 +11,26 @@
 
 <BR><BR>
 
+<cfset useLakebaseForgetAuthorizedApprovers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("personnel_detail")>
+<cfif useLakebaseForgetAuthorizedApprovers>
+	<cftry>
+		<cfset getAuthorizedApprovers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("personnel_detail", {
+				"order" = "personnel_last_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAuthorizedApprovers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAuthorizedApprovers>
 <cfquery name="getAuthorizedApprovers" datasource="#application.datasource#">
 	SELECT *
 	FROM Personnel_Detail
 	Order By Personnel_last_name
 </cfquery>
+</cfif>
 
 <cfquery name="getDeductionRangeAssignments" datasource="#application.datasource#">
 	SELECT     dbo.Deduction_Cost_Range_Assignments.Range_Min, dbo.Deduction_Cost_Range_Assignments.Range_Max,dbo.Deduction_Cost_Range_Assignments.Setting_Last_Updated, 

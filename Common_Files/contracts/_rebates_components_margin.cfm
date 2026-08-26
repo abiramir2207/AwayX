@@ -357,10 +357,25 @@ if(dropdown_names == undefined)
 			</cfif>
 			<TD width="#desc_width#" title="#thisDesc#" valign="top"> #desRebateData.aProd[i].description# 
 			<CFIF GetSettings.Include_Competitive_Data_Tracking EQ 1>
-				<cfquery name="getcompetitiveinfo" dbtype="query">
+				<cfset useLakebaseForgetcompetitiveinfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getcompetitiveproductsinfo")>
+<cfif useLakebaseForgetcompetitiveinfo>
+	<cftry>
+		<cfset getcompetitiveinfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getcompetitiveproductsinfo", {
+				"product_id" = "eq.#desRebateData.aProd[i].masterItemId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcompetitiveinfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcompetitiveinfo>
+<cfquery name="getcompetitiveinfo" dbtype="query">
 					select * from getCompetitiveProductsInfo
 					where product_id = '#desRebateData.aProd[i].masterItemId#'
 				</cfquery>
+</cfif>
 				<CFMODULE template="/CustomTags/SmallHelp.cfm"
 				width = "180"
 				height = "50"

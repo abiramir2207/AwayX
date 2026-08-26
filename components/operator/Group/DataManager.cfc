@@ -234,11 +234,28 @@
       </cfif>
       <cfif bRecExists EQ "0">
 
-		<cfquery name="qryChkISPG" datasource="#application.datasource#">
+		<cfset useLakebaseForqryChkISPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("operator_group_level")>
+<cfif useLakebaseForqryChkISPG>
+	<cftry>
+		<cfset qryChkISPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("operator_group_level", {
+				"operator_group_level_id" = "eq.#arguments.stForm.GroupLevelID#",
+				"limit" = "1",
+				"select" = "is_pg"
+			}), "is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryChkISPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryChkISPG>
+<cfquery name="qryChkISPG" datasource="#application.datasource#">
           SELECT TOP 1 IS_PG  FROM
           Operator_Group_Level
           WHERE Operator_Group_Level_ID = #arguments.stForm.GroupLevelID#
         </cfquery>
+</cfif>
         <cfquery name="qUpdateAllRecs" datasource="#application.datasource#">
           INSERT INTO Operator_Group_Template_Selection
           (

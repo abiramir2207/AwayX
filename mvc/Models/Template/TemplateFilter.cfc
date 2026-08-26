@@ -48,7 +48,24 @@
 		<cfset var objMarketPriceManager = CreateObject("component","mvc.Models.Template.MarketPriceManager") />
 		<cfset var objPositionFilterManager = CreateObject("component","mvc.Models.Template.UserPositionFilterManager")/>
 		<!--- get 1 template filter based on Id --->
-		<cfquery name="qGetTemplateFilter" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_filters")>
+<cfif useLakebaseForqGetTemplateFilter>
+	<cftry>
+		<cfset qGetTemplateFilter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_filters", {
+				"template_filters_id" = "eq.#this.Template_Filters_Id#",
+				"select" = "template_filters_id,template_id,parent_template_id,name,description,status,created_user_id
+					--,created_date"
+			}), "template_filters_id,template_id,parent_template_id,name,description,status,created_user_id
+					--,created_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplateFilter>
+<cfquery name="qGetTemplateFilter" datasource="#application.datasource#">
 			SELECT 	Template_Filters_Id,
 					Template_Id,
 					Parent_Template_Id,
@@ -60,6 +77,7 @@
 			FROM	Template_Filters
 			WHERE 	Template_Filters_Id = #this.Template_Filters_Id#			
 		</cfquery>
+</cfif>
 		
 		<cfoutput query="qGetTemplateFilter">
 			<!---<cflog text="TemplateFilter cfc id = #qGetTemplateFilter.Template_Filters_Id#"/>--->
@@ -145,7 +163,28 @@
 	<!--- UPDATE :: Template Filter --->
 	<cffunction name="updateTemplateFilter" access="public" output="false">
   		<!---<cfargument name="TemplateFilter" type="mvc.Models.Template.TemplateFilter" required="true" />--->
-		<cfquery name="qUpdateTemplateFilter" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_filters")>
+<cfif useLakebaseForqUpdateTemplateFilter>
+	<cftry>
+		<cfset application.oLakebase.updateRows("template_filters",
+			{
+				"template_filters_id" = "eq.#this.Template_Filters_Id#"
+			},
+			{
+				"--template_id" = "#this.Template_Id#",
+				"--parent_template_id" = "#this.Parent_Template_Id#",
+				"name" = "#this.Name#",
+				"description" = "#this.Desc#",
+				"status" = "#this.Status#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateTemplateFilter>
+<cfquery name="qUpdateTemplateFilter" datasource="#application.datasource#">
 			UPDATE Template_Filters
 			SET
 				--Template_Id = #this.Template_Id#,
@@ -155,16 +194,35 @@
 				Status = '#this.Status#'
 			WHERE 	Template_Filters_Id = #this.Template_Filters_Id#	
 		</cfquery>
+</cfif>
 		
   	</cffunction>
 	
 	<!---DELETE Filter Pack--->
 	<cffunction name="deleteDB" access="public" output="false">
-		<cfquery name="qDeleteTemplateFilter" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_filters")>
+<cfif useLakebaseForqDeleteTemplateFilter>
+	<cftry>
+		<cfset application.oLakebase.updateRows("template_filters",
+			{
+				"template_filters_id" = "eq.#this.Template_Filters_Id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteTemplateFilter>
+<cfquery name="qDeleteTemplateFilter" datasource="#application.datasource#">
 			UPDATE Template_Filters
 			SET Deleted = 1
 			WHERE 	Template_Filters_Id = #this.Template_Filters_Id#	
 		</cfquery>
+</cfif>
   	</cffunction>
 	
 	<!--- Getter Setter --->

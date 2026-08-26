@@ -76,46 +76,121 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get from db all of the Q Brand Description													 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForQ_Brand_Desc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForQ_Brand_Desc>
+	<cftry>
+		<cfset Q_Brand_Desc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "q_brand_desc"
+			}), "q_brand_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForQ_Brand_Desc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForQ_Brand_Desc>
 <CFQUERY NAME="Q_Brand_Desc" datasource="#application.datasource#">
 Select	distinct	Q_Brand_Desc
 From	BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get from db all of the Type Code Description													 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForType_Code_Desc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForType_Code_Desc>
+	<cftry>
+		<cfset Type_Code_Desc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"order" = "type_code_desc.asc",
+				"select" = "type_code_desc"
+			}), "type_code_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForType_Code_Desc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForType_Code_Desc>
 <CFQUERY NAME="Type_Code_Desc" datasource="#application.datasource#">
 Select		distinct	Type_Code_Desc
 From		BSA_Foodservice_Items_Master
 Order by	Type_Code_Desc
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get from db all of the Type Group Description													 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForType_Group_Desc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForType_Group_Desc>
+	<cftry>
+		<cfset Type_Group_Desc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "type_group_desc"
+			}), "type_group_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForType_Group_Desc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForType_Group_Desc>
 <CFQUERY NAME="Type_Group_Desc" datasource="#application.datasource#">
 Select	distinct	Type_Group_Desc
 From	BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get from db all of the Brands																	 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForBrand = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForBrand>
+	<cftry>
+		<cfset Brand = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"brand" = "not.is.null",
+				"select" = "brand"
+			}), "brand"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBrand = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBrand>
 <CFQUERY NAME="Brand" datasource="#application.datasource#">
 Select	distinct	Brand
 From	BSA_Foodservice_Items_Master
 Where 	Brand IS NOT NULL
 </CFQUERY>
+</cfif>
 
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get all of the UOM descriptions																 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_UOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForGet_UOM>
+	<cftry>
+		<cfset Get_UOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_UOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_UOM>
 <CFQUERY NAME="Get_UOM" datasource="#application.datasource#">
 Select	*
 From	Units_of_Measure
-</CFQUERY>			
+</CFQUERY>
+</cfif>			
 			
 			
 <STYLE TYPE="text/css">

@@ -1,11 +1,27 @@
 <cfparam name="form.File" default="">
 
 
+<cfset useLakebaseForGetOperatorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGetOperatorInfo>
+	<cftry>
+		<cfset GetOperatorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#form.operatorid#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatorInfo>
 <cfquery name="GetOperatorInfo" datasource="#application.datasource#">
 	SELECT Operator_Name
 	FROM BSA_Operator
 	WHERE BSA_Operator_ID = '#form.operatorid#'
 </cfquery>
+</cfif>
 
 	<CFSTOREDPROC PROCEDURE="GET_USDANOI_PRICE" DATASOURCE="#application.datasource#">
 			<cfprocparam type="In" cfsqltype="CF_SQL_VARCHAR" dbvarname="@@BSA_Foodservice_Items_Master_ID" value="#form.productid#" null="No">
@@ -16,11 +32,27 @@
 	<CFSET aCompValUOM = USDA_UOM>
 	
 	
-	<cfquery name="getProductInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForgetProductInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForgetProductInfo>
+	<cftry>
+		<cfset getProductInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#form.productid#",
+				"select" = "net_weight,item,description"
+			}), "net_weight,item,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductInfo>
+<cfquery name="getProductInfo" datasource="#application.datasource#">
 		SELECT Net_Weight, item, description
 		FROM BSA_Foodservice_Items_Master
 		WHERE BSA_Foodservice_Items_Master_ID = '#form.productid#'
 	</cfquery>
+</cfif>
 
 <cfquery name="GetBBs" datasource="#application.datasource#">
 SELECT     dbo.BB_Item_Final.Item_Volume_Paid_CS, dbo.BB_Approved.Date_Approved, dbo.Billback.Billback_ID, dbo.Billback.BB_Title, 

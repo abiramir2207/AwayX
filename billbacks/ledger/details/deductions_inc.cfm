@@ -13,9 +13,24 @@
 <cfoutput query="GetDeductions">
 
 <!---Use cleared amount?--->
-	<cfquery name="DeductionSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForDeductionSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForDeductionSettings>
+	<cftry>
+		<cfset DeductionSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {
+				"select" = "use_cleared_amount"
+			}), "use_cleared_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeductionSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeductionSettings>
+<cfquery name="DeductionSettings" datasource="#application.datasource#">
 	SELECT Use_Cleared_Amount FROM Deduction_Settings
 	</cfquery>
+</cfif>
 
 <cfset DeductionAmount = DD_Amount>
 <cfif DeductionSettings.Use_Cleared_Amount IS 1>

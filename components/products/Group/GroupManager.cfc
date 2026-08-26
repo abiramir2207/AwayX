@@ -209,12 +209,27 @@
 		
 		<cfset groupTypeStruct = StructNew() />
 		
-		<cfquery name="qGetGroupType" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetGroupType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqGetGroupType>
+	<cftry>
+		<cfset qGetGroupType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "group_by_group_type"
+			}), "group_by_group_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupType>
+<cfquery name="qGetGroupType" datasource="#application.datasource#">
 			
 			SELECT	Group_By_Group_Type
 			FROM	_Application_Settings
 			
 		</cfquery>
+</cfif>
 		
 		<cfset this.groupTypeVal = qGetGroupType.Group_By_Group_Type />
 		

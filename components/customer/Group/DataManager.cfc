@@ -568,11 +568,27 @@
 			<cfset qGetCustomerGroupAttributesGroupTemplate = this.getDistributorLevelsGroupTemplate(active=1, templateID=FirstParentID) />
 		</cfif>	
 	
-    <cfquery name="qGetCustomers" datasource="#application.datasource#">
+    <cfset useLakebaseForqGetCustomers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_level")>
+<cfif useLakebaseForqGetCustomers>
+	<cftry>
+		<cfset qGetCustomers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_level", {
+				"distributor_group_level_id" = "eq.#arguments.customerGroupLevelId#",
+				"select" = "is_pg"
+			}), "is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCustomers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCustomers>
+<cfquery name="qGetCustomers" datasource="#application.datasource#">
       SELECT Is_PG 
       FROM Distributor_Group_Level
       WHERE Distributor_Group_Level_ID = #arguments.customerGroupLevelId#
     </cfquery>
+</cfif>
     
 		<CFQUERY NAME="qGetCustomers" datasource="#application.datasource#">
 
@@ -1086,11 +1102,28 @@
       </cfif>
       <cfif bRecExists EQ "0">
       
-		<cfquery name="qryChkISPG" datasource="#application.datasource#">
+		<cfset useLakebaseForqryChkISPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_level")>
+<cfif useLakebaseForqryChkISPG>
+	<cftry>
+		<cfset qryChkISPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_level", {
+				"distributor_group_level_id" = "eq.#arguments.stForm.GroupLevelID#",
+				"limit" = "1",
+				"select" = "is_pg"
+			}), "is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryChkISPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryChkISPG>
+<cfquery name="qryChkISPG" datasource="#application.datasource#">
           SELECT TOP 1 IS_PG  FROM 
           Distributor_Group_Level
           WHERE Distributor_Group_Level_ID = #arguments.stForm.GroupLevelID#
         </cfquery>
+</cfif>
         <cfquery name="qUpdateAllRecs" datasource="#application.datasource#">
           INSERT INTO Customer_Group_Template_Selection 
           (

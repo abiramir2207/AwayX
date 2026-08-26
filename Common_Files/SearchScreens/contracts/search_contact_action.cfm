@@ -113,11 +113,27 @@
 	getUserInformation.Service_Market_ID 	EQ	""
 >
 	<CFSET Position_Type = "GOD">
-	<CFQUERY NAME="getGODPositions" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGODPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetGODPositions>
+	<cftry>
+		<cfset getGODPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGODPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGODPositions>
+<CFQUERY NAME="getGODPositions" datasource="#application.datasource#">
 		SELECT User_Positions_ID
 		FROM User_Positions
 		WHERE Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET Position_List_From_My_Position_Down = valuelist(getGODPositions.User_Positions_ID)>
 </CFIF>
 
@@ -135,11 +151,27 @@
 <CFINCLUDE TEMPLATE="\settings\Access_Rights\approval_tree\Approver_Tree_Search.cfm">
 
 
+<cfset useLakebaseForgetProgramTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetProgramTypes>
+	<cftry>
+		<cfset getProgramTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#FORM.Program_Type#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramTypes>
 <CFQUERY NAME="getProgramTypes" datasource="#application.datasource#">
 	SELECT Created_Type
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = '#FORM.Program_Type#'
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="GetRegion" datasource="#application.datasource#">
 	SELECT *
@@ -263,11 +295,26 @@
 
 
 		
-		<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
+<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 			Select		*
 			From		_Users_Settings
 			Where		User_ID		=		'#request.AccessStructure.Company_Main_ID#'
 		</CFQUERY>
+</cfif>
 
 		<TR>
 			<TD><B>Status codes:</B></TD>

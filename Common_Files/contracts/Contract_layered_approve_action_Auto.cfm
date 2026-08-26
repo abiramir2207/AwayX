@@ -37,7 +37,22 @@
                 where contract_main.Contract_Main_Id = #program_id#
 	</CFQUERY>
 
-	<cfquery name="GetSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "generic_type,pullbacks_on,is_pullback_corporate_deal,pullback_from_corporate"
+			}), "generic_type,pullbacks_on,is_pullback_corporate_deal,pullback_from_corporate"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
+<cfquery name="GetSettings" datasource="#application.datasource#">
         SELECT dbo.Program_Control_Panel_Options.Generic_Type,
                Pullbacks_On,
                is_pullback_corporate_deal,
@@ -45,6 +60,7 @@
         FROM   Program_Control_Panel_Options
         WHERE  ProgramControl_Panel_Options_ID = '#GetContractInfo.ProgramType_ID#'
 	</cfquery>
+</cfif>
 	<cfset ApproveProgram = 1>
 	<!---- save budget information ----->
 	<cfif appSettings.getBudgetsFunctionalityOn() eq 1 and GetContractInfo.planner_Id eq 0 >
@@ -86,11 +102,27 @@
 	<cfif ApproveProgram eq 1>
 		<!---TSF: Label 10245 - Only get the Approved_By_User_ID from the parent if one wasn't passed --->
 		<cfif not len(trim(form.Approved_By_User_ID))>
-			<CFQUERY NAME="ParentContractInfo" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForParentContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForParentContractInfo>
+	<cftry>
+		<cfset ParentContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#GetContractInfo.Revision_Of_Contract_Main_ID#",
+				"select" = "approved_by_user_id"
+			}), "approved_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForParentContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForParentContractInfo>
+<CFQUERY NAME="ParentContractInfo" DATASOURCE="#Application.Datasource#">
 				SELECT Approved_By_User_ID
                 FROM Contract_main
                 WHERE Contract_Main_ID = #GetContractInfo.Revision_Of_Contract_Main_ID#
 			</CFQUERY>
+</cfif>
 			<cfset form.Approved_By_User_ID = ParentContractInfo.Approved_By_User_ID />
 		</cfif>
 		<CFQUERY NAME="insertprogramtypecodes" DATASOURCE="#Application.Datasource#">
@@ -154,18 +186,52 @@
 
 		<!--- check for revision if it is pre-active remove it --->
 		<CFIF len(GetContractInfo.Revision_Of_Contract_Main_ID) GT 0>
-			<CFQUERY NAME="checkParentStats" datasource="#application.datasource#">
+			<cfset useLakebaseForcheckParentStats = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForcheckParentStats>
+	<cftry>
+		<cfset checkParentStats = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#GetContractInfo.Revision_Of_Contract_Main_ID#",
+				"select" = "contract_main_id,contract_status_type_idx"
+			}), "contract_main_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckParentStats = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckParentStats>
+<CFQUERY NAME="checkParentStats" datasource="#application.datasource#">
 				SELECT Contract_Main_ID, Contract_Status_Type_IDX
 				FROM Contract_Main
 				WHERE Contract_Main_ID = #GetContractInfo.Revision_Of_Contract_Main_ID#
 			</CFQUERY>
+</cfif>
 
 			<CFIF checkParentStats.Contract_Status_Type_IDX EQ GetContractInfo.Contract_Status_Type_IDX>
-				<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
+				<cfset useLakebaseFordeleteParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFordeleteParent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#checkParentStats.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteParent>
+<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
 					UPDATE Contract_main
 					SET deleted = 1
 					where contract_main_id = '#checkParentStats.Contract_Main_ID#'
 				</CFQUERY>
+</cfif>
 			</CFIF>
 		</CFIF>
 	</cfif>

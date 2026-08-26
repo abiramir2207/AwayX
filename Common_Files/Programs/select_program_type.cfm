@@ -11,11 +11,26 @@
 </cfif>
 <br>
 
+<cfset useLakebaseForGetAllPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetAllPrograms>
+	<cftry>
+		<cfset GetAllPrograms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllPrograms>
 <cfquery name="GetAllPrograms" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Control_Panel_Options
 	WHERE Company_Main_ID = '#request.AccessStructure.Company_Main_ID#'
 </cfquery>
+</cfif>
 
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">

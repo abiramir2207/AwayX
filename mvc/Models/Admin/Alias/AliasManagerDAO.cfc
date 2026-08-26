@@ -7,10 +7,25 @@
 	<!--- Get settings --->
 	<cffunction name="getSettings" access="private" returntype="query">
 
-	    <cfquery name="qGetSettings" datasource="#application.datasource#">
+	    <cfset useLakebaseForqGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqGetSettings>
+	<cftry>
+		<cfset qGetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "allow_multiple_operator_xref"
+			}), "allow_multiple_operator_xref"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSettings>
+<cfquery name="qGetSettings" datasource="#application.datasource#">
 		 SELECT Allow_Multiple_Operator_Xref
 		 FROM billback_settings
 	    </cfquery>
+</cfif>
 	  
 	   <cfreturn qGetSettings>
 

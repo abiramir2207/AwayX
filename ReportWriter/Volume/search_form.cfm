@@ -63,7 +63,25 @@ function showDistSearchWindow()
 <cfparam Name="FORM.DateType" 	default="FiscalPeriod">
 
 		<CFIF FORM.Distributor_List NEQ "">
-			<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
+			<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#FORM.Distributor_List#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "name.asc",
+				"select" = "bsa_foodservice_customers_id,name"
+			}), "bsa_foodservice_customers_id,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
 				SELECT BSA_Foodservice_Customers_ID,Name 
 				FROM BSA_Foodservice_Customers 
 				WHERE
@@ -74,6 +92,7 @@ function showDistSearchWindow()
 					BSA_Foodservice_Customers.Active_Code = 'A'
 				ORDER BY Name
 			</CFQUERY>
+</cfif>
 		<CFSET Selected_Distributor=Dist_Search_Result.Name>
 		</CFIF>
 		

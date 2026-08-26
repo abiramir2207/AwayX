@@ -407,11 +407,28 @@
 
 	<cfswitch expression="#arguments.Billback_Payee_Type_ID#">
 		<cfcase value="1"><!--- Distributor --->
-			<cfquery name="getPayeeID" datasource="#Application.Datasource#">
+			<cfset useLakebaseForgetPayeeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForgetPayeeID>
+	<cftry>
+		<cfset getPayeeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#arguments.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id as payee_id"
+			}), "distributor_id as payee_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeID>
+<cfquery name="getPayeeID" datasource="#Application.Datasource#">
 				SELECT Distributor_ID as Payee_ID
 				FROM Billback_Distributor
 				WHERE Billback_ID = '#arguments.Billback_ID#' AND Deleted = 0
 			</cfquery>
+</cfif>
 		</cfcase>
 
 		<cfcase value="2"><!--- Operator --->
@@ -513,10 +530,25 @@
 		<cfargument name="billback_id" type="string" required="true" />
 		<cfargument name="fromPayment" type="numeric" required="false" default="0" /><!--- D57265 --->
 
-		<CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetFA_AppSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetFA_AppSetting>
+	<cftry>
+		<cfset GetFA_AppSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "forbidallowprofilesintemplates"
+			}), "forbidallowprofilesintemplates"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFA_AppSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFA_AppSetting>
+<CFQUERY NAME="GetFA_AppSetting" DATASOURCE="#Application.Datasource#">
 		SELECT ForbidAllowProfilesInTemplates
 		FROM _Application_Settings
 		</CFQUERY>
+</cfif>
 
 		<CFQUERY NAME="qryCheckTemplateApprovalRights" DATASOURCE="#Application.Datasource#">
 			SELECT 		PCPO.ProgramControl_Panel_Options_ID,Contract_Main.Contract_Main_ID, ISNULL(Forbid_Access_Type,0) AS Forbid_Access_Type

@@ -88,11 +88,27 @@
 			R.Deleted = 0
 </CFQUERY>
 
+<cfset useLakebaseForgetProgramLockInformation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramLockInformation>
+	<cftry>
+		<cfset getProgramLockInformation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#URL.Program_Id#",
+				"select" = "contract_is_locked,contract_status_type_idx"
+			}), "contract_is_locked,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramLockInformation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramLockInformation>
 <CFQUERY NAME="getProgramLockInformation" datasource="#application.datasource#">
 		SELECT Contract_Is_Locked,Contract_Status_Type_IDX
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#URL.Program_Id#'
 	</CFQUERY>
+</cfif>
 
 <cfset CSL_Contract_Main_ID = URL.Program_Id>
 <CFINCLUDE template="\common_files\contracts\commonqueries.cfm">

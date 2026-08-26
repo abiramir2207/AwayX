@@ -15,6 +15,20 @@ Added/Changed: Added this variable--->
 	WHERE Contract_Main_ID = '#CTLKR_Contract_Main_ID#'
 </CFQUERY>
 
+<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#CSLGetContractInfo.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
 <cfquery name="GetSettings" datasource="#application.datasource#">
 	SELECT *
 	FROM 
@@ -22,12 +36,29 @@ Added/Changed: Added this variable--->
 	WHERE 
 		ProgramControl_Panel_Options_ID = '#CSLGetContractInfo.ProgramType_ID#'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForisContractCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForisContractCurrentlyLocked>
+	<cftry>
+		<cfset isContractCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CTLKR_Contract_Main_ID#",
+				"select" = "contract_is_locked,contract_locked_by_user_id"
+			}), "contract_is_locked,contract_locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisContractCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisContractCurrentlyLocked>
 <cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
 	SELECT Contract_Is_Locked, Contract_Locked_By_User_ID
 	FROM Contract_Main
 	WHERE Contract_Main_ID ='#CTLKR_Contract_Main_ID#'
 </cfquery>
+</cfif>
 
 
 <!--- If the Program has Date Exclusions turned on --->

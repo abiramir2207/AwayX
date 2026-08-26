@@ -199,11 +199,27 @@ WHERE		Billback.Billback_ID = '#url.billback_id#'
 ORDER BY 	BSA_Foodservice_Items_Master.Is_Divested,c.ship_to, Billback_Product.Product_Type_ID,	
 		item_number, Billback_Product_Detail.BB_Product_Type_ID
 </cfquery>
+<cfset useLakebaseForGetVendorId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForGetVendorId>
+	<cftry>
+		<cfset GetVendorId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_approved", {
+				"billback_id" = "eq.#url.Billback_ID#",
+				"select" = "vendor_master_id"
+			}), "vendor_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorId>
 <cfquery name="GetVendorId" DATASOURCE="#application.datasource#">
    Select Vendor_master_ID 
    From BB_Approved 
    Where Billback_ID = '#url.Billback_ID#'
 </cfquery>
+</cfif>
 <!--- Get the ERP ID of all the entries related to this billback from the Forge_ERP_Mapping table --->
 <cfquery name="getERPInfo" DATASOURCE="#application.datasource#">
    SELECT DISTINCT ERP.Program_Number,BSAFIM.Item,ERP.Deal_ID
@@ -223,10 +239,25 @@ ORDER BY 	BSA_Foodservice_Items_Master.Is_Divested,c.ship_to, Billback_Product.P
 	 AND BPR.Distributor_ID = ERP.Distributor_ID
 	 AND BPR.Deleted = 0
 </cfquery>	
-<!--- <cfquery name="getCsrSettings" datasource="#application.datasource#">
+<!--- <cfset useLakebaseForgetCsrSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetCsrSettings>
+	<cftry>
+		<cfset getCsrSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "csr_path,csr_days_to_store,csr_address_label"
+			}), "csr_path,csr_days_to_store,csr_address_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCsrSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCsrSettings>
+<cfquery name="getCsrSettings" datasource="#application.datasource#">
  	Select Csr_Path,Csr_Days_To_Store,Csr_Address_Label
     From General_Settings
- </cfquery> --->
+ </cfquery>
+</cfif> --->
 <cfif GetVendorId.Vendor_Master_ID neq "">
  <cfset variables.showVendorInfo = true />
   

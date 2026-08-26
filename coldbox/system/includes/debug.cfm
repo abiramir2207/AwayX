@@ -228,9 +228,22 @@ Modification History:
 				<cfif varVal eq ""><span class="fw_redText">N/A</span></cfif> #varVal#
 			<cfelse>
 				<cfif isQuery(varVal) and (varVal.recordCount gt 50)>
-					<cfquery name="varVal" dbType="query" maxrows="50">
+					<cfset useLakebaseForvarVal = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("varval")>
+<cfif useLakebaseForvarVal>
+	<cftry>
+		<cfset varVal = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("varval", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvarVal = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvarVal>
+<cfquery name="varVal" dbType="query" maxrows="50">
 						select * from varVal
 					</cfquery>
+</cfif>
 					<cfdump var="#Event.getValue(vars)#" label="Query Truncated to 50 records">
 				<cfelse>
 					<cfdump var="#Event.getValue(vars)#">

@@ -11,9 +11,25 @@
 	<CFIF Billback_Payee_Type_ID EQ 1>
 		<CFSET CountThisItem = 1>
 	<CFELSEIF Billback_Payee_Type_ID EQ 2>
-		<CFQUERY NAME="GetPayee" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator")>
+<cfif useLakebaseForGetPayee>
+	<cftry>
+		<cfset GetPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_operator", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayee>
+<CFQUERY NAME="GetPayee" DATASOURCE="#Application.Datasource#">
 			SELECT * FROM Billback_Operator WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		<CFSET CountThisItem = 0>
 
 		<CFQUERY NAME="CheckCount" DATASOURCE="#Application.Datasource#">
@@ -108,10 +124,29 @@
 	<CFSET CountThisItem = Count_Flag>
 </CFIF>
 
+<cfset useLakebaseForUpdateActual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
+<cfif useLakebaseForUpdateActual>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_product",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"actual_count_flag" = "#CountThisItem#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateActual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateActual>
 <CFQUERY NAME="UpdateActual" DATASOURCE="#Application.Datasource#">
 	UPDATE Billback_Product 
 	SET Actual_Count_Flag = #CountThisItem#
 	WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 </body>
 </html>

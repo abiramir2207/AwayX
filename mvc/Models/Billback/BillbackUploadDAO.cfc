@@ -664,7 +664,24 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 	--->
 	<cffunction name="getUploadHeaderSet" output="false" returntype="query">
 		<cfargument name="uploadID" type="numeric" required="true">
-		<cfquery name="qGetUploadHeaderSet" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUploadHeaderSet = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_header_error_correction")>
+<cfif useLakebaseForqGetUploadHeaderSet>
+	<cftry>
+		<cfset qGetUploadHeaderSet = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_header_error_correction", {
+				"upload_id" = "eq.#arguments.uploadID#",
+				"select" = "bb_upload_header_error_correction_id,upload_id,vendor_id,vendor_master_id
+				vendor_name,claim_org_id,claim_num,claim_date,due_date,trans_type,ref_trans_num,period_st_date,period_end_date,agreement_num,agreement_name,e_total_claimed_amt,claim_reason_code,claim_package_id,received_date,err_msg,err_type,reference_num,upload_type,locked,locked_user,locked_datetime,processed"
+			}), "bb_upload_header_error_correction_id,upload_id,vendor_id,vendor_master_id
+				vendor_name,claim_org_id,claim_num,claim_date,due_date,trans_type,ref_trans_num,period_st_date,period_end_date,agreement_num,agreement_name,e_total_claimed_amt,claim_reason_code,claim_package_id,received_date,err_msg,err_type,reference_num,upload_type,locked,locked_user,locked_datetime,processed"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUploadHeaderSet = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUploadHeaderSet>
+<cfquery name="qGetUploadHeaderSet" datasource="#application.datasource#">
 			SELECT
 				BB_Upload_Header_Error_Correction_ID,
 				upload_id,
@@ -697,6 +714,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 				BB_Upload_Header_Error_Correction
  			WHERE Upload_ID = #arguments.uploadID#
 		</cfquery>
+</cfif>
 		<!--- 	<cfelse>
 					 BB_Upload_Header_Log
 				</cfif>

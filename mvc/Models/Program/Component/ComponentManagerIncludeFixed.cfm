@@ -3,11 +3,27 @@ Retain the selected value for Dont_Count_Volume from Program_Fixed_Component
 --->
 <cfset bFixRateCount = 0 />
 
+<cfset useLakebaseForqGetFixedVolOverrideTemp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedvolumeoverrideselection")>
+<cfif useLakebaseForqGetFixedVolOverrideTemp>
+	<cftry>
+		<cfset qGetFixedVolOverrideTemp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedvolumeoverrideselection", {
+				"program_fixed_component_name_id" = "eq.#indx.componentId#",
+				"select" = "dont_count_volume"
+			}), "dont_count_volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedVolOverrideTemp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedVolOverrideTemp>
 <CFQUERY NAME="qGetFixedVolOverrideTemp" dbtype="query">
 	SELECT	Dont_Count_Volume
 	FROM	qGetFixedVolumeOverrideSelection
 	WHERE	Program_Fixed_Component_Name_ID = #indx.componentId#
 </CFQUERY>
+</cfif>
 <cfif qGetFixedVolOverrideTemp.RecordCount>
 	<cfset bFixRateCount = qGetFixedVolOverrideTemp.Dont_Count_Volume />
 </cfif>

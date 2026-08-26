@@ -33,11 +33,26 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get City, County and State																	 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_City = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("zipcodes")>
+<cfif useLakebaseForGet_City>
+	<cftry>
+		<cfset Get_City = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("zipcodes", {
+				"zipcode" = "eq.#Zip_Code#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_City = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_City>
 <CFQUERY NAME="Get_City" datasource="#application.datasource#">
 Select		*
 From 		ZipCodes
 Where		ZipCode	=	#Zip_Code#
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the freight details																		 --->

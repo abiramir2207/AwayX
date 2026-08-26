@@ -229,7 +229,24 @@
 <CFIF URL.RID EQ "0"> 
 		<CFPARAM NAME="FORM.Operator_List" 	DEFAULT="">
 		<CFIF FORM.Operator_List NEQ "">
-			<CFQUERY NAME="Search_Result" DATASOURCE = "#Application.Datasource#">
+			<cfset useLakebaseForSearch_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForSearch_Result>
+	<cftry>
+		<cfset Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_List#",
+				"deleted" = "eq.0",
+				"order" = "operator_name.asc",
+				"select" = "bsa_operator_id,operator_name"
+			}), "bsa_operator_id,operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSearch_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSearch_Result>
+<CFQUERY NAME="Search_Result" DATASOURCE = "#Application.Datasource#">
 				SELECT BSA_Operator_ID,Operator_Name 
 				FROM BSA_Operator 
 				WHERE
@@ -239,7 +256,8 @@
 					
 
 				ORDER BY Operator_Name
-			</CFQUERY>	
+			</CFQUERY>
+</cfif>	
 	
 			<CFSET Selected_Name = Search_Result.Operator_Name>
 		</CFIF>
@@ -272,12 +290,28 @@
 	ORDER BY  isnull(c.Country_Sort_Order, c.country_id) ASC
 </CFQUERY>
 <!--- Country code --->
+<cfset useLakebaseForgetCountry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForgetCountry>
+	<cftry>
+		<cfset getCountry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {
+				"active" = "eq.1",
+				"order" = "country_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCountry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCountry>
 <CFQUERY NAME="getCountry" datasource="#application.datasource#">
 	SELECT *
 	FROM _Country
 	where active = 1
 	ORDER BY Country_id ASC
 </CFQUERY>
+</cfif>
 <!--- Bank_Address --->
 <SCRIPT type = "text/javascript">
 function restrictLength(thisobj,valueLength)
@@ -443,9 +477,25 @@ function alert_and_delete()
 
 	 					<CFIF isdefined("URL.new_bb_check")>
 							<CFSET STATE = "disabled">
-						<CFQUERY name = "check_contury" datasource = "#Application.datasource#">
+						<cfset useLakebaseForcheck_contury = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForcheck_contury>
+	<cftry>
+		<cfset check_contury = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"ledger_id" = "eq.#URL.LRID#",
+				"select" = "curr_symbol"
+			}), "curr_symbol"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck_contury = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck_contury>
+<CFQUERY name = "check_contury" datasource = "#Application.datasource#">
 							SELECT Curr_symbol from Ledger_Table where Ledger_ID = #URL.LRID#	
 						</CFQUERY>
+</cfif>
 						<CFPARAM NAME = "check_contury.curr_symbol" DEFAULT = "">
 						<CFIF check_contury.curr_symbol EQ "US">
 							<!--- <INPUT TYPE = "hidden" NAME = "Customer_Bank_Location" VALUE = "1"> --->

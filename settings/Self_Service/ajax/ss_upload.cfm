@@ -37,10 +37,23 @@
 
 	<cfspreadsheet action="read" src="#(final_destination & upload.serverFile)#" query="qContent" headerrow="1" excludeHeaderRow="true">
 
-	<cfquery name="qFileData" dbtype="query">
+	<cfset useLakebaseForqFileData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcontent")>
+<cfif useLakebaseForqFileData>
+	<cftry>
+		<cfset qFileData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcontent", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFileData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFileData>
+<cfquery name="qFileData" dbtype="query">
 		SELECT *
 		FROM qContent
-	</cfquery> 
+	</cfquery>
+</cfif> 
 
 	<cfset missing_columns = 0>
 	<!--- add missing columns --->

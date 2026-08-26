@@ -37,11 +37,27 @@ ORDER BY Setting_Date DESC
 </cfquery>
 
 <!--- Get the filename of the file uploaded to the web server --->
+<cfset useLakebaseForget_Upload_File_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alias_management_products_history")>
+<cfif useLakebaseForget_Upload_File_Name>
+	<cftry>
+		<cfset get_Upload_File_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alias_management_products_history", {
+				"alias_management_product_history_id" = "eq.#setUploadInfo.Alias_Management_Product_History_ID#",
+				"select" = "upload_filename"
+			}), "upload_filename"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Upload_File_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Upload_File_Name>
 <cfquery name="get_Upload_File_Name" datasource="#application.datasource#">
 SELECT Upload_FileName
 FROM Alias_Management_Products_History 
 WHERE Alias_Management_Product_History_ID = '#setUploadInfo.Alias_Management_Product_History_ID#'
 </cfquery>
+</cfif>
 
 <!--- We always choose the name '\AliasProducts.csv' for the file. --->
 <cfset Complete_File_Path = get_DTS_Reference_Path.DTS_Reference_Path & '\AliasProducts.csv'>

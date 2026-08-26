@@ -44,10 +44,25 @@
 
 						
 <cfif form.letter_id NEQ "">
-	<cfquery name="getletterdetails" datasource="#application.datasource#">
+	<cfset useLakebaseForgetletterdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForgetletterdetails>
+	<cftry>
+		<cfset getletterdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#form.letter_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetletterdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetletterdetails>
+<cfquery name="getletterdetails" datasource="#application.datasource#">
 					select * from Program_Letters
 					where Program_Letters_id = #form.letter_id#
 	</cfquery>
+</cfif>
 	<cfif getletterdetails.recordcount GT 0>
 		<cfset operator_name = getletterdetails.operator_name>
 		<cfset distributor_name = getletterdetails.distributor_name>

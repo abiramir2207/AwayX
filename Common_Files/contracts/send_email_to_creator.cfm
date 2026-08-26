@@ -9,17 +9,49 @@
 	where User_ID = (select creator_ID  from contract_main where contract_main_id='#cryp.value#')
 </cfquery>
 	
+<cfset useLakebaseForgetFromEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetFromEmail>
+	<cftry>
+		<cfset getFromEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "user_email,name_first,name_last"
+			}), "user_email,name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFromEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFromEmail>
 <cfquery name="getFromEmail" datasource="#application.datasource#">
 	select User_Email, Name_first, Name_Last
 	from _Users
 	where User_ID = '#request.AccessStructure.User_ID#'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetProgramTitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramTitle>
+	<cftry>
+		<cfset getProgramTitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "contract_number,contract_title"
+			}), "contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramTitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramTitle>
 <cfquery name="getProgramTitle" datasource="#application.datasource#">
 	select Contract_Number,contract_title
 	from contract_main 
 	where contract_main_id='#cryp.value#'
 </cfquery>
+</cfif>
 
 <cfset ep.cid = #cryp.value#>
 <CFSET CSL_Contract_Main_ID = #cryp.value#>	

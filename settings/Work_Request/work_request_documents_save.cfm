@@ -6,11 +6,29 @@
 
 <!--- set delete to 1--->
 <cfif FORM.DeleteAttchedFile EQ 1>
-	<CFQUERY NAME="delete_AttchedFile" datasource="#application.datasource#">
+	<cfset useLakebaseFordelete_AttchedFile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request_document")>
+<cfif useLakebaseFordelete_AttchedFile>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request_document",
+			{
+				"work_request_document_id" = "eq.#Form.Work_Request_Document_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelete_AttchedFile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelete_AttchedFile>
+<CFQUERY NAME="delete_AttchedFile" datasource="#application.datasource#">
 		update  Work_Request_Document  
 		set deleted = 1
 		where	Work_Request_Document_ID =  '#Form.Work_Request_Document_ID#'	
 	</CFQUERY>
+</cfif>
 	<CFLOCATION URL="work_request_documents.cfm?MatchAttch=#Form.MatchAttch#" ADDTOKEN="No">
 	<CFABORT>
 <cfelse>
@@ -32,11 +50,27 @@
 </CFQUERY>
 
 <!--- Get user name --->
+<cfset useLakebaseForGetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserName>
+	<cftry>
+		<cfset GetUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.accessStructure.User_ID#",
+				"select" = "name_first + ' ' + name_last as uploadedby"
+			}), "name_first + ' ' + name_last as uploadedby"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserName>
 <CFQUERY name="GetUserName" datasource="#application.datasource#">
 	Select	Name_First + ' ' + Name_Last as uploadedBy
 	From	_Users 
 	Where	User_ID = '#request.accessStructure.User_ID#'
 </CFQUERY>
+</cfif>
 
 <cfscript>
 	compWorkRequest = CreateObject("component","settings.Work_Request.WorkRequest");

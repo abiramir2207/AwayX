@@ -410,9 +410,26 @@
 	ORDER BY	DESCRIPTION
 </CFQUERY>
 
+<cfset useLakebaseForCurrent_Active_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForCurrent_Active_Data>
+	<cftry>
+		<cfset Current_Active_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"deleted" = "eq.0",
+				"current_active_data" = "not.is.null",
+				"select" = "current_active_data"
+			}), "current_active_data"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCurrent_Active_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCurrent_Active_Data>
 <CFQUERY NAME="Current_Active_Data" DATASOURCE="#Application.Datasource#">
 	SELECT DISTINCT Current_Active_Data FROM GL_Code_Activation WHERE Deleted = 0 AND Current_Active_Data IS NOT NULL
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="GetFicalYear" DATASOURCE="#Application.Datasource#">
 	SELECT 		DISTINCT(GL_Code_Upload.Fiscal_Year) 

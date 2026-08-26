@@ -1,10 +1,26 @@
 <cffunction name="GetGDW4Info" access="public" returntype="query">
+<cfset useLakebaseForqGetGDW4Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("type_code_desc")>
+<cfif useLakebaseForqGetGDW4Info>
+	<cftry>
+		<cfset qGetGDW4Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("type_code_desc", {
+				"deleted" = "eq.0",
+				"order" = "type_code_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGDW4Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGDW4Info>
 <CFQUERY NAME="qGetGDW4Info" datasource="#application.datasource#">
 	SELECT * from
 	Type_Code_Desc
 	where deleted = 0
 	ORDER BY Type_Code_Desc
 </CFQUERY>
+</cfif>
 <cfreturn qGetGDW4Info />
 </cffunction>
 
@@ -143,9 +159,24 @@ FROM Generic_Files_Upload_Log LEFT JOIN	Generic_Files_Upload ON
 
 <cffunction name="GetLogDetails" access="public" returntype="query">
 <cfargument name="Generic_Files_Upload_Log_ID" type="string" required="true" default="">
+<cfset useLakebaseForqGetLogDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_files_upload_log")>
+<cfif useLakebaseForqGetLogDetails>
+	<cftry>
+		<cfset qGetLogDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_files_upload_log", {
+				"generic_files_upload_log_id" = "eq.#arguments.Generic_Files_Upload_Log_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLogDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLogDetails>
 <CFQUERY NAME="qGetLogDetails" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Generic_Files_Upload_Log WHERE Generic_Files_Upload_Log_ID = '#arguments.Generic_Files_Upload_Log_ID#'
 </CFQUERY>
+</cfif>
 <cfreturn qGetLogDetails />
 </cffunction>
 
@@ -153,10 +184,25 @@ FROM Generic_Files_Upload_Log LEFT JOIN	Generic_Files_Upload ON
 <cfargument name="Margin_Target_Temp_Valid_Id" type="numeric" required="true" default="">
 <cfargument name="filetype" type="numeric" required="true" default="">
 <CFIF arguments.filetype EQ 1>
-	<CFQUERY NAME="qGetItemNotfoundDetails" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForqGetItemNotfoundDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gdwl4_margin_targets_valid_temp")>
+<cfif useLakebaseForqGetItemNotfoundDetails>
+	<cftry>
+		<cfset qGetItemNotfoundDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gdwl4_margin_targets_valid_temp", {
+				"gdwl4_margin_target_temp_valid_id" = "eq.#arguments.Margin_Target_Temp_Valid_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetItemNotfoundDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetItemNotfoundDetails>
+<CFQUERY NAME="qGetItemNotfoundDetails" DATASOURCE="#Application.Datasource#">
 		select * from GDWL4_Margin_Targets_Valid_Temp
 		where GDWL4_Margin_Target_Temp_Valid_Id = #arguments.Margin_Target_Temp_Valid_Id#
 	</CFQUERY>
+</cfif>
 <CFELSEIF arguments.filetype EQ 2>
 	<CFQUERY NAME="qGetItemNotfoundDetails" DATASOURCE="#Application.Datasource#">
 		select * from ITEM_MARGIN_TARGETS_VALID_TEMP
@@ -182,12 +228,28 @@ FROM Generic_Files_Upload_Log LEFT JOIN	Generic_Files_Upload ON
 
 <cffunction name="CheckForLog" access="public" returntype="query">
 <cfargument name="Generic_Files_Upload_ID" type="numeric" required="true" default="">
-	<CFQUERY NAME="qCheckForLog" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForqCheckForLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_files_upload_log")>
+<cfif useLakebaseForqCheckForLog>
+	<cftry>
+		<cfset qCheckForLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_files_upload_log", {
+				"generic_files_upload_id" = "eq.#arguments.Generic_Files_Upload_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckForLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckForLog>
+<CFQUERY NAME="qCheckForLog" DATASOURCE="#Application.Datasource#">
 			SELECT 	* 
 			FROM 	Generic_Files_Upload_Log 
 			WHERE 	Generic_Files_Upload_ID = #arguments.Generic_Files_Upload_ID# AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 	<cfreturn qCheckForLog />
 </cffunction>
 
@@ -219,6 +281,20 @@ FROM Generic_Files_Upload_Log LEFT JOIN	Generic_Files_Upload ON
 </cffunction>
 
 <cffunction name="getdefaultitemsettings" access="public" output="false">
+<cfset useLakebaseForqgetdefaultitemsettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqgetdefaultitemsettings>
+	<cftry>
+		<cfset qgetdefaultitemsettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "default_item_margin_target_fob,default_item_margin_target_del,default_item_delivery_type,default_fob_price,default_del_price,default_fob_cash_discount,default_del_cash_discount"
+			}), "default_item_margin_target_fob,default_item_margin_target_del,default_item_delivery_type,default_fob_price,default_del_price,default_fob_cash_discount,default_del_cash_discount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetdefaultitemsettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetdefaultitemsettings>
 <CFQUERY NAME="qgetdefaultitemsettings" DATASOURCE="#Application.Datasource#">
 			SELECT default_item_margin_target_fob,default_item_margin_target_del,default_item_delivery_type,
 			default_FOB_Price, default_Del_Price, default_FOB_Cash_Discount,
@@ -226,26 +302,61 @@ FROM Generic_Files_Upload_Log LEFT JOIN	Generic_Files_Upload ON
 			from
 			general_settings
 </CFQUERY>
+</cfif>
 	<cfreturn qgetdefaultitemsettings />
 </cffunction>
 
 <cffunction name="getdefaultGDW4settings" access="public" output="false">
+<cfset useLakebaseForqgetdefaultGDW4settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForqgetdefaultGDW4settings>
+	<cftry>
+		<cfset qgetdefaultGDW4settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "default_gdw4_margin_target"
+			}), "default_gdw4_margin_target"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetdefaultGDW4settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetdefaultGDW4settings>
 <CFQUERY NAME="qgetdefaultGDW4settings" DATASOURCE="#Application.Datasource#">
 			SELECT default_GDW4_margin_target
 			from
 			general_settings
 </CFQUERY>
+</cfif>
 	<cfreturn qgetdefaultGDW4settings />
 </cffunction>
 
 <cffunction name="resetUpload" access="public" output="false">
 <cfargument name="Generic_Files_Upload_ID" type="numeric" required="true" default="">
+<cfset useLakebaseForqresetUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_files_upload")>
+<cfif useLakebaseForqresetUpload>
+	<cftry>
+		<cfset application.oLakebase.updateRows("generic_files_upload",
+			{
+				"generic_files_upload_id" = "eq.#arguments.Generic_Files_Upload_ID#"
+			},
+			{
+				"deleted" = "1",
+				"generic_files_upload_process_status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqresetUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqresetUpload>
 <CFQUERY NAME="qresetUpload" DATASOURCE="#Application.Datasource#">
 			update Generic_Files_Upload
 			set deleted = 1,
 			Generic_Files_Upload_Process_Status_ID = 3
 			where Generic_Files_Upload_ID = #arguments.Generic_Files_Upload_ID#
 </CFQUERY>
+</cfif>
 </cffunction>
 
 

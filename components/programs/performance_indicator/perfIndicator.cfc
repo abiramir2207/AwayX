@@ -429,13 +429,31 @@
 </cffunction>
 
 <cffunction name="ListGenericTypes" output="false" returntype="struct">
-	<CFQUERY NAME="getGenericTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGenericTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetGenericTypes>
+	<cftry>
+		<cfset getGenericTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"isdominant" = "eq.1",
+				"order" = "1.asc",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGenericTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGenericTypes>
+<CFQUERY NAME="getGenericTypes" datasource="#application.datasource#">
 		SELECT 	distinct Generic_Type 
 		FROM  	Program_Control_Panel_Options 
 		where 	deleted = 0
 		and		isDominant = 1
 		order by 1 asc
 	</CFQUERY>
+</cfif>
 	<cfloop query="getGenericTypes">
 		<cfif Not StructKeyExists(this.genericTypes, Left(UCase(Generic_Type), 1))>
 			<cfset this.genericTypes[Left(UCase(Generic_Type), 1)] = ArrayNew(1) />

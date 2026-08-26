@@ -28,10 +28,25 @@ Date Last Modified 	-	04/04/2006 by Milan --->
 
 	<cfif #qGetLockInfo.IS_Locked# EQ 1>
 		<!--- get the database setting for session timeout and use that for now as the program timeout --->
-		<CFQUERY NAME="getSessionTimeoutSetting" datasource="#application.datasource#">
+		<cfset useLakebaseForgetSessionTimeoutSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetSessionTimeoutSetting>
+	<cftry>
+		<cfset getSessionTimeoutSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "session_expiration_length"
+			}), "session_expiration_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSessionTimeoutSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSessionTimeoutSetting>
+<CFQUERY NAME="getSessionTimeoutSetting" datasource="#application.datasource#">
 			SELECT Session_Expiration_Length
 			FROM General_Settings
 		</CFQUERY>
+</cfif>
 
 		<CFSET FractionOfTHeDayInactive = getSessionTimeoutSetting.Session_Expiration_Length + 1>
 		<!--- get the time the user sent a request to the system last --->

@@ -7,11 +7,27 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 		<CF_CRYP type="de" string="#URL.CID#" key="#request.key#">
-		<cfquery name="CheckForExistingOperators" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckForExistingOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCheckForExistingOperators>
+	<cftry>
+		<cfset CheckForExistingOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "operator_id"
+			}), "operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForExistingOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForExistingOperators>
+<cfquery name="CheckForExistingOperators" datasource="#application.datasource#">
 			SELECT 	operator_ID
 			FROM Contract_Main
 			WHERE Contract_Main_ID = '#cryp.value#'
-		</cfquery>		
+		</cfquery>
+</cfif>		
 	<CFSET FORM.button_caption = "save">
 
 	<CFIF listfind(CheckForExistingOperators.operator_ID, 0, ",") EQ 0>
@@ -62,11 +78,29 @@
 		<CFIF isdefined("FORM.ALLINCATEGORY")><CFSET FORM.FinalItemList = "ALL"><CFELSE><CFIF listfind(FORM.FinalItemList, "ALL") NEQ 0><CFSET FORM.FinalItemList = listdeleteat(FORM.FinalItemList,listfind(FORM.FinalItemList, "ALL"),",")></CFIF></CFIF>
 		<CFIF len(trim(FORM.FinalItemList)) EQ 0><CFSET FORM.FinalItemList = "0"></CFIF>
 
-		<cfquery name="SaveOperator" datasource="#application.datasource#">
+		<cfset useLakebaseForSaveOperator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForSaveOperator>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			},
+			{
+				"operator_id" = "#FORM.FinalItemList#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaveOperator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaveOperator>
+<cfquery name="SaveOperator" datasource="#application.datasource#">
 			UPDATE Contract_Main
 			SET Operator_ID = '#FORM.FinalItemList#'
 			WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
 		</cfquery>
+</cfif>
 	
 	<CF_CRYP type="en" string="#FORM.Contract_Main_ID#" key="#request.key#">
 	<CFIF CheckForExistingOperators.operator_ID EQ 0>
@@ -135,11 +169,27 @@ TABLE.Maintable TD
 							<TD>
 							
 								<!--- Get All Operator Types --->
-								<CFQUERY NAME="Get_Operator_Types" datasource="#application.datasource#">
+								<cfset useLakebaseForGet_Operator_Types = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Types>
+	<cftry>
+		<cfset Get_Operator_Types = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"deleted" = "eq.0",
+				"select" = "operator_type"
+			}), "operator_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Types = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Types>
+<CFQUERY NAME="Get_Operator_Types" datasource="#application.datasource#">
 								Select	distinct Operator_Type
 								From	BSA_Operator
 								Where	Deleted =0 
 								</CFQUERY>
+</cfif>
 							
 								<SELECT NAME="Operator_Type" STYLE="width:200px;">
 									<OPTION VALUE="ALL" SELECTED>**ALL** Operator Types</OPTION>
@@ -163,11 +213,27 @@ TABLE.Maintable TD
 							</TD>
 							<TD>
 								<!--- Get Location Types --->
-								<CFQUERY NAME="Get_Location_Types" datasource="#application.datasource#">
+								<cfset useLakebaseForGet_Location_Types = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Location_Types>
+	<cftry>
+		<cfset Get_Location_Types = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"deleted" = "eq.0",
+				"select" = "operator_location_type"
+			}), "operator_location_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Location_Types = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Location_Types>
+<CFQUERY NAME="Get_Location_Types" datasource="#application.datasource#">
 								Select	distinct	Operator_Location_Type
 								From	BSA_Operator
 								Where	deleted = 0
 								</CFQUERY>
+</cfif>
 								<SELECT NAME="Operator_Location_Type" STYLE="width:200px;">
 									<OPTION VALUE="All" SELECTED>**ALL** Location Types</OPTION>
 									<CFOUTPUT QUERY="Get_Location_Types"><OPTION VALUE="#Operator_Location_Type#">#Operator_Location_Type#</OPTION></CFOUTPUT>

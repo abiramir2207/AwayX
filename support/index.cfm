@@ -18,9 +18,24 @@
     <cfset cdn_url = "https://cdn.awayx.com/base/styles/normalize/8.0.0/normalize.min.css">
     <cfhttp method="get" url="#cdn_url#">
 
-    <cfquery name="qCDN" datasource="#application.datasource#">
+    <cfset useLakebaseForqCDN = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_settings")>
+<cfif useLakebaseForqCDN>
+	<cftry>
+		<cfset qCDN = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_settings", {
+				"input_name" = "eq.Forge_CDN"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCDN = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCDN>
+<cfquery name="qCDN" datasource="#application.datasource#">
         SELECT * FROM _Settings WHERE Input_Name = 'Forge_CDN'
     </cfquery>
+</cfif>
 
     <cfif qCDN.Value neq ''>
         <fieldset>

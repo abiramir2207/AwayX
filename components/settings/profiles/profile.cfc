@@ -38,9 +38,24 @@
 
 		<cfset tmpProfileQuery = this.loadPacket(arguments.FileLocation)>
 
-		<cfquery name="getSettingFromQuery" dbtype="query">
+		<cfset useLakebaseForgetSettingFromQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("tmpprofilequery")>
+<cfif useLakebaseForgetSettingFromQuery>
+	<cftry>
+		<cfset getSettingFromQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("tmpprofilequery", {
+				"select" = "#setting_column_name#"
+			}), "#setting_column_name#"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSettingFromQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSettingFromQuery>
+<cfquery name="getSettingFromQuery" dbtype="query">
 			SELECT #Setting_Column_Name# FROM tmpProfileQuery
 		</cfquery>
+</cfif>
 
 		<cfreturn evaluate("getSettingFromQuery.#Setting_Column_Name#") />
 
@@ -225,17 +240,53 @@
     	</cfquery>
     	<cfloop from="#pull_CURRENT_ID.profile_sequence#" to="#pull_MAX_ID.max_ps#" index="ps">
     		<cfset new_ps = ps + 1>
-    		<cfquery name="update_ps" datasource="#application.datasource#">
+    		<cfset useLakebaseForupdate_ps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForupdate_ps>
+	<cftry>
+		<cfset application.oLakebase.updateRows("profiles",
+			{
+				"profile_sequence" = "eq.#new_ps#",
+				"deleted" = "eq.0"
+			},
+			{
+				"profile_sequence" = "#ps#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdate_ps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdate_ps>
+<cfquery name="update_ps" datasource="#application.datasource#">
     			UPDATE profiles
     			SET profile_sequence = #ps# WHERE profile_sequence = #new_ps# AND deleted = 0
     		</cfquery>
+</cfif>
     	</cfloop>
 
-    	<cfquery name="getUsersWithProfile" datasource="#application.datasource#">
+    	<cfset useLakebaseForgetUsersWithProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUsersWithProfile>
+	<cftry>
+		<cfset getUsersWithProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#arguments.profileId#",
+				"select" = "user_id"
+			}), "user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUsersWithProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUsersWithProfile>
+<cfquery name="getUsersWithProfile" datasource="#application.datasource#">
     		SELECT User_ID
     		FROM _Users
     		WHERE Deleted = 0 AND Profiles_ID = '#arguments.profileId#'
     	</cfquery>
+</cfif>
 
 		<CFSET ReasonText = "Your application security profile has been modified which requires you to log back in">
 
@@ -246,11 +297,29 @@
 			<cfset oReasonArray[arrayLen(oReasonArray)+1][1] = getUsersWithProfile.User_ID>
 			<cfset oReasonArray[arrayLen(oReasonArray)][2] = ReasonText>
 		</cfloop>
-    	<cfquery name="updateUserPositions" datasource="#application.datasource#">
+    	<cfset useLakebaseForupdateUserPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForupdateUserPositions>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"profiles_id" = "eq.#arguments.profileId#"
+			},
+			{
+				"profiles_id" = "#arguments.substitute_profileId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateUserPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateUserPositions>
+<cfquery name="updateUserPositions" datasource="#application.datasource#">
     		UPDATE _Users
     		SET Profiles_ID = '#arguments.substitute_profileId#'
     		WHERE Profiles_ID = '#arguments.profileId#'
     	</cfquery>
+</cfif>
     	<!--- Dev Notes: 23086/Anand Rao/21-May-10 User Traffic Changes --->
     	<cfloop query="getUsersWithProfile">
     		<cfquery name="qGetUserCode" datasource="#application.datasource#">
@@ -518,10 +587,25 @@
 
 
 		<cffunction name="getSequenceProfileLockStatus" output="false" hint="Return Lock Status">
-			<cfquery name="qGetSequenceProfileLockStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetSequenceProfileLockStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqGetSequenceProfileLockStatus>
+	<cftry>
+		<cfset qGetSequenceProfileLockStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"select" = "is_locked,locked_by_user_id"
+			}), "is_locked,locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSequenceProfileLockStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSequenceProfileLockStatus>
+<cfquery name="qGetSequenceProfileLockStatus" datasource="#application.datasource#">
 				 SELECT is_locked, Locked_By_User_ID
 				 FROM Profiles
 			</cfquery>
+</cfif>
 			<cfreturn qGetSequenceProfileLockStatus />
 		</cffunction>
 
@@ -551,12 +635,29 @@
 			<!--- Query for Lock Status' (by design all current profiles should have the same value) --->	<!--- Dev Note: Clay : 7029  --->
 
 <!--- Dev Note: GV : D9589   --->
-			<cfquery name="qgetdistinctProfiles" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetdistinctProfiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForqgetdistinctProfiles>
+	<cftry>
+		<cfset qgetdistinctProfiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"order" = "profiles_desc.asc",
+				"select" = "profiles_id,profiles_desc"
+			}), "profiles_id,profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetdistinctProfiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetdistinctProfiles>
+<cfquery name="qgetdistinctProfiles" datasource="#application.datasource#">
 				select DISTINCT Profiles.Profiles_ID, Profiles_Desc
 				from Profiles
 				where deleted = 0
 				order by Profiles_Desc
 			</cfquery>
+</cfif>
 
 			<cfreturn qgetdistinctProfiles />
 		</cffunction>
@@ -874,11 +975,26 @@
 		<!--- customer type --->
 		<cfset UseCustomerType = appSettings.getCustomertype()>
 		<cfif UseCustomerType IS 1>
-			<cfquery name="GetCustomertypeValues" datasource="#application.datasource#">
+			<cfset useLakebaseForGetCustomertypeValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_customer_type_settings")>
+<cfif useLakebaseForGetCustomertypeValues>
+	<cftry>
+		<cfset GetCustomertypeValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_customer_type_settings", {
+				"profiles_id" = "eq.#arguments.Copy_Profile_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCustomertypeValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCustomertypeValues>
+<cfquery name="GetCustomertypeValues" datasource="#application.datasource#">
 				Select *
 				from Profile_Customer_Type_Settings
 				where  Profiles_ID =  '#arguments.Copy_Profile_ID#'
 			</cfquery>
+</cfif>
 			<cfif GetCustomertypeValues.recordcount GT 0>
 				<cfloop query="GetCustomertypeValues" >
 					<cfquery name="EnterGetOperatingGroupProfileMap" datasource="#application.datasource#">
@@ -942,12 +1058,29 @@
 	<cffunction name="isActiveUsersAssociateToProfile" output="No" returntype="boolean">
 		<cfargument name="profileId" type="numeric" required="yes" displayname="Profile ID">
 		<cfset isActiveUsersWithProfile = 0 />
-		<cfquery name="getActiveUsersWithProfile" datasource="#application.datasource#">
+		<cfset useLakebaseForgetActiveUsersWithProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetActiveUsersWithProfile>
+	<cftry>
+		<cfset getActiveUsersWithProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#arguments.profileId#",
+				"select" = "user_id"
+			}), "user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetActiveUsersWithProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetActiveUsersWithProfile>
+<cfquery name="getActiveUsersWithProfile" datasource="#application.datasource#">
 			SELECT 	User_ID
 			FROM 	_Users
 			WHERE 	Deleted = 0
 			AND 	Profiles_ID = '#arguments.profileId#'
 		</cfquery>
+</cfif>
 		<cfif getActiveUsersWithProfile.recordcount GT 0>
 			<cfset isActiveUsersWithProfile = 1/>
 		</cfif>

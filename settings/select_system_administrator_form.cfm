@@ -1,20 +1,66 @@
+<cfset useLakebaseForgetCurrentAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetCurrentAdmin>
+	<cftry>
+		<cfset getCurrentAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentAdmin>
 <CFQUERY NAME="getCurrentAdmin" datasource="#application.datasource#">
 	SELECT *
 	FROm _Users
 	WHERE Is_System_Administrator = 1
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForgetAllUsers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetAllUsers>
+	<cftry>
+		<cfset getAllUsers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"order" = "name_first.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllUsers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllUsers>
 <CFQUERY NAME="getAllUsers" datasource="#application.datasource#">
 	SELECT *
 	FROM _Users
 	WHERE Deleted = 0
 	ORDER BY NAME_FIRST
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetOperatorAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGetOperatorAdmin>
+	<cftry>
+		<cfset GetOperatorAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "operator_admin_id,pricing_admin_id"
+			}), "operator_admin_id,pricing_admin_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatorAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatorAdmin>
 <CFQUERY name="GetOperatorAdmin" datasource="#application.datasource#">
 	SELECT 	Operator_Admin_ID, Pricing_Admin_ID
 	FROM 	General_Settings
 </CFQUERY>
+</cfif>
 
 <cfset Operator_Admin_ID 	= GetOperatorAdmin.Operator_Admin_ID>
 <cfset Pricing_Admin_ID 	= GetOperatorAdmin.Pricing_Admin_ID>

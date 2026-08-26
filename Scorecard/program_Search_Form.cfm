@@ -420,11 +420,27 @@ function isNextRow(maxCols, currCols)
 			<cfelse>
 				<span ID="searchItemLabel"><B>Program Generic Type</B></span><BR>
 				<CFPARAM NAME="FORM.Generic_Type" DEFAULT="0">
-				<CFQUERY NAME="Get_Generic_Types" DATASOURCE="#application.datasource#">
+				<cfset useLakebaseForGet_Generic_Types = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_type")>
+<cfif useLakebaseForGet_Generic_Types>
+	<cftry>
+		<cfset Get_Generic_Types = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_type", {
+				"order" = "generic_type.asc",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Generic_Types = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Generic_Types>
+<CFQUERY NAME="Get_Generic_Types" DATASOURCE="#application.datasource#">
 				Select	Generic_Type
 				From 	Generic_Type
 				Order By Generic_Type
 				</CFQUERY>
+</cfif>
         <cfoutput>
           <SELECT NAME="Generic_Type" STYLE="WIDTH:#Form_Field_Width#px;">
             <OPTION VALUE="0">**ALL** Generic Type</OPTION>
@@ -718,13 +734,30 @@ function isNextRow(maxCols, currCols)
 				</cfif>
 				<TD>
 				<cfoutput><span ID="searchItemLabel"><B>#application.returned_customer_setting.family_name_label_singular#</B></span><BR></cfoutput>
-				<cfquery name="GetFamilyNames" datasource="#application.datasource#" cachedwithin="#APPLICATION.masterDataCacheSpan#">
+				<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"family_name" = "neq.",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#" cachedwithin="#APPLICATION.masterDataCacheSpan#">
 					SELECT *
 					FROM Distributor_Family
 					WHERE Deleted = 0
 					AND Family_Name <> ''
 					ORDER BY Family_Name
 				</cfquery>
+</cfif>
 				<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 				<SPAN ID="SP_Family_Name">
 				<SELECT NAME="Family_Name">

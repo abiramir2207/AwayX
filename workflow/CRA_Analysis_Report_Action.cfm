@@ -35,11 +35,27 @@ image{border:none}
 <cfset appsettings = application.appSettingsGet />
 <cfoutput>
 <!---check to see if business segments are enabled--->
+<cfset useLakebaseForqIsEnabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForqIsEnabled>
+	<cftry>
+		<cfset qIsEnabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment_enabled", {
+				"deleted" = "eq.0",
+				"select" = "enabled,distributor_enabled,product_enabled"
+			}), "enabled,distributor_enabled,product_enabled"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsEnabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsEnabled>
 <cfquery name="qIsEnabled" datasource="#application.datasource#">			
 	SELECT	Enabled, Distributor_Enabled, Product_Enabled
 	FROM	Business_Segment_Enabled
 	WHERE	Deleted = 0		
 </cfquery>
+</cfif>
 
 <table border="0" width="100%" cellpadding="0" cellspacing="0">
 	<tr>

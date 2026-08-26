@@ -89,7 +89,24 @@
 	
 	<cffunction name="getActive" output="false" returntype="query">
    
-		<cfquery name="qGetActiveComps" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "payment_type_name.asc",
+				"select" = "payment_type_id,payment_type_name,is_auto_pay,off_invoice,restrict_from_billback,program_lock_type_id,include_claim_rates_report,include_pricing_report,billback_closing_method_id"
+			}), "payment_type_id,payment_type_name,is_auto_pay,off_invoice,restrict_from_billback,program_lock_type_id,include_claim_rates_report,include_pricing_report,billback_closing_method_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+<cfquery name="qGetActiveComps" datasource="#application.datasource#">
 			SELECT	Payment_Type_ID,
 					Payment_Type_Name,
 					Is_Auto_Pay,
@@ -104,6 +121,7 @@
 			AND		Active = 1
 			ORDER BY 	Payment_Type_Name
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetActiveComps />
 		
@@ -113,7 +131,22 @@
    
    		<cfargument name="compId" required="false" default=0 />
 		
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#arguments.compId#",
+				"select" = "payment_type_id,payment_type_name,is_auto_pay,off_invoice,restrict_from_billback,program_lock_type_id,include_claim_rates_report,include_pricing_report,last_edited_by,last_edited_date,billback_closing_method_id"
+			}), "payment_type_id,payment_type_name,is_auto_pay,off_invoice,restrict_from_billback,program_lock_type_id,include_claim_rates_report,include_pricing_report,last_edited_by,last_edited_date,billback_closing_method_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	Payment_Type_ID,
 					Payment_Type_Name,
 					Is_Auto_Pay, 
@@ -128,6 +161,7 @@
 			FROM 	Payment_Type
 			WHERE 	Payment_Type_ID = #arguments.compId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 		

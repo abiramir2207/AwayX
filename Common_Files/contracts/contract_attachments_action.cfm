@@ -17,9 +17,27 @@
 			</cftry>
 		</cfif>
 		<cfif NOT useLakebaseForUpdateDel>
-			<CFQUERY NAME="update_del" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForupdate_del = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForupdate_del>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"program_id" = "eq.#FORM.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdate_del = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdate_del>
+<CFQUERY NAME="update_del" DATASOURCE="#Application.Datasource#">
 				UPDATE Contract_Attachments SET deleted = 1 WHERE program_ID = '#FORM.Contract_Main_ID#'
 			</CFQUERY>
+</cfif>
 		</cfif>
 
 		<CFLOOP LIST="#Current_Selection_List#" INDEX="loop">

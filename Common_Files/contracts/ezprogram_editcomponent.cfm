@@ -58,11 +58,27 @@
 
 <cfinclude template="/get_access_profile.cfm">
 
+<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.ProgramType_ID#",
+				"select" = "base_sales_equal_to_lowest_bracket,program_date_type"
+			}), "base_sales_equal_to_lowest_bracket,program_date_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
 <cfquery name="GetSettings" datasource="#application.datasource#">
 	SELECT Base_Sales_Equal_To_Lowest_Bracket, Program_Date_Type
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = '#url.ProgramType_ID#'
 </cfquery>
+</cfif>
 
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset ProgramManager = CreateObject("component", "components.programs.ProgramManager") />
@@ -103,11 +119,27 @@
 		<cfset donotupdatepaidto =  templateManager.updatecomponentpaidto(form.Component_Paid_To,url.discounttypeid,url.compid,url.programid)>
 
 			<!--- Dev Note(079237) update the "paid to" for the 2nd component as well. --->
-				<cfquery name="getSecondComponent" datasource="#application.datasource#">
+				<cfset useLakebaseForgetSecondComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForgetSecondComponent>
+	<cftry>
+		<cfset getSecondComponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#url.compid#",
+				"select" = "include_second_component,second_component_name_id"
+			}), "include_second_component,second_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSecondComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSecondComponent>
+<cfquery name="getSecondComponent" datasource="#application.datasource#">
 					SELECT	Include_Second_Component,Second_Component_Name_ID
 					FROM	Program_Fixed_Component_Name
 					WHERE	Program_Fixed_Component_Name_ID = #url.compid#
 				</cfquery>
+</cfif>
 
 				<cfif getSecondComponent.Include_Second_Component EQ 1 AND getSecondComponent.Second_Component_Name_ID GT 0>
 					<cfset templateManager.updatecomponentpaidto(form.Component_Paid_To,url.discounttypeid,getSecondComponent.Second_Component_Name_ID,url.programid)>

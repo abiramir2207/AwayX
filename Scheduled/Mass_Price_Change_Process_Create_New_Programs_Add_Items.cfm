@@ -93,12 +93,29 @@
 	<cfset nProgramSpan = qGetProgramSpan.Program_Span />
 	
 	<!--- get the item, rate, uom and discount data to add --->
-	<cfquery name="qGetDiscountDataToAdd" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetDiscountDataToAdd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("simplot_items_add")>
+<cfif useLakebaseForqGetDiscountDataToAdd>
+	<cftry>
+		<cfset qGetDiscountDataToAdd = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("simplot_items_add", {
+				"program_id" = "eq.#programNumberToUseForAdd#",
+				"order" = "component_type.asc",
+				"select" = "item,uom,unit_of_measure_id,rate,component_type,component_name_id"
+			}), "item,uom,unit_of_measure_id,rate,component_type,component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountDataToAdd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountDataToAdd>
+<cfquery name="qGetDiscountDataToAdd" datasource="#application.datasource#">
 		SELECT	Item, UOM, Unit_Of_Measure_ID, Rate, Component_Type, Component_Name_ID
 		FROM	Simplot_Items_Add 
 		WHERE	Program_ID = '#programNumberToUseForAdd#'
 		ORDER BY Component_Type
 	</cfquery>
+</cfif>
 	
 	<cfloop query="qGetDiscountDataToAdd">
 	

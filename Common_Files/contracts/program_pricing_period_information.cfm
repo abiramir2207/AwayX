@@ -15,7 +15,23 @@
 <CFIF isdefined("getInfoForProgramID")>
 	<CFIF IsNumeric(getInfoForProgramID)>
 	<CFSET periods.Program_ID = getInfoForProgramID>
-		<CFQUERY NAME="allPeriods" datasource="#application.datasource#">
+		<cfset useLakebaseForallPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForallPeriods>
+	<cftry>
+		<cfset allPeriods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"program_id" = "eq.#periods.Program_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForallPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForallPeriods>
+<CFQUERY NAME="allPeriods" datasource="#application.datasource#">
 			SELECT *
 			FROM Program_Formula_Pricing_Periods
 			WHERE 
@@ -25,13 +41,30 @@
 				AND
 				Program_ID = #periods.Program_ID#
 		</CFQUERY>
+</cfif>
 		
-		<CFQUERY NAME="Get_Program_Start_Date" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_Program_Start_Date = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGet_Program_Start_Date>
+	<cftry>
+		<cfset Get_Program_Start_Date = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#periods.Program_ID#",
+				"select" = "contract_start_date"
+			}), "contract_start_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Program_Start_Date = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Program_Start_Date>
+<CFQUERY NAME="Get_Program_Start_Date" DATASOURCE="#application.datasource#">
 			SELECT	Contract_Start_Date
 			FROM	Contract_Main
 			WHERE
 					Contract_Main.Contract_Main_ID = #periods.Program_ID#
 		</CFQUERY>
+</cfif>
 		<CFIF Get_Program_Start_Date.recordCOunt GT 0>
 			<CFSET TodaysDate = Get_Program_Start_Date.Contract_Start_Date>
 		</CFIF>

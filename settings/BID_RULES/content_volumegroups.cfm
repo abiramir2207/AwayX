@@ -63,11 +63,27 @@
 <cfparam name="url.volumegroupcount" default="0">
 
 <!--- get uom desc --->
+<cfset useLakebaseForgetUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUOM>
+	<cftry>
+		<cfset getUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#bidrule.basic.bid_rule_uom#",
+				"select" = "unit_of_measure_desc"
+			}), "unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUOM>
 <cfquery name="getUOM" datasource="#application.datasource#">
 	SELECT Unit_Of_Measure_Desc
 	FROM Units_of_Measure
 	WHERE Unit_Of_Measure_ID = '#bidrule.basic.bid_rule_uom#'
 </cfquery>
+</cfif>
 <cfset ruleuomdesc = getUOM.Unit_Of_Measure_Desc>
 
 <cfoutput>

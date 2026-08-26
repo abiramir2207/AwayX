@@ -290,11 +290,27 @@
             <!--- parse new product element into multiple parts --->
             <cfset local.entries  = local.key.listToArray('$')>
 
-            <cfquery name="local.qValidation" datasource="#application.datasource#">
+            <cfset useLakebaseForlocal_qValidation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForlocal_qValidation>
+	<cftry>
+		<cfset local.qValidation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"item" = "eq.#local.new_item#",
+				"select" = "bsa_foodservice_items_master_id"
+			}), "bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_qValidation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_qValidation>
+<cfquery name="local.qValidation" datasource="#application.datasource#">
                 SELECT BSA_Foodservice_Items_Master_ID 
                   FROM BSA_Foodservice_Items_Master 
                  WHERE Item = '#local.new_item#'
             </cfquery>
+</cfif>
 
             <cfif local.qValidation.recordCount eq 0>
                 <cfset local.errors.append( local.new_item )>

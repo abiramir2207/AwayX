@@ -104,10 +104,25 @@ Purpose:  	Single Page Planner Program View
 	
 </cfscript>
 
+<cfset useLakebaseForgGetExpMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetplannerprofiledata")>
+<cfif useLakebaseForgGetExpMargin>
+	<cftry>
+		<cfset gGetExpMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetplannerprofiledata", {
+				"select" = "planner_expected_margin"
+			}), "planner_expected_margin"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgGetExpMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgGetExpMargin>
 <cfquery name="gGetExpMargin" dbtype="query">
 	SELECT DISTINCT Planner_Expected_Margin
 	FROM qGetPlannerProfileData
 </cfquery>
+</cfif>
 
 <!--- if we don't have a program id then the program has not been created yet so we need to generate one --->
 <cfif form.programId eq 0>
@@ -122,17 +137,62 @@ Purpose:  	Single Page Planner Program View
 
 <cf_include files="/Script/javascript/gridviewScroll.min.js">
 <!--- Check if the template allows fixed --->
+<cfset useLakebaseForqHasFixedComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgettemplates")>
+<cfif useLakebaseForqHasFixedComp>
+	<cftry>
+		<cfset qHasFixedComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgettemplates", {
+				"discount_type_id" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqHasFixedComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqHasFixedComp>
 <cfquery name="qHasFixedComp" dbtype="query">
 	SELECT * FROM qGetTemplates WHERE Discount_Type_ID = 1
 </cfquery>
+</cfif>
 <!--- Check if the template allows rebate --->
+<cfset useLakebaseForqHasRebateComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgettemplates")>
+<cfif useLakebaseForqHasRebateComp>
+	<cftry>
+		<cfset qHasRebateComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgettemplates", {
+				"discount_type_id" = "eq.2"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqHasRebateComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqHasRebateComp>
 <cfquery name="qHasRebateComp" dbtype="query">
 	SELECT * FROM qGetTemplates WHERE Discount_Type_ID = 2
 </cfquery>
+</cfif>
 <!--- Check if the template allows lump sum --->
+<cfset useLakebaseForqHasLumpComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgettemplates")>
+<cfif useLakebaseForqHasLumpComp>
+	<cftry>
+		<cfset qHasLumpComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgettemplates", {
+				"discount_type_id" = "eq.3"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqHasLumpComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqHasLumpComp>
 <cfquery name="qHasLumpComp" dbtype="query">
 	SELECT * FROM qGetTemplates WHERE Discount_Type_ID = 3
 </cfquery>
+</cfif>
 
 <cfif form.bSaveVolume>
 	<cfscript>
@@ -179,10 +239,25 @@ Purpose:  	Single Page Planner Program View
 	<!--- loop over the data and map form fields --->
 
 	<!--- fixed mappings start--->
-	<cfquery name="qGetFixedCompId" dbtype="query">
+	<cfset useLakebaseForqGetFixedCompId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixeddata")>
+<cfif useLakebaseForqGetFixedCompId>
+	<cftry>
+		<cfset qGetFixedCompId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixeddata", {
+				"select" = "compnameid,uom"
+			}), "compnameid,uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedCompId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedCompId>
+<cfquery name="qGetFixedCompId" dbtype="query">
 		SELECT 	DISTINCT compNameId, uom
 		FROM	qGetFixedData
 	</cfquery>
+</cfif>
 
 	<cfloop query="qGetFixedCompId">
 
@@ -202,10 +277,25 @@ Purpose:  	Single Page Planner Program View
 	<!--- fixed mappings end--->
 
 	<!--- rebate mappings start--->
-	<cfquery name="qGetRebateCompId" dbtype="query">
+	<cfset useLakebaseForqGetRebateCompId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetrebatedata")>
+<cfif useLakebaseForqGetRebateCompId>
+	<cftry>
+		<cfset qGetRebateCompId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetrebatedata", {
+				"select" = "compnameid,uom"
+			}), "compnameid,uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRebateCompId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRebateCompId>
+<cfquery name="qGetRebateCompId" dbtype="query">
 		SELECT 	DISTINCT compNameId, uom
 		FROM	qGetRebateData
 	</cfquery>
+</cfif>
 	<cfloop query="qGetRebateCompId">
 
 		<cfset form.lRebateCompIds = listAppend(form.lRebateCompIds, "#qGetRebateCompId.compNameId#") />
@@ -224,10 +314,25 @@ Purpose:  	Single Page Planner Program View
 	<!--- rebate mappings end--->
 
 	<!--- lump sum mappings start--->
-	<cfquery name="qGetLumpSumCompId" dbtype="query">
+	<cfset useLakebaseForqGetLumpSumCompId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetlumpsumdata")>
+<cfif useLakebaseForqGetLumpSumCompId>
+	<cftry>
+		<cfset qGetLumpSumCompId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetlumpsumdata", {
+				"select" = "compnameid,uom"
+			}), "compnameid,uom"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLumpSumCompId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLumpSumCompId>
+<cfquery name="qGetLumpSumCompId" dbtype="query">
 		SELECT 	DISTINCT compNameId, uom
 		FROM	qGetLumpSumData
 	</cfquery>
+</cfif>
 	<cfloop query="qGetLumpSumCompId">
 
 		<cfset form.lLumpSumCompIds = listAppend(form.lLumpSumCompIds, "#qGetLumpSumCompId.compNameId#") />
@@ -252,11 +357,26 @@ Purpose:  	Single Page Planner Program View
 
 	<cfloop index="idx" list="#form.Product_List#">
 
-		<cfquery name="qGetVol" dbtype="query">
+		<cfset useLakebaseForqGetVol = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetplannervolumedata")>
+<cfif useLakebaseForqGetVol>
+	<cftry>
+		<cfset qGetVol = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetplannervolumedata", {
+				"bsa_foodservice_items_master_id" = "eq.#idx#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVol = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVol>
+<cfquery name="qGetVol" dbtype="query">
 			SELECT	*
 			FROM	qGetPlannerVolumeData
 			WHERE	BSA_Foodservice_Items_Master_ID = '#idx#'
 		</cfquery>
+</cfif>
 
 		<cfif qGetVol.Volume_CS eq "">
 			<cfset volVal = 0 />
@@ -279,6 +399,22 @@ Purpose:  	Single Page Planner Program View
 	<cfset form.Contract_Title = qGetPlannerProfileData.Planner_NickName />
 </cfif>
 
+<cfset useLakebaseForqCheckGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqCheckGroup>
+	<cftry>
+		<cfset qCheckGroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#form.programId#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckGroup>
 <cfquery name="qCheckGroup" datasource="#application.datasource#">
 	SELECT	*
 	FROM	Contract_Products
@@ -286,6 +422,7 @@ Purpose:  	Single Page Planner Program View
 	AND		Deleted = 0
 	AND		Is_Group = 1
 </cfquery>
+</cfif>
 
 <cfif qCheckGroup.RecordCount>
 	<cfset form.bHasGroup = 1 />
@@ -737,11 +874,26 @@ Purpose:  	Single Page Planner Program View
 					<cfloop query="qGetProducts">
 						<td class="numeric">
 							<cfparam name="form.everydayprice__#Replace(qGetProducts.BSA_Foodservice_Items_Master_ID, "-", "_", "ALL")#" default="0" />
-							<cfquery name="qGetEveryDayPrice" dbtype="query">
+							<cfset useLakebaseForqGetEveryDayPrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetunitpricedata")>
+<cfif useLakebaseForqGetEveryDayPrice>
+	<cftry>
+		<cfset qGetEveryDayPrice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetunitpricedata", {
+				"group_id" = "eq.#qGetProducts.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetEveryDayPrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetEveryDayPrice>
+<cfquery name="qGetEveryDayPrice" dbtype="query">
 								SELECT 	*
 								FROM	qGetUnitPriceData
 								WHERE	Group_ID = '#qGetProducts.BSA_Foodservice_Items_Master_ID#'
 							</cfquery>
+</cfif>
 							<cfif qGetEveryDayPrice.RecordCount>
 								<cfset "form.everydayprice__#Replace(qGetProducts.BSA_Foodservice_Items_Master_ID, "-", "_", "ALL")#" = qGetEveryDayPrice.Everyday_Unit_Price />
 							</cfif>
@@ -759,11 +911,26 @@ Purpose:  	Single Page Planner Program View
 					<cfloop query="qGetProducts">
 						<td class="numeric">
 							<cfparam name="form.merchprice__#Replace(qGetProducts.BSA_Foodservice_Items_Master_ID, "-", "_", "ALL")#" default="0" />
-							<cfquery name="qGetMerchPrice" dbtype="query">
+							<cfset useLakebaseForqGetMerchPrice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetunitpricedata")>
+<cfif useLakebaseForqGetMerchPrice>
+	<cftry>
+		<cfset qGetMerchPrice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetunitpricedata", {
+				"group_id" = "eq.#qGetProducts.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetMerchPrice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetMerchPrice>
+<cfquery name="qGetMerchPrice" dbtype="query">
 								SELECT 	*
 								FROM	qGetUnitPriceData
 								WHERE	Group_ID = '#qGetProducts.BSA_Foodservice_Items_Master_ID#'
 							</cfquery>
+</cfif>
 							<cfif qGetMerchPrice.RecordCount>
 								<cfset "form.merchprice__#Replace(qGetProducts.BSA_Foodservice_Items_Master_ID, "-", "_", "ALL")#" = qGetMerchPrice.Merchant_Price />
 							</cfif>
@@ -780,11 +947,26 @@ Purpose:  	Single Page Planner Program View
 					<td>Retailer Margin / Profit</td>
 					<cfloop query="qGetProducts">
 						<td class="numeric" id="rm__#Replace(qGetProducts.BSA_Foodservice_Items_Master_ID, "-", "_", "ALL")#">
-							<cfquery name="qGetMerchPrice2" dbtype="query">
+							<cfset useLakebaseForqGetMerchPrice2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetunitpricedata")>
+<cfif useLakebaseForqGetMerchPrice2>
+	<cftry>
+		<cfset qGetMerchPrice2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetunitpricedata", {
+				"group_id" = "eq.#qGetProducts.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetMerchPrice2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetMerchPrice2>
+<cfquery name="qGetMerchPrice2" dbtype="query">
 								SELECT 	*
 								FROM	qGetUnitPriceData
 								WHERE	Group_ID = '#qGetProducts.BSA_Foodservice_Items_Master_ID#'
 							</cfquery>
+</cfif>
 							<cfset thisStripGUID = Replace(qGetProducts.BSA_Foodservice_Items_Master_ID, "-", "_", "ALL") />
 							<cfset nPrice = oPlannerProgram.getnPrice(qGetProducts.Item, form.GroupLevel_1, qGetProducts.BSA_Foodservice_Items_Master_ID)>
 							<cfset nMerchantPrice = 0 />

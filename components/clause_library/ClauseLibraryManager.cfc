@@ -737,12 +737,28 @@
 
 	<cffunction name="getDiscountTypes" output="false" returntype="query">
 
-		<cfquery name="qGetDiscountTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDiscountTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_type")>
+<cfif useLakebaseForqGetDiscountTypes>
+	<cftry>
+		<cfset qGetDiscountTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_type", {
+				"deleted" = "eq.0",
+				"select" = "discount_type_id,discount_type_desc"
+			}), "discount_type_id,discount_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountTypes>
+<cfquery name="qGetDiscountTypes" datasource="#application.datasource#">
 			SELECT 	Discount_Type_ID,
 					Discount_Type_Desc
 			FROM 	Discount_Type
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetDiscountTypes />
 

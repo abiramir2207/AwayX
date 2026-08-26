@@ -533,12 +533,29 @@
 
 
 			<!------ Change the director for supervisors whose director is getting deleted to the default director ----->
-			<cfquery name="qGetDefaultDirector" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetDefaultDirector = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_analyst")>
+<cfif useLakebaseForqGetDefaultDirector>
+	<cftry>
+		<cfset qGetDefaultDirector = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_analyst", {
+				"is_default_director" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "analyst_user_id"
+			}), "analyst_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultDirector = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultDirector>
+<cfquery name="qGetDefaultDirector" datasource="#application.datasource#">
 				SELECT	Analyst_User_ID
 				FROM	BB_Analyst
 				WHERE	Is_Default_Director = 1
 				AND	Deleted = 0
 			</cfquery>
+</cfif>
 
 			<cfquery name="qChangeToDefaultDirector" datasource="#application.datasource#">
 				UPDATE	BB_Analyst
@@ -1054,18 +1071,48 @@
 	</cffunction>
 
 	<cffunction name="getAssignNewDistributorsToDefaultAnalyst" output="false" returntype="boolean">
-		<cfquery name="getAssign_New_Distributors_to_Default_Analyst" datasource="#application.datasource#">
+		<cfset useLakebaseForgetAssign_New_Distributors_to_Default_Analyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetAssign_New_Distributors_to_Default_Analyst>
+	<cftry>
+		<cfset getAssign_New_Distributors_to_Default_Analyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "assign_new_distributors_to_default_analyst"
+			}), "assign_new_distributors_to_default_analyst"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssign_New_Distributors_to_Default_Analyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssign_New_Distributors_to_Default_Analyst>
+<cfquery name="getAssign_New_Distributors_to_Default_Analyst" datasource="#application.datasource#">
 				select Assign_New_Distributors_to_Default_Analyst
 				from _Application_Settings
 		</cfquery>
+</cfif>
 		<cfreturn getAssign_New_Distributors_to_Default_Analyst.Assign_New_Distributors_to_Default_Analyst />
 	</cffunction>
 
 	<cffunction name="getAssignNewOperatorsToDefaultAnalyst" output="false" returntype="boolean">
-		<cfquery name="getAssign_New_Operators_to_Default_Analyst" datasource="#application.datasource#">
+		<cfset useLakebaseForgetAssign_New_Operators_to_Default_Analyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetAssign_New_Operators_to_Default_Analyst>
+	<cftry>
+		<cfset getAssign_New_Operators_to_Default_Analyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "assign_new_operators_to_default_analyst"
+			}), "assign_new_operators_to_default_analyst"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAssign_New_Operators_to_Default_Analyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAssign_New_Operators_to_Default_Analyst>
+<cfquery name="getAssign_New_Operators_to_Default_Analyst" datasource="#application.datasource#">
 				select Assign_New_Operators_to_Default_Analyst
 				from _Application_Settings
 		</cfquery>
+</cfif>
 		<cfreturn getAssign_New_Operators_to_Default_Analyst.Assign_New_Operators_to_Default_Analyst />
 	</cffunction>
 </cfcomponent>

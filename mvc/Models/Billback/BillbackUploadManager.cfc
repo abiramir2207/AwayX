@@ -2539,9 +2539,25 @@
 	
 
 		<cfif (isDefined(arguments.uploadId) AND arguments.uploadId NEQ "")>
-			<cfquery name="qGetFileName" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetFileName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_log")>
+<cfif useLakebaseForqGetFileName>
+	<cftry>
+		<cfset qGetFileName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_log", {
+				"upload_id" = "eq.#arguments.uploadId#",
+				"select" = "header_file_name"
+			}), "header_file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFileName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFileName>
+<cfquery name="qGetFileName" datasource="#application.datasource#">
 				SELECT header_file_name FROM BB_upload_log WHERE Upload_id = #arguments.uploadId#
 			</cfquery>
+</cfif>
 			<cfset fileName = qGetFileName.header_file_name />
 
 		</cfif>

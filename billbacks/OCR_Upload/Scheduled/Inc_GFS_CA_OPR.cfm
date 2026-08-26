@@ -272,14 +272,34 @@ Description  :  Include template for GFS CA Operator
 					</cfloop>
 				<cfelse>
 				<!--- in error else part <cfoutput>i = #i#, j = #j#</cfoutput><br> --->
-						<!--- <cfquery name="updateOCRUploadLogStatus5" datasource="#application.datasource#">
+						<!--- <cfset useLakebaseForupdateOCRUploadLogStatus5 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLogStatus5>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2.CF_Error",
+				"ocr_upload_status" = "Data mismatch between the file and the Docparser template. ",
+				"debug_dev_status" = "In docParser.cfm Checkpoint 1. The parser failed to return the data. The data location are not correct in the file and did not match the docparser template."
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLogStatus5 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLogStatus5>
+<cfquery name="updateOCRUploadLogStatus5" datasource="#application.datasource#">
 							UPDATE OCR_Upload_Log 
 							SET 
 								OCR_Step = '2.CF_Error',
 								OCR_Upload_Status = 'Data mismatch between the file and the Docparser template. ',
 								Debug_Dev_Status = 'In docParser.cfm Checkpoint 1. The parser failed to return the data. The data location are not correct in the file and did not match the docparser template.'
 							WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-						</cfquery>  --->
+						</cfquery>
+</cfif>  --->
 						  <!--- OTHER ROWS WILL BE PICKED UP DURING THE NEXT RUN --->
 				</cfif>	<!--- END: <cfif (StructKeyExists(structFileContent[i], "customer_reference_number")  AND  --->
 				<cfset pageCount = pageCount + structFileContent[i].page_count />

@@ -1,14 +1,46 @@
+<cfset useLakebaseForGetDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDist>
+	<cftry>
+		<cfset GetDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Form.Distributor_List#",
+				"select" = "ship_to,name"
+			}), "ship_to,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDist>
 <cfquery name="GetDist" datasource="#application.datasource#">
 	SELECT Ship_To, Name
 	FROM BSA_Foodservice_Customers
 	WHERE BSA_Foodservice_Customers_ID = '#Form.Distributor_List#' 
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForGetProd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetProd>
+	<cftry>
+		<cfset GetProd = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#Form.EXISTINGPRODUCTLIST#",
+				"select" = "item,upc,description"
+			}), "item,upc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProd>
 <cfquery name="GetProd" datasource="#application.datasource#">
 	SELECT Item, UPC, Description
 	FROM BSA_Foodservice_Items_Master
 	WHERE BSA_Foodservice_Items_Master_ID = '#Form.EXISTINGPRODUCTLIST#' 
 </cfquery>
+</cfif>
 
 <cfquery name="getInvoiceData" datasource="#application.datasource#">
 SELECT     dbo.Invoice_Detail.Invoice_Date, dbo.Invoice_Detail.Pounds_Invoiced, dbo.Invoice_Detail.Cases_Invoiced, dbo.Invoice_Detail.LB_Unit_Price, 

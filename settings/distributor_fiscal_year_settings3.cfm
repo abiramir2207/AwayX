@@ -1,9 +1,26 @@
+<cfset useLakebaseForgetDistributorFiscalCalendar = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_fiscal_year")>
+<cfif useLakebaseForgetDistributorFiscalCalendar>
+	<cftry>
+		<cfset getDistributorFiscalCalendar = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_fiscal_year", {
+				"deleted" = "eq.0",
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"order" = "start_date.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistributorFiscalCalendar = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistributorFiscalCalendar>
 <CFQUERY NAME="getDistributorFiscalCalendar" datasource="#application.datasource#">
 	SELECT *
 	FROM Distributor_Fiscal_Year
 	WHERE Deleted = 0 AND Company_Main_ID = '#request.AccessStructure.Company_Main_ID#'
 	ORDER BY Start_Date 
 </CFQUERY>
+</cfif>
 
 <CFOUTPUT QUERY="getDistributorFiscalCalendar">
 	<CFPARAM NAME="Period_#currentrow#_Length_Default" DEFAULT="#getDistributorFiscalCalendar.Period_Length#">

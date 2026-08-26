@@ -1063,11 +1063,27 @@ DEPENDENCIES:
 		<cfargument name="id" required="true" type="numeric" />
 		<cfargument name="idList" required="false" type="string" default=""/>
 
-		<CFQUERY NAME="getParentID" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForgetParentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetParentID>
+	<cftry>
+		<cfset getParentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.id#",
+				"select" = "childof parent"
+			}), "childof parent"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentID>
+<CFQUERY NAME="getParentID" DATASOURCE="#Application.Datasource#">
 			SELECT 	Program_Control_Panel_Options.ChildOf parent
 			FROM	Program_Control_Panel_Options
 			WHERE 	Program_Control_Panel_Options.ProgramControl_Panel_Options_ID = #arguments.id#
 		</CFQUERY>
+</cfif>
 
 		<CFIF getParentID.parent NEQ "">
 			<CFSET arguments.idList = LISTAPPEND(arguments.idList,getParentID.parent)>
@@ -1373,11 +1389,27 @@ DEPENDENCIES:
 	<!--- Dev Note: KAL - D7952 : Lock/Unlock Template --->
 		<cffunction name="getLocked" output="true" returntype="query">
 			<cfargument name="TemplateID" required="true" type="numeric" />
-			<cfquery name="qGetLocked" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetLocked>
+	<cftry>
+		<cfset qGetLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.TemplateID#",
+				"select" = "programcontrol_panel_options_id,is_locked,locked_by,locked_time"
+			}), "programcontrol_panel_options_id,is_locked,locked_by,locked_time"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLocked>
+<cfquery name="qGetLocked" datasource="#application.datasource#">
 				Select 	ProgramControl_Panel_Options_ID, IS_Locked, Locked_By, Locked_Time
 					FROM	Program_Control_Panel_Options
 					WHERE	ProgramControl_Panel_Options_ID = '#arguments.TemplateID#'
 			</cfquery>
+</cfif>
 			<cfreturn qGetLocked />
 		</cffunction>
 
@@ -1416,12 +1448,29 @@ DEPENDENCIES:
 		<cffunction name="GetNewTemplate" output="false">
 			<cfargument name="TemplateID" required="true" type="numeric" />
 
-			<cfquery name="qGetNewTemplate" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetNewTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetNewTemplate>
+	<cftry>
+		<cfset qGetNewTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"childof" = "eq.#arguments.TemplateID#",
+				"deleted" = "eq.0",
+				"select" = "programcontrol_panel_options_id"
+			}), "programcontrol_panel_options_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetNewTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetNewTemplate>
+<cfquery name="qGetNewTemplate" datasource="#application.datasource#">
 				SELECT 	ProgramControl_Panel_Options_ID
 					FROM 	Program_Control_Panel_Options
 					WHERE	ChildOF = '#arguments.TemplateID#'
 					AND		Deleted = 0
 			</cfquery>
+</cfif>
 
 			<cfset returnValue = qGetNewTemplate.ProgramControl_Panel_Options_ID>
 			<cfreturn returnValue />
@@ -1947,22 +1996,58 @@ DEPENDENCIES:
 		<cfargument name="program_id" required="true" type="string" />
 		<cfset paidtoexist = "false">
 			<cfif arguments.discounttypeid EQ 1>
-				<cfquery name="checkpaidto" datasource="#application.datasource#">
+				<cfset useLakebaseForcheckpaidto = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForcheckpaidto>
+	<cftry>
+		<cfset checkpaidto = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_fixed_component_name_id" = "eq.#arguments.compid#",
+				"program_id" = "eq.#arguments.program_id#",
+				"fixed_component_paid_to" = "eq.#arguments.Component_Paid_To#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckpaidto = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckpaidto>
+<cfquery name="checkpaidto" datasource="#application.datasource#">
 				select * from
 				Program_Fixed_Component
 				where Program_Fixed_Component_Name_ID = #arguments.compid#
 				AND Program_Fixed_Component.Program_ID = '#arguments.program_id#'
 				AND Program_Fixed_Component.Fixed_Component_Paid_to = '#arguments.Component_Paid_To#'
 				</cfquery>
+</cfif>
 				<cfif checkpaidto.recordcount GT 0>
 				<cfset paidtoexist = "true">
 				<cfelse>
-				<cfquery name="updatecomponentpaidto" datasource="#application.datasource#">
+				<cfset useLakebaseForupdatecomponentpaidto = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForupdatecomponentpaidto>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component",
+			{
+				"program_fixed_component_name_id" = "eq.#arguments.compid#",
+				"program_id" = "eq.#arguments.program_id#"
+			},
+			{
+				"fixed_component_paid_to" = "#arguments.Component_Paid_To#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatecomponentpaidto = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatecomponentpaidto>
+<cfquery name="updatecomponentpaidto" datasource="#application.datasource#">
 				update Program_Fixed_Component
 				set Fixed_Component_Paid_to = #arguments.Component_Paid_To#
 				where Program_Fixed_Component_Name_ID = #arguments.compid#
 				AND Program_Fixed_Component.Program_ID = '#arguments.program_id#'
 				</cfquery>
+</cfif>
 				<cfset paidtoexist = "false">
 			</cfif>
 			<cfelseif arguments.discounttypeid EQ 2>
@@ -2403,11 +2488,28 @@ DEPENDENCIES:
             </cfif>
           </cfloop>
            <cfif  SearchChecked EQ "1" OR GroupChecked EQ "1" OR FiltersChecked EQ "1" OR PrgVolBYAttributeChecked EQ "1">
-            <cfquery name="qryChkISPG" datasource="#application.datasource#">
+            <cfset useLakebaseForqryChkISPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqryChkISPG>
+	<cftry>
+		<cfset qryChkISPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_group_level", {
+				"product_group_level_id" = "eq.#qGetTopLevelGroups.Product_Group_Level_ID#",
+				"limit" = "1",
+				"select" = "is_pg"
+			}), "is_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryChkISPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryChkISPG>
+<cfquery name="qryChkISPG" datasource="#application.datasource#">
                 SELECT TOP 1 IS_PG  FROM
                 Product_group_level
                 WHERE Product_Group_Level_ID = #qGetTopLevelGroups.Product_Group_Level_ID#
             </cfquery>
+</cfif>
             <cfquery name="qInsPGTypeTemplate" datasource="#application.datasource#">
             	INSERT INTO Group_Template
             	( Template_ID,
@@ -2922,11 +3024,26 @@ DEPENDENCIES:
 
 		<cfargument name="Performance_programs" 	required="true">
 
-		<cfquery name="qDashboardAccessInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqDashboardAccessInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dashboard_access")>
+<cfif useLakebaseForqDashboardAccessInfo>
+	<cftry>
+		<cfset qDashboardAccessInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dashboard_access", {
+				"profile_id" = "eq.#arguments.profileID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDashboardAccessInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDashboardAccessInfo>
+<cfquery name="qDashboardAccessInfo" datasource="#application.datasource#">
 			SELECT *
 			FROM Dashboard_Access
 			WHERE Profile_ID = #arguments.profileID#
 		</cfquery>
+</cfif>
 		<cfif qDashboardAccessInfo.Recordcount>
 				  <cfquery name="qDashboardAccess"  datasource="#application.datasource#">
 				  	UPDATE	Dashboard_Access
@@ -3126,10 +3243,25 @@ DEPENDENCIES:
 	</cffunction>
 
 	<cffunction name="getGenericType" access="public" returntype="query">
-		<cfquery name="qGenericType" datasource="#application.datasource#">
+		<cfset useLakebaseForqGenericType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("generic_type")>
+<cfif useLakebaseForqGenericType>
+	<cftry>
+		<cfset qGenericType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("generic_type", {
+				"select" = "generic_type,generic_type_id"
+			}), "generic_type,generic_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGenericType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGenericType>
+<cfquery name="qGenericType" datasource="#application.datasource#">
 			select Generic_Type, Generic_Type_ID
 			from Generic_Type
 		</cfquery>
+</cfif>
 		<cfreturn qGenericType/>
 	</cffunction>
 
@@ -3138,7 +3270,25 @@ DEPENDENCIES:
 		<cfargument name="discountTypeID" type="Numeric" required="true" />
 		<cfargument name="componentNameID" 	type="Numeric" required="true" />
 
-		<cfquery name="qGetDiscountComponentDefaultPaidTo" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDiscountComponentDefaultPaidTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_template_component")>
+<cfif useLakebaseForqGetDiscountComponentDefaultPaidTo>
+	<cftry>
+		<cfset qGetDiscountComponentDefaultPaidTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_template_component", {
+				"template_id" = "eq.#arguments.templateID#",
+				"discount_type_id" = "eq.#arguments.discountTypeID#",
+				"component_id" = "eq.#arguments.componentNameID#",
+				"deleted" = "eq.0",
+				"select" = "default_paid_to_cf_pages"
+			}), "default_paid_to_cf_pages"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountComponentDefaultPaidTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountComponentDefaultPaidTo>
+<cfquery name="qGetDiscountComponentDefaultPaidTo" datasource="#application.datasource#">
 		SELECT Default_Paid_To_CF_Pages
 		FROM Program_Template_Component
 		WHERE Template_ID = '#arguments.templateID#'
@@ -3146,6 +3296,7 @@ DEPENDENCIES:
 		AND Program_Template_Component.Component_ID = '#arguments.componentNameID#'
 		AND Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetDiscountComponentDefaultPaidTo />
 	</cffunction>

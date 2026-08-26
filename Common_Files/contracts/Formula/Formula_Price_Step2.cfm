@@ -542,6 +542,22 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	ORDER BY Overage_Index
 </cfquery>
 <!--------------------------------Compounded Independent Query--------------------------------->
+<cfset useLakebaseForGet_This_Independent_Commodity_Overage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
+<cfif useLakebaseForGet_This_Independent_Commodity_Overage>
+	<cftry>
+		<cfset Get_This_Independent_Commodity_Overage = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_commodity_overage", {
+				"program_formula_pricing_rule_comm_data_id" = "eq.#Program_Formula_Pricing_Rule_Comm_Data_ID#",
+				"calc_type" = "eq.1",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_This_Independent_Commodity_Overage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_This_Independent_Commodity_Overage>
 <cfquery NAME="Get_This_Independent_Commodity_Overage" DBTYPE="query">
 		SELECT	*
 		FROM	Get_All_Commodity_Overage
@@ -551,6 +567,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 				Calc_Type = 1
 		ORDER BY Overage_Index
 </cfquery>
+</cfif>
 
 <CFSET i = i + 1>
 <!---Rows can now exceed 4. Adding code to handle for rows that were added dynamically beyond 4. --->

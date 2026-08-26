@@ -7,7 +7,22 @@
 		<cfswitch expression="#arguments.Discount_Type_ID#">
 		<!--- Fixed Price --->
 			<cfcase value="1">
-				<cfquery name="qCompDetails" datasource="#application.datasource#">
+				<cfset useLakebaseForqCompDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForqCompDetails>
+	<cftry>
+		<cfset qCompDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#arguments.Component_Name_ID#",
+				"select" = "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+			}), "program_fixed_component_name_id as component_name_id,program_fixed_component_name as component_name,external_id,fixed_component_type as component_type,accrual_on,exclude_brokerage,off_invoice_on,floor_pricing_on,0 as rebate_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCompDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCompDetails>
+<cfquery name="qCompDetails" datasource="#application.datasource#">
 				SELECT 	Program_Fixed_Component_Name_ID AS Component_Name_ID,
 						Program_Fixed_Component_Name AS Component_Name,
 						External_ID,
@@ -20,6 +35,7 @@
 				FROM 	Program_Fixed_Component_Name
 				WHERE	Program_Fixed_Component_Name_ID = '#arguments.Component_Name_ID#'
 				</cfquery>
+</cfif>
 			</cfcase>
 		<!--- Rebate --->
 			<cfcase value="2">

@@ -70,20 +70,54 @@ Select
 
 
 <CFSET thisSessionID=Session.SessionID>
+<cfset useLakebaseForGet_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
+<cfif useLakebaseForGet_Session_Status>
+	<cftry>
+		<cfset Get_Session_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("session_tracker", {
+				"session_user_id" = "eq.#GetUserData.User_ID#",
+				"select" = "session_id"
+			}), "session_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Status>
 <CFQUERY NAME="Get_Session_Status" datasource="#application.datasource#">
 	Select		Session_ID
 	From		Session_Tracker
 	Where		Session_User_ID	= '#GetUserData.User_ID#'
 </CFQUERY>
+</cfif>
 
 
 <CFIF Get_Session_Status.recordCount GT 0>
 	<CFIF Get_Session_Status.Session_ID EQ "">
-		<CFQUERY NAME="Update_Session_Status" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdate_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
+<cfif useLakebaseForUpdate_Session_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("session_tracker",
+			{
+				"session_user_id" = "eq.#GetUserData.User_ID#"
+			},
+			{
+				"session_id" = "#thisSessionID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Session_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Session_Status>
+<CFQUERY NAME="Update_Session_Status" datasource="#application.datasource#">
 			UPDATE	Session_Tracker
 			SET		Session_ID = '#thisSessionID#'
 			WHERE	Session_User_ID = '#GetUserData.User_ID#'
 		</CFQUERY>
+</cfif>
 	<CFELSE>
 		<CFIF Get_Session_Status.Session_ID NEQ thisSessionID>			
 			<CFLOCATION URL="try_again.cfm?id=#GetUserData.User_ID#">

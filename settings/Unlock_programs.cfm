@@ -35,10 +35,28 @@
 <cfset programManager = CreateObject("component", "components.programs.program") />
 <cfif isDefined("url.Program_Number")>
 	<cfoutput>	
-	<cfquery name="LatestContractMain" datasource="#application.datasource#">
+	<cfset useLakebaseForLatestContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForLatestContractMain>
+	<cftry>
+		<cfset LatestContractMain = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#Program_Number#",
+				"order" = "contract_main_id.desc",
+				"limit" = "1",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLatestContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLatestContractMain>
+<cfquery name="LatestContractMain" datasource="#application.datasource#">
 		SELECT TOP 1 Contract_Main_ID FROM Contract_Main WHERE Contract_Number = '#Program_Number#'
 		ORDER BY Contract_Main_ID Desc
 	</cfquery>
+</cfif>
 	
 	<cfquery name="UndeleteProgram" datasource="#application.datasource#">
 		UPDATE          contract_main

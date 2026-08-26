@@ -1949,11 +1949,27 @@ function massUpdateVM(t) {
 <!---/////////////////////////////////////////////////////////////////////////////////////////////////////////////////--->
 
 
-    <CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
+    <cfset useLakebaseForgetApprovalMargin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_group_profile_approval_margins")>
+<cfif useLakebaseForgetApprovalMargin>
+	<cftry>
+		<cfset getApprovalMargin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_group_profile_approval_margins", {
+				"deleted" = "eq.0",
+				"select" = "group_id,profile_id,amount,approval_method"
+			}), "group_id,profile_id,amount,approval_method"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetApprovalMargin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetApprovalMargin>
+<CFQUERY NAME="getApprovalMargin" datasource="#application.datasource#">
       SELECT  Group_ID, Profile_ID, Amount, Approval_Method
       FROM  Margin_Group_Profile_Approval_Margins
       WHERE   Deleted = 0
     </CFQUERY>
+</cfif>
     <cfset marginDetailsClosed = "yes">
 
     <cfset AvailableApprovalOptions = genSettingsManager.getApprovalTypeList()>
@@ -1991,12 +2007,28 @@ function massUpdateVM(t) {
       <CFSET qgetProfileGroupApprovalTypeSettings = CreateObject("component", "components.settings.settings_management.TemplateSettingsManager").getProfileGroupApprovalTypeSettings(#ThisApprovalType#)>
 
     <CFLOOP INDEX="GroupCount" FROM="1" TO="#application.returned_customer_setting.approval_group_count#" STEP="1">
-        <cfquery name="GetSetting_Display_Value" dbtype="query" >
+        <cfset useLakebaseForGetSetting_Display_Value = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetprofilegroupapprovaltypesettings")>
+<cfif useLakebaseForGetSetting_Display_Value>
+	<cftry>
+		<cfset GetSetting_Display_Value = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetprofilegroupapprovaltypesettings", {
+				"group_labels_approval_group_count" = "eq.#GroupCount#",
+				"select" = "setting_display_value"
+			}), "setting_display_value"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSetting_Display_Value = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSetting_Display_Value>
+<cfquery name="GetSetting_Display_Value" dbtype="query" >
           SELECT    Setting_Display_Value
           FROM    qgetProfileGroupApprovalTypeSettings
           WHERE     Group_Labels_Approval_Group_Count = #GroupCount#
 
         </cfquery>
+</cfif>
       <cfif fromSettings_management eq 1>
       <TR>
           <cfset numCount = 3 - len(GroupCount)>
@@ -2032,13 +2064,31 @@ function massUpdateVM(t) {
           <TD WIDTH="#massUpdate_TD_Width#" class="massUpdate" ><input TYPE="text" SIZE="5" NAME="Group_Approval_Type_#ThisApprovalType#_#GroupCount#_Profile" ID="Group_Approval_Type_#ThisApprovalType#_#GroupCount#_Profile" VALUE="" onkeyup="clenseTextBuffer(this, '*-.02134567890')"><a href="##" OnClick="javascript:massUpdate('textbox','Group_Approval_Type_#ThisApprovalType#_#GroupCount#_Profile','1')" TITLE="Update all values for this row.">(+)</a></TD>
           <cfloop query="getProfiles">
             <!------ Get group Value for this Profile ----->
-            <cfquery name="qGetMarginValues" dbtype="query">
+            <cfset useLakebaseForqGetMarginValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getapprovalmargin")>
+<cfif useLakebaseForqGetMarginValues>
+	<cftry>
+		<cfset qGetMarginValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getapprovalmargin", {
+				"group_id" = "eq.#GroupCount#",
+				"profile_id" = "eq.#profiles_id#",
+				"approval_method" = "eq.#ThisApprovalType#",
+				"select" = "amount"
+			}), "amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetMarginValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetMarginValues>
+<cfquery name="qGetMarginValues" dbtype="query">
               SELECT  Amount
               FROM  getApprovalMargin
               WHERE Group_ID = #GroupCount#
                   AND Profile_ID = #profiles_id#
                   AND Approval_Method = #ThisApprovalType#
             </cfquery>
+</cfif>
             <cfset i = getProfiles.profiles_id>
             <cfset checkBoxDisabled = getCheckBoxDisabled("Get_#i#_Settings.Cont_Prog_Approval_Rights", 0)>
             <TD ALIGN="center" WIDTH="#TD_Width#" nowrap><span ID="ProfileSpan_#i#">
@@ -2111,12 +2161,29 @@ function massUpdateVM(t) {
       <TD WIDTH="#massUpdate_TD_Width#" class="massUpdate" ><INPUT TYPE="text"  SIZE="5" NAME="Program_LSN_#lsNameID#" ID="Program_LSN_#lsNameID#" VALUE="" onkeyup="clenseTextBuffer(this, '*-.02134567890')"><a href="##" OnClick="javascript:massUpdate('textbox','Program_LSN_#lsNameID#','1')" TITLE="Update all values for this row.">(+)</a></TD>
         <cfloop query="getProfiles">
         <cfset i = getProfiles.profiles_id>
-        <cfquery name="GetApprovalAmountforProfile" datasource="#application.datasource#">
+        <cfset useLakebaseForGetApprovalAmountforProfile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_ls_approval")>
+<cfif useLakebaseForGetApprovalAmountforProfile>
+	<cftry>
+		<cfset GetApprovalAmountforProfile = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_ls_approval", {
+				"profiles_id" = "eq.#i#",
+				"program_lump_sum_name_id" = "eq.#lsNameID#",
+				"select" = "approval_amount"
+			}), "approval_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetApprovalAmountforProfile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetApprovalAmountforProfile>
+<cfquery name="GetApprovalAmountforProfile" datasource="#application.datasource#">
           Select  Approval_Amount
           FROM  Profile_LS_Approval
           WHERE   Profiles_ID = #i#
               AND Program_Lump_Sum_Name_ID = #lsNameID#
         </cfquery>
+</cfif>
 
         <cfif GetApprovalAmountforProfile.Recordcount LT 1>
           <cfset Approval_Amount = 0>

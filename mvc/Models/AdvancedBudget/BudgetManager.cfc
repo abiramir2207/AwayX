@@ -11,11 +11,27 @@ Remarks:
 	<cffunction name="getContributionFactorTypes" returntype="query" access="public" hint="Will return a query with all Contribution Factor Types" output="false">
 
 		<cfset var qGetContributionFactorTypes = "" />
-		<cfquery name="qGetContributionFactorTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetContributionFactorTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_contribution_factor_type")>
+<cfif useLakebaseForqGetContributionFactorTypes>
+	<cftry>
+		<cfset qGetContributionFactorTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_contribution_factor_type", {
+				"deleted" = "eq.0",
+				"select" = "budget_contribution_factor_type_id,contribution_factor_type,list_order"
+			}), "budget_contribution_factor_type_id,contribution_factor_type,list_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetContributionFactorTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetContributionFactorTypes>
+<cfquery name="qGetContributionFactorTypes" datasource="#application.datasource#">
 			SELECT	Budget_Contribution_Factor_Type_ID, Contribution_Factor_Type, List_Order
 			FROM	Budget_Contribution_Factor_Type
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetContributionFactorTypes />
 

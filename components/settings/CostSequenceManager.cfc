@@ -47,24 +47,59 @@
 		
 		<cfset returnValue = "">
 		<!------ Find if same desc exist for other record ----->
-		<cfquery name="qGetSameName" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetSameName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForqGetSameName>
+	<cftry>
+		<cfset qGetSameName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cost_sequence", {
+				"deleted" = "eq.0",
+				"cost_sequence_id" = "neq.#arguments.CostSequenceId#",
+				"cost_sequence_name" = "eq.#arguments.CostSequenceDesc#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSameName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSameName>
+<cfquery name="qGetSameName" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Cost_Sequence
 			WHERE	Cost_Sequence.Deleted = 0
 					AND Cost_Sequence.Cost_Sequence_ID <> #arguments.CostSequenceId#
 					AND Cost_Sequence.Cost_Sequence_Name = '#arguments.CostSequenceDesc#'
 		</cfquery>
+</cfif>
 		
 		<cfif NOT qGetSameName.recordCount>
 		
 			<cfif arguments.CostSequenceId><!------ Edit ----->
 			
 				<!------ Edit the description alone ----->
-				<cfquery name="qUpdateAS" datasource="#application.datasource#">
+				<cfset useLakebaseForqUpdateAS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForqUpdateAS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("cost_sequence",
+			{
+				"cost_sequence_id" = "eq.#arguments.CostSequenceId#"
+			},
+			{
+				"cost_sequence_name" = "#arguments.CostSequenceDesc#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateAS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateAS>
+<cfquery name="qUpdateAS" datasource="#application.datasource#">
 					UPDATE	Cost_Sequence
 					SET		Cost_Sequence_Name = '#arguments.CostSequenceDesc#'
 					WHERE	Cost_Sequence_ID = #arguments.CostSequenceId#
 				</cfquery>
+</cfif>
 				
 			<cfelse><!------ Insert ----->
 			
@@ -115,12 +150,29 @@
 	
 		<cfargument name="CostSequenceId" type="numeric" required="true">
 		
-		<cfquery name="qGetUserAssosiated" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUserAssosiated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUserAssosiated>
+	<cftry>
+		<cfset qGetUserAssosiated = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"deleted" = "eq.0",
+				"cost_sequence_id" = "eq.#arguments.CostSequenceId#",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUserAssosiated = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUserAssosiated>
+<cfquery name="qGetUserAssosiated" datasource="#application.datasource#">
 			SELECT 	TOP 1 *
 			FROM	_Users
 			WHERE	Deleted = 0
 					AND Cost_Sequence_ID = #arguments.CostSequenceId#
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetUserAssosiated />
 		
@@ -137,11 +189,27 @@
 		<cfif NOT qGetUserAssosiated.recordCount> --->
 		
 			<!------ Get current order ----->
-			<cfquery name="qGetAuthOrder" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetAuthOrder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForqGetAuthOrder>
+	<cftry>
+		<cfset qGetAuthOrder = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cost_sequence", {
+				"cost_sequence_id" = "eq.#arguments.CostSequenceId#",
+				"select" = "cost_sequence_order"
+			}), "cost_sequence_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAuthOrder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAuthOrder>
+<cfquery name="qGetAuthOrder" datasource="#application.datasource#">
 				SELECT	Cost_Sequence_Order
 				FROM	Cost_Sequence
 				WHERE	Cost_Sequence_ID = #arguments.CostSequenceId#
 			</cfquery>
+</cfif>
 			
 			<cfif qGetAuthOrder.recordCount>
 			

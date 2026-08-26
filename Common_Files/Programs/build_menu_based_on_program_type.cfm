@@ -14,11 +14,26 @@ WHERE     (dbo.syscolumns.id IN
                             WHERE      NAME = 'Program_Control_Panel_Options'))
 </cfquery>
 
+<cfset useLakebaseForgetProgramSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetProgramSettings>
+	<cftry>
+		<cfset getProgramSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#FORM.Program_Type_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramSettings>
 <cfquery name="getProgramSettings" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = '#FORM.Program_Type_ID#'
 </cfquery>
+</cfif>
 
 <CF_List_Compare List1="#ValueList(getOptionToMenuTabMappings.name)#" List2="#getProgramSettings.ColumnList#" CaseSensitive="NO">
 

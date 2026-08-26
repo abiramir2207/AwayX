@@ -1,8 +1,24 @@
+<cfset useLakebaseForgetCN = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetCN>
+	<cftry>
+		<cfset getCN = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#url.Contract_Main_ID#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCN = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCN>
 <cfquery name="getCN" datasource="#application.datasource#">
 	SELECT Contract_Number
 	FROM Contract_main
 	WHERE Contract_Main_ID  = '#url.Contract_Main_ID#'
 </cfquery>
+</cfif>
 
 <cfquery name="qDataPriorVersions" datasource="#application.datasource#">
 <!--- Using STUFF, we can remove commas, when not needed. e.g. when there is only one record.

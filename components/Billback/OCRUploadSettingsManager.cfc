@@ -172,7 +172,22 @@
 			<cfset bSettingNameExists = 1 />
 			<cfset strPerformAction = "NONE" />
 		</cfif>	
-		<cfquery name="qGetSourceCode" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetSourceCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_claim_source_xref")>
+<cfif useLakebaseForqGetSourceCode>
+	<cftry>
+		<cfset qGetSourceCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_claim_source_xref", {
+				"bb_claim_source_xref_id" = "eq.#arguments.BB_Claim_Source_XREF_ID#",
+				"select" = "bb_claim_source_xref_id,source_type,source_type_description,source_code"
+			}), "bb_claim_source_xref_id,source_type,source_type_description,source_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSourceCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSourceCode>
+<cfquery name="qGetSourceCode" datasource="#application.datasource#">
 			SELECT 
 				BB_Claim_Source_XREF_ID,
 				Source_Type,
@@ -182,7 +197,8 @@
 				BB_Claim_Source_XREF
 			WHERE 
 				BB_Claim_Source_XREF_ID = '#arguments.BB_Claim_Source_XREF_ID#'
-		</cfquery>	
+		</cfquery>
+</cfif>	
 		<cfset sourceCode = qGetSourceCode.Source_Code />
 		
 		<cfif strPerformAction EQ "INSERT">

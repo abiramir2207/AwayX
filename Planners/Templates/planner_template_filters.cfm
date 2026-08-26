@@ -76,7 +76,23 @@ Description  : 	Planner Templates
 	 <cfset bAllowFilter = 0 />
 	<cfparam name="form.Customers_Filters_#Distributor_Group_Level_ID#" default="" />
 
-	<cfquery name="qGetSelections" dbtype="query">
+	<cfset useLakebaseForqGetSelections = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetplannerfiltersdata")>
+<cfif useLakebaseForqGetSelections>
+	<cftry>
+		<cfset qGetSelections = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetplannerfiltersdata", {
+				"group_level_id" = "eq.#Distributor_Group_Level_ID#",
+				"pg_group_type" = "eq.2",
+				"select" = "group_level_id,pg_group_type,allow_in_search,allow_in_group_search,allow_filter"
+			}), "group_level_id,pg_group_type,allow_in_search,allow_in_group_search,allow_filter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSelections = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSelections>
+<cfquery name="qGetSelections" dbtype="query">
 		SELECT	Group_Level_ID,
 				PG_Group_Type,
 				Allow_In_Search,
@@ -86,12 +102,29 @@ Description  : 	Planner Templates
 		WHERE	Group_Level_ID = #Distributor_Group_Level_ID#
 		AND		PG_Group_Type = 2
 	</cfquery>
+</cfif>
 
-	<cfquery name="qGetProductSelections" dbtype="query">
+	<cfset useLakebaseForqGetProductSelections = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetplannerfilterscustomerdata")>
+<cfif useLakebaseForqGetProductSelections>
+	<cftry>
+		<cfset qGetProductSelections = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetplannerfilterscustomerdata", {
+				"distributor_group_level_id" = "eq.#Distributor_Group_Level_ID#",
+				"select" = "distributor_group_id"
+			}), "distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductSelections = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductSelections>
+<cfquery name="qGetProductSelections" dbtype="query">
 		SELECT	Distributor_Group_ID
 		FROM	qGetPlannerFiltersCustomerData
 		WHERE	Distributor_Group_Level_ID = #Distributor_Group_Level_ID#
 	</cfquery>
+</cfif>
 	<cfif qGetSelections.Allow_Filter eq 1>
 		<cfset bAllowFilter = 1 />
 	</cfif>
@@ -164,7 +197,23 @@ Description  : 	Planner Templates
 		<cfset bAllowFilter = 0 />
 		<cfparam name="form.Product_Filters_#Product_Group_Level_ID#" default="" />
 
-		<cfquery name="qGetProdSelections" dbtype="query">
+		<cfset useLakebaseForqGetProdSelections = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetplannerfiltersdata")>
+<cfif useLakebaseForqGetProdSelections>
+	<cftry>
+		<cfset qGetProdSelections = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetplannerfiltersdata", {
+				"group_level_id" = "eq.#Product_Group_Level_ID#",
+				"pg_group_type" = "eq.1",
+				"select" = "group_level_id,pg_group_type,allow_in_search,allow_filter,default_view"
+			}), "group_level_id,pg_group_type,allow_in_search,allow_filter,default_view"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProdSelections = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProdSelections>
+<cfquery name="qGetProdSelections" dbtype="query">
 			SELECT	Group_Level_ID,
 					PG_Group_Type,
 					Allow_In_Search,
@@ -174,6 +223,7 @@ Description  : 	Planner Templates
 			WHERE	Group_Level_ID = #Product_Group_Level_ID#
 			AND		PG_Group_Type = 1
 		</cfquery>
+</cfif>
 
 		<cfquery name="qGetProductSelections" dbtype="query">
 			SELECT	Product_Group_ID
@@ -258,11 +308,27 @@ Description  : 	Planner Templates
 		AND		PG_Group_Type = 3
 	</cfquery>
 
-	<cfquery name="qGetOperatorSelections" dbtype="query">
+	<cfset useLakebaseForqGetOperatorSelections = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetplannerfiltersoperatordata")>
+<cfif useLakebaseForqGetOperatorSelections>
+	<cftry>
+		<cfset qGetOperatorSelections = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetplannerfiltersoperatordata", {
+				"operator_group_level_id" = "eq.#Operator_Group_Level_ID#",
+				"select" = "operator_group_id"
+			}), "operator_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOperatorSelections = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOperatorSelections>
+<cfquery name="qGetOperatorSelections" dbtype="query">
 		SELECT	Operator_Group_ID
 		FROM	qGetPlannerFiltersOperatorData
 		WHERE	Operator_Group_Level_ID = #Operator_Group_Level_ID#
 	</cfquery>
+</cfif>
 	<cfif qGetSelections.Allow_Filter eq 1>
 		<cfset bAllowFilter = 1 />
 	</cfif>

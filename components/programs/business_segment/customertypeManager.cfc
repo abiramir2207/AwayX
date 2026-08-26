@@ -5,7 +5,22 @@
 		<cfargument name="custtypeId" type="numeric" required="false" default="0" />
 		
 		<!---get the business segments--->
-		<cfquery name="getCustomerTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForgetCustomerTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_type")>
+<cfif useLakebaseForgetCustomerTypes>
+	<cftry>
+		<cfset getCustomerTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_type", {
+				"deleted" = "eq.0",
+				"customer_type_id" = "eq.#arguments.custtypeId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCustomerTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCustomerTypes>
+<cfquery name="getCustomerTypes" datasource="#application.datasource#">
 			
 			SELECT 	*
 			FROM 	Customer_Type
@@ -13,6 +28,7 @@
 			AND		Customer_Type_ID = #arguments.custtypeId#
 			
 		</cfquery>
+</cfif>
 		
 		<cfreturn getCustomerTypes />
 	</cffunction>

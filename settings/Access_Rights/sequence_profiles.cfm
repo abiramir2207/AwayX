@@ -37,11 +37,28 @@ padding: 5px;}
 <cfoutput>
 
 	<cfset lock = 1>
-	<cfquery name="get_profile_lock_info" datasource="#application.datasource#">
+	<cfset useLakebaseForget_profile_lock_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForget_profile_lock_info>
+	<cftry>
+		<cfset get_profile_lock_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles", {
+				"deleted" = "eq.0",
+				"is_locked" = "eq.1",
+				"select" = "locked_by_user_id"
+			}), "locked_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_profile_lock_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_profile_lock_info>
+<cfquery name="get_profile_lock_info" datasource="#application.datasource#">
 	SELECT Distinct Locked_By_user_ID
 	FROM Profiles
 	WHERE deleted = 0 and Is_Locked = 1
 	</cfquery>
+</cfif>
 	<cfif get_profile_lock_info.RecordCount>
 	    <cfinvoke component = "components.user.usermanager"   method="getUser"   returnVariable = "qLockingUserData" userId= "#get_profile_lock_info.Locked_By_User_ID#">
 	    <cfset lockingUserName = '#qLockingUserData.name_first# #qLockingUserData.name_last#'>
@@ -51,11 +68,31 @@ padding: 5px;}
 
 <!--- if Profile consel is locked by you and failed to unlock it UPDATE statement will unlock the profile Console --->
 	    	<cfif get_profile_lock_info.Locked_By_User_ID EQ '#trim(request.AccessStructure.user_id)#'>
-	    		    <cfquery name="Update_profile_lock" datasource="#application.datasource#">
+	    		    <cfset useLakebaseForUpdate_profile_lock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForUpdate_profile_lock>
+	<cftry>
+		<cfset application.oLakebase.updateRows("profiles",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"is_locked" = "0",
+				"locked_by_user_id" = javaCast("null",""),
+				"lock_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_profile_lock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_profile_lock>
+<cfquery name="Update_profile_lock" datasource="#application.datasource#">
 	    			UPDATE profiles
 	    			SET Is_locked = 0, Locked_By_User_ID =  null, Lock_Date = null
 	    			WHERE deleted = 0
 	    			</cfquery>
+</cfif>
 	    	</cfif>
 
 

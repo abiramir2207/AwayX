@@ -291,13 +291,30 @@ Start Search Form
 			<!---Program status (RFA etc.)--->
 			<TD>
 			<span ID="searchItemLabel"><B>Program Status</B></span><BR>
-				<CFQUERY NAME="Get_Status" DATASOURCE="#application.datasource#">
+				<cfset useLakebaseForGet_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_status_types")>
+<cfif useLakebaseForGet_Status>
+	<cftry>
+		<cfset Get_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_status_types", {
+				"contract_status_type_id" = "neq.1",
+				"order" = "contract_status_type_id.asc",
+				"select" = "contract_status_type_id,contract_status_type_desc"
+			}), "contract_status_type_id,contract_status_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Status>
+<CFQUERY NAME="Get_Status" DATASOURCE="#application.datasource#">
 					Select	Contract_Status_Type_ID,Contract_Status_Type_Desc
 					From 	Contract_Status_Types
 					Where	Contract_Status_Type_ID <> 3
 					AND 	Contract_Status_Type_ID != 1
 					Order By Contract_Status_Type_ID
 					</CFQUERY>
+</cfif>
 					<CFPARAM NAME="FORM.Status" DEFAULT="0">
 					<SELECT NAME="Status">
 						<OPTION VALUE="0">**ALL** Status</OPTION>
@@ -310,12 +327,29 @@ Start Search Form
 			<TD>
 			<span ID="searchItemLabel"><B>Bid Status</B></span><BR>
 					<CFPARAM NAME="FORM.BidStatus" DEFAULT="0">
-					<cfquery name="GetBidStatus" datasource="#application.datasource#">
+					<cfset useLakebaseForGetBidStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_request_status")>
+<cfif useLakebaseForGetBidStatus>
+	<cftry>
+		<cfset GetBidStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bid_request_status", {
+				"deleted" = "eq.0",
+				"order" = "bid_request_status_id.asc",
+				"select" = "bid_request_status_id,status_desc"
+			}), "bid_request_status_id,status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBidStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBidStatus>
+<cfquery name="GetBidStatus" datasource="#application.datasource#">
 					SELECT Bid_Request_Status_ID, Status_Desc
 					FROM Bid_Request_Status
 					WHERE Deleted = 0
 					ORDER BY Bid_Request_Status_ID
 					</cfquery>
+</cfif>
 						<cfoutput query="GetBidStatus">
 								<input type="checkbox" name="BidStatus" value="#Bid_Request_Status_ID#" checked>#Status_Desc#&nbsp; 
 						</cfoutput>
@@ -584,12 +618,28 @@ Start Search Form
 			</TD>
 			<TD>
 			<cfoutput><span ID="searchItemLabel"><B>#application.returned_customer_setting.family_name_label_singular#</B></span><BR></cfoutput>
-			<cfquery name="GetFamilyNames" datasource="#application.datasource#">
+			<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#">
 				SELECT *
 				FROM Distributor_Family
 				WHERE Deleted = 0
 				ORDER BY Family_Name
 			</cfquery>
+</cfif>
 			<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 			<SPAN ID="SP_Family_Name">
 			<SELECT NAME="Family_Name">

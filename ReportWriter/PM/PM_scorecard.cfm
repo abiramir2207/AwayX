@@ -53,11 +53,28 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 <!---  initial user position--->
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 <!--- locate those positions underneath the supplied position --->
 <CFSET GP_Supplied_Position = ValueList(getUserPosition.User_Positions_ID)>
 
@@ -79,18 +96,50 @@
 </CFQUERY>
 
 <!--- Get the list of phases --->
+<cfset useLakebaseForGet_Phases = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_phase")>
+<cfif useLakebaseForGet_Phases>
+	<cftry>
+		<cfset Get_Phases = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_phase", {
+				"pm_phase_deleted" = "eq.0",
+				"select" = "pm_phase_id"
+			}), "pm_phase_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Phases = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Phases>
 <CFQUERY NAME="Get_Phases" datasource="#application.datasource#">
 	Select		PM_Phase_ID
 	From		PM_Phase
 	Where		PM_Phase_Deleted	=	0
 </CFQUERY>
+</cfif>
 
 <!--- Get list of status --->
+<cfset useLakebaseForGet_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_status")>
+<cfif useLakebaseForGet_Status>
+	<cftry>
+		<cfset Get_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_status", {
+				"pm_status_deleted" = "eq.0",
+				"select" = "pm_status_id"
+			}), "pm_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Status>
 <CFQUERY NAME="Get_Status" datasource="#application.datasource#">
 	Select		PM_Status_ID
 	From		PM_Status
 	Where		PM_Status_Deleted	=	0
 </CFQUERY>
+</cfif>
 
 <cfset cacheSpan = DateAdd("n",2,Now())  />    <!--- This is a fix for a CF Bug.  Set it to a future date or else it uses cache --->
 <cfif URL.useCache EQ 1>

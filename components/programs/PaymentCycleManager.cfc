@@ -60,13 +60,33 @@
 		<cfargument name="discountTypeId" type="numeric" required="true">
 		<cfargument name="paymentCycleId" type="numeric" required="true">
 		
-		<cfquery name="qDeleteExisting" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteExisting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForqDeleteExisting>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_payment_cycle",
+			{
+				"program_id" = "eq.#arguments.programId#",
+				"discount_type_id" = "eq.#arguments.discountTypeId#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteExisting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteExisting>
+<cfquery name="qDeleteExisting" datasource="#application.datasource#">
 			UPDATE	Program_Payment_Cycle
 			SET		Deleted = 1
 			WHERE	Program_ID = #arguments.programId#
 			AND 	Discount_Type_ID = #arguments.discountTypeId#
 			AND 	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfquery name="qInsertPaymentType" datasource="#application.datasource#">
 			INSERT INTO Program_Payment_Cycle (Program_ID, Discount_Type_ID, Payment_Cycle_ID)
@@ -154,7 +174,25 @@
 		
 		<cfset isLocked = 0 />		
 		
-		<cfquery name="qCheckLocked" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForqCheckLocked>
+	<cftry>
+		<cfset qCheckLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_payment_cycle", {
+				"program_id" = "eq.#arguments.programId#",
+				"discount_type_id" = "eq.#arguments.discountTypeId#",
+				"component_id" = "eq.#arguments.componentId#",
+				"deleted" = "eq.0",
+				"select" = "payment_cycle_is_locked"
+			}), "payment_cycle_is_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckLocked>
+<cfquery name="qCheckLocked" datasource="#application.datasource#">
 			SELECT	Payment_Cycle_Is_Locked
 			FROM	Program_Payment_Cycle			
 			WHERE	Program_ID = #arguments.programId#
@@ -162,6 +200,7 @@
 			AND		Component_ID = '#arguments.componentId#'
 			AND 	Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfif qCheckLocked.recordCount>
 			<cfset isLocked = qCheckLocked.Payment_Cycle_Is_Locked>

@@ -187,11 +187,27 @@ MVC V11 Edit [end] doc_modules/inc_all_vars.cfm --->
 
 <!--- D16774 8/14/08 [begin]
 <!--- X1.) Let's grab our XML data typed variable representing THIS letter's DNA... --->
+<cfset useLakebaseForthisTag_qGetXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForthisTag_qGetXML>
+	<cftry>
+		<cfset thisTag.qGetXML = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#thisTag.program_letter_id#",
+				"select" = "letter_xml"
+			}), "letter_xml"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetXML>
 <cfquery name="thisTag.qGetXML" datasource="#application.datasource#">
   SELECT	Letter_xml
   FROM		Program_Letters
   WHERE 	Program_Letters.Program_Letters_ID = #thisTag.program_letter_id#
 </cfquery>
+</cfif>
 --->
 
 <!--- NOTE: XML is an empty string at this point...
@@ -1335,11 +1351,27 @@ I.) ////// KEEP Temporarily TESTING [end] //////////////////////////////////////
 
 					<!--- D16774 8/14/08 [begin]
 					<!--- Let's grab our PDF full path for THIS letter... --->
-                    <cfquery name="thisTag.qGetPDF" datasource="#application.datasource#">
+                    <cfset useLakebaseForthisTag_qGetPDF = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForthisTag_qGetPDF>
+	<cftry>
+		<cfset thisTag.qGetPDF = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#thisTag.program_letter_id#",
+				"select" = "letter_path"
+			}), "letter_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetPDF = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetPDF>
+<cfquery name="thisTag.qGetPDF" datasource="#application.datasource#">
                         SELECT	letter_path
                         FROM	Program_Letters
                         WHERE 	Program_Letters.Program_Letters_ID = #thisTag.program_letter_id#
                     </cfquery>
+</cfif>
 					--->
 					<cfset thisTag.currentLetterPath = trim(application.oLetterManager.getLetterPath(thisTag.program_letter_id))>
                     <!--- D16774 8/14/08 [end] --->

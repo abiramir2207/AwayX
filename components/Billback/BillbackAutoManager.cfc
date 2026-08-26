@@ -233,12 +233,29 @@
 					<cfswitch expression="#PayeeType#">
 						<!--- Distributor --->
 						<cfcase value="1">
-							<cfquery name="GetPayeeIDs" datasource="#application.datasource#">
+							<cfset useLakebaseForGetPayeeIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGetPayeeIDs>
+	<cftry>
+		<cfset GetPayeeIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeIDs>
+<cfquery name="GetPayeeIDs" datasource="#application.datasource#">
 								SELECT BSA_Foodservice_Customers_ID 
 								FROM Contract_Distributors
 								WHERE Contract_Main_ID = '#arguments.Contract_Main_ID#'
 								AND Deleted = 0
 							</cfquery>
+</cfif>
 							
 							<cfset PayeeList = valuelist(GetPayeeIDs.BSA_Foodservice_Customers_ID)>
 						</cfcase>

@@ -17,12 +17,29 @@ Last Modified On:
 <cfset sBasicInfo  ="">
 <cfset SettingsInCFMPage  ="create_edit.cfm">
 
+<cfset useLakebaseForgetDefaultForm = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("settings_list")>
+<cfif useLakebaseForgetDefaultForm>
+	<cftry>
+		<cfset getDefaultForm = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("settings_list", {
+				"setting_type" = "eq.Template",
+				"order" = "setting_name.asc",
+				"select" = "setting_name"
+			}), "setting_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDefaultForm = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDefaultForm>
 <CFQUERY NAME="getDefaultForm" datasource="#application.datasource#">
 	select Setting_Name
 	from settings_list
 	where setting_Type = 'Template'
 	order by Setting_Name
 </CFQUERY>
+</cfif>
 
 <cfoutput query = getDefaultForm>
 	<cfparam name="Form.#getDefaultForm.Setting_Name#"  default="1">

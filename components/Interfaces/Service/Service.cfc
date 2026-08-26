@@ -123,9 +123,25 @@
 	<cffunction name="getDataIntCount" access="public" returntype="Numeric" output="false">
 		<cfargument name="DataIntegrationUploadId" type="numeric" required="true" default="0">
 
-		<cfquery name="qGeDataIntTotalCount" datasource="#application.datasource#">
+		<cfset useLakebaseForqGeDataIntTotalCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("data_integration_upload")>
+<cfif useLakebaseForqGeDataIntTotalCount>
+	<cftry>
+		<cfset qGeDataIntTotalCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("data_integration_upload", {
+				"data_integration_upload_id" = "eq.#arguments.DataIntegrationUploadId#",
+				"select" = "total_count_received"
+			}), "total_count_received"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGeDataIntTotalCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGeDataIntTotalCount>
+<cfquery name="qGeDataIntTotalCount" datasource="#application.datasource#">
 			Select Total_Count_Received FROM  Data_integration_Upload WHERE Data_integration_Upload_ID = #arguments.DataIntegrationUploadId#
 		</cfquery>
+</cfif>
 		<cfscript>
 			return qGeDataIntTotalCount.Total_Count_Received;
 		</cfscript>

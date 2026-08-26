@@ -116,8 +116,21 @@ AND RP_Mapping_Table.FP_End_Date = '#Fiscal_Period_End_Date#'
 	
 	</cfloop>
 
-<!--- <cfquery name="SelectAll" datasource="#application.datasource#">
+<!--- <cfset useLakebaseForSelectAll = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_invoice_summary")>
+<cfif useLakebaseForSelectAll>
+	<cftry>
+		<cfset SelectAll = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_invoice_summary", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelectAll = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelectAll>
+<cfquery name="SelectAll" datasource="#application.datasource#">
 SELECT * FROM RP_Invoice_Summary
-</cfquery>	
+</cfquery>
+</cfif>	
 <cfdump var="#SelectAll#">
 <hr>  --->

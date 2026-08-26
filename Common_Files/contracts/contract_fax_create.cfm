@@ -109,6 +109,21 @@ function confirmCompletion(disableClickedButtonName)
 
 
 <!--- Get the program number --->
+<cfset useLakebaseForGet_Program_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGet_Program_Details>
+	<cftry>
+		<cfset Get_Program_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#URL.Contract_Main_ID#",
+				"select" = "contract_main_id,contract_number,contract_title"
+			}), "contract_main_id,contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Program_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Program_Details>
 <CFQUERY NAME="Get_Program_Details" datasource="#application.datasource#">
 	Select		Contract_Main_ID,
 				Contract_Number,
@@ -116,6 +131,7 @@ function confirmCompletion(disableClickedButtonName)
 	From		Contract_Main
 	Where		Contract_Main_ID	=	#URL.Contract_Main_ID#
 </CFQUERY>
+</cfif>
 
 <!--- Get the broker fax numbers --->
 <CFQUERY NAME="Get_Broker_Details" datasource="#application.datasource#">

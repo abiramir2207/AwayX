@@ -119,7 +119,44 @@
 	</cfif>
 </cfcase>
 <cfcase value="2">
-	<cfquery name="updSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForupdSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForupdSettings>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"created_type" = "eq.#FORM.oldCreatedType#"
+			},
+			{
+				"company_main_id" = "#request.AccessStructure.Company_Main_ID#",
+				"generic_type" = "#FORM.selGeneric#",
+				"created_type" = "#FORM.sel#",
+				"invoice_billback" = "#FORM.chkClaimPerfReq_1#",
+				"ib_required" = "#FORM.reqClaimPerfReq_1#",
+				"claim_period" = "#FORM.chkClaimPerfReq_2#",
+				"cp_required" = "#FORM.reqClaimPerfReq_2#",
+				"item_number" = "#FORM.chkClaimPerfReq_3#",
+				"in_required" = "#FORM.reqClaimPerfReq_3#",
+				"total_dollar_pound" = "#FORM.chkClaimPerfReq_4#",
+				"tdp_required" = "#FORM.reqClaimPerfReq_4#",
+				"menu_listing" = "#FORM.chkClaimPerfReq_5#",
+				"ml_required" = "#FORM.reqClaimPerfReq_5#",
+				"branded_point_of_sale" = "#FORM.chkClaimPerfReq_6#",
+				"bpos_required" = "#FORM.reqClaimPerfReq_6#",
+				"mandated_specification" = "#FORM.chkClaimPerfReq_7#",
+				"ms_required" = "#FORM.reqClaimPerfReq_7#",
+				"optional_specification" = "#FORM.chkClaimPerfReq_8#",
+				"os_required" = "#FORM.reqClaimPerfReq_8#",
+				"feature_sheet" = "#FORM.chkClaimPerfReq_9#",
+				"fs_required" = "#FORM.reqClaimPerfReq_9#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdSettings>
+<cfquery name="updSettings" datasource="#application.datasource#">
 		UPDATE Program_Control_Panel_Options
 		Set Company_Main_ID			=	'#request.AccessStructure.Company_Main_ID#',
 			Generic_Type			=	'#FORM.selGeneric#',
@@ -144,13 +181,32 @@
 			FS_Required				=	#FORM.reqClaimPerfReq_9#
 		Where Created_Type			=   '#FORM.oldCreatedType#'
 	</cfquery>
+</cfif>
 </cfcase>
 <cfcase value="3">
-	<cfquery name="delSettings" datasource="#application.datasource#">
+	<cfset useLakebaseFordelSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseFordelSettings>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"created_type" = "eq.#FORM.oldCreatedType#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelSettings>
+<cfquery name="delSettings" datasource="#application.datasource#">
 		UPDATE Program_Control_Panel_Options
 		Set deleted = 1
 		Where Created_Type	=	'#FORM.oldCreatedType#'
 	</cfquery>
+</cfif>
 </cfcase>
 </cfswitch>
 

@@ -19,12 +19,30 @@
 								  AND (dbo.Contract_Products.Deleted = 0)
 		</CFQUERY>
 		
-		<CFQUERY NAME="updateWeeklyVolume" datasource="#application.datasource#">
+		<cfset useLakebaseForupdateWeeklyVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
+<cfif useLakebaseForupdateWeeklyVolume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_product_data",
+			{
+				"program_growth_component_product_data_id" = "eq.#getProdDataID.Program_Growth_Component_Product_Data_ID#"
+			},
+			{
+				"weekly_volume" = "#thisProduct_WeeklyVolume#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateWeeklyVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateWeeklyVolume>
+<CFQUERY NAME="updateWeeklyVolume" datasource="#application.datasource#">
 			UPDATE Program_Growth_Component_Product_Data
 			SET
 				Weekly_Volume = '#thisProduct_WeeklyVolume#'
 			WHERE Program_Growth_Component_Product_Data_ID = '#getProdDataID.Program_Growth_Component_Product_Data_ID#'
 		</CFQUERY>
+</cfif>
 
 			<CFLOOP INDEX="Tier_ID" LIST="#FORM.Tier_List#" DELIMITERS=",">
 				<!--- insert Product ID --->

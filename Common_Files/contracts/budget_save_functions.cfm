@@ -75,9 +75,25 @@
       </cfif>
       <!---  D50326 :: Tru-up to Actuals Button in Program START--->
       <cfif arguments.UpdateCommittedToActual AND arguments.CommittedToActualChangeFromNoToYes>
-        <cfquery name="OffInvoiceActualDetail" datasource="#application.datasource#">
+        <cfset useLakebaseForOffInvoiceActualDetail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("off_invoice_actual_detail")>
+<cfif useLakebaseForOffInvoiceActualDetail>
+	<cftry>
+		<cfset OffInvoiceActualDetail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("off_invoice_actual_detail", {
+				"limit" = "1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOffInvoiceActualDetail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOffInvoiceActualDetail>
+<cfquery name="OffInvoiceActualDetail" datasource="#application.datasource#">
           SELECT TOP 1 1 FROM  Off_Invoice_Actual_Detail
         </cfquery>
+</cfif>
 
         <cfset User_OI_Table =  OffInvoiceActualDetail.RecordCount>
 

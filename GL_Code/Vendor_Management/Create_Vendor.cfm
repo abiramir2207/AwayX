@@ -148,11 +148,27 @@
 	</script>
 <cfelse>
 <!---STATE --->
-	<cfquery name="GetStates" datasource="#application.datasource#">
+	<cfset useLakebaseForGetStates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_states")>
+<cfif useLakebaseForGetStates>
+	<cftry>
+		<cfset GetStates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_states", {
+				"order" = "state_name.asc",
+				"select" = "state_code as state,state_name"
+			}), "state_code as state,state_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStates>
+<cfquery name="GetStates" datasource="#application.datasource#">
 		SELECT DISTINCT State_CODE As State, State_Name
 		FROM _States
 		ORDER BY State_Name
 	</cfquery>
+</cfif>
 
 	<cfsavecontent variable="variables.vendor_states">
 		<SELECT NAME="vendor_state" STYLE="WIDTH:300px;" id="vendor_state">
@@ -166,9 +182,22 @@
 	</cfsavecontent>
 
 <!--- COUNTRY --->
-	<CFQUERY NAME="getCountry" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForgetCountry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForgetCountry>
+	<cftry>
+		<cfset getCountry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCountry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCountry>
+<CFQUERY NAME="getCountry" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM _Country
 	</CFQUERY>
+</cfif>
 
 	<cfsavecontent variable="variables.vendor_countries">
 		<SELECT NAME="vendor_country" STYLE="WIDTH:300px;" id="vendor_country">

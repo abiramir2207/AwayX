@@ -1,18 +1,64 @@
+<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"select" = "family_name"
+			}), "family_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
 <cfquery name="GetFamilyNames" datasource="#application.datasource#">
 	SELECT DISTINCT Family_Name
 	FROM BSA_Foodservice_Customers
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForGetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForGetBrokers>
+	<cftry>
+		<cfset GetBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"order" = "broker_name.asc",
+				"select" = "broker_legcy_shard,broker_name"
+			}), "broker_legcy_shard,broker_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokers>
 <cfquery name="GetBrokers" datasource="#application.datasource#">
 	SELECT DISTINCT Broker_Legcy_Shard, Broker_Name
 	FROM BSA_Foodservice_Brokers
 	ORDER BY Broker_Name
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForGetStates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetStates>
+	<cftry>
+		<cfset GetStates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"select" = "state"
+			}), "state"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStates>
 <cfquery name="GetStates" datasource="#application.datasource#">
 	SELECT DISTINCT State
 	FROM BSA_Foodservice_Customers
 </cfquery>
+</cfif>
 
 <cfquery name="GetBrokers" datasource="#application.datasource#">
 	SELECT DISTINCT Market_Area, Broker_Legcy_Shard, Broker_Name

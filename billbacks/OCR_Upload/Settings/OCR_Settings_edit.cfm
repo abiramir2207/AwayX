@@ -30,11 +30,27 @@ Description  :  Edit Existing OCR Setting
 <!--- Last edited info --->
 <cfif isdefined("qGetOCRSettings.Updated_By") AND len(trim(qGetOCRSettings.Updated_By)) GT 0 >
 	
-	<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
+	<cfset useLakebaseForGetUserLastEdited = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserLastEdited>
+	<cftry>
+		<cfset GetUserLastEdited = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#qGetOCRSettings.Updated_By#",
+				"select" = "name_first + ' ' + name_last as userlastedited"
+			}), "name_first + ' ' + name_last as userlastedited"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLastEdited = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLastEdited>
+<cfquery name="GetUserLastEdited" datasource="#application.datasource#">
 		SELECT Name_First + ' ' + Name_Last AS UserLastEdited
 		FROM _Users
 		WHERE User_ID = '#qGetOCRSettings.Updated_By#'
 	</cfquery>
+</cfif>
 	<cfif GetUserLastEdited.Recordcount IS 1>
 		<table id="lastUpdatedBy" bgcolor="White" style="border-color:Orange;border-style:solid;margin-top:10px;" cellpadding="3" cellspacing="0" align="center">
 		<tr>

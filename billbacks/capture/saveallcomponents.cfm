@@ -1,8 +1,24 @@
 <cfoutput><!---Saves values entered in /billbacks/capture/program_components_discounts.cfm --->
 
+<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
 <CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
 	SELECT Billback_Status_ID FROM Billback WHERE Billback_ID = '#FORM.Billback_ID#'
 </CFQUERY>
+</cfif>
 <CFIF GetStatus.Billback_Status_ID GTE 3> 
 	<!--- 17302 - Redirect to Summary --->
 	<CFSET Billback_Status_ID = GetStatus.Billback_Status_ID>
@@ -20,6 +36,23 @@
 <cfset DiscountList = "">
 
 <!--- If it's not already there, add the program to billback_programs --->
+<cfset useLakebaseForDoesBillbackProgramHaveValue = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForDoesBillbackProgramHaveValue>
+	<cftry>
+		<cfset DoesBillbackProgramHaveValue = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_program_id,discount_list"
+			}), "billback_program_id,discount_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDoesBillbackProgramHaveValue = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDoesBillbackProgramHaveValue>
 <cfquery name="DoesBillbackProgramHaveValue" datasource="#application.datasource#">
 Select Billback_Program_ID, Discount_List 
 FROM Billback_Program
@@ -27,6 +60,7 @@ WHERE Billback_ID = '#Billback_ID#'
 AND Program_ID = '#Program_ID#'
 AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfif DoesBillbackProgramHaveValue.Recordcount GT 0>
 	<cfset Billback_Program_ID = DoesBillbackProgramHaveValue.Billback_Program_ID>
@@ -179,12 +213,31 @@ WHERE	(dbo.Contract_Main.Contract_Main_ID = #Program_ID#)
 <cfif appSettings.Claims_at_Comp_Level AND isDefined("form.Program_BidRequest_Component_ID")>
 
 <!---clear out any existing entries--->
-	<cfquery name="qInsertBidRequestData" datasource="#application.datasource#">
+	<cfset useLakebaseForqInsertBidRequestData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_bidrequest_component")>
+<cfif useLakebaseForqInsertBidRequestData>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_bidrequest_component",
+			{
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"billback_program_id" = "eq.#Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertBidRequestData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertBidRequestData>
+<cfquery name="qInsertBidRequestData" datasource="#application.datasource#">
 		UPDATE	Billback_Program_BidRequest_Component
 		SET		Deleted = 1
 		WHERE	Billback_ID = '#Form.Billback_ID#'
 		AND		Billback_Program_ID = '#Program_ID#'
 	</cfquery>
+</cfif>
 	
 	<!---Loop through selected bid request components--->
 	<cfset ShowBidRequest = 0>
@@ -240,12 +293,31 @@ WHERE	(dbo.Contract_Main.Contract_Main_ID = #Program_ID#)
 <!--- Lump sums --->
 
 <!--- Delete prior lump sums --->
+<cfset useLakebaseForDeletePriorLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForDeletePriorLS>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program_lumpsum_component",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"billback_program_id" = "eq.#Billback_Program_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePriorLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePriorLS>
 <cfquery name="DeletePriorLS" datasource="#application.datasource#">
 UPDATE Billback_Program_Lumpsum_Component
 SET Deleted = 1
 WHERE Billback_ID = '#Billback_ID#'
 AND Billback_Program_ID = '#Billback_Program_ID#'
 </cfquery>
+</cfif>
 
 <cfif isDefined("LSList")>
 <cfloop list="#LSList#" index="SafeLSID">
@@ -314,11 +386,29 @@ AND Billback_Product.Billback_ID = '#Billback_ID#'
 </cfif>
 </cfif>
 
-	<cfquery name="AddDiscountList" datasource="#application.datasource#">
+	<cfset useLakebaseForAddDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForAddDiscountList>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program",
+			{
+				"billback_program_id" = "eq.#Billback_Program_ID#"
+			},
+			{
+				"discount_list" = "#DiscountList#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAddDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAddDiscountList>
+<cfquery name="AddDiscountList" datasource="#application.datasource#">
 	UPDATE Billback_Program
 	SET Discount_List = '#DiscountList#'
 	WHERE Billback_Program_ID = '#Billback_Program_ID#'
 	</cfquery>
+</cfif>
 	
 	
 	<!--- Don't go to product page if only lump sum has been selected --->

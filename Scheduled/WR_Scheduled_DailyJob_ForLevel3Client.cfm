@@ -2,10 +2,25 @@
 
 <!--- ---------------------------------daily job to update the data in work_request table --------------------------------- --->
 
+<cfset useLakebaseForqGetWebserviceOn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqGetWebserviceOn>
+	<cftry>
+		<cfset qGetWebserviceOn = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "webserviceon"
+			}), "webserviceon"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetWebserviceOn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetWebserviceOn>
 <cfquery name="qGetWebserviceOn" datasource="#application.datasource#">
 	select WebserviceOn
 	from _application_settings
 </cfquery>
+</cfif>
 
 <CFIF qGetWebserviceOn.WebserviceOn eq 0>
 
@@ -123,11 +138,27 @@
 		</cfquery>
 		<cfset PunchDevAsgn = ValueList(qGetPunchDevAsgn.Punch_ID,",")>
 
-		<cfquery name="qGetID45StatusName" datasource="punchlist">
+		<cfset useLakebaseForqGetID45StatusName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("punch_status")>
+<cfif useLakebaseForqGetID45StatusName>
+	<cftry>
+		<cfset qGetID45StatusName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("punch_status", {
+				"punch_status_id" = "eq.45",
+				"select" = "punch_status_desc"
+			}), "punch_status_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetID45StatusName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetID45StatusName>
+<cfquery name="qGetID45StatusName" datasource="punchlist">
 			select Punch_Status_Desc
 			from Punch_status
 			where Punch_status_ID = 45
 		</cfquery>
+</cfif>
 
 		<cfif qGetPunchDevAsgn.recordcount GT 0>
 			<cfquery name="updatePunchComplete" datasource="#application.datasource#">
@@ -157,12 +188,31 @@
 
 		<!--- ---------------------------------update Stage Built Date BEGIN--------------------------------- --->
 		<cfif qGetPunchComplete.recordcount GT 0>
-			<cfquery name="updatebuiltOnStage" datasource="#application.datasource#">
+			<cfset useLakebaseForupdatebuiltOnStage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForupdatebuiltOnStage>
+	<cftry>
+		<cfset application.oLakebase.updateRows("work_request",
+			{
+				"builtonstage" = "is.null",
+				"builtonprod" = "not.is.null"
+			},
+			{
+				"builtonstage" = "builtOnProd"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatebuiltOnStage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatebuiltOnStage>
+<cfquery name="updatebuiltOnStage" datasource="#application.datasource#">
 				update work_request
 				set builtOnStage = builtOnProd
 				where builtOnStage is NULL
 				and builtOnProd is not NULL
 			</cfquery>
+</cfif>
 		</cfif>
 			update Release_Notes for  WRs.<br>
 		<!--- ---------------------------------  update Stage Built Date End --------------------------------- --->

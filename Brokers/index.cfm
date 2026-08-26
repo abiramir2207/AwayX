@@ -37,7 +37,22 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForGetBrokerPlans>
-	<CFQUERY NAME="Get_Broker_Plans" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Broker_Plans = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("broker_action_plan")>
+<cfif useLakebaseForGet_Broker_Plans>
+	<cftry>
+		<cfset Get_Broker_Plans = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("broker_action_plan", {
+				"order" = "date_created_on.desc",
+				"select" = "broker_action_plan_id,bsa_operator_id,date_created_on,user_id"
+			}), "broker_action_plan_id,bsa_operator_id,date_created_on,user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Broker_Plans = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Broker_Plans>
+<CFQUERY NAME="Get_Broker_Plans" datasource="#application.datasource#">
 		Select		Broker_Action_Plan_ID,
 					BSA_Operator_ID,
 					Date_Created_On,
@@ -45,6 +60,7 @@
 		From		Broker_Action_Plan
 		Order by	Date_Created_On desc
 	</CFQUERY>
+</cfif>
 </cfif>
 
 
@@ -64,19 +80,51 @@
 	<CFLOOP QUERY="Get_Broker_Plans">
 	
 	<!--- Get the name of the Operator --->
-	<CFQUERY NAME="Get_Operator_Name" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Operator_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Name>
+	<cftry>
+		<cfset Get_Operator_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#BSA_Operator_ID#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Name>
+<CFQUERY NAME="Get_Operator_Name" datasource="#application.datasource#">
 		Select		Operator_Name
 		From		BSA_Operator
 		Where		BSA_Operator_ID	=	#BSA_Operator_ID#
 	</CFQUERY>
+</cfif>
 	
 	<!--- Get the name of the user that created this broker plan --->
-	<CFQUERY NAME="Get_User_Name" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_User_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_User_Name>
+	<cftry>
+		<cfset Get_User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_User_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_User_Name>
+<CFQUERY NAME="Get_User_Name" datasource="#application.datasource#">
 		Select		Name_First,
 					Name_Last
 		From		_Users
 		Where		User_ID	=	'#User_ID#'
 	</CFQUERY>
+</cfif>
 	
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Encrypt the ID																				 --->

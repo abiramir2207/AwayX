@@ -44,11 +44,26 @@
 <CFPARAM NAME="FORM.Zone_ID"				DEFAULT="0">
 
 <CFIF len(URL.Broker_ID) GT 0>
-	<CFQUERY NAME="getBrokerInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForgetBrokerInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForgetBrokerInfo>
+	<cftry>
+		<cfset getBrokerInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"bsa_foodservice_brokers_id" = "eq.#URL.Broker_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBrokerInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBrokerInfo>
+<CFQUERY NAME="getBrokerInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM BSA_Foodservice_Brokers
 		WHERE BSA_Foodservice_Brokers_ID = '#URL.Broker_ID#'
 	</CFQUERY>
+</cfif>
 
 	<CFIF getBrokerInfo.Recordcount GT 0>
 		<CFSET FORM.UPDATERECORD			= "1">
@@ -367,12 +382,29 @@
 					<TR>
 						<TD CLASS="labelStyle"><SPAN ID="error_LineOfBiz"></SPAN>&nbsp;<cfoutput>#application.returned_customer_setting.lob_label_singular#</cfoutput></TD>
 						<CFIF FORM.UPDATERECORD EQ 0>
-							<CFQUERY NAME="getLOBFoodserviceTitle" datasource="#application.datasource#">
+							<cfset useLakebaseForgetLOBFoodserviceTitle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForgetLOBFoodserviceTitle>
+	<cftry>
+		<cfset getLOBFoodserviceTitle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"deleted" = "eq.0",
+				"line_of_business" = "eq.F",
+				"select" = "line_of_business_name,line_of_business_id"
+			}), "line_of_business_name,line_of_business_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLOBFoodserviceTitle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLOBFoodserviceTitle>
+<CFQUERY NAME="getLOBFoodserviceTitle" datasource="#application.datasource#">
 								SELECT Line_Of_Business_Name, Line_Of_Business_ID
 								FROM Line_Of_Business
 								WHERE DELETED = 0
 								AND Line_Of_Business = 'F'
 							</CFQUERY>
+</cfif>
 							<TD>#getLOBFoodserviceTitle.Line_Of_Business_Name#<input TYPE="Hidden" NAME="Line_Of_Business_ID" VALUE="#getLOBFoodserviceTitle.Line_Of_Business_ID#"><!--- <INPUT NAME="Line_Of_Business" VALUE="#FORM.Line_Of_Business#" TYPE="text" SIZE="40"> ---></TD>
 						<CFELSE>
 							<TD>#FORM.Line_Of_Business#</TD>

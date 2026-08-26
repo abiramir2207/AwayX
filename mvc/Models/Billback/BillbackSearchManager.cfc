@@ -115,12 +115,28 @@
 		<cfargument name="userId" type="string" required="true">
 		<cfset var qGetData = "">
 		
-		<cfquery name="qGetData" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_search_grid_column_size")>
+<cfif useLakebaseForqGetData>
+	<cftry>
+		<cfset qGetData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_search_grid_column_size", {
+				"user_id" = "eq.#arguments.userId#",
+				"select" = "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+			}), "status,payable_number,billback_number,title,bb_date,bb_received_date,payee,start_date,end_date,claimed_amount,approved_amount,closing_method,more_info,vendor"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetData>
+<cfquery name="qGetData" datasource="#application.datasource#">
 			SELECT  Status,Payable_Number,Billback_Number,Title,BB_Date,BB_Received_Date,Payee,Start_Date,End_Date,
 				Claimed_Amount,Approved_Amount,Closing_Method,More_Info,Vendor
 			FROM  BB_Search_Grid_Column_Size
 			WHERE User_Id = '#arguments.userId#'
 		</cfquery>
+</cfif>
 
 	  <cfif qGetData.recordcount eq 0>
 		<cfquery name="qGetData" datasource="#application.datasource#">

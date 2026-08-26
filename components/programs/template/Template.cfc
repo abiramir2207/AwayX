@@ -326,7 +326,28 @@ DEPENDENCIES:
 	<!--- UPDATE :: Template Filter --->
 	<cffunction name="updateTemplateFilter" access="public" output="false">
   		<cfargument name="TemplateFilter" type="mvc.Models.Template.TemplateFilter" required="true" />
-		<cfquery name="qUpdateTemplateFilter" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_filters")>
+<cfif useLakebaseForqUpdateTemplateFilter>
+	<cftry>
+		<cfset application.oLakebase.updateRows("template_filters",
+			{
+				"template_filters_id" = "eq.#arguments.TemplateFilter.Template_Filters_Id#"
+			},
+			{
+				"template_id" = "#arguments.TemplateFilter.Template_Id#",
+				"parent_template_id" = "#arguments.TemplateFilter.Parent_Template_Id#",
+				"name" = "#arguments.TemplateFilter.Name#",
+				"description" = "#arguments.TemplateFilter.Desc#",
+				"status" = "#arguments.TemplateFilter.Status#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateTemplateFilter>
+<cfquery name="qUpdateTemplateFilter" datasource="#application.datasource#">
 			UPDATE Template_Filters
 			SET
 				Template_Id = #arguments.TemplateFilter.Template_Id#,
@@ -336,6 +357,7 @@ DEPENDENCIES:
 				Status = '#arguments.TemplateFilter.Status#'
 			WHERE 	Template_Filters_Id = #arguments.TemplateFilter.Template_Filters_Id#	
 		</cfquery>
+</cfif>
 		
   	</cffunction>--->
       

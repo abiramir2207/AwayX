@@ -14,7 +14,23 @@
 		
 		<cfif arguments.id>
 		
-			<cfquery name="qGetSupplier" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetSupplier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_supplier")>
+<cfif useLakebaseForqGetSupplier>
+	<cftry>
+		<cfset qGetSupplier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_supplier", {
+				"deleted" = "eq.0",
+				"fp_supplier_id" = "eq.#arguments.id#",
+				"select" = "fp_supplier_id,supplier_name"
+			}), "fp_supplier_id,supplier_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSupplier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSupplier>
+<cfquery name="qGetSupplier" datasource="#application.datasource#">
 				SELECT	FP_Supplier_ID, Supplier_Name
 				FROM	FP_Supplier
 				WHERE
@@ -22,6 +38,7 @@
 						AND
 						FP_Supplier_ID = #arguments.id#
 			</cfquery>
+</cfif>
 			
 			<cfloop query="qGetSupplier">
 			

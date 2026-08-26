@@ -8,11 +8,27 @@
 <body>
 <cfparam name="url.CID" default="">
 <cfif url.CID NEQ "">
+<cfset useLakebaseForgetprogramsapdetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetprogramsapdetails>
+	<cftry>
+		<cfset getprogramsapdetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#url.CID#",
+				"select" = "sent_to_external_client,error_from_external_client,contract_status_type_idx,contract_number"
+			}), "sent_to_external_client,error_from_external_client,contract_status_type_idx,contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetprogramsapdetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetprogramsapdetails>
 <CFQUERY NAME="getprogramsapdetails" datasource="#application.datasource#">
 	select Sent_To_External_Client,error_from_external_client,contract_status_type_idx,contract_number
 	from contract_main
 	where contract_main_id = #url.CID#
 </CFQUERY>
+</cfif>
 <cfif (getprogramsapdetails.Sent_To_External_Client EQ 1 and getprogramsapdetails.error_from_external_client EQ 0 and getprogramsapdetails.contract_status_type_idx EQ 2) OR (getprogramsapdetails.contract_status_type_idx GT 2)>
 <CFQUERY NAME="TheQuery" datasource="#application.datasource#">
 	select distinct Program_Webservices_Error_Detail.pactiv_program_id,Program_Webservices_Error_Detail.BSA_Program_Id

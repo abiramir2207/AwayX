@@ -412,10 +412,25 @@
 	</div>
 	</cfoutput>
 	
+<cfset useLakebaseForvars_qSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForvars_qSetting>
+	<cftry>
+		<cfset vars.qSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "split_billback"
+			}), "split_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvars_qSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvars_qSetting>
 <cfquery name="vars.qSetting" datasource="#application.datasource#">
 	SELECT split_billback
 	  FROM _Application_Settings
 </cfquery>
+</cfif>
 <cfset vars.split_billback = vars.qSetting.split_billback>
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
 	<tr>
@@ -578,11 +593,27 @@
 	<cfoutput query="session.Get_Data" maxrows="#pagingmaxrows#" startrow="#pagingstartrow#">
 		
 		<cfif is_locked>
-			<cfquery name="GetLockedByName" datasource="#application.datasource#">
+			<cfset useLakebaseForGetLockedByName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetLockedByName>
+	<cftry>
+		<cfset GetLockedByName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#locked_by#",
+				"select" = "name_first + ' ' + name_last as lockedbyname"
+			}), "name_first + ' ' + name_last as lockedbyname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockedByName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockedByName>
+<cfquery name="GetLockedByName" datasource="#application.datasource#">
 				SELECT name_first + ' ' + name_last as LockedByName
 				FROM _Users
 				WHERE user_id = '#locked_by#'
 			</cfquery>
+</cfif>
 		</cfif>		
 		<cfscript>
 			if(listFind(workList,Deduction_ID) GT 0){

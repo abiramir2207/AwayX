@@ -27,18 +27,49 @@
 	<cfset form.programID = "" />
 </cfif>
 
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#url.programID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#url.programID#'
 	</cfquery>
+</cfif>
 
 	<cfif isDefined("GetContractInfo.ProgramType_ID") and GetContractInfo.RecordCount GTE 1>
-	  <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+	  <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,fixed_rebate_grid_option"
+			}), "first_parent_id,fixed_rebate_grid_option"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT First_parent_ID,Fixed_Rebate_Grid_Option
 	    FROM Program_Control_Panel_Options
 	    WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
 	  </cfquery>
+</cfif>
 	</cfif>
 	<cfif isDefined("GetTemplateInfo.First_parent_ID") and GetTemplateInfo.RecordCount GTE 1>
 		<cfset varFirstParentID = GetTemplateInfo.First_parent_ID />

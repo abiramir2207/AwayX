@@ -844,9 +844,24 @@ Description  : 	Search Manager for Planners
             <!--- ~~~~~~~ filter by product ~~~~~~~~ --->
             <cfif trim(arguments.product) neq ''>
 
-				<cfquery name="local.getSegmentSetting" datasource="#application.datasource#">
+				<cfset useLakebaseForlocal_getSegmentSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForlocal_getSegmentSetting>
+	<cftry>
+		<cfset local.getSegmentSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment_enabled", {
+				"select" = "planner_volume_plan_segment_enable"
+			}), "planner_volume_plan_segment_enable"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_getSegmentSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_getSegmentSetting>
+<cfquery name="local.getSegmentSetting" datasource="#application.datasource#">
 					SELECT Planner_Volume_Plan_Segment_Enable FROM Business_Segment_Enabled
 				</cfquery>
+</cfif>
 
 				<cfset local.filterSegment = Val(local.getSegmentSetting.Planner_Volume_Plan_Segment_Enable) />
 

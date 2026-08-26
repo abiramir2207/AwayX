@@ -39,6 +39,24 @@ WHERE dbo.Contract_Main.Contract_Main_ID = '#cryp.value#'
 </cfif>
 <!---60308	Best Plans Enhancement END--->
 <!--- Dev Note:Milan (25639) - Check whether the most recent version is active --->
+<cfset useLakebaseForgetActiveTemplateVersion = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetActiveTemplateVersion>
+	<cftry>
+		<cfset getActiveTemplateVersion = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#getProgramTemplateInfo.First_Parent_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"isdominant" = "eq.1",
+				"select" = "isdominant"
+			}), "isdominant"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetActiveTemplateVersion = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetActiveTemplateVersion>
 <CFQUERY NAME="getActiveTemplateVersion" datasource="#application.datasource#">
 SELECT IsDominant
 FROM Program_Control_Panel_Options
@@ -47,6 +65,7 @@ AND Deleted = 0
 AND Active = 1
 AND IsDominant = 1
 </CFQUERY>
+</cfif>
 
 <CFSET ProgramIsARevision = 0>
 <CFIF len(trim(getProgramTemplateInfo.Parent_Revised_Contract_Main_ID)) NEQ 0 AND len(trim(getProgramTemplateInfo.Revision_of_Contract_Main_ID)) NEQ 0>

@@ -231,10 +231,25 @@ TSF - Label 16253: Code to handle Billback Analyst search form
 <CFSET GTE_Operators=" ,Greater_Or_Equal,Equal,Less_Or_Equal">
 <CFSET GTE_Operator_Symbols=" ,>=,=,<=">
 <!--- 98106 :: Auto Deviations to consider if bb is beyond program budget START--->
+<cfset useLakebaseForqGetToleranceSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForqGetToleranceSettings>
+	<cftry>
+		<cfset qGetToleranceSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "autoprocess_check_bb_beyond_budget"
+			}), "autoprocess_check_bb_beyond_budget"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetToleranceSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetToleranceSettings>
 <CFQUERY NAME="qGetToleranceSettings" DATASOURCE="#Application.Datasource#">
 	SELECT AutoProcess_Check_BB_Beyond_Budget
 	FROM	Billback_Tolerance_Settings
 </CFQUERY>
+</cfif>
 <!--- 98106 :: Auto Deviations to consider if bb is beyond program budget END--->
 <cfif Source IS "Deductions">
 	<!--- 17294 ? --->
@@ -421,10 +436,25 @@ TSF - Label 16253: Code to handle Billback Analyst search form
 		Added a new field in the Billback Search for searching on the Duplicates.
 	--->
 	<tr>
-		<cfquery name="getBBSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForgetBBSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForgetBBSettings>
+	<cftry>
+		<cfset getBBSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "enable_bb_dup_check"
+			}), "enable_bb_dup_check"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBSettings>
+<cfquery name="getBBSettings" datasource="#application.datasource#">
 			SELECT 	Enable_BB_Dup_Check
             FROM 		Billback_Settings
         </cfquery>
+</cfif>
 		<cfif (getBBSettings.Enable_BB_Dup_Check EQ 1)>
 
 				<td >
@@ -1028,11 +1058,27 @@ TSF - Label 16253: Code to handle Billback Analyst search form
       </td>
 	<cfif Source IS "Deductions">
 	<cfsilent>
-       <cfquery name="GetDeductionDetails" datasource="#Application.Datasource#">
+       <cfset useLakebaseForGetDeductionDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForGetDeductionDetails>
+	<cftry>
+		<cfset GetDeductionDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deductions", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"select" = "dd_amount,distributor_id,distributor_bill_to_id"
+			}), "dd_amount,distributor_id,distributor_bill_to_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDeductionDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDeductionDetails>
+<cfquery name="GetDeductionDetails" datasource="#Application.Datasource#">
          SELECT	DD_Amount, Distributor_ID, Distributor_Bill_To_ID
          FROM	Deductions
          WHERE 	Deduction_ID = '#Deduction_ID#'
        </cfquery>
+</cfif>
      </cfsilent>
 	</cfif>
       <td>

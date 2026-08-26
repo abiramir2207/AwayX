@@ -63,11 +63,29 @@
 			</CFQUERY> --->
 			
 			<!--- 
-			<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForResetOtherUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForResetOtherUpload>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"activation_date" = "eq.#FORM.Activation_Date#"
+			},
+			{
+				"activate_tonight" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetOtherUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetOtherUpload>
+<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
 				UPDATE GL_Code_Upload
 				SET Activate_Tonight = 0
 				WHERE Activation_Date = '#FORM.Activation_Date#'
-			</CFQUERY> --->
+			</CFQUERY>
+</cfif> --->
 						
 			<CFQUERY NAME="deleteallOthers" DATASOURCE="#Application.Datasource#">
 				UPDATE 	GL_Code_Pro_Grp_Upload 

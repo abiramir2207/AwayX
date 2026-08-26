@@ -53,9 +53,22 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the datecodes for the commodities --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->	
+<cfset useLakebaseForGet_Date_Codes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_datecode")>
+<cfif useLakebaseForGet_Date_Codes>
+	<cftry>
+		<cfset Get_Date_Codes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_datecode", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Date_Codes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Date_Codes>
 <CFQUERY NAME="Get_Date_Codes" datasource="#application.datasource#">
 Select * from Commodities_Datecode
-</CFQUERY>	
+</CFQUERY>
+</cfif>	
 
 
 

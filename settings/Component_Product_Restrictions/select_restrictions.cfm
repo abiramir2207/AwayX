@@ -134,12 +134,29 @@ function isNextRow(maxCols, currCols)
 				 WHERE	Product_Group_Level_ID = #RestrictedProductCriteria.Component_Product_Restriction_Criteria#
 			</cfquery>
 			
-			<cfquery name="ExistingSelections" datasource="#application.datasource#">
+			<cfset useLakebaseForExistingSelections = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_product_restriction")>
+<cfif useLakebaseForExistingSelections>
+	<cftry>
+		<cfset ExistingSelections = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_product_restriction", {
+				"component_id" = "eq.#url.Component_ID#",
+				"discount_type_id" = "eq.#url.Discount_Type_ID#",
+				"select" = "criteria_restriction_id"
+			}), "criteria_restriction_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForExistingSelections = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForExistingSelections>
+<cfquery name="ExistingSelections" datasource="#application.datasource#">
 			SELECT Criteria_Restriction_ID
 			FROM Component_Product_Restriction
 			WHERE Component_ID = '#url.Component_ID#'
 			AND Discount_Type_ID = '#url.Discount_Type_ID#'
 			</cfquery>
+</cfif>
 			
 			<Cfset ExistingSelectionList = valuelist(ExistingSelections.Criteria_Restriction_ID)>
 			

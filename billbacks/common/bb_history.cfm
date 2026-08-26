@@ -186,11 +186,26 @@ WHERE Billback_ID = '#bbid#'
 	date_Changed asc,name_last,BB_ModifyAgree_ProductChanges.program_id,product_id
 </cfquery>
 
+<cfset useLakebaseForgetusersmodifyagreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackmodifyagreedchanges")>
+<cfif useLakebaseForgetusersmodifyagreed>
+	<cftry>
+		<cfset getusersmodifyagreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackmodifyagreedchanges", {
+				"select" = "bb_modifyagree_prgid,date_changed,user_modified"
+			}), "bb_modifyagree_prgid,date_changed,user_modified"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetusersmodifyagreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetusersmodifyagreed>
 <cfquery name="getusersmodifyagreed" dbtype="query">
 select distinct BB_ModifyAgree_PrgId,
 date_changed,User_Modified
 from BillbackModifyAgreedChanges
 </cfquery>
+</cfif>
 </cfif>
 
 <!--- Create Query Objects --->
@@ -281,6 +296,22 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 
 
 <!--- Get the query results for various actions (Create, RFA, Agree, Disagree, Reset, Approval, Payment Request, Payment Approved, BB Reversed)--->
+<cfset useLakebaseForBillbackCreate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackcreatequery")>
+<cfif useLakebaseForBillbackCreate>
+	<cftry>
+		<cfset BillbackCreate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackcreatequery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackCreate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackCreate>
 <cfquery name="BillbackCreate" dbtype="query">
 	SELECT *
 	FROM BillbackCreateQuery
@@ -289,7 +320,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackRFA = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackrfaquery")>
+<cfif useLakebaseForBillbackRFA>
+	<cftry>
+		<cfset BillbackRFA = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackrfaquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackRFA = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackRFA>
 <cfquery name="BillbackRFA" dbtype="query">
 	SELECT *
 	FROM BillbackRFAQuery
@@ -298,7 +346,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackAgreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackagreedquery")>
+<cfif useLakebaseForBillbackAgreed>
+	<cftry>
+		<cfset BillbackAgreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackagreedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackAgreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackAgreed>
 <cfquery name="BillbackAgreed" dbtype="query">
 	SELECT * 
 	FROM BillbackAgreedQuery
@@ -307,7 +372,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackDisAgreed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackdisagreedquery")>
+<cfif useLakebaseForBillbackDisAgreed>
+	<cftry>
+		<cfset BillbackDisAgreed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackdisagreedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackDisAgreed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackDisAgreed>
 <cfquery name="BillbackDisAgreed" dbtype="query">
 	SELECT *
 	FROM BillbackDisAgreedQuery
@@ -316,7 +398,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackReset = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackresetquery")>
+<cfif useLakebaseForBillbackReset>
+	<cftry>
+		<cfset BillbackReset = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackresetquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackReset = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackReset>
 <cfquery name="BillbackReset" dbtype="query">
 	SELECT *
 	FROM BillbackResetQuery
@@ -325,7 +424,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackapprovedquery")>
+<cfif useLakebaseForBillbackApproved>
+	<cftry>
+		<cfset BillbackApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackapprovedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackApproved>
 <cfquery name="BillbackApproved" dbtype="query">
 	SELECT *
 	FROM BillbackApprovedQuery
@@ -334,7 +450,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackPaymentRequested = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackpaymentrequestedquery")>
+<cfif useLakebaseForBillbackPaymentRequested>
+	<cftry>
+		<cfset BillbackPaymentRequested = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackpaymentrequestedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackPaymentRequested = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackPaymentRequested>
 <cfquery name="BillbackPaymentRequested" dbtype="query">
 	SELECT *
 	FROM BillbackPaymentRequestedQuery
@@ -343,7 +476,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackPaymentApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackpaymentapprovedquery")>
+<cfif useLakebaseForBillbackPaymentApproved>
+	<cftry>
+		<cfset BillbackPaymentApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackpaymentapprovedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackPaymentApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackPaymentApproved>
 <cfquery name="BillbackPaymentApproved" dbtype="query">
 	SELECT *
 	FROM BillbackPaymentApprovedQuery
@@ -352,7 +502,24 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForBillbackReversed = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billbackreversedquery")>
+<cfif useLakebaseForBillbackReversed>
+	<cftry>
+		<cfset BillbackReversed = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billbackreversedquery", {
+				"name" = "neq.''
+	GROUP BY Action_Date,Name",
+				"order" = "action_date.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBillbackReversed = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBillbackReversed>
 <cfquery name="BillbackReversed" dbtype="query">
 	SELECT *
 	FROM BillbackReversedQuery
@@ -361,6 +528,7 @@ Solution:  Initialize the query BillbackAgreedQuery with the recordcount of the 
 	GROUP BY Action_Date,Name
 	ORDER BY Action_Date DESC
 </cfquery>
+</cfif>
 
  <!---******* SHOW THE REPORT OUTPUT ******* --->
 <cfset ColorBackground = "FFCE84">

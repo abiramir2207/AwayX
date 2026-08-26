@@ -358,45 +358,125 @@
 	ORDER BY  isnull(c.Country_Sort_Order, c.country_id) ASC
 </CFQUERY>
 
+<cfset useLakebaseForgetCountry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForgetCountry>
+	<cftry>
+		<cfset getCountry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {
+				"active" = "eq.1",
+				"order" = "country_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCountry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCountry>
 <CFQUERY NAME="getCountry" datasource="#application.datasource#">
 	SELECT *
 	FROM _Country
 	where active = 1
 	ORDER BY Country_id ASC
 </CFQUERY>
+</cfif>
 <!---Replaces query to get profiles--->
 <cfset UserSetting = CreateObject("component","components.user.Profile").getUserSettingsPanel(request.AccessStructure.Profiles_ID)>
 
 <CFSET getProfilesComp = CreateObject("component", "components.settings.profiles.profile").getAllProfiles(UserSettingPanel=UserSetting.Settings_Panel)>
 
 <!---Want to order by name--->
- <cfquery name="getProfiles" dbtype="Query">
+ <cfset useLakebaseForgetProfiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getprofilescomp")>
+<cfif useLakebaseForgetProfiles>
+	<cftry>
+		<cfset getProfiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getprofilescomp", {
+				"order" = "profiles_desc.asc",
+				"select" = "profiles_id,profiles_desc"
+			}), "profiles_id,profiles_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProfiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProfiles>
+<cfquery name="getProfiles" dbtype="Query">
  Select Profiles_ID, Profiles_Desc
  FROM getProfilesComp
  ORDER BY Profiles_Desc
  </cfquery>
+</cfif>
 
 
+<cfset useLakebaseForgetCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForgetCompanies>
+	<cftry>
+		<cfset getCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"order" = "company_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCompanies>
 <CFQUERY NAME="getCompanies" datasource="#application.datasource#">
 	SELECT *
 	FROM Company_Main
 	WHERE Deleted = 0
 	ORDER BY Company_Name
 </CFQUERY>
+</cfif>
 
 <!---If Sales Org On, get all Lines of Business--->
 <cfif appSettings.getSalesOrgOn() IS 1>
-	<cfquery name="GetLOB" datasource="#application.datasource#">
+	<cfset useLakebaseForGetLOB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLOB>
+	<cftry>
+		<cfset GetLOB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"deleted" = "eq.0",
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLOB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLOB>
+<cfquery name="GetLOB" datasource="#application.datasource#">
 	SELECT * FROM Line_of_Business WHERE Deleted = 0 ORDER BY Line_of_Business_Name
 	</cfquery>
+</cfif>
 </cfif>
 
 
 <!---If distribution channel on, get type codes--->
 <cfif appSettings.getDistributionChannelOn() IS 1>
-	<cfquery name="GetTypeCode" datasource="#application.datasource#">
+	<cfset useLakebaseForGetTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("type_code_desc")>
+<cfif useLakebaseForGetTypeCode>
+	<cftry>
+		<cfset GetTypeCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("type_code_desc", {
+				"deleted" = "eq.0",
+				"order" = "type_code_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeCode>
+<cfquery name="GetTypeCode" datasource="#application.datasource#">
 	SELECT * FROM Type_Code_Desc WHERE Deleted = 0 ORDER BY Type_Code_Desc
 	</cfquery>
+</cfif>
 </cfif>
 
 <STYLE TYPE="text/css">
@@ -478,11 +558,26 @@
 		</TR>
 <cfif appSettings.getAuthority_Sequence_For_HQ_Only()>
 	 <!------ Find position list has HQ ----->
-	<cfquery name="qIsHQ" dbtype="query">
+	<cfset useLakebaseForqIsHQ = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getuserpositions")>
+<cfif useLakebaseForqIsHQ>
+	<cftry>
+		<cfset qIsHQ = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getuserpositions", {
+				"service_zone_id" = "is.null"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsHQ = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsHQ>
+<cfquery name="qIsHQ" dbtype="query">
 		SELECT	*
 		FROM	getUserPositions
 		WHERE	Service_Zone_ID IS NULL
 	</cfquery>
+</cfif>
 	<cfset isHQ = qIsHQ.recordCount>
 	<cfelse>
 		<cfset isHQ = 0>
@@ -552,11 +647,28 @@
 		<cfif appsettings.getDistributionChannelOn() IS 1>
 
 			<!---Get current Type codes for user--->
-			<cfquery name="GetTypeCodesforUser" datasource="#application.datasource#">
+			<cfset useLakebaseForGetTypeCodesforUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_type_code")>
+<cfif useLakebaseForGetTypeCodesforUser>
+	<cftry>
+		<cfset GetTypeCodesforUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_type_code", {
+				"user_id" = "eq.#url.User_ID#",
+				"deleted" = "eq.0",
+				"select" = "type_code_id"
+			}), "type_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeCodesforUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeCodesforUser>
+<cfquery name="GetTypeCodesforUser" datasource="#application.datasource#">
 			SELECT Type_Code_ID FROM User_Type_Code
 			WHERE User_ID = '#url.User_ID#'
 			AND Deleted = 0
 			</cfquery>
+</cfif>
 
 	      <TR valign="top">
         <cfset rowMax = 4>
@@ -572,9 +684,25 @@
               <cfset cnt = 0>
 			  <cfloop query="getTypeCode">
 
-				  <cfquery name="ThisTypeCode" dbtype="query">
+				  <cfset useLakebaseForThisTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettypecodesforuser")>
+<cfif useLakebaseForThisTypeCode>
+	<cftry>
+		<cfset ThisTypeCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettypecodesforuser", {
+				"type_code_id" = "eq.#getTypeCode.Type_Code_Desc_ID#",
+				"select" = "type_code_id"
+			}), "type_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThisTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThisTypeCode>
+<cfquery name="ThisTypeCode" dbtype="query">
 				  SELECT Type_Code_ID FROM GetTypeCodesforUser WHERE Type_Code_ID = '#getTypeCode.Type_Code_Desc_ID#'
 				  </cfquery>
+</cfif>
 
               <td><input type="Checkbox" class="type_code" name="Type_Code_ID" value="#Type_Code_Desc_ID#" <cfif ThisTypeCode.Recordcount GT 0>checked</cfif>>
                		#trim(Type_Code_Desc)#
@@ -592,11 +720,28 @@
 
 		<!---Get current Type codes for user--->
 		<cfif NOT isDefined("FORM.Line_of_Business_ID")>
-			<cfquery name="GetLOBsforUser" datasource="#application.datasource#">
+			<cfset useLakebaseForGetLOBsforUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_lob")>
+<cfif useLakebaseForGetLOBsforUser>
+	<cftry>
+		<cfset GetLOBsforUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_lob", {
+				"user_id" = "eq.#url.User_ID#",
+				"deleted" = "eq.0",
+				"select" = "line_of_business_id"
+			}), "line_of_business_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLOBsforUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLOBsforUser>
+<cfquery name="GetLOBsforUser" datasource="#application.datasource#">
 				SELECT Line_of_Business_ID FROM User_LOB
 				WHERE User_ID = '#url.User_ID#'
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 			<cfset FORM.Line_of_Business_ID = ValueList(GetLOBsforUser.Line_of_Business_ID)>
 		</cfif>
 

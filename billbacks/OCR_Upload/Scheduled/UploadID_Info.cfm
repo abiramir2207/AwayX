@@ -60,16 +60,46 @@ font-variant: normal;
 </cfif>	
 	
 	<cfif (isDefined("FORM.OCRUploadID")	AND FORM.OCRUploadID NEQ "")>
-		<cfquery name="qGetOCRUploadByID" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetOCRUploadByID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqGetOCRUploadByID>
+	<cftry>
+		<cfset qGetOCRUploadByID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_upload_log", {
+				"ocr_upload_id" = "eq.#FORM.OCRUploadID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOCRUploadByID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOCRUploadByID>
+<cfquery name="qGetOCRUploadByID" datasource="#application.datasource#">
 			SELECT * FROM OCR_Upload_Log where OCR_Upload_ID = #FORM.OCRUploadID#
 		</cfquery>
+</cfif>
 	
 	
 	
 	<cfif (isDefined("qGetOCRUploadByID") AND qGetOCRUploadByID.RecordCount NEQ 0)>
-		<cfquery name="qGetOCRTemplateSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetOCRTemplateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_template_settings")>
+<cfif useLakebaseForqGetOCRTemplateSettings>
+	<cftry>
+		<cfset qGetOCRTemplateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_template_settings", {
+				"ocr_template_settings_id" = "eq.#qGetOCRUploadByID.OCR_Template_Settings_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOCRTemplateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOCRTemplateSettings>
+<cfquery name="qGetOCRTemplateSettings" datasource="#application.datasource#">
 			SELECT * FROM OCR_Template_Settings WHERE OCR_Template_Settings_ID = #qGetOCRUploadByID.OCR_Template_Settings_ID#
 		</cfquery>
+</cfif>
 		
 <!----  DISPLAY STARTS --->		
 		<div id="titleFont">Important Detail about this upload:</div>

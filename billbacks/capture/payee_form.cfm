@@ -52,7 +52,22 @@
 <cfset savedPayeeType = 0 />
 <cfset savedPayeeID = "" />
 <CFIF LoadBillback EQ 1>
-	<cfquery name="LoadBillbackData" datasource="#Application.Datasource#">
+	<cfset useLakebaseForLoadBillbackData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForLoadBillbackData>
+	<cftry>
+		<cfset LoadBillbackData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"select" = "bb_title,bb_date,bb_start_date,bb_end_date,bb_amount,bb_reference,bb_creator_id,bb_creator_notes,bb_code,bb_creator_user_position_id,--bb_is_locked,--bb_locked_by_user_id,--bb_lock_date,billback_status_id,billback_payee_type_id,bb_up,bb_pnf,created_date,deleted,scheduled_auto_bb,bb_closing_method,vendor_only_billback"
+			}), "bb_title,bb_date,bb_start_date,bb_end_date,bb_amount,bb_reference,bb_creator_id,bb_creator_notes,bb_code,bb_creator_user_position_id,--bb_is_locked,--bb_locked_by_user_id,--bb_lock_date,billback_status_id,billback_payee_type_id,bb_up,bb_pnf,created_date,deleted,scheduled_auto_bb,bb_closing_method,vendor_only_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLoadBillbackData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLoadBillbackData>
+<cfquery name="LoadBillbackData" datasource="#Application.Datasource#">
 		SELECT
 			BB_Title,
 			BB_Date,
@@ -79,6 +94,7 @@
 		FROM Billback
 		WHERE Billback_ID = '#Form.Billback_ID#'
 	</cfquery>
+</cfif>
 
 <!--- D30517: Item not appearing on Billback 'programs' page after importing it START	 --->
 <cfquery name="CheckDistributors" datasource="#Application.Datasource#">
@@ -97,11 +113,27 @@ HAVING COUNT(*) > 1
 	<cfset savedPayeeType = LoadBillbackData.Billback_Payee_Type_ID />
 	<CFSWITCH expression="#LoadBillbackData.Billback_Payee_Type_ID#">
 		<CFCASE value="1"><!--- di --->
-			<cfquery name="getPayeeData" datasource="#Application.Datasource#">
+			<cfset useLakebaseForgetPayeeData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForgetPayeeData>
+	<cftry>
+		<cfset getPayeeData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeData>
+<cfquery name="getPayeeData" datasource="#Application.Datasource#">
 				SELECT *
 				FROM Billback_Distributor
 				WHERE Billback_ID = '#Form.Billback_ID#' AND Deleted = 0
 			</cfquery>
+</cfif>
 			<cfset savedPayeeID = getPayeeData.Distributor_ID />
 <!--- 			<cfif len(getPayeeData.Distributor_ID) EQ 0>
 				<CFSET is_an_unknown_payee = 1>
@@ -234,7 +266,22 @@ HAVING COUNT(*) > 1
 <cfset variables.VendorOnlyBillback = LoadBillbackData.Vendor_Only_Billback>
 
 <CFELSE>
-	<cfquery name="LoadBillbackData_Two" datasource="#Application.Datasource#">
+	<cfset useLakebaseForLoadBillbackData_Two = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForLoadBillbackData_Two>
+	<cftry>
+		<cfset LoadBillbackData_Two = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Form.Billback_ID#",
+				"select" = "billback_payee_type_id,bb_closing_method,vendor_only_billback"
+			}), "billback_payee_type_id,bb_closing_method,vendor_only_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLoadBillbackData_Two = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLoadBillbackData_Two>
+<cfquery name="LoadBillbackData_Two" datasource="#Application.Datasource#">
 		SELECT
 			Billback_Payee_Type_ID,
 			BB_Closing_Method,
@@ -242,6 +289,7 @@ HAVING COUNT(*) > 1
 		FROM Billback
 		WHERE Billback_ID = '#Form.Billback_ID#'
 	</cfquery>
+</cfif>
 	<CFSET BB_Closing_method = LoadBillbackData_Two.BB_Closing_Method>
 	<!--- <CFSET FORM.Default_Payee = LoadBillbackData_Two.Billback_Payee_Type_ID>  --->
 	<cfset savedPayeeType = LoadBillbackData_Two.Billback_Payee_Type_ID />
@@ -269,11 +317,27 @@ logic will work, when payee is a vendor. The below code will be initially called
 a vendor from the vendor popup.
 --->
 <cfif variables.VendorOnlyBillback eq 1 AND Form.Vendor_ID neq "">
-	<cfquery NAME="getVendorMasterID" datasource="#application.datasource#">
+	<cfset useLakebaseForgetVendorMasterID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForgetVendorMasterID>
+	<cftry>
+		<cfset getVendorMasterID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#Form.Vendor_ID#",
+				"select" = "vendor_master_id"
+			}), "vendor_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetVendorMasterID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetVendorMasterID>
+<cfquery NAME="getVendorMasterID" datasource="#application.datasource#">
 		SELECT	Vendor_Master_ID
 		FROM Vendor_Master
 		WHERE Vendor_ID = '#Form.Vendor_ID#'
 	</cfquery>
+</cfif>
 	<cfset Form.Distributor_ID = getVendorMasterID.Vendor_Master_ID>
 	<!--- Since "uploaded_vendor_ID" should have a value in the "billback_distributor" table, Form.Vendor_ID is not being set to blank --->
 	<!---<cfset Form.Vendor_ID = "">--->
@@ -493,12 +557,28 @@ a vendor from the vendor popup.
 	ORDER BY  isnull(c.Country_Sort_Order, c.country_id) ASC
 </CFQUERY>
 <!--- Country code --->
+<cfset useLakebaseForgetCountry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForgetCountry>
+	<cftry>
+		<cfset getCountry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {
+				"active" = "eq.1",
+				"order" = "country_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCountry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCountry>
 <CFQUERY NAME="getCountry" datasource="#application.datasource#">
 	SELECT *
 	FROM _Country
 	where active = 1
 	ORDER BY Country_id ASC
 </CFQUERY>
+</cfif>
 
 <cfset OnlyDistributorsUnderMe = 1 />
 <cfif Get_Profile_Settings.BB_Add_Payee_Any_Position EQ 1>
@@ -1663,11 +1743,27 @@ So that the UI does not get affected by extra height, the last row of this table
 		<TD id="BB_Payee_Type_Data_2_Form"<CFIF OP_SHOW NEQ 1> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF>><!--- Operator in our database --->
 			<CFSET getOperatorInformation = QueryNew('BSA_Operator_ID')>
 			<CFIF len(trim(Form.operator_id)) GT 0>
-				<cfquery name="getOperatorInformation" datasource="#Application.Datasource#">
+				<cfset useLakebaseForgetOperatorInformation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForgetOperatorInformation>
+	<cftry>
+		<cfset getOperatorInformation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_ID#",
+				"select" = "bsa_operator_id,operator_name,operator_location_type,operator_city,operator_state,operator_number_of_locations,operator_dba,legacy_id,business_segment_id"
+			}), "bsa_operator_id,operator_name,operator_location_type,operator_city,operator_state,operator_number_of_locations,operator_dba,legacy_id,business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOperatorInformation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOperatorInformation>
+<cfquery name="getOperatorInformation" datasource="#Application.Datasource#">
 					SELECT	BSA_Operator_ID, operator_name, Operator_Location_Type, Operator_City, Operator_State, Operator_Number_Of_Locations, Operator_DBA, legacy_id, Business_Segment_ID
 					FROM 	BSA_Operator
 					WHERE 	BSA_Operator_ID = '#FORM.Operator_ID#'
 				</cfquery>
+</cfif>
 				<cfset lsBusinessSegmentID = Valuelist(getOperatorInformation.Business_Segment_ID) />
 			</CFIF>
             <!--- Ajax Operator Info --->
@@ -2422,7 +2518,24 @@ So that the UI does not get affected by extra height, the last row of this table
 		<TR>
 			<TD <CFIF FORM.Vendor_ID EQ ""> STYLE="DISPLAY:NONE;"<CFELSE> STYLE="DISPLAY:BLOCK"</CFIF> id="vendorTable">
 				<CFIF len(trim(FORM.Vendor_ID)) GT 0>
-					<cfquery name="getVendorInfo" datasource="#Application.Datasource#">
+					<cfset useLakebaseForgetVendorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForgetVendorInfo>
+	<cftry>
+		<cfset getVendorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#FORM.Vendor_ID#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"select" = "vendor_name as vendorname,address_1 as vendoraddress1,address_2 as vendoraddress2,city as vendorcity,state as vendorstate,zipcode as vendorzipcode"
+			}), "vendor_name as vendorname,address_1 as vendoraddress1,address_2 as vendoraddress2,city as vendorcity,state as vendorstate,zipcode as vendorzipcode"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetVendorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetVendorInfo>
+<cfquery name="getVendorInfo" datasource="#Application.Datasource#">
 						SELECT 	Vendor_Name as vendorName,
 								Vendor_Master.Address_1 as vendorAddress1,
 								Vendor_Master.Address_2 as vendorAddress2,
@@ -2434,6 +2547,7 @@ So that the UI does not get affected by extra height, the last row of this table
 								Deleted = 0 AND
 								Active_Code = 'A'
 					</cfquery>
+</cfif>
 				</CFIF>
 
 				<TABLE border="0" cellspacing="0" cellpadding="3" align="center" WIDTH="100%" CLASS="Maintable">

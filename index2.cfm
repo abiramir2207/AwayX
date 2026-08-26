@@ -33,13 +33,43 @@
   </script>
   <cfabort>
 </cfif>
+<cfset useLakebaseForqGetCustKey = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForqGetCustKey>
+	<cftry>
+		<cfset qGetCustKey = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "customer_keyword"
+			}), "customer_keyword"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCustKey = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCustKey>
 <cfquery name="qGetCustKey" datasource="#application.datasource#">
   select customer_keyword from customer_settings
 </cfquery>
+</cfif>
+<cfset useLakebaseForGetSingleSignOnInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetSingleSignOnInfo>
+	<cftry>
+		<cfset GetSingleSignOnInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "singlesign_on,ssl_on"
+			}), "singlesign_on,ssl_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSingleSignOnInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSingleSignOnInfo>
 <cfquery name="GetSingleSignOnInfo" datasource="#application.datasource#">
   SELECT SingleSign_On, SSL_On
   FROM _application_settings
 </cfquery>
+</cfif>
 
 <cfif GetSingleSignOnInfo.SingleSign_On EQ 0 AND NOT isdefined("session.AccessStructureExternal")>
   <!--- ColdFusion 2018+ blocks <cfcookie> from directly clearing the reserved

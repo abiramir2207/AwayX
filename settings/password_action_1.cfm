@@ -14,6 +14,22 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the password for this user																 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Password = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_Password>
+	<cftry>
+		<cfset Get_Password = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0",
+				"select" = "user_password"
+			}), "user_password"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Password = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Password>
 <CFQUERY NAME="Get_Password" datasource="#application.datasource#">
 	Select	User_Password
 	From	_Users
@@ -21,6 +37,7 @@
 			and
 			deleted		=	0
 </CFQUERY>
+</cfif>
 
 
 

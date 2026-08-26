@@ -1,5 +1,21 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
+<cfset useLakebaseForgetCreatedTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetCreatedTypes>
+	<cftry>
+		<cfset getCreatedTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"generic_type" = "neq.Operator-deviated Pricing",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCreatedTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCreatedTypes>
 <cfquery name="getCreatedTypes" datasource="#application.datasource#">
 	SELECT DISTINCT *
 	FROM Program_Control_Panel_Options
@@ -7,6 +23,7 @@
 	AND Generic_Type <> 'Operator-deviated Pricing'
 	AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset PAGE_TITLE = "Select Program Type">
 

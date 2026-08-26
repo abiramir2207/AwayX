@@ -15,11 +15,27 @@
 		
 <cfset qGetDropdowns = CreateObject("component", "MVC.Models.OnePageBillback.OPBManager").getDropdowns(1)>
 
+<cfset useLakebaseForqPrgdropdown = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetdropdowns")>
+<cfif useLakebaseForqPrgdropdown>
+	<cftry>
+		<cfset qPrgdropdown = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetdropdowns", {
+				"order" = "contract_main_id.asc",
+				"select" = "contract_main_id,program_number"
+			}), "contract_main_id,program_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqPrgdropdown = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqPrgdropdown>
 <cfquery name="qPrgdropdown" dbtype="query">
 	SELECT DISTINCT contract_main_id, Program_Number
 	FROM qGetDropdowns
 	ORDER BY contract_main_id
 </cfquery>
+</cfif>
 
 <form id="OPBAddProduct" name="OPBAddProduct" method="post" action="OPB_Add_Products.cfm"> 
 
@@ -129,11 +145,27 @@
 	<cfset qTemplateBusinessSegments = queryNew("") />
 	<cfif (isBusinessSegEnabledForProduct EQ 1 AND appSettings.Filter_Business_Segments EQ 1)>
 		<cfset bBusinessSettingONinTemplate = 1 />
-		<cfquery name="qGetTemplateID" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetTemplateID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetTemplateID>
+	<cftry>
+		<cfset qGetTemplateID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#form.Contract_Main_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetTemplateID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetTemplateID>
+<cfquery name="qGetTemplateID" datasource="#application.datasource#">
 			SELECT ProgramType_ID 
 			FROM Contract_Main 
 			WHERE Contract_Main_ID = #form.Contract_Main_ID# 
 		</cfquery>
+</cfif>
 		<cfif qGetTemplateID.RecordCount GTE 1 >
 			<cfset qTemplateBusinessSegments  = businessSegManager.getBusinessSegmentTemplateSettings(qGetTemplateID.ProgramType_ID) />
 		</cfif>
@@ -202,10 +234,25 @@
 			<cfset qGetProductHierarchy = productGroupDataManager.getHierarchyLevel(excludeLevelList=sExcludeLevelList,addParentName=0,getLevelNames=1) />
 		</cfif>
 						
-		<cfquery name="qGetDistinctLevels" dbtype="query">
+		<cfset useLakebaseForqGetDistinctLevels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproducthierarchy")>
+<cfif useLakebaseForqGetDistinctLevels>
+	<cftry>
+		<cfset qGetDistinctLevels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproducthierarchy", {
+				"select" = "hierarchy_level"
+			}), "hierarchy_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistinctLevels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistinctLevels>
+<cfquery name="qGetDistinctLevels" dbtype="query">
 			SELECT	DISTINCT Hierarchy_Level
 			FROM	qGetProductHierarchy
 		</cfquery>
+</cfif>
 						
 		<cfset stStruct.productHierarchyLevelList = ValueList(qGetDistinctLevels.Hierarchy_Level, ",") />
 		
@@ -233,13 +280,31 @@
 	<cfset stStruct.List_Of_Rebate_Product_ID = "">
 	
 	<cfif IsDefined("Form.Rebate_Type_Search_ID") AND Form.Rebate_Type_Search_ID NEQ 0>
-		<cfquery name="getRateTypeProducts" datasource="#Application.Datasource#">
+		<cfset useLakebaseForgetRateTypeProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForgetRateTypeProducts>
+	<cftry>
+		<cfset getRateTypeProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"deleted" = "eq.0",
+				"product_type_id" = "eq.#form.Rebate_Type_Search_ID#",
+				"contract_main_id" = "eq.#form.Contract_Main_ID#",
+				"select" = "bsa_foodservice_items_master_id,product_type_id,contract_main_id"
+			}), "bsa_foodservice_items_master_id,product_type_id,contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRateTypeProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRateTypeProducts>
+<cfquery name="getRateTypeProducts" datasource="#Application.Datasource#">
 			SELECT     BSA_Foodservice_Items_Master_ID, Product_Type_ID, Contract_Main_ID
 			FROM      Contract_Products
 			WHERE     Deleted = 0 
 			AND Product_Type_ID = '#form.Rebate_Type_Search_ID#'
 			AND Contract_Main_ID = '#form.Contract_Main_ID#'
 		</cfquery>
+</cfif>
 		<cfset stStruct.List_Of_Rebate_Product_ID = ListQualify(ValueList(getRateTypeProducts.BSA_Foodservice_Items_Master_ID), "'")>
 	</cfif>
 
@@ -304,7 +369,26 @@
 	    <cfif (GetSettings.isDominant EQ 1)>
 	      <cfset Latest_EZ_Contract_ID = GetSettings.EZ_Contract_Id />
 	    <cfelse>
-	      <cfquery name="qryGetLatestTemplate" datasource="#application.datasource#">
+	      <cfset useLakebaseForqryGetLatestTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryGetLatestTemplate>
+	<cftry>
+		<cfset qryGetLatestTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"first_parent_id" = "eq.#GetSettings.First_Parent_ID#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1",
+				"select" = "ez_contract_id"
+			}), "ez_contract_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetLatestTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetLatestTemplate>
+<cfquery name="qryGetLatestTemplate" datasource="#application.datasource#">
 	      SELECT TOP 1 EZ_Contract_ID
 				FROM Program_Control_Panel_Options
 				WHERE First_Parent_ID = #GetSettings.First_Parent_ID#
@@ -312,6 +396,7 @@
 				and deleted = 0
 				ORDER BY ProgramControl_Panel_Options_ID desc
 	      </cfquery>
+</cfif>
 	      <cfset Latest_EZ_Contract_ID = qryGetLatestTemplate.EZ_Contract_ID />
 	  	</cfif>
 	  	
@@ -327,6 +412,23 @@
 	<cfset searchProducts = productManager.search(search = stStruct, useCache = 1)>
 
 <!---- QUERY OF QUERY TO PREVENT DISPLAYING ITEMS WHICH ALREADY ON PROGRAM---->
+<cfset useLakebaseForcurrentProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForcurrentProducts>
+	<cftry>
+		<cfset currentProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.0",
+				"select" = "bsa_foodservice_items_master_id"
+			}), "bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcurrentProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcurrentProducts>
 <cfquery name="currentProducts" datasource="#application.datasource#">
 	SELECT BSA_Foodservice_Items_Master_ID 
 	FROM Contract_Products
@@ -334,6 +436,7 @@
 	AND Deleted = 0
 	AND Is_Group = 0
 </cfquery>
+</cfif>
 
 <cfset ExisitingItems = ValueList(currentProducts.BSA_Foodservice_Items_Master_ID)>
 

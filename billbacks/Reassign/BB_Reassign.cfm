@@ -140,11 +140,27 @@ TABLE.BorderTable TD
 
 <CFIF FORM.Vendor_ID NEQ "">
 		
-	<CFQUERY NAME="GetVendorID" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForGetVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
+<cfif useLakebaseForGetVendorID>
+	<cftry>
+		<cfset GetVendorID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vendor_master", {
+				"vendor_id" = "eq.#Vendor_ID#",
+				"select" = "vendor_id,vendor_name"
+			}), "vendor_id,vendor_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVendorID>
+<CFQUERY NAME="GetVendorID" DATASOURCE = "#Application.Datasource#">
 		SELECT Vendor_ID, Vendor_Name 
 		FROM Vendor_Master 
 		WHERE Vendor_ID = '#Vendor_ID#'
 	</CFQUERY>
+</cfif>
 		
 	<CFSET Selected_Vendor = GetVendorID.Vendor_Name>
 		
@@ -162,10 +178,23 @@ TABLE.BorderTable TD
 </CFQUERY>
 
 <!---Get Possible statuses--->
+<cfset useLakebaseForGetBBStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_status")>
+<cfif useLakebaseForGetBBStatus>
+	<cftry>
+		<cfset GetBBStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_status", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBStatus>
 <CFQUERY NAME="GetBBStatus" Datasource="#application.datasource#">
 	SELECT * 
 	FROM Billback_Status
 </CFQUERY>
+</cfif>
 
 <CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
 

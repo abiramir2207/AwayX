@@ -6,12 +6,28 @@
 <cfparam name="sendLetterGenerationEmail" default="0">
 
 <!--- STATUS CHANGE NOTIFICATION EMAIL --->
+<cfset useLakebaseForgetThisProgramsStatusEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetThisProgramsStatusEmail>
+	<cftry>
+		<cfset getThisProgramsStatusEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#contract_main_id#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,broker_user_id,creating_user_position_id,business_segment_id,responsible_user_id,programtype_id,creator_id"
+			}), "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,broker_user_id,creating_user_position_id,business_segment_id,responsible_user_id,programtype_id,creator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProgramsStatusEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProgramsStatusEmail>
 <CFQUERY NAME="getThisProgramsStatusEmail" datasource="#application.datasource#">
 	SELECT 	Contract_Status_Type_IDX, Revision_Of_Contract_Main_ID, Broker_User_ID, Contract_Number, Contract_Title, Broker_User_ID,Creating_User_Position_ID,
 			Contract_Main.Business_Segment_ID, Contract_Main.Responsible_User_ID, Contract_Main.ProgramType_ID, Contract_Main.Creator_ID
 	FROM 	Contract_main
 	WHERE 	Contract_main_ID = '#contract_main_id#'
 </CFQUERY>
+</cfif>
 
 <!--- prevent problem in including this template more than once --->
 <cfif not (isDefined("EmailSubject") and isCustomFunction(EmailSubject))>
@@ -37,7 +53,21 @@
 	<cfset Approved_Date = now()>
 
 	<!--- check the email bit to determine whether to send email or not --->
-	<cfquery name="getGenSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGenSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGenSettings>
+	<cftry>
+		<cfset getGenSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_daily_expiring_email,send_daily_expired_email,send_daily_active_email,send_daily_aging_billback_email,send_broker_email,send_approve_email,number_of_days_for_summarized_weekly_expiring_email,use_discount_id"
+			}), "send_daily_expiring_email,send_daily_expired_email,send_daily_active_email,send_daily_aging_billback_email,send_broker_email,send_approve_email,number_of_days_for_summarized_weekly_expiring_email,use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGenSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGenSettings>
+<cfquery name="getGenSettings" datasource="#application.datasource#">
 		SELECT
 			send_daily_expiring_email,
 			send_daily_expired_email,
@@ -50,12 +80,29 @@
 		FROM
 			General_Settings
 	</cfquery>
+</cfif>
 
-	<cfquery name="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"select" = "name_first,name_last,user_email"
+			}), "name_first,name_last,user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<cfquery name="getUserName" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last, User_Email
 		FROM _Users
 		WHERE User_ID = '#request.AccessStructure.user_id#'
 	</cfquery>
+</cfif>
 
 	<cfset uName = getUserName.Name_First & " " & getUserName.Name_Last>
 	<cfset uEmail = getUserName.User_Email>
@@ -68,9 +115,24 @@
 	<cfset sEmailAction = "approval" />
 	<cfinclude template="\anything_automated\email\get_user_position_contact.cfm">
 
-	<cfquery name="GetSetting" datasource="#application.datasource#">
+	<cfset useLakebaseForGetSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetSetting>
+	<cftry>
+		<cfset GetSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "only_notify_rsp_of_approval"
+			}), "only_notify_rsp_of_approval"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSetting>
+<cfquery name="GetSetting" datasource="#application.datasource#">
 	Select Only_Notify_RSP_Of_Approval FROM _application_settings
 	</cfquery>
+</cfif>
 
 	<cfset Setting_HQ_Send_Email_To_RSP_Only = appsettings.getNotify_RSP_Only_NotAllHQUser()>
 
@@ -91,9 +153,26 @@
 	to the HQ position (HQ_Send_Email_To_RSP_Only)
 	--->
 	<cfif GetSetting.Only_Notify_RSP_Of_Approval IS 1 OR HQ_Send_Email_To_RSP_Only eq 1>
-		<cfquery name="userPositionContactInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForuserPositionContactInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForuserPositionContactInfo>
+	<cftry>
+		<cfset userPositionContactInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Contract_Responsible_User_ID#",
+				"deleted" = "eq.0",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForuserPositionContactInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForuserPositionContactInfo>
+<cfquery name="userPositionContactInfo" datasource="#application.datasource#">
 		SELECT User_Email FROM _Users WHERE User_ID = '#Contract_Responsible_User_ID#' AND Deleted = 0
 		</cfquery>
+</cfif>
 	</cfif>
 
 	<cfif (getGenSettings.send_approve_email EQ 1 and appSettings.getSendAutoAttachments() EQ 1) OR (appSettings.getSendApprovedProgramsEmailAdress() NEQ "") AND sendLetterGenerationEmail eq 0>

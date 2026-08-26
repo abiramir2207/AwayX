@@ -29,10 +29,28 @@
 		</cftry>
 	</cfif>
 	<cfif NOT useLakebaseForDeleteAttachment>
-		<CFQUERY NAME="Delete_attachment" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDelete_attachment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForDelete_attachment>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"doc_id" = "eq.#FORM.Doc_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDelete_attachment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDelete_attachment>
+<CFQUERY NAME="Delete_attachment" DATASOURCE="#application.datasource#">
 			UPDATE Contract_Attachments
 			SET Deleted = 1 WHERE Doc_ID = '#FORM.Doc_ID#'
 		</CFQUERY>
+</cfif>
 	</cfif>
 
 	<cfset useLakebaseForDeleteData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("document_details")>
@@ -136,13 +154,31 @@
 
 <cffile action="upload" destination="#Application.Doc_Path#\Data_Files\Uploaded\Documents\Uploaded_Doc\" nameconflict="makeunique">
 
-	<CFQUERY NAME="GetPosition" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForGetPosition>
+	<cftry>
+		<cfset GetPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPosition>
+<CFQUERY NAME="GetPosition" DATASOURCE="#Application.Datasource#">
 		SELECT 	User_Positions_ID
 		FROM 	User_Position_Holders
 		WHERE 	User_ID = '#request.AccessStructure.user_id#'
 		AND User_Position_Type = 'P'
 		AND Deleted = 0
 	</CFQUERY>
+</cfif>
 
 <!--- Insert the record --->
 	<CFQUERY NAME="Save_Data" datasource="#application.datasource#">

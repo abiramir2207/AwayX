@@ -14,20 +14,55 @@
 
 		<cfset this.qGetChangeLog = CreateObject("component", "components.programs.ReviseLog").init() />
 
-		<CFQUERY NAME="GetRevisionSettingsData" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGetRevisionSettingsData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("revision_settings")>
+<cfif useLakebaseForGetRevisionSettingsData>
+	<cftry>
+		<cfset GetRevisionSettingsData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("revision_settings", {
+				"revision_setting_deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRevisionSettingsData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRevisionSettingsData>
+<CFQUERY NAME="GetRevisionSettingsData" DATASOURCE="#application.datasource#">
 			SELECT		*
 			FROM		Revision_Settings
 			WHERE		Revision_Setting_Deleted = 0
 		</CFQUERY>
+</cfif>
 
 		<!--- Resetting the Contract_Main_Aux_Data for RevisionTypes, generally useful during testing --->
-		<CFQUERY NAME="ResetRevisionTypes" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForResetRevisionTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForResetRevisionTypes>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main_aux_data",
+			{
+				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#"
+			},
+			{
+				"revisiontypea" = "0",
+				"revisiontypeb" = "0",
+				"revisiontypec" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetRevisionTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetRevisionTypes>
+<CFQUERY NAME="ResetRevisionTypes" DATASOURCE="#application.datasource#">
 				Update Contract_Main_Aux_Data
 				SET		RevisionTypeA = 0,
 						RevisionTypeB = 0,
 						RevisionTypeC = 0
 				WHERE 	Contract_Main_ID = #arguments.Child_Contract_Main_ID#
 		</CFQUERY>
+</cfif>
 
 		<!--- Inserting an empty record into Program_Revision_Changes table to mark what parameters in a program have changed --->
 		<cfquery name="qInsertRevisionChanges" datasource="#application.datasource#">
@@ -438,27 +473,72 @@
 			<cfif qGetFixedProductsRatesChanged.recordCount GT 0>
 
 
-				<cfquery name="qAnyRateChanged" dbtype="query">
+				<cfset useLakebaseForqAnyRateChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyRateChanged>
+	<cftry>
+		<cfset qAnyRateChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"rate_change" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyRateChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyRateChanged>
+<cfquery name="qAnyRateChanged" dbtype="query">
 							Select 	*
 							from 	qGetFixedProductsRatesChanged
 							where 	Rate_Change = 1
 				</cfquery>
+</cfif>
 				<cfif qAnyRateChanged.recordcount GT 0>
 					<cfset rates_changed = rates_changed + 1>
 				</cfif>
-				<cfquery name="qAnyUOMChanged" dbtype="query">
+				<cfset useLakebaseForqAnyUOMChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyUOMChanged>
+	<cftry>
+		<cfset qAnyUOMChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"uom_change" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyUOMChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyUOMChanged>
+<cfquery name="qAnyUOMChanged" dbtype="query">
 							Select 	*
 							from 	qGetFixedProductsRatesChanged
 							where 	Uom_Change = 1
 				</cfquery>
+</cfif>
 				<cfif qAnyUOMChanged.recordcount GT 0>
 					<cfset UOMs_changed = UOMs_changed + 1>
 				</cfif>
-				<cfquery name="qAnyClaimMechChanged" dbtype="query">
+				<cfset useLakebaseForqAnyClaimMechChanged = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetfixedproductsrateschanged")>
+<cfif useLakebaseForqAnyClaimMechChanged>
+	<cftry>
+		<cfset qAnyClaimMechChanged = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetfixedproductsrateschanged", {
+				"claimmech_changed" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqAnyClaimMechChanged = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqAnyClaimMechChanged>
+<cfquery name="qAnyClaimMechChanged" dbtype="query">
 							Select 	*
 							from 	qGetFixedProductsRatesChanged
 							where 	ClaimMech_Changed = 1
 				</cfquery>
+</cfif>
 				<cfif qAnyClaimMechChanged.recordcount GT 0>
 					<cfset ClaimMechs_Changed = ClaimMechs_Changed + 1>
 				</cfif>
@@ -555,11 +635,27 @@
 			WHERE	Contract_Main_ID = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.Child_Contract_Main_ID#" />
 		</CFQUERY>
 
-		<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
+<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 			Select	Volume_UOT_ID
 			From	_Users_Settings
 			Where	User_ID = '#request.AccessStructure.Company_Main_ID#'
 		</CFQUERY>
+</cfif>
 
 		<cfset ParentVolQty = CreateObject("component", "components.programs.volume.ProgramVolume").getProgramQty(arguments.Parent_Contract_Main_ID, geGetParentProgramInfo.Program_Span, Get_Settings.Volume_UOT_ID) />
 		<cfset ChildVolQty 	= CreateObject("component", "components.programs.volume.ProgramVolume").getProgramQty(arguments.Child_Contract_Main_ID, geGetChildProgramInfo.Program_Span, Get_Settings.Volume_UOT_ID) />
@@ -633,12 +729,29 @@
 			<cfset FieldNames[arlen][1] = "Contract_Title" />			<!--- Field name to check for value change in contract_main --->
 			<cfset FieldNames[arlen][2] = "Title_Changes_Approval" />	<!--- Filed name in the Revision_Settings table to check if its a minor change/requires approval --->
 			<cfset FieldNames[arlen][3] = "Title_Changed" />			<!--- Filed name in Program_Revision_Changes table to hold the value if its been cahnged and what type --->
-		<cfquery name="checkifproductsadded" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckifproductsadded = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_revision_changes")>
+<cfif useLakebaseForcheckifproductsadded>
+	<cftry>
+		<cfset checkifproductsadded = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_revision_changes", {
+				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "products_added"
+			}), "products_added"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckifproductsadded = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckifproductsadded>
+<cfquery name="checkifproductsadded" datasource="#application.datasource#">
 			SELECT 	Products_Added
 			FROM 	Program_Revision_Changes
 			WHERE 	Contract_Main_ID = #arguments.Child_Contract_Main_ID#
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 		<cfif checkifproductsadded.Products_Added EQ 0>
 			<cfset arlen = arlen + 1 />
 			<cfset FieldNames[arlen][1] = "Contract_Quantity" />				<!--- Field name to check for value change in contract_main --->
@@ -736,13 +849,31 @@
 									From		qGetRebateProductsRatesChanged
 									Where	Rate1 > Rate2
 								</cfquery>
-								<cfquery name="qLumpProducts" datasource="#application.datasource#" >
+								<cfset useLakebaseForqLumpProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqLumpProducts>
+	<cftry>
+		<cfset qLumpProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.Child_Contract_Main_ID#",
+				"product_type_id" = "eq.3",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_items_master_id,is_group"
+			}), "bsa_foodservice_items_master_id,is_group"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLumpProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLumpProducts>
+<cfquery name="qLumpProducts" datasource="#application.datasource#" >
 									Select  	BSA_Foodservice_Items_Master_ID, Is_group
 									From 		Contract_Products
 									Where 	Contract_Main_ID  = #arguments.Child_Contract_Main_ID#
 									And 		Product_Type_ID = 3
 									And			Deleted = 0
 								</cfquery>
+</cfif>
 								<cfquery name="qAnyItemsAdded" dbtype="query">
 									Select  	BSA_Foodservice_Items_Master_ID, Is_group
 									From 		qAnyAdded

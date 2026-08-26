@@ -24,11 +24,28 @@
 
 
 <!---  initial user position--->
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
 
@@ -484,52 +501,152 @@ function Reset_criteria()
 <CFIF FORM.From_Owner_Position_ID NEQ "" OR FORM.From_PM_Sponsor_ID NEQ "" OR FORM.From_PM_Far_ID NEQ "">
 	<CFOUTPUT>
 		<CFIF FORM.From_PM_Far_ID NEQ "">
-			<CFQUERY NAME="Get_FAR_Sel" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_FAR_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_far")>
+<cfif useLakebaseForGet_FAR_Sel>
+	<cftry>
+		<cfset Get_FAR_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_far", {
+				"pm_far_deleted" = "eq.0",
+				"pm_far_id" = "eq.#FORM.From_PM_Far_ID#",
+				"select" = "pm_far_description"
+			}), "pm_far_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_FAR_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_FAR_Sel>
+<CFQUERY NAME="Get_FAR_Sel" datasource="#application.datasource#">
 				Select		PM_FAR_Description
 				From		PM_FAR
 				Where		PM_FAR_Deleted	=	0 AND PM_Far_ID = '#FORM.From_PM_Far_ID#'
 				
 			</CFQUERY>
+</cfif>
 		</CFIF>
 		<CFIF FORM.To_PM_Far_ID NEQ "">
-			<CFQUERY NAME="Get_ToFAR_Sel" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_ToFAR_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_far")>
+<cfif useLakebaseForGet_ToFAR_Sel>
+	<cftry>
+		<cfset Get_ToFAR_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_far", {
+				"pm_far_deleted" = "eq.0",
+				"pm_far_id" = "eq.#FORM.To_PM_Far_ID#",
+				"select" = "pm_far_description"
+			}), "pm_far_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_ToFAR_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_ToFAR_Sel>
+<CFQUERY NAME="Get_ToFAR_Sel" datasource="#application.datasource#">
 				Select		PM_FAR_Description
 				From		PM_FAR
 				Where		PM_FAR_Deleted	=	0 AND PM_Far_ID = '#FORM.To_PM_Far_ID#'
 				
 			</CFQUERY>
+</cfif>
 		</CFIF>
 		
 		<CFIF FORM.From_PM_Sponsor_ID NEQ "">
-			<CFQUERY NAME="Get_Sponsor_Sel" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_Sponsor_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_sponsor")>
+<cfif useLakebaseForGet_Sponsor_Sel>
+	<cftry>
+		<cfset Get_Sponsor_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_sponsor", {
+				"pm_sponsor_deleted" = "eq.0",
+				"pm_sponsor_id" = "eq.#FORM.From_PM_Sponsor_ID#",
+				"select" = "pm_sponsor_name_first,pm_sponsor_name_last"
+			}), "pm_sponsor_name_first,pm_sponsor_name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Sponsor_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Sponsor_Sel>
+<CFQUERY NAME="Get_Sponsor_Sel" datasource="#application.datasource#">
 				Select		PM_Sponsor_Name_First, 
 							PM_Sponsor_Name_Last
 				From		PM_Sponsor
 				Where		PM_Sponsor_Deleted	=	0 AND PM_Sponsor_ID = '#FORM.From_PM_Sponsor_ID#'
 			</CFQUERY>
+</cfif>
 		</CFIF>
 		<CFIF FORM.To_PM_Sponsor_ID NEQ "">
-			<CFQUERY NAME="Get_ToSponsor_Sel" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_ToSponsor_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_sponsor")>
+<cfif useLakebaseForGet_ToSponsor_Sel>
+	<cftry>
+		<cfset Get_ToSponsor_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_sponsor", {
+				"pm_sponsor_deleted" = "eq.0",
+				"pm_sponsor_id" = "eq.#FORM.To_PM_Sponsor_ID#",
+				"select" = "pm_sponsor_name_first,pm_sponsor_name_last"
+			}), "pm_sponsor_name_first,pm_sponsor_name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_ToSponsor_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_ToSponsor_Sel>
+<CFQUERY NAME="Get_ToSponsor_Sel" datasource="#application.datasource#">
 				Select		PM_Sponsor_Name_First, 
 							PM_Sponsor_Name_Last
 				From		PM_Sponsor
 				Where		PM_Sponsor_Deleted	=	0 AND PM_Sponsor_ID = '#FORM.To_PM_Sponsor_ID#'
 			</CFQUERY>
+</cfif>
 		</CFIF>
 		
 		<CFIF FORM.From_Owner_Position_ID NEQ "">
-		<CFQUERY NAME="Get_Position_Sel" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGet_Position_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForGet_Position_Sel>
+	<cftry>
+		<cfset Get_Position_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#FORM.From_Owner_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Position_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Position_Sel>
+<CFQUERY NAME="Get_Position_Sel" DATASOURCE="#Application.Datasource#">
 			SELECT 	Position_Label 
 			FROM	User_Positions 
 			WHERE 	User_Positions_ID = #FORM.From_Owner_Position_ID#
 		</CFQUERY>
+</cfif>
 		</CFIF>
 		<CFIF FORM.To_Owner_Position_ID NEQ "">
-		<CFQUERY NAME="Get_ToPosition_Sel" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGet_ToPosition_Sel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForGet_ToPosition_Sel>
+	<cftry>
+		<cfset Get_ToPosition_Sel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#FORM.To_Owner_Position_ID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_ToPosition_Sel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_ToPosition_Sel>
+<CFQUERY NAME="Get_ToPosition_Sel" DATASOURCE="#Application.Datasource#">
 			SELECT 	Position_Label 
 			FROM	User_Positions 
 			WHERE 	User_Positions_ID = #FORM.To_Owner_Position_ID#
 		</CFQUERY>
+</cfif>
 		</CFIF>
 		<TR BGCOLOR="ffce84">
 			<TD>&nbsp;&nbsp;&nbsp;<B>Source:</B></TD>

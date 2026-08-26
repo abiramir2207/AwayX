@@ -736,11 +736,27 @@ function formatRate(oInput, fne)
 			<CFLOOP INDEX="item" LIST="#Form.Contract_Number#">
 			
 			<CFIF NOT ListFindNoCase(Saved_Contract_Number, item, ",")>
-				<CFQUERY NAME="Get_Programs_Selected" datasource="#application.datasource#">
+				<cfset useLakebaseForGet_Programs_Selected = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGet_Programs_Selected>
+	<cftry>
+		<cfset Get_Programs_Selected = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#Item#",
+				"select" = "contract_title"
+			}), "contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Programs_Selected = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Programs_Selected>
+<CFQUERY NAME="Get_Programs_Selected" datasource="#application.datasource#">
 					Select		Contract_Main.Contract_Title
 					From		Contract_Main
 					Where		Contract_Main.Contract_Number	=	'#Item#'
 				</CFQUERY>
+</cfif>
 		
 				<TR VALIGN="top">
 					<TD><CFOUTPUT><INPUT TYPE="checkbox" NAME="PM_Contract_Number" VALUE="#Item#" CHECKED></CFOUTPUT></TD>
@@ -783,9 +799,25 @@ function formatRate(oInput, fne)
 							<CFSET Recently_Selected_Attach_List = Saved_Attachment_List>
 						</CFIF>
 						<CFOUTPUT QUERY = "Pre_Att_Doc">
-						<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForUser_Name>
+	<cftry>
+		<cfset User_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUser_Name>
+<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
 								SELECT Name_First, Name_Last FROM _USERS WHERE User_ID = '#Uploaded_By#'
 						</CFQUERY>
+</cfif>
 						<TR VALIGN="top">
 							<TD WIDTH="3%"><INPUT TYPE="Checkbox" NAME="Doc_ID" VALUE="#Doc_ID#"<CFIF ListFindNoCase(Recently_Selected_Attach_List, Doc_ID, ",")>CHECKED</CFIF>></TD>
 							<TD WIDTH="13%">#DateFormat(Uploaded_Date,"mm/dd/yyyy")#<br>#User_Name.Name_First# #User_Name.Name_Last#</TD>
@@ -822,11 +854,26 @@ function formatRate(oInput, fne)
 					<!--- <CFPARAM NAME="FORM.Attachment_List" DEFAULT=""> --->					
 					<CFLOOP INDEX="item" LIST="#Form.Attachment_List#">			
 					<CFIF NOT ListFindNoCase(Saved_Attachment_List, item, ",")>
-						<CFQUERY NAME="Get_Document_Selected" DBTYPE="query">
+						<cfset useLakebaseForGet_Document_Selected = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_attachments")>
+<cfif useLakebaseForGet_Document_Selected>
+	<cftry>
+		<cfset Get_Document_Selected = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_attachments", {
+				"doc_id" = "eq.#Item#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Document_Selected = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Document_Selected>
+<CFQUERY NAME="Get_Document_Selected" DBTYPE="query">
 							Select		*
 							From		Get_Attachments
 							Where		Doc_ID	=	'#Item#'
 						</CFQUERY>
+</cfif>
 						<CFOUTPUT QUERY="Get_Document_Selected">
 						<CFQUERY NAME="User_Name" DATASOURCE="#Application.Datasource#">
 								SELECT Name_First, Name_Last FROM _USERS WHERE User_ID = '#Uploaded_By#'
@@ -983,12 +1030,28 @@ function formatRate(oInput, fne)
 		
 		
 		<!---- Priority ---->
-		<CFQUERY NAME="This_Priority" DBTYPE="query">
+		<cfset useLakebaseForThis_Priority = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_priority")>
+<cfif useLakebaseForThis_Priority>
+	<cftry>
+		<cfset This_Priority = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_priority", {
+				"pm_priority_id" = "eq.#Get_Data.PM_Priority_ID#",
+				"select" = "pm_priority_description"
+			}), "pm_priority_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Priority = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Priority>
+<CFQUERY NAME="This_Priority" DBTYPE="query">
 		SELECT	PM_Priority_Description
 		FROM	Get_Priority
 		WHERE
 				PM_Priority_ID = '#Get_Data.PM_Priority_ID#'
 		</CFQUERY>
+</cfif>
 		<TR>
 			<TD>Priority:</TD>
 			<TD ROWSPAN="100%" BGCOLOR="Navy"><IMG SRC="/Images/fill.gif" WIDTH="1"></TD>
@@ -996,23 +1059,55 @@ function formatRate(oInput, fne)
 			<TD>#This_Priority.PM_Priority_Description#&nbsp;</TD>
 		</TR>
 		<!---- Status ---->
-		<CFQUERY NAME="This_Status" DBTYPE="query">
+		<cfset useLakebaseForThis_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_status")>
+<cfif useLakebaseForThis_Status>
+	<cftry>
+		<cfset This_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_status", {
+				"pm_status_id" = "eq.#Get_Data.PM_Status_ID#",
+				"select" = "pm_status_description"
+			}), "pm_status_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Status>
+<CFQUERY NAME="This_Status" DBTYPE="query">
 		SELECT	PM_Status_Description
 		FROM	Get_Status
 		WHERE
 				PM_Status_ID = '#Get_Data.PM_Status_ID#'
 		</CFQUERY>
+</cfif>
 		<TR>
 			<TD>Status:</TD>			
 			<TD>#This_Status.PM_Status_Description#&nbsp;</TD>
 		</TR>
 		<!---- Phase ---->
-		<CFQUERY NAME="This_Phase" DBTYPE="query">
+		<cfset useLakebaseForThis_Phase = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_phase")>
+<cfif useLakebaseForThis_Phase>
+	<cftry>
+		<cfset This_Phase = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_phase", {
+				"pm_phase_id" = "eq.#Get_Data.PM_Phase_ID#",
+				"select" = "pm_phase_description"
+			}), "pm_phase_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Phase = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Phase>
+<CFQUERY NAME="This_Phase" DBTYPE="query">
 		SELECT	PM_Phase_Description
 		FROM	Get_Phase
 		WHERE
 				PM_Phase_ID = '#Get_Data.PM_Phase_ID#'
 		</CFQUERY>
+</cfif>
 		<TR>
 			<TD>Phase:</TD>			
 			<TD>#This_Phase.PM_Phase_Description#&nbsp;</TD>
@@ -1024,9 +1119,25 @@ function formatRate(oInput, fne)
 		</TR>
 		
 		<!---- Functional Area Responsible --->
-		<CFQUERY NAME="Get_FAR" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_FAR = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pm_far")>
+<cfif useLakebaseForGet_FAR>
+	<cftry>
+		<cfset Get_FAR = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pm_far", {
+				"pm_far_id" = "eq.#Get_Data.PM_FAR_ID#",
+				"select" = "pm_far_description"
+			}), "pm_far_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_FAR = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_FAR>
+<CFQUERY NAME="Get_FAR" datasource="#application.datasource#">
 			SELECT PM_FAR_Description FROM PM_FAR WHERE PM_FAR_ID = '#Get_Data.PM_FAR_ID#' 
 		</CFQUERY>
+</cfif>
 		<TR>
 			<TD>Functional Area Responsible:</TD>			
 			<TD>#Get_FAR.PM_FAR_Description#&nbsp;</TD>
@@ -1172,12 +1283,28 @@ function formatRate(oInput, fne)
 		</TR>
 		
 		<!---- Sponsor --->
-		<CFQUERY NAME="This_Sponsor" DBTYPE="query">
+		<cfset useLakebaseForThis_Sponsor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_sponsor")>
+<cfif useLakebaseForThis_Sponsor>
+	<cftry>
+		<cfset This_Sponsor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_sponsor", {
+				"pm_sponsor_id" = "eq.#Get_Data.PM_Sponsor_ID#",
+				"select" = "pm_sponsor_name_first,pm_sponsor_name_last"
+			}), "pm_sponsor_name_first,pm_sponsor_name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Sponsor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Sponsor>
+<CFQUERY NAME="This_Sponsor" DBTYPE="query">
 		SELECT	PM_Sponsor_Name_First, PM_Sponsor_Name_Last
 		FROM	Get_Sponsor
 		WHERE
 				PM_Sponsor_ID = '#Get_Data.PM_Sponsor_ID#'
 		</CFQUERY>
+</cfif>
 		<TR>
 			<TD>Sponsor:</TD>			
 			<TD>#This_Sponsor.PM_Sponsor_Name_First# #This_Sponsor.PM_Sponsor_Name_Last#&nbsp;</TD>

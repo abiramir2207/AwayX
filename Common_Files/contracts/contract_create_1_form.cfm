@@ -41,10 +41,26 @@ NOTE: When editing this file make sure the accent characters for JS variable var
 <cfimport prefix="layout" taglib="/CustomTags">
 
 <!---Should show discount identifier--->
+<cfset useLakebaseForgetGeneralSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGeneralSettings>
+	<cftry>
+		<cfset getGeneralSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"limit" = "1",
+				"select" = "use_discount_id"
+			}), "use_discount_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGeneralSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGeneralSettings>
 <cfquery name="getGeneralSettings" datasource="#application.datasource#">
 	SELECT 	TOP 1 Use_Discount_ID
 	FROM 	General_Settings
 </cfquery>
+</cfif>
 
 <cfparam name="form.Do_Revise_Copy" default="0">
 <cfparam name="form.IsExclusionRevision" default="0">
@@ -103,7 +119,23 @@ NOTE: When editing this file make sure the accent characters for JS variable var
 		            ON Contract_Main.Contract_Main_ID = Contract_Main_Aux_Data.Contract_Main_ID
 		            WHERE 	Contract_Main.Contract_Main_ID = '#cryp.value#'
 		</cfquery>
-		<cfquery name="Program_Auto_Renew" datasource="#application.datasource#">
+		<cfset useLakebaseForProgram_Auto_Renew = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForProgram_Auto_Renew>
+	<cftry>
+		<cfset Program_Auto_Renew = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_auto_renew", {
+				"program_id" = "eq.#GetContractInfo.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_auto_renew_id,ar_notification_date,ar_start_date,ar_end_date,ar_renewal_type,renewal_lead_time,renewed"
+			}), "program_auto_renew_id,ar_notification_date,ar_start_date,ar_end_date,ar_renewal_type,renewal_lead_time,renewed"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Auto_Renew = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Auto_Renew>
+<cfquery name="Program_Auto_Renew" datasource="#application.datasource#">
 			SELECT 	Program_Auto_Renew_ID,
 					AR_Notification_Date,
 					AR_Start_Date,
@@ -116,6 +148,7 @@ NOTE: When editing this file make sure the accent characters for JS variable var
 			AND		Deleted = 0
 
 		</cfquery>
+</cfif>
 
 		<!--- D26803 : Revise Active/Pre-active PGM's
 		Find if users are allowed to change dates --->
@@ -503,12 +536,28 @@ NOTE: When editing this file make sure the accent characters for JS variable var
 
 		<cfelse>
 
-			<cfquery name="getExclusionInfo" datasource="#application.datasource#">
+			<cfset useLakebaseForgetExclusionInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetExclusionInfo>
+	<cftry>
+		<cfset getExclusionInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"revision_program_id" = "eq.#GetContractInfo.Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExclusionInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExclusionInfo>
+<cfquery name="getExclusionInfo" datasource="#application.datasource#">
 				SELECT 	*
 				FROM 	Program_Exclusions
 				WHERE 	Revision_Program_ID = '#GetContractInfo.Contract_Main_ID#'
 				AND 	Deleted = 0
 			</cfquery>
+</cfif>
 
 			<CFSET FORM.Contract_Number = "#Program_Packet.Basic_Information.Contract_Number#">
 			<CFSET FORM.start_date = "#dateformat(getExclusionInfo.Start_Date, 'mm/dd/yyyy')#">
@@ -1355,11 +1404,27 @@ start date of the parent.
 		<!---Only display if there are discount identifiers--->
 		<cfset Discount_Identifier_Number = ''>
 		<cfif getGeneralSettings.Use_Discount_ID IS 1 AND len(trim(getFieldSettings.Discount_Identifier_ID)) GT 0>
-			<cfquery name="GetDiscountIdentifier" datasource="#application.datasource#">
+			<cfset useLakebaseForGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForGetDiscountIdentifier>
+	<cftry>
+		<cfset GetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#getFieldSettings.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDiscountIdentifier>
+<cfquery name="GetDiscountIdentifier" datasource="#application.datasource#">
 			SELECT Discount_Identifier_Number, Discount_Identifier_Desc
 			FROM Discount_Identifier
 			WHERE Discount_Identifier_ID = '#getFieldSettings.Discount_Identifier_ID#'
 			</cfquery>
+</cfif>
 			<cfset Discount_Identifier_Number = GetDiscountIdentifier.Discount_Identifier_Number>
 			<TR>
 				<TD align="right" nowrap valign="top"><B>Discount Identifier:</B></TD>
@@ -1576,13 +1641,31 @@ start date of the parent.
 							#application.util.string.actionLinkFormat2('Select #Perf_Req_Label#')#
 						</a>
 							<span id="error_PerfRequirementCategory_#Perf_Req_Label#"></span>
-							<cfquery name="selectedPR" datasource="#application.datasource#">
+							<cfset useLakebaseForselectedPR = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("one_program_perf_mapping")>
+<cfif useLakebaseForselectedPR>
+	<cftry>
+		<cfset selectedPR = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("one_program_perf_mapping", {
+				"contract_main_id" = "eq.#Contract_ID#",
+				"program_perf_req_label" = "eq.#Perf_Req_Label#",
+				"checked" = "eq.1",
+				"select" = "program_perf_req_id"
+			}), "program_perf_req_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselectedPR = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselectedPR>
+<cfquery name="selectedPR" datasource="#application.datasource#">
 								SELECT Program_Perf_Req_ID
 								FROM One_Program_Perf_Mapping
 								WHERE  Contract_Main_ID = #Contract_ID#
 								AND Program_Perf_Req_Label = '#Perf_Req_Label#'
 								AND checked = 1
 							</cfquery>
+</cfif>
 							<input type="hidden" name="#Perf_Req_Label#" id="#Perf_Req_Label#" value="#valuelist(selectedPR.Program_Perf_Req_ID)#"/>
 						</td>
 					</tr>
@@ -1754,9 +1837,25 @@ start date of the parent.
 			        AND TPSPT.Deleted = 0
 			ORDER BY PPT.Description
 			</cfquery> 	<!--- <cfdump var="#qGetPlannerPerfTypes#" /> <cfdump var="#FORM#" /><cfabort> --->	
-			<cfquery name="qGetPrgPerfType" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetPrgPerfType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetPrgPerfType>
+	<cftry>
+		<cfset qGetPrgPerfType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Contract_ID#",
+				"select" = "planner_perf_type_id,contract_status_type_idx"
+			}), "planner_perf_type_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPrgPerfType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPrgPerfType>
+<cfquery name="qGetPrgPerfType" datasource="#application.datasource#">
 				SELECT Planner_Perf_Type_ID,Contract_Status_Type_IDX  FROM Contract_Main WHERE Contract_main_ID = #Contract_ID#
 			</cfquery>
+</cfif>
 			<cfif (isDefined("qGetPrgPerfType")	AND (qGetPrgPerfType.Contract_Status_Type_IDX GTE 3) AND NOT IsRevision)>
 				<cfset perfDisabled = "Disabled"/>
 			<cfelse>
@@ -2152,18 +2251,50 @@ start date of the parent.
 					D22774: LW CA - Currency incorrect on new programs/Anand Rao/18-Mar-10
 					Set the currency to the Defualt and active one, only if we have only one active currency
 					--->
-					<cfquery name="qryCurrency" datasource="#application.datasource#">
+					<cfset useLakebaseForqryCurrency = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("currency")>
+<cfif useLakebaseForqryCurrency>
+	<cftry>
+		<cfset qryCurrency = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("currency", {
+				"active" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCurrency = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCurrency>
+<cfquery name="qryCurrency" datasource="#application.datasource#">
 						SELECT * FROM Currency WHERE Active = 1 and Deleted = 0
 					</cfquery>
+</cfif>
 					<cfoutput>
 						<cfif (qryCurrency.RecordCount EQ 1)>
 							<input type="hidden" name="Currency" value="#qryCurrency.Currency_ID#">
 						<cfelseif isDefined("FORM.ProgramType_ID")>
-							<CFQUERY NAME="qryCurrencyTemplate" datasource="#application.datasource#">
+							<cfset useLakebaseForqryCurrencyTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryCurrencyTemplate>
+	<cftry>
+		<cfset qryCurrencyTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#FORM.ProgramType_ID#",
+				"select" = "currencydefaultoption,*"
+			}), "currencydefaultoption,*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryCurrencyTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryCurrencyTemplate>
+<CFQUERY NAME="qryCurrencyTemplate" datasource="#application.datasource#">
 								SELECT CurrencyDefaultOption,*
 								FROM Program_Control_Panel_Options
 								WHERE ProgramControl_Panel_Options_ID ='#FORM.ProgramType_ID#'
 							</cfquery>
+</cfif>
 							<input type="hidden" name="Currency" value="#qryCurrencyTemplate.CurrencyDefaultOption#">
 						<cfelse>
 							<input type="hidden" name="Currency" value="0">
@@ -2478,10 +2609,25 @@ start date of the parent.
 				<tr>
 					<td>Address 2:</td><td><input type="text" size="30" maxlength="50" name="Payable_Address_2" value="#replacenocase(Form.Payable_Address_2, "NULL", "")#" <CFIF PayChecked EQ 1>DISABLED STYLE="background-color: cccccc"</CFIF>></td>
 				</tr>
-				<cfquery name="GetStates" datasource="#application.datasource#">
+				<cfset useLakebaseForGetStates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_states")>
+<cfif useLakebaseForGetStates>
+	<cftry>
+		<cfset GetStates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_states", {
+				"order" = "state_code.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStates>
+<cfquery name="GetStates" datasource="#application.datasource#">
 				SELECT * FROM _states
 				ORDER BY State_Code
 				</cfquery>
+</cfif>
 				<tr>
 					<td>City, State and Postal:<span id="error_Payable_City"></span><span id="error_Payable_Zip"></span></td><td><input type="text" size="30" maxlength="50" name="Payable_City" value="#replacenocase(Form.Payable_City, "NULL", "")#" <CFIF PayChecked EQ 1>DISABLED STYLE="background-color: cccccc"</CFIF>><select name="Payable_State" <CFIF PayChecked EQ 1>DISABLED STYLE="background-color: cccccc"</CFIF>><cfloop query="GetStates"><option value="#State_Code#" <cfif Form.Payable_State IS State_Code>selected</cfif>>#State_Code#</option></cfloop></select> <input type="text" size="5" maxlength="10" name="Payable_Zip" value="#replacenocase(Form.Payable_Zip, "NULL", "")#" <CFIF PayChecked EQ 1>DISABLED STYLE="background-color: cccccc"</CFIF>></td> <!--- onKeyUp="clenseText(this, '0123456789');" --->
 				</tr>
@@ -2629,9 +2775,22 @@ start date of the parent.
 			<cfset qCompetitiveInfoFixedPriceTypeComponentList = templateManager.getAllTemplateDiscountComponents(templateId=FORM.ProgramType_ID, discountTypeList=1, returnSelected=1, fixedPriceType=1)>
 			<cfif qCompetitiveInfoFixedPriceTypeComponentList.recordcount>
 				<!--- Get all active source --->
-				<cfquery name="qgetTopOneCompRow" dbType="query" maxrows="1">
+				<cfset useLakebaseForqgetTopOneCompRow = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qcompetitiveinfofixedpricetypecomponentlist")>
+<cfif useLakebaseForqgetTopOneCompRow>
+	<cftry>
+		<cfset qgetTopOneCompRow = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qcompetitiveinfofixedpricetypecomponentlist", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetTopOneCompRow = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetTopOneCompRow>
+<cfquery name="qgetTopOneCompRow" dbType="query" maxrows="1">
 					SELECT * FROM	qCompetitiveInfoFixedPriceTypeComponentList
 				</cfquery>
+</cfif>
 				<cfset vars.source 						= qgetTopOneCompRow.Source />
 				<cfset vars.sourceRequired 				= qgetTopOneCompRow.Source_Required />
 				<cfset vars.sourceType					= qgetTopOneCompRow.Source_Type />

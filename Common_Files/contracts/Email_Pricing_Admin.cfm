@@ -2,10 +2,25 @@
 <cfparam name="URL.CID" 	default="">
 <cfset Include_File_path = "/common_files/contracts/thin_contract_general_display_header.cfm" />
 
+<cfset useLakebaseForGetOperatorAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGetOperatorAdmin>
+	<cftry>
+		<cfset GetOperatorAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "operator_admin_id,pricing_admin_id"
+			}), "operator_admin_id,pricing_admin_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatorAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatorAdmin>
 <CFQUERY name="GetOperatorAdmin" datasource="#application.datasource#">
 	SELECT 	Operator_Admin_ID, Pricing_Admin_ID
 	FROM 	General_Settings
 </CFQUERY>
+</cfif>
 
 <cfset Pricing_Admin_ID 	= GetOperatorAdmin.Pricing_Admin_ID>
 <cfset Pricing_Admin_Email_ID = "" />

@@ -12,11 +12,28 @@
 	<!--- <CFIF FORM.FilterSearchPrograms NEQ 0 AND len(trim(FORM.FilterDataList)) GT 0> --->
 <CFSWITCH expression="#FORM.FilterType#">
 	<cfcase value="1"><!--- Distributor --->
-		<cfquery name="getPayeeFilter" datasource="#Application.Datasource#">
+		<cfset useLakebaseForgetPayeeFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForgetPayeeFilter>
+	<cftry>
+		<cfset getPayeeFilter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"bsa_foodservice_customers_id" = "eq.#PayeeID#",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeFilter>
+<cfquery name="getPayeeFilter" datasource="#Application.Datasource#">
 			SELECT Contract_Main_ID
 			FROM Contract_Distributors
 			WHERE BSA_Foodservice_Customers_ID = '#PayeeID#' AND Deleted = 0
 		</cfquery>
+</cfif>
 		<CFIF getPayeeFilter.recordcount EQ 0>
 			<CFSET Filter_CID_List = 0>
 		<CFELSE>

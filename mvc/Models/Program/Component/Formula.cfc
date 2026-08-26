@@ -158,12 +158,27 @@
 	<cffunction name="getProgram" output="false" returntype="Query" >
 		<cfargument name="Program_Id" type="numeric" required="true" >
 
-			<CFQUERY NAME="qGetProgram" DATASOURCE="#APPLICATION.DATASOURCE#">
+			<cfset useLakebaseForqGetProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgram>
+	<cftry>
+		<cfset qGetProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Program_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgram>
+<CFQUERY NAME="qGetProgram" DATASOURCE="#APPLICATION.DATASOURCE#">
 				SELECT	*
 				FROM	Contract_Main
 				WHERE
 						Contract_Main_ID = '#arguments.Program_Id#'
 			</CFQUERY>
+</cfif>
 		<cfreturn qGetProgram >
 	</cffunction>
 	

@@ -624,7 +624,24 @@
 		<!--- xx --->
 		<cfset var qGet = "" />
 		
-		<cfquery name="qGetVolPlanMasterTemplates" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetVolPlanMasterTemplates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetVolPlanMasterTemplates>
+	<cftry>
+		<cfset qGetVolPlanMasterTemplates = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"pullback_template_type" = "eq.2",
+				"isdominant" = "eq.1",
+				"select" = "programcontrol_panel_options_id as id,generic_type as generictype,created_type as createdtype,first_parent_id as firstparentid"
+			}), "programcontrol_panel_options_id as id,generic_type as generictype,created_type as createdtype,first_parent_id as firstparentid"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVolPlanMasterTemplates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVolPlanMasterTemplates>
+<cfquery name="qGetVolPlanMasterTemplates" datasource="#application.datasource#">
 			SELECT ProgramControl_Panel_Options_ID as Id,
 					Generic_Type as genericType,
 					Created_Type as createdType,
@@ -634,6 +651,7 @@
 				pullback_Template_Type = 2
 				AND IsDominant = 1
     	</cfquery>
+</cfif>
 			<!---Generic_Type IN ('Operator Direct or HQ Programs',
 							'Operator-Deviated Pricing')--->
 		<cfreturn qGetVolPlanMasterTemplates />

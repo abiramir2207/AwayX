@@ -100,7 +100,23 @@
 			<CFSET BrokersList = ValueList(getAllDistributors.BSA_Foodservice_Brokers_ID)>
 			
 			<!------ Find Brokers ----->
-			<CFQUERY NAME="getAllBrokers" datasource="#application.datasource#">
+			<cfset useLakebaseForgetAllBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseForgetAllBrokers>
+	<cftry>
+		<cfset getAllBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_brokers", {
+				"contract_main_id" = "eq.#Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_brokers_id"
+			}), "bsa_foodservice_brokers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllBrokers>
+<CFQUERY NAME="getAllBrokers" datasource="#application.datasource#">
 			SELECT    	DISTINCT  Contract_Brokers.BSA_Foodservice_Brokers_ID
 			FROM      	Contract_Brokers
 			WHERE     
@@ -108,6 +124,7 @@
 						AND
 						Contract_Brokers.Deleted = 0
 			</CFQUERY>
+</cfif>
 			
 			<CFSET BrokersList = ListAppend(BrokersList, ValueList(getAllBrokers.BSA_Foodservice_Brokers_ID))>
 			

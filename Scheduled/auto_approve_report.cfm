@@ -10,10 +10,25 @@
 	Label:
 		D35466 GM EDI BB Auto Approve Process Overview
 --->
+<cfset useLakebaseForgetEmailAddressList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetEmailAddressList>
+	<cftry>
+		<cfset getEmailAddressList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_auto_deviation"
+			}), "send_auto_deviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEmailAddressList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEmailAddressList>
 <cfquery name="getEmailAddressList" datasource="#application.datasource#">
 	SELECT 	General_Settings.Send_Auto_Deviation
 	FROM 	General_Settings
 </cfquery>
+</cfif>
 
 <!---Only send an email notification if we have email addresses--->
 <cfif getEmailAddressList.RecordCount and len(trim(getEmailAddressList.Send_Auto_Deviation))>

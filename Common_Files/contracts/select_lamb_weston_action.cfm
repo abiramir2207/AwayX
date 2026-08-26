@@ -19,13 +19,33 @@
 						<cfset fields[i] = replace(fields[i], "__", "-", "ALL")>
 						<cfset z = ListToArray(fields[i], "_")>
 						<cfif #z[7]# IS "UPD">
-							 <cfquery name="updLambProductSettings" datasource="#application.datasource#">
+							 <cfset useLakebaseForupdLambProductSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("lamb_requirements_products")>
+<cfif useLakebaseForupdLambProductSettings>
+	<cftry>
+		<cfset application.oLakebase.updateRows("lamb_requirements_products",
+			{
+				"program_component_id" = "eq.#z[2]#",
+				"assoc_dist_id" = "eq.#z[3]#",
+				"assoc_program_id" = "eq.#z[4]#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdLambProductSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdLambProductSettings>
+<cfquery name="updLambProductSettings" datasource="#application.datasource#">
 								 UPDATE lamb_requirements_products
 								 Set deleted = 1
 								 WHERE Program_Component_ID	= '#z[2]#'
 								 AND Assoc_Dist_ID = #z[3]#
 								 AND Assoc_Program_ID = #z[4]#
-							</cfquery> 
+							</cfquery>
+</cfif> 
 						</cfif>
 					</cfif>
 			</cfif>
@@ -75,7 +95,30 @@
 						<cfset aryComp[i][5] = #discount#>
 						<!--- // insert first five parts of component record --->
 						<cfif #z[8]# IS "UPD"> 
-							<cfquery name="updLambSettings" datasource="#application.datasource#">
+							<cfset useLakebaseForupdLambSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("lamb_requirements")>
+<cfif useLakebaseForupdLambSettings>
+	<cftry>
+		<cfset application.oLakebase.updateRows("lamb_requirements",
+			{
+				"hq_rebate_component_id" = "eq.#aryComp[i][3]#",
+				"assoc_dist_id" = "eq.#aryComp[i][1]#"
+			},
+			{
+				"hq_rebate_component_id" = "#aryComp[i][3]#",
+				"comp_rate_discount" = "#aryComp[i][5]#",
+				"assoc_dist_id" = "#aryComp[i][1]#",
+				"assoc_program_id" = "#aryComp[i][4]#",
+				"program_component_id" = "#aryComp[i][2]#",
+				"hq_rebate_id" = "#cryp.value#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdLambSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdLambSettings>
+<cfquery name="updLambSettings" datasource="#application.datasource#">
 								 UPDATE lamb_requirements
 									SET HQ_Rebate_Component_ID 	= #aryComp[i][3]#,
 										Comp_Rate_Discount 		= #aryComp[i][5]#,
@@ -87,6 +130,7 @@
 										HQ_Rebate_Component_ID 	= #aryComp[i][3]#
 										AND Assoc_Dist_Id 		= #aryComp[i][1]#
 							</cfquery>
+</cfif>
 						<cfelseif #z[8]# IS "INS">
 							<cfquery name="insLambSettings" datasource="#application.datasource#">
 								INSERT INTO lamb_requirements

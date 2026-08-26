@@ -30,9 +30,25 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = genSettingsManager.get()>
 
+<cfset useLakebaseForqDiscountTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_type")>
+<cfif useLakebaseForqDiscountTypes>
+	<cftry>
+		<cfset qDiscountTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_type", {
+				"deleted" = "eq.0",
+				"select" = "discount_type_id"
+			}), "discount_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDiscountTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDiscountTypes>
 <cfquery name="qDiscountTypes" datasource="#application.datasource#">
 SELECT Discount_Type_ID  FROM Discount_Type WHERE Deleted = 0
 </cfquery>
+</cfif>
 
 
 <SCRIPT SRC="/Common_Files/Delete_Functions.js"></SCRIPT>

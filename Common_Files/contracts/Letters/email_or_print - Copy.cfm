@@ -149,11 +149,27 @@ FUNCTIONALITY:
 	
 <!--- /// some bandaids for some legacy schtuff... [end] /// ---> 
 
-	<cfquery name="getuseremail" datasource="#application.datasource#">
+	<cfset useLakebaseForgetuseremail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetuseremail>
+	<cftry>
+		<cfset getuseremail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#variables.user_id#",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetuseremail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetuseremail>
+<cfquery name="getuseremail" datasource="#application.datasource#">
 	  select user_email from
 	  _users
 	  where user_id = '#variables.user_id#'
 	</cfquery>
+</cfif>
     
     <!--- TO DELETE request.AccessStructure.user_id --->
 
@@ -172,11 +188,27 @@ FUNCTIONALITY:
       
       <!--- D16774 8/14/08 [begin]
       <!--- Get info for printing PDF Doc or emailing HTML doc [begin] --->
-      <cfquery name="variables.qGetLetterInfo" datasource="#application.datasource#">
+      <cfset useLakebaseForvariables_qGetLetterInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvariables_qGetLetterInfo>
+	<cftry>
+		<cfset variables.qGetLetterInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#id#",
+				"select" = "letter_path,letter_name,program_id,created_date"
+			}), "letter_path,letter_name,program_id,created_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qGetLetterInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qGetLetterInfo>
+<cfquery name="variables.qGetLetterInfo" datasource="#application.datasource#">
           SELECT 			letter_path,letter_name,program_id,created_date
           FROM 				program_letters
           WHERE 			program_letters.program_letters_id = #id#
         </cfquery>
+</cfif>
       <!--- Get info for printing PDF Doc  or emailing HTML doc [end] --->
 	  --->
       <cfset variables.qGetLetterInfo = application.oLetterManager.getAllLetterInfo(id)>

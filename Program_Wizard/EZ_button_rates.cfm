@@ -10,11 +10,27 @@
 <cfif (isDefined("URL.TemplateID") AND URL.TemplateID NEQ 0)>
 	<cfset EZInfo = CreateObject("component","components.programs.template.TemplateManager").EZratesExcel(url.TemplateID) >
 	
-	<cfquery name="TemplateInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForTemplateInfo>
+	<cftry>
+		<cfset TemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#url.TemplateID#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTemplateInfo>
+<cfquery name="TemplateInfo" datasource="#application.datasource#">
 		SELECT Created_Type
 		FROM Program_Control_Panel_Options
 		WHERE ProgramControl_Panel_Options_ID = #url.TemplateID#
 	</cfquery>
+</cfif>
 
 	<cfoutput>
 		<!---D41067 :: Unable to Download Max Case Rates - EZ Button...  --->
@@ -24,11 +40,27 @@
 <cfelseif isDefined("URL.EZButtonRateID")>
 	<cfset EZInfo = CreateObject("component","components.programs.template.TemplateManager").EZRatesSettingExcel(url.EZButtonRateID) >
 	
-	<cfquery name="EZButtonInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForEZButtonInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ez_button_rate_setting")>
+<cfif useLakebaseForEZButtonInfo>
+	<cftry>
+		<cfset EZButtonInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ez_button_rate_setting", {
+				"ez_button_rate_id" = "eq.#url.EZButtonRateID#",
+				"select" = "ez_button_rate_title"
+			}), "ez_button_rate_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForEZButtonInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForEZButtonInfo>
+<cfquery name="EZButtonInfo" datasource="#application.datasource#">
 		SELECT EZ_Button_Rate_Title
 		FROM EZ_Button_Rate_Setting
 		WHERE EZ_Button_Rate_ID = #url.EZButtonRateID#
 	</cfquery>
+</cfif>
 	<cfoutput>
 		<!---D41067 :: Unable to Download Max Case Rates - EZ Button...  --->
 		<cfset ExcelName  = #REReplace(EZButtonInfo.EZ_Button_Rate_Title,"[^0-9A-Za-z]","","all")#>

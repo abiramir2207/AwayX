@@ -8,12 +8,29 @@
 		<!---Do this for normal--->
 		<cfif ComponentType IS 1>				
 		
-			<cfquery name="DoesThisCompHaveAChild" datasource="#application.datasource#">
+			<cfset useLakebaseForDoesThisCompHaveAChild = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForDoesThisCompHaveAChild>
+	<cftry>
+		<cfset DoesThisCompHaveAChild = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"parent_id" = "eq.#ComponentID#",
+				"deleted" = "eq.0",
+				"select" = "program_growth_component_id as volume_component_id"
+			}), "program_growth_component_id as volume_component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDoesThisCompHaveAChild = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDoesThisCompHaveAChild>
+<cfquery name="DoesThisCompHaveAChild" datasource="#application.datasource#">
 			SELECT Program_Growth_Component_ID AS Volume_Component_ID
 			FROM Program_Growth_Components
 			WHERE Parent_ID = '#ComponentID#'
 			AND Deleted = 0
-			</cfquery>			
+			</cfquery>
+</cfif>			
 		
 			<cfif DoesThisCompHaveAChild.Recordcount GT 0>
 			
@@ -23,7 +40,22 @@
 				
 					<cfset UseThisComponentForVolume = DoesThisCompHaveAChild.Volume_Component_ID>
 					
-					<cfquery name="GetVolumeItems" datasource="#application.datasource#">
+					<cfset useLakebaseForGetVolumeItems = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getitemsforgrowthcomponent")>
+<cfif useLakebaseForGetVolumeItems>
+	<cftry>
+		<cfset GetVolumeItems = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getitemsforgrowthcomponent", {
+				"program_growth_component_id" = "eq.#UseThisComponentForVolume#",
+				"select" = "bsa_foodservice_items_master_id,product_group_level_id,product_group_id,program_growth_component_product_data_id"
+			}), "bsa_foodservice_items_master_id,product_group_level_id,product_group_id,program_growth_component_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetVolumeItems = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetVolumeItems>
+<cfquery name="GetVolumeItems" datasource="#application.datasource#">
 					SELECT 	BSA_Foodservice_Items_Master_ID, 
 							Product_Group_Level_ID,
 							Product_Group_ID,
@@ -32,14 +64,31 @@
 					WHERE 	
 							Program_Growth_Component_ID = '#UseThisComponentForVolume#'
 					</cfquery>
+</cfif>
 									
 					<!------ Find if any products is 'All products' ----->
-					<cfquery name="qCheckGroupProducts" dbtype="query">
+					<cfset useLakebaseForqCheckGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getvolumeitems")>
+<cfif useLakebaseForqCheckGroupProducts>
+	<cftry>
+		<cfset qCheckGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getvolumeitems", {
+				"product_group_level_id" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id,product_group_id,program_growth_component_product_data_id"
+			}), "bsa_foodservice_items_master_id,product_group_id,program_growth_component_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckGroupProducts>
+<cfquery name="qCheckGroupProducts" dbtype="query">
 						SELECT		BSA_Foodservice_Items_Master_ID, Product_Group_ID, Program_Growth_Component_Product_Data_ID
 						FROM		GetVolumeItems
 						WHERE
 									Product_Group_Level_ID = 1
 					</cfquery>
+</cfif>
 					
 					<cfif qCheckGroupProducts.recordCount>
 					

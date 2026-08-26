@@ -1,10 +1,28 @@
 
 <CFIF FORM.JustActivateToNight EQ 1>
-	<CFQUERY NAME="OnActivateBit" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForOnActivateBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForOnActivateBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"gl_code_upload_id" = "eq.#FORM.RID#"
+			},
+			{
+				"activate_tonight" = "#FORM.ActivateStatus#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOnActivateBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOnActivateBit>
+<CFQUERY NAME="OnActivateBit" DATASOURCE="#Application.Datasource#">
 		UPDATE 	GL_Code_Upload
 		SET  	Activate_Tonight = #FORM.ActivateStatus#
 		WHERE 	GL_Code_Upload_ID = '#FORM.RID#'
 	</CFQUERY>
+</cfif>
 	<BR><BR><BR><BR>
 	<TABLE ALIGN="Center">
 		<TR>
@@ -74,11 +92,29 @@
 				WHERE	GL_Code_Process_Status_ID = 2
 			</CFQUERY> --->
 			<CFIF FORM.ActivateStatus EQ 1>
-				<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForResetOtherUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForResetOtherUpload>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"activate_tonight" = "eq.1"
+			},
+			{
+				"activate_tonight" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetOtherUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetOtherUpload>
+<CFQUERY NAME="ResetOtherUpload" DATASOURCE="#Application.Datasource#">
 					UPDATE GL_Code_Upload
 					SET Activate_Tonight = 0
 					WHERE Activate_Tonight = 1
 				</CFQUERY>
+</cfif>
 			</CFIF>
 			
 			<CFQUERY NAME="deleteallOthers" DATASOURCE="#Application.Datasource#">

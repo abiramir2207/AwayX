@@ -12,9 +12,25 @@
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
+<cfset useLakebaseForselect_field = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings_column_nature")>
+<cfif useLakebaseForselect_field>
+	<cftry>
+		<cfset select_field = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings_column_nature", {
+				"column_nature" = "eq.#URL.nature#",
+				"select" = "column_name,dispaly_label"
+			}), "column_name,dispaly_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForselect_field = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForselect_field>
 <CFQUERY name = "select_field" datasource="#application.datasource#">
 	SELECT column_name,dispaly_label from customer_settings_column_nature where column_nature = '#URL.nature#'
 </CFQUERY>
+</cfif>
 <CFSET p_nature = "#url.nature#">
 
 

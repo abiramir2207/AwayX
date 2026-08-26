@@ -1,6 +1,23 @@
 <!--- unlock this users billbacks --->
 <cfparam name="url.filterIds" default="">
 
+<cfset useLakebaseForqGetBBsLockedByMe = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForqGetBBsLockedByMe>
+	<cftry>
+		<cfset qGetBBsLockedByMe = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_allied", {
+				"bb_is_locked" = "eq.1",
+				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"bb_locked_by_match_central" = "eq.0",
+				"select" = "bb_is_locked"
+			}), "bb_is_locked"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBBsLockedByMe = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBBsLockedByMe>
 <cfquery name="qGetBBsLockedByMe" datasource="#Application.Datasource#">
 	SELECT BB_Is_Locked
 	FROM Billback_Allied
@@ -9,6 +26,7 @@
 		BB_Locked_By_User_ID	= '#request.AccessStructure.User_ID#'
 			AND BB_Locked_By_Match_Central = 0
 </cfquery>
+</cfif>
 <CFIF qGetBBsLockedByMe.recordcount GT 0>
 	<cfquery name="Unlock_Billbacks" datasource="#application.datasource#">
 		UPDATE 	Billback_Allied

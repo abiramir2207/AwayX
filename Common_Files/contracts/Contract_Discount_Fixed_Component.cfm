@@ -61,13 +61,43 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 	<cfset program_Span = Datediff('d',GetContractInfo.Contract_Start_Date, GetContractInfo.Contract_End_Date) + 1>
-  <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+  <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,source,source_required,source_type,source_type_required,date_source_received,date_source_received_required,ezbutton_on,discount_rebate_max_rate_on,ezbutton_enter_beyond_max_rates,ideal_price,ratetypedefault"
+			}), "first_parent_id,source,source_required,source_type,source_type_required,date_source_received,date_source_received_required,ezbutton_on,discount_rebate_max_rate_on,ezbutton_enter_beyond_max_rates,ideal_price,ratetypedefault"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT
 			First_parent_ID,
 			Source,
@@ -84,17 +114,35 @@
     FROM Program_Control_Panel_Options
     WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
   </cfquery>
+</cfif>
 
   <cfset businessSegManager = CreateObject("component", "components.programs.business_segment.BusinessSegmentManager") />
   <cfset businessSegmentID = businessSegManager.getSegmentIdByProgram(cryp.value) />
 
 <cfif GetTemplateInfo.Ideal_Price>
-	<CFQUERY NAME="getFixedComponentID" datasource="#application.datasource#">
+	<cfset useLakebaseForgetFixedComponentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForgetFixedComponentID>
+	<cftry>
+		<cfset getFixedComponentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0",
+				"select" = "program_fixed_component_name_id"
+			}), "program_fixed_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedComponentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedComponentID>
+<CFQUERY NAME="getFixedComponentID" datasource="#application.datasource#">
 		SELECT Program_Fixed_Component_Name_ID
 		FROM Program_Fixed_Component
 		where program_id =  '#cryp.value#'
 		AND deleted = 0
 	</CFQUERY>
+</cfif>
 	<cfif getFixedComponentID.recordCount>
 		<cfset IPcomp_id = getFixedComponentID.Program_Fixed_Component_Name_ID>
 	</cfif>
@@ -115,12 +163,29 @@
 		<!---61605 : Event error on fixed price save when revision setting for UOM change is OFF START --->
 		<cfset ParentFixedComponents = 0>
 		<cfif len(GetContractInfo.Revision_of_Contract_Main_ID)>
-		<CFQUERY NAME="getParentFixedComponents" datasource="#application.datasource#">
+		<cfset useLakebaseForgetParentFixedComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForgetParentFixedComponents>
+	<cftry>
+		<cfset getParentFixedComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#GetContractInfo.Revision_of_Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_fixed_component_name_id"
+			}), "program_fixed_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentFixedComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentFixedComponents>
+<CFQUERY NAME="getParentFixedComponents" datasource="#application.datasource#">
 			SELECT Program_Fixed_Component_Name_ID
 			FROM Program_Fixed_Component
 			where program_id = #GetContractInfo.Revision_of_Contract_Main_ID#
 			AND deleted = 0
 		</CFQUERY>
+</cfif>
 		<cfset ParentFixedComponents = valuelist(getParentFixedComponents.Program_Fixed_Component_Name_ID)>
 		</cfif>
 		<!---61605 : Event error on fixed price save when revision setting for UOM change is OFF END --->
@@ -543,11 +608,27 @@ User is not deleting a component
 
 	<!--- Dev Note(79237) - When a 2nd Component (Child of the first component) exists fpr the component, the we need to add the 2nd(child) component and set the
 	"paid to", Rate and UOM  of th 2nd Component, same as the  the first component. --->
-	<cfquery name="getSecondComponent" datasource="#application.datasource#">
+	<cfset useLakebaseForgetSecondComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForgetSecondComponent>
+	<cftry>
+		<cfset getSecondComponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#form.Program_Fixed_Component_Name_ID#",
+				"select" = "include_second_component,second_component_name_id,second_component_payment_type_id,second_component_gl_account_id,second_component_payment_cycle_id"
+			}), "include_second_component,second_component_name_id,second_component_payment_type_id,second_component_gl_account_id,second_component_payment_cycle_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSecondComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSecondComponent>
+<cfquery name="getSecondComponent" datasource="#application.datasource#">
 		SELECT	Include_Second_Component,Second_Component_Name_ID,Second_Component_Payment_Type_ID,Second_Component_GL_Account_ID,Second_Component_Payment_Cycle_ID
 		FROM	Program_Fixed_Component_Name
 		WHERE	Program_Fixed_Component_Name_ID = #form.Program_Fixed_Component_Name_ID#
 	</cfquery>
+</cfif>
 
 	<cfif getSecondComponent.Include_Second_Component EQ 1 AND getSecondComponent.Second_Component_Name_ID GT 0>
 		<cfset form.Program_Fixed_Component_Name_ID = getSecondComponent.Second_Component_Name_ID><!--- From the 2nd component dropdown --->
@@ -2675,12 +2756,29 @@ function editfreightrates(prodid,compId,num,paidTo)
 
 			<!--- D11147 BJF Component product restrictions 	Set product restriction query here so there are fewer iterations	--->
 			<cfif appsettings.getComponent_Product_Restrictions_On()>
-				<cfquery name="Query_#getFixedComponentName.Program_Fixed_Component_Name_Id#" datasource="#application.datasource#">
+				<cfset useLakebaseForQuery_#getFixedComponentName_Program_Fixed_Component_Name_Id# = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("component_products_restricted")>
+<cfif useLakebaseForQuery_#getFixedComponentName_Program_Fixed_Component_Name_Id#>
+	<cftry>
+		<cfset Query_#getFixedComponentName.Program_Fixed_Component_Name_Id# = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("component_products_restricted", {
+				"discount_type_id" = "eq.1 --Fixed",
+				"component_id" = "eq.#comp_id#",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForQuery_#getFixedComponentName_Program_Fixed_Component_Name_Id# = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForQuery_#getFixedComponentName_Program_Fixed_Component_Name_Id#>
+<cfquery name="Query_#getFixedComponentName.Program_Fixed_Component_Name_Id#" datasource="#application.datasource#">
 					SELECT 		Product_ID
 					FROM 		Component_Products_Restricted
 					WHERE 		Discount_Type_ID = 1 --Fixed
 					AND 		Component_ID = '#comp_id#'
 				</cfquery>
+</cfif>
 			</cfif>
 
 			<cfset qGetCompRuleUoms = compBusRule.getCompRuleUoms(#comp_id#)>
@@ -3560,11 +3658,27 @@ function editfreightrates(prodid,compId,num,paidTo)
             						<!--- Dev Note: drachala; D28500: Add functionality to require user to enter value for 'other' on Comp Name  (Changed/Added: added condition to display Other value in text box.)--->
 									<cfset other_value = "">
 												<cfif (form["fixed_C"&currentcompid&'_P'&reproduct_id&'_'&i&'_Competitor_Name_ID'] EQ #TheQuery.Competitor_Name_ID#) AND (CompetitorList.Program_Bid_Won_By_ID NEQ #TheQuery.Competitor_Name_ID#) AND (len(TheQuery.Competitor_Name_ID) GT 0) AND #TheQuery.Competitor_Name_ID# NEQ 0  AND (len(not_other) EQ 0)  OR (form["fixed_C"&currentcompid&'_P'&reproduct_id&'_'&i&'_Competitor_Name_ID'] EQ -1)>
-              							<cfquery name="Pull_other_comp" datasource="#application.datasource#">
+              							<cfset useLakebaseForPull_other_comp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForPull_other_comp>
+	<cftry>
+		<cfset Pull_other_comp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_id" = "eq.#TheQuery.Competitor_Name_ID#",
+				"select" = "program_bid_won_by_description"
+			}), "program_bid_won_by_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPull_other_comp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPull_other_comp>
+<cfquery name="Pull_other_comp" datasource="#application.datasource#">
 												SELECT Program_Bid_Won_By_Description
 												FROM	Program_Bid_Won_By
 												WHERE Program_Bid_Won_By_ID = #TheQuery.Competitor_Name_ID#
               							</cfquery>
+</cfif>
               							<cfset other_value = #Pull_other_comp.Program_Bid_Won_By_Description#>
 									</cfif>
 												<input type="text" name="fixed_C#currentcompid#_P#reproduct_id#_#i#_CompetitorSourceOther" id="CompetitorSourceOther#id_i#" value = "#other_value#" <cfif (form["fixed_C"&currentcompid&'_P'&reproduct_id&'_'&i&'_Competitor_Name_ID'] EQ #TheQuery.Competitor_Name_ID#) AND (CompetitorList.Program_Bid_Won_By_ID NEQ #TheQuery.Competitor_Name_ID#) AND (len(TheQuery.Competitor_Name_ID) GT 0) AND #TheQuery.Competitor_Name_ID# NEQ 0  AND (len(not_other) EQ 0)  OR (form["fixed_C"&currentcompid&'_P'&reproduct_id&'_'&i&'_Competitor_Name_ID'] EQ -1)>style="display: block;"</cfif>style="display: none;">

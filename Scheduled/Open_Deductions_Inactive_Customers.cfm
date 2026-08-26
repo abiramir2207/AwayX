@@ -13,15 +13,45 @@
 --->
 <cfparam name="emailList" default="">
 
+<cfset useLakebaseForgetAppDDSentRejectIn1510 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetAppDDSentRejectIn1510>
+	<cftry>
+		<cfset getAppDDSentRejectIn1510 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "dd_sent_reject_in_1510"
+			}), "dd_sent_reject_in_1510"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAppDDSentRejectIn1510 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAppDDSentRejectIn1510>
 <cfquery name="getAppDDSentRejectIn1510" datasource="#application.datasource#">
 	select DD_Sent_Reject_In_1510
 	from  _Application_settings
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetEmail>
+	<cftry>
+		<cfset getEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "open_dd_inactive_customers_email_address"
+			}), "open_dd_inactive_customers_email_address"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEmail>
 <cfquery name="getEmail" datasource="#application.datasource#">
 	Select	Open_DD_Inactive_Customers_Email_Address 
 	from	general_Settings
 </cfquery>
+</cfif>
 
 <cfset emailList = valuelist(getEmail.Open_DD_Inactive_Customers_Email_Address)>
 

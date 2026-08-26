@@ -6,11 +6,27 @@ Created By   :  Anand Rao
 Description  :  Upload from home page
 ---------------------------------------------------------------------------------->
 
-	<cfquery name="qgetCopyPath" datasource="#application.datasource#">
+	<cfset useLakebaseForqgetCopyPath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_settings")>
+<cfif useLakebaseForqgetCopyPath>
+	<cftry>
+		<cfset qgetCopyPath = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dataint_settings", {
+				"order" = "dataint_setting_id.asc",
+				"select" = "dtspath = dts_reference_path+'\inbox\claims_upload'"
+			}), "dtspath = dts_reference_path+'\inbox\claims_upload'"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetCopyPath = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetCopyPath>
+<cfquery name="qgetCopyPath" datasource="#application.datasource#">
        SELECT DTSPATH = DTS_Reference_Path+'\inbox\Claims_Upload'
        FROM   DataInt_Settings
        ORDER BY Dataint_setting_ID
 	</cfquery>
+</cfif>
 
 <cftry>
 	<cfset pathFileName = qgetCopyPath.DTSPATH & "\" & strFileName />

@@ -58,11 +58,29 @@
 		<CFSWITCH expression="#FORM.Query_Type#">
 
 			<CFCASE value="INSERT">
-				<CFQUERY NAME="getThisUserPosition" DATASOURCE="AwayX">
+				<cfset useLakebaseForgetThisUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetThisUserPosition>
+	<cftry>
+		<cfset getThisUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisUserPosition>
+<CFQUERY NAME="getThisUserPosition" DATASOURCE="AwayX">
 					SELECT User_Positions_ID
 					FROM User_Position_Holders
 					WHERE User_ID = '#request.AccessStructure.User_ID#' AND User_Position_Type = 'P' AND DELETED = 0
 				</CFQUERY>
+</cfif>
 				<CFSET This_User_Position_ID = getThisUserPosition.User_Positions_ID>
 		
 				<CFQUERY NAME="insert" DATASOURCE="awayx">
@@ -167,11 +185,27 @@
 				</CFQUERY>
 				
 				<!--- save comments --->
-				<cfquery name="recordCheck" datasource="#Application.Datasource#">
+				<cfset useLakebaseForrecordCheck = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForrecordCheck>
+	<cftry>
+		<cfset recordCheck = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#insert.Contract_Main_ID#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrecordCheck = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrecordCheck>
+<cfquery name="recordCheck" datasource="#Application.Datasource#">
 					SELECT Contract_Main_ID
 					FROM Contract_Main_Aux_Data
 					WHERE Contract_Main_ID = '#insert.Contract_Main_ID#'
 				</cfquery>
+</cfif>
 				<CFIF recordCheck.recordcount EQ 0>
 					<cfquery name="insertRecord" datasource="#Application.Datasource#">
 						INSERT INTO Contract_Main_Aux_Data
@@ -364,11 +398,26 @@
 
 <!--- Process data from the packet --->
 <CFIF FORM.CONTRACT_RENEWAL_PACKETS_ID NEQ 0>
-	<CFQUERY NAME="getPacket" DATASOURCE="AwayX" MAXROWS="1">
+	<cfset useLakebaseForgetPacket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_renewal_packets")>
+<cfif useLakebaseForgetPacket>
+	<cftry>
+		<cfset getPacket = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_renewal_packets", {
+				"contract_renewal_packets_id" = "eq.#FORM.CONTRACT_RENEWAL_PACKETS_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPacket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPacket>
+<CFQUERY NAME="getPacket" DATASOURCE="AwayX" MAXROWS="1">
 		SELECT *
 		FROM Contract_Renewal_Packets
 		WHERE Contract_Renewal_Packets_ID = '#FORM.CONTRACT_RENEWAL_PACKETS_ID#'
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 	
 	<CFFILE ACTION="READ" FILE="#getPacket.XML_File_Location#" VARIABLE="Packet_Data">
 	<CFWDDX ACTION="WDDX2CFML" INPUT="#Packet_Data#" OUTPUT="Program_Packet">

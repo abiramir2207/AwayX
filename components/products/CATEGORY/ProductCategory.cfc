@@ -55,13 +55,29 @@
 		<cfset var controlPanelId = 0 />
 		
 		<!---first get the control panel options id from contract main--->
-		<cfquery name="qGetControlPanelId" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetControlPanelId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetControlPanelId>
+	<cftry>
+		<cfset qGetControlPanelId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetControlPanelId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetControlPanelId>
+<cfquery name="qGetControlPanelId" datasource="#application.datasource#">
 			
 			SELECT 	ProgramType_ID 
 			FROM 	Contract_Main
 			WHERE 	Contract_Main_ID = #arguments.programId#		
 			
 		</cfquery>
+</cfif>
 		
 		<cfset controlPanelId = qGetControlPanelId.ProgramType_ID />
 		
@@ -83,7 +99,25 @@
 		<cfset lCategories = arguments.categories />
 		
 		<!---set deleted = 1 for any existing entries--->
-		<cfquery name="insertFilters" datasource="#application.datasource#">
+		<cfset useLakebaseForinsertFilters = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_category_filter")>
+<cfif useLakebaseForinsertFilters>
+	<cftry>
+		<cfset application.oLakebase.updateRows("product_category_filter",
+			{
+				"deleted" = "eq.0",
+				"programcontrol_panel_options_id" = "eq.#controlPanelId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForinsertFilters = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForinsertFilters>
+<cfquery name="insertFilters" datasource="#application.datasource#">
 			
 			UPDATE	Product_Category_Filter
 			SET		Deleted = 1
@@ -91,6 +125,7 @@
 			AND		ProgramControl_Panel_Options_ID = #controlPanelId#
 				
 		</cfquery>
+</cfif>
 			
 		<!---loop over category list and insert for each one--->
 		<cfloop index="indx" list="#lCategories#">

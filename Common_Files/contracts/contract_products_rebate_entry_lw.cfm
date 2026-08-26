@@ -1,8 +1,21 @@
  
+<cfset useLakebaseForGETUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForGETUOM>
+	<cftry>
+		<cfset GETUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGETUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGETUOM>
 <CFQUERY NAME="GETUOM" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 24, 0, 0)#">
 	SELECT *
 	FROM Units_of_Measure
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="GetAllContractInfo" datasource="#application.datasource#">
 	SELECT *

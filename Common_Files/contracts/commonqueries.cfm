@@ -80,18 +80,54 @@ FUNCTIONALITY:
 </CFQUERY>
 
 
+<cfset useLakebaseForCSLGetOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForCSLGetOperators>
+	<cftry>
+		<cfset CSLGetOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_operators", {
+				"contract_main_id" = "eq.#CSL_Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCSLGetOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCSLGetOperators>
 <CFQUERY NAME="CSLGetOperators" datasource="#application.datasource#">
 	SELECT top 1 Contract_Main_ID
 	FROM Contract_Operators
 	WHERE Contract_Main_ID = '#CSL_Contract_Main_ID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForcheckForBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseForcheckForBrokers>
+	<cftry>
+		<cfset checkForBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_brokers", {
+				"contract_main_id" = "eq.#CSL_Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckForBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckForBrokers>
 <CFQUERY NAME="checkForBrokers" datasource="#application.datasource#">
 	SELECT top 1 Contract_Main_ID
 	FROM Contract_Brokers
 	WHERE Contract_Main_ID = '#CSL_Contract_Main_ID#'
 	AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="checkForDistributors" datasource="#application.datasource#">
 	SELECT CD.*
@@ -204,11 +240,27 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     <!--- 17386 RBL fixing for frequent errors ARGH [end] --->
 
     <!--- Flag This Contract As Locked As Long As This User Is Using It --->
-    <cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
+    <cfset useLakebaseForisContractCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForisContractCurrentlyLocked>
+	<cftry>
+		<cfset isContractCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CSLGetContractInfo.Contract_Main_ID#",
+				"select" = "contract_is_locked,contract_locked_by_user_id,contract_main_id"
+			}), "contract_is_locked,contract_locked_by_user_id,contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisContractCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisContractCurrentlyLocked>
+<cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
         SELECT Contract_Is_Locked, Contract_Locked_By_User_ID, Contract_Main_ID
         FROM Contract_Main
         WHERE Contract_Main_ID ='#CSLGetContractInfo.Contract_Main_ID#'
     </cfquery>
+</cfif>
     <!--- END Flag This Contract As Locked As Long As This User Is Using It --->
 
     <!---  check position tree for  user access--->

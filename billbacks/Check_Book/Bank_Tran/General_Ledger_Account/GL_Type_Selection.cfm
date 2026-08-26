@@ -24,12 +24,29 @@
 <CFSET BBID_List = BBID>
 
 <CFIF IsDefined("Pay_Multi_Billbacks_ID")>
-	<CFQUERY NAME="GetBBID" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetBBID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks_list")>
+<cfif useLakebaseForGetBBID>
+	<cftry>
+		<cfset GetBBID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pay_multi_billbacks_list", {
+				"pay_multi_billbacks_id" = "eq.#Pay_Multi_Billbacks_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBID>
+<CFQUERY NAME="GetBBID" DATASOURCE="#Application.Datasource#">
 		SELECT 	Billback_ID 
 		FROM 	Pay_Multi_Billbacks_List
 		WHERE 	Pay_Multi_Billbacks_ID = '#Pay_Multi_Billbacks_ID#' AND 
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET BBID_List = VALUELIST(GetBBID.Billback_ID)>
 </CFIF>
 
@@ -648,9 +665,24 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Dispalying results --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForAll_GL_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_type")>
+<cfif useLakebaseForAll_GL_Type>
+	<cftry>
+		<cfset All_GL_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_type", {
+				"order" = "gl_type_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAll_GL_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAll_GL_Type>
 <CFQUERY NAME="All_GL_Type" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Type ORDER BY GL_Type_Desc
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="Sum_up_QBrand" DATASOURCE="#Application.Datasource#">
 	SELECT 		GL_QBrand_Rate_Calculation.Billback_ID,

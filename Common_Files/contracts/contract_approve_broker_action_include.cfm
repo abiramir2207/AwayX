@@ -23,11 +23,26 @@
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</CFQUERY>
 
-	<cfquery name="GetSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForGetSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetSettings>
+	<cftry>
+		<cfset GetSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#CSLGetContractInfo.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSettings>
+<cfquery name="GetSettings" datasource="#application.datasource#">
 		SELECT	*
 		FROM	Program_Control_Panel_Options
 		WHERE	ProgramControl_Panel_Options_ID = '#CSLGetContractInfo.ProgramType_ID#'
 	</cfquery>
+</cfif>
 
 	<cfif GetSettings.Date_Exclusions_ON EQ 1>
 		<!--- If its a Date exclusion project, get all the IDs including the Date Exclusion Program IDs --->

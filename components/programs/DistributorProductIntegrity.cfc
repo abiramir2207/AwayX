@@ -23,12 +23,29 @@
    </cffunction>
    
 	<cffunction name="getActive" output="false" returntype="query">	
-		<cfquery name="qGetActiveComps" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"deleted" = "eq.0",
+				"order" = "rule_name.asc",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+<cfquery name="qGetActiveComps" datasource="#application.datasource#">
 			SELECT 		Distributor_Product_Integrity_Rule.*
 			FROM 		Distributor_Product_Integrity_Rule
 			WHERE 		Deleted = 0
 			ORDER BY 	Rule_Name
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetActiveComps />
 		
@@ -38,11 +55,26 @@
    
    		<cfargument name="compId" required="false" default=0 />
 		
-		<cfquery name="qGetComp" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForqGetComp>
+	<cftry>
+		<cfset qGetComp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"distributor_product_integrity_rule_id" = "eq.#arguments.compId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetComp>
+<cfquery name="qGetComp" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Distributor_Product_Integrity_Rule
 			WHERE 	Distributor_Product_Integrity_Rule_ID = #arguments.compId#	
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetComp />
 		

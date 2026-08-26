@@ -138,11 +138,27 @@ document.all.PleaseWaitMessage.style.display='none';
 	<!-------- Lookup queries ------->
 	
 	<!-------- Commodity_Exchange_Type ------------->
-	<CFQUERY NAME="Get_Exchange_Type" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForGet_Exchange_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodity_exchange_type")>
+<cfif useLakebaseForGet_Exchange_Type>
+	<cftry>
+		<cfset Get_Exchange_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodity_exchange_type", {
+				"order" = "commodity_exchange_type_id.asc",
+				"select" = "commodity_exchange_type_id,commodity_exchange_type_description"
+			}), "commodity_exchange_type_id,commodity_exchange_type_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Exchange_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Exchange_Type>
+<CFQUERY NAME="Get_Exchange_Type" DATASOURCE="#application.datasource#">
 		SELECT	Commodity_Exchange_Type_ID, Commodity_Exchange_Type_Description
 		FROM	Commodity_Exchange_Type
 		ORDER BY Commodity_Exchange_Type_ID
 	</CFQUERY>
+</cfif>
 	
 	<!-------- Commodity_Exchange_Detail ------------->
 	<CFQUERY NAME="Get_Exchange_Detail" DATASOURCE="#application.datasource#">

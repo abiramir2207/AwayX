@@ -34,11 +34,26 @@
 
 
 <CFIF len(URL.Company_Main_ID) GT 0>
-	<CFQUERY NAME="getCompanyInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForgetCompanyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForgetCompanyInfo>
+	<cftry>
+		<cfset getCompanyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCompanyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCompanyInfo>
+<CFQUERY NAME="getCompanyInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Company_Main
 		WHERE Company_Main_ID = '#URL.Company_Main_ID#'
 	</CFQUERY>
+</cfif>
 
 	<CFIF getCompanyInfo.Recordcount GT 0>
 		<CFSET FORM.COMPANY_NAME 				=	"#trim(getCompanyInfo.COMPANY_NAME)#">

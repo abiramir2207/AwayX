@@ -1,7 +1,25 @@
+<cfset useLakebaseFordeleteCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseFordeleteCompany>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bsa_foodservice_brokers",
+			{
+				"bsa_foodservice_brokers_id" = "eq.#FORM.Broker_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteCompany>
 <CFQUERY NAME="deleteCompany" datasource="#application.datasource#">
 	UPDATE BSA_Foodservice_Brokers
 	SET deleted = 1
 	WHERE BSA_Foodservice_Brokers_ID = '#FORM.Broker_ID#'
 </CFQUERY>
+</cfif>
 
 <CFLOCATION URL="brokers_search_form.cfm">

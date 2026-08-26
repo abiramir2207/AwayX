@@ -28,21 +28,53 @@ Change Summary:
 
 
 
+<cfset useLakebaseForgetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetPayeeInfo>
+	<cftry>
+		<cfset getPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_payee_type_id,bb_amount"
+			}), "billback_payee_type_id,bb_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeInfo>
 <cfquery name="getPayeeInfo" datasource="#Application.Datasource#">
 	SELECT 	Billback_Payee_Type_ID, 
 			BB_Amount
 	FROM 	Billback
 	WHERE 	Billback_ID = '#FORM.Billback_ID#'
 </cfquery>
+</cfif>
 
 <CFIF len(trim(URL.BBID)) GT 0>
 
-	<cfquery name="LookForExistingProgram" datasource="#Application.Datasource#" >
+	<cfset useLakebaseForLookForExistingProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForLookForExistingProgram>
+	<cftry>
+		<cfset LookForExistingProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookForExistingProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookForExistingProgram>
+<cfquery name="LookForExistingProgram" datasource="#Application.Datasource#" >
 		SELECT	*
 		FROM 	Billback_Program
 		WHERE 	Billback_ID = '#FORM.Billback_ID#' 
 		AND		Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfset Program_List = valuelist(LookForExistingProgram.Program_ID)>
 	
@@ -135,11 +167,28 @@ SELECT TOP 2 * FROM Units_of_Measure
 
 <cfswitch expression="#getPayeeInfo.Billback_Payee_Type_ID#">
 	<cfcase value="1"><!--- Distributor --->
-		<cfquery name="getPayeeID" datasource="#Application.Datasource#">
+		<cfset useLakebaseForgetPayeeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForgetPayeeID>
+	<cftry>
+		<cfset getPayeeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id as payee_id"
+			}), "distributor_id as payee_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPayeeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPayeeID>
+<cfquery name="getPayeeID" datasource="#Application.Datasource#">
 			SELECT Distributor_ID as Payee_ID
 			FROM Billback_Distributor
 			WHERE Billback_ID = '#FORM.Billback_ID#' AND Deleted = 0
 		</cfquery>
+</cfif>
 	</cfcase>
 
 	<cfcase value="2"><!--- Operator --->

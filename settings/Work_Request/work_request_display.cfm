@@ -54,14 +54,14 @@ select  	{width: 145px; font-size: 11px; }
 				imgHeight="13"
 				dropdownCheck="0"
 				>
-<font color=blue>Open</font> – Request is being reviewed by BA to ensure enough details have been provided by the client before any work begins.
-<br><font color=blue>BA Review</font> – The request is an enhancement.  Before any work begins the following must be done:  specification document, client approval of specification document, client agreement of payment and terms.
-<br><font color=blue>Complete</font> – Development work complete.  Note:  the work may not be internally tested or deployed to your environment yet.
-<br><font color=blue>Decline</font> – Not a code issue.  Client requires explanation of how the feature works.
-<br><font color=blue>DEV</font> – Request reviewed and has all necessary information.  Request is waiting to be assigned to development team.
-<br><font color=blue>DEV ASGN</font> – Request is in development. 
-<br><font color=blue>Duplicate</font> – This has already been reported and addressed in a prior label.  
-<br><font color=blue>Next Service Pk</font> – Request is considered for our next service pack.
+<font color=blue>Open</font>  Request is being reviewed by BA to ensure enough details have been provided by the client before any work begins.
+<br><font color=blue>BA Review</font>  The request is an enhancement.  Before any work begins the following must be done:  specification document, client approval of specification document, client agreement of payment and terms.
+<br><font color=blue>Complete</font>  Development work complete.  Note:  the work may not be internally tested or deployed to your environment yet.
+<br><font color=blue>Decline</font>  Not a code issue.  Client requires explanation of how the feature works.
+<br><font color=blue>DEV</font>  Request reviewed and has all necessary information.  Request is waiting to be assigned to development team.
+<br><font color=blue>DEV ASGN</font>  Request is in development. 
+<br><font color=blue>Duplicate</font>  This has already been reported and addressed in a prior label.  
+<br><font color=blue>Next Service Pk</font>  Request is considered for our next service pack.
 			</CF_SmallHelp>
 			<span ID="searchItemLabel">Status</span>
 		</TD>
@@ -78,12 +78,29 @@ select  	{width: 145px; font-size: 11px; }
 			<input type="text" Name="Request_Desc" value="<cfoutput>#form.Request_Desc#</cfoutput>">	
 		</TD>
 		<TD valign="top"><!--- Request Type --->
-			<CFQUERY NAME="GetRequestTypes" datasource="#application.datasource#">
+			<cfset useLakebaseForGetRequestTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGetRequestTypes>
+	<cftry>
+		<cfset GetRequestTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"deleted" = "eq.0",
+				"order" = "request_type.asc",
+				"select" = "request_type"
+			}), "request_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRequestTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRequestTypes>
+<CFQUERY NAME="GetRequestTypes" datasource="#application.datasource#">
 			SELECT DISTINCT Request_Type
 			FROM Work_Request
 			WHERE Deleted = 0
 			ORDER BY Request_Type
 			</CFQUERY>
+</cfif>
 			<CFPARAM NAME="FORM.Request_Type" DEFAULT="0">
 			<SELECT NAME="Request_Type" >
 				<OPTION VALUE="0">**ALL** Request Types</OPTION>
@@ -93,12 +110,29 @@ select  	{width: 145px; font-size: 11px; }
 			</SELECT>	
 		</TD>
 		<TD valign="top"><!--- App area --->
-			<CFQUERY NAME="GetAppAreas" datasource="#application.datasource#">
+			<cfset useLakebaseForGetAppAreas = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGetAppAreas>
+	<cftry>
+		<cfset GetAppAreas = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"deleted" = "eq.0",
+				"order" = "app_area.asc",
+				"select" = "app_area"
+			}), "app_area"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAppAreas = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAppAreas>
+<CFQUERY NAME="GetAppAreas" datasource="#application.datasource#">
 			SELECT DISTINCT App_Area
 			FROM Work_Request
 			WHERE Deleted = 0
 			ORDER BY App_Area
 			</CFQUERY>
+</cfif>
 			<CFPARAM NAME="FORM.App_Area" DEFAULT="0">
 			<SELECT NAME="App_Area" >
 				<OPTION VALUE="0">**ALL** Application Areas</OPTION>
@@ -108,12 +142,29 @@ select  	{width: 145px; font-size: 11px; }
 			</SELECT>		
 		</TD>
 		<TD valign="top"><!--- Priority --->
-			<CFQUERY NAME="GetPriorities" datasource="#application.datasource#">
+			<cfset useLakebaseForGetPriorities = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGetPriorities>
+	<cftry>
+		<cfset GetPriorities = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"deleted" = "eq.0",
+				"order" = "client_priority.asc",
+				"select" = "client_priority"
+			}), "client_priority"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPriorities = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPriorities>
+<CFQUERY NAME="GetPriorities" datasource="#application.datasource#">
 			SELECT DISTINCT Client_Priority
 			FROM Work_Request
 			WHERE Deleted = 0
 			ORDER BY Client_Priority
 			</CFQUERY>
+</cfif>
 			<CFPARAM NAME="FORM.Client_Priority" DEFAULT="0">
 			<SELECT NAME="Client_Priority" >
 				<OPTION VALUE="0">**ALL** Priorities</OPTION>
@@ -123,13 +174,31 @@ select  	{width: 145px; font-size: 11px; }
 			</SELECT>	
 		</TD>
 		<TD valign="top" ><!--- Item Status --->
-			<CFQUERY NAME="GeItemStatuses" datasource="#application.datasource#">
+			<cfset useLakebaseForGeItemStatuses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGeItemStatuses>
+	<cftry>
+		<cfset GeItemStatuses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"deleted" = "eq.0",
+				"item_status" = "not.is.null",
+				"order" = "item_status.asc",
+				"select" = "item_status"
+			}), "item_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGeItemStatuses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGeItemStatuses>
+<CFQUERY NAME="GeItemStatuses" datasource="#application.datasource#">
 			SELECT DISTINCT Item_Status
 			FROM Work_Request
 			WHERE Deleted = 0
 			and Item_Status is not NULL
 			ORDER BY Item_Status
 			</CFQUERY>
+</cfif>
 			<CFPARAM NAME="FORM.Item_Status" DEFAULT="0">
 			<cfoutput><CFPARAM NAME="Item_status_selected" DEFAULT= #form.Item_status#></cfoutput>
 

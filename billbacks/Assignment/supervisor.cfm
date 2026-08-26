@@ -22,11 +22,27 @@
 <cfif NOT isDefined("qGetAvailableAnalysts")><!------ might be already called in nextPage.cfm ----->
 <cfset qGetAvailableAnalysts = billbackAssignmentManager.getAnalysts(bNonSupervisor=1) />
 </cfif>
+<cfset useLakebaseForqGetDefaultSupervisor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetsupervisors")>
+<cfif useLakebaseForqGetDefaultSupervisor>
+	<cftry>
+		<cfset qGetDefaultSupervisor = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetsupervisors", {
+				"is_default_supervisor" = "eq.1",
+				"select" = "analyst_user_id"
+			}), "analyst_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultSupervisor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultSupervisor>
 <cfquery name="qGetDefaultSupervisor" dbtype="query">
 	SELECT	Analyst_User_ID
 	FROM	qGetSupervisors
 	WHERE	Is_Default_Supervisor = 1
 </cfquery>
+</cfif>
 
 <cfset showMessage = "" />
 <!--- removed by 32466

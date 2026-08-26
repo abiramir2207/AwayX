@@ -43,12 +43,29 @@
 
 	<cfif isUSDANOI_enabled.recordcount GT 0>
 		<cfif isUSDANOI_enabled.usdanoi_enabled EQ 1>
-			<cfquery name="getusdanoicomponentid" datasource="#application.datasource#">
+			<cfset useLakebaseForgetusdanoicomponentid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component_name")>
+<cfif useLakebaseForgetusdanoicomponentid>
+	<cftry>
+		<cfset getusdanoicomponentid = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_rebates_component_name", {
+				"is_usda_noi_comp" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_component_name_id"
+			}), "program_rebates_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetusdanoicomponentid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetusdanoicomponentid>
+<cfquery name="getusdanoicomponentid" datasource="#application.datasource#">
 				SELECT 		Program_Rebates_Component_Name_ID
 				FROM 		Program_Rebates_Component_Name
 				WHERE 		Is_USDA_NOI_Comp = 1
 					AND 	Deleted = 0
 			</cfquery>
+</cfif>
 
 			<cfif getusdanoicomponentid.recordcount GT 0>
 				<cfset usdanoi_on = 1>
@@ -80,10 +97,25 @@ table for that module.
 <cfif application.appSettingsGet.getDeduction_Module()>
 	<!------ deduction code ----->
 	<cfoutput>
-		<cfquery name="WhoRebills" datasource="#application.datasource#">
+		<cfset useLakebaseForWhoRebills = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_settings")>
+<cfif useLakebaseForWhoRebills>
+	<cftry>
+		<cfset WhoRebills = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_settings", {
+				"select" = "rebill"
+			}), "rebill"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForWhoRebills = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForWhoRebills>
+<cfquery name="WhoRebills" datasource="#application.datasource#">
 			SELECT 	Deduction_Settings.Rebill
 			FROM Deduction_Settings
 		</cfquery>
+</cfif>
 	</cfoutput>
 </cfif>
 

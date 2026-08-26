@@ -54,13 +54,30 @@
 		
 		<cfset returnValue = "">
 		<!------ Find if same desc exist for other record ----->
-		<cfquery name="qGetSameName" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetSameName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqGetSameName>
+	<cftry>
+		<cfset qGetSameName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("authority_sequence", {
+				"deleted" = "eq.0",
+				"authority_sequence_id" = "neq.#arguments.authoritySequenceId#",
+				"authority_sequence_name" = "eq.#arguments.authoritySequenceDesc#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSameName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSameName>
+<cfquery name="qGetSameName" datasource="#application.datasource#">
 			SELECT	*
 			FROM	Authority_Sequence
 			WHERE	Authority_Sequence.Deleted = 0
 					AND Authority_Sequence.Authority_Sequence_ID <> #arguments.authoritySequenceId#
 					AND Authority_Sequence.Authority_Sequence_Name = '#arguments.authoritySequenceDesc#'
 		</cfquery>
+</cfif>
 		
 		<cfif NOT qGetSameName.recordCount>
 		
@@ -135,11 +152,27 @@
 		<cfif NOT qGetUserAssosiated.recordCount>
 		
 			<!------ Get current order ----->
-			<cfquery name="qGetAuthOrder" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetAuthOrder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("authority_sequence")>
+<cfif useLakebaseForqGetAuthOrder>
+	<cftry>
+		<cfset qGetAuthOrder = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("authority_sequence", {
+				"authority_sequence_id" = "eq.#arguments.authoritySequenceId#",
+				"select" = "authority_sequence_order"
+			}), "authority_sequence_order"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAuthOrder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAuthOrder>
+<cfquery name="qGetAuthOrder" datasource="#application.datasource#">
 				SELECT	Authority_Sequence_Order
 				FROM	Authority_Sequence
 				WHERE	Authority_Sequence_ID = #arguments.authoritySequenceId#
 			</cfquery>
+</cfif>
 			
 			<cfif qGetAuthOrder.recordCount>
 			

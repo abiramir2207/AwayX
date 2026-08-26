@@ -58,11 +58,27 @@
 	</cfcase>
 
 	<cfcase value="read"><!--- read packet--->
-		<cfquery name="getPacketFilename" datasource="#Application.Datasource#">
+		<cfset useLakebaseForgetPacketFilename = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("wddx_packet_to_file_map")>
+<cfif useLakebaseForgetPacketFilename>
+	<cftry>
+		<cfset getPacketFilename = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("wddx_packet_to_file_map", {
+				"wddx_packet_to_file_map_id" = "eq.#Supplied_Wddx_Packet_To_File_Map_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPacketFilename = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPacketFilename>
+<cfquery name="getPacketFilename" datasource="#Application.Datasource#">
 			SELECT *
 			FROM Wddx_Packet_To_File_Map
 			WHERE Wddx_Packet_To_File_Map_ID = '#Supplied_Wddx_Packet_To_File_Map_ID#' and Deleted = 0
-		</cfquery>	
+		</cfquery>
+</cfif>	
 		<CFIF getPacketFilename.recordcount EQ 1>
 			<cffile action="READ" file="#WddxPacketLocation#\#getPacketFilename.Packet_Filename#" variable="PacketWddxText">
 			<cfwddx action="WDDX2CFML" input="#PacketWddxText#" output="Packet">

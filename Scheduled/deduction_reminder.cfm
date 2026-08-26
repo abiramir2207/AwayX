@@ -65,11 +65,29 @@ AND (Deductions.DD_Status < 4 OR Deductions.DD_Status = 7)
 			
 	
 		 <!---Update Reminder to say that it has been sent--->
-		<cfquery name="UpdateReminder" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateReminder = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_reminders")>
+<cfif useLakebaseForUpdateReminder>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_reminders",
+			{
+				"dd_reminder_id" = "eq.#DD_Reminder_ID#"
+			},
+			{
+				"reminder_sent" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateReminder = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateReminder>
+<cfquery name="UpdateReminder" datasource="#application.datasource#">
 		UPDATE DD_Reminders
 		SET Reminder_Sent = 1
 		WHERE DD_Reminder_ID = '#DD_Reminder_ID#'
-		</cfquery> 
+		</cfquery>
+</cfif> 
 	</cfif>
 
 	</cfloop>

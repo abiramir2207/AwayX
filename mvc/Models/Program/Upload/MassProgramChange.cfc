@@ -367,12 +367,31 @@
 	<!--- cancel mass update : delete the data --->
 	<cffunction name="cancelMassUpdate" access="public" returntype="void">
 	
-		<cfquery name="qCancelMassUpdate" datasource="#application.datasource#">
+		<cfset useLakebaseForqCancelMassUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mpcu_schedule")>
+<cfif useLakebaseForqCancelMassUpdate>
+	<cftry>
+		<cfset application.oLakebase.updateRows("mpcu_schedule",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"scheduled" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCancelMassUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCancelMassUpdate>
+<cfquery name="qCancelMassUpdate" datasource="#application.datasource#">
 			UPDATE 	MPCU_Schedule 
 			SET 	Deleted = 1,
 					Scheduled = 0
 			WHERE 	Deleted = 0 
 		</cfquery>
+</cfif>
 
 		<cfquery name="qEmptyMassUpdate" datasource="#application.datasource#">
 			TRUNCATE TABLE MPCU_DATA

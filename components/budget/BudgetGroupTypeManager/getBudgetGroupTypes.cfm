@@ -13,11 +13,26 @@ Usage:			N/A
 	<cfset var var_budgetGroupType = "" />
 			
 	<!------ do query ----->
-	<cfquery name="qGetBudgetGroupTypes" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetBudgetGroupTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_group_type")>
+<cfif useLakebaseForqGetBudgetGroupTypes>
+	<cftry>
+		<cfset qGetBudgetGroupTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_group_type", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBudgetGroupTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBudgetGroupTypes>
+<cfquery name="qGetBudgetGroupTypes" datasource="#application.datasource#">
 		SELECT	*
 		FROM	Budget_Group_Type
 		WHERE	Deleted = 0
 	</cfquery>
+</cfif>
 	
 	<!------ loop and populate var_budgetGroupType and add to the array  ----->
 	<cfloop query="qGetBudgetGroupTypes">

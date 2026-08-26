@@ -2,6 +2,21 @@
 
 <CFPARAM NAME="URL.Company_Main_ID" DEFAULT="">
 
+<cfset useLakebaseForGetCompanyBillingInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_billing")>
+<cfif useLakebaseForGetCompanyBillingInfo>
+	<cftry>
+		<cfset GetCompanyBillingInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_billing", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyBillingInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyBillingInfo>
 <CFQUERY NAME="GetCompanyBillingInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM 
@@ -11,7 +26,24 @@
 			AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetCompanyName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetCompanyName>
+	<cftry>
+		<cfset GetCompanyName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "company_name"
+			}), "company_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyName>
 <CFQUERY NAME="GetCompanyName" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT
 			Company_Name
@@ -22,6 +54,7 @@
 			AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
 <!--- Form Variables --->
 <CFPARAM NAME="ButtonCaption" DEFAULT="Save Changes">

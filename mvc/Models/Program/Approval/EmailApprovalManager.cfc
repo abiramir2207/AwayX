@@ -10,11 +10,27 @@
 	<cffunction name="getAutoApproverSettings" output="false" returntype="Query" >
 
 		<cfset var qGetAutoApproverSettings = "" />
-		<cfquery name="qGetAutoApproverSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAutoApproverSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_approver_settings")>
+<cfif useLakebaseForqGetAutoApproverSettings>
+	<cftry>
+		<cfset qGetAutoApproverSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_approver_settings", {
+				"deleted" = "eq.0",
+				"select" = "username,password,mail_server,domain_server,mail_folder,auto_approve_email,mail_ssl,bb_auto_approve_email"
+			}), "username,password,mail_server,domain_server,mail_folder,auto_approve_email,mail_ssl,bb_auto_approve_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAutoApproverSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAutoApproverSettings>
+<cfquery name="qGetAutoApproverSettings" datasource="#application.datasource#">
 			SELECT	UserName, Password, Mail_Server, Domain_Server, Mail_Folder, Auto_Approve_Email, Mail_SSL, BB_Auto_Approve_Email
 			FROM 	Auto_Approver_Settings
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetAutoApproverSettings />
 	</cffunction>

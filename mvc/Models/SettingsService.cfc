@@ -431,7 +431,21 @@ LEGEND:
 		<!--- Billback default sort column and order --->
 	<cffunction name="getBillbackSettings" returntype="query" access="public">
 
-	<cfquery name="qBillbackSettings" datasource="#application.datasource#">
+	<cfset useLakebaseForqBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqBillbackSettings>
+	<cftry>
+		<cfset qBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "enable_bb_dup_check,same_dollar_amount,same_reference_number,same_payee,same_start_end_dates,auto_approve_cm_off,auto_approve_on"
+			}), "enable_bb_dup_check,same_dollar_amount,same_reference_number,same_payee,same_start_end_dates,auto_approve_cm_off,auto_approve_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBillbackSettings>
+<cfquery name="qBillbackSettings" datasource="#application.datasource#">
 		SELECT 	Enable_BB_Dup_Check,
 				Same_Dollar_Amount,
 				Same_Reference_Number,
@@ -442,6 +456,7 @@ LEGEND:
 		FROM 	
 				Billback_settings
 	</cfquery>
+</cfif>
 	
 	<cfreturn qBillbackSettings />
 	

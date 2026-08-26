@@ -5,10 +5,26 @@
   b.	They are associated to a program version that was approved N days ago or greater [app setting to determine how long ago is N]
 --->
 
+<cfset useLakebaseForrsAppSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForrsAppSettings>
+	<cftry>
+		<cfset rsAppSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"limit" = "1",
+				"select" = "letter_removal_min_age_in_days"
+			}), "letter_removal_min_age_in_days"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrsAppSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrsAppSettings>
 <cfquery name="rsAppSettings" datasource="#application.datasource#">
   SELECT TOP 1 Letter_Removal_Min_Age_In_Days
     FROM _Application_Settings
 </cfquery>
+</cfif>
 
 <cfscript>
   ApprovalMininumAgeinDays = rsAppSettings.Letter_Removal_Min_Age_In_Days;

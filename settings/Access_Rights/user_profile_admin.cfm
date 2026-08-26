@@ -107,10 +107,25 @@
 
 <CFSET getValidProfiles = CreateObject("component", "components.settings.profiles.profile").getAllProfiles()>
 <cfif len(trim(url.id)) GT 0 and url.mode neq "copy">
+<cfset useLakebaseForgetValidProfiles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getvalidprofiles")>
+<cfif useLakebaseForgetValidProfiles>
+	<cftry>
+		<cfset getValidProfiles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getvalidprofiles", {
+				"profiles_id" = "neq.#url.id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetValidProfiles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetValidProfiles>
 <cfquery name="getValidProfiles" dbtype="query">
 SELECT * FROM getValidProfiles
 WHERE Profiles_ID <> #url.id#
 </cfquery>
+</cfif>
 </cfif>
 
 <cfif getValidProfiles.recordcount  EQ 1>

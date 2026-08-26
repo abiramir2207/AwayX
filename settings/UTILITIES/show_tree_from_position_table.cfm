@@ -83,7 +83,24 @@ WHERE     (dbo.User_Positions.Deleted = 0)
 
 <cfoutput>
 <table border="1" cellspacing="2" cellpadding="2">
-	<cfquery name="getGodLabel" dbtype="query">
+	<cfset useLakebaseForgetGodLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetGodLabel>
+	<cftry>
+		<cfset getGodLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_zone_id" = "is.null",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGodLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGodLabel>
+<cfquery name="getGodLabel" dbtype="query">
 		SELECT Position_Label
 		FROM getPositions
 		WHERE
@@ -93,6 +110,7 @@ WHERE     (dbo.User_Positions.Deleted = 0)
 			AND
 			Service_Market_ID IS NULL
 	</cfquery>
+</cfif>
 	<TR>
 		<td><b>#getGodLabel.Position_Label#&nbsp;</b></td>
 		<td>&nbsp;</td>
@@ -100,12 +118,31 @@ WHERE     (dbo.User_Positions.Deleted = 0)
 		<td>&nbsp;</td>
 	</TR>
 	
-	<cfquery name="getZones" dbtype="query">
+	<cfset useLakebaseForgetZones = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetZones>
+	<cftry>
+		<cfset getZones = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_zone_id" = "not.is.null",
+				"service_region_id" = "is.null",
+				"service_market_id" = "is.null",
+				"order" = "service_zone_name.asc",
+				"select" = "service_zone_id,service_zone_name,position_label"
+			}), "service_zone_id,service_zone_name,position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetZones = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetZones>
+<cfquery name="getZones" dbtype="query">
 		SELECT DISTINCT Service_Zone_ID, Service_Zone_Name, Position_Label
 		FROM getPositions
 		WHERE Service_Zone_ID is not null AND Service_Region_ID IS NULL AND Service_Market_ID IS NULL
 		ORDER BY Service_Zone_Name
 	</cfquery>
+</cfif>
 
 	<cfset ZoneList = ValueList(getZones.Service_Zone_ID)>
 	
@@ -117,12 +154,31 @@ WHERE     (dbo.User_Positions.Deleted = 0)
 			<td>&nbsp;</td>
 		</TR>
 
-		<cfquery name="getRegions" dbtype="query">
+		<cfset useLakebaseForgetRegions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetRegions>
+	<cftry>
+		<cfset getRegions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_zone_id" = "eq.#getZones.Service_Zone_ID#",
+				"service_region_id" = "not.is.null",
+				"service_market_id" = "is.null",
+				"order" = "service_region_name.asc",
+				"select" = "service_region_id,service_region_name,position_label"
+			}), "service_region_id,service_region_name,position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRegions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRegions>
+<cfquery name="getRegions" dbtype="query">
 			SELECT DISTINCT Service_Region_ID, Service_Region_Name, Position_Label
 			FROM getPositions
 			WHERE Service_Zone_ID = '#getZones.Service_Zone_ID#' AND Service_Region_ID IS NOT NULL AND Service_Market_ID IS NULL
 			ORDER BY Service_Region_Name 
 		</cfquery>
+</cfif>
 		
 		<cfloop query="getRegions">
 			<TR>
@@ -132,12 +188,31 @@ WHERE     (dbo.User_Positions.Deleted = 0)
 				<td>&nbsp;</td>
 			</TR>
  			
-			<cfquery name="getMarkets" dbtype="query">
+			<cfset useLakebaseForgetMarkets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getpositions")>
+<cfif useLakebaseForgetMarkets>
+	<cftry>
+		<cfset getMarkets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getpositions", {
+				"service_region_id" = "eq.#getRegions.Service_Region_ID#",
+				"service_zone_id" = "not.is.null",
+				"service_market_id" = "not.is.null",
+				"order" = "service_market_name.asc",
+				"select" = "service_market_id,service_market_name,position_label"
+			}), "service_market_id,service_market_name,position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMarkets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMarkets>
+<cfquery name="getMarkets" dbtype="query">
 				SELECT DISTINCT Service_Market_ID, Service_Market_Name, Position_Label
 				FROM getPositions
 				WHERE Service_Region_ID = '#getRegions.Service_Region_ID#' AND Service_Zone_ID IS NOT NULL AND Service_Market_ID IS NOT NULL
 				ORDER BY Service_Market_Name
-			</cfquery>	
+			</cfquery>
+</cfif>	
 			
 			<cfloop query="getMarkets">
 				<TR>

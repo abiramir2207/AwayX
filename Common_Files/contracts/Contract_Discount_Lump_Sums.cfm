@@ -36,11 +36,26 @@
 
 <cfif len(trim(URL.CID)) GT 0>
 	<cf_cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 	<!--- Dev Notes: 22308/Anand Rao/04-Feb-10 CAG - multi discount type template--->
 	<cfset sDiscountType = "LUMPSUM" />
 	<cfset Contract_Main_ID = cryp.value>
@@ -632,12 +647,28 @@
 	<cfset lTemplateAllowList = ValueList(qComponents.Component_ID) />
 </cfif>
 	<!--- D45016 :: Restrict access at component level for all discount types START--->
-	<cfquery name="getAllLumpSumComponentsAccess" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllLumpSumComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lumpsum_component_profile")>
+<cfif useLakebaseForgetAllLumpSumComponentsAccess>
+	<cftry>
+		<cfset getAllLumpSumComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lumpsum_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllLumpSumComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllLumpSumComponentsAccess>
+<cfquery name="getAllLumpSumComponentsAccess" datasource="#application.datasource#">
 			SELECT 	*
 			FROM		Program_Lumpsum_Component_Profile
 			WHERE		Deleted = 0
 			AND 		Profiles_ID = #request.AccessStructure.Profiles_ID#
 	</cfquery>
+</cfif>
 	<cfset restictList = valuelist(getAllLumpSumComponentsAccess.Program_LumpSum_Component_Name_ID)>
 	<cfif listlen(restictList)>
 		<cfloop list ="#restictList#" index="rl">
@@ -923,12 +954,28 @@ in case they save before selecting a component. --->
 <cfset bAllowSelectAllProducts = ProductGroupManager.allowSelectAllProducts(3, form.Contract_Main_ID) />
 <cfoutput query="getAllLumpSums">
 	<!--- D45016 :: Restrict access at component level for all discount types START--->
-	<cfquery name="compvisibility" dbtype="query">
+	<cfset useLakebaseForcompvisibility = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getalllumpsumcomponentsaccess")>
+<cfif useLakebaseForcompvisibility>
+	<cftry>
+		<cfset compvisibility = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getalllumpsumcomponentsaccess", {
+				"program_lumpsum_component_name_id" = "eq.#getAllLumpSums.Program_Lump_Sum_Name_ID#",
+				"allow_user_to_view" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcompvisibility = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcompvisibility>
+<cfquery name="compvisibility" dbtype="query">
 		SELECT *
 		FROM getAllLumpSumComponentsAccess
 		WHERE Program_LumpSum_Component_Name_ID = #getAllLumpSums.Program_Lump_Sum_Name_ID#
 		AND Allow_User_To_View = 1
 	</cfquery>
+</cfif>
 	<cfif compvisibility.recordcount>
 		<cfset display="none">
 	<cfelse>

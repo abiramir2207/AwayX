@@ -488,7 +488,26 @@
 				<cfset "Bid_Rule_Group_ID_#i#" = insertGroup.Bid_Rule_Group_ID>
 			<cfelse>
 				<!--- update --->
-				<cfquery name="updateGroup" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_volume_groups")>
+<cfif useLakebaseForupdateGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_volume_groups",
+			{
+				"bid_rule_group_id" = "eq.#currentnode.Bid_Rule_Group_ID#"
+			},
+			{
+				"group_index" = "#i#",
+				"range_start" = "#currentnode.Range_Start#",
+				"range_end" = "#currentnode.Range_End#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateGroup>
+<cfquery name="updateGroup" datasource="#application.datasource#">
 					UPDATE Bid_Rule_Volume_Groups
 					SET 
 						Group_Index	= '#i#',
@@ -496,6 +515,7 @@
 						Range_End	= '#currentnode.Range_End#'
 						WHERE Bid_Rule_Group_ID = '#currentnode.Bid_Rule_Group_ID#'
 				</cfquery>
+</cfif>
 				<cfset "Bid_Rule_Group_ID_#i#" = currentnode.Bid_Rule_Group_ID>
 			</cfif>			
 		</cfloop>
@@ -533,21 +553,57 @@
 			<!--- if action 2 update --->
 
 			<cfif currentnode.action EQ 2>
-				<cfquery name="updateTypeCode" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
+<cfif useLakebaseForupdateTypeCode>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_items",
+			{
+				"bid_rule_item_id" = "eq.#currentnode.type_id#"
+			},
+			{
+				"deleted" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTypeCode>
+<cfquery name="updateTypeCode" datasource="#application.datasource#">
 					UPDATE Bid_Rule_Items
 					SET Deleted = 0
 					WHERE Bid_Rule_Item_ID = '#currentnode.type_id#'
 				</cfquery>
+</cfif>
 			</cfif>
 
 			<!--- if action 3 delete --->
 
 			<cfif currentnode.action EQ 3>
-				<cfquery name="deleteTypeCode" datasource="#application.datasource#">
+				<cfset useLakebaseFordeleteTypeCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_items")>
+<cfif useLakebaseFordeleteTypeCode>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_items",
+			{
+				"bid_rule_item_id" = "eq.#currentnode.Bid_Rule_Item_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteTypeCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteTypeCode>
+<cfquery name="deleteTypeCode" datasource="#application.datasource#">
 					UPDATE Bid_Rule_Items
 					SET Deleted = 1
 					WHERE Bid_Rule_Item_ID = '#currentnode.Bid_Rule_Item_ID#'
 				</cfquery>
+</cfif>
 			</cfif>
 			
  			<!--- update Overage amount --->
@@ -569,11 +625,30 @@
 						<cfif isdefined("currentnode_overage.Group_Overage_#x#_Bid_Rule_Item_Group_Amount_ID")>
 							<cfset thisOverageAmountID = evaluate("currentnode_overage.Group_Overage_#x#_Bid_Rule_Item_Group_Amount_ID")>
 							<cfif len(thisOverageAmountID) gt 0>
-								<cfquery name="updateAmount" datasource="#application.datasource#">
+								<cfset useLakebaseForupdateAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_item_group_amounts")>
+<cfif useLakebaseForupdateAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_item_group_amounts",
+			{
+				"bid_rule_item_group_amount_id" = "eq.#thisOverageAmountID#"
+			},
+			{
+				"amount" = "#thisOverageAmount#",
+				"uom" = "#thisOverageAmountUOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateAmount>
+<cfquery name="updateAmount" datasource="#application.datasource#">
 									UPDATE Bid_Rule_Item_Group_Amounts
 									SET Amount = '#thisOverageAmount#', UOM = '#thisOverageAmountUOM#'
 									WHERE Bid_Rule_Item_Group_Amount_ID = '#thisOverageAmountID#'
 								</cfquery>
+</cfif>
 							<cfelse>
 								<cfquery name="insertOverage" datasource="#application.datasource#">
 									INSERT INTO Bid_Rule_Item_Group_Amounts
@@ -642,11 +717,29 @@
 		<cfloop index="x" from="1" to="#BidRule.Modifiers.Deletethesemods.index_count#">
 			<cfset currentnode = evaluate("BidRule.Modifiers.Deletethesemods.Mods.Mod_#x#")>
 			<cfif len(currentnode.Bid_Rule_Modifier_ID) GT 0 AND currentnode.Action EQ 3>
-				<cfquery name="DeleteMod" datasource="#application.datasource#">
+				<cfset useLakebaseForDeleteMod = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_modifiers")>
+<cfif useLakebaseForDeleteMod>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_modifiers",
+			{
+				"bid_rule_modifier_id" = "eq.#currentnode.Bid_Rule_Modifier_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteMod = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteMod>
+<cfquery name="DeleteMod" datasource="#application.datasource#">
 					UPDATE Bid_Rule_Modifiers
 					SET Deleted = 1
 					WHERE Bid_Rule_Modifier_ID = '#currentnode.Bid_Rule_Modifier_ID#'
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfloop>
 		
@@ -676,11 +769,29 @@
 				</cfcase>
 				
 				<cfcase value="2"><!--- update group --->
-					<cfquery name="updateGroupInfo" datasource="#application.datasource#">
+					<cfset useLakebaseForupdateGroupInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_groups")>
+<cfif useLakebaseForupdateGroupInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("exception_groups",
+			{
+				"exception_group_id" = "eq.#currentnode.Exception_Group_ID#"
+			},
+			{
+				"group_name" = "#currentnode.Name#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateGroupInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateGroupInfo>
+<cfquery name="updateGroupInfo" datasource="#application.datasource#">
 						UPDATE Exception_Groups
 						SET Group_Name = '#currentnode.Name#'
 						WHERE Exception_Group_ID = '#currentnode.Exception_Group_ID#'
 					</cfquery>
+</cfif>
 				</cfcase>
 
 				<cfcase value="3"><!--- deltet group rule --->
@@ -697,11 +808,27 @@
 			
 			<cfif len(trim(currentnode.Exception_Group_ID)) GT 0>
 			<!--- loop through group products --->
-				<cfquery name="getGroupProducts" datasource="#application.datasource#">
+				<cfset useLakebaseForgetGroupProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("exception_group_products")>
+<cfif useLakebaseForgetGroupProducts>
+	<cftry>
+		<cfset getGroupProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("exception_group_products", {
+				"deleted" = "eq.0",
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGroupProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGroupProducts>
+<cfquery name="getGroupProducts" datasource="#application.datasource#">
 					SELECT Product_ID
 					FROM Exception_Group_Products
 					WHERE Deleted = 0
 				</cfquery>
+</cfif>
 				
 					<cfset DBList = valuelist(getGroupProducts.Product_ID)>
 					<cfset UsrList = currentnode.Product_List>
@@ -797,11 +924,30 @@
 		<!--- DELETE GROUPS FROM RULES --->	
 		<cfloop index="x" from="1" to="#BidRule.Exceptions.DeleteTheseGroups.Index_Count#">
 			<cfset currentNode = evaluate("BidRule.Exceptions.DeleteTheseGroups.Group_#x#")>
-			<cfquery name="deleteExceptionGroup" datasource="#application.datasource#">
+			<cfset useLakebaseFordeleteExceptionGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_exception_groups")>
+<cfif useLakebaseFordeleteExceptionGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bid_rule_exception_groups",
+			{
+				"bid_rule_id" = "eq.#BidRule.Basic.Bid_Rule_ID#",
+				"exception_group_id" = "eq.#currentNode.Exception_Group_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteExceptionGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteExceptionGroup>
+<cfquery name="deleteExceptionGroup" datasource="#application.datasource#">
 				UPDATE Bid_Rule_Exception_Groups
 				SET Deleted = 1
 				WHERE Bid_Rule_ID = '#BidRule.Basic.Bid_Rule_ID#' AND Exception_Group_ID = '#currentNode.Exception_Group_ID#'
 			</cfquery>
+</cfif>
 			
 		</cfloop>
 		

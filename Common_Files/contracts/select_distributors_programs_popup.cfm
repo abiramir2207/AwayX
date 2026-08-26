@@ -90,18 +90,49 @@ is a part of this file now. Additional code has been added so that this file can
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
 
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 	<!---D42322 ::  Programs cannot be submitted for approval
 		Added : "Custom_Fixed_Price_Options" to below Query--->
-	 <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+	 <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,base_sales_equal_to_lowest_bracket,custom_fixed_price_options,filter_distributor_results_based_on_program_position,one_distributor"
+			}), "first_parent_id,base_sales_equal_to_lowest_bracket,custom_fixed_price_options,filter_distributor_results_based_on_program_position,one_distributor"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT First_parent_ID, Base_Sales_Equal_To_Lowest_Bracket, Custom_Fixed_Price_Options,Filter_Distributor_Results_Based_On_Program_Position, One_Distributor
 		FROM Program_Control_Panel_Options
 		WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
 	 </cfquery>
+</cfif>
 
 	<cfset TemplateFiltersId = GetContractInfo.Template_Filters_Id />
 	<cfset form.Line_Of_Business_ID = GetContractInfo.Line_Of_Business_ID>
@@ -551,12 +582,29 @@ Added/Changed: Added value to busSegIdForProgram to filter Position Drop Down Fi
 								</cfoutput>
 								<CFOUTPUT QUERY="GetBrokers">
 
-									<cfquery name="GetBrokerIDs" dbtype="query">
+									<cfset useLakebaseForGetBrokerIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallbrokers")>
+<cfif useLakebaseForGetBrokerIDs>
+	<cftry>
+		<cfset GetBrokerIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallbrokers", {
+				"broker_name" = "eq.#GetBrokers.Broker_Name#",
+				"order" = "broker_name.asc",
+				"select" = "bsa_foodservice_brokers_id"
+			}), "bsa_foodservice_brokers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrokerIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrokerIDs>
+<cfquery name="GetBrokerIDs" dbtype="query">
 										SELECT BSA_Foodservice_Brokers_ID
 										FROM GetAllBrokers
 										WHERE Broker_Name = '#GetBrokers.Broker_Name#'
 										ORDER BY Broker_Name
 									</cfquery>
+</cfif>
 									<cfset IDList = valueList(GetBrokerIDs.BSA_Foodservice_Brokers_ID)>
 									<OPTION
 										VALUE="#trim(IDList)#"

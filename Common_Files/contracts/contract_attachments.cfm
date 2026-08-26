@@ -68,11 +68,26 @@
 <cfif application.programlayout EQ 1>
 <div id="Layer1" style="position:relative; height:430px; width:796px; z-index:1; left: 150px; top: 10px;"></cfif>
 <!------
+<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
 <cfquery name="GetContractInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Main
 	WHERE Contract_Main_ID = #cryp.value#
 </cfquery>
+</cfif>
 
 	<HR COLOR="Blue" SIZE="1" WIDTH="800" ALIGN="left">
 
@@ -92,9 +107,27 @@
  <cfinclude template="Contract_Documents_Menu.cfm">
 
 <!------<CFIF isdefined("FORM.formcheck")>
-	<CFQUERY NAME="update_del" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForupdate_del = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForupdate_del>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"program_id" = "eq.#cryp.value#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdate_del = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdate_del>
+<CFQUERY NAME="update_del" DATASOURCE="#Application.Datasource#">
 		UPDATE Contract_Attachments SET deleted = 1 WHERE program_ID = '#cryp.value#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 <CFPARAM NAME="FORM.Doc_ID" DEFAULT="">
 <CFIF FORM.Doc_ID NEQ "">

@@ -535,11 +535,27 @@
 				</cfif>
 				>
 				<cfif bb_is_locked>
-					<cfquery name="GetLockedByName" datasource="#application.datasource#">
+					<cfset useLakebaseForGetLockedByName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetLockedByName>
+	<cftry>
+		<cfset GetLockedByName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#bb_locked_by_user_id#",
+				"select" = "name_first + ' ' + name_last as lockedbyname"
+			}), "name_first + ' ' + name_last as lockedbyname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockedByName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockedByName>
+<cfquery name="GetLockedByName" datasource="#application.datasource#">
 						SELECT name_first + ' ' + name_last as LockedByName
 						FROM _Users
 						WHERE user_id = '#bb_locked_by_user_id#'
 					</cfquery>
+</cfif>
 				</cfif>
 				<td class="searchRow" id="sel_#currentrow#" colspan="100%">
 					<table border="0" cellspacing="0" cellpadding="0" width="100%">

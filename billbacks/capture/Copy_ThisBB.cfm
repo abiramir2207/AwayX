@@ -10,14 +10,53 @@
 <cfinclude template="billback_number_generator.cfm">
 <CFSET NextBB_Code = generator_billback_number>
 
+<cfset useLakebaseForgetThisUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetThisUserPosition>
+	<cftry>
+		<cfset getThisUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisUserPosition>
 <CFQUERY NAME="getThisUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.User_ID#' AND User_Position_Type = 'P' AND  DELETED = 0
 </CFQUERY>
+</cfif>
 <CFSET This_User_Position_ID = getThisUserPosition.User_Positions_ID>
 
 
+<cfset useLakebaseForUpdateLock = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForUpdateLock>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#BBID#",
+				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"bb_locked_by_match_central" = "eq.0"
+			},
+			{
+				"bb_is_locked" = "0",
+				"bb_locked_by_user_id" = javaCast("null",""),
+				"bb_lock_date" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateLock = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateLock>
 <CFQUERY NAME="UpdateLock" DATASOURCE="#Application.Datasource#">
 	UPDATE 	Billback_Allied 
 	SET 	BB_Is_Locked = 0,
@@ -27,6 +66,7 @@
 			BB_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 		AND BB_Locked_By_Match_Central = 0
 </CFQUERY>
+</cfif>
  
  <!--- Dev Note: Clay 9710 - Add Expected Amount to BB Copy   --->
 <CFQUERY NAME="InsertNewBB" DATASOURCE="#Application.Datasource#">
@@ -97,14 +137,46 @@
 	</cfquery>
 </cfif>
 
+<cfset useLakebaseForGetPayeeType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetPayeeType>
+	<cftry>
+		<cfset GetPayeeType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#BBID#",
+				"select" = "billback_payee_type_id"
+			}), "billback_payee_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeType>
 <CFQUERY NAME="GetPayeeType" DATASOURCE="#Application.Datasource#">
 	SELECT Billback_Payee_Type_ID FROM Billback WHERE Billback_ID = '#BBID#'
 </CFQUERY>
+</cfif>
 
 <CFIF GetPayeeType.Billback_Payee_Type_ID EQ 1 OR GetPayeeType.Billback_Payee_Type_ID EQ 5>
-	<CFQUERY NAME="CheckPayee" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckPayee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForCheckPayee>
+	<cftry>
+		<cfset CheckPayee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#BBID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckPayee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckPayee>
+<CFQUERY NAME="CheckPayee" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Billback_Distributor WHERE Billback_ID = '#BBID#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFIF CheckPayee.RecordCount GT 0>
 		
 		
@@ -300,9 +372,25 @@ WHERE 					Billback_ID = '#BBID#' AND
 <!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
 <!--- Copy Program Information --->
 <!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
+<cfset useLakebaseForCheckProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForCheckProgram>
+	<cftry>
+		<cfset CheckProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#BBID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckProgram>
 <CFQUERY NAME="CheckProgram" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM Billback_Program WHERE Billback_ID = '#BBID#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFIF CheckProgram.RecordCount GT 0>
 	
@@ -327,11 +415,29 @@ WHERE 					Billback_ID = '#BBID#' AND
 				<cfset DiscountList = VALUELIST(GetDiscountsfromBillback.BB_Product_Type_ID, ',')>
 		
 		<cfif 	len(trim(DiscountList)) GT 0>
-			<cfquery name="UpdateDiscountList" datasource="#application.datasource#">
+			<cfset useLakebaseForUpdateDiscountList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForUpdateDiscountList>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_program",
+			{
+				"program_id" = "eq.#CheckProgram.Program_ID#"
+			},
+			{
+				"discount_list" = "#DiscountList#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateDiscountList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateDiscountList>
+<cfquery name="UpdateDiscountList" datasource="#application.datasource#">
 			UPDATE Billback_Program
 			SET Discount_List = '#DiscountList#'
 			WHERE Billback_Program.Program_ID = '#CheckProgram.Program_ID#'
 			</cfquery>
+</cfif>
 		</cfif>
 				
 		</cfloop>
@@ -612,9 +718,26 @@ WHERE 					Billback_ID = '#BBID#' AND
 	<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
 	<!--- Copy Lumpsum Information --->
 	<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
-	<CFQUERY NAME="CheckLump" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckLump = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_lumpsum_component")>
+<cfif useLakebaseForCheckLump>
+	<cftry>
+		<cfset CheckLump = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_lumpsum_component", {
+				"billback_id" = "eq.#BBID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckLump = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckLump>
+<CFQUERY NAME="CheckLump" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM Billback_Program_Lumpsum_Component WHERE Billback_ID = '#BBID#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<CFIF CheckLump.RecordCount GT 0>
 		<CFQUERY NAME="InsertLump" DATASOURCE="#Application.Datasource#">
@@ -649,9 +772,26 @@ WHERE 					Billback_ID = '#BBID#' AND
 	<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
 	<!--- Copy Rebate Component Information --->
 	<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
-	<CFQUERY NAME="CheckRebate" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckRebate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_rebate_component")>
+<cfif useLakebaseForCheckRebate>
+	<cftry>
+		<cfset CheckRebate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program_rebate_component", {
+				"billback_id" = "eq.#BBID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckRebate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckRebate>
+<CFQUERY NAME="CheckRebate" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM Billback_Program_Rebate_Component WHERE Billback_ID = '#BBID#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<CFIF CheckRebate.RecordCount GT 0>
 		<CFQUERY NAME="InsertRebate" DATASOURCE="#Application.Datasource#">

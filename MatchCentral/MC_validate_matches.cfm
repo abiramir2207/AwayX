@@ -96,23 +96,73 @@
 					</cfif>
 			ORDER BY DD_Classification_Desc
 		</cfquery>
-		<cfquery name="getDefaultClass" dbtype="query">
+		<cfset useLakebaseForgetDefaultClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallclass")>
+<cfif useLakebaseForgetDefaultClass>
+	<cftry>
+		<cfset getDefaultClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallclass", {
+				"is_default" = "eq.1",
+				"select" = "dd_classification_id"
+			}), "dd_classification_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDefaultClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDefaultClass>
+<cfquery name="getDefaultClass" dbtype="query">
 			SELECT DD_Classification_ID
 			FROM getAllClass 
 			WHERE IS_Default = 1
 		</cfquery>
-		<cfquery name="getMatchCentralDefaultClass" dbtype="query">
+</cfif>
+		<cfset useLakebaseForgetMatchCentralDefaultClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getallclass")>
+<cfif useLakebaseForgetMatchCentralDefaultClass>
+	<cftry>
+		<cfset getMatchCentralDefaultClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getallclass", {
+				"is_matchcentral_default" = "eq.1",
+				"select" = "dd_classification_id"
+			}), "dd_classification_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetMatchCentralDefaultClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetMatchCentralDefaultClass>
+<cfquery name="getMatchCentralDefaultClass" dbtype="query">
 			SELECT DD_Classification_ID
 			FROM getAllClass 
 			WHERE IS_MatchCentral_Default = 1
 		</cfquery>
+</cfif>
 		<!--- Ana D19384 Rebill Interface package --->	
-		<cfquery name="getAllRebillPackages" datasource="#application.datasource#">
+		<cfset useLakebaseForgetAllRebillPackages = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_hdr")>
+<cfif useLakebaseForgetAllRebillPackages>
+	<cftry>
+		<cfset getAllRebillPackages = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_rebill_package_hdr", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "rebill_package_title.asc",
+				"select" = "dd_rebill_package_hdr_id,rebill_package_title"
+			}), "dd_rebill_package_hdr_id,rebill_package_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllRebillPackages = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllRebillPackages>
+<cfquery name="getAllRebillPackages" datasource="#application.datasource#">
 			SELECT DD_Rebill_Package_Hdr_ID,Rebill_Package_Title 
 			FROM DD_Rebill_Package_Hdr
 			WHERE Deleted = 0 AND Active = 1
 			ORDER BY Rebill_Package_Title
 		</cfquery>
+</cfif>
     <!---Gets data about deduction--->
 	<cfif workItemType eq "DD">
     <cfset Deduction_ID = idx />

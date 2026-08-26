@@ -88,7 +88,24 @@ SET NOCOUNT OFF
 	
 	<cfloop from="1" to="#ListLen(form.PRODUCT_LIST)#" index="j">
 	<cfset product_id = ListGetAt(form.PRODUCT_LIST,j)>
-	<CFQUERY NAME="getcontractproducts" datasource="#application.datasource#">
+	<cfset useLakebaseForgetcontractproducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForgetcontractproducts>
+	<cftry>
+		<cfset getcontractproducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"product_type_id" = "eq.10",
+				"deleted" = "eq.0",
+				"bsa_foodservice_items_master_id" = "eq.#product_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcontractproducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcontractproducts>
+<CFQUERY NAME="getcontractproducts" datasource="#application.datasource#">
 	SELECT * FROM
 	Contract_Products
 	where 
@@ -97,6 +114,7 @@ SET NOCOUNT OFF
 	AND deleted = 0
 	AND BSA_Foodservice_Items_Master_ID = '#product_id#'
 	</CFQUERY>
+</cfif>
 	
 	<cfif getcontractproducts.recordcount EQ 0>
 	<cfparam name="form.Prod_Default_#replace(product_id, "-", "_", "ALL")#" default="0">
@@ -133,11 +151,27 @@ SET NOCOUNT OFF
 	</cfstoredproc>
 </cfif>
 
+<cfset useLakebaseForgetProgramType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramType>
+	<cftry>
+		<cfset getProgramType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramType>
 <CFQUERY NAME="getProgramType" datasource="#application.datasource#">
 	SELECT ProgramType_ID
 	FROM Contract_Main 
 	WHERE Contract_Main_ID = #FORM.Program_ID#
 </CFQUERY>
+</cfif>
 
 
 <!------ Start Clause Code ----->

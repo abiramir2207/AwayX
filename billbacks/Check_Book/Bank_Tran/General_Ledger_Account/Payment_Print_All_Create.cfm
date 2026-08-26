@@ -1,5 +1,23 @@
 
 
+<cfset useLakebaseForGet_All = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
+<cfif useLakebaseForGet_All>
+	<cftry>
+		<cfset Get_All = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_data_export_1", {
+				"paid" = "eq.0",
+				"deleted" = "eq.0",
+				"saved" = "eq.1",
+				"order" = "pay_multi_billbacks_id.asc",
+				"select" = "payment_data_export_1_id,billback_id,payment_trans_id,pay_multi_billbacks_id paymultibillbacksid"
+			}), "payment_data_export_1_id,billback_id,payment_trans_id,pay_multi_billbacks_id paymultibillbacksid"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_All = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_All>
 <CFQUERY NAME="Get_All" DATASOURCE="#Application.Datasource#">
 	SELECT 		Payment_Data_Export_1_ID,
 				Billback_ID,
@@ -13,6 +31,7 @@
 				Saved=1
 	ORDER BY	Pay_Multi_Billbacks_ID
 </CFQUERY>
+</cfif>
 
 <CFSET Count = 0>
 <CFSET Print_output = "">

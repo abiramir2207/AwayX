@@ -36,11 +36,27 @@
 		<!--- BJF D11212 Distributor Product Integrity --->
 		<cfset RestrictByRule = 0>
 		<cfif appsettings.getDistributor_Product_Integrity_On() IS 1 AND len(trim(this.search.getSettings.Distributor_Product_Integrity_Rule_ID)) GT 0>
-			<cfquery name="GetIntegrityRuleType" datasource="#application.datasource#">
+			<cfset useLakebaseForGetIntegrityRuleType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForGetIntegrityRuleType>
+	<cftry>
+		<cfset GetIntegrityRuleType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"distributor_product_integrity_rule_id" = "eq.#this.search.getSettings.Distributor_Product_Integrity_Rule_ID#",
+				"select" = "inclusive_restriction"
+			}), "inclusive_restriction"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetIntegrityRuleType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetIntegrityRuleType>
+<cfquery name="GetIntegrityRuleType" datasource="#application.datasource#">
 			SELECT Inclusive_Restriction
 			FROM Distributor_Product_Integrity_Rule
 			WHERE Distributor_Product_Integrity_Rule_ID = #this.search.getSettings.Distributor_Product_Integrity_Rule_ID#
 			</cfquery>
+</cfif>
 			<!--- You only restrict the search if the rule is inclusive, otherwise your just pick it up on RFA --->
 			<cfif GetIntegrityRuleType.Inclusive_Restriction EQ 1>
 				<cfset RestrictByRule = 1>
@@ -693,13 +709,30 @@
 
 	<cfargument name="sort_by" required="false" default="Warehouse_Name" />
 	<cfargument name="sort_Order" required="false" default=" ASC" />
-	<cfquery name="qrygetWarehouses" datasource="#application.datasource#">
+	<cfset useLakebaseForqrygetWarehouses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("warehouse_master")>
+<cfif useLakebaseForqrygetWarehouses>
+	<cftry>
+		<cfset qrygetWarehouses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("warehouse_master", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "#sort_by#.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetWarehouses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetWarehouses>
+<cfquery name="qrygetWarehouses" datasource="#application.datasource#">
 		SELECT *
 		FROM Warehouse_Master
 		WHERE Deleted = 0
 		AND Active_Code = 'A'
 		ORDER BY #sort_by# #sort_Order#
 	</cfquery>
+</cfif>
 		<cfreturn qrygetWarehouses />
    	</cffunction>
 

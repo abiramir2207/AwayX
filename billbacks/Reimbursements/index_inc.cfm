@@ -9,11 +9,26 @@
 <cfoutput>
 <!---Set as saved amounts if updating--->
 <cfif isDefined("BB_Reimbursement_ID")>
-	<cfquery name="GetReimbursementInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetReimbursementInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement")>
+<cfif useLakebaseForGetReimbursementInfo>
+	<cftry>
+		<cfset GetReimbursementInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_reimbursement", {
+				"bb_reimbursement_id" = "eq.#BB_Reimbursement_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetReimbursementInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetReimbursementInfo>
+<cfquery name="GetReimbursementInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM BB_Reimbursement
 		WHERE BB_Reimbursement.BB_Reimbursement_ID = '#BB_Reimbursement_ID#'
 	</cfquery>
+</cfif>
 	
 	<cfset ReimbursementType = GetReimbursementInfo.Reimbursement_Type>
 	<cfset ReimbursementAmount = GetReimbursementInfo.Reimbursement_Amount>
@@ -29,11 +44,27 @@
 </cfif>
 
 <!---Gets user friendly names--->
+<cfset useLakebaseForGetDistributorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistributorName>
+	<cftry>
+		<cfset GetDistributorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#FinalDistributorList#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorName>
 <cfquery name="GetDistributorName" datasource="#application.datasource#">
 SELECT Name 
 FROM BSA_Foodservice_Customers 
 WHERE BSA_Foodservice_Customers_ID = '#FinalDistributorList#'
 </cfquery>
+</cfif>
 
 <!---Gets program number--->
 <cfquery name="GetProgramNumber" datasource="#application.datasource#">
@@ -78,9 +109,24 @@ WHERE Contract_Main_ID = #FinalProgramList#
 	<Tr>
 		<td align="Right" valign="top"><strong>Reimbursement Type</strong></td>
 		<td>
-		<cfquery name="GetReimbursementTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForGetReimbursementTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_reimbursement_type")>
+<cfif useLakebaseForGetReimbursementTypes>
+	<cftry>
+		<cfset GetReimbursementTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_reimbursement_type", {
+				"order" = "bb_reimbursement_type_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetReimbursementTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetReimbursementTypes>
+<cfquery name="GetReimbursementTypes" datasource="#application.datasource#">
 		SELECT * FROM BB_Reimbursement_Type ORDER BY BB_Reimbursement_Type_ID
 		</cfquery>
+</cfif>
 		
 		<select name="ReimbursementType">
 		<cfloop query="GetReimbursementTypes">

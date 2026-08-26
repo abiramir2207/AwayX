@@ -59,11 +59,26 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get all the information for this operator														 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Operator_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Data>
+	<cftry>
+		<cfset Get_Operator_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#BSA_Operator_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Data>
 <CFQUERY NAME="Get_Operator_Data" datasource="#application.datasource#">
 Select		*
 From		BSA_Operator
 Where		BSA_Operator_ID		=		'#BSA_Operator_ID#'
 </CFQUERY>
+</cfif>
 
 <!---72360 :: Add customer label for BSA ID START --->
 <cfset CustomerSettingsLabels = createObject("component", "mvc.Models.SettingsService").getCustomerSettingsLabels() />
@@ -201,14 +216,31 @@ Where		BSA_Operator_ID		=		'#BSA_Operator_ID#'
  
  
 	<!---   Get the other contact information --->
-	<CFQUERY NAME="Get_Contacts" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Contacts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Contacts>
+	<cftry>
+		<cfset Get_Contacts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"operator_name" = "eq.#Operator_Name#",
+				"operator_address" = "eq.#Get_Operator_Data.Operator_Address#",
+				"order" = "operator_last_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Contacts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Contacts>
+<CFQUERY NAME="Get_Contacts" datasource="#application.datasource#">
 	Select		*
 	From		BSA_Operator
 	Where		Operator_Name		=	'#Operator_Name#'
 				and
 				Operator_Address	=	'#Get_Operator_Data.Operator_Address#'
 	Order by	Operator_Last_Name
-	</CFQUERY>  
+	</CFQUERY>
+</cfif>  
   	<CFSET contacts=0>
 	<CFLOOP QUERY="Get_Contacts">
   <TR>

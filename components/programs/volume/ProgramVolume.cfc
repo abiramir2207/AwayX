@@ -157,7 +157,23 @@ components.programs.volume.ProgramVolume
 		<cfset businessSegmentID = CreateObject("component", "components.programs.business_segment.BusinessSegmentManager").getSegmentIdByProgram(this.Program_ID) />
 		<cfset this.Volume_Packet_Builder.setAllProductsSelected(ProductGroupManager.isAllProductProgram(this.Program_ID))>
 
-		<CFQUERY NAME="Get_Ditributors" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_Ditributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForGet_Ditributors>
+	<cftry>
+		<cfset Get_Ditributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#this.Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_foodservice_customers_id,distributor_group_level_id,distributor_group_id"
+			}), "bsa_foodservice_customers_id,distributor_group_level_id,distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Ditributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Ditributors>
+<CFQUERY NAME="Get_Ditributors" DATASOURCE="#application.datasource#">
 			SELECT	Contract_Distributors.BSA_Foodservice_Customers_ID,
 					Contract_Distributors.Distributor_Group_Level_ID,
 					Contract_Distributors.Distributor_Group_ID
@@ -167,24 +183,58 @@ components.programs.volume.ProgramVolume
 					AND
 					Contract_Distributors.Deleted = 0
 		</CFQUERY>
+</cfif>
 		<CFSET this.Volume_Packet_Builder.addDistributors(ValueList(Get_Ditributors.BSA_Foodservice_Customers_ID, ","))>
-		<cfquery name="qGetLevel_1_Distributors" dbtype="query">
+		<cfset useLakebaseForqGetLevel_1_Distributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_ditributors")>
+<cfif useLakebaseForqGetLevel_1_Distributors>
+	<cftry>
+		<cfset qGetLevel_1_Distributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_ditributors", {
+				"distributor_group_level_id" = "eq.1",
+				"select" = "distributor_group_id"
+			}), "distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLevel_1_Distributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLevel_1_Distributors>
+<cfquery name="qGetLevel_1_Distributors" dbtype="query">
 			SELECT	Distributor_Group_ID
 			FROM	Get_Ditributors
 			WHERE	Distributor_Group_Level_ID = 1
 		</cfquery>
+</cfif>
 		<cfset Distributor_Level_1 = ValueList(qGetLevel_1_Distributors.Distributor_Group_ID) />
 		<cfset this.Volume_Packet_Builder.setAllProductsSelected(ProductGroupManager.isAllProductProgram(this.Program_ID))>
 		<cfif Distributor_Level_1 EQ 1>
 			<CFSET this.Volume_Packet_Builder.setAllDistributorsSelected(1)>
 		</cfif>
 		<!---get operators--->
-		<CFQUERY NAME="Get_Operators" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_Operators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForGet_Operators>
+	<cftry>
+		<cfset Get_Operators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_operators", {
+				"contract_main_id" = "eq.#this.Program_ID#",
+				"deleted" = "eq.0",
+				"select" = "bsa_operator_id"
+			}), "bsa_operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operators>
+<CFQUERY NAME="Get_Operators" DATASOURCE="#application.datasource#">
 			SELECT	Contract_Operators.BSA_Operator_ID
 			FROM	Contract_Operators
 			WHERE	Contract_Operators.Contract_Main_ID = #this.Program_ID#
 			AND		Contract_Operators.Deleted = 0
 		</CFQUERY>
+</cfif>
 		<CFSET this.Volume_Packet_Builder.addOperators(ValueList(Get_Operators.BSA_Operator_ID, ","))>
 
 		<CFSET Get_Product_List(Not_In_Forecast=0,
@@ -459,12 +509,30 @@ components.programs.volume.ProgramVolume
 		</cfif><!---End this.volumePacket.volumeAction --->
 
 		<!------ save forcastId ----->
-		<CFQUERY NAME="SaveForecastID" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForSaveForecastID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForSaveForecastID>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main_aux_data",
+			{
+				"contract_main_id" = "eq.#this.Program_ID#"
+			},
+			{
+				"forecast_id" = "#this.volumePacket.forecastId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaveForecastID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaveForecastID>
+<CFQUERY NAME="SaveForecastID" DATASOURCE="#application.datasource#">
 			UPDATE	Contract_Main_Aux_Data
 			SET		Forecast_ID = #this.volumePacket.forecastId#
 			WHERE
 					Contract_Main_Aux_Data.Contract_Main_ID = #this.Program_ID#
 		</CFQUERY>
+</cfif>
 			<script language="JavaScript">
 				window.close();
 			</script>
@@ -476,13 +544,32 @@ components.programs.volume.ProgramVolume
 		<CFSET Program_Volume = Arguments.Program_Volume>
 		<CFSET DailyContractQuantity = Program_Volume / this.Contract_Span>
 
-		<CFQUERY NAME="Save_Program_Volume" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForSave_Program_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForSave_Program_Volume>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#this.Program_ID#"
+			},
+			{
+				"contract_quantity" = "#Program_Volume#",
+				"contract_daily_volume" = "#DailyContractQuantity#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Program_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Program_Volume>
+<CFQUERY NAME="Save_Program_Volume" DATASOURCE="#application.datasource#">
 			UPDATE	Contract_Main
 			SET		Contract_Quantity = #Program_Volume#,
 					Contract_Daily_Volume = #DailyContractQuantity#
 			WHERE
 					Contract_Main_ID = #this.Program_ID#
 		</CFQUERY>
+</cfif>
 
 		<cfif this.volumePacket.allProductsSelected>
 			<!------ update all products with avg volume ----->
@@ -2069,12 +2156,28 @@ components.programs.volume.ProgramVolume
 		<cfset product_volume = 0>
 
 		<!------------- Global Volume ---------------->
-		<CFQUERY NAME="This_Global_Volume" DBTYPE="query">
+		<cfset useLakebaseForThis_Global_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_global_volume")>
+<cfif useLakebaseForThis_Global_Volume>
+	<cftry>
+		<cfset This_Global_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_global_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#",
+				"select" = "volume"
+			}), "volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForThis_Global_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForThis_Global_Volume>
+<CFQUERY NAME="This_Global_Volume" DBTYPE="query">
 			SELECT		Volume
 			FROM		Get_Global_Volume
 			WHERE
 						BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 		</CFQUERY>
+</cfif>
 
 
 		<cfset product_volume = 0>
@@ -2382,7 +2485,25 @@ components.programs.volume.ProgramVolume
 					</cfstoredproc>
 				</cfif>
 
-				<cfquery name="qFlagGroup" datasource="#application.datasource#">
+				<cfset useLakebaseForqFlagGroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqFlagGroup>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#arguments.programID#"
+			},
+			{
+				"group_processed" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFlagGroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFlagGroup>
+<cfquery name="qFlagGroup" datasource="#application.datasource#">
 
 					UPDATE	Contract_Main
 					SET		Group_Processed = 0
@@ -2390,6 +2511,7 @@ components.programs.volume.ProgramVolume
 					AND 	Contract_Main_ID = #arguments.programID#
 
 				</cfquery>
+</cfif>
 
 				<cfreturn 1 />
 

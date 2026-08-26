@@ -124,13 +124,31 @@
 			<!--- RATE CHECK END--->
 
 			<!--- DISTRIBUTOR CHANNEL EXIST --->
-			<cfquery name="checkDC" datasource="#application.datasource#">
+			<cfset useLakebaseForcheckDC = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForcheckDC>
+	<cftry>
+		<cfset checkDC = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"bs_var_2" = "eq.#data.Distribution_Channel#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckDC = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckDC>
+<cfquery name="checkDC" datasource="#application.datasource#">
 					SELECT 1
 					FROM Business_Segment
 					WHERE BS_Var_2 = '#data.Distribution_Channel#'
 					AND Deleted = 0
 					AND Active = 1
 			</cfquery>
+</cfif>
 
 			<cfif ! checkDC.recordcount>
 					<cfset reason = reason & 'Distributor channel is not valid.'>
@@ -196,12 +214,29 @@
 					WHERE item = '#item#'
 				</cfquery>
 
-				<cfquery name="checkItemExist" datasource="#application.datasource#">
+				<cfset useLakebaseForcheckItemExist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload")>
+<cfif useLakebaseForcheckItemExist>
+	<cftry>
+		<cfset checkItemExist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("margin_targets_upload", {
+				"item" = "eq.#item#",
+				"bsa_foodservice_items_master_id" = "eq.#getBSAID.BSA_Foodservice_Items_Master_ID#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckItemExist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckItemExist>
+<cfquery name="checkItemExist" datasource="#application.datasource#">
 				SELECT 1
 				FROM Margin_Targets_Upload
 				WHERE item = '#item#'
 				AND BSA_Foodservice_Items_Master_ID = '#getBSAID.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 
 			<cfif checkItemExist.recordcount>
 				<cfquery name="updateItem" datasource="#application.datasource#">

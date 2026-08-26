@@ -1,6 +1,25 @@
 
 <CFOUTPUT>
 <CFIF SavedAlready NEQ 1>
+<cfset useLakebaseForDeletePre = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForDeletePre>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.2",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePre = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePre>
 <CFQUERY NAME="DeletePre" DATASOURCE="#Application.Datasource#">
 	UPDATE 	Gl_Code_Allocation
 	SET 	Deleted = 1
@@ -8,6 +27,7 @@
 			Allocation_Method = 2 AND
 			Deleted = 0	
 </CFQUERY>
+</cfif>
 </CFIF>
 <CFQUERY NAME="GetARDetails2" DATASOURCE="#Application.Datasource#">
 	SELECT 		DISTINCT 	Billback_Program.A_R,
@@ -115,7 +135,27 @@
 		</CFQUERY>
 		
 		<CFLOOP QUERY="GetPrograms">
-			<CFQUERY NAME="GetBBAmount" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForGetBBAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_fund_allocation_cal")>
+<cfif useLakebaseForGetBBAmount>
+	<cftry>
+		<cfset GetBBAmount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fixed_fund_allocation_cal", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"allocation_method" = "eq.2",
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBAmount>
+<CFQUERY NAME="GetBBAmount" DATASOURCE="#Application.Datasource#">
 				SELECT 	Top 1 * 
 				FROM 	GL_Code_Fixed_Fund_Allocation_Cal
 				WHERE 	Billback_ID = '#Billback_ID#' AND 
@@ -125,6 +165,7 @@
 						Fiscal_Year = '#DISTFY#' AND
 						Deleted = 0
 			</CFQUERY>
+</cfif>
 					
 			<CFSET TotBBAmount = TotBBAmount + GetBBAmount.Approved_Amount>
 		</CFLOOP>
@@ -211,7 +252,29 @@
 		</CFLOOP>	
 		<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
 		
-		<CFQUERY NAME="CalAmount" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForCalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_allocation_makeup")>
+<cfif useLakebaseForCalAmount>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_fixed_allocation_makeup",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id_list" = "eq.#SameARProgs#",
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"allocation_method" = "eq.2",
+				"deleted" = "eq.0"
+			},
+			{
+				"calculated_amount" = "Progs_Sum_Amt * Allocation"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCalAmount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCalAmount>
+<CFQUERY NAME="CalAmount" DATASOURCE="#Application.Datasource#">
 			UPDATE 	GL_Code_Fixed_Allocation_MakeUp
 		
 			SET 	Calculated_Amount = Progs_Sum_Amt * Allocation
@@ -223,6 +286,7 @@
 					Allocation_Method = 2 AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 		</CFIF>
 		<CFQUERY NAME="GetAllocationSum" DATASOURCE="#Application.Datasource#">
 			SELECT 	SUM(Allocation) CheckTotAllocation
@@ -314,7 +378,25 @@
 			<CFSET Tot_Allocated_Persent = 0>
 			<CFSET CheckPercentTot = 0>
 			<CFLOOP QUERY = "GetAllFund">
-				<CFQUERY NAME="GetARPercent" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetARPercent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetARPercent>
+	<cftry>
+		<cfset GetARPercent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"fund_number" = "eq.#Fund_Number#",
+				"current_active_data" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetARPercent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetARPercent>
+<CFQUERY NAME="GetARPercent" DATASOURCE="#Application.Datasource#">
 					SELECT 		*
 											
 					FROM 		GL_Code_Activation
@@ -325,6 +407,7 @@
 								Current_Active_Data = 1 AND								
 								deleted = 0
 				</CFQUERY>
+</cfif>
 
 				<CFSET SOCA_Fixed = "#GetARPercent.COMPANY#-#GetARPercent.LOCATION#-#GetARPercent.COST_CENTER#-#GetARPercent.NATURAL_ACCT#-#GetARPercent.CHANNEL#-#GetARPercent.PRODUCT_GROUP#-#GetARPercent.FUND_NUMBER#">				
 				<CFSET CheckPercentTot = CheckPercentTot + Calculated_Amount>

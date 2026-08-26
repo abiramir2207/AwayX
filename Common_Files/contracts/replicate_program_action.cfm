@@ -2,11 +2,26 @@
 	<cfparam name="SUPPLIEDPROGRAMPACKET" default="0">
 	
 <cfif form.ProgramPacketSupplied EQ 0>
-	<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
+	<cfset useLakebaseForgetPacket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_renewal_packets")>
+<cfif useLakebaseForgetPacket>
+	<cftry>
+		<cfset getPacket = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_renewal_packets", {
+				"contract_renewal_packets_id" = "eq.#FORM.CONTRACT_RENEWAL_PACKETS_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPacket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPacket>
+<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
 		SELECT *
 		FROM Contract_Renewal_Packets
 		WHERE Contract_Renewal_Packets_ID = '#FORM.CONTRACT_RENEWAL_PACKETS_ID#'
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 	<cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = genSettingsManager.get()>
 
@@ -17,12 +32,30 @@
 </cfif>	
 
 				<!--- SAVE Basic information Data From BI Page --->
-				<CFQUERY NAME="getThisUserPosition" datasource="#application.datasource#">
+				<cfset useLakebaseForgetThisUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetThisUserPosition>
+	<cftry>
+		<cfset getThisUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#Program_Packet.Basic_Information.Creator_ID#",
+				"user_position_type" = "eq.P",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisUserPosition>
+<CFQUERY NAME="getThisUserPosition" datasource="#application.datasource#">
 					SELECT User_Positions_ID
 					FROM User_Position_Holders
 					WHERE User_ID = '#Program_Packet.Basic_Information.Creator_ID#'
 					AND User_Position_Type = 'P' AND DELETED = 0
 				</CFQUERY>
+</cfif>
 				<CFSET This_User_Position_ID = getThisUserPosition.User_Positions_ID>
 				<CFIF ucase(Program_Packet.Basic_Information.Contract_Reference_Number) EQ "NULL">
 					<CFSET Program_Packet.Basic_Information.Contract_Reference_Number = "">
@@ -1242,9 +1275,27 @@ SELECT Program_BidRequest_Component_ID = @@IDENTITY
 				<!--- END save --->
 				
 				<!--- this update forces UPDATE Stored Procs To Run Which = GOOD --->
-				<CFQUERY NAME="ForceTriggersToExecute" datasource="#application.datasource#">
+				<cfset useLakebaseForForceTriggersToExecute = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForForceTriggersToExecute>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#Renewed_Program_ID#"
+			},
+			{
+				"deleted" = "#Program_Packet.Basic_Information.DELETED#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForForceTriggersToExecute = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForForceTriggersToExecute>
+<CFQUERY NAME="ForceTriggersToExecute" datasource="#application.datasource#">
 					UPDATE Contract_Main
 					SET Deleted = '#Program_Packet.Basic_Information.DELETED#'
 					WHERE Contract_Main_ID = '#Renewed_Program_ID#'
 				</CFQUERY>
+</cfif>
 		

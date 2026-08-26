@@ -10,11 +10,26 @@
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFPARAM NAME="URL.RID" DEFAULT="0">
+<cfset useLakebaseForGet_Notes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_notes")>
+<cfif useLakebaseForGet_Notes>
+	<cftry>
+		<cfset Get_Notes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_notes", {
+				"order" = "template_note_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Notes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Notes>
 <CFQUERY NAME="Get_Notes" datasource="#application.datasource#">
 	Select		*
 	From		Template_Notes
 	Order by	Template_Note_Desc ASC
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="Get_LastCreated_Details" datasource="#application.datasource#">
 	Select		TOP 1 *

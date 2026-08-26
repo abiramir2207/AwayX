@@ -7,10 +7,25 @@
 
 <body>
 <cfparam name="ACCESSSTRUCTURE.USER_ID" 	default="0000000000">
- <cfquery name="getEmail" datasource="#application.datasource#">
+ <cfset useLakebaseForgetEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetEmail>
+	<cftry>
+		<cfset getEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "send_program_error_ack_emailaddress"
+			}), "send_program_error_ack_emailaddress"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEmail>
+<cfquery name="getEmail" datasource="#application.datasource#">
 	Select send_Program_Error_Ack_emailaddress
 	from _application_settings
  </cfquery>
+</cfif>
 <!--- 
  <CFQUERY NAME="Partial_Ack" DATASOURCE="#Application.Datasource#">
 	SELECT 		Contract_main_ID,Contract_Number,Revision_version,
@@ -50,6 +65,23 @@
 	
 </cfstoredproc>
 
+<cfset useLakebaseForqInvalidHierarchy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("log_program_donotinterface_prodhierarchy")>
+<cfif useLakebaseForqInvalidHierarchy>
+	<cftry>
+		<cfset qInvalidHierarchy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("log_program_donotinterface_prodhierarchy", {
+				"deleted" = "eq.0
+	Group By Contract_Number,Created_Date",
+				"order" = "contract_number.asc",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInvalidHierarchy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInvalidHierarchy>
 <cfquery name="qInvalidHierarchy" datasource="#application.datasource#">
 	Select Distinct Contract_Number 
 	From  Log_Program_DONOTInterface_Prodhierarchy
@@ -57,6 +89,7 @@
 	Group By Contract_Number,Created_Date
 	Order By Contract_Number
  </cfquery>
+</cfif>
 
 <STYLE>
 TABLE.Maintable TD 

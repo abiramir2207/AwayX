@@ -314,9 +314,27 @@ Description  :  Include template for PFG OT1
 		 
 			<cfset pageCount = pageCount + structFileContent[i].page_count />	
 		</cfloop>	<!--- LOOP i --->	
-		<cfquery name="qUpdateFileName" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateFileName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForqUpdateFileName>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
+			},
+			{
+				"db_input_filename" = "#qGetOCRUploadExtracted.File_Name#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateFileName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateFileName>
+<cfquery name="qUpdateFileName" datasource="#application.datasource#">
 			UPDATE OCR_Upload_Log SET DB_Input_FileName = '#qGetOCRUploadExtracted.File_Name#' WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-		</cfquery>	
+		</cfquery>
+</cfif>	
 		
 
 	

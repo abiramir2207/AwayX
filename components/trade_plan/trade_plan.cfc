@@ -95,13 +95,30 @@
 		<cfargument name="CostType" type="numeric" required="false" default="" />
 		
 		<!---Query Costs--->
-		<cfquery name="qGetCosts" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("trade_plan_costs")>
+<cfif useLakebaseForqGetCosts>
+	<cftry>
+		<cfset qGetCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("trade_plan_costs", {
+				"trade_plan_id" = "eq.#arguments.Trade_Plan_ID#",
+				"trade_plan_cost_type_id" = "eq.#arguments.CostType#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCosts>
+<cfquery name="qGetCosts" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Trade_Plan_Costs
 			WHERE	Trade_Plan_ID = '#arguments.Trade_Plan_ID#'
 			AND		Trade_Plan_Cost_Type_ID = '#arguments.CostType#'
 			AND		Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qGetCosts />
 		

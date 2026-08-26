@@ -5,13 +5,32 @@
 		<CFSET FORM.Show_Details = 0>
 	</CFIF>
 	<CFIF Rule_ID NEQ "">
-		<CFQUERY NAME="Save_Rule_Basic_Info" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForSave_Rule_Basic_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_rule")>
+<cfif useLakebaseForSave_Rule_Basic_Info>
+	<cftry>
+		<cfset application.oLakebase.updateRows("formula_pricing_rule",
+			{
+				"formula_pricing_rule_id" = "eq.#Rule_ID#"
+			},
+			{
+				"rule_name" = "#FORM.Rule_Name#",
+				"show_details" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSave_Rule_Basic_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSave_Rule_Basic_Info>
+<CFQUERY NAME="Save_Rule_Basic_Info" DATASOURCE="#application.datasource#">
 			UPDATE 	Formula_Pricing_Rule
 			SET		Rule_Name	=	'#FORM.Rule_Name#',
 					Show_Details = 1
 			WHERE
 					Formula_Pricing_Rule_ID = '#Rule_ID#'
 		</CFQUERY>
+</cfif>
 	<CFELSE>
 		<CFQUERY NAME="Insert_Rule_Basic_Info" DATASOURCE="#application.datasource#">
 			INSERT	INTO	

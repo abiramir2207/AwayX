@@ -4,17 +4,61 @@
 <CFPARAM NAME="URL.User_ID" DEFAULT="">
 
 
+<cfset useLakebaseForGetUserLevels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_access_rights")>
+<cfif useLakebaseForGetUserLevels>
+	<cftry>
+		<cfset GetUserLevels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_access_rights", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserLevels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserLevels>
 <CFQUERY NAME="GetUserLevels" datasource="#application.datasource#">SELECT *
 	FROM _Users_Access_Rights
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetAllCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetAllCompanies>
+	<cftry>
+		<cfset GetAllCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"order" = "company_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllCompanies>
 <CFQUERY NAME="GetAllCompanies" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Company_Main
 	WHERE Deleted = 0
 	ORDER BY Company_Name ASC
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#URL.User_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
 <CFQUERY NAME="GetUserInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM _Users
@@ -23,6 +67,7 @@
 			AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="URL.RTS" DEFAULT="0">
 <CFPARAM NAME="Form.ActionPage" DEFAULT="InsertActions.cfm">

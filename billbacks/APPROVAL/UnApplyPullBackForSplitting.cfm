@@ -30,11 +30,26 @@
 	</cfloop>
 	</cfif>
 		
-	<cfquery name="SortBillbackstoApply" dbtype="query">
+	<cfset useLakebaseForSortBillbackstoApply = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getbillbackstoapply")>
+<cfif useLakebaseForSortBillbackstoApply>
+	<cftry>
+		<cfset SortBillbackstoApply = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getbillbackstoapply", {
+				"order" = "pullback_billback_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSortBillbackstoApply = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSortBillbackstoApply>
+<cfquery name="SortBillbackstoApply" dbtype="query">
 	select * from
 	GetBillbackstoApply
 	order by pullback_billback_id
-	</cfquery>		
+	</cfquery>
+</cfif>		
 	
 	<cfoutput query="SortBillbackstoApply">
 	<input type="Hidden" name="pullback_billback_ids" value="#pullback_billback_id#_#discount_type_id#_#product_id#">

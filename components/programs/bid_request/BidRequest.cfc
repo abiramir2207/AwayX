@@ -139,12 +139,29 @@
 	<cffunction name="getDiscountTypeId" output="false">
 		
 		<!---get the Discount Type ID for Bid Request--->
-		<cfquery name="qGetDiscountTypeId" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 12, 0, 0)#">
+		<cfset useLakebaseForqGetDiscountTypeId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_type")>
+<cfif useLakebaseForqGetDiscountTypeId>
+	<cftry>
+		<cfset qGetDiscountTypeId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_type", {
+				"deleted" = "eq.0",
+				"discount_type_desc" = "eq.Bid Request",
+				"select" = "discount_type_id"
+			}), "discount_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountTypeId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountTypeId>
+<cfquery name="qGetDiscountTypeId" datasource="#application.datasource#" cachedwithin="#CreateTimeSpan(0, 12, 0, 0)#">
 			SELECT 	Discount_Type_ID
 			FROM	Discount_Type
 			WHERE	Deleted = 0
 			AND		Discount_Type_Desc = 'Bid Request'
 		</cfquery>
+</cfif>
 		<cfset this.setDiscountTypeId(qGetDiscountTypeId.Discount_Type_ID) />
 		<cfreturn this.discountTypeId />
 	</cffunction>

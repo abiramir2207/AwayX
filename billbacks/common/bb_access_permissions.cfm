@@ -15,6 +15,22 @@ The permissions can be accessed as follows
 
 ------->
 
+<cfset useLakebaseForGet_Access_Permissions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_profiles_settings")>
+<cfif useLakebaseForGet_Access_Permissions>
+	<cftry>
+		<cfset Get_Access_Permissions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_profiles_settings", {
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"deleted" = "eq.0",
+				"select" = "bb_create,bb_view_deviation,bb_approve,bb_approve_amount,bb_approve_critical,bb_approve_critical_amount"
+			}), "bb_create,bb_view_deviation,bb_approve,bb_approve_amount,bb_approve_critical,bb_approve_critical_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Access_Permissions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Access_Permissions>
 <CFQUERY NAME="Get_Access_Permissions" DATASOURCE="#Application.Datasource#">
 	SELECT	BB_Create, BB_View_Deviation, 
 			BB_Approve, BB_Approve_Amount,
@@ -25,6 +41,7 @@ The permissions can be accessed as follows
 			AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="ACCESS_PERMISSION_BB_CREATE" 					DEFAULT=0>
 <CFPARAM NAME="ACCESS_PERMISSION_BB_VIEW_DEVIATION" 			DEFAULT=0>

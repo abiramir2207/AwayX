@@ -9,19 +9,51 @@
 	<cfset OperatorList = AllOperators>
 <!---Am an operator, have a county picked--->
 <cfelseif url.Operator EQ 0 AND url.County NEQ 0>
-	<cfquery name="GetOpsForCounty" datasource="#application.datasource#">
+	<cfset useLakebaseForGetOpsForCounty = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usdanoi_operators_no_claims")>
+<cfif useLakebaseForGetOpsForCounty>
+	<cftry>
+		<cfset GetOpsForCounty = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usdanoi_operators_no_claims", {
+				"countyfips" = "eq.#url.County#",
+				"select" = "bsa_operator_id"
+			}), "bsa_operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOpsForCounty = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOpsForCounty>
+<cfquery name="GetOpsForCounty" datasource="#application.datasource#">
 	SELECT BSA_Operator_ID 
 	FROM USDANOI_Operators_No_Claims
 	WHERE CountyFIPS = '#url.County#'
 	</cfquery>
+</cfif>
 	<cfset OperatorList = valuelist(GetOpsForCounty.BSA_Operator_ID)>
 <!---Am an operator, have a state picked--->
 <cfelseif url.County EQ 0 AND url.Operator EQ 0  AND url.State NEQ 0>
-	<cfquery name="GetOpsForState" datasource="#application.datasource#">
+	<cfset useLakebaseForGetOpsForState = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usdanoi_operators_no_claims")>
+<cfif useLakebaseForGetOpsForState>
+	<cftry>
+		<cfset GetOpsForState = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usdanoi_operators_no_claims", {
+				"statefips" = "eq.#url.State#",
+				"select" = "bsa_operator_id"
+			}), "bsa_operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOpsForState = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOpsForState>
+<cfquery name="GetOpsForState" datasource="#application.datasource#">
 	SELECT BSA_Operator_ID 
 	FROM USDANOI_Operators_No_Claims
 	WHERE StateFIPS = '#url.State#'
 	</cfquery>
+</cfif>
 	<cfset OperatorList = valuelist(GetOpsForState.BSA_Operator_ID)>
 <!---Should never happen--->
 <cfelseif len(trim(AllOperators)) GT 0>

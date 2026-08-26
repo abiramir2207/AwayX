@@ -16,9 +16,25 @@
 <body>
 <CFIF Form.Bank_Info_ID EQ "">
 <CFOUTPUT>
-	<CFQUERY NAME="Check_repetition" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheck_repetition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_bank_info")>
+<cfif useLakebaseForCheck_repetition>
+	<cftry>
+		<cfset Check_repetition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_bank_info", {
+				"customer_id" = "eq.#Customer_ID#",
+				"bank_info_deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_repetition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_repetition>
+<CFQUERY NAME="Check_repetition" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Customer_Bank_Info WHERE Customer_ID = '#Customer_ID#' AND Bank_Info_Deleted = 0 
 	</CFQUERY>
+</cfif>
 	<CFIF Check_repetition.recordcount GT 0>
 		<CFSET urlstring = "RID=#Check_repetition.Bank_Info_ID#">		
 		<CFIF isdefined("FORM.New_BB_Check")>

@@ -39,35 +39,115 @@ table{
 <cfset vars.labelSettings = createObject("component", "components.settings.labels.labels").init() />
 <cfset prodlabels = vars.labelSettings.getAllProductAttributes()>
 
+<cfset useLakebaseForgetTypeCodeLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("prodlabels")>
+<cfif useLakebaseForgetTypeCodeLabel>
+	<cftry>
+		<cfset getTypeCodeLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("prodlabels", {
+				"group_internal_label" = "eq.Type Code",
+				"select" = "group_level_desc"
+			}), "group_level_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTypeCodeLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTypeCodeLabel>
 <cfquery name="getTypeCodeLabel" dbtype="query">
 	SELECT Group_level_Desc
 	FROM prodlabels
 	WHERE Group_Internal_Label = 'Type Code'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetTypeGroupLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("prodlabels")>
+<cfif useLakebaseForgetTypeGroupLabel>
+	<cftry>
+		<cfset getTypeGroupLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("prodlabels", {
+				"group_internal_label" = "eq.Type Group",
+				"select" = "group_level_desc"
+			}), "group_level_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTypeGroupLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTypeGroupLabel>
 <cfquery name="getTypeGroupLabel" dbtype="query">
 	SELECT Group_level_Desc
 	FROM prodlabels
 	WHERE Group_Internal_Label = 'Type Group'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetBrandLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("prodlabels")>
+<cfif useLakebaseForgetBrandLabel>
+	<cftry>
+		<cfset getBrandLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("prodlabels", {
+				"group_internal_label" = "eq.Brand",
+				"select" = "group_level_desc"
+			}), "group_level_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBrandLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBrandLabel>
 <cfquery name="getBrandLabel" dbtype="query">
 	SELECT Group_level_Desc
 	FROM prodlabels
 	WHERE Group_Internal_Label = 'Brand'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetQBrandLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("prodlabels")>
+<cfif useLakebaseForgetQBrandLabel>
+	<cftry>
+		<cfset getQBrandLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("prodlabels", {
+				"group_internal_label" = "eq.Q Brand",
+				"select" = "group_level_desc"
+			}), "group_level_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetQBrandLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetQBrandLabel>
 <cfquery name="getQBrandLabel" dbtype="query">
 	SELECT Group_level_Desc
 	FROM prodlabels
 	WHERE Group_Internal_Label = 'Q Brand'
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetProdVarALabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("prodlabels")>
+<cfif useLakebaseForgetProdVarALabel>
+	<cftry>
+		<cfset getProdVarALabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("prodlabels", {
+				"group_internal_label" = "eq.Prod Var A",
+				"select" = "group_level_desc"
+			}), "group_level_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProdVarALabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProdVarALabel>
 <cfquery name="getProdVarALabel" dbtype="query">
 	SELECT Group_level_Desc
 	FROM prodlabels
 	WHERE Group_Internal_Label = 'Prod Var A'
 </cfquery>
+</cfif>
 
 <cfset variables.TypeCodeDesc = replace(getTypeCodeLabel.Group_LeveL_Desc,' ', '', 'All')>
 <cfset variables.TypeGroupDesc = replace(getTypeGroupLabel.Group_LeveL_Desc,' ', '', 'All')>

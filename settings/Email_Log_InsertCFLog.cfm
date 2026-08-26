@@ -8,10 +8,25 @@
 
 <cfset LastLineNumber_previous=0>
 
+<cfset useLakebaseForGet_AppDocument_path = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGet_AppDocument_path>
+	<cftry>
+		<cfset Get_AppDocument_path = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "document_path"
+			}), "document_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_AppDocument_path = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_AppDocument_path>
 <CFQUERY NAME="Get_AppDocument_path" datasource="#application.datasource#">
 	select document_path
 	from _application_settings
 </CFQUERY>
+</cfif>
 
 <cfset currentPath = getCurrentTemplatePath()>
 <cfset currentDirectory = getDirectoryFromPath(currentPath)>

@@ -339,7 +339,24 @@
 		<cfargument name="distributorId" required="true" default="" />
 		
 	<cfif distributorId eq "">
-		<cfquery name="qGetAllFiscalYearPeriods" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetAllFiscalYearPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForqGetAllFiscalYearPeriods>
+	<cftry>
+		<cfset qGetAllFiscalYearPeriods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"deleted" = "eq.0",
+				"company_main_id" = "eq.#arguments.companyId#",
+				"order" = "start_date.asc",
+				"select" = "start_date,end_date,period_length"
+			}), "start_date,end_date,period_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllFiscalYearPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllFiscalYearPeriods>
+<cfquery name="qGetAllFiscalYearPeriods" datasource="#application.datasource#">
 		
 			SELECT 	Start_Date,
 					End_Date,
@@ -350,6 +367,7 @@
 			ORDER BY Start_Date
 			
 		</cfquery>
+</cfif>
 	
 	<cfelse>
 		

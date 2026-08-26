@@ -37,11 +37,30 @@
 </CFIF>
 
 <CFIF FORM.Current_Active_State EQ 1 AND FORM.Active EQ 0 AND FORM.hiBit NEQ 3>
-	<CFQUERY NAME="saveActiveState" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveActiveState = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForsaveActiveState>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#FORM.ProgramControl_Panel_Options_ID#"
+			},
+			{
+				"active" = "0",
+				"program_editable" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveActiveState = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveActiveState>
+<CFQUERY NAME="saveActiveState" datasource="#application.datasource#">
 		UPDATE Program_Control_Panel_Options
 		SET Active = 0, Program_Editable = 0
 		WHERE ProgramControl_Panel_Options_ID = '#FORM.ProgramControl_Panel_Options_ID#'
 	</CFQUERY>
+</cfif>
 
 	<cfoutput>
 		<script>
@@ -485,11 +504,29 @@
 	</cfquery>
 </cfcase>
 <cfcase value="3">
-	<cfquery name="delSettings" datasource="#application.datasource#">
+	<cfset useLakebaseFordelSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseFordelSettings>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#FORM.ProgramControl_Panel_Options_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordelSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordelSettings>
+<cfquery name="delSettings" datasource="#application.datasource#">
 		UPDATE Program_Control_Panel_Options
 		Set deleted = 1
 		WHERE ProgramControl_Panel_Options_ID = '#FORM.ProgramControl_Panel_Options_ID#'
 	</cfquery>
+</cfif>
 </cfcase>
 </cfswitch>
 

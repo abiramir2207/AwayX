@@ -1,22 +1,82 @@
+<cfset useLakebaseForGetQBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetQBrands>
+	<cftry>
+		<cfset GetQBrands = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "q_brand_desc"
+			}), "q_brand_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetQBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetQBrands>
 <CFQUERY NAME="GetQBrands" datasource="#application.datasource#">
 	SELECT DISTINCT Q_brand_desc
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetTypeCodeDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetTypeCodeDesc>
+	<cftry>
+		<cfset GetTypeCodeDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "type_code_desc"
+			}), "type_code_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeCodeDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeCodeDesc>
 <CFQUERY NAME="GetTypeCodeDesc" datasource="#application.datasource#">
 	SELECT DISTINCT Type_Code_Desc
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetTypeGroupDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetTypeGroupDesc>
+	<cftry>
+		<cfset GetTypeGroupDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "type_group_desc"
+			}), "type_group_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTypeGroupDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTypeGroupDesc>
 <CFQUERY NAME="GetTypeGroupDesc" datasource="#application.datasource#">
 	SELECT DISTINCT Type_Group_Desc
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetBrands = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetBrands>
+	<cftry>
+		<cfset GetBrands = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"select" = "brand"
+			}), "brand"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBrands = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBrands>
 <CFQUERY NAME="GetBrands" datasource="#application.datasource#">
 	SELECT DISTINCT Brand
 	FROM BSA_Foodservice_Items_Master
 </CFQUERY>
+</cfif>
 
 
 <CENTER>

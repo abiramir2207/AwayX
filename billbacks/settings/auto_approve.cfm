@@ -6,10 +6,25 @@ Created Date: 1/28/2010
 Description: This file is responsible for modifying billback auto approve settings
 ***********************************************************************
 --->
+<cfset useLakebaseForGetBBAutoApproveLogic = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForGetBBAutoApproveLogic>
+	<cftry>
+		<cfset GetBBAutoApproveLogic = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "custom_auto_approve_type"
+			}), "custom_auto_approve_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBAutoApproveLogic = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBAutoApproveLogic>
 <cfquery name="GetBBAutoApproveLogic" datasource="#application.datasource#">
 select Custom_Auto_Approve_Type
 from _Application_Settings
 </cfquery>
+</cfif>
 
 <cfparam name="form.Operator_List" 						default="" />
 <cfparam name="form.Distributor_List" 					default="" />
@@ -71,17 +86,49 @@ from _Application_Settings
 	
 <cfif form.firstTimeLoading eq 1>
 	
-	<cfquery name="qGetDistributorList" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetDistributorList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_appr_payee_exception")>
+<cfif useLakebaseForqGetDistributorList>
+	<cftry>
+		<cfset qGetDistributorList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_appr_payee_exception", {
+				"payee_type" = "eq.1",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistributorList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistributorList>
+<cfquery name="qGetDistributorList" datasource="#application.datasource#">
 		SELECT	DISTINCT Distributor_ID
 		FROM	Auto_Appr_Payee_Exception
 		WHERE	Payee_Type = 1
 	</cfquery>
+</cfif>
 	
-	<cfquery name="qGetOperatorList" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetOperatorList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_appr_payee_exception")>
+<cfif useLakebaseForqGetOperatorList>
+	<cftry>
+		<cfset qGetOperatorList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_appr_payee_exception", {
+				"payee_type" = "eq.2",
+				"select" = "operator_id"
+			}), "operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOperatorList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOperatorList>
+<cfquery name="qGetOperatorList" datasource="#application.datasource#">
 		SELECT	DISTINCT Operator_ID
 		FROM	Auto_Appr_Payee_Exception
 		WHERE	Payee_Type = 2
 	</cfquery>
+</cfif>
 	
 	<cfset form.Operator_List					= valueList(qGetOperatorList.Operator_ID) />
 	<cfset form.Distributor_List				= valueList(qGetDistributorList.Distributor_ID) />
@@ -492,7 +539,7 @@ e. Any billback with a claimed/expected amount > $250,000 is not included in Aut
 	<tr>
 		<td>
 			<br>
-			<strong>Consider billback’s created date:</strong>
+			<strong>Consider billbacks created date:</strong>
 		</td>
 		<td>
 			<br>
@@ -514,7 +561,7 @@ e. Any billback with a claimed/expected amount > $250,000 is not included in Aut
 	<tr>
 		<td>
 			<br>
-			<strong>Auto approve should process BB’s with divested items:</strong>
+			<strong>Auto approve should process BBs with divested items:</strong>
 		</td>
 		<td>
 			<br>
@@ -525,7 +572,7 @@ e. Any billback with a claimed/expected amount > $250,000 is not included in Aut
 	<tr>
 		<td>
 			<br>
-			<strong>Auto approve should process BB’s with unknown items:</strong>
+			<strong>Auto approve should process BBs with unknown items:</strong>
 		</td>
 		<td>
 			<br>
@@ -536,7 +583,7 @@ e. Any billback with a claimed/expected amount > $250,000 is not included in Aut
 	<tr>
 		<td>
 			<br>
-			<strong>Auto approve should process BB’s with dummy Program:</strong>
+			<strong>Auto approve should process BBs with dummy Program:</strong>
 		</td>
 		<td>
 			<br>
@@ -549,7 +596,7 @@ e. Any billback with a claimed/expected amount > $250,000 is not included in Aut
 <table cellpadding="3" cellspacing="0" border="0">
 	<tr>
 		<td valign="bottom" style="border-bottom:none">
-			<strong>Auto approve should process BB’s where the payee = operator:</strong>
+			<strong>Auto approve should process BBs where the payee = operator:</strong>
 			&nbsp;&nbsp;
 			<input name="Auto_Appr_Payee_Operator" type="checkbox" value="1" onClick="javascript:enableException(this);" <cfif form.Auto_Appr_Payee_Operator eq 1>checked</cfif> />
 		</td>
@@ -607,7 +654,7 @@ e. Any billback with a claimed/expected amount > $250,000 is not included in Aut
 <table cellpadding="3" cellspacing="0" border="0">
 	<tr>
 		<td valign="bottom" style="border-bottom:none">
-			<strong>Auto approve should process BB’s where the payee = distributor:</strong>
+			<strong>Auto approve should process BBs where the payee = distributor:</strong>
 			&nbsp;&nbsp;
 			<input name="Auto_Appr_Payee_Distributor" type="checkbox" value="1" onClick="javascript:enableException(this);" <cfif form.Auto_Appr_Payee_Distributor eq 1>checked</cfif> />
 		</td>

@@ -22,10 +22,25 @@
 
 		<cfset classCodesOn = 0 />
 		<cfif NOT isQuery(qGetClassCodesOn)>
-			<cfquery name="qGetClassCodesOn" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetClassCodesOn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForqGetClassCodesOn>
+	<cftry>
+		<cfset qGetClassCodesOn = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "classcodes_on"
+			}), "classcodes_on"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClassCodesOn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClassCodesOn>
+<cfquery name="qGetClassCodesOn" datasource="#application.datasource#">
 				SELECT	Classcodes_On
 				FROM	_Application_Settings
 			</cfquery>
+</cfif>
 		</cfif>
 		<cfset classCodesOn = qGetClassCodesOn.Classcodes_On />
 		<cfreturn classCodesOn />
@@ -50,22 +65,54 @@
 	<cffunction name="getBusinessSegmentID" output="false" returntype="numeric">
 		<cfargument name="programID" type="string" required="true" default="0" />
 
-			<cfquery name="qGetBusinessSegmentID" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetBusinessSegmentID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetBusinessSegmentID>
+	<cftry>
+		<cfset qGetBusinessSegmentID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBusinessSegmentID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBusinessSegmentID>
+<cfquery name="qGetBusinessSegmentID" datasource="#application.datasource#">
 				SELECT	Business_Segment_ID
 				FROM	Contract_Main
 				WHERE Contract_Main_id = '#arguments.programID#'
 			</cfquery>
+</cfif>
 
 		<cfreturn qGetBusinessSegmentID.Business_Segment_ID>
 	</cffunction>
 
 	<cffunction name="getDistChannelFromBusSeg" output="false" returntype="any">
 		<cfargument name="businessSegmentID" type="string" required="true" default="0" />
-			<cfquery name="qGetDistChannelID" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetDistChannelID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqGetDistChannelID>
+	<cftry>
+		<cfset qGetDistChannelID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"business_segment_id" = "eq.#arguments.businessSegmentID#",
+				"select" = "bs_var_2"
+			}), "bs_var_2"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistChannelID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistChannelID>
+<cfquery name="qGetDistChannelID" datasource="#application.datasource#">
 				SELECT	BS_Var_2
 				FROM	Business_segment
 				WHERE Business_segment_Id = '#arguments.businessSegmentID#'
 			</cfquery>
+</cfif>
 
 		<cfreturn qGetDistChannelID.BS_Var_2>
 	</cffunction>
@@ -250,7 +297,25 @@
 		<cfif rIsValid>
 
 			<!---inActivate business segment if allowed--->
-			<cfquery name="qMakeInActive" datasource="#application.datasource#">
+			<cfset useLakebaseForqMakeInActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqMakeInActive>
+	<cftry>
+		<cfset application.oLakebase.updateRows("business_segment",
+			{
+				"deleted" = "eq.0",
+				"business_segment_id" = "eq.#arguments.busSegId#"
+			},
+			{
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqMakeInActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqMakeInActive>
+<cfquery name="qMakeInActive" datasource="#application.datasource#">
 
 				UPDATE	Business_Segment
 				SET		Active = 0
@@ -258,6 +323,7 @@
 				AND		Business_Segment_ID = #arguments.busSegId#
 
 			</cfquery>
+</cfif>
 
 		</cfif>
 
@@ -354,13 +420,29 @@
 		<cfargument name="programId" type="numeric" required="false" default="0" />
 
 		<!---get the business segments--->
-		<cfquery name="qGetBusSegIdFromProgram" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBusSegIdFromProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetBusSegIdFromProgram>
+	<cftry>
+		<cfset qGetBusSegIdFromProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBusSegIdFromProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBusSegIdFromProgram>
+<cfquery name="qGetBusSegIdFromProgram" datasource="#application.datasource#">
 
 			SELECT 	Business_Segment_ID
 			FROM 	Contract_Main
 			WHERE	Contract_Main_ID = #arguments.programId#
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetBusSegIdFromProgram.Business_Segment_ID />
 
@@ -386,7 +468,22 @@
 		<cfif application.returned_customer_setting.business_segments_on eq 1>
 
 			<!---check to see if business segments are enabled--->
-			<cfquery name="qIsEnabled" datasource="#application.datasource#">
+			<cfset useLakebaseForqIsEnabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForqIsEnabled>
+	<cftry>
+		<cfset qIsEnabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment_enabled", {
+				"deleted" = "eq.0",
+				"select" = "enabled,distributor_enabled,product_enabled,vendor_enabled_type,operator_enabled,autopay_segment_enable,allow_multiple_segment,allow_segment_change,budget_segment_enabled,display_segment_in_billbacks,planner_volume_plan_segment_enable,user_segment_filters_autopay_results"
+			}), "enabled,distributor_enabled,product_enabled,vendor_enabled_type,operator_enabled,autopay_segment_enable,allow_multiple_segment,allow_segment_change,budget_segment_enabled,display_segment_in_billbacks,planner_volume_plan_segment_enable,user_segment_filters_autopay_results"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqIsEnabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqIsEnabled>
+<cfquery name="qIsEnabled" datasource="#application.datasource#">
 
 				SELECT	Enabled, Distributor_Enabled, Product_Enabled, Vendor_Enabled_Type,Operator_Enabled, AutoPay_Segment_Enable, Allow_Multiple_Segment, Allow_Segment_Change,
 						Budget_Segment_Enabled,Display_Segment_In_Billbacks,Planner_Volume_Plan_Segment_Enable,User_Segment_Filters_Autopay_Results
@@ -394,6 +491,7 @@
 				WHERE	Deleted = 0
 
 			</cfquery>
+</cfif>
 
 			<!---set enabled if business segments are turned on in customer settings--->
 			<cfif qIsEnabled.RecordCount and application.returned_customer_setting.business_segments_on eq 1>
@@ -490,12 +588,25 @@
 		</cfif>
 
 		<!---if we have a record set then update, otherwise insert--->
-		<cfquery name="qCheckEnabled" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckEnabled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment_enabled")>
+<cfif useLakebaseForqCheckEnabled>
+	<cftry>
+		<cfset qCheckEnabled = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment_enabled", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckEnabled = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckEnabled>
+<cfquery name="qCheckEnabled" datasource="#application.datasource#">
 
 			SELECT	*
 			FROM	Business_Segment_Enabled
 
 		</cfquery>
+</cfif>
 
 		<cfif qCheckEnabled.RecordCount>
 
@@ -538,7 +649,22 @@
 		<cfparam name="rVal" default="0" />
 
 		<!---run query to see if any segments exist--->
-		<cfquery name="qCheckExists" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqCheckExists>
+	<cftry>
+		<cfset qCheckExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"active" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckExists>
+<cfquery name="qCheckExists" datasource="#application.datasource#">
 
 			SELECT	*
 			FROM	Business_Segment
@@ -546,6 +672,7 @@
 			AND		Active = 1
 
 		</cfquery>
+</cfif>
 
 		<cfif qCheckExists.RecordCount>
 			<cfset rVal = 1 />
@@ -652,7 +779,23 @@
 		<cfargument name="id" type="numeric" required="false" default="0" />
 
 		<!---get the class codes--->
-		<cfquery name="qGetClassCodes" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetClasscodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("class_code")>
+<cfif useLakebaseForqGetClasscodes>
+	<cftry>
+		<cfset qGetClasscodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("class_code", {
+				"deleted" = "eq.0",
+				"class_code_id" = "eq.#arguments.id#",
+				"select" = "class_code_id,class_code,class_code_desc,class_code_uuid,business_segment_id,external_id"
+			}), "class_code_id,class_code,class_code_desc,class_code_uuid,business_segment_id,external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetClasscodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetClasscodes>
+<cfquery name="qGetClassCodes" datasource="#application.datasource#">
 
 			SELECT 	Class_Code_ID,
 					Class_Code,
@@ -665,6 +808,7 @@
 			AND		Class_Code_ID = #arguments.id#
 
 		</cfquery>
+</cfif>
 
 		<!---if we don't get a record count then retrun a record with a No Segment description--->
 		<cfif not qGetClassCodes.RecordCount>

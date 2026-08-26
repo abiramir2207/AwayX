@@ -43,24 +43,77 @@ label {
 
       <cfset variables.Billback_list = variables.Billback_list & "'" & variables.bb_id & "'," />
       
-      <cfquery name="variables.checkOperatorExists" datasource="#application.datasource#">
+      <cfset useLakebaseForvariables_checkOperatorExists = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForvariables_checkOperatorExists>
+	<cftry>
+		<cfset variables.checkOperatorExists = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category_definition", {
+				"pg_operator_category_id" = "eq.#variables.PGCatID#",
+				"operator_group_id" = "eq.#variables.OperatorID#",
+				"deleted" = "eq.0",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_checkOperatorExists = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_checkOperatorExists>
+<cfquery name="variables.checkOperatorExists" datasource="#application.datasource#">
         SELECT 1 
          FROM PG_Operator_Category_Definition
         WHERE PG_Operator_Category_ID = '#variables.PGCatID#' 
                AND Operator_Group_ID = '#variables.OperatorID#' 
                AND Deleted = 0
       </cfquery>
+</cfif>
       
       <cfif (variables.checkOperatorExists.RecordCount GT 0)>
-        <cfquery name="UpdOperPG" datasource="#application.datasource#">
+        <cfset useLakebaseForUpdOperPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category_definition")>
+<cfif useLakebaseForUpdOperPG>
+	<cftry>
+		<cfset application.oLakebase.updateRows("pg_operator_category_definition",
+			{
+				"pg_operator_category_id" = "eq.#variables.PGCatID#",
+				"operator_group_id" = "eq.#variables.OperatorID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"inclusion_exclusion" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdOperPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdOperPG>
+<cfquery name="UpdOperPG" datasource="#application.datasource#">
           UPDATE PG_Operator_Category_Definition
              SET Inclusion_Exclusion = 1
            WHERE PG_Operator_Category_ID = '#variables.PGCatID#' AND
                   Operator_Group_ID = '#variables.OperatorID#' AND
                   Deleted = 0
         </cfquery>
+</cfif>
       <cfelse>
-        <cfquery name="variables.selPGTypeID" datasource="#application.datasource#">
+        <cfset useLakebaseForvariables_selPGTypeID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_operator_category")>
+<cfif useLakebaseForvariables_selPGTypeID>
+	<cftry>
+		<cfset variables.selPGTypeID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_operator_category", {
+				"pg_operator_category_id" = "eq.#variables.PGCatID#",
+				"select" = "pg_type_id"
+			}), "pg_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_selPGTypeID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_selPGTypeID>
+<cfquery name="variables.selPGTypeID" datasource="#application.datasource#">
           SELECT
             PG_Type_ID
           FROM
@@ -68,6 +121,7 @@ label {
           WHERE
             PG_Operator_Category_ID = '#variables.PGCatID#'
         </cfquery>
+</cfif>
 
         <cfquery name="variables.qInsPGOperatorCategoryDefinition" datasource="#application.datasource#">
           INSERT INTO PG_Operator_Category_Definition

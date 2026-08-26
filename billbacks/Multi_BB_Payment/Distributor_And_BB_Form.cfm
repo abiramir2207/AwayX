@@ -43,7 +43,23 @@ TABLE.BorderTable TD Validate
 		WHERE 		Billback.Billback_ID = '#URL.BBID#'
 	</CFQUERY>
 	
-	<CFQUERY NAME="BBList" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForBBList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks_list")>
+<cfif useLakebaseForBBList>
+	<cftry>
+		<cfset BBList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pay_multi_billbacks_list", {
+				"pay_multi_billbacks_id" = "eq.#URL.Pay_Multi_Billbacks_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBList>
+<CFQUERY NAME="BBList" DATASOURCE="#Application.Datasource#">
 		SELECT 	Billback_ID 
 		
 		FROM 	Pay_Multi_Billbacks_List 
@@ -51,6 +67,7 @@ TABLE.BorderTable TD Validate
 		WHERE 	Pay_Multi_Billbacks_ID = '#URL.Pay_Multi_Billbacks_ID#' AND 
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET BBIDList = VALUELIST(BBList.Billback_ID)>
 	
 	
@@ -92,7 +109,27 @@ TABLE.BorderTable TD Validate
 <CFPARAM NAME="FORM.LockSubmit" DEFAULT="0">
 
 <CFIF FORM.Billback_ID EQ "">
-	<CFQUERY NAME="UnlockAnyLocked" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUnlockAnyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForUnlockAnyLocked>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"bb_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"bb_is_locked" = "eq.1",
+				"bb_locked_by_match_central" = "eq.0"
+			},
+			{
+				"bb_is_locked" = "0",
+				"bb_locked_by_user_id" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUnlockAnyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUnlockAnyLocked>
+<CFQUERY NAME="UnlockAnyLocked" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Billback_Allied
 		
 		SET 	BB_Is_Locked = 0,
@@ -102,6 +139,7 @@ TABLE.BorderTable TD Validate
 				BB_Is_Locked = 1
 		AND BB_Locked_By_Match_Central = 0
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 
@@ -125,7 +163,24 @@ TABLE.BorderTable TD Validate
 <!--- <CFDUMP VAR="#FORM#"> --->
 
 <CFIF FORM.Distributor_List NEQ "">
-	<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#FORM.Distributor_List#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"select" = "bsa_foodservice_customers_id,name,ship_to,address_1,address_2,city,state,zipcode,phone"
+			}), "bsa_foodservice_customers_id,name,ship_to,address_1,address_2,city,state,zipcode,phone"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
 		SELECT 		BSA_Foodservice_Customers_ID,
 					Name,
 					Ship_To,
@@ -142,10 +197,27 @@ TABLE.BorderTable TD Validate
 					BSA_Foodservice_Customers.Deleted = 0	AND
 					BSA_Foodservice_Customers.Active_Code = 'A'
 	</CFQUERY>
+</cfif>
 </CFIF>	
 
 <CFIF FORM.Operator_List NEQ "">
-	<CFQUERY NAME="Op_Search_Result" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForOp_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForOp_Search_Result>
+	<cftry>
+		<cfset Op_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#FORM.Operator_List#",
+				"deleted" = "eq.0",
+				"select" = "operator_name,operator_address,operator_city,operator_state,operator_zip,operator_address2"
+			}), "operator_name,operator_address,operator_city,operator_state,operator_zip,operator_address2"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOp_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOp_Search_Result>
+<CFQUERY NAME="Op_Search_Result" DATASOURCE = "#Application.Datasource#">
 		SELECT 	Operator_Name,
 				Operator_Address,
 				Operator_City,
@@ -156,11 +228,29 @@ TABLE.BorderTable TD Validate
 		FROM 	BSA_Operator 
 		WHERE	BSA_Operator.BSA_Operator_ID = '#FORM.Operator_List#' AND
 				BSA_Operator.Deleted = 0
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 </CFIF>
 
 <CFIF FORM.Broker_List NEQ "">
-	<CFQUERY NAME="Bro_Search_Result" DATASOURCE = "#Application.Datasource#">
+	<cfset useLakebaseForBro_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForBro_Search_Result>
+	<cftry>
+		<cfset Bro_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"bsa_foodservice_brokers_id" = "eq.#FORM.Broker_List#",
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"select" = "bsa_foodservice_brokers_id,broker_name,address,address_2,city,state,zip"
+			}), "bsa_foodservice_brokers_id,broker_name,address,address_2,city,state,zip"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBro_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBro_Search_Result>
+<CFQUERY NAME="Bro_Search_Result" DATASOURCE = "#Application.Datasource#">
 		SELECT 	BSA_Foodservice_Brokers_ID,
 				Broker_Name,
 				Address,
@@ -174,6 +264,7 @@ TABLE.BorderTable TD Validate
 				BSA_Foodservice_Brokers.Deleted = 0	AND
 				BSA_Foodservice_Brokers.Active_Code = 'A'
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 <CFIF FORM.Billback_ID NEQ "">

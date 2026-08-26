@@ -285,12 +285,28 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 		<cfset doneForecast = 0>
 		<cfset forecastVolume = 0>
 		<cfif isDefined("qForecastVolumeInfo")>
-			<CFQUERY NAME="Get_Forecast_Volume" dbtype="query">
+			<cfset useLakebaseForGet_Forecast_Volume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qforecastvolumeinfo")>
+<cfif useLakebaseForGet_Forecast_Volume>
+	<cftry>
+		<cfset Get_Forecast_Volume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qforecastvolumeinfo", {
+				"product_id" = "eq.#arguments.productId#",
+				"select" = "forecastvolume"
+			}), "forecastvolume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Forecast_Volume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Forecast_Volume>
+<CFQUERY NAME="Get_Forecast_Volume" dbtype="query">
 				SELECT	forecastVolume
 				FROM	qForecastVolumeInfo
 				WHERE
 						Product_ID = '#arguments.productId#'
 			</CFQUERY>
+</cfif>
 			<cfif Get_Forecast_Volume.RecordCount GT 0>
 				<cfset doneForecast = 1>
 				<cfset forecastVolume = Get_Forecast_Volume.forecastVolume>

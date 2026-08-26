@@ -18,18 +18,59 @@
 <!---Help Files--->
 <CFINCLUDE TEMPLATE="/helpsystem/help_link.cfm">
 <p></p>
+<cfset useLakebaseForGet_Session_settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGet_Session_settings>
+	<cftry>
+		<cfset Get_Session_settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_settings>
+<cfset useLakebaseForGet_Session_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGet_Session_Settings>
+	<cftry>
+		<cfset Get_Session_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Settings>
 <CFQUERY NAME="Get_Session_settings" datasource="#application.datasource#" MAXROWS=1>
 	SELECT		*
 	FROM		General_Settings
 </CFQUERY>
+</cfif>
+</cfif>
 
 
 
+<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_Session_settings.Session_Expiration_Changed_By#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
 <CFQUERY NAME="getUserName" datasource="#application.datasource#">
 	SELECT *
 	FROM _Users
 	WHERE User_ID = '#Get_Session_settings.Session_Expiration_Changed_By#'
 </CFQUERY>
+</cfif>
 
 <TABLE BGCOLOR="White" style="border-color:Orange;border-style:solid;" CELLPADDING="3" CELLSPACING="0">
 <TR>

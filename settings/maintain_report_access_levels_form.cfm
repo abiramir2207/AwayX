@@ -9,12 +9,28 @@
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <CFPARAM NAME="URL.RID" DEFAULT="9999">
+<cfset useLakebaseForGet_RAL_List = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_access_levels")>
+<cfif useLakebaseForGet_RAL_List>
+	<cftry>
+		<cfset Get_RAL_List = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("report_access_levels", {
+				"editable" = "eq.1",
+				"order" = "level_code.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_RAL_List = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_RAL_List>
 <CFQUERY NAME="Get_RAL_List" datasource="#application.datasource#">
 	Select		*
 	From		report_access_levels
 	WHERE 	 	editable = 1
 	Order by	level_code ASC
 </CFQUERY>
+</cfif>
 
 
 <CFQUERY NAME="Get_LastUpdated_Details" datasource="#application.datasource#">

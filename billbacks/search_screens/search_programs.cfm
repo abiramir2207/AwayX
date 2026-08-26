@@ -70,11 +70,27 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
 
 <cfset variables.VendorOnlyBillback = 0>
 <cfif len(trim(Billback_ID)) GT 0>
+<cfset useLakebaseForqVendorOnlyBillback = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqVendorOnlyBillback>
+	<cftry>
+		<cfset qVendorOnlyBillback = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "vendor_only_billback"
+			}), "vendor_only_billback"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqVendorOnlyBillback = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqVendorOnlyBillback>
 <cfquery name="qVendorOnlyBillback" datasource="#Application.Datasource#">
 	SELECT Vendor_Only_Billback
 	FROM Billback
 	WHERE Billback_ID = '#Billback_ID#'
 </cfquery>
+</cfif>
 	<!--- Dev Note(78635): Check whether it is a lump sum program paid to vendor --->
 	<cfset variables.VendorOnlyBillback = qVendorOnlyBillback.Vendor_Only_Billback>
 </cfif>
@@ -575,12 +591,28 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
 								<TD><INPUT onclick="JavaScript:dist_lookup_Pick(1,this);" TYPE="RADIO" ID="Customer_Filter" NAME="Customer_Filter" VALUE="family_name"<CFIF FORM.Customer_Filter EQ "family_name"> CHECKED</CFIF>></TD>
 								<TD NOWRAP><span class="searchItemLabel"><cfoutput>#application.returned_customer_setting.family_name_label_singular#</cfoutput></span></TD>
 								<TD>
-								<cfquery name="GetFamilyNames" datasource="#application.datasource#">
+								<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" datasource="#application.datasource#">
 									SELECT *
 									FROM Distributor_Family
 									WHERE Deleted = 0
 									ORDER BY Family_Name
 								</cfquery>
+</cfif>
 								<CFPARAM NAME="FORM.Family_Name" DEFAULT="0">
 								<SPAN ID="SP_Family_Name">
 								<SELECT NAME="Family_Name" style="width: 180px;"  onkeydown="if (event.keyCode == 13) document.MyForm.submit();">
@@ -593,13 +625,30 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--->
 								<TD><INPUT onclick="JavaScript:dist_lookup_Pick(2,this);" TYPE="RADIO" ID="Customer_Filter" NAME="Customer_Filter" VALUE="buying_group"<CFIF FORM.Customer_Filter EQ "buying_group"> CHECKED</CFIF>></TD>
 								<TD NOWRAP><span class="searchItemLabel"><cfoutput>#application.returned_customer_setting.buying_group_label_plural#</cfoutput></span></TD>
 								<TD>
-								<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
+								<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
 									SELECT *
 									FROM Distributor_Buying_Groups
 									WHERE Deleted = 0
 									AND	Active_Code = 'A'
 									ORDER BY Buying_Group_Name
 								</cfquery>
+</cfif>
 								<CFPARAM NAME="FORM.Buying_Group" DEFAULT="0">
 								<SPAN ID="SP_Buying_Group">
 								<SELECT NAME="Buying_Group" style="width: 180px;"  onkeydown="if (event.keyCode == 13) document.MyForm.submit();">
@@ -956,11 +1005,27 @@ Add Sort By
 				<cfset segment_enabled_for_distributor = 0 />
 			</cfcase>
 			<cfcase value="3"><!--- Broker --->
-				<cfquery name="getBrokerBusinessSegmentId" datasource="#Application.Datasource#">
+				<cfset useLakebaseForgetBrokerBusinessSegmentId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForgetBrokerBusinessSegmentId>
+	<cftry>
+		<cfset getBrokerBusinessSegmentId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"bsa_foodservice_brokers_id" = "eq.#FORM.FilterDataList#",
+				"select" = "business_segment_id"
+			}), "business_segment_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBrokerBusinessSegmentId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBrokerBusinessSegmentId>
+<cfquery name="getBrokerBusinessSegmentId" datasource="#Application.Datasource#">
 					SELECT 	Business_Segment_ID
 					FROM	BSA_Foodservice_Brokers
 					WHERE 	BSA_Foodservice_Brokers_ID = '#FORM.FilterDataList#'
 				</cfquery>
+</cfif>
 				<CFIF getBrokerBusinessSegmentId.recordcount GT 0>
 					<cfset businessSegmentId = getBrokerBusinessSegmentId.Business_Segment_ID />
 				</CFIF>
@@ -981,18 +1046,49 @@ Add Sort By
 		########	used for auto bb stuff...could be applied for other purposes 	########
 		########	Discount Identifier Filter										########--->
 <cfif form.DiscIDFilter>
-	<cfquery name="getPricingTemplateList" datasource="#Application.Datasource#">
+	<cfset useLakebaseForgetPricingTemplateList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForgetPricingTemplateList>
+	<cftry>
+		<cfset getPricingTemplateList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "pricing_template_list"
+			}), "pricing_template_list"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPricingTemplateList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPricingTemplateList>
+<cfquery name="getPricingTemplateList" datasource="#Application.Datasource#">
 		SELECT Pricing_Template_List
 			FROM _Application_Settings
 	</cfquery>
 </cfif>
+</cfif>
 <!--- Filter on Programs with components that have "is_Auto_pay = 1" claim_mechanics --->
 <cfif form.isAutoPaySearch eq 1>
-	<cfquery name="qGetAutoPayClaimMechanics" datasource="#Application.Datasource#">
+	<cfset useLakebaseForqGetAutoPayClaimMechanics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForqGetAutoPayClaimMechanics>
+	<cftry>
+		<cfset qGetAutoPayClaimMechanics = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"is_auto_pay" = "eq.1",
+				"select" = "payment_type_id"
+			}), "payment_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAutoPayClaimMechanics = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAutoPayClaimMechanics>
+<cfquery name="qGetAutoPayClaimMechanics" datasource="#Application.Datasource#">
 		SELECT Payment_Type_Id
 		FROM Payment_Type
 		WHERE is_Auto_Pay = 1
 	</cfquery>
+</cfif>
 	<CFSET Filter_Auto_Pay_Claim_Mech_List = ValueList(qGetAutoPayClaimMechanics.Payment_Type_Id)>
 </cfif>
 <!---TSF: Label 10612 - Adding program filters based on users position.--->

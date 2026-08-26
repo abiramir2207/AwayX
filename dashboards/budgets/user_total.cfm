@@ -1,5 +1,19 @@
 <!--- ----------------------------------------------------------------------------------------- --->
 
+<cfset useLakebaseForGet_Data_1 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dashboards_budget_weekly_summary")>
+<cfif useLakebaseForGet_Data_1>
+	<cftry>
+		<cfset Get_Data_1 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dashboards_budget_weekly_summary", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data_1 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data_1>
 <cfquery name="Get_Data_1" datasource="#Application.Datasource#">
     SELECT *
 
@@ -8,6 +22,7 @@
     WHERE  user_id = '#request.AccessStructure.User_ID#'
 
 </cfquery>
+</cfif>
 
 <!--- ----------------------------------------------------------------------------------------- --->
 

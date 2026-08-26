@@ -70,7 +70,23 @@
 		WHERE 		Billback.Billback_ID = '#URL.BBID#'
 	</CFQUERY>
 	
-	<CFQUERY NAME="BBList" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForBBList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pay_multi_billbacks_list")>
+<cfif useLakebaseForBBList>
+	<cftry>
+		<cfset BBList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pay_multi_billbacks_list", {
+				"pay_multi_billbacks_id" = "eq.#URL.Pay_Multi_Billbacks_ID#",
+				"deleted" = "eq.0",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBBList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBBList>
+<CFQUERY NAME="BBList" DATASOURCE="#Application.Datasource#">
 		SELECT 	Billback_ID 
 		
 		FROM 	Pay_Multi_Billbacks_List 
@@ -78,6 +94,7 @@
 		WHERE 	Pay_Multi_Billbacks_ID = '#URL.Pay_Multi_Billbacks_ID#' AND 
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET BBIDList = VALUELIST(BBList.Billback_ID)>
 	
 	<FORM NAME="SRCFormVar" ACTION="Distributor_And_BB_Form.cfm" METHOD="POST" TARGET="contentIFrame">

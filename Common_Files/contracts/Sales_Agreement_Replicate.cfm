@@ -198,12 +198,31 @@
 </cftransaction>
 
 <!--- Unlock the current user's locked programs --->
+<cfset useLakebaseForunlockTheirPrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForunlockTheirPrograms>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"sales_agreement_locked_by_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"sales_agreement_is_locked" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForunlockTheirPrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForunlockTheirPrograms>
 <cfquery name="unlockTheirPrograms" datasource="#application.datasource#">
 	UPDATE Export_Sales_Agreement
 	SET	Sales_Agreement_Is_Locked = 0 
 	WHERE Sales_Agreement_Locked_By_User_ID = '#request.AccessStructure.User_ID#' 
 	AND Deleted = 0 
 </cfquery>
+</cfif>
 
 <!--- Lock the new created program --->
 <cfquery NAME="lockContractFromOtherUsers" datasource="#application.datasource#">

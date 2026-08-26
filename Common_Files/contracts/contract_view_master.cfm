@@ -7,17 +7,47 @@
 
 <CFPARAM NAME="CSL_CallingPageCode" DEFAULT="">
 
+<cfset useLakebaseForCSLGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForCSLGetContractInfo>
+	<cftry>
+		<cfset CSLGetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#CSLDeCID.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCSLGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCSLGetContractInfo>
 <CFQUERY NAME="CSLGetContractInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Main
 	WHERE Contract_Main_ID = '#CSLDeCID.value#'
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForCSLGetProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForCSLGetProducts>
+	<cftry>
+		<cfset CSLGetProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "neq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCSLGetProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCSLGetProducts>
 <CFQUERY NAME="CSLGetProducts" datasource="#application.datasource#">
 SELECT *
 FROM Contract_products
 WHERE Contract_Main_ID = '#CSLDeCID.value#' AND Contract_Main_ID <> 0
 </CFQUERY>
+</cfif>
 
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">

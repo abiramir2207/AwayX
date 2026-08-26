@@ -16,12 +16,28 @@ Usage:			N/A
 	<!--- Attempt to run the function code --->
 	<cftry>
 	
-		<cfquery name="var_selectQuery" datasource="#application.datasource#">
+		<cfset useLakebaseForvar_selectQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_setting_category")>
+<cfif useLakebaseForvar_selectQuery>
+	<cftry>
+		<cfset var_selectQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_setting_category", {
+				"order" = "name.asc",
+				"select" = "application_setting_category_id,name"
+			}), "application_setting_category_id,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvar_selectQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvar_selectQuery>
+<cfquery name="var_selectQuery" datasource="#application.datasource#">
 			SELECT 	Application_Setting_Category_ID,
 					Name
 			FROM 	Application_Setting_Category
 			ORDER BY Name
 		</cfquery>
+</cfif>
 				
 		<cfset var_returnQuery = var_selectQuery />
 		

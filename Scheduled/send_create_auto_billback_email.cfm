@@ -109,11 +109,29 @@
 				</table>
 	</CF_EMAILWRAPPER>
 
-	<CFQUERY NAME="UpdateSentBit" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateSentBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForUpdateSentBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"sent_create_auto_billback_email" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateSentBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateSentBit>
+<CFQUERY NAME="UpdateSentBit" DATASOURCE="#Application.Datasource#">
 		UPDATE Billback
 		SET Sent_Create_Auto_Billback_Email = 1
 		WHERE Billback_ID = '#Billback_ID#'
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 
 </cfif>
 </cfoutput>

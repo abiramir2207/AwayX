@@ -33,11 +33,28 @@
 <cfset ListAllowedGroupLevel = ""/>
 <cfif GetSettings.EZButton_On EQ 1 and url.EZTemplate EQ 0 and IsDefined("FORM.ProgramID") and GetSettings.Discount_Rebate_Max_Rate_On EQ 0>
 
-	<cfquery name="qryProductGroupOnProgram" datasource="#application.datasource#">
+	<cfset useLakebaseForqryProductGroupOnProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqryProductGroupOnProgram>
+	<cftry>
+		<cfset qryProductGroupOnProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#FORM.ProgramID#",
+				"deleted" = "eq.0",
+				"select" = "product_group_level_id"
+			}), "product_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryProductGroupOnProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryProductGroupOnProgram>
+<cfquery name="qryProductGroupOnProgram" datasource="#application.datasource#">
 		SELECT Distinct Product_Group_Level_ID
 		FROM Contract_Products
 		WHERE Contract_Main_ID = '#FORM.ProgramID#' and Deleted = 0
 	</cfquery>
+</cfif>
 	<cfset ListAllowedGroupLevel = ValueList(qryProductGroupOnProgram.Product_Group_Level_ID) />
 </cfif>
 

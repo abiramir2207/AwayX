@@ -267,11 +267,27 @@ and cp1.group_id not in
 
 <cffunction name="checkParentStats" access="public" returntype="query">
 <cfargument name="Revision_Of_Contract_Main_ID" type="string" required="true" />
+<cfset useLakebaseForqcheckParentStats = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqcheckParentStats>
+	<cftry>
+		<cfset qcheckParentStats = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Revision_Of_Contract_Main_ID#",
+				"select" = "contract_main_id,contract_status_type_idx"
+			}), "contract_main_id,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqcheckParentStats = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqcheckParentStats>
 <CFQUERY NAME="qcheckParentStats" datasource="#application.datasource#">
 				SELECT Contract_Main_ID, Contract_Status_Type_IDX
 				FROM Contract_Main
 				WHERE Contract_Main_ID = #arguments.Revision_Of_Contract_Main_ID#
 			</CFQUERY>
+</cfif>
 	<cfreturn qcheckParentStats />
 </cffunction>
 
@@ -352,6 +368,22 @@ and deleted = 0
 
 <cffunction name="getGrowthproducts" access="public" returntype="query">
 <cfargument name="program_id" type="string" required="true" />
+<cfset useLakebaseForqgetGrowthproducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForqgetGrowthproducts>
+	<cftry>
+		<cfset qgetGrowthproducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#arguments.program_id#",
+				"product_type_id" = "eq.4",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetGrowthproducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetGrowthproducts>
 <CFQUERY NAME="qgetGrowthproducts" datasource="#application.datasource#">
 select *
 from contract_products
@@ -360,6 +392,7 @@ contract_main_id =  #arguments.program_id#
 and Product_Type_ID = 4
 and deleted = 0
 </CFQUERY>
+</cfif>
 	<cfreturn qgetGrowthproducts />
 </cffunction>
 
@@ -419,11 +452,27 @@ order by Contract_Group_Margin.Group_Id
 
 <cffunction name="getThisProgramsStatus" access="public" returntype="query">
 <cfargument name="program_id" type="string" required="true" />
+<cfset useLakebaseForqgetThisProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqgetThisProgramsStatus>
+	<cftry>
+		<cfset qgetThisProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.program_id#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+			}), "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetThisProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetThisProgramsStatus>
 <CFQUERY NAME="qgetThisProgramsStatus" datasource="#application.datasource#">
 			SELECT Contract_Status_Type_IDX, Revision_Of_Contract_Main_ID, Broker_User_ID, Contract_Number, Contract_Title,Adv_Spending_Amount
 			FROM Contract_main
 			WHERE Contract_main_ID = #arguments.program_id#
 		</CFQUERY>
+</cfif>
 	<cfreturn qgetThisProgramsStatus />
 </cffunction>
 

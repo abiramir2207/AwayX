@@ -11,7 +11,25 @@
 <cfset duplicate_found_in_save = 0>
 
 <cfif cgi.request_method is "post">
-    <cfquery name="qTarget" datasource="#application.datasource#">
+    <cfset useLakebaseForqTarget = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_target_header")>
+<cfif useLakebaseForqTarget>
+	<cftry>
+		<cfset qTarget = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("planner_target_header", {
+				"fiscal_year" = "eq.#form.fiscal_year#",
+				"main_distributor_group_id" = "eq.#form.main_distributor_group_id#",
+				"invoice_start_date" = "eq.#form.invoice_start_date#",
+				"invoice_end_date" = "eq.#form.invoice_end_date#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqTarget = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqTarget>
+<cfquery name="qTarget" datasource="#application.datasource#">
         SELECT 1
           FROM Planner_Target_Header
          WHERE fiscal_year = #form.fiscal_year#
@@ -19,6 +37,7 @@
                     AND Invoice_Start_Date = '#form.invoice_start_date#'
                     AND Invoice_End_Date = '#form.invoice_end_date#'
     </cfquery>
+</cfif>
 
     <cfif qTarget.recordCount and form.overwrite neq "1">
         <cfset duplicate_found_in_save = 1>

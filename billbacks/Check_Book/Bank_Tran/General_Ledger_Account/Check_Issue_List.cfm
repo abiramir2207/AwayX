@@ -434,23 +434,81 @@
 					WHERE Billback_Allied.Billback_ID	=	'#Update_BBID#'
 				</CFQUERY>
 				<CFIF Check_Lock.BB_Is_Locked EQ 0>
-					<CFQUERY NAME="Lock_BB" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForLock_BB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForLock_BB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#Update_BBID#"
+			},
+			{
+				"bb_is_locked" = "1",
+				"bb_locked_by_user_id" = "#request.AccessStructure.User_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLock_BB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLock_BB>
+<CFQUERY NAME="Lock_BB" DATASOURCE="#Application.Datasource#">
 						UPDATE 		Billback_Allied
 						SET 		BB_Is_Locked = 1,
 									BB_Locked_By_User_ID = '#request.AccessStructure.User_ID#'
 									
 						WHERE 		Billback_ID = '#Update_BBID#' 
 					</CFQUERY>
+</cfif>
 					
 					
-					<CFQUERY NAME="Update_Status" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForUpdate_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
+<cfif useLakebaseForUpdate_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("payment_data_export_1",
+			{
+				"billback_id" = "eq.#Update_BBID#",
+				"deleted" = "eq.0",
+				"saved" = "eq.1"
+			},
+			{
+				"paid" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Status>
+<CFQUERY NAME="Update_Status" DATASOURCE="#Application.Datasource#">
 						UPDATE Payment_Data_Export_1
 						
 						SET		Paid	=	1
 						
 						WHERE Billback_ID = '#Update_BBID#' AND Deleted=0 AND Saved=1
 					</CFQUERY>
-					<CFQUERY NAME="Status_Paid" DATASOURCE="#Application.Datasource#">			
+</cfif>
+					<cfset useLakebaseForStatus_Paid = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForStatus_Paid>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback",
+			{
+				"billback_id" = "eq.#Update_BBID#",
+				"billback_status_id" = "eq.4",
+				"deleted" = "eq.0"
+			},
+			{
+				"billback_status_id" = "5"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForStatus_Paid = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForStatus_Paid>
+<CFQUERY NAME="Status_Paid" DATASOURCE="#Application.Datasource#">			
 						UPDATE	Billback
 						
 						SET		Billback_Status_ID = 5
@@ -458,8 +516,29 @@
 						WHERE	Billback.Billback_ID = '#Update_BBID#'
 								AND	Billback.Billback_Status_ID = 4 AND Deleted=0
 					</CFQUERY>
+</cfif>
 					
-					<CFQUERY NAME="Un_Lock_BB" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForUn_Lock_BB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_allied")>
+<cfif useLakebaseForUn_Lock_BB>
+	<cftry>
+		<cfset application.oLakebase.updateRows("billback_allied",
+			{
+				"billback_id" = "eq.#Update_BBID#",
+				"bb_locked_by_user_id" = "eq.#request.AccessStructure.user_id#",
+				"bb_locked_by_match_central" = "eq.0"
+			},
+			{
+				"bb_is_locked" = "0",
+				"bb_locked_by_user_id" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUn_Lock_BB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUn_Lock_BB>
+<CFQUERY NAME="Un_Lock_BB" DATASOURCE="#Application.Datasource#">
 						UPDATE 		Billback_Allied
 						
 						SET 		BB_Is_Locked = 0,
@@ -469,7 +548,8 @@
 									AND BB_Locked_By_User_ID = '#request.AccessStructure.user_id#'
 									AND BB_Locked_By_Match_Central = 0
 									
-					</CFQUERY>								
+					</CFQUERY>
+</cfif>								
 				<CFELSE>
 					<CFSET Unsuccess_Count = Unsuccess_Count + 1>
 					<CFIF Unsuccess_Count EQ 1>
@@ -518,13 +598,31 @@
 							WHERE 		Billback_ID IN (#LISTQUALIFY(PayMultiBBIdList,"'",",","All")#)
 						</CFQUERY>
 						
-						<CFQUERY NAME="ChangeStatus" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForChangeStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
+<cfif useLakebaseForChangeStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("payment_data_export_1",
+			{
+				"pay_multi_billbacks_id" = "eq.#IDList#"
+			},
+			{
+				"paid" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForChangeStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForChangeStatus>
+<CFQUERY NAME="ChangeStatus" DATASOURCE="#Application.Datasource#">
 							UPDATE 	Payment_Data_Export_1
 							
 							SET 	Paid	=	1
 							
 							WHERE 	Pay_Multi_Billbacks_ID = '#IDList#'
 						</CFQUERY>
+</cfif>
 						
 						<CFQUERY NAME="Status_Paid" DATASOURCE="#Application.Datasource#">			
 							UPDATE	Billback

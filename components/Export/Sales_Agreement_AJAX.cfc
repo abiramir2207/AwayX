@@ -46,12 +46,29 @@
 		<cfargument name="IsDisabled" type="boolean" default="0">
 
 		<cfset ReturnValue  = ArrayNew(1)>
-		<cfquery name="get_Named_Place_Type_ID" datasource="#Application.Datasource#">
+		<cfset useLakebaseForget_Named_Place_Type_ID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_terms_of_sale")>
+<cfif useLakebaseForget_Named_Place_Type_ID>
+	<cftry>
+		<cfset get_Named_Place_Type_ID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_terms_of_sale", {
+				"export_lookup_terms_of_sale_id" = "eq.#arguments.TOS#",
+				"order" = "export_lookup_terms_of_sale_desc.asc",
+				"select" = "export_lookup_named_place_type_id"
+			}), "export_lookup_named_place_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Named_Place_Type_ID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Named_Place_Type_ID>
+<cfquery name="get_Named_Place_Type_ID" datasource="#Application.Datasource#">
 			SELECT Export_Lookup_Named_Place_Type_ID
 			FROM Export_Lookup_Terms_of_Sale
 			WHERE Export_Lookup_Terms_of_Sale_ID = '#arguments.TOS#'
 			ORDER BY Export_Lookup_Terms_of_Sale_Desc
 		</cfquery>
+</cfif>
 		
 		<cfif arguments.Export_Sales_Agreement_ID neq "">
 			<cfset Export_Sales_Agreement_Details = getExportSalesAgreement('#arguments.Export_Sales_Agreement_ID#')>
@@ -81,11 +98,27 @@
 		<cfelse>
 		<cfset ReturnValue[1] = ReturnValue[1] & "<option value='0'>None</option>">
 
-		<cfquery name="qrygetNamedPlace" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqrygetNamedPlace = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_ports")>
+<cfif useLakebaseForqrygetNamedPlace>
+	<cftry>
+		<cfset qrygetNamedPlace = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_ports", {
+				"export_lookup_named_place_type_id" = "eq.#Export_Lookup_Named_Place_Type_ID#",
+				"order" = "export_lookup_destination_port_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetNamedPlace = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetNamedPlace>
+<cfquery name="qrygetNamedPlace" datasource="#Application.Datasource#">
 			SELECT * FROM Export_Lookup_Destination_Ports
 			WHERE Export_Lookup_Named_Place_Type_ID = '#Export_Lookup_Named_Place_Type_ID#'
 			ORDER BY Export_Lookup_Destination_Port_Desc
 		</cfquery>
+</cfif>
 
 			<cfloop query="qrygetNamedPlace">
 				<cfset ReturnValue[1] = ReturnValue[1] & "<option value='#Export_Lookup_Destination_Port_ID#'">
@@ -107,11 +140,27 @@
 		
 		<!--- FOR DAF (ID - 3), RETURNS 'MEXICO DELIVERY POINTS' ALSO --->
 		<cfif Export_Lookup_Named_Place_Type_ID eq 3>
-			<cfquery name="List_Mexico_Destinations" datasource="#Application.Datasource#">
+			<cfset useLakebaseForList_Mexico_Destinations = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_ports")>
+<cfif useLakebaseForList_Mexico_Destinations>
+	<cftry>
+		<cfset List_Mexico_Destinations = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_ports", {
+				"export_lookup_named_place_type_id" = "eq.4",
+				"order" = "export_lookup_destination_port_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForList_Mexico_Destinations = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForList_Mexico_Destinations>
+<cfquery name="List_Mexico_Destinations" datasource="#Application.Datasource#">
 			SELECT * FROM Export_Lookup_Destination_Ports
 			WHERE Export_Lookup_Named_Place_Type_ID = 4
 			ORDER BY Export_Lookup_Destination_Port_Desc
-			</cfquery>		
+			</cfquery>
+</cfif>		
 
 			<cfloop query="List_Mexico_Destinations">
 				<cfset ReturnValue[2] = ReturnValue[2] & "<option value='#Export_Lookup_Destination_Port_ID#'">
@@ -137,11 +186,27 @@
 		<cfargument name="IsDisabled" type="boolean" default="0">
 		<cfargument name="ShowSelected" type="boolean" default="0" required="no">
 
-		<cfquery name="qrygetPalletIndicator" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqrygetPalletIndicator = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_country")>
+<cfif useLakebaseForqrygetPalletIndicator>
+	<cftry>
+		<cfset qrygetPalletIndicator = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_country", {
+				"export_lookup_destination_country_id" = "eq.#arguments.Destination#",
+				"select" = "export_lookup_allow_pallets"
+			}), "export_lookup_allow_pallets"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetPalletIndicator = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetPalletIndicator>
+<cfquery name="qrygetPalletIndicator" datasource="#Application.Datasource#">
 			SELECT Export_Lookup_Allow_Pallets
 			FROM Export_Lookup_Destination_Country
 			WHERE Export_Lookup_Destination_Country_ID = '#arguments.Destination#'
 		</cfquery>
+</cfif>
 
 			<cfif arguments.Export_Sales_Agreement_ID neq "">
 				<cfset Export_Sales_Agreement_Details = getExportSalesAgreement('#arguments.Export_Sales_Agreement_ID#')>
@@ -233,23 +298,54 @@
 
 	<!--- Get the invoice terms --->
 	<cffunction name="getInvoiceTerms" output="no" returntype="query">
-		<cfquery name="qrygetInvoiceTerms" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqrygetInvoiceTerms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("invoice_terms")>
+<cfif useLakebaseForqrygetInvoiceTerms>
+	<cftry>
+		<cfset qrygetInvoiceTerms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("invoice_terms", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetInvoiceTerms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetInvoiceTerms>
+<cfquery name="qrygetInvoiceTerms" datasource="#Application.Datasource#">
 			SELECT * FROM 
 			Invoice_Terms
 			WHERE Deleted = 0
 		</cfquery>
+</cfif>
 		
 		<cfreturn qrygetInvoiceTerms>
 	</cffunction>
 	
 	<!--- get the list of destinations, Max weight allowed for the country, and if the country allows pallets or not --->
 	<cffunction name="getDestination" output="no" returntype="query">	
-		<cfquery name="qrygetDestination" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqrygetDestination = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_country")>
+<cfif useLakebaseForqrygetDestination>
+	<cftry>
+		<cfset qrygetDestination = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_destination_country", {
+				"show_country" = "eq.1",
+				"order" = "export_lookup_destination_country_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetDestination = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetDestination>
+<cfquery name="qrygetDestination" datasource="#Application.Datasource#">
 			SELECT * FROM 
 			Export_Lookup_Destination_Country
 			WHERE Show_Country = 1
 			ORDER BY Export_Lookup_Destination_Country_Desc
 		</cfquery>
+</cfif>
 
 		<cfreturn qrygetDestination>
 	</cffunction>
@@ -415,10 +511,25 @@
 
 	<!--- Get the stickering costs (per LB) related to exports --->
 	<cffunction name="getAllStickeringCosts" output="no" returntype="query">
-		<cfquery name="qrygetAllStickeringCosts" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqrygetAllStickeringCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_stickering_cost")>
+<cfif useLakebaseForqrygetAllStickeringCosts>
+	<cftry>
+		<cfset qrygetAllStickeringCosts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_stickering_cost", {
+				"select" = "export_stickering_cost_id,export_stickering_cost_desc,export_stickering_cost_lb"
+			}), "export_stickering_cost_id,export_stickering_cost_desc,export_stickering_cost_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetAllStickeringCosts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetAllStickeringCosts>
+<cfquery name="qrygetAllStickeringCosts" datasource="#Application.Datasource#">
 			SELECT Export_Stickering_Cost_ID,Export_Stickering_Cost_Desc,Export_Stickering_Cost_LB
 			FROM Export_Lookup_Stickering_Cost
 		</cfquery>
+</cfif>
 
 		<cfreturn qrygetAllStickeringCosts>
 	</cffunction>
@@ -469,11 +580,29 @@
 		<cfargument name="Export_Sales_Agreement_ID" type="string" required="yes">
 		<cfargument name="ExportStickeringType" type="numeric" required="yes">
 
-		<cfquery name="updateStickeringType" datasource="#Application.Datasource#">
+		<cfset useLakebaseForupdateStickeringType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForupdateStickeringType>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_sales_agreement",
+			{
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_stickering_cost_id" = "#arguments.ExportStickeringType#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateStickeringType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateStickeringType>
+<cfquery name="updateStickeringType" datasource="#Application.Datasource#">
 			UPDATE Export_Sales_Agreement
 			SET Export_Stickering_Cost_ID = '#arguments.ExportStickeringType#'
 			WHERE Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'
 		</cfquery>
+</cfif>
 		<!--- I am returning a  value here because AJAXCFC expects a return value --->
 		<cfreturn 1>
 	</cffunction>
@@ -624,12 +753,31 @@
 
 		<cfloop from="1" to="#Arraylen(Target_NSP)#" index="i">
 			<cfset TargetNSP = TargetNSP + Target_NSP[i]>
-			<cfquery name="updateCost" datasource="#Application.Datasource#">
+			<cfset useLakebaseForupdateCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_products")>
+<cfif useLakebaseForupdateCost>
+	<cftry>
+		<cfset application.oLakebase.updateRows("export_products",
+			{
+				"bsa_foodservice_items_master_id" = "eq.#arguments.BSA_Foodservice_Items_Master_ID#",
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#"
+			},
+			{
+				"export_target_net_sales_price" = "#Target_NSP[i]#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateCost>
+<cfquery name="updateCost" datasource="#Application.Datasource#">
 			UPDATE Export_Products
 			SET Export_Target_Net_Sales_Price = '#Target_NSP[i]#'
 			WHERE BSA_Foodservice_Items_Master_ID = '#arguments.BSA_Foodservice_Items_Master_ID#'
 			AND Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'
 			</cfquery>
+</cfif>
 		</cfloop>
 
 		<cfloop from="1" to="#Arraylen(Standard_Costs)#" index="i">
@@ -789,12 +937,29 @@
 	  <cfargument name="ExportCustomerID" type="numeric" required="Yes">
 	  <cfargument name="StatusAllowed" type="numeric" required="Yes">
 
-		<cfquery name="qrygetCustomerStatusTypes" datasource="#application.datasource#">
+		<cfset useLakebaseForqrygetCustomerStatusTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_customer_status_types")>
+<cfif useLakebaseForqrygetCustomerStatusTypes>
+	<cftry>
+		<cfset qrygetCustomerStatusTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_lookup_customer_status_types", {
+				"export_lookup_customer_status_type_id" = "eq.#arguments.StatusAllowed#",
+				"deleted" = "eq.0",
+				"select" = "export_lookup_customer_status_type_id,export_lookup_customer_status_type_desc"
+			}), "export_lookup_customer_status_type_id,export_lookup_customer_status_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetCustomerStatusTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetCustomerStatusTypes>
+<cfquery name="qrygetCustomerStatusTypes" datasource="#application.datasource#">
 			SELECT Export_Lookup_Customer_Status_type_ID,Export_Lookup_Customer_Status_Type_Desc
 			FROM Export_Lookup_Customer_Status_Types
 			WHERE Export_Lookup_Customer_Status_type_ID = '#arguments.StatusAllowed#'
 			AND Deleted = 0
 		</cfquery>
+</cfif>
 
 		<cfset ReturnValue = ArrayNew(1)>
 		

@@ -46,11 +46,26 @@ ORDER BY dbo.Type_Group_Desc.Type_Group_Desc, dbo.Q_Brand_Desc.Q_Brand_Desc, dbo
 	</CFQUERY>
 </cfif>
 
+<cfset useLakebaseForgetProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetProgramInfo>
+	<cftry>
+		<cfset getProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Program_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramInfo>
 <cfquery name="getProgramInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Main
 	WHERE Contract_Main_ID = '#FORM.Program_ID#'
 </cfquery>
+</cfif>
 
 <!--- count all the products in the categories --->
 <CFSET TotalProductCount = 0>

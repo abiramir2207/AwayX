@@ -1,7 +1,20 @@
+<cfset useLakebaseForGetTradePrograms = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("trade_programs")>
+<cfif useLakebaseForGetTradePrograms>
+	<cftry>
+		<cfset GetTradePrograms = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("trade_programs", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTradePrograms = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTradePrograms>
 <CFQUERY NAME="GetTradePrograms" datasource="#application.datasource#">
 	SELECT *
 	FROM Trade_Programs
 </CFQUERY>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 

@@ -6,33 +6,95 @@
 	<cfset Form.Program_ID = cryp.value>
 	<cfset Form.IsRevisionOfExistingContract = 1>
 	
-	<cfquery name="Getcompany" datasource="#application.datasource#">
+	<cfset useLakebaseForGetcompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetcompany>
+	<cftry>
+		<cfset Getcompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetcompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetcompany>
+<cfquery name="Getcompany" datasource="#application.datasource#">
 		SELECT 	Top 1 Company_Main_ID
 		FROM 	Company_Main
 	</cfquery>
+</cfif>
 
 	<cfset request.AccessStructure.Company_Main_ID = GetCompany.Company_Main_ID>
 	
 	<cfinclude template="/common_files/contracts/contract_renewal_action.cfm">
 	
-		<cfquery name="qProgramInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForqProgramInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqProgramInfo>
+	<cftry>
+		<cfset qProgramInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"select" = "original_creating_user_position_id,creating_user_position_id,creator_id,programtype_id"
+			}), "original_creating_user_position_id,creating_user_position_id,creator_id,programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqProgramInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqProgramInfo>
+<cfquery name="qProgramInfo" datasource="#application.datasource#">
 			SELECT 	Original_Creating_User_Position_ID, Creating_User_Position_ID, Creator_ID, ProgramType_ID
 			FROM 	Contract_Main
 			WHERE 	Contract_Main_ID = '#Program_ID_To_Replicate#'
 		</cfquery>
+</cfif>
 		
 		<!--- LOAD SETTINGS --->
-		<cfquery name="getFieldSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForgetFieldSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetFieldSettings>
+	<cftry>
+		<cfset getFieldSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#qProgramInfo.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFieldSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFieldSettings>
+<cfquery name="getFieldSettings" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_Control_Panel_Options
 			WHERE 	ProgramControl_Panel_Options_ID = '#qProgramInfo.ProgramType_ID#'
 		</cfquery>
+</cfif>
 		
-		<cfquery name="AutoRenew" datasource="#application.datasource#">
+		<cfset useLakebaseForAutoRenew = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForAutoRenew>
+	<cftry>
+		<cfset AutoRenew = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_auto_renew", {
+				"program_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAutoRenew = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAutoRenew>
+<cfquery name="AutoRenew" datasource="#application.datasource#">
 			SELECT 	* 
 			FROM 	Program_Auto_Renew 
 			WHERE 	Program_ID = '#Program_ID_To_Replicate#'
 		</cfquery>
+</cfif>
 		
 		<!------ Bid Request ----->
 		<cfif getFieldSettings.Generic_Type eq "Bid Request">
@@ -49,11 +111,27 @@
 		<cfset request.AccessStructure.Creating_User_Position_ID = qProgramInfo.Creating_User_Position_ID>
 		<cfset request.AccessStructure.User_ID = qProgramInfo.Creator_ID>
 		
-		<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
+		<cfset useLakebaseForgetPacket = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_renewal_packets")>
+<cfif useLakebaseForgetPacket>
+	<cftry>
+		<cfset getPacket = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_renewal_packets", {
+				"contract_renewal_packets_id" = "eq.#savePacket.Contract_Renewal_Packets_ID#",
+				"select" = "xml_file_location"
+			}), "xml_file_location"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPacket = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPacket>
+<CFQUERY NAME="getPacket" datasource="#application.datasource#" MAXROWS="1">
 			SELECT XML_File_Location
 			FROM Contract_Renewal_Packets
 			WHERE Contract_Renewal_Packets_ID = '#savePacket.Contract_Renewal_Packets_ID#'
 		</CFQUERY>
+</cfif>
 	
 		<CFFILE ACTION="READ" FILE="#getPacket.XML_File_Location#" VARIABLE="Packet_Data">
 		<CFWDDX ACTION="WDDX2CFML" INPUT="#Packet_Data#" OUTPUT="Program_Packet">

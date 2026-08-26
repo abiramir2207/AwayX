@@ -1,7 +1,20 @@
 
+<cfset useLakebaseForTotalEarn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("rp_mapping_table")>
+<cfif useLakebaseForTotalEarn>
+	<cftry>
+		<cfset TotalEarn = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("rp_mapping_table", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTotalEarn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTotalEarn>
 <cfquery name="TotalEarn" datasource="#application.datasource#">
 SELECT * FROM RP_Mapping_Table
 </cfquery>
+</cfif>
 <cfquery name="TotalBB" datasource="#application.datasource#">
 <!--- SELECT * FROM RP_Mapping_Table --->
 SELECT * FROM RP_Billback_Table

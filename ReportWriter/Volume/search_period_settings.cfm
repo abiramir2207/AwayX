@@ -1,9 +1,26 @@
+<cfset useLakebaseForgetDistributorFiscalCalendar = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_fiscal_year")>
+<cfif useLakebaseForgetDistributorFiscalCalendar>
+	<cftry>
+		<cfset getDistributorFiscalCalendar = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_fiscal_year", {
+				"deleted" = "eq.0",
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "last_updated,last_updated_by_user_id"
+			}), "last_updated,last_updated_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDistributorFiscalCalendar = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDistributorFiscalCalendar>
 <CFQUERY NAME="getDistributorFiscalCalendar" datasource="#application.datasource#" MAXROWS=1>
 	SELECT Last_Updated,Last_Updated_By_User_ID
 	FROM Distributor_Fiscal_Year
 	WHERE Deleted = 0
 	AND Company_Main_ID = '#request.AccessStructure.Company_Main_ID#'
 </CFQUERY>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>
@@ -44,11 +61,26 @@
 <CFIF getDistributorFiscalCalendar.recordcount EQ 0>
 <p>There have been no entries for any of the <cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput>'s Fiscal Year</p>
 <CFELSE>
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#getDistributorFiscalCalendar.Last_Updated_By_User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT *
 		FROM _Users
 		WHERE User_ID = '#getDistributorFiscalCalendar.Last_Updated_By_User_ID#'
 	</CFQUERY>
+</cfif>
 
 	<TABLE BGCOLOR="White" style="border-color:Orange;border-style:solid;" CELLPADDING="3" CELLSPACING="0">
 	<TR>

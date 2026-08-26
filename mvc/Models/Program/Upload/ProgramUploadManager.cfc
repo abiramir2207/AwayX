@@ -136,7 +136,22 @@
 
 		<cfset r = "" />
 
-		<cfquery name="qGetReport" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetReport = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("y_deal_ui_upload")>
+<cfif useLakebaseForqGetReport>
+	<cftry>
+		<cfset qGetReport = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("y_deal_ui_upload", {
+				"batch_id" = "eq.#arguments.batchId#",
+				"select" = "batch_id,record_type,header_action,external_program,forge_program,title,start,[end],rsp_id,position_id,sold_to,operator_id,material,rate,uom,discount_type,component,pays_to,frequency,claim_mechanic,currency,volume,volume_uom,error_info,upload_file_name"
+			}), "batch_id,record_type,header_action,external_program,forge_program,title,start,[end],rsp_id,position_id,sold_to,operator_id,material,rate,uom,discount_type,component,pays_to,frequency,claim_mechanic,currency,volume,volume_uom,error_info,upload_file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetReport = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetReport>
+<cfquery name="qGetReport" datasource="#application.datasource#">
 			SELECT	Batch_ID,
 					Record_Type,
 					Header_Action,
@@ -165,6 +180,7 @@
 			FROM	Y_DEAL_UI_Upload
 			WHERE	Batch_ID = '#arguments.batchId#'
 		</cfquery>
+</cfif>
 
 		<cfif qGetReport.RecordCount>
 			<cfscript>

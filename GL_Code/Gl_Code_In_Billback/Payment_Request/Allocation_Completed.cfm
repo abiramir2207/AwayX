@@ -79,9 +79,25 @@
 	</CFQUERY>
 <CFELSEIF GetPayee.Billback_Payee_Type_ID EQ 2>
 	<!--- 
-	<CFQUERY NAME="GetAssociatedShipTo" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetAssociatedShipTo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_operator")>
+<cfif useLakebaseForGetAssociatedShipTo>
+	<cftry>
+		<cfset GetAssociatedShipTo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_operator", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAssociatedShipTo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAssociatedShipTo>
+<CFQUERY NAME="GetAssociatedShipTo" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Billback_Operator WHERE Billback_ID = '#Billback_ID#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	 --->
 	<CFQUERY NAME="SelectVendor" DATASOURCE="#Application.Datasource#">
 		SELECT 		DISTINCT 	Vendor_Dist_Oper.Vendor_ID,					

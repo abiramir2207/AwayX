@@ -17,9 +17,24 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 <cfinclude template="/settings/settings_title.cfm">
 <cfoutput>
 	<cfif URL.src EQ "Dist">
-		<cfquery name="shrShipToInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForshrShipToInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForshrShipToInfo>
+	<cftry>
+		<cfset shrShipToInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"ship_to" = "eq.#URL.shrShipTo#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForshrShipToInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForshrShipToInfo>
+<cfquery name="shrShipToInfo" datasource="#application.datasource#">
 			SELECT * FROM BSA_Foodservice_Customers WHERE Ship_To = '#URL.shrShipTo#'
 		</cfquery>
+</cfif>
 		<cfquery name="qryBBList" datasource="#application.datasource#">
 			SELECT BB.BB_Code,BB.BB_Title,BB.Billback_ID, CM.Ship_To,CM.Default_Vendor_ID,CM.Default_Billback_Closing_Method_ID
 			FROM Billback BB

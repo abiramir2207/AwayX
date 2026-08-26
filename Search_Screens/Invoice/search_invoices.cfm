@@ -181,12 +181,28 @@ function isNextRow(maxCols, currCols)
 				<cfif DistGroupDataManager.getDistributorLevelSearchFilterOn(qGetDistributorLevels, 2)>
 					<TD COLSPAN="1"><!--- Family Name --->
 						<span class="label" ID="searchItemLabel"><cfoutput>#application.returned_customer_setting.Family_Name_Label_Singular#</cfoutput>:</span><BR>
-						<cfquery name="GetFamilyNames" Datasource="#application.datasource#">
+						<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
+<cfquery name="GetFamilyNames" Datasource="#application.datasource#">
 							SELECT *
 							FROM Distributor_Family
 							WHERE Deleted = 0
 							ORDER BY Family_Name
 						</cfquery>
+</cfif>
 						<SELECT NAME="Family_Name">
 							<OPTION VALUE="0">**ALL** <cfoutput>#application.returned_customer_setting.Family_Name_Label_Plural#</cfoutput></OPTION>
 							<CFOUTPUT QUERY="GetFamilyNames"><OPTION VALUE="#trim(GetFamilyNames.Family_ID)#"#IIF(trim(FORM.Family_Name) EQ trim(GetFamilyNames.Family_ID), DE(" SELECTED"), DE(""))#>#trim(GetFamilyNames.Family_Name)#</OPTION></CFOUTPUT>
@@ -199,12 +215,28 @@ function isNextRow(maxCols, currCols)
 				<cfif DistGroupDataManager.getDistributorLevelSearchFilterOn(qGetDistributorLevels, 3)>
 					<TD><!--- Buying Groups --->
 						<span class="label" ID="searchItemLabel"><cfoutput>#application.returned_customer_setting.Buying_Group_Label_Singular#</cfoutput>:</span><BR>
-						<cfquery name="GetBuyingGroups" Datasource="#application.datasource#">
+						<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+<cfquery name="GetBuyingGroups" Datasource="#application.datasource#">
 							SELECT *
 							FROM Distributor_Buying_Groups
 							WHERE Deleted = 0
 							ORDER BY Buying_Group_Name
 						</cfquery>
+</cfif>
 						<SELECT NAME="Buying_Group">
 							<OPTION VALUE="0">**ALL** <cfoutput>#application.returned_customer_setting.buying_group_label_plural#</cfoutput></OPTION>
 							<CFOUTPUT QUERY="GetBuyingGroups"><OPTION VALUE="#trim(GetBuyingGroups.Buying_Group_ID)#"#IIF(trim(FORM.Buying_Group) EQ trim(GetBuyingGroups.Buying_Group_ID), DE(" SELECTED"), DE(""))#>#trim(GetBuyingGroups.Buying_Group_Name)#</OPTION></CFOUTPUT>
@@ -217,12 +249,28 @@ function isNextRow(maxCols, currCols)
 				<cfif application.returned_customer_setting.lob_search_switch eq 1 OR DistGroupDataManager.getDistributorLevelSearchFilterOn(qGetDistributorLevels, 4)>
 					<TD><!--- Line Of Biz --->
 						<span class="label" ID="searchItemLabel"><cfoutput>#application.returned_customer_setting.LOB_Label_Singular#</cfoutput>:</span><BR>
-						<cfquery name="GetLinesOfBiz" Datasource="#application.datasource#">
+						<cfset useLakebaseForGetLinesOfBiz = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
+<cfif useLakebaseForGetLinesOfBiz>
+	<cftry>
+		<cfset GetLinesOfBiz = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("line_of_business", {
+				"deleted" = "eq.0",
+				"order" = "line_of_business_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLinesOfBiz = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLinesOfBiz>
+<cfquery name="GetLinesOfBiz" Datasource="#application.datasource#">
 							SELECT *
 							FROM Line_Of_Business
 							WHERE Deleted = 0
 							ORDER BY Line_Of_Business_Name
 						</cfquery>
+</cfif>
 						<CFSET First_Time = NOT Isdefined("FORM.Line_Of_Biz")>
 						<SELECT NAME="Line_Of_Biz">
 							<OPTION VALUE="0">**ALL** <cfoutput>#application.returned_customer_setting.LOB_Label_Plural#</cfoutput></OPTION>
@@ -240,12 +288,28 @@ function isNextRow(maxCols, currCols)
 				<cfif variables.busSegmentForDistributors>
 					<TD><!--- Business Segment --->
 						<span class="label" ID="searchItemLabel"><cfoutput>#appSettings.getbusiness_segment_label()#</cfoutput>:</span><BR>
-						<cfquery name="GetBusinessSegs" Datasource="#application.datasource#">
+						<cfset useLakebaseForGetBusinessSegs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForGetBusinessSegs>
+	<cftry>
+		<cfset GetBusinessSegs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {
+				"deleted" = "eq.0",
+				"order" = "business_unit_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBusinessSegs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBusinessSegs>
+<cfquery name="GetBusinessSegs" Datasource="#application.datasource#">
 							SELECT *
 							FROM Business_Segment
 							WHERE	Deleted = 0
 							ORDER BY Business_Unit_Desc
 						</cfquery>
+</cfif>
 						<CFSET First_Time = NOT Isdefined("FORM.Business_Segment_Id")>
 						<CFPARAM NAME="FORM.Business_Segment_Id" DEFAULT="0">
 						<SELECT NAME="Business_Segment_Id">

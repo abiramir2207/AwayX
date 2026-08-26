@@ -17,6 +17,23 @@
 
 <cfparam name="z" default="Operator-Deviated Pricing">
 
+<cfset useLakebaseForgetGenericValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetGenericValues>
+	<cftry>
+		<cfset getGenericValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"deleted" = "eq.0",
+				"order" = "generic_type.asc",
+				"select" = "generic_type"
+			}), "generic_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGenericValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGenericValues>
 <cfquery name="getGenericValues" datasource="#application.datasource#">
 	SELECT DISTINCT Generic_Type
 	FROM Program_Control_Panel_Options
@@ -24,7 +41,24 @@
 	AND Deleted = 0
 	ORDER BY Generic_Type
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetCreatedTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetCreatedTypes>
+	<cftry>
+		<cfset getCreatedTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"deleted" = "eq.0",
+				"order" = "created_type.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCreatedTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCreatedTypes>
 <cfquery name="getCreatedTypes" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Control_Panel_Options
@@ -32,11 +66,27 @@
 	AND Deleted = 0
 	ORDER BY Created_Type
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForgetGLNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deduction_programs_and_gl_reason_codes")>
+<cfif useLakebaseForgetGLNames>
+	<cftry>
+		<cfset getGLNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("deduction_programs_and_gl_reason_codes", {
+				"select" = "deduction_programs_and_gl_reason_code_id,program_name"
+			}), "deduction_programs_and_gl_reason_code_id,program_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGLNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGLNames>
 <cfquery name="getGLNames" datasource="#application.datasource#">
 	Select Deduction_Programs_And_GL_Reason_Code_ID, Program_Name
 	From Deduction_Programs_And_GL_Reason_Codes
-</cfquery>		
+</cfquery>
+</cfif>		
 								
 <cfoutput>
 <cfwddx action="CFML2JS" input="#getGenericValues#" output="MyDynamicJSCode4getGenericValues" toplevelvariable="generic">

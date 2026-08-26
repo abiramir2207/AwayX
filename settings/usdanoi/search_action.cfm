@@ -8,18 +8,50 @@
 
 <body>
 <cfsilent>
+<cfset useLakebaseForGetOperatorInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGetOperatorInfo>
+	<cftry>
+		<cfset GetOperatorInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#url.operator#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetOperatorInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetOperatorInfo>
 <cfquery name="GetOperatorInfo" datasource="#application.datasource#">
 	SELECT Operator_Name
 	FROM BSA_Operator
 	WHERE BSA_Operator_ID = '#url.operator#'
 </cfquery>
+</cfif>
 <CFSET OpProgramList = url.programid>
 <!--- consolidate both queries into one later --->
+<cfset useLakebaseForgetNOIProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("usdanoi_program_product_detail")>
+<cfif useLakebaseForgetNOIProducts>
+	<cftry>
+		<cfset getNOIProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("usdanoi_program_product_detail", {
+				"bsa_operator_id" = "eq.#url.operator#",
+				"program_id" = "eq.#url.programid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetNOIProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetNOIProducts>
 <cfquery name="getNOIProducts" datasource="#application.datasource#">
 	SELECT *
 	FROM USDANOI_Program_Product_Detail
 	WHERE BSA_Operator_ID = '#url.operator#' and program_id = '#url.programid#'
 </cfquery>
+</cfif>
 
 <cfset orderby = "ORDER BY dbo.Operator_ZipCode_Map.State, dbo.Operator_ZipCode_Map.County, dbo.USDANOI_Program_Product_Detail.Item">
 <cfset whereclause = "AND dbo.USDANOI_Programs_Approved.Program_ID = '#url.programid#' AND dbo.Contract_Operators.BSA_Operator_ID = '#url.operator#'">

@@ -20,7 +20,23 @@
 <cfinclude template="/billbacks/capture/billback_load_infobar.cfm"> --->
 
 <CFIF URL.BBID NEQ "">
-	<CFQUERY NAME="GetAutoBB_BasicInfo" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetAutoBB_BasicInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor")>
+<cfif useLakebaseForGetAutoBB_BasicInfo>
+	<cftry>
+		<cfset GetAutoBB_BasicInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor", {
+				"billback_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id,bb_distributor_notes"
+			}), "distributor_id,bb_distributor_notes"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAutoBB_BasicInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAutoBB_BasicInfo>
+<CFQUERY NAME="GetAutoBB_BasicInfo" DATASOURCE="#Application.Datasource#">
 		SELECT 		Distributor_ID, 
 					BB_Distributor_Notes
 					
@@ -28,12 +44,30 @@
 		
 		WHERE 		Billback_ID = '#URL.BBID#' AND Deleted = 0
 	</CFQUERY>
-	<CFQUERY NAME="ProgramList" DATASOURCE="#Application.Datasource#">
+</cfif>
+	<cfset useLakebaseForProgramList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForProgramList>
+	<cftry>
+		<cfset ProgramList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgramList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgramList>
+<CFQUERY NAME="ProgramList" DATASOURCE="#Application.Datasource#">
 		SELECT 	Program_ID 
 		FROM 	Billback_Program
 		WHERE	Billback_ID = '#URL.BBID#' AND 
 				Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET ProgrmID_List = VALUELIST(ProgramList.Program_ID)>
 	
 	
@@ -91,7 +125,27 @@
 	</cfif>
 	
 	<CFIF FORM.Distributor_List NEQ "">
-		<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
+		<cfset useLakebaseForDist_Search_Result = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDist_Search_Result>
+	<cftry>
+		<cfset Dist_Search_Result = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#FORM.Distributor_List#'
+				--AND
+				--BSA_Foodservice_Customers.Deleted = 0
+				--AND
+				--BSA_Foodservice_Customers.Active_Code = 'A",
+				"order" = "name.asc",
+				"select" = "bsa_foodservice_customers_id,name"
+			}), "bsa_foodservice_customers_id,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDist_Search_Result = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDist_Search_Result>
+<CFQUERY NAME="Dist_Search_Result" DATASOURCE = "#Application.Datasource#">
 			SELECT BSA_Foodservice_Customers_ID,Name 
 			FROM BSA_Foodservice_Customers 
 			WHERE
@@ -102,6 +156,7 @@
 				--BSA_Foodservice_Customers.Active_Code = 'A'
 			ORDER BY Name
 		</CFQUERY>
+</cfif>
 	<CFSET Selected_Distributor=Dist_Search_Result.Name>
 	</CFIF>
 	

@@ -12,10 +12,25 @@ This is a page which allows users to set their preferences for certain areas of 
 <cfparam name="RecordsToShow" default="25">
 <cfparam name="LastUpdated" default="Never">
 
+<cfset useLakebaseForGetPriorValues = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_user_preferences")>
+<cfif useLakebaseForGetPriorValues>
+	<cftry>
+		<cfset GetPriorValues = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_user_preferences", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPriorValues = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPriorValues>
 <cfquery name="GetPriorValues" datasource="#application.datasource#">
 SELECT * FROM _User_Preferences
 WHERE User_ID = '#request.AccessStructure.User_ID#'
 </cfquery>
+</cfif>
 
 <!---Sets values to be record values if there is a record returned--->
 <cfif GetPriorValues.Recordcount GT 0>

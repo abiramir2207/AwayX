@@ -17,9 +17,25 @@
 <!--- ////////////////////////////////////////////////////////////////////////////////////////// --->	
 <!--- This Section contains statements to Insert, Update, Delete, Select Class Information START --->
 	<cffunction name="GVFC"  access="public"  output="no" hint="Get Volume Forecast Class">    
-		<cfquery name="qGetVFClass" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetVFClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_class")>
+<cfif useLakebaseForqGetVFClass>
+	<cftry>
+		<cfset qGetVFClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_class", {
+				"deleted" = "eq.0",
+				"order" = "vf_class_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVFClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVFClass>
+<cfquery name="qGetVFClass" datasource="#application.datasource#">
 			SELECT * FROM VF_Class WHERE Deleted = 0 ORDER BY VF_Class_Desc
-		</cfquery>   
+		</cfquery>
+</cfif>   
     <cfreturn  qGetVFClass>    
     </cffunction>    
 
@@ -171,9 +187,25 @@
 <!--- /////////////////////////////////////////GROUP///////////////////////////////////////////// --->
 <!--- ////////////////////////////////////////////////////////////////////////////////////////// --->
 	<cffunction name="GVFG"  access="public"  output="false" hint="Get Volume Forecast Groups">    
-    	<cfquery name="qGetVFGroups" datasource="#application.datasource#">
+    	<cfset useLakebaseForqGetVFGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_group")>
+<cfif useLakebaseForqGetVFGroups>
+	<cftry>
+		<cfset qGetVFGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_group", {
+				"deleted" = "eq.0",
+				"order" = "vf_group_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVFGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVFGroups>
+<cfquery name="qGetVFGroups" datasource="#application.datasource#">
 	    SELECT * FROM VF_Group WHERE Deleted = 0 ORDER BY VF_Group_Desc	
 		</cfquery>
+</cfif>
     <cfreturn qGetVFGroups>    
     </cffunction>    
 
@@ -405,9 +437,25 @@
 		
 		<cfif arguments.pg_group>
 			<cfset pg_ext_info = "">
-	<cfquery name="Pg_groups_info" datasource="#application.datasource#">
+	<cfset useLakebaseForPg_groups_info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vf_planning_groups")>
+<cfif useLakebaseForPg_groups_info>
+	<cftry>
+		<cfset Pg_groups_info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("vf_planning_groups", {
+				"vf_plan_id" = "eq.#arguments.edit#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPg_groups_info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPg_groups_info>
+<cfquery name="Pg_groups_info" datasource="#application.datasource#">
 		SELECT * FROM VF_Planning_Groups WHERE VF_plan_ID = #arguments.edit# AND deleted = 0
 	</cfquery>
+</cfif>
 				<cfif Pg_groups_info.recordcount>
 				
 						<cfloop query="Pg_groups_info">

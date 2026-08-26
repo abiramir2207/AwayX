@@ -1,10 +1,25 @@
 <!--- SEND EMAIL TO ALERT USERS of status change --->
+<cfset useLakebaseForgetGSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGSettings>
+	<cftry>
+		<cfset getGSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_auto_rfa_email,rfa_email"
+			}), "send_auto_rfa_email,rfa_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGSettings>
 <cfquery name="getGSettings" datasource="#application.datasource#">
 	SELECT
 		send_auto_rfa_email, RFA_Email
 	FROM
 		General_Settings
 </cfquery>
+</cfif>
 <cfset didWeSendEmail = 0 />
 
 

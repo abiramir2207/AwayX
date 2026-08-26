@@ -4,12 +4,31 @@
 <cfset appSettings = genSettingsManager.get()>
 
 <cfif appsettings.getsend_to_sap()>
-  <CFQUERY NAME="updatecontractmain" datasource="#application.datasource#">
+  <cfset useLakebaseForupdatecontractmain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdatecontractmain>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			},
+			{
+				"sent_to_external_client" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatecontractmain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatecontractmain>
+<CFQUERY NAME="updatecontractmain" datasource="#application.datasource#">
 		update contract_main
 		set Sent_To_External_Client = 1
 		where contract_main_id = #cryp.value#
 		and deleted = 0
 	</CFQUERY>
+</cfif>
  	 <div align="center"><font size="2" color="red"> SENDING DATA TO SAP, PLEASE CHECK LATER!!!!.</font> </div>
 
 	<cfset PathToExe 	= ExpandPath("\Utils\BSA_HTTP.exe")>

@@ -20,17 +20,48 @@
 
 <CFIF len(trim(URL.HQR_ID)) GT 0 AND URL.RO EQ 1>
 		<CF_CRYP type="de" string="#URL.HQR_ID#" key="#request.key#">
-		<cfquery name="CheckForExistingDistributors" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckForExistingDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("hq_rebate")>
+<cfif useLakebaseForCheckForExistingDistributors>
+	<cftry>
+		<cfset CheckForExistingDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("hq_rebate", {
+				"hq_rebate_id" = "eq.#cryp.value#",
+				"select" = "distributor_ids"
+			}), "distributor_ids"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckForExistingDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckForExistingDistributors>
+<cfquery name="CheckForExistingDistributors" datasource="#application.datasource#">
 			SELECT 	Distributor_IDs
 			FROM HQ_Rebate
 			WHERE HQ_Rebate_ID = '#cryp.value#'			
-		</cfquery>		
+		</cfquery>
+</cfif>		
 		
-		<cfquery name="getTheseLambRequirements" datasource="#application.datasource#">
+		<cfset useLakebaseForgetTheseLambRequirements = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("lamb_requirements")>
+<cfif useLakebaseForgetTheseLambRequirements>
+	<cftry>
+		<cfset getTheseLambRequirements = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("lamb_requirements", {
+				"hq_rebate_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTheseLambRequirements = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTheseLambRequirements>
+<cfquery name="getTheseLambRequirements" datasource="#application.datasource#">
 			SELECT DISTINCT *
 			FROM lamb_requirements
 			WHERE HQ_Rebate_ID = #cryp.value#
 		</cfquery>
+</cfif>
 		
 		<cfset HQRC_ID = #ValueList(getTheseLambRequirements.HQ_Rebate_ID)#>
 		
@@ -43,11 +74,27 @@
 	<CFSET FORM.HQR_ID = cryp.value>
 </CFIF>
 
+<cfset useLakebaseForgetContractTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractTypes>
+	<cftry>
+		<cfset getContractTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"generic_type" = "eq.Operator-Deviated Pricing",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractTypes>
 <cfquery name="getContractTypes" datasource="#application.datasource#">
 	Select DISTINCT Created_Type 
 	From Program_Control_Panel_Options 
 	Where Generic_Type = 'Operator-Deviated Pricing'
 </cfquery>
+</cfif>
 
 <HTML>
 <HEAD>

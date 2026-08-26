@@ -4,18 +4,50 @@
 <cfparam name="EncryptedCID" default="">
 <cfparam name="CSL_Export_Sales_Agreement_ID" default="">
 
+<cfset useLakebaseForCSLGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForCSLGetContractInfo>
+	<cftry>
+		<cfset CSLGetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#CSL_Export_Sales_Agreement_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCSLGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCSLGetContractInfo>
 <CFQUERY NAME="CSLGetContractInfo" datasource="#application.datasource#">
 	SELECT	*
 	FROM 	Export_Sales_Agreement
 	WHERE Export_Sales_Agreement_ID = '#CSL_Export_Sales_Agreement_ID#'
 </CFQUERY>
+</cfif>
 
 <CFIF isdefined("request.AccessStructure.name_first")>
+<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
 <CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 	SELECT User_Positions_ID
 	FROM User_Position_Holders
 	WHERE User_ID = '#request.AccessStructure.user_id#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFIF CSL_Export_Sales_Agreement_ID NEQ "">
 <CF_CRYP type="en" string="#CSL_Export_Sales_Agreement_ID#" key="#request.key#" return="Enc">
@@ -24,11 +56,27 @@
 
 
 <!--- Flag This Contract As Locked As Long As This User Is Using It --->
+<cfset useLakebaseForisContractCurrentlyLocked = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForisContractCurrentlyLocked>
+	<cftry>
+		<cfset isContractCurrentlyLocked = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#CSLGetContractInfo.Export_Sales_Agreement_ID#",
+				"select" = "sales_agreement_is_locked,sales_agreement_locked_by_user_id,export_sales_agreement_id"
+			}), "sales_agreement_is_locked,sales_agreement_locked_by_user_id,export_sales_agreement_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisContractCurrentlyLocked = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisContractCurrentlyLocked>
 <cfquery name="isContractCurrentlyLocked" datasource="#application.datasource#">
 	SELECT Sales_Agreement_Is_Locked, Sales_Agreement_Locked_By_User_ID, Export_Sales_Agreement_ID
 	FROM Export_Sales_Agreement
 	WHERE Export_Sales_Agreement_ID ='#CSLGetContractInfo.Export_Sales_Agreement_ID#'
 </cfquery>
+</cfif>
 <!--- END Flag This Contract As Locked As Long As This User Is Using It --->
 
 <!---  check position tree for  user access--->

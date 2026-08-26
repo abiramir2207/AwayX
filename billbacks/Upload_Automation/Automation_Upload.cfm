@@ -58,11 +58,29 @@ Description  :  Upload from Settings
 			<cfset activeTab = 0 />
 			<!--- <cffile action="delete" file="#Application.Doc_Path#\data_files\uploaded\billbacks\uploadAutomation\#form.Single_File#" /> --->
 		<cfelse>
-			<cfquery name="getDuplicateUAUpload" datasource="#application.datasource#">
+			<cfset useLakebaseForgetDuplicateUAUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("upload_automation_log")>
+<cfif useLakebaseForgetDuplicateUAUpload>
+	<cftry>
+		<cfset getDuplicateUAUpload = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("upload_automation_log", {
+				"file_name" = "eq.#strFileName#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "file_name"
+			}), "file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDuplicateUAUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDuplicateUAUpload>
+<cfquery name="getDuplicateUAUpload" datasource="#application.datasource#">
 				SELECT  top 1 File_Name
 				FROM Upload_Automation_Log
 				WHERE 	File_Name = '#strFileName#'	and deleted = 0
 			</cfquery>
+</cfif>
 			<cfif getDuplicateUAUpload.RecordCount GTE 1>
 				<!--- <cffile action="delete" file="#cffile.serverDirectory#\#cffile.serverFile#"> --->
 				<!--- <!--- <BR><b><u>Upload Failed due to the below reason:</u></b><BR> ---> --->

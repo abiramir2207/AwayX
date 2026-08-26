@@ -1,11 +1,27 @@
 <cfparam name="url.savecomplete" default="0">
 <cfset dnpMessage = "<span style=""color: Red; font-weight:bold;"">Data Not Provided</span>">
 
+<cfset useLakebaseForgetUOMLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUOMLabel>
+	<cftry>
+		<cfset getUOMLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#bidrule.basic.Bid_Rule_UOM#",
+				"select" = "unit_of_measure_desc"
+			}), "unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUOMLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUOMLabel>
 <cfquery name="getUOMLabel" datasource="#application.datasource#">
 	SELECT Unit_Of_Measure_Desc
 	FROM Units_Of_Measure
 	WHERE Unit_Of_Measure_ID = '#bidrule.basic.Bid_Rule_UOM#'
 </cfquery>
+</cfif>
 
 <cfif bidrule.basic.Bid_Rule_UOM EQ 0><cfset uomDesc = dnpMessage><cfelse><cfset uomDesc = getUOMLabel.Unit_Of_Measure_Desc></cfif>
 

@@ -3,21 +3,52 @@ this logic needs to be used on "common_files\ExportAll.cfm" for csv file creatio
 --->
 <cfparam name="costvariableslist" default="">
 
+<cfset useLakebaseForgetTargetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetTargetStatus>
+	<cftry>
+		<cfset getTargetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "program_margin_target_enabled,pm_lastupdated_date,pm_lastupdated_userid"
+			}), "program_margin_target_enabled,pm_lastupdated_date,pm_lastupdated_userid"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTargetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTargetStatus>
 <cfquery name="getTargetStatus" datasource="#application.datasource#">
 	SELECT program_margin_target_enabled, PM_LastUpdated_Date, PM_LastUpdated_UserId
 	FROM General_Settings
 </cfquery>
+</cfif>
 
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />
 <cfset appSettings = genSettingsManager.get()>
 
 <cfif appSettings.getlocalcostvariables() eq 1>
+<cfset useLakebaseForgetcostvariables = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cost_sequence")>
+<cfif useLakebaseForgetcostvariables>
+	<cftry>
+		<cfset getcostvariables = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cost_sequence", {
+				"deleted" = "eq.0",
+				"order" = "cost_sequence_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetcostvariables = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetcostvariables>
 <cfquery name="getcostvariables" datasource="#application.datasource#">
 select * from
 cost_sequence
 WHERE	Deleted = 0
 ORDER BY Cost_Sequence_Order
 </cfquery>
+</cfif>
 <cfif getcostvariables.recordcount GT 0>
 <cfset costvariableslist = valuelist(getcostvariables.cost_sequence_order)>
 <cfset costvariablesnames = valuelist(getcostvariables.cost_sequence_name)>

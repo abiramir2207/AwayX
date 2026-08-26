@@ -529,7 +529,22 @@
 	</CFQUERY>
 
 	<!---handle for multi level groups--->
-	<cfquery name="qGetGroups" dbtype="query">
+	<cfset useLakebaseForqGetGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_comp_products")>
+<cfif useLakebaseForqGetGroups>
+	<cftry>
+		<cfset qGetGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_comp_products", {
+				"is_group" = "eq.1",
+				"select" = "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+			}), "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroups>
+<cfquery name="qGetGroups" dbtype="query">
 	
 		SELECT 	BSA_Foodservice_Items_Master_ID,
 				Product_Group_Level_ID,
@@ -538,6 +553,7 @@
 		WHERE	Is_Group = 1
 		
 	</cfquery>
+</cfif>
 	
 	<!---if we have a record set then we know we have groups so we have to handle for it--->
 	<cfif qGetGroups.RecordCount>
@@ -555,7 +571,22 @@
 		</cfloop>
 	
 		<!---if we have groups check to see if there are any products--->
-		<cfquery name="qGetProducts" dbtype="query">
+		<cfset useLakebaseForqGetProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_comp_products")>
+<cfif useLakebaseForqGetProducts>
+	<cftry>
+		<cfset qGetProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_comp_products", {
+				"is_group" = "eq.0",
+				"select" = "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+			}), "bsa_foodservice_items_master_id,product_group_level_id,pricing_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProducts>
+<cfquery name="qGetProducts" dbtype="query">
 	
 			SELECT 	BSA_Foodservice_Items_Master_ID,
 					Product_Group_Level_ID,
@@ -564,6 +595,7 @@
 			WHERE	Is_Group = 0
 		
 		</cfquery>
+</cfif>
 		
 		<cfif qGetProducts.RecordCount>
 		
@@ -585,11 +617,27 @@
 
 	<CFSET FORM.Product_List = ValueList(Get_Growth_Comp_Products.BSA_Foodservice_Items_Master_ID, ",")>
 	
-	<cfquery name="qGetLevel_1_Products" dbtype="query">
+	<cfset useLakebaseForqGetLevel_1_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_growth_comp_products")>
+<cfif useLakebaseForqGetLevel_1_Products>
+	<cftry>
+		<cfset qGetLevel_1_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_growth_comp_products", {
+				"product_group_level_id" = "eq.1",
+				"select" = "product_group_id"
+			}), "product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLevel_1_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLevel_1_Products>
+<cfquery name="qGetLevel_1_Products" dbtype="query">
 		SELECT	Product_Group_ID
 		FROM	Get_Growth_Comp_Products
 		WHERE	Product_Group_Level_ID = 1
 	</cfquery>
+</cfif>
 	
 	<cfset FORM.Product_Level_1 = ValueList(qGetLevel_1_Products.Product_Group_ID) />
 	

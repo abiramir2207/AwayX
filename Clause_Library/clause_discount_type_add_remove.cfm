@@ -67,11 +67,27 @@
 
 <!------ Find the template id of this program ----->
 <cfif NOT isDefined("templateId") AND isDefined("programId")>
-	<cfquery name="getTemplateId" datasource="#application.datasource#">
+	<cfset useLakebaseForgetTemplateId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetTemplateId>
+	<cftry>
+		<cfset getTemplateId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#programId#",
+				"select" = "programtype_id"
+			}), "programtype_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateId>
+<cfquery name="getTemplateId" datasource="#application.datasource#">
 		SELECT 	ProgramType_ID
 		FROM 	Contract_Main 
 		WHERE 	Contract_Main_ID = #programId#
 	</cfquery>
+</cfif>
 	<cfset templateId = getTemplateId.ProgramType_ID>
 </cfif>
 

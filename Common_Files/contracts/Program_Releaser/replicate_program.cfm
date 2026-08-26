@@ -37,14 +37,48 @@
 	</cfif>
 	
 <cfif isdateexclusion EQ 0>
-	<cfquery name="gettemplateparent" datasource="#application.datasource#">
+	<cfset useLakebaseForgettemplateparent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgettemplateparent>
+	<cftry>
+		<cfset gettemplateparent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#this.ProgramType_ID#",
+				"select" = "template_parent_id,ez_contract_id"
+			}), "template_parent_id,ez_contract_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgettemplateparent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgettemplateparent>
+<cfquery name="gettemplateparent" datasource="#application.datasource#">
 		SELECT template_parent_id,EZ_Contract_Id
 		FROM Program_Control_Panel_Options
 		WHERE ProgramControl_Panel_Options_ID = '#this.ProgramType_ID#'
 	</cfquery>
+</cfif>
 
 	<cfif gettemplateparent.template_parent_id NEQ 0>
-		<cfquery name="getContractTemplateDetails" datasource="#application.datasource#">
+		<cfset useLakebaseForgetContractTemplateDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractTemplateDetails>
+	<cftry>
+		<cfset getContractTemplateDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"template_parent_id" = "eq.#gettemplateparent.template_parent_id#",
+				"isdominant" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "programcontrol_panel_options_id.desc",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractTemplateDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractTemplateDetails>
+<cfquery name="getContractTemplateDetails" datasource="#application.datasource#">
 			SELECT top 1 * 
 			FROM Program_Control_Panel_Options
 			WHERE template_parent_id = #gettemplateparent.template_parent_id#
@@ -52,6 +86,7 @@
 			and deleted = 0
 			ORDER BY ProgramControl_Panel_Options_ID desc
 		</cfquery>
+</cfif>
 	<cfelseif gettemplateparent.template_parent_id EQ 0>
 		<cfquery name="getContractTemplateDetails" datasource="#application.datasource#">
 			SELECT TOP 1 * from
@@ -99,12 +134,28 @@
 
 <!--- 	get Program_Accounting_Specialist details --->
 <cfif application.returned_customer_setting.Accounting_Specialist eq 1>
-	<CFQUERY NAME="getContractAccountingSpecialist" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContractAccountingSpecialist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_accounting_specialist")>
+<cfif useLakebaseForgetContractAccountingSpecialist>
+	<cftry>
+		<cfset getContractAccountingSpecialist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_accounting_specialist", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractAccountingSpecialist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractAccountingSpecialist>
+<CFQUERY NAME="getContractAccountingSpecialist" datasource="#application.datasource#">
 		select * from
 		Program_Accounting_Specialist
 		where program_id = '#Program_ID_To_Replicate#'
 		and deleted = 0
 	</CFQUERY>
+</cfif>
 </cfif>
 	
 <cfif getContractTemplateDetails.Specify_Operators EQ 1>
@@ -126,11 +177,27 @@
 	<!--- contract_brokers --->
 <!--- Ana: D15113 - Commenting the below CFIF condition --->
 <!--- <cfif getContractTemplateDetails.Specify_Brokers EQ 1> --->
-	<CFQUERY NAME="getContractBrokers" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContractBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseForgetContractBrokers>
+	<cftry>
+		<cfset getContractBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_brokers", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractBrokers>
+<CFQUERY NAME="getContractBrokers" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Brokers
 		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 <!--- </cfif> --->
 
 <cfif Form.suppressProductsDistributors EQ 0>
@@ -302,28 +369,76 @@
 		
 	 	<!--- Auto Renew --->
 		<cfif getContractTemplateDetails.Auto_Renew_Option EQ 1>
-		<CFQUERY NAME="getAutoRenew" datasource="#application.datasource#">
+		<cfset useLakebaseForgetAutoRenew = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForgetAutoRenew>
+	<cftry>
+		<cfset getAutoRenew = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_auto_renew", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAutoRenew = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAutoRenew>
+<CFQUERY NAME="getAutoRenew" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_Auto_Renew
 			WHERE 	Program_ID = '#Program_ID_To_Replicate#'
 			AND		Deleted = 0
-		</CFQUERY> 
+		</CFQUERY>
+</cfif> 
 		</cfif>
 	<!---   Sysco deal sheets --->
-		 <cfquery name="qSyscoDealSheets" datasource="#application.datasource#">
+		 <cfset useLakebaseForqSyscoDealSheets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("sysco_deal_sheet_programs")>
+<cfif useLakebaseForqSyscoDealSheets>
+	<cftry>
+		<cfset qSyscoDealSheets = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("sysco_deal_sheet_programs", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSyscoDealSheets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSyscoDealSheets>
+<cfquery name="qSyscoDealSheets" datasource="#application.datasource#">
 			SELECT * FROM Sysco_Deal_Sheet_Programs
 			WHERE Contract_Main_ID = '#Program_ID_To_Replicate#'
 			AND Deleted = 0
-		</cfquery> 
+		</cfquery>
+</cfif> 
 		
 		<!--- 5.0 fixed freight --->
 		<!--- If revision of guaranteed template, copy over values from parent version ---->
 		<cfif (form.IsRevisionOfExistingContract EQ 1 and getContractTemplateDetails.Fixed_Type eq 0) or (FORM.ForceFreightOnAutoCopy EQ 1)>
-		<CFQUERY NAME="getProgramDistributorFreight" datasource="#application.datasource#">
+		<cfset useLakebaseForgetProgramDistributorFreight = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_distributor_freight")>
+<cfif useLakebaseForgetProgramDistributorFreight>
+	<cftry>
+		<cfset getProgramDistributorFreight = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_distributor_freight", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramDistributorFreight = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramDistributorFreight>
+<CFQUERY NAME="getProgramDistributorFreight" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Program_Distributor_Freight
 			WHERE 	Program_ID = #Program_ID_To_Replicate# AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		</cfif>
 		
 		<!--- If the template is an EZ Template, 
@@ -1251,7 +1366,23 @@
 		</CFQUERY>	
 		
 		
-		<CFQUERY NAME="get_Program_Formula_Pricing_Rule_Mapped" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForget_Program_Formula_Pricing_Rule_Mapped = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rule_mapped")>
+<cfif useLakebaseForget_Program_Formula_Pricing_Rule_Mapped>
+	<cftry>
+		<cfset get_Program_Formula_Pricing_Rule_Mapped = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rule_mapped", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Program_Formula_Pricing_Rule_Mapped = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Program_Formula_Pricing_Rule_Mapped>
+<CFQUERY NAME="get_Program_Formula_Pricing_Rule_Mapped" DATASOURCE="#application.datasource#">
 			SELECT	Program_Formula_Pricing_Rule_Mapped.*
 			FROM	Program_Formula_Pricing_Rule_Mapped
 			WHERE
@@ -1259,6 +1390,7 @@
 				AND
 				Program_Formula_Pricing_Rule_Mapped.Deleted = 0
 		</CFQUERY>
+</cfif>
 		
 		<!--- Formula Product Data --->
 		<CFQUERY NAME="get_Program_Formula_Pricing_Rule_Products" datasource="#application.datasource#">
@@ -1363,13 +1495,29 @@
 	
 	<!--- Bid Pricing --->
 		<CFIF getContractTemplateDetails.Discount_BidRequest EQ 1>
-		<CFQUERY NAME="get_BidRequest_Components" datasource="#application.datasource#">
+		<cfset useLakebaseForget_BidRequest_Components = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bidrequest_component")>
+<cfif useLakebaseForget_BidRequest_Components>
+	<cftry>
+		<cfset get_BidRequest_Components = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bidrequest_component", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_BidRequest_Components = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_BidRequest_Components>
+<CFQUERY NAME="get_BidRequest_Components" datasource="#application.datasource#">
 			SELECT *
 			FROM Program_Bidrequest_Component
 			WHERE 
 			program_id = '#Program_ID_To_Replicate#'
 			AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		<CFQUERY NAME="get_BidRequest_Products" datasource="#application.datasource#">
 			CREATE TABLE ##Tmp_Program_Product
 			(
@@ -1568,21 +1716,66 @@
 	<cfset Program_ID_To_Replicate = actual_Program_ID_To_Replicate>
 		
 	<CFIF Form.IsRevisionOfExistingContract EQ 1 AND ((getContractTemplateDetails.generic_type EQ "Distributor Trade/Shelter" and getContractTemplateDetails.Pullbacks_On EQ 1 and getContractTemplateDetails.is_pullback_corporate_deal EQ 0 and getContractTemplateDetails.pullback_from_corporate EQ 1) OR ((getContractTemplateDetails.generic_type EQ "Operator Direct or HQ Programs" OR getContractTemplateDetails.generic_type EQ "Operator-Deviated Pricing") and getContractTemplateDetails.Pullbacks_On EQ 1))>
-	<cfquery name="getPullbacksDetails" datasource="#application.datasource#">
+	<cfset useLakebaseForgetPullbacksDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pullback_details")>
+<cfif useLakebaseForgetPullbacksDetails>
+	<cftry>
+		<cfset getPullbacksDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pullback_details", {
+				"opr_program_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbacksDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbacksDetails>
+<cfquery name="getPullbacksDetails" datasource="#application.datasource#">
 	select * from
 	pullback_details
 	where opr_program_id = '#Program_ID_To_Replicate#'
 	</cfquery>
-	<cfquery name="getPullbackLevelsDetails" datasource="#application.datasource#">
+</cfif>
+	<cfset useLakebaseForgetPullbackLevelsDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pullbacks_levels")>
+<cfif useLakebaseForgetPullbackLevelsDetails>
+	<cftry>
+		<cfset getPullbackLevelsDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pullbacks_levels", {
+				"pullback_program_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbackLevelsDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbackLevelsDetails>
+<cfquery name="getPullbackLevelsDetails" datasource="#application.datasource#">
 	select * from
 	pullbacks_Levels
 	where pullback_program_id = '#Program_ID_To_Replicate#'
 	</cfquery>
-	<cfquery name="getPullbackDisDefaults" datasource="#application.datasource#">
+</cfif>
+	<cfset useLakebaseForgetPullbackDisDefaults = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pullbacks_distributors_defaults")>
+<cfif useLakebaseForgetPullbackDisDefaults>
+	<cftry>
+		<cfset getPullbackDisDefaults = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pullbacks_distributors_defaults", {
+				"pullback_program_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbackDisDefaults = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbackDisDefaults>
+<cfquery name="getPullbackDisDefaults" datasource="#application.datasource#">
 	select * from
 	Pullbacks_Distributors_Defaults
 	where pullback_program_id = '#Program_ID_To_Replicate#'
 	</cfquery>
+</cfif>
 	</CFIF>
 </cfif> 
 <!--- 
@@ -1590,12 +1783,28 @@ Dev Note: Milan (48182) - Remove any insert/update to "template_pullback_program
 This table is not being used anymore.
 --->
 <!---<CFIF getContractTemplateDetails.generic_type EQ "Distributor Trade/Shelter" and getContractTemplateDetails.Pullbacks_On EQ 1 and getContractTemplateDetails.is_pullback_corporate_deal EQ 1>
+<cfset useLakebaseForgetPullbacksProgramDefaults = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("template_pullback_program_defaults")>
+<cfif useLakebaseForgetPullbacksProgramDefaults>
+	<cftry>
+		<cfset getPullbacksProgramDefaults = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("template_pullback_program_defaults", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPullbacksProgramDefaults = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPullbacksProgramDefaults>
 <cfquery name="getPullbacksProgramDefaults" datasource="#application.datasource#">
 	select * from
 	template_pullback_program_defaults
 	where program_id = '#Program_ID_To_Replicate#'
 	and deleted = 0
 </cfquery>
+</cfif>
 </CFIF>--->
 <!--- End suppress distributors & products --->
 			

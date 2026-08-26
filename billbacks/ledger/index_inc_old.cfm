@@ -150,20 +150,52 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 <cfset DistributorNumber=FinalDistributorList>
 
 <!---Getting Contract Number--->
-	<cfquery name="GetContractNumber" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_info")>
+<cfif useLakebaseForGetContractNumber>
+	<cftry>
+		<cfset GetContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_program_info", {
+				"contract_main_id" = "eq.#ContractID#",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractNumber>
+<cfquery name="GetContractNumber" datasource="#application.datasource#">
 	SELECT Contract_Number
 	FROM BB_Program_Info
 	WHERE Contract_Main_ID = #ContractID#
 	</cfquery>
+</cfif>
 	
 	<cfset Contract_Number = GetContractNumber.Contract_Number>
 	
 	<!---Get the rates on the date on the invoice--->
-	<cfquery name="GetContractMain" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractMain = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_program_info")>
+<cfif useLakebaseForGetContractMain>
+	<cftry>
+		<cfset GetContractMain = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_program_info", {
+				"contract_number" = "eq.#Contract_Number#",
+				"select" = "contract_main_id,approval_start_date,approval_end_date"
+			}), "contract_main_id,approval_start_date,approval_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractMain = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractMain>
+<cfquery name="GetContractMain" datasource="#application.datasource#">
 	SELECT DISTINCT Contract_Main_ID, Approval_Start_Date, Approval_End_Date 
 	FROM BB_Program_Info
 	WHERE Contract_Number = '#Contract_Number#'
 	</cfquery>
+</cfif>
 	
 	<cfquery name="PopulateTables1" datasource="#application.datasource#">
 	exec BB_D_Program_Detail
@@ -181,11 +213,27 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 
 
 <!---Gets user friendly names--->
+<cfset useLakebaseForGetDistributorName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDistributorName>
+	<cftry>
+		<cfset GetDistributorName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#DistributorNumber#",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistributorName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistributorName>
 <cfquery name="GetDistributorName" datasource="#application.datasource#">
 SELECT Name 
 FROM BSA_Foodservice_Customers 
 WHERE BSA_Foodservice_Customers_ID = '#DistributorNumber#'
 </cfquery>
+</cfif>
 
 <!---Gets program number--->
 <cfquery name="GetProgramNumber" datasource="#application.datasource#">
@@ -197,11 +245,27 @@ FROM Contract_Main
 WHERE Contract_Main_ID = #ContractID#
 </cfquery>
 
+<cfset useLakebaseForGetProgramNumbers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetProgramNumbers>
+	<cftry>
+		<cfset GetProgramNumbers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#GetProgramNumber.Contract_Number#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProgramNumbers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProgramNumbers>
 <cfquery name="GetProgramNumbers" datasource="#application.datasource#">
 SELECT Contract_Main_ID
 FROM Contract_Main
 WHERE Contract_Number = '#GetProgramNumber.Contract_Number#'
 </cfquery>
+</cfif>
 
 <cfset ProgramNumber = listqualify(valuelist(GetProgramNumbers.Contract_Main_ID), chr(39))>
 

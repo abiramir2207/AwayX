@@ -75,11 +75,29 @@
 			</cftry>
 		</cfif>
 		<cfif NOT useLakebaseForUpdateStatus20>
-			<CFQUERY NAME="updateTheProgramProcessStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_release_programs")>
+<cfif useLakebaseForupdateTheProgramProcessStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_release_programs",
+			{
+				"program_formula_pricing_release_program_id" = "eq.#thisProgram_Formula_Pricing_Release_Program_ID#"
+			},
+			{
+				"process_status" = "20"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateTheProgramProcessStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateTheProgramProcessStatus>
+<CFQUERY NAME="updateTheProgramProcessStatus" datasource="#application.datasource#">
 				UPDATE Program_Formula_Pricing_Release_Programs
 				SET Process_Status = 20
 				WHERE Program_Formula_Pricing_Release_Program_ID = '#thisProgram_Formula_Pricing_Release_Program_ID#'
 			</CFQUERY>
+</cfif>
 		</cfif>
 
 		<!--- build program structure --->
@@ -135,11 +153,27 @@
 		<CFSET Program.Basic_Information.Parent_Revised_Contract_Main_ID = thisProgram_ID>
 
 		<!--- get release Date Information --->
-		<CFQUERY NAME="getPeriodInformation" datasource="#application.datasource#">
+		<cfset useLakebaseForgetPeriodInformation = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForgetPeriodInformation>
+	<cftry>
+		<cfset getPeriodInformation = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_formula_pricing_period_id" = "eq.#thisProgram_Formula_Pricing_Period_ID#",
+				"select" = "start_date,end_date,release_date,is_current_period"
+			}), "start_date,end_date,release_date,is_current_period"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetPeriodInformation = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetPeriodInformation>
+<CFQUERY NAME="getPeriodInformation" datasource="#application.datasource#">
 			SELECT Start_Date,End_Date,Release_Date,Is_Current_Period
 			FROM Program_Formula_Pricing_Periods
 			WHERE Program_Formula_Pricing_Period_ID = '#thisProgram_Formula_Pricing_Period_ID#'
 		</CFQUERY>
+</cfif>
 		<CFSET Program.Basic_Information.Contract_Start_Date = getPeriodInformation.Start_Date>
 		<CFIF DateDiff("d", getPeriodInformation.End_Date, Now()) GT 0><!---- if period is already over ----->
 			<CFSET Program.Basic_Information.DELETED = 1>
@@ -155,12 +189,30 @@
 			</CFQUERY>
 
 			<!------ Make the period inactive, otherwise it'll try to release again ----->
-			<CFQUERY NAME="updatePeriodStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForupdatePeriodStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForupdatePeriodStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_formula_pricing_period_id" = "eq.#thisProgram_Formula_Pricing_Period_ID#"
+			},
+			{
+				"process_by_system" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdatePeriodStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdatePeriodStatus>
+<CFQUERY NAME="updatePeriodStatus" datasource="#application.datasource#">
 				UPDATE 	Program_Formula_Pricing_Periods
 				SET 	Process_By_System = 1
 				WHERE
 						Program_Formula_Pricing_Period_ID = '#thisProgram_Formula_Pricing_Period_ID#'
 			</CFQUERY>
+</cfif>
 		<CFELSE>
 			<!------ Do release ----->
 
@@ -308,17 +360,49 @@
 				WHERE Program_Formula_Pricing_Period_ID = '#thisProgram_Formula_Pricing_Period_ID#'
 			</CFQUERY>
 
-			<CFQUERY NAME="getThisProgramsStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForgetThisProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetThisProgramsStatus>
+	<cftry>
+		<cfset getThisProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#thisProgram_ID#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id"
+			}), "contract_status_type_idx,revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProgramsStatus>
+<CFQUERY NAME="getThisProgramsStatus" datasource="#application.datasource#">
 				SELECT Contract_Status_Type_IDX, Revision_Of_Contract_Main_ID
 				FROM Contract_main
 				WHERE Contract_main_ID = '#thisProgram_ID#'
 			</CFQUERY>
+</cfif>
 
-			<CFQUERY NAME="getReplicantProgramsStatus" datasource="#application.datasource#">
+			<cfset useLakebaseForgetReplicantProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetReplicantProgramsStatus>
+	<cftry>
+		<cfset getReplicantProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Renewed_Program_ID#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id"
+			}), "contract_status_type_idx,revision_of_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetReplicantProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetReplicantProgramsStatus>
+<CFQUERY NAME="getReplicantProgramsStatus" datasource="#application.datasource#">
 				SELECT Contract_Status_Type_IDX, Revision_Of_Contract_Main_ID
 				FROM Contract_main
 				WHERE Contract_main_ID = '#Renewed_Program_ID#'
 			</CFQUERY>
+</cfif>
 
 
 			<!--- if revision is same status as its parent remove the parent --->
@@ -326,29 +410,81 @@
 				<CFIF getReplicantProgramsStatus.Contract_Status_Type_IDX EQ getThisProgramsStatus.Contract_Status_Type_IDX>
 					<!------
 					Let the trigger delete it
-					<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
+					<cfset useLakebaseFordeleteParent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseFordeleteParent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteParent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteParent>
+<CFQUERY NAME="deleteParent" datasource="#application.datasource#">
 						UPDATE Contract_main
 						SET deleted = 1
 						where contract_main_id = '#Program_ID_To_Replicate#'
 					</CFQUERY>
+</cfif>
 					----->
 				</CFIF>
 			</CFIF>
 
 			<!--- this update forces UPDATE Stored Procs To Run Which = GOOD --->
-			<CFQUERY NAME="ForceTriggersToExecute" datasource="#application.datasource#">
+			<cfset useLakebaseForForceTriggersToExecute = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForForceTriggersToExecute>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#Renewed_Program_ID#"
+			},
+			{
+				"deleted" = "#Program_Packet.Basic_Information.DELETED#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForForceTriggersToExecute = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForForceTriggersToExecute>
+<CFQUERY NAME="ForceTriggersToExecute" datasource="#application.datasource#">
 				UPDATE Contract_Main
 				SET Deleted = '#Program_Packet.Basic_Information.DELETED#'
 				WHERE Contract_Main_ID = '#Renewed_Program_ID#'
 			</CFQUERY>
+</cfif>
 
 
 			<!--- GET NEW STATUS AFTER UPDATING --->
-			<CFQUERY NAME="GetNewStatusAfterUpdate" datasource="#application.datasource#">
+			<cfset useLakebaseForGetNewStatusAfterUpdate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetNewStatusAfterUpdate>
+	<cftry>
+		<cfset GetNewStatusAfterUpdate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Renewed_Program_ID#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,parent_revised_contract_main_id"
+			}), "contract_status_type_idx,revision_of_contract_main_id,parent_revised_contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNewStatusAfterUpdate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNewStatusAfterUpdate>
+<CFQUERY NAME="GetNewStatusAfterUpdate" datasource="#application.datasource#">
 				SELECT Contract_Status_Type_IDX,Revision_Of_Contract_Main_ID,PARENT_REVISED_CONTRACT_MAIN_ID
 				FROM Contract_Main
 				WHERE Contract_Main_ID = '#Renewed_Program_ID#'
 			</CFQUERY>
+</cfif>
 			<CFSET New_Contract_Status_Type_IDX = GetNewStatusAfterUpdate.Contract_Status_Type_IDX>
 
 			<CFSET IsParent = 0>

@@ -226,9 +226,25 @@ div.save { margin-top:10px; }
 
  	<cfset var oBudgetClassMgr = createObject("component","mvc.Models.AdvancedBudget.BudgetClassManager") />
  	<cfset var qryDateRange = oBudgetClassMgr.getDateRange(form.Contract_Start_Date,form.Contract_End_Date)/>
- 	<cfquery name="qSelDateRange" datasource="#application.datasource#"  dbtype="query">
+ 	<cfset useLakebaseForqSelDateRange = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qrydaterange")>
+<cfif useLakebaseForqSelDateRange>
+	<cftry>
+		<cfset qSelDateRange = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qrydaterange", {
+				"daterangeid" = "eq.#form.Date_Range#",
+				"select" = "start_date,end_date"
+			}), "start_date,end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSelDateRange = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSelDateRange>
+<cfquery name="qSelDateRange" datasource="#application.datasource#"  dbtype="query">
 		SELECT start_Date, end_Date FROM qryDateRange WHERE DateRangeID = #form.Date_Range#
  	</cfquery>
+</cfif>
 
 	<cftransaction>
 		<cfquery name="local.save" datasource="#application.datasource#">

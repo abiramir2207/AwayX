@@ -11,11 +11,26 @@
 <CFSET pagetitle = "USERS: USER POSITIONS">
 <CFINCLUDE TEMPLATE="/settings/settings_title.cfm">
 
+<cfset useLakebaseForlasteditedby = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("zone_region_market_last_edited_by")>
+<cfif useLakebaseForlasteditedby>
+	<cftry>
+		<cfset lasteditedby = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("zone_region_market_last_edited_by", {
+				"order" = "last_updated.desc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlasteditedby = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlasteditedby>
 <CFQUERY NAME="lasteditedby" datasource="#application.datasource#" MAXROWS="1">
 SELECT *
 FROM Zone_Region_Market_Last_Edited_By
 ORDER BY Last_Updated desc
 </CFQUERY>
+</cfif>
 <!---Help Files--->
 <B>
 <FONT SIZE="2" COLOR="Red">[</FONT>
@@ -27,11 +42,26 @@ ORDER BY Last_Updated desc
 
 <CFIF lasteditedby.recordcount EQ 0>
 <CFELSE>
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#lasteditedby.Users_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT *
 		FROM _Users
 		WHERE User_ID = '#lasteditedby.Users_ID#'
 	</CFQUERY>
+</cfif>
 
 	<TABLE BGCOLOR="White" style="border-color:Orange;border-style:solid;" CELLPADDING="3" CELLSPACING="0">
 	<TR>

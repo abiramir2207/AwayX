@@ -8,18 +8,49 @@
 		<CFSET Variables.Button_Title = "SAVE">
 </CFIF>
 
+<cfset useLakebaseForGetCurrentProductCategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_categories")>
+<cfif useLakebaseForGetCurrentProductCategories>
+	<cftry>
+		<cfset GetCurrentProductCategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_categories", {
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"order" = "category_title.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentProductCategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentProductCategories>
 <CFQUERY NAME="GetCurrentProductCategories" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Product_Categories
 	WHERE Company_Main_ID = '#request.AccessStructure.Company_Main_ID#'
 	ORDER BY Category_Title ASC
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetSpecifiedCategoryInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_categories")>
+<cfif useLakebaseForGetSpecifiedCategoryInfo>
+	<cftry>
+		<cfset GetSpecifiedCategoryInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_categories", {
+				"product_category_id" = "eq.#Form.Product_Category_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetSpecifiedCategoryInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetSpecifiedCategoryInfo>
 <CFQUERY NAME="GetSpecifiedCategoryInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM Product_Categories
 	WHERE   Product_Category_ID = #Form.Product_Category_ID#
 </CFQUERY>
+</cfif>
 
 
 <CFPARAM NAME="Form.Category_Title" DEFAULT="#GetSpecifiedCategoryInfo.Category_Title#">

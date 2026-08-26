@@ -16,7 +16,23 @@
 		
 		<cfif arguments.id>
 			
-			<cfquery name="qGetCampaign" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetCampaign = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cm_campaign")>
+<cfif useLakebaseForqGetCampaign>
+	<cftry>
+		<cfset qGetCampaign = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cm_campaign", {
+				"deleted" = "eq.0",
+				"cm_campaign_id" = "eq.#arguments.id#",
+				"select" = "cm_campaign_id,campaign_name,campaign_description,campaign_start_date,campaign_end_date,created_by_user_id,updated_by_user_id"
+			}), "cm_campaign_id,campaign_name,campaign_description,campaign_start_date,campaign_end_date,created_by_user_id,updated_by_user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCampaign = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCampaign>
+<cfquery name="qGetCampaign" datasource="#application.datasource#">
 				SELECT 	CM_Campaign_ID,
 						Campaign_Name,
 						Campaign_Description,
@@ -29,6 +45,7 @@
 				AND		CM_Campaign_ID = #arguments.id#
 				AND		deleted = 0
 			</cfquery>
+</cfif>
 			
 			<!--- query customers --->
 			<cfquery name="qGetCustomerId" datasource="#application.datasource#">
@@ -123,11 +140,28 @@
 		<cfset tickBegin = GetTickCount()>
 		<cfset checkOnUserPosition = Super.variableExist("this.search.User_ID", "")>
 		<cfif checkOnUserPosition>
-			<CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
+			<cfset useLakebaseForgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForgetUserPosition>
+	<cftry>
+		<cfset getUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#this.search.User_ID#",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserPosition>
+<CFQUERY NAME="getUserPosition" datasource="#application.datasource#">
 				SELECT User_Positions_ID
 				FROM User_Position_Holders
 				WHERE User_ID = '#this.search.User_ID#' AND Deleted = 0
 			</CFQUERY>
+</cfif>
 			<CFSET GP_Supplied_Position = getUserPosition.User_Positions_ID>
 			<CFINCLUDE TEMPLATE="\settings\Access_Rights\approval_tree\get_positions_underneath_supplied_position.cfm">
 			<!------ <cfset allOperatorIds = custManager.getAllOperators(this.search.User_ID)>

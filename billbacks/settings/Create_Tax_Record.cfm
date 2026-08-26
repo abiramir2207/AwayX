@@ -12,11 +12,27 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Retrieve the data for this item  --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_main")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_tax_main", {
+				"order" = "description.asc",
+				"select" = "bb_tax_main_id,tax_allowance_code,description,deleted"
+			}), "bb_tax_main_id,tax_allowance_code,description,deleted"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
 <CFQUERY NAME="Get_Data" datasource="#application.datasource#">
 	SELECT BB_Tax_Main_ID,Tax_Allowance_Code, Description, Deleted
 	FROM BB_Tax_Main
 	Order by	Description
 </CFQUERY>
+</cfif>
 
 <script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery-1.2.1-min.js"></script>
 <script type="text/javascript" src="/Script/javascript/Ajax_JS/jquery.dimensions.js"></script>
@@ -63,11 +79,26 @@
 <!--- Retrieve the data for the ID of the item passed --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->				
 
+<cfset useLakebaseForGet_Item = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_main")>
+<cfif useLakebaseForGet_Item>
+	<cftry>
+		<cfset Get_Item = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_tax_main", {
+				"bb_tax_main_id" = "eq.#URL.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Item = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Item>
 <CFQUERY NAME="Get_Item" datasource="#application.datasource#">
 	Select		*
 	From		BB_Tax_Main
 	Where		BB_Tax_Main_ID	=	'#URL.RID#'
 </CFQUERY>
+</cfif>
 <link rel="stylesheet" type="text/css" media="screen" href="/Script/javascript/Ajax_JS/jquery.suggest.css" />
 <SCRIPT SRC="/Script/javascript/dom_common.js"></SCRIPT>
 

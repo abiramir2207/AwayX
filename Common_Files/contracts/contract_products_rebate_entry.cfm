@@ -11,25 +11,68 @@
 
 <CFPARAM NAME="FORM.Contract_Main_ID" DEFAULT="">
 
+<cfset useLakebaseForGETUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForGETUOM>
+	<cftry>
+		<cfset GETUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGETUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGETUOM>
 <CFQUERY NAME="GETUOM" datasource="#application.datasource#">
 	SELECT *
 	FROM Units_of_Measure
 </CFQUERY>
+</cfif>
 
 
+<cfset useLakebaseForGetAllContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetAllContractInfo>
+	<cftry>
+		<cfset GetAllContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllContractInfo>
 <CFQUERY NAME="GetAllContractInfo" datasource="#application.datasource#">
 	SELECT *
 	FROM Contract_Main
 	WHERE Contract_Main_ID = #FORM.Contract_Main_ID#
 </CFQUERY>
+</cfif>
 
 
 
+<cfset useLakebaseForGetAllContractsProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForGetAllContractsProducts>
+	<cftry>
+		<cfset GetAllContractsProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllContractsProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllContractsProducts>
 <CFQUERY NAME="GetAllContractsProducts" datasource="#application.datasource#">
 	SELECT * 
 	FROM Contract_Products
 	WHERE Contract_Main_ID = #FORM.Contract_Main_ID#
 </CFQUERY>
+</cfif>
 
 
 <!--- <cfquery name="GetContractBrokers" datasource="#application.datasource#">

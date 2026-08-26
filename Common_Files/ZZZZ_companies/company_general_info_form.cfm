@@ -4,6 +4,21 @@
 
 
 
+<cfset useLakebaseForRetrieveCompanyInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForRetrieveCompanyInfo>
+	<cftry>
+		<cfset RetrieveCompanyInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "eq.#URL.Company_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForRetrieveCompanyInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForRetrieveCompanyInfo>
 <CFQUERY NAME="RetrieveCompanyInfo" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT *
 	FROM 
@@ -13,13 +28,31 @@
 			AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetNationalAffiliationCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetNationalAffiliationCodes>
+	<cftry>
+		<cfset GetNationalAffiliationCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"national_affiliation_code" = "neq.0",
+				"order" = "national_affiliation_code.asc",
+				"select" = "national_affiliation_code,company_main_id"
+			}), "national_affiliation_code,company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetNationalAffiliationCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetNationalAffiliationCodes>
 <CFQUERY NAME="GetNationalAffiliationCodes" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT DISTINCT National_Affiliation_Code, Company_Main_ID
 	FROM Company_Main
 	WHERE National_Affiliation_Code <> 0
 	ORDER BY National_Affiliation_Code ASC
 </CFQUERY>
+</cfif>
 
 <CFPARAM NAME="Form.National_Affiliation_Code" DEFAULT="#RetrieveCompanyInfo.National_Affiliation_Code#">
 <CFPARAM NAME="Form.Company_Main_ID" DEFAULT="#RetrieveCompanyInfo.Company_Main_ID#">
@@ -78,13 +111,41 @@
 	ORDER BY  isnull(c.Country_Sort_Order, c.country_id) ASC
 </CFQUERY>
 
+<cfset useLakebaseForGetCompanyTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_types")>
+<cfif useLakebaseForGetCompanyTypes>
+	<cftry>
+		<cfset GetCompanyTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_types", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyTypes>
 <CFQUERY NAME="GetCompanyTypes" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT * FROM Company_Types
 </CFQUERY>
+</cfif>
 
+<cfset useLakebaseForGetCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForGetCompanies>
+	<cftry>
+		<cfset GetCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"company_main_id" = "neq.#Form.Company_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanies>
 <CFQUERY NAME="GetCompanies" datasource="#application.datasource#" DBTYPE="ODBC">
 	SELECT * FROM Company_Main WHERE Company_Main_ID <> '#Form.Company_Main_ID#'
 </CFQUERY>
+</cfif>
 
 
  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">

@@ -3,7 +3,25 @@
 <CFIF NOT IsDefined("FORM.Number_Of_Periods")><!---- for edit ----->
 	<!--- load from db ---->
 	<CFSET program_ID = cryp.value>
-	<CFQUERY NAME="Get_Current_Periods" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForGet_Current_Periods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForGet_Current_Periods>
+	<cftry>
+		<cfset Get_Current_Periods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_id" = "eq.#program_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "start_date.asc",
+				"select" = "start_date,end_date,release_date"
+			}), "start_date,end_date,release_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Current_Periods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Current_Periods>
+<CFQUERY NAME="Get_Current_Periods" DATASOURCE="#application.datasource#">
 		SELECT Start_Date, End_Date, Release_Date
 		FROM Program_Formula_Pricing_Periods
 		WHERE Program_ID = #program_ID#
@@ -13,6 +31,7 @@
 			ACTIVE = 1
 		ORDER BY Start_Date	
 	</CFQUERY>
+</cfif>
 	<CFIF Get_Current_Periods.RecordCount GT 0>
 		<CFSET FORM.Number_Of_Periods = Get_Current_Periods.RecordCount>		
 		<CFSET i = 1>	

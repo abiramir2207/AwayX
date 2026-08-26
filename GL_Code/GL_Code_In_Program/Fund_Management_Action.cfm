@@ -7,27 +7,139 @@
 
 <body>
 
+<cfset useLakebaseForSelYear3Back = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
+<cfif useLakebaseForSelYear3Back>
+	<cftry>
+		<cfset SelYear3Back = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fund_setting", {
+				"ar_from_fiscal_year" = "eq.#FORM.Year3Back#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelYear3Back = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelYear3Back>
 <CFQUERY NAME="SelYear3Back" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE AR_From_Fiscal_Year = '#FORM.Year3Back#' AND Deleted = 0
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForSelYear2Back = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
+<cfif useLakebaseForSelYear2Back>
+	<cftry>
+		<cfset SelYear2Back = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fund_setting", {
+				"ar_from_fiscal_year" = "eq.#FORM.Year2Back#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelYear2Back = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelYear2Back>
 <CFQUERY NAME="SelYear2Back" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE AR_From_Fiscal_Year = '#FORM.Year2Back#' AND Deleted = 0
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForSelYear1Back = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
+<cfif useLakebaseForSelYear1Back>
+	<cftry>
+		<cfset SelYear1Back = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fund_setting", {
+				"ar_from_fiscal_year" = "eq.#FORM.Year1Back#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelYear1Back = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelYear1Back>
 <CFQUERY NAME="SelYear1Back" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE AR_From_Fiscal_Year = '#FORM.Year1Back#' AND Deleted = 0
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForSelYearNow = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
+<cfif useLakebaseForSelYearNow>
+	<cftry>
+		<cfset SelYearNow = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fund_setting", {
+				"ar_from_fiscal_year" = "eq.#FORM.YearNow#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelYearNow = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelYearNow>
 <CFQUERY NAME="SelYearNow" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE AR_From_Fiscal_Year = '#FORM.YearNow#' AND Deleted = 0
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForSelYear1Plus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
+<cfif useLakebaseForSelYear1Plus>
+	<cftry>
+		<cfset SelYear1Plus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fund_setting", {
+				"ar_from_fiscal_year" = "eq.#FORM.Year1Plus#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelYear1Plus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelYear1Plus>
 <CFQUERY NAME="SelYear1Plus" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE AR_From_Fiscal_Year = '#FORM.Year1Plus#' AND Deleted = 0
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForSelYear2Plus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
+<cfif useLakebaseForSelYear2Plus>
+	<cftry>
+		<cfset SelYear2Plus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fund_setting", {
+				"ar_from_fiscal_year" = "eq.#FORM.Year2Plus#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelYear2Plus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelYear2Plus>
 <CFQUERY NAME="SelYear2Plus" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE AR_From_Fiscal_Year = '#FORM.Year2Plus#' AND Deleted = 0
 </CFQUERY>
+</cfif>
+<cfset useLakebaseForSelYear3Plus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fund_setting")>
+<cfif useLakebaseForSelYear3Plus>
+	<cftry>
+		<cfset SelYear3Plus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fund_setting", {
+				"ar_from_fiscal_year" = "eq.#FORM.Year3Plus#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSelYear3Plus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSelYear3Plus>
 <CFQUERY NAME="SelYear3Plus" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Code_Fund_Setting WHERE AR_From_Fiscal_Year = '#FORM.Year3Plus#' AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 
 <CFSET AddToList_3 = 1>

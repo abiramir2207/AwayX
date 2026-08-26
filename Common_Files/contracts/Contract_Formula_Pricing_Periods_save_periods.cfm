@@ -8,6 +8,25 @@
 <CFSET FORM.Program_ID = cryp.value>
 
 
+<cfset useLakebaseFordeletedExistingPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseFordeletedExistingPeriods>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_formula_pricing_periods",
+			{
+				"program_id" = "eq.#FORM.Program_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1",
+				"active" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletedExistingPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletedExistingPeriods>
 <CFQUERY NAME="deletedExistingPeriods" datasource="#application.datasource#">
 	UPDATE Program_Formula_Pricing_Periods
 	SET DELETED = 1, Active = 0
@@ -15,6 +34,7 @@
 		Program_ID = #FORM.Program_ID#
 		AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFLOOP INDEX="i" FROM="1" TO="#FORM.NUMBER_OF_PERIODS#" STEP="1">
 	<CFIF IsDefined("FORM.PERIOD_LENGTH_#i#")>

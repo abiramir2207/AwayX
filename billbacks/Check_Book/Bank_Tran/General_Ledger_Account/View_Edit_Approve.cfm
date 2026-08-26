@@ -9,11 +9,28 @@
 <CFIF IsDefined("URL.FromPaymentTab")>
 	
 	<CFIF Not IsDefined("URL.Payment_Data_Export_1_ID")>
-		<CFQUERY NAME="GetID" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGetID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
+<cfif useLakebaseForGetID>
+	<cftry>
+		<cfset GetID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_data_export_1", {
+				"billback_id" = "eq.#URL.BBID#",
+				"deleted" = "eq.0",
+				"select" = "payment_data_export_1_id"
+			}), "payment_data_export_1_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetID>
+<CFQUERY NAME="GetID" DATASOURCE="#Application.Datasource#">
 			SELECT Payment_Data_Export_1_ID 
 			FROM Payment_Data_Export_1 
 			WHERE Billback_ID = '#URL.BBID#' AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		<CFPARAM NAME="URL.Payment_Data_Export_1_ID" DEFAULT="">		
 		<CFSET URL.Payment_Data_Export_1_ID = GetID.Payment_Data_Export_1_ID>
 	</CFIF>
@@ -274,7 +291,22 @@ function alert_landscape()
 <CFELSE>
 	<CFIF NOT isdefined("FORM.Approve")>
 		<CFOUTPUT>
-		<CFQUERY NAME="Get_Payee" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForGet_Payee = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_data_export_1")>
+<cfif useLakebaseForGet_Payee>
+	<cftry>
+		<cfset Get_Payee = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_data_export_1", {
+				"payment_data_export_1_id" = "eq.#FORM.Payment_Data_Export_1_ID#",
+				"select" = "customer_name,address1,address2,city,state,zipcode,vendor_number,due_date"
+			}), "customer_name,address1,address2,city,state,zipcode,vendor_number,due_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Payee = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Payee>
+<CFQUERY NAME="Get_Payee" DATASOURCE="#Application.Datasource#">
 			SELECT 		Customer_Name,
 						Address1,
 						Address2,
@@ -288,6 +320,7 @@ function alert_landscape()
 			
 			WHERE 		Payment_Data_Export_1_ID='#FORM.Payment_Data_Export_1_ID#'
 		</CFQUERY>
+</cfif>
 		<CFSET DueDate = ListFirst(FORM.Due_Date,",")>
 		<CFSET VendorNumber = ListFirst(FORM.VENDOR_NUMBER,",")>
 		<CFTRANSACTION ACTION="BEGIN">

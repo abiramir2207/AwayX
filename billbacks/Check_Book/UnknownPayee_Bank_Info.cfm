@@ -12,9 +12,25 @@
 <body>
 
 <!--- Currency --->
+<cfset useLakebaseForCurrency = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForCurrency>
+	<cftry>
+		<cfset Currency = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"ledger_id" = "eq.#URL.LRID#",
+				"select" = "curr_symbol"
+			}), "curr_symbol"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCurrency = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCurrency>
 <CFQUERY NAME = "Currency" DATASOURCE = "#Application.datasource#">
 	SELECT curr_symbol FROM Ledger_Table Where Ledger_ID = #URL.LRID#	
 </CFQUERY>
+</cfif>
 
 <!--- <CFPARAM NAME = "URL.State_code" default = ""> --->
 <!--- State code --->
@@ -25,12 +41,28 @@
 	ORDER BY  isnull(c.Country_Sort_Order, c.country_id) ASC
 </CFQUERY>
 <!--- Country code --->
+<cfset useLakebaseForgetCountry = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_country")>
+<cfif useLakebaseForgetCountry>
+	<cftry>
+		<cfset getCountry = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_country", {
+				"active" = "eq.1",
+				"order" = "country_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCountry = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCountry>
 <CFQUERY NAME="getCountry" datasource="#application.datasource#">
 	SELECT *
 	FROM _Country
 	where active = 1
 	ORDER BY Country_id ASC
 </CFQUERY>
+</cfif>
 <!--- Bank_Address --->
 <SCRIPT type = "text/javascript">
 function restrictLength(thisobj,valueLength)
@@ -143,9 +175,25 @@ function restrictLength(thisobj,valueLength)
 
 	 					<CFIF isdefined("URL.new_bb_check")>
 							<CFSET STATE = "disabled">
-						<CFQUERY name = "check_contury" datasource = "#Application.datasource#">
+						<cfset useLakebaseForcheck_contury = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ledger_table")>
+<cfif useLakebaseForcheck_contury>
+	<cftry>
+		<cfset check_contury = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ledger_table", {
+				"ledger_id" = "eq.#URL.LRID#",
+				"select" = "curr_symbol"
+			}), "curr_symbol"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck_contury = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck_contury>
+<CFQUERY name = "check_contury" datasource = "#Application.datasource#">
 							SELECT Curr_symbol from Ledger_Table where Ledger_ID = #URL.LRID#	
 						</CFQUERY>
+</cfif>
 						
 						<CFIF check_contury.curr_symbol EQ "US">
 							<!--- <INPUT TYPE = "hidden" NAME = "Customer_Bank_Location" VALUE = "1"> --->

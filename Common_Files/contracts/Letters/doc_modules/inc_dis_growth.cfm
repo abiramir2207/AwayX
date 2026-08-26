@@ -135,11 +135,27 @@ will be used as the width of the columns in the table_dis_growth_component table
 								<!--- 3A.) IF claims @ component level... --->
 								<cfif application.appsettingsget.claims_at_comp_level>
 
-									<cfquery name="thisTag.qGetGrowthClaimMechanism" datasource="#application.datasource#">
+									<cfset useLakebaseForthisTag_qGetGrowthClaimMechanism = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForthisTag_qGetGrowthClaimMechanism>
+	<cftry>
+		<cfset thisTag.qGetGrowthClaimMechanism = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#thisTag.qProgramGrowth.claim_mechanics#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetGrowthClaimMechanism = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetGrowthClaimMechanism>
+<cfquery name="thisTag.qGetGrowthClaimMechanism" datasource="#application.datasource#">
 										SELECT  Payment_Type.Payment_Type_Name
 										FROM   	Payment_Type
 										WHERE   Payment_Type_ID = #thisTag.qProgramGrowth.claim_mechanics#
 									</cfquery>
+</cfif>
 
 									<cfif thisTag.qGetGrowthClaimMechanism.recordCount>
 										<cfset thisTag.program_growth_claim_mechanism = thisTag.qGetGrowthClaimMechanism.Payment_Type_Name[1]>

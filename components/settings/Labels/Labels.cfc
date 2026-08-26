@@ -77,12 +77,28 @@
 			hint="Gets the Labels if they exist.">
 
 	<cfargument name="tblName" required="true" default="" type="string">
-	<cfquery name="getLabels" datasource="#this.dsn#">
+	<cfset useLakebaseForgetLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("table_column_labels")>
+<cfif useLakebaseForgetLabels>
+	<cftry>
+		<cfset getLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("table_column_labels", {
+				"table_name" = "eq.#arguments.tblName#",
+				"order" = "sequence.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetLabels>
+<cfquery name="getLabels" datasource="#this.dsn#">
 		SELECT *
 		FROM Table_Column_Labels
 		WHERE Table_Name = '#arguments.tblName#'
 		ORDER BY Sequence
 	</cfquery>
+</cfif>
 	<cfreturn getLabels>
 </cffunction>
 
@@ -301,18 +317,54 @@
 
 		<cfset notice = "Label set (#arguments.LabelSetName#) deleted successfully.">
 
-		<cfquery name="deleteLabelSet" datasource="#this.dsn#">
+		<cfset useLakebaseFordeleteLabelSet = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_summary_label_sets")>
+<cfif useLakebaseFordeleteLabelSet>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_summary_label_sets",
+			{
+				"label_set_name" = "eq.#arguments.LabelSetName#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteLabelSet = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteLabelSet>
+<cfquery name="deleteLabelSet" datasource="#this.dsn#">
 			UPDATE Program_Summary_Label_Sets
 			SET deleted = 1
 			WHERE Label_Set_Name = '#arguments.LabelSetName#'
 		</cfquery>
+</cfif>
 
 		<!--- UPDATE ALL TEMPLATES THAT USE THE LABEL SET THAT IS GETTING DELETED --->
-		<cfquery name="renameLabelSet2" datasource="#this.dsn#">
+		<cfset useLakebaseForrenameLabelSet2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForrenameLabelSet2>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"label_set_default" = "eq.#arguments.LabelSetName#"
+			},
+			{
+				"label_set_default" = javaCast("null","")
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrenameLabelSet2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrenameLabelSet2>
+<cfquery name="renameLabelSet2" datasource="#this.dsn#">
 			UPDATE Program_Control_Panel_Options
 			SET Label_Set_Default = NULL
 			WHERE Label_Set_Default = '#arguments.LabelSetName#'
 		</cfquery>
+</cfif>
 
 		<cfreturn notice>
 
@@ -666,11 +718,27 @@
 				displayname="GetProgramLabels"
 				hint="Gets all program summary labels">
 
-	<cfquery name="itemLangCodes" datasource="#this.dsn#">
+	<cfset useLakebaseForitemLangCodes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_summary_label_items")>
+<cfif useLakebaseForitemLangCodes>
+	<cftry>
+		<cfset itemLangCodes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_summary_label_items", {
+				"deleted" = "eq.0",
+				"select" = "language_code"
+			}), "language_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemLangCodes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemLangCodes>
+<cfquery name="itemLangCodes" datasource="#this.dsn#">
 		SELECT DISTINCT Language_Code
 		FROM Program_Summary_Label_Items
 		WHERE Deleted = 0
 	</cfquery>
+</cfif>
 
 	<cfreturn itemLangCodes>
 
@@ -913,11 +981,26 @@
 			</cfquery>
 	</cfloop>
 
-	<cfquery name="itemLabels" datasource="#this.dsn#">
+	<cfset useLakebaseForitemLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_summary_label_items")>
+<cfif useLakebaseForitemLabels>
+	<cftry>
+		<cfset itemLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_summary_label_items", {
+				"order" = "item_description.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForitemLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForitemLabels>
+<cfquery name="itemLabels" datasource="#this.dsn#">
 		SELECT *
 		FROM Program_Summary_Label_Items
 		ORDER BY ITEM_DESCRIPTION
 	</cfquery>
+</cfif>
 
 	<cfreturn itemLabels>
 
@@ -1122,7 +1205,24 @@
 
 	 <cfset var allDistributorStaticSearchFields = "" />
 
-		 <cfquery name="allDistributorStaticSearchFields" datasource="#Application.Datasource#">
+		 <cfset useLakebaseForallDistributorStaticSearchFields = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("search_settings")>
+<cfif useLakebaseForallDistributorStaticSearchFields>
+	<cftry>
+		<cfset allDistributorStaticSearchFields = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("search_settings", {
+				"type_id" = "eq.2",
+				"deleted" = "eq.0",
+				"order" = "list_order.asc",
+				"select" = "search_settings_id,type_id,field_name,display_in_search,display_in_search_results,list_order,created_date,deleted"
+			}), "search_settings_id,type_id,field_name,display_in_search,display_in_search_results,list_order,created_date,deleted"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForallDistributorStaticSearchFields = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForallDistributorStaticSearchFields>
+<cfquery name="allDistributorStaticSearchFields" datasource="#Application.Datasource#">
 			SELECT 	Search_Settings_ID,
 				 	Type_ID,
 					Field_Name,
@@ -1138,6 +1238,7 @@
 			ORDER BY
 					List_Order
 		  </cfquery>
+</cfif>
 
     <cfreturn allDistributorStaticSearchFields />
 
@@ -1150,7 +1251,25 @@
 
 	 <cfset var distributorStaticSearchFieldsActive = "" />
 
-		 <cfquery name="distributorStaticSearchFieldsActive" datasource="#Application.Datasource#">
+		 <cfset useLakebaseFordistributorStaticSearchFieldsActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("search_settings")>
+<cfif useLakebaseFordistributorStaticSearchFieldsActive>
+	<cftry>
+		<cfset distributorStaticSearchFieldsActive = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("search_settings", {
+				"type_id" = "eq.2",
+				"display_in_search" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "list_order.asc",
+				"select" = "search_settings_id,type_id,field_name,display_in_search,list_order,created_date,deleted,distributor_group_level_id = 0,is_pg = 0"
+			}), "search_settings_id,type_id,field_name,display_in_search,list_order,created_date,deleted,distributor_group_level_id = 0,is_pg = 0"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordistributorStaticSearchFieldsActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordistributorStaticSearchFieldsActive>
+<cfquery name="distributorStaticSearchFieldsActive" datasource="#Application.Datasource#">
 			SELECT 	Search_Settings_ID,
 				 	Type_ID,
 					Field_Name,
@@ -1167,6 +1286,7 @@
 			ORDER BY
 					List_Order
 		  </cfquery>
+</cfif>
 
     <cfreturn distributorStaticSearchFieldsActive />
 
@@ -1428,7 +1548,25 @@
 
 	 <cfset var operatorStaticSearchFieldsActive = "" />
 
-		 <cfquery name="operatorStaticSearchFieldsActive" datasource="#Application.Datasource#">
+		 <cfset useLakebaseForoperatorStaticSearchFieldsActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("search_settings")>
+<cfif useLakebaseForoperatorStaticSearchFieldsActive>
+	<cftry>
+		<cfset operatorStaticSearchFieldsActive = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("search_settings", {
+				"type_id" = "eq.3",
+				"display_in_search" = "eq.1",
+				"deleted" = "eq.0",
+				"order" = "list_order.asc",
+				"select" = "search_settings_id,type_id,field_name,display_in_search,list_order,created_date,deleted,operator_group_level_id = 0,is_pg = 0"
+			}), "search_settings_id,type_id,field_name,display_in_search,list_order,created_date,deleted,operator_group_level_id = 0,is_pg = 0"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForoperatorStaticSearchFieldsActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForoperatorStaticSearchFieldsActive>
+<cfquery name="operatorStaticSearchFieldsActive" datasource="#Application.Datasource#">
 			SELECT 	Search_Settings_ID,
 				 	Type_ID,
 					Field_Name,
@@ -1445,6 +1583,7 @@
 			ORDER BY
 					List_Order
 		  </cfquery>
+</cfif>
 
     <cfreturn operatorStaticSearchFieldsActive />
 
@@ -1457,7 +1596,24 @@
 
 		<cfset var operatorStaticSearchFieldsDisplayStatus = "" />
 
-			<cfquery name="operatorStaticSearchFieldsDisplayStatus" datasource="#Application.Datasource#">
+			<cfset useLakebaseForoperatorStaticSearchFieldsDisplayStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("search_settings")>
+<cfif useLakebaseForoperatorStaticSearchFieldsDisplayStatus>
+	<cftry>
+		<cfset operatorStaticSearchFieldsDisplayStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("search_settings", {
+				"type_id" = "eq.3",
+				"display_in_search_results" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "search_settings_id,type_id,field_name,created_date,deleted,display_in_search_results"
+			}), "search_settings_id,type_id,field_name,created_date,deleted,display_in_search_results"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForoperatorStaticSearchFieldsDisplayStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForoperatorStaticSearchFieldsDisplayStatus>
+<cfquery name="operatorStaticSearchFieldsDisplayStatus" datasource="#Application.Datasource#">
 				SELECT 	Search_Settings_ID,
 						Type_ID,
 						Field_Name,
@@ -1470,6 +1626,7 @@
 				AND	Display_In_Search_Results = 1 
 				AND	Deleted = 0
 			</cfquery>
+</cfif>
 
 		<cfreturn operatorStaticSearchFieldsDisplayStatus />
 
@@ -1780,10 +1937,23 @@
 
 	<cfset colList = valueList(getCols.COLUMN_NAME)> --->
 
-	<cfquery name="qGetCustomerSettings" datasource="#this.dsn#">
+	<cfset useLakebaseForqGetCustomerSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForqGetCustomerSettings>
+	<cftry>
+		<cfset qGetCustomerSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCustomerSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCustomerSettings>
+<cfquery name="qGetCustomerSettings" datasource="#this.dsn#">
 		SELECT *
 		FROM Customer_Settings
 	</cfquery>
+</cfif>
 
 	<cfreturn qGetCustomerSettings>
 </cffunction>

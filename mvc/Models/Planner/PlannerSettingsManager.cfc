@@ -11,10 +11,25 @@ Description  : 	Manager for Planner Settings
 	<!--- get the list of weekdays --->
 	<cffunction name="getWeekDays" access="public" returntype="query" output="false" >
 		<cfset qGetWeekDays = "" />
-		<cfquery name="qGetWeekDays" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetWeekDays = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("weekdays")>
+<cfif useLakebaseForqGetWeekDays>
+	<cftry>
+		<cfset qGetWeekDays = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("weekdays", {
+				"select" = "weekdays_id,weekday,weekday_abbr"
+			}), "weekdays_id,weekday,weekday_abbr"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetWeekDays = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetWeekDays>
+<cfquery name="qGetWeekDays" datasource="#application.datasource#">
 			SELECT Weekdays_Id, Weekday, Weekday_abbr
 			FROM   Weekdays
 		</cfquery>
+</cfif>
 
 		<cfreturn	qGetWeekDays />
 	</cffunction>
@@ -411,11 +426,29 @@ Description  : 	Manager for Planner Settings
   <cffunction name="savePlannerOutputConfig" access="public" returntype="void" output="no" hint="Save config settings based on form parameters.">
 		<!--- If a default setting is being set, remove the previous default setting --->
 		<cfif form.default_setting eq 1>
-			<cfquery name="updSetting" datasource="#application.datasource#">
+			<cfset useLakebaseForupdSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("planner_output_setting")>
+<cfif useLakebaseForupdSetting>
+	<cftry>
+		<cfset application.oLakebase.updateRows("planner_output_setting",
+			{
+				"default_setting" = "eq.1"
+			},
+			{
+				"default_setting" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdSetting>
+<cfquery name="updSetting" datasource="#application.datasource#">
 				UPDATE Planner_Output_Setting
 				SET default_setting = 0
 				WHERE default_setting = 1
 			</cfquery>
+</cfif>
 		</cfif>
 
 		<cfif val(form.config_ID) eq -1>

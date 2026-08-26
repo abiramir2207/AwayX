@@ -1,11 +1,26 @@
 <CFPARAM NAME="URL.UPC" DEFAULT="">
 <CFPARAM NAME="FORM.BSA_Foodservice_Items_Master_ID" DEFAULT="#URL.UPC#">
 
+<cfset useLakebaseForgetProduct_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForgetProduct_Info>
+	<cftry>
+		<cfset getProduct_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#FORM.BSA_Foodservice_Items_Master_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProduct_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProduct_Info>
 <CFQUERY NAME="getProduct_Info" datasource="#application.datasource#">
 	SELECT *
 	FROM BSA_Foodservice_Items_Master
 	WHERE BSA_Foodservice_Items_Master_ID = '#FORM.BSA_Foodservice_Items_Master_ID#'
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="get_Product_Price_Lists" datasource="#application.datasource#">
 	<cfinclude template="#Application.Doc_mapping#/data_files/created/#application.returned_customer_setting.qry_product_price_list_detail#">

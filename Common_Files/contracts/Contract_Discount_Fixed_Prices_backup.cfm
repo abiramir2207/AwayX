@@ -66,6 +66,23 @@ Add Sort By
 
 <cfif isDefined("URL.Program_Fixed_Component_ID")>
 <cfset form.component_id = URL.Program_Fixed_Component_ID>
+<cfset useLakebaseForgetFixedComponents = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForgetFixedComponents>
+	<cftry>
+		<cfset getFixedComponents = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"program_fixed_component_id" = "eq.#URL.Program_Fixed_Component_ID#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedComponents = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedComponents>
 <CFQUERY NAME="getFixedComponents" datasource="#application.datasource#">
 SELECT 	Program_Fixed_Component.*
 FROM 	Program_Fixed_Component
@@ -73,6 +90,7 @@ WHERE 	Program_ID = '#FORM.Contract_Main_ID#'
 		AND Program_Fixed_Component.DELETED = 0
 		and Program_Fixed_Component.Program_Fixed_Component_ID = #URL.Program_Fixed_Component_ID#
 </CFQUERY>
+</cfif>
 <cfif getFixedComponents.recordcount GT 0>
 	<cfset FORM.Fixed_Component_Paid_To = getFixedComponents.Fixed_Component_Paid_To>
 	<cfset FORM.Program_Fixed_Component_Name_ID = getFixedComponents.Program_Fixed_Component_Name_ID>

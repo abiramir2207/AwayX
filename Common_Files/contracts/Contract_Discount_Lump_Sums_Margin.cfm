@@ -21,11 +21,26 @@
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfinclude template="/get_access_profile.cfm">
@@ -451,12 +466,29 @@ FROM         dbo.Contract_Main INNER JOIN
 
 <!------ </div> ----->
 		<TABLE ID="oLumpSumTable" BORDER="0">
-			<cfquery name="GetLSNames" datasource="#application.datasource#">
+			<cfset useLakebaseForGetLSNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_name")>
+<cfif useLakebaseForGetLSNames>
+	<cftry>
+		<cfset GetLSNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_name", {
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "program_lump_sum_name,program_lump_sum_name_id,external_id"
+			}), "program_lump_sum_name,program_lump_sum_name_id,external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLSNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLSNames>
+<cfquery name="GetLSNames" datasource="#application.datasource#">
 			SELECT Program_Lump_Sum_Name, Program_Lump_Sum_Name_ID, External_ID
 			FROM Program_Lump_Sum_Name
 			WHERE Active = 1
 			AND Deleted = 0
 			</cfquery>
+</cfif>
 			<TR valign="top">
 				<TD ALIGN="right" nowrap><B>Name:</B><SPAN ID="error_Name"></SPAN>&nbsp;</TD>
 				<TD>

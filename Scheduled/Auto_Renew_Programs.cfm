@@ -7,10 +7,26 @@
 	request.key = request.app_general_functions.GenerateKey();
 </cfscript>
 
+<cfset useLakebaseForlocal_query = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForlocal_query>
+	<cftry>
+		<cfset local.query = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"limit" = "1",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForlocal_query = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForlocal_query>
 <cfquery name="local.query" datasource="#application.datasource#">
 	SELECT Top 1 Company_Main_ID
 	FROM Company_Main
 </cfquery>
+</cfif>
 <cfset request.AccessStructure.Company_Main_ID = local.query.Company_Main_ID>
 <cfset request.AccessStructure.User_ID = "0000000000"><!--- D34822:Element ACCESSSTRUCTURE.USER_ID is undefined in REQUEST --->
 <cfset objProgram = CreateObject("component", "components.programs.Program") />

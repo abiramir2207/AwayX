@@ -72,10 +72,27 @@ Description  :  All the actions that happen on the Actions are columns are handl
 
 	<cfif isDefined("FORM.deleteUploadID") AND FORM.deleteUploadID NEQ "">
 
-		<cfquery name="qryUploadID" datasource="#application.datasource#">
+		<cfset useLakebaseForqryUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("upload_automation_log")>
+<cfif useLakebaseForqryUploadID>
+	<cftry>
+		<cfset qryUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("upload_automation_log", {
+				"upload_automation_log_id" = "eq.#FORM.deleteUploadID#",
+				"deleted" = "eq.0",
+				"select" = "upload_automation_log_id,upload_status"
+			}), "upload_automation_log_id,upload_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUploadID>
+<cfquery name="qryUploadID" datasource="#application.datasource#">
 				SELECT Upload_Automation_Log_ID,Upload_Status FROM Upload_Automation_Log
 				WHERE Upload_Automation_Log_ID = '#FORM.deleteUploadID#' AND Deleted = 0
 		</cfquery>
+</cfif>
 		<cfif (qryUploadID.RecordCount NEQ 0 AND qryUploadID.Upload_Automation_Log_ID NEQ "" ) ><!--- //Check which one can be deleted later // AND qryUploadID.OCR_Step EQ "11" --->
 			<cftry>
 				<cfinvoke component="components.billback.AutomationUploadManager" method="purge_upload">
@@ -90,9 +107,26 @@ Description  :  All the actions that happen on the Actions are columns are handl
 			</cftry>
 		</cfif>
 
-		<cfquery name="qGetUAUploadID" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUAUploadID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("upload_automation_log")>
+<cfif useLakebaseForqGetUAUploadID>
+	<cftry>
+		<cfset qGetUAUploadID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("upload_automation_log", {
+				"upload_automation_log_id" = "eq.#FORM.deleteUploadID#",
+				"deleted" = "eq.0",
+				"select" = "upload_automation_log_id"
+			}), "upload_automation_log_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUAUploadID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUAUploadID>
+<cfquery name="qGetUAUploadID" datasource="#application.datasource#">
 			SELECT Upload_Automation_Log_ID FROM Upload_Automation_Log WHERE Upload_Automation_Log_ID = '#FORM.deleteUploadID#' AND Deleted = 0
 		</cfquery>
+</cfif>
 		<cfif qGetUAUploadID.RecordCount EQ 1 AND qGetUAUploadID.Upload_Automation_Log_ID NEQ "">
 		<cfinvoke component="components.billback.AutomationUploadManager" method="purge_upload">
 					<cfinvokeargument name="Upload_Automation_Log_ID" value="#qGetUAUploadID.Upload_Automation_Log_ID#">

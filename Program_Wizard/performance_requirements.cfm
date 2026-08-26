@@ -90,11 +90,27 @@
 </CFQUERY>
 
 <CFIF Get_LastUpdated_Details.Recordcount GT 0>
-	<CFQUERY NAME="getUserName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_LastUpdated_Details.Updated_By#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
+<CFQUERY NAME="getUserName" datasource="#application.datasource#">
 		SELECT 	_Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 		FROM 	_Users
 		WHERE 	User_ID = '#Get_LastUpdated_Details.Updated_By#'
 	</CFQUERY>
+</cfif>
 </CFIF>
 
 <CFSET URL.PageTitle="Performance Requirements">
@@ -113,11 +129,26 @@
 <CFIF Get_LastUpdated_Details.RecordCount GT 0>
 	<FONT SIZE="2"><B>This <cfif url.RID NEQ 0>file <cfelse> setting</cfif> was last updated on <CFOUTPUT>#dateformat(Get_LastUpdated_Details.Date_Updated, 'm/d/yyy')# #timeformat(Get_LastUpdated_Details.Date_Updated, 'h:mm:ss TT')#</CFOUTPUT> by <CFOUTPUT>#getUserName.User_FullName#</CFOUTPUT></B></FONT></td></tr></table>
 </CFIF>
+<cfset useLakebaseForGet_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_perf_req")>
+<cfif useLakebaseForGet_Data>
+	<cftry>
+		<cfset Get_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_perf_req", {
+				"order" = "program_perf_req_id.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Data>
 <CFQUERY NAME="Get_Data" datasource="#application.datasource#">
 	Select		*
 	From		Program_Perf_Req
 	Order by	Program_Perf_Req_ID
 </CFQUERY>
+</cfif>
 <TABLE BORDER="0" CELLSPACING="10" CELLPADDING="0" WIDTH="750">
 	<TR>
 		<TD VALIGN="top">

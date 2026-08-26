@@ -60,12 +60,28 @@
 		<cfset this.createdBy = arguments.createdBy />
 		
 		<!---get username and password from database--->
-		<cfquery name="qGetUser" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqGetUser>
+	<cftry>
+		<cfset qGetUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.createdBy#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUser>
+<cfquery name="qGetUser" datasource="#application.datasource#">
 			SELECT 	Name_First,
 					Name_Last 
 			FROM 	_users
 			WHERE	User_ID = '#arguments.createdBy#'
 		</cfquery>
+</cfif>
 		
 		<cfset tmpUserName = qGetUser.Name_First & " " & qGetUser.Name_Last />
 		

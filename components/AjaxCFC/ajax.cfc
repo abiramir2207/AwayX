@@ -642,11 +642,27 @@
 	<cfset UserFunctionInfo = "User Name: #UserName#<br>Application Area:  #FunctionType#"/>
 
 	<cfif isDefined("arguments.parameterArray.programID") AND isNumeric(arguments.parameterArray.programID)>
-		<CFQUERY NAME="GetID" DATASOURCE = "#Application.Datasource#">
+		<cfset useLakebaseForGetID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetID>
+	<cftry>
+		<cfset GetID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.parameterArray.programID#",
+				"select" = "contract_number as number"
+			}), "contract_number as number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetID>
+<CFQUERY NAME="GetID" DATASOURCE = "#Application.Datasource#">
 			select Contract_Number as Number
 			from Contract_Main
 			where Contract_Main_ID  = '#arguments.parameterArray.programID#'
 		</CFQUERY>
+</cfif>
 	 	<cfset UserFunctionInfo = "#UserFunctionInfo# Program ID: #GetID.Number#<br>"/>
 	</cfif>
 

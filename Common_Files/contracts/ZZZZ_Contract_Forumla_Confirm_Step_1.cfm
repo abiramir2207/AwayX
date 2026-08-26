@@ -11,6 +11,23 @@
 <CFSET Program_ID = cryp.value>
 
 
+<cfset useLakebaseForgetRuleInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForgetRuleInfo>
+	<cftry>
+		<cfset getRuleInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_id" = "eq.#Program_ID#",
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"select" = "rule_name,number_of_comms"
+			}), "rule_name,number_of_comms"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRuleInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRuleInfo>
 <CFQUERY NAME="getRuleInfo" datasource="#application.datasource#">
 	SELECT Rule_Name, Number_Of_Comms
 	FROM Program_Formula_Pricing_Rules
@@ -21,6 +38,7 @@
 		AND
 		DELETED = 0
 </CFQUERY>
+</cfif>
 <CFIF getRuleInfo.recordCount GT 0>
 	<CFSET Form.Original_Rule_Name = getRuleInfo.Rule_Name>
 	<CFSET Form.Original_Comm_Count = getRuleInfo.Number_Of_Comms>

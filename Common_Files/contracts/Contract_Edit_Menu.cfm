@@ -27,11 +27,29 @@ DEPENDENCIES:
 	<cfset FORM.IsCopyProgram = 1 />
 </cfif>
 <cfif (isDefined ("URL.lockProgram") AND URL.lockProgram EQ 1)>
-	<cfquery name="updDontAllowEdit" datasource="#application.datasource#">
+	<cfset useLakebaseForupdDontAllowEdit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdDontAllowEdit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#cryp.value#"
+			},
+			{
+				"dont_allow_edit" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdDontAllowEdit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdDontAllowEdit>
+<cfquery name="updDontAllowEdit" datasource="#application.datasource#">
 		UPDATE Contract_Main
 		SET Dont_Allow_Edit = 1
 		WHERE Contract_Main_ID = #cryp.value#
 	</cfquery>
+</cfif>
 </cfif>
 <!--- D50074 :: Viewing and Editing prior program versions START --->
 <cfset ModifyDeletedPrograms = CreateObject("component","components.programs.program").ModifyDeletedProgram(cryp.value,Get_Profile_Settings.Modify_Expired_Programs) />
@@ -54,19 +72,55 @@ DEPENDENCIES:
 <cfset EncrypContractId = URL.CID>
 
 <!--- check to make sure this program is not Deleted = 1. If it is then w need to get the latest version that isn't deleted --->
+<cfset useLakebaseForqCheckIfDeleted = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqCheckIfDeleted>
+	<cftry>
+		<cfset qCheckIfDeleted = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#URL.Contract_Main_ID#",
+				"deleted" = "eq.1",
+				"select" = "contract_number"
+			}), "contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckIfDeleted = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckIfDeleted>
 <cfquery name="qCheckIfDeleted" datasource="#application.datasource#">
 	SELECT 	Contract_Number
 	FROM 	Contract_Main
 	WHERE 	Contract_Main_ID = '#URL.Contract_Main_ID#'
 	AND 	Deleted = 1
 </cfquery>
+</cfif>
 <!--- Get latest versions Contract_Main_ID --->
 <!---
 D50074 :: Viewing and Editing prior program versions
 Added code to prevent user redirecting to lastest version when coming from Modify programs link in revision history.
  --->
 <cfif ModifyDeletedPrograms EQ 0 AND qCheckIfDeleted.RecordCount>
-	<cfquery name="qGetLatestVersionCMID" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetLatestVersionCMID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetLatestVersionCMID>
+	<cftry>
+		<cfset qGetLatestVersionCMID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_number" = "eq.#qCheckIfDeleted.Contract_Number#",
+				"deleted" = "eq.0",
+				"approved" = "eq.1",
+				"order" = "revision_version.desc",
+				"limit" = "1",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLatestVersionCMID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLatestVersionCMID>
+<cfquery name="qGetLatestVersionCMID" datasource="#application.datasource#">
 		SELECT 	TOP 1 Contract_Main_ID
 		FROM 	Contract_Main
 		WHERE 	Contract_Number = '#qCheckIfDeleted.Contract_Number#'
@@ -74,6 +128,7 @@ Added code to prevent user redirecting to lastest version when coming from Modif
 		AND		Approved = 1
 		ORDER BY Contract_Main.revision_version DESC
 	</cfquery>
+</cfif>
 
 	<!--- Then redirect using the new Contract_Main_ID --->
 	<cf_cryp type="en" string ="#qGetLatestVersionCMID.Contract_Main_ID#" key="#request.key#">
@@ -419,12 +474,28 @@ stop the user from requesting approval and also approval.
 <!---D43479	:: When Qualifications are turned ON - validate q's with answers req'd are filled out prior to RFA & Approval.START --->
 	<cfif CSLGetContractInfo.Enable_Program_Qualifications>
 
-		<cfquery name="CheckProgramQualificationsRequired" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckProgramQualificationsRequired = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qualification_template_mapping")>
+<cfif useLakebaseForCheckProgramQualificationsRequired>
+	<cftry>
+		<cfset CheckProgramQualificationsRequired = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qualification_template_mapping", {
+				"template_id" = "eq.#CSLGetContractInfo.ProgramType_ID#",
+				"answer_required" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckProgramQualificationsRequired = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckProgramQualificationsRequired>
+<cfquery name="CheckProgramQualificationsRequired" datasource="#application.datasource#">
 		 	SELECT *
 			FROM  Qualification_Template_Mapping
 			WHERE Template_Id = #CSLGetContractInfo.ProgramType_ID#
 			AND Answer_Required = 1
 		</cfquery>
+</cfif>
 
 <cfif CheckProgramQualificationsRequired.recordcount>
 		<cfquery name="CheckProgramQualifications" datasource="#application.datasource#">
@@ -924,7 +995,26 @@ stop the user from requesting approval and also approval.
 	<cfset approvaltype = 0>
 </cfif>
 
- <cfquery name="getapprovalTypes" datasource="#application.datasource#">
+ <cfset useLakebaseForgetapprovalTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_template")>
+<cfif useLakebaseForgetapprovalTypes>
+	<cftry>
+		<cfset getapprovalTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_template", {
+				"deleted" = "eq.0",
+				"template_id" = "eq.#CSLGetContractInfo.ProgramType_ID#",
+				"forbid_type" = "eq.#forbidType#",
+				"forbid_access_type" = "eq.2",
+				"profile_id" = "eq.#Get_Profile_Settings.profiles_id#",
+				"select" = "template_id"
+			}), "template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetapprovalTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetapprovalTypes>
+<cfquery name="getapprovalTypes" datasource="#application.datasource#">
 	select 	distinct template_id
 						from 	Profile_Forbidden_Template
 						where 	Deleted = 0
@@ -933,6 +1023,7 @@ stop the user from requesting approval and also approval.
 								AND	Forbid_Access_Type = 2
 								AND profile_id = #Get_Profile_Settings.profiles_id#
 </cfquery>
+</cfif>
 
 <cfif getapprovalTypes.recordcount GT 0>
 	<cfif forbidType EQ 0>
@@ -943,6 +1034,25 @@ stop the user from requesting approval and also approval.
 </cfif>
 
 
+<cfset useLakebaseForgetagreeTypes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profile_forbidden_template")>
+<cfif useLakebaseForgetagreeTypes>
+	<cftry>
+		<cfset getagreeTypes = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profile_forbidden_template", {
+				"deleted" = "eq.0",
+				"template_id" = "eq.#CSLGetContractInfo.ProgramType_ID#",
+				"forbid_type" = "eq.#forbidType#",
+				"forbid_access_type" = "eq.5",
+				"profile_id" = "eq.#Get_Profile_Settings.profiles_id#",
+				"select" = "template_id"
+			}), "template_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetagreeTypes = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetagreeTypes>
 <cfquery name="getagreeTypes" datasource="#application.datasource#">
 	select 	distinct template_id
 						from 	Profile_Forbidden_Template
@@ -952,6 +1062,7 @@ stop the user from requesting approval and also approval.
 								AND	Forbid_Access_Type = 5
 								AND profile_id = #Get_Profile_Settings.profiles_id#
 </cfquery>
+</cfif>
 
 <cfif getagreeTypes.recordcount GT 0>
 		<cfset approvaltype = 1>

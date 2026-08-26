@@ -85,6 +85,25 @@
 	</CFQUERY>
 </CFIF>
 <!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
+<cfset useLakebaseForDeletePrevious = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForDeletePrevious>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"allocation_method" = "eq.3",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePrevious = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePrevious>
 <CFQUERY NAME="DeletePrevious" DATASOURCE="#Application.Datasource#">
 	UPDATE 	Gl_Code_Allocation
 	SET 	Deleted = 1
@@ -92,6 +111,7 @@
 			Allocation_Method = 3 AND
 			Deleted = 0
 </CFQUERY>
+</cfif>
 <CFQUERY NAME="InsertDundDetail" DATASOURCE="#Application.Datasource#">
 	INSERT INTO 
 	Gl_Code_Allocation	(	Billback_ID,
@@ -142,7 +162,29 @@
 </CFQUERY>
 
 <CFLOOP QUERY="GetSCOAStr">
-	<CFQUERY NAME="SCOAUPDATE" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForSCOAUPDATE = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForSCOAUPDATE>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_allocation",
+			{
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"allocation_method" = "eq.3",
+				"fiscal_year" = "eq.#Fiscal_Year#",
+				"fund_number" = "eq.#Fund_Number#",
+				"a_r" = "eq.#A_R#",
+				"deleted" = "eq.0"
+			},
+			{
+				"scoa" = "#SCOAStr#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSCOAUPDATE = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSCOAUPDATE>
+<CFQUERY NAME="SCOAUPDATE" DATASOURCE="#Application.Datasource#">
 		UPDATE 	Gl_Code_Allocation
 		SET 	SCOA = '#SCOAStr#'
 		WHERE 		Billback_ID = '#FORM.Billback_ID#' AND			
@@ -151,7 +193,8 @@
 					Fund_Number = '#Fund_Number#' AND
 					A_R = '#A_R#' AND				
 					Deleted = 0
-	</CFQUERY>		
+	</CFQUERY>
+</cfif>		
 </CFLOOP>
 
 <CFIF IsDefined("fromSplitBillbackPage") AND fromSplitBillbackPage EQ 1>

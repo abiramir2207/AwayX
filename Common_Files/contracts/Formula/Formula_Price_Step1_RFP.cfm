@@ -69,7 +69,23 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 </cfscript>
 
 <CFIF URL.RID NEQ "">
-	<CFQUERY NAME="Saved_Formula_Info" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForSaved_Formula_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_rules")>
+<cfif useLakebaseForSaved_Formula_Info>
+	<cftry>
+		<cfset Saved_Formula_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_rules", {
+				"program_formula_pricing_rule_id" = "eq.#URL.RID#",
+				"deleted" = "eq.0",
+				"order" = "rule_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSaved_Formula_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSaved_Formula_Info>
+<CFQUERY NAME="Saved_Formula_Info" DATASOURCE="#application.datasource#">
 		SELECT	*
 		FROM	Program_Formula_Pricing_Rules
 		WHERE
@@ -78,6 +94,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 				Deleted = 0
 		ORDER BY	RULE_NAME
 	</CFQUERY>
+</cfif>
 	<CFQUERY NAME="Get_All_Commodities" DATASOURCE="#application.datasource#">
 		SELECT 	LTRIM(RTRIM(Symbol)) AS Symbol,Commodities_Symbol_ID
 		FROM 	Program_Formula_Pricing_Rule_Comm_Data
@@ -97,12 +114,27 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	</CFQUERY>
 </CFIF>
 <!--- NEED TO GET RULE NAME --->
-	<CFQUERY NAME="Program_Info" DATASOURCE="#application.datasource#">
+	<cfset useLakebaseForProgram_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForProgram_Info>
+	<cftry>
+		<cfset Program_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#URL.Program_Id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForProgram_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForProgram_Info>
+<CFQUERY NAME="Program_Info" DATASOURCE="#application.datasource#">
 		SELECT	*
 		FROM	Contract_Main
 		WHERE
 				Contract_Main_ID = '#URL.Program_Id#'
 	</CFQUERY>
+</cfif>
 
 
 <CFIF Saved_Formula_Info.recordCount GT 0>

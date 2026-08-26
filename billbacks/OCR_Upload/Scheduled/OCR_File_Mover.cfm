@@ -10,6 +10,21 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 --->
 
 <!--- This query will check to see if the scheduled task is running or not --->
+<cfset useLakebaseForqryIsSTProcessing = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("cia_scheduled_task_log")>
+<cfif useLakebaseForqryIsSTProcessing>
+	<cftry>
+		<cfset qryIsSTProcessing = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("cia_scheduled_task_log", {
+				"isprocessing" = "eq.1",
+				"select" = "cia_scheduled_task_log_id,start_datetime,end_datetime,errored,isprocessing"
+			}), "cia_scheduled_task_log_id,start_datetime,end_datetime,errored,isprocessing"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryIsSTProcessing = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryIsSTProcessing>
 <cfquery name="qryIsSTProcessing" datasource="#application.datasource#">
 	SELECT 	CIA_Scheduled_Task_Log_id,
 		  	Start_DateTime,
@@ -21,6 +36,7 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 	WHERE 
 		isProcessing = 1
 </cfquery>
+</cfif>
 
 <cftry>
 	<cfif (qryIsSTProcessing.Recordcount EQ 0)>
@@ -149,13 +165,29 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 						OUL.OCR_Upload_Date DESC  		
 			</cfquery>
 
-			<!--- <cfquery name="qGetOCRUploadSettings" datasource="#application.datasource#">
+			<!--- <cfset useLakebaseForqGetOCRUploadSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_template_settings")>
+<cfif useLakebaseForqGetOCRUploadSettings>
+	<cftry>
+		<cfset qGetOCRUploadSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("ocr_template_settings", {
+				"deleted" = "eq.0",
+				"order" = "search_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOCRUploadSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOCRUploadSettings>
+<cfquery name="qGetOCRUploadSettings" datasource="#application.datasource#">
 				SELECT * 
 					FROM OCR_Template_Settings 
 				WHERE
 					Deleted = 0
 				ORDER BY Search_Order
-			</cfquery> --->
+			</cfquery>
+</cfif> --->
 
 		<!--- 
 			A) RUN THE LOGIC TO PICK THE TEMPLATE BY DOING A STRING MATCHING
@@ -182,13 +214,32 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 				<cfset OCRTemplateSettingsID_Matched = 0 />
 				<cfloop query = "qGetOCRUploadSettings">
 		 			
-		<!--- 			<cfquery name="updateOCRUploadLog" datasource="#application.datasource#">
+		<!--- 			<cfset useLakebaseForupdateOCRUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
+<cfif useLakebaseForupdateOCRUploadLog>
+	<cftry>
+		<cfset application.oLakebase.updateRows("ocr_upload_log",
+			{
+				"ocr_upload_id" = "eq.#qGetOCRUploadRecords.OCR_Upload_ID#"
+			},
+			{
+				"ocr_step" = "2",
+				"ocr_upload_status" = "Analyzing the file for Picking Template"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateOCRUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateOCRUploadLog>
+<cfquery name="updateOCRUploadLog" datasource="#application.datasource#">
 							UPDATE OCR_Upload_Log 
 								SET 
 									OCR_Step			= 2,	
 									OCR_Upload_Status 	= 'Analyzing the file for Picking Template'
 							WHERE OCR_Upload_ID = '#qGetOCRUploadRecords.OCR_Upload_ID#'
-						</cfquery> --->
+						</cfquery>
+</cfif> --->
 					
 					<!--- <cfset txtFile = qGetOCRUploadSettings.OCR_File_Landing_Path & "\Raw_Text\" & Replace(qGetOCRUploadRecords.File_Name,".pdf",".txt") />  --->
 					<cfif ((qGetOCRUploadSettings.OCR_Reader_Name EQ "ABBYY") OR (qGetOCRUploadSettings.Is_Double_Processing_On EQ 1 AND qGetOCRUploadSettings.OCR_Reader_Name EQ "ABBYY&DOCPARSER" ) OR
@@ -711,12 +762,12 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 		<!---------------------------------------------------------------------------------------------------->
 		<!---- PHASE 6: TIMEOUT FOR INVOICE AND ALIAS --->
 		<!---- 
-				3	INVOICE: (…)
-				4	INVOICE: (…)
-				4.1	INVOICE: (…)
-				5	INVOICE: (…)
-				5.1	AMOUNT: (…)
-				8	ALIAS: (…)
+				3	INVOICE: ()
+				4	INVOICE: ()
+				4.1	INVOICE: ()
+				5	INVOICE: ()
+				5.1	AMOUNT: ()
+				8	ALIAS: ()
 				 
 		---->
 		<!---------------------------------------------------------------------------------------------------->	
@@ -818,7 +869,7 @@ to pick up the TXt file and then do the keyword matchup (from above step) and th
 		<!---------------------------------------------------------------------------------------------------->
 		<!---- PHASE 7: TIMEOUT FOR CREATED  --->
 		<!---- 
-				11	CREATED: (…)
+				11	CREATED: ()
 		---->
 		<!---------------------------------------------------------------------------------------------------->	
 		<h2>PHASE 7: </h2>

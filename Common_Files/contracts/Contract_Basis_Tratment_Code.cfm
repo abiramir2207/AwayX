@@ -62,11 +62,26 @@ var arComponentNames = new Array();
 	<cfset allowanceCodeID = 0 />
 	<cfif isNumeric(Component_Allowance_Code_ID)>
 		<cfset allowanceCodeID = Component_Allowance_Code_ID />
-		<cfquery name="qGetDefaultBasicTreatmentCode" dbtype="query">
+		<cfset useLakebaseForqGetDefaultBasicTreatmentCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetallowancecodes")>
+<cfif useLakebaseForqGetDefaultBasicTreatmentCode>
+	<cftry>
+		<cfset qGetDefaultBasicTreatmentCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetallowancecodes", {
+				"allowance_code_id" = "eq.#Component_Allowance_Code_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDefaultBasicTreatmentCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDefaultBasicTreatmentCode>
+<cfquery name="qGetDefaultBasicTreatmentCode" dbtype="query">
 			SELECT	*
 			FROM	qGetAllowanceCodes
 			WHERE	Allowance_Code_ID = #Component_Allowance_Code_ID#
 		</cfquery>
+</cfif>
 		<cfif qGetDefaultBasicTreatmentCode.recordCount>
 			<cfif isNumeric(qGetDefaultBasicTreatmentCode.Basis_Code_Master_ID)>
 				<cfset defaultBasisCodeID = qGetDefaultBasicTreatmentCode.Basis_Code_Master_ID />

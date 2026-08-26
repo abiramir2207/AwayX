@@ -72,7 +72,22 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 						WHERE FSO.active = 1
 						ORDER BY price_Day_Frequency desc,Price_Day_When ASC
 </cfquery>
- <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+ <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,source,source_required,source_type,source_type_required,date_source_received,date_source_received_required,ezbutton_on,discount_rebate_max_rate_on,ezbutton_enter_beyond_max_rates,formula_pricing_type"
+			}), "first_parent_id,source,source_required,source_type,source_type_required,date_source_received,date_source_received_required,ezbutton_on,discount_rebate_max_rate_on,ezbutton_enter_beyond_max_rates,formula_pricing_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT
 			First_parent_ID,
 			Source,
@@ -88,6 +103,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     FROM Program_Control_Panel_Options
     WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
   </cfquery>
+</cfif>
 
 <cfif GetTemplateInfo.Formula_Pricing_Type eq 2>
 	<cfset byComponent = 1 />

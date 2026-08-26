@@ -62,11 +62,27 @@
 <cfoutput><!--- Program Qty --->#application.returned_customer_setting.Program_Quantity_Label# : #trim(numberformat(CSLGetContractInfo.Contract_Quantity,'___,___,___,___,___,___'))# #getContractUOMLabel.Unit_Of_Measure_Desc##NewLine##NewLine#</cfoutput>
 
 		<!---Get payment type--->
-	<cfquery name="PaymentTypeforProgram" datasource="#application.datasource#">
+	<cfset useLakebaseForPaymentTypeforProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_type")>
+<cfif useLakebaseForPaymentTypeforProgram>
+	<cftry>
+		<cfset PaymentTypeforProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_type", {
+				"payment_type_id" = "eq.#CSLGetContractInfo.ClaimMechanics#",
+				"select" = "payment_type_name"
+			}), "payment_type_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPaymentTypeforProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPaymentTypeforProgram>
+<cfquery name="PaymentTypeforProgram" datasource="#application.datasource#">
 	SELECT Payment_Type.Payment_Type_Name
 	FROM Payment_Type
 	WHERE Payment_Type.Payment_Type_ID = '#CSLGetContractInfo.ClaimMechanics#'
 	</cfquery>
+</cfif>
 	<cfoutput><cfif PaymentTypeforProgram.Recordcount IS 1>#trim(PaymentTypeforProgram.Payment_Type_Name)#</cfif>
 	#NewLine#</cfoutput>
 	
@@ -104,11 +120,27 @@
 	
 	<cfif isDefined("CSLGETCONTRACTINFO.Approved_By_User_ID")>
 	<cfif len(trim(CSLGETCONTRACTINFO.Approved_By_User_ID)) GT 0>
-	<cfquery name="ApprovedUser" datasource="#application.datasource#">
+	<cfset useLakebaseForApprovedUser = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForApprovedUser>
+	<cftry>
+		<cfset ApprovedUser = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#CSLGetContractInfo.Approved_By_User_ID#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForApprovedUser = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForApprovedUser>
+<cfquery name="ApprovedUser" datasource="#application.datasource#">
 			SELECT Name_First, Name_Last
 			FROM _Users
 			WHERE User_ID = '#CSLGetContractInfo.Approved_By_User_ID#'
 	</cfquery>
+</cfif>
 	<cfoutput>Approved By: #ApprovedUser.Name_First# #ApprovedUser.Name_Last# #NewLine##NewLine###</cfoutput>
 	</cfif>
 	</cfif>

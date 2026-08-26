@@ -68,13 +68,28 @@
 
 		<cfargument name="Contract_Quantity_UOM_IDX" type="string" required="true" />
 
-		<CFQUERY NAME="qgetContractUOMLabel" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetContractUOMLabel = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForqgetContractUOMLabel>
+	<cftry>
+		<cfset qgetContractUOMLabel = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#arguments.Contract_Quantity_UOM_IDX#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetContractUOMLabel = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetContractUOMLabel>
+<CFQUERY NAME="qgetContractUOMLabel" datasource="#application.datasource#">
 
 			SELECT 	*
 			FROM 	Units_Of_Measure
 			WHERE 	Unit_Of_Measure_ID = '#arguments.Contract_Quantity_UOM_IDX#'
 
 		</CFQUERY>
+</cfif>
 
 		<cfreturn qgetContractUOMLabel />
 
@@ -84,11 +99,26 @@
 
 		<cfargument name="CSL_Contract_Main_ID" type="string" required="true" />
 
-		<cfquery name="qgetContract_Main_Aux_Data" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetContract_Main_Aux_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForqgetContract_Main_Aux_Data>
+	<cftry>
+		<cfset qgetContract_Main_Aux_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#arguments.CSL_Contract_Main_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetContract_Main_Aux_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetContract_Main_Aux_Data>
+<cfquery name="qgetContract_Main_Aux_Data" datasource="#application.datasource#">
 			SELECT 	*
 			FROM 	Contract_Main_Aux_Data
 			WHERE 	Contract_Main_ID = '#arguments.CSL_Contract_Main_ID#'
 		</cfquery>
+</cfif>
 
 		<cfreturn qgetContract_Main_Aux_Data />
 
@@ -181,7 +211,22 @@
 
 		<cfargument name="Discount_Identifier_ID" type="string" required="true" />
 
-		<cfquery name="qGetDiscountIdentifier" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetDiscountIdentifier = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("discount_identifier")>
+<cfif useLakebaseForqGetDiscountIdentifier>
+	<cftry>
+		<cfset qGetDiscountIdentifier = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("discount_identifier", {
+				"discount_identifier_id" = "eq.#arguments.Discount_Identifier_ID#",
+				"select" = "discount_identifier_number,discount_identifier_desc"
+			}), "discount_identifier_number,discount_identifier_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDiscountIdentifier = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDiscountIdentifier>
+<cfquery name="qGetDiscountIdentifier" datasource="#application.datasource#">
 
 			SELECT 	Discount_Identifier_Number,
 					Discount_Identifier_Desc
@@ -189,6 +234,7 @@
 			WHERE 	Discount_Identifier_ID = '#arguments.Discount_Identifier_ID#'
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetDiscountIdentifier />
 
@@ -198,13 +244,29 @@
 
 		<cfargument name="PaymentCycle" type="string" required="true" />
 
-		<cfquery name="qgetPaymentCycles" datasource="#application.datasource#" blockfactor="100">
+		<cfset useLakebaseForqgetPaymentCycles = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_cycle")>
+<cfif useLakebaseForqgetPaymentCycles>
+	<cftry>
+		<cfset qgetPaymentCycles = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_cycle", {
+				"payment_cycle_id" = "eq.#arguments.PaymentCycle#",
+				"select" = "payment_cycle"
+			}), "payment_cycle"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetPaymentCycles = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetPaymentCycles>
+<cfquery name="qgetPaymentCycles" datasource="#application.datasource#" blockfactor="100">
 
 			SELECT 	Payment_Cycle
 			FROM 	Payment_Cycle
 			WHERE 	Payment_Cycle_ID = '#arguments.PaymentCycle#'
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qgetPaymentCycles />
 
@@ -1295,13 +1357,29 @@ BSA_Foodservice_Items_Master.Description  /*dbo.UDF_REMOVE_NON_ASCIICharOnly(BSA
 
 		<cfargument name="Program_Growth_Component_ID" type="string" required="true" />
 
-		<cfquery name="qGetVolumePool" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetVolumePool = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForqGetVolumePool>
+	<cftry>
+		<cfset qGetVolumePool = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"parent_id" = "eq.#arguments.Program_Growth_Component_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetVolumePool = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetVolumePool>
+<cfquery name="qGetVolumePool" datasource="#application.datasource#">
 
 			SELECT * FROM Program_Growth_Components
 			WHERE Parent_ID = '#arguments.Program_Growth_Component_ID#'
 			AND Deleted = 0
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetVolumePool />
 
@@ -1786,11 +1864,27 @@ BSA_Foodservice_Items_Master.Description  /*dbo.UDF_REMOVE_NON_ASCIICharOnly(BSA
 
 		<cfargument name="Uploaded_By" type="string" required="true" />
 
-		<CFQUERY NAME="qUser_Name" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForqUser_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqUser_Name>
+	<cftry>
+		<cfset qUser_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#arguments.Uploaded_By#",
+				"select" = "name_first,name_last"
+			}), "name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUser_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUser_Name>
+<CFQUERY NAME="qUser_Name" DATASOURCE="#Application.Datasource#">
 
 			SELECT Name_First, Name_Last FROM _USERS WHERE User_ID = '#arguments.Uploaded_By#'
 
 		</CFQUERY>
+</cfif>
 
 		<cfreturn qUser_Name />
 
@@ -1897,10 +1991,25 @@ BSA_Foodservice_Items_Master.Description  /*dbo.UDF_REMOVE_NON_ASCIICharOnly(BSA
 
 		<cfset var arUOM = arrayNew(1) />
 
-		<cfquery name="qGetUOM" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForqGetUOM>
+	<cftry>
+		<cfset qGetUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"select" = "unit_of_measure_id,unit_of_measure_desc,unit_of_measure_desc_singular,abbreviation,abbreviation_singular"
+			}), "unit_of_measure_id,unit_of_measure_desc,unit_of_measure_desc_singular,abbreviation,abbreviation_singular"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUOM>
+<cfquery name="qGetUOM" datasource="#application.datasource#">
 			SELECT	Unit_of_Measure_ID, Unit_Of_Measure_Desc, Unit_Of_Measure_Desc_Singular, Abbreviation, Abbreviation_Singular
 			FROM	Units_of_Measure
 		</cfquery>
+</cfif>
 
 		<cfloop query="qGetUOM">
 
@@ -2494,13 +2603,31 @@ BSA_Foodservice_Items_Master.Description  /*dbo.UDF_REMOVE_NON_ASCIICharOnly(BSA
 		<cfargument name="programId" required="true" type="numeric" />
 
 		<cfset returnValue = 0 />
-		<cfquery name="qGetGroupsSaved" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetGroupsSaved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForqGetGroupsSaved>
+	<cftry>
+		<cfset qGetGroupsSaved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_operators", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"is_group" = "eq.1",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupsSaved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupsSaved>
+<cfquery name="qGetGroupsSaved" datasource="#application.datasource#">
 			SELECT 	TOP 1 *
 			FROM 	Contract_Operators
 			WHERE 	Contract_Main_ID = #arguments.programId#
 			AND 	Deleted = 0
 			AND		Is_Group = 1
 		</cfquery>
+</cfif>
 
 		<cfif qGetGroupsSaved.recordCount>
 			<cfset returnValue = 1 />
@@ -2538,12 +2665,31 @@ BSA_Foodservice_Items_Master.Description  /*dbo.UDF_REMOVE_NON_ASCIICharOnly(BSA
 		<cfargument name="ContractMainID" required="true" default="" />
 		<cfargument name="CompID" required="true" default="" />
 
-		<cfquery name="updFixedComp" datasource="#application.datasource#">
+		<cfset useLakebaseForupdFixedComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForupdFixedComp>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_fixed_component",
+			{
+				"program_id" = "eq.#arguments.ContractMainID#",
+				"program_fixed_component_name_id" = "eq.#arguments.CompID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdFixedComp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdFixedComp>
+<cfquery name="updFixedComp" datasource="#application.datasource#">
 				UPDATE Program_Fixed_Component
 				set deleted = 1
 				where Program_ID = '#arguments.ContractMainID#'
 				AND Program_Fixed_Component_Name_ID = #arguments.CompID#
 		</cfquery>
+</cfif>
 		<cfreturn 0>
 	</cffunction>
 </cfcomponent>

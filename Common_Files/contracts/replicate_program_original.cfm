@@ -2,39 +2,118 @@
 <CFPARAM NAME="Program_ID_To_Replicate" DEFAULT="0">
 
 	<!--- Basic Information - Contract_Main --->
-	<CFQUERY NAME="getContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetContractInfo>
+	<cftry>
+		<cfset getContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractInfo>
+<CFQUERY NAME="getContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#'
 	</CFQUERY>
+</cfif>
 	
 	<!--- contract_operators --->
-	<CFQUERY NAME="getContractOperators" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContractOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseForgetContractOperators>
+	<cftry>
+		<cfset getContractOperators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_operators", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractOperators>
+<CFQUERY NAME="getContractOperators" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Operators
 		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 
 	<!--- contract_brokers --->
-	<CFQUERY NAME="getContractBrokers" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContractBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseForgetContractBrokers>
+	<cftry>
+		<cfset getContractBrokers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_brokers", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractBrokers>
+<CFQUERY NAME="getContractBrokers" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Brokers
 		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<!--- contract_Distributors --->
-	<CFQUERY NAME="getContractDistributors" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContractDistributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForgetContractDistributors>
+	<cftry>
+		<cfset getContractDistributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractDistributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractDistributors>
+<CFQUERY NAME="getContractDistributors" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Distributors
 		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
-	</CFQUERY>	
+	</CFQUERY>
+</cfif>	
 
 	<!--- contract_products --->
-	<CFQUERY NAME="getContract_Products" datasource="#application.datasource#">
+	<cfset useLakebaseForgetContract_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForgetContract_Products>
+	<cftry>
+		<cfset getContract_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"contract_main_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContract_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContract_Products>
+<CFQUERY NAME="getContract_Products" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Products
 		WHERE Contract_Main_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET ListOfProductIDs = valuelist(getContract_Products.Contract_Products_ID)>
 	<CFIF Listlen(ListOfProductIDs) EQ 0><CFSET ListOfProductIDs = 0></CFIF>
 	
@@ -53,11 +132,27 @@
 	</CFQUERY>	
 
 	<!--- lumpsum components --->
-	<CFQUERY NAME="get_Lump_Sum_Components" datasource="#application.datasource#">
+	<cfset useLakebaseForget_Lump_Sum_Components = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForget_Lump_Sum_Components>
+	<cftry>
+		<cfset get_Lump_Sum_Components = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Lump_Sum_Components = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Lump_Sum_Components>
+<CFQUERY NAME="get_Lump_Sum_Components" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Lump_Sums
 		WHERE Program_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 
 	<!--- lumpsum component Products --->
 	<CFQUERY NAME="get_Lump_Sum_Component_Products" datasource="#application.datasource#">
@@ -74,11 +169,27 @@
 	</CFQUERY>
 
 	<!--- Growth Components Tiers--->
-	<CFQUERY NAME="get_Growth_Component_Tiers" datasource="#application.datasource#">
+	<cfset useLakebaseForget_Growth_Component_Tiers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_tiers")>
+<cfif useLakebaseForget_Growth_Component_Tiers>
+	<cftry>
+		<cfset get_Growth_Component_Tiers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_tiers", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Growth_Component_Tiers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Growth_Component_Tiers>
+<CFQUERY NAME="get_Growth_Component_Tiers" datasource="#application.datasource#">
 		SELECT *
 		FROM Program_Growth_Component_Tiers
 		WHERE Program_ID = '#Program_ID_To_Replicate#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	
 	<!--- Growth Components Tier Products--->
 	<CFQUERY NAME="get_Growth_Component_Tier_Products" datasource="#application.datasource#">

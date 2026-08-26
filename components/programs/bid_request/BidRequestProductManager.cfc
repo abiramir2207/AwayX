@@ -587,11 +587,27 @@
 			<cfset priceListId = appSettings.getBidRequestPriceListId() />
 		</cfif>
 		
-		<cfquery name="qGetPriceListHeaderID" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetPriceListHeaderID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForqGetPriceListHeaderID>
+	<cftry>
+		<cfset qGetPriceListHeaderID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"price_list_id" = "eq.#priceListId#",
+				"select" = "price_list_header_id"
+			}), "price_list_header_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceListHeaderID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceListHeaderID>
+<cfquery name="qGetPriceListHeaderID" datasource="#application.datasource#">
 			SELECT	Price_List_Header.Price_List_Header_ID
 			FROM	Price_List_Header
 			WHERE	Price_List_Header.Price_List_ID = '#priceListId#'
 		</cfquery>
+</cfif>
 		
 		<cfif qGetPriceListHeaderID.recordCount>
 			<cfset rPriceListID = qGetPriceListHeaderID.Price_List_Header_ID />
@@ -966,7 +982,22 @@ ORDER BY Program_Bidrequest_Component_Name.Program_Bidrequest_Component_Name_ID,
 
 <cffunction name="getCompetitiveData" output="false" returntype="query">
 	<cfargument name="programId" required="true"  type="numeric" />
-	<CFQUERY NAME="qgetCompetitiveData" datasource="#application.datasource#">
+	<cfset useLakebaseForqgetCompetitiveData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_competitive_data")>
+<cfif useLakebaseForqgetCompetitiveData>
+	<cftry>
+		<cfset qgetCompetitiveData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_competitive_data", {
+				"program_id" = "eq.#arguments.programId#",
+				"select" = "previous_won_by,previous_won_price,previous_won_uom,previous_won_delivery_type,created_by,product_id"
+			}), "previous_won_by,previous_won_price,previous_won_uom,previous_won_delivery_type,created_by,product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetCompetitiveData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetCompetitiveData>
+<CFQUERY NAME="qgetCompetitiveData" datasource="#application.datasource#">
 	SELECT DISTINCT
 			Program_Competitive_Data.Previous_Won_By,
 			Program_Competitive_Data.Previous_Won_Price,
@@ -977,6 +1008,7 @@ ORDER BY Program_Bidrequest_Component_Name.Program_Bidrequest_Component_Name_ID,
 	FROM	Program_Competitive_Data
 	WHERE	Program_Competitive_Data.Program_ID = '#arguments.programId#'
 	</CFQUERY>
+</cfif>
 <cfreturn qgetCompetitiveData />
 </cffunction>
 	

@@ -7,12 +7,29 @@
 </head>
 </cfoutput>
 <body>
+<cfset useLakebaseForGet_Operators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operators>
+	<cftry>
+		<cfset Get_Operators = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"deleted" = "eq.0",
+				"order" = "operator_name.asc",
+				"select" = "bsa_operator_id,operator_name"
+			}), "bsa_operator_id,operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operators>
 <CFQUERY NAME="Get_Operators" datasource="#application.datasource#">
 	SELECT	DISTINCT BSA_Operator_ID, Operator_Name
 	FROM	BSA_Operator
 	WHERE 	Deleted = 0  
 	ORDER BY Operator_Name
 </CFQUERY>
+</cfif>
 <!--- none
 hidden
 dotted

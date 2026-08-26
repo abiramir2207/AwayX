@@ -312,19 +312,56 @@
 	</cfquery>
 	
 	<!---Add to tiers--->
-	<cfquery name="UpdateTiers" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdateTiers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_tiers")>
+<cfif useLakebaseForUpdateTiers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_tiers",
+			{
+				"program_growth_component_id" = "eq.#url.Child_ID#"
+			},
+			{
+				"range_end" = "#Target_Amount#",
+				"growth_amount" = "#Target_Bonus#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateTiers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateTiers>
+<cfquery name="UpdateTiers" datasource="#application.datasource#">
 		UPDATE 	Program_Growth_Component_Tiers
 		SET 	Range_End 		= '#Target_Amount#',
 				Growth_Amount 	= '#Target_Bonus#'
 		WHERE 	Program_Growth_Component_Tiers.Program_Growth_Component_ID = '#url.Child_ID#'
 	</cfquery>
+</cfif>
 	
 	<!---Delete all prior products--->
-	<cfquery name="DeletePriorProducts" datasource="#application.datasource#">
+	<cfset useLakebaseForDeletePriorProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_data")>
+<cfif useLakebaseForDeletePriorProducts>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_product_data",
+			{
+				"program_growth_component_id" = "eq.#Child_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeletePriorProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeletePriorProducts>
+<cfquery name="DeletePriorProducts" datasource="#application.datasource#">
 		UPDATE 	Program_Growth_Component_Product_Data 
 		SET 	Deleted = 1 
 		WHERE 	Program_Growth_Component_ID = '#Child_ID#'
 	</cfquery>
+</cfif>
 	
 	<CFLOOP INDEX="Product_ID" LIST="#FORM.Product_List#" DELIMITERS=",">
 	

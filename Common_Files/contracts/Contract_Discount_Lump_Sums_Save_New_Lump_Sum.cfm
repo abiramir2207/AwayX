@@ -91,11 +91,27 @@
 </cfif>
 <cfset this.lumpSumCompId = "" />
 
+<cfset useLakebaseForGetComponentInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_name")>
+<cfif useLakebaseForGetComponentInfo>
+	<cftry>
+		<cfset GetComponentInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_name", {
+				"program_lump_sum_name_id" = "eq.#FORM.Program_Lump_Sum_Name_ID#",
+				"select" = "external_id"
+			}), "external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetComponentInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetComponentInfo>
 <cfquery name="GetComponentInfo" datasource="#application.datasource#">
 	SELECT External_ID
 	FROM Program_Lump_Sum_Name
 	WHERE Program_Lump_Sum_Name_ID = '#FORM.Program_Lump_Sum_Name_ID#'
 </cfquery>
+</cfif>
 
 <cfset useLakebaseForGetVendorMasterId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("vendor_master")>
 <cfif useLakebaseForGetVendorMasterId>
@@ -211,21 +227,56 @@
 <!------ End  Clause Code ----->
 
 <!---get the Program_Lumps_Sum_Ext_Id from Program_Lump_Sums because this is the id we're going to store--->
+<cfset useLakebaseForqGetLmpSmEctId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqGetLmpSmEctId>
+	<cftry>
+		<cfset qGetLmpSmEctId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"deleted" = "eq.0",
+				"program_lump_sum_id" = "eq.#this.lumpSumCompId#",
+				"select" = "program_lumps_sum_ext_id"
+			}), "program_lumps_sum_ext_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLmpSmEctId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLmpSmEctId>
 <cfquery name="qGetLmpSmEctId" datasource="#application.datasource#">
 	SELECT 	Program_Lumps_Sum_Ext_Id
 	FROM	Program_Lump_Sums
 	WHERE	Deleted = 0
 	AND		Program_Lump_Sum_ID = '#this.lumpSumCompId#'
 </cfquery>
+</cfif>
 <!---se the lump sum ext id--->
 <cfset this.lumpSumExtId = qGetLmpSmEctId.Program_Lumps_Sum_Ext_Id />
 
 <!---set the comp id for revision--->
+<cfset useLakebaseForqUpdateRevisionCompId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqUpdateRevisionCompId>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_lump_sums",
+			{
+				"program_lump_sum_id" = "eq.#this.lumpSumCompId#"
+			},
+			{
+				"lump_revision_comp_id" = "#this.lumpSumExtId#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateRevisionCompId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateRevisionCompId>
 <CFQUERY NAME="qUpdateRevisionCompId" datasource="#application.datasource#">
 	UPDATE 	Program_Lump_Sums
 	SET		Lump_Revision_Comp_ID = #this.lumpSumExtId#
 	WHERE 	Program_Lump_Sum_ID 	= '#this.lumpSumCompId#'
 </CFQUERY>
+</cfif>
 
 <!------ update discount type payment cycle ----->
 <cfset genSettingsManager = CreateObject("component", "components.settings.ApplicationSettingsManager").init() />

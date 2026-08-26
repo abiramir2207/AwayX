@@ -42,14 +42,44 @@
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
 
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 	<!---D42322 ::  Programs cannot be submitted for approval
 		Added : "Custom_Fixed_Price_Options" to below Query--->
-	 <cfquery name="GetTemplateInfo" datasource="#application.datasource#">
+	 <cfset useLakebaseForGetTemplateInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForGetTemplateInfo>
+	<cftry>
+		<cfset GetTemplateInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#",
+				"select" = "first_parent_id,base_sales_equal_to_lowest_bracket,custom_fixed_price_options,rfp_process"
+			}), "first_parent_id,base_sales_equal_to_lowest_bracket,custom_fixed_price_options,rfp_process"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetTemplateInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetTemplateInfo>
+<cfquery name="GetTemplateInfo" datasource="#application.datasource#">
 		SELECT First_parent_ID,
 				Base_Sales_Equal_To_Lowest_Bracket,
 				Custom_Fixed_Price_Options,
@@ -57,6 +87,7 @@
 		FROM Program_Control_Panel_Options
 		WHERE ProgramControl_Panel_Options_ID = #GetContractInfo.ProgramType_ID#
 	 </cfquery>
+</cfif>
 
 		<cfset TemplateFiltersId = GetContractInfo.Template_Filters_Id />
 		<cfset form.Line_Of_Business_ID = GetContractInfo.Line_Of_Business_ID>
@@ -189,11 +220,27 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 	--->
 	<cfset FORM.FinalItemList = baseSettings.listCompare(FORM.FinalItemList, Replace(form.excludeDistributor,"_","-","ALL"))>
 
-	<cfquery name="qGetLevel_1_Distributors" dbtype="query">
+	<cfset useLakebaseForqGetLevel_1_Distributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("checkforexistingdistributors")>
+<cfif useLakebaseForqGetLevel_1_Distributors>
+	<cftry>
+		<cfset qGetLevel_1_Distributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("checkforexistingdistributors", {
+				"distributor_group_level_id" = "eq.1",
+				"select" = "distributor_group_id"
+			}), "distributor_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLevel_1_Distributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLevel_1_Distributors>
+<cfquery name="qGetLevel_1_Distributors" dbtype="query">
 		SELECT	Distributor_Group_ID
 		FROM	CheckForExistingDistributors
 		WHERE 	Distributor_Group_Level_ID = 1
 	</cfquery>
+</cfif>
 
 	<cfif qGetLevel_1_Distributors.recordcount GT 0>
 	<cfset FORM.Distributor_Level_1 = ValueList(qGetLevel_1_Distributors.Distributor_Group_ID) />
@@ -387,11 +434,30 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 		</CFQUERY>
 
 		<!--- Delete Auto_Broker --->
-		<CFQUERY NAME="deletedCurrentBrokers" datasource="#application.datasource#">
+		<cfset useLakebaseFordeletedCurrentBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_brokers")>
+<cfif useLakebaseFordeletedCurrentBrokers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_brokers",
+			{
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#",
+				"auto_selection" = "eq.1"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletedCurrentBrokers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletedCurrentBrokers>
+<CFQUERY NAME="deletedCurrentBrokers" datasource="#application.datasource#">
 			UPDATE Contract_Brokers
 			SET Deleted = 1
 			WHERE Contract_Main_ID = '#Form.Contract_Main_ID#' AND Auto_Selection = 1
 		</CFQUERY>
+</cfif>
 		<!--- ################### --->
 
 		<!--- (start) DISTRIBUTOR EXCEPTIONS
@@ -436,12 +502,28 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 				<cfparam name="FORM.Dynamic_Static_Groups" default="0" />
 				<cfparam name="FORM.SelectedWarehouse_#stripCustId#" default="0" />
 				<cfparam name="FORM.DefaultWarehouse_#stripCustId#" default="0" />
-						<cfquery name="isitgroup" datasource="#application.datasource#">
+						<cfset useLakebaseForisitgroup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForisitgroup>
+	<cftry>
+		<cfset isitgroup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#ListDistributor_ID#",
+				"ship_to" = "eq.Group"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisitgroup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisitgroup>
+<cfquery name="isitgroup" datasource="#application.datasource#">
 							SELECT *
 							FROM 	BSA_Foodservice_Customers
 							WHERE BSA_Foodservice_Customers_ID = '#ListDistributor_ID#'
 							AND 	ship_to = 'Group'
 						</cfquery>
+</cfif>
 						<cfif isitgroup.recordcount>
 							<cfset form.Is_Group = 1>
 						<cfelse>
@@ -450,12 +532,29 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 				<!--- D56899 END --->
 				<!---handle for groups--->
 				<cfif form.Is_Group eq 1>
-					<cfquery name="qGetDistributorGroupLevelID" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetDistributorGroupLevelID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_group_distributor")>
+<cfif useLakebaseForqGetDistributorGroupLevelID>
+	<cftry>
+		<cfset qGetDistributorGroupLevelID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_group_distributor", {
+				"distributor_id" = "eq.#ListDistributor_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_group_level_id"
+			}), "distributor_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistributorGroupLevelID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistributorGroupLevelID>
+<cfquery name="qGetDistributorGroupLevelID" datasource="#application.datasource#">
 						SELECT	Distributor_Group_Level_ID
 						FROM   Distributor_Group_Distributor
 						WHERE Distributor_ID = '#ListDistributor_ID#'
 						AND Deleted = 0
 					</cfquery>
+</cfif>
 
 					<cfset thisGroupLevel = qGetDistributorGroupLevelID.Distributor_Group_Level_ID / >
 					<cfset thisGroupId = ListDistributor_ID />
@@ -546,7 +645,27 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 			</cfif>
 			<!--- D56899 START--->
 				<cfif form.Is_Group EQ 0>
-					<cfquery name="DeleteDuplicates" datasource="#application.datasource#">
+					<cfset useLakebaseForDeleteDuplicates = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForDeleteDuplicates>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_distributors",
+			{
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#",
+				"bsa_foodservice_customers_id" = "eq.#ListDistributor_ID#",
+				"captured_from_group" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDeleteDuplicates = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDeleteDuplicates>
+<cfquery name="DeleteDuplicates" datasource="#application.datasource#">
 						UPDATE Contract_Distributors
 						SET DELETED = 1
 						WHERE Contract_Main_ID = '#FORM.Contract_Main_ID#'
@@ -554,6 +673,7 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 						AND Captured_From_Group = 1
 						AND Deleted = 0
 					</cfquery>
+</cfif>
 				</cfif>
             <!--- D56899 END--->
 
@@ -595,11 +715,27 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 
 			<!--- Select Broker_Id from BSA_Foodservice_Customers And Insert into Contract_Brokers --->
 			<CFIF NOT (appSettings.getDistributorMultiPosition()) and form.Is_Group NEQ 1 AND NOT Specify_Broker.Generic_Type EQ "LSAutoPay"><!---  NO BROKER INSERT FOR GENERIC TYPE LSAutoPay --->
-				<CFQUERY NAME="Get_Broker" DATASOURCE="#application.datasource#">
+				<cfset useLakebaseForGet_Broker = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGet_Broker>
+	<cftry>
+		<cfset Get_Broker = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#ListDistributor_ID#",
+				"select" = "bsa_foodservice_brokers_id"
+			}), "bsa_foodservice_brokers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Broker = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Broker>
+<CFQUERY NAME="Get_Broker" DATASOURCE="#application.datasource#">
 					SELECT BSA_Foodservice_Brokers_ID
 					FROM BSA_Foodservice_Customers
 					WHERE BSA_Foodservice_Customers_ID = '#ListDistributor_ID#'
 				</CFQUERY>
+</cfif>
 				<CFQUERY NAME = "Check_existance" DATASOURCE = "#Application.Datasource#">
 					SELECT BSA_Foodservice_Brokers_ID
 					FROM Contract_Brokers
@@ -712,11 +848,29 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 			and Contract_Distributors.contract_main_id = '#FORM.Contract_Main_ID#'
 			</cfquery>
 			<cfif checkDistributor.recordcount GT 0>
-				<cfquery name="updateSyscoFeild" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateSyscoFeild = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForupdateSyscoFeild>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#FORM.Contract_Main_ID#"
+			},
+			{
+				"contract_contains_sysco" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateSyscoFeild = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateSyscoFeild>
+<cfquery name="updateSyscoFeild" datasource="#application.datasource#">
 					update contract_main
 					set Contract_contains_Sysco = 1
 					where contract_main_id = '#FORM.Contract_Main_ID#'
 				</cfquery>
+</cfif>
 			<cfelse>
 				<cfquery name="updateSyscoFeild" datasource="#application.datasource#">
 					update contract_main

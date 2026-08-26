@@ -568,12 +568,29 @@ Add Sort By
 			</cfif>
 			
 			<CFOUTPUT QUERY="TheQuery" startrow="#StartRow#" maxrows="#MaxRows#">
-				<cfquery name="BrokerID" datasource="#application.datasource#">
+				<cfset useLakebaseForBrokerID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForBrokerID>
+	<cftry>
+		<cfset BrokerID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"broker_name" = "eq.#TheQuery.Broker_Name#",
+				"broker_legcy_shard" = "eq.#TheQuery.Broker_Legcy_Shard#",
+				"select" = "bsa_foodservice_brokers_id"
+			}), "bsa_foodservice_brokers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBrokerID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBrokerID>
+<cfquery name="BrokerID" datasource="#application.datasource#">
 					SELECT 	BSA_Foodservice_Brokers_ID
 					FROM 	BSA_Foodservice_Brokers
 					WHERE 	Broker_Name = '#TheQuery.Broker_Name#'
 					AND		Broker_Legcy_Shard = '#TheQuery.Broker_Legcy_Shard#'
 				</cfquery>
+</cfif>
 				
 				<cf_cryp string="#BrokerID.BSA_Foodservice_Brokers_ID#" type="en" key="#request.key#">
 

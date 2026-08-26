@@ -8,18 +8,49 @@
 
 <CFSET UserInformation.User_ID = "8F4E2CFD-C6AB-4172-BCFCD050F39EF729">
 
+<cfset useLakebaseForget_Basic_User_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForget_Basic_User_Info>
+	<cftry>
+		<cfset get_Basic_User_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#UserInformation.User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Basic_User_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Basic_User_Info>
 <CFQUERY NAME="get_Basic_User_Info" datasource="#application.datasource#">
 	SELECT *
 	FROM _Users
 	WHERE User_ID = '#UserInformation.User_ID#'
 </CFQUERY>
+</cfif>
 <CFSET UserInformation.Profile_ID = get_Basic_User_Info.Profiles_ID>
 
+<cfset useLakebaseForget_User_Geographic_Restriction = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForget_User_Geographic_Restriction>
+	<cftry>
+		<cfset get_User_Geographic_Restriction = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles_settings", {
+				"profiles_id" = "eq.#UserInformation.Profile_ID#",
+				"select" = "geographic_access"
+			}), "geographic_access"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_User_Geographic_Restriction = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_User_Geographic_Restriction>
 <CFQUERY NAME="get_User_Geographic_Restriction" datasource="#application.datasource#">
 	SELECT Geographic_Access
 	FROM Profiles_Settings
 	WHERE Profiles_ID = '#UserInformation.Profile_ID#'
 </CFQUERY>
+</cfif>
 <CFSET UserInformation.Geographic_Access = get_User_Geographic_Restriction.Geographic_Access>
 
 

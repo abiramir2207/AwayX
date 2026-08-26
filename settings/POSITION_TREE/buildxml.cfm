@@ -50,41 +50,105 @@
 <CFINCLUDE TEMPLATE="/settings/get_position_label.cfm">
 
 <!---get zones that are free--->
+<cfset useLakebaseForzone_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForzone_free>
+	<cftry>
+		<cfset zone_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.4"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForzone_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForzone_free>
 <cfquery name="zone_free" datasource="#application.datasource#">
 	SELECT 	* 
 	FROM 	user_binder
 	WHERE 	Deleted = 0
 	AND		binder_type = 4
 </cfquery>
+</cfif>
 
 <cfset zone_free_list = lcase(valuelist(zone_free.SERVICE_ID))>
 
 <!---get regions that are free--->
+<cfset useLakebaseForregion_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseForregion_free>
+	<cftry>
+		<cfset region_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.5"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForregion_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForregion_free>
 <cfquery name="region_free" datasource="#application.datasource#">
 	SELECT 	* 
 	FROM 	user_binder
 	WHERE 	Deleted = 0
 	AND		binder_type = 5
 </cfquery>
+</cfif>
 
 <cfset region_free_list = lcase(valuelist(region_free.SERVICE_ID))>
 
 <!---get markets that are free--->
+<cfset useLakebaseFormarket_free = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_binder")>
+<cfif useLakebaseFormarket_free>
+	<cftry>
+		<cfset market_free = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_binder", {
+				"deleted" = "eq.0",
+				"binder_type" = "eq.6"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormarket_free = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormarket_free>
 <cfquery name="market_free" datasource="#application.datasource#">
 	SELECT 	* 
 	FROM 	user_binder
 	WHERE 	Deleted = 0
 	AND		binder_type = 6
 </cfquery>
+</cfif>
 
 <cfset market_free_list = lcase(valuelist(market_free.SERVICE_ID))>
 
 <!---get admin--->
+<cfset useLakebaseForgetAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetAdmin>
+	<cftry>
+		<cfset getAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "is_system_administrator"
+			}), "is_system_administrator"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAdmin>
 <CFQUERY NAME="getAdmin" datasource="#application.datasource#">
 	SELECT	Is_System_Administrator
 	FROM 	_Users
 	WHERE 	User_ID = '#request.AccessStructure.User_ID#'
 </CFQUERY>
+</cfif>
 
 <CFSET isAdmin = getAdmin.Is_System_Administrator>
 

@@ -1,6 +1,22 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the date/time stamps for the message history for this contract							 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Message_History = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_message_history")>
+<cfif useLakebaseForGet_Message_History>
+	<cftry>
+		<cfset Get_Message_History = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_message_history", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"order" = "message_date.asc",
+				"select" = "message_date"
+			}), "message_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Message_History = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Message_History>
 <CFQUERY NAME="Get_Message_History" datasource="#application.datasource#">
 Select distinct
 			Contract_Message_History.Message_date
@@ -8,6 +24,7 @@ From		Contract_Message_History
 Where		Contract_Main_ID	=	'#cryp.value#'
 Order by	Message_date
 </CFQUERY>
+</cfif>
 
 
 

@@ -136,7 +136,25 @@
      		</cfquery>
 		</cfif>
       
-      <cfquery name="qGetGroupTemplate" datasource="#application.datasource#">
+      <cfset useLakebaseForqGetGroupTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_template")>
+<cfif useLakebaseForqGetGroupTemplate>
+	<cftry>
+		<cfset qGetGroupTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_template", {
+				"template_id" = "eq.#arguments.TemplateID#",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"pg_group_type" = "eq.1",
+				"select" = "group_level_id,allow_in_search,allow_in_group_search,allow_filter"
+			}), "group_level_id,allow_in_search,allow_in_group_search,allow_filter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupTemplate>
+<cfquery name="qGetGroupTemplate" datasource="#application.datasource#">
         SELECT DISTINCT Group_Level_ID,Allow_In_Search,Allow_In_Group_Search,Allow_Filter 
 		FROM Group_Template
         WHERE Template_ID =  #arguments.TemplateID# AND    
@@ -144,6 +162,7 @@
          	Deleted = 0 AND 
          	PG_Group_Type = 1
       </cfquery>
+</cfif>
    
       <cfloop query="qGetGroupTemplate">
         <cfif qGetGroupTemplate.Group_Level_ID EQ productGroupType.GroupLevelID  AND qGetGroupTemplate.Allow_Filter EQ 1>
@@ -355,7 +374,25 @@
 				AND		Column_Name = '#productGroupType.IDField#'
 			</cfquery>
 			<!--- New query for Group_template--->	
-			<cfquery name="qGetGroupTemplateFilter" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetGroupTemplateFilter = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_template")>
+<cfif useLakebaseForqGetGroupTemplateFilter>
+	<cftry>
+		<cfset qGetGroupTemplateFilter = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("group_template", {
+				"template_id" = "eq.#arguments.FirstParentID#",
+				"group_level_id" = "eq.#productGroupType.GroupLevelID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"select" = "allow_filter"
+			}), "allow_filter"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupTemplateFilter = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupTemplateFilter>
+<cfquery name="qGetGroupTemplateFilter" datasource="#application.datasource#">
 				SELECT Allow_Filter 
 				FROM Group_Template 
 				WHERE Template_ID = #arguments.FirstParentID#
@@ -363,6 +400,7 @@
 					AND Deleted = 0 
 					AND Active = 1
 			</cfquery>
+</cfif>
             
             <cfset bApplyPlannerTemplateFilter = 0 />
             <cfif arguments.plannerId>

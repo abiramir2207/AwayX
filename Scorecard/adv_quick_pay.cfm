@@ -59,6 +59,23 @@
 	<cfset LockPrg = QuickPay.ProgramStatus(Contract_Main_ID=ContractMainID, LockType=1)>
 	<cfset DDForge = variables.appSettings.get_Setting('DD_In_Forge')>
 
+<cfset useLakebaseForClosingMethods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_closing_methods")>
+<cfif useLakebaseForClosingMethods>
+	<cftry>
+		<cfset ClosingMethods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_closing_methods", {
+				"deleted" = "eq.0",
+				"display_in_advance_qp" = "eq.1",
+				"order" = "display_sequence.asc",
+				"select" = "ibillback_closing_method_id,vchbillback_closing_method_desc,qpdefault,closing_method_code"
+			}), "ibillback_closing_method_id,vchbillback_closing_method_desc,qpdefault,closing_method_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForClosingMethods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForClosingMethods>
 <cfquery NAME="ClosingMethods" datasource="#application.datasource#">
 	SELECT	iBillback_Closing_Method_ID, vchBillback_Closing_Method_Desc, qpDefault, Closing_Method_Code
 	FROM  	Billback_Closing_Methods
@@ -66,6 +83,7 @@
 	AND Display_In_Advance_QP = 1
 	ORDER BY Display_Sequence
 </cfquery>
+</cfif>
 
 <cfquery name="userPosition" datasource="#application.datasource#">
 	SELECT a.User_Positions_ID

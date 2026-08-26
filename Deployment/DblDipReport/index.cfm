@@ -22,11 +22,27 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 	
 	<cfif isDefined("FORM.submitted") AND FORM.submitted EQ "1" AND isDefined("FORM.submitSource") AND FORM.submitSource EQ "self" AND FORM.actionsToDo EQ "SaveAndGenerate">
 	
-		<cfquery name="qFilePath" datasource="#application.datasource#">
+		<cfset useLakebaseForqFilePath = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dataint_settings")>
+<cfif useLakebaseForqFilePath>
+	<cftry>
+		<cfset qFilePath = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dataint_settings", {
+				"order" = "dataint_setting_id.asc",
+				"select" = "dts_reference_path"
+			}), "dts_reference_path"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqFilePath = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqFilePath>
+<cfquery name="qFilePath" datasource="#application.datasource#">
 			SELECT      DTS_Reference_Path
 			FROM  DataInt_Settings
 			ORDER BY Dataint_setting_ID
 		</cfquery>
+</cfif>
 	
 		<cfquery name="qCreateTemp" datasource="#application.datasource#">	
 			IF OBJECT_ID ('tempdb..##check_status') IS NOT NULL 

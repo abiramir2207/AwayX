@@ -7,11 +7,30 @@
 
 <body>
 <CFIF IsDefined("URL.KillProcess")>
-	<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForUpdateStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForUpdateStatus>
+	<cftry>
+		<cfset application.oLakebase.updateRows("gl_code_upload",
+			{
+				"gl_code_process_status_id" = "eq.2",
+				"deleted" = "eq.0"
+			},
+			{
+				"gl_code_process_status_id" = "3"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateStatus>
+<CFQUERY NAME="UpdateStatus" DATASOURCE="#Application.Datasource#">
 		UPDATE GL_Code_Upload
 		SET GL_Code_Process_Status_ID = 3
 		WHERE GL_Code_Process_Status_ID = 2 AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	<BR><BR><BR><BR>
 	<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" ALIGN="Center">
 		<TR>
@@ -123,9 +142,25 @@
 <CFELSE>
 	<CFPARAM NAME="URL.RID" DEFAULT="">
 	<CFPARAM NAME="FORM.WorkSheetName" DEFAULT="Sheet1">
-	<CFQUERY NAME="AnyReadyActivateTonight" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForAnyReadyActivateTonight = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForAnyReadyActivateTonight>
+	<cftry>
+		<cfset AnyReadyActivateTonight = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_upload", {
+				"activate_tonight" = "eq.1",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAnyReadyActivateTonight = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAnyReadyActivateTonight>
+<CFQUERY NAME="AnyReadyActivateTonight" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM GL_Code_Upload WHERE Activate_Tonight = 1 AND Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET AnyReadyToActivate = 0>
 	<CFIF AnyReadyActivateTonight.RecordCount GT 0>
 		<CFSET AnyReadyToActivate = 1>
@@ -177,12 +212,29 @@
 								</CFIF>
 						</TD>
 						<TD ALIGN="Center">
-							<CFQUERY NAME="GetActive" DATASOURCE="#Application.Datasource#">
+							<cfset useLakebaseForGetActive = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_activation")>
+<cfif useLakebaseForGetActive>
+	<cftry>
+		<cfset GetActive = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_activation", {
+				"gl_code_upload_id" = "eq.#GL_Code_Upload_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetActive = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetActive>
+<CFQUERY NAME="GetActive" DATASOURCE="#Application.Datasource#">
 								SELECT 	Top 1 * 
 								FROM 	GL_Code_Activation
 								WHERE 	GL_Code_Upload_ID = #GL_Code_Upload_ID# AND
 										Deleted = 0
 							</CFQUERY>
+</cfif>
 							<CFIF GetActive.Current_Active_Data EQ 1>
 							<img src="/Images/alert_icon_small.gif" alt="" width="10" height="10" border="0">
 							<CFELSE>
@@ -322,9 +374,25 @@
 								</CFIF>							
 							</TD>						
 						</TR>
-						<CFQUERY NAME="CheckActiveProcess" DATASOURCE="#Application.Datasource#">
+						<cfset useLakebaseForCheckActiveProcess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_upload")>
+<cfif useLakebaseForCheckActiveProcess>
+	<cftry>
+		<cfset CheckActiveProcess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_upload", {
+				"gl_code_process_status_id" = "eq.2",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckActiveProcess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckActiveProcess>
+<CFQUERY NAME="CheckActiveProcess" DATASOURCE="#Application.Datasource#">
 							SELECT * FROM GL_Code_Upload WHERE GL_Code_Process_Status_ID = 2 AND Deleted = 0
 						</CFQUERY>
+</cfif>
 						<CFIF CheckActiveProcess.RecordCount GT 0>
 						<TR>
 							<TD></TD>

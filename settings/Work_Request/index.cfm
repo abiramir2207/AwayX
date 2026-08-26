@@ -104,9 +104,24 @@
             <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
             <!--- ****************************** START COMMANDS *********************************** --->
-            <cfquery name="GetCompanyName" datasource="#application.datasource#">
+            <cfset useLakebaseForGetCompanyName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForGetCompanyName>
+	<cftry>
+		<cfset GetCompanyName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "company_name"
+			}), "company_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCompanyName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCompanyName>
+<cfquery name="GetCompanyName" datasource="#application.datasource#">
             SELECT Company_Name FROM Customer_Settings
             </cfquery>
+</cfif>
 
             <!--- /////////////ADD COMPONENT/////////// --->
             <cfif form.command eq 'addComp'>

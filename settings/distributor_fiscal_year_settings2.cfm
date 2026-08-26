@@ -4,12 +4,28 @@
 	<TITLE>Select <cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput> / Accounting Periods</TITLE>
 </HEAD>
 
+<cfset useLakebaseForGetFamilyNames = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForGetFamilyNames>
+	<cftry>
+		<cfset GetFamilyNames = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetFamilyNames = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetFamilyNames>
 <cfquery name="GetFamilyNames" datasource="#application.datasource#">
 	SELECT *
 	FROM Distributor_Family
 	WHERE Deleted = 0
 	ORDER BY Family_Name
 </cfquery>
+</cfif>
 
 <BODY BGCOLOR="Whitesmoke" TEXT="Black" LINK="Blue" VLINK="Blue" ALINK="Red">
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->

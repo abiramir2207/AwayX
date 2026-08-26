@@ -10,12 +10,28 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <BR><BR>
 
+<cfset useLakebaseForgetAllCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForgetAllCompanies>
+	<cftry>
+		<cfset getAllCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"order" = "company_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllCompanies>
 <CFQUERY NAME="getAllCompanies" datasource="#application.datasource#">
 	SELECT * 
 	FROM Company_Main
 	WHERE deleted = 0
 	ORDER BY Company_name ASC
 </CFQUERY>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 

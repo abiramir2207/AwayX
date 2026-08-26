@@ -28,10 +28,25 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Retrieve the list of Warehouses...															 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Warehouses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_freight_charges")>
+<cfif useLakebaseForGet_Warehouses>
+	<cftry>
+		<cfset Get_Warehouses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_freight_charges", {
+				"select" = "warehouse"
+			}), "warehouse"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Warehouses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Warehouses>
 <CFQUERY NAME="Get_Warehouses" datasource="#application.datasource#">
 Select	distinct Warehouse
 From	BSA_Foodservice_Freight_Charges
 </CFQUERY>
+</cfif>
 
 
 <CFFORM ACTION="index.cfm" METHOD="post">

@@ -199,12 +199,29 @@
 					<cfset this.request.setLDistributorIds(ValueList(qGetDistList.Distributor_ID)) />
 					
 					<!---get operator list--->
-					<cfquery name="qGetOpList" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetOpList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_operator")>
+<cfif useLakebaseForqGetOpList>
+	<cftry>
+		<cfset qGetOpList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_operator", {
+				"deleted" = "eq.0",
+				"fp_request_master_id" = "eq.#arguments.id#",
+				"select" = "operator_id"
+			}), "operator_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOpList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOpList>
+<cfquery name="qGetOpList" datasource="#application.datasource#">
 						SELECT	Operator_ID 
 						FROM 	FP_Operator
 						WHERE	Deleted = 0
 						AND 	FP_Request_Master_ID = #arguments.id#
 					</cfquery>
+</cfif>
 					
 					<!---set the list of operator id's--->
 					<cfset this.request.setLOperatorIds(ValueList(qGetOpList.Operator_ID)) />

@@ -121,11 +121,27 @@ TABLE.Maintable TD
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 
 <CFIF isnumeric(GetActiveAndPreactiveContracts.Operator_ID)>
-		<CFQUERY NAME="Get_Operator_Name" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Operator_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_operator")>
+<cfif useLakebaseForGet_Operator_Name>
+	<cftry>
+		<cfset Get_Operator_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_operator", {
+				"bsa_operator_id" = "eq.#GetActiveAndPreactiveContracts.Operator_ID#",
+				"select" = "operator_name"
+			}), "operator_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Operator_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Operator_Name>
+<CFQUERY NAME="Get_Operator_Name" datasource="#application.datasource#">
 			Select		BSA_Operator.operator_name
 			From		BSA_Operator
 			Where		BSA_Operator_ID	=	'#GetActiveAndPreactiveContracts.Operator_ID#'
 		</CFQUERY>
+</cfif>
 		<CFSET operatorname=Get_Operator_Name.operator_name>
 	<CFELSE>
 		<CFSET operatorname="Multiple">

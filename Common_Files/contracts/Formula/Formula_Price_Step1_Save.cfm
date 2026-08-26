@@ -37,12 +37,29 @@
 					Deleted = 0
 		</CFQUERY>
 		
-		<CFQUERY NAME="checkOverageData" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForcheckOverageData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_pricing_commodity_overage")>
+<cfif useLakebaseForcheckOverageData>
+	<cftry>
+		<cfset checkOverageData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_pricing_commodity_overage", {
+				"program_formula_pricing_rule_id" = "eq.#Rule_ID#",
+				"deleted" = "eq.0",
+				"select" = "formula_pricing_commodity_overage_id"
+			}), "formula_pricing_commodity_overage_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckOverageData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckOverageData>
+<CFQUERY NAME="checkOverageData" DATASOURCE="#application.datasource#">
 			SELECT Formula_Pricing_Commodity_Overage_Id
 			FROM Formula_Pricing_Commodity_Overage
 			WHERE Program_Formula_Pricing_Rule_ID = '#Rule_ID#' AND
 					Deleted = 0
 		</CFQUERY>
+</cfif>
 		<!--- IF THERE IS OVERAGE DAT CONFIGURED RUN THE CALCULATION --->
 		<CFIF checkCommOverageData.recordcount GT 0 OR checkOverageData.RecordCount GT 0>
 			<cfif appSettings.get_Setting('Formula_Price_Item_Level_Config') eq 0>

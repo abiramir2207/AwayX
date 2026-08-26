@@ -1148,9 +1148,24 @@ SELECT	Billback.Billback_ID,
 		<CFIF IsDate(Calulation_Start_Date) AND IsDate(Calulation_End_Date) AND BSA_Foodservice_Items_Master_ID NEQ "">
 			<!------------------- Get invoice info for the sample size ----------------->
 
-			<cfquery NAME="Get_BB_Tolerance_Settings" DATASOURCE="#application.datasource#">
+			<cfset useLakebaseForGet_BB_Tolerance_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_tolerance_settings")>
+<cfif useLakebaseForGet_BB_Tolerance_Settings>
+	<cftry>
+		<cfset Get_BB_Tolerance_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_tolerance_settings", {
+				"select" = "auto_deviation_family_level"
+			}), "auto_deviation_family_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_BB_Tolerance_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_BB_Tolerance_Settings>
+<cfquery NAME="Get_BB_Tolerance_Settings" DATASOURCE="#application.datasource#">
 				SELECT Auto_Deviation_Family_Level FROM Billback_Tolerance_Settings
 			</cfquery>
+</cfif>
 			
 			<cfset Fob_Price_Indicator = bbDeviationManager.getComponentFobPriceIndicator(
 					Billback_ID = Billback_ID,

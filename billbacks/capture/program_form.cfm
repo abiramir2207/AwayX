@@ -40,21 +40,55 @@ Description:	This file is responsible for handling programs that are being billb
 	</CFIF>
 </CFIF>
 
+<cfset useLakebaseForGetValidDiscountsforProductBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_product_discount")>
+<cfif useLakebaseForGetValidDiscountsforProductBB>
+	<cftry>
+		<cfset GetValidDiscountsforProductBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_product_discount", {
+				"billback_id" = "eq.#BB_ID#",
+				"limit" = "1",
+				"select" = "billback_id"
+			}), "billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetValidDiscountsforProductBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetValidDiscountsforProductBB>
 <cfquery name="GetValidDiscountsforProductBB" datasource="#application.datasource#">
 	SELECT top 1 Billback_ID
 	FROM BB_Product_Discount
 	WHERE Billback_ID = '#BB_ID#'	
 </cfquery>
+</cfif>
 
 <cfset GetValidDiscountsforProduct = QueryNew("Discount_List") />
 
 <!--- Get a list of programs --->
+<cfset useLakebaseForgetProgramCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForgetProgramCount>
+	<cftry>
+		<cfset getProgramCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#BB_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramCount>
 <CFQUERY NAME="getProgramCount" DATASOURCE="#Application.Datasource#">
  SELECT Program_ID
  FROM Billback_Program
  WHERE billback_id = '#BB_ID#'
  AND deleted = 0
 </CFQUERY>
+</cfif>
 
 <!--- While adding (modifying) products on this page, get the number of products being added --->
 <cfif IsDefined('form.fieldnames') AND ReFindNoCase('Product_list_',form.fieldnames) NEQ 0>
@@ -142,9 +176,24 @@ Description:	This file is responsible for handling programs that are being billb
 <!--- Get the Billback profile setting --->
 <cfset BB_User_Profile = CreateObject("component", "components.user.profile").getProfileSettings(request.Accessstructure.Profiles_ID)>
 <CFIF URL.BBID NEQ "">
-	<CFQUERY NAME="CheckCopiedBB" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckCopiedBB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForCheckCopiedBB>
+	<cftry>
+		<cfset CheckCopiedBB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#URL.BBID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckCopiedBB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckCopiedBB>
+<CFQUERY NAME="CheckCopiedBB" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Billback WHERE Billback_ID = '#URL.BBID#'
 	</CFQUERY>
+</cfif>
 
 	<CFIF CheckCopiedBB.CopiedBB NEQ "" AND CheckCopiedBB.BB_Start_Date EQ "">
 		<CFLOCATION URL="basic_information_form.cfm?BBID=#URL.BBID#" ADDTOKEN="No">
@@ -161,12 +210,29 @@ Description:	This file is responsible for handling programs that are being billb
 <CFIF len(trim(URL.BBID)) GT 0>
 	<CFSET FORM.Billback_ID = URL.BBID>
 
-	<!--- <cfquery name="LookForExistingProgram" datasource="#Application.Datasource#" maxrows=1>
+	<!--- <cfset useLakebaseForLookForExistingProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
+<cfif useLakebaseForLookForExistingProgram>
+	<cftry>
+		<cfset LookForExistingProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_program", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForLookForExistingProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForLookForExistingProgram>
+<cfquery name="LookForExistingProgram" datasource="#Application.Datasource#" maxrows=1>
 		SELECT	Program_ID
 		FROM	Billback_Program
 		WHERE 	Billback_ID = '#FORM.Billback_ID#' 
 		AND		Deleted = 0
 	</cfquery>
+</cfif>
 	<CFIF LookForExistingProgram.recordcount GT 0>
 		<CFSET LoadBillbackID = FORM.Billback_ID>	
 		<cfinclude template="load_billback_to_struct.cfm">
@@ -198,12 +264,29 @@ FROM        Billback_Settings
 </cfquery>
 
 <cfif IIIvalue.III_P_Upload_Single_BB_Per_Invoice EQ 1 AND getPayeeInfo.Billback_Payee_Type_ID EQ 1>
-		<cfquery name="qDistList" datasource="#Application.Datasource#">
+		<cfset useLakebaseForqDistList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_distributor_list")>
+<cfif useLakebaseForqDistList>
+	<cftry>
+		<cfset qDistList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_distributor_list", {
+				"billback_id" = "eq.#BB_ID#",
+				"deleted" = "eq.0",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDistList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDistList>
+<cfquery name="qDistList" datasource="#Application.Datasource#">
 			Select Distributor_ID 
 			From Billback_Distributor_List
 			Where Billback_id = '#BB_ID#'
 			And deleted = 0
 		</cfquery>
+</cfif>
 		<cfif qDistList.RecordCount>
 			<cfset FiltersList = #ValueList(qDistList.Distributor_ID,",")#>
 		<cfelse>
@@ -249,11 +332,27 @@ FROM        Billback_Settings
 		<cfinclude template="build_PayeeProgramIDList.cfm">
 	</CFIF>
 </CFIF>
+<cfset useLakebaseForqCheckSched = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqCheckSched>
+	<cftry>
+		<cfset qCheckSched = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "scheduled_auto_bb"
+			}), "scheduled_auto_bb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckSched = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckSched>
 <cfquery name="qCheckSched" datasource="#Application.Datasource#" maxrows=1>
 		SELECT	Scheduled_Auto_BB
 		FROM	Billback
 		WHERE 	Billback_ID = '#FORM.Billback_ID#'
 </cfquery>
+</cfif>
 <!--- --------------------------------------------------------------------------------------------------------------------------- --->
 <!--- New code --->
 <!--- --------------------------------------------------------------------------------------------------------------------------- --->
@@ -823,9 +922,25 @@ FROM        Billback_Settings
 
 <!--- Delete Program from Billback --->
 <cfif structKeyExists(form,"Data_Action_ID")>
-	<CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetStatus>
+	<cftry>
+		<cfset GetStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#FORM.Billback_ID#",
+				"select" = "billback_status_id"
+			}), "billback_status_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetStatus>
+<CFQUERY NAME="GetStatus" DATASOURCE="#Application.Datasource#">
 		SELECT Billback_Status_ID FROM Billback WHERE Billback_ID = '#FORM.Billback_ID#'
 	</CFQUERY>
+</cfif>
 	<CFIF GetStatus.Billback_Status_ID GTE 3> 
 		<!--- 17302 - Redirect to Summary --->
 		<CFSET Billback_Status_ID = GetStatus.Billback_Status_ID>

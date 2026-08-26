@@ -21,10 +21,25 @@ Description:	This file is responsible for displaying Billback Products that are 
 		<CFSET CurrentProduct = evaluate("stProductsNotOnProgram.Product_#prodIndx#")>
 		
 			<CFIF ShowProductsInGroupLevel EQ 1>
-				<CFQUERY NAME="getProductData" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForgetProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("product_hierarchy")>
+<cfif useLakebaseForgetProductData>
+	<cftry>
+		<cfset getProductData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("product_hierarchy", {
+				"product_hierarchy_id" = "eq.#CurrentProduct.PRODUCT_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductData>
+<CFQUERY NAME="getProductData" DATASOURCE="#Application.Datasource#">
 					SELECT * FROM Product_Hierarchy
 					WHERE Product_Hierarchy_ID = '#CurrentProduct.PRODUCT_ID#'
-				</CFQUERY>													
+				</CFQUERY>
+</cfif>													
 			<CFELSE>
 				<cfquery name="getProductData" datasource="#Application.Datasource#">
 					SELECT	dbo.BSA_Foodservice_Items_Master.Item, 

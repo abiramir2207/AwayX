@@ -39,10 +39,23 @@
 
 <!---D79237:  Rebate - OI and Redi START---->
 	<cfset qGetALLCompRebates = compRebate.getActive(get_all_active = 1)>
-	<cfquery name="qGetActiveComps" dbtype="query">
+	<cfset useLakebaseForqGetActiveComps = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetallcomprebates")>
+<cfif useLakebaseForqGetActiveComps>
+	<cftry>
+		<cfset qGetActiveComps = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetallcomprebates", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetActiveComps = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetActiveComps>
+<cfquery name="qGetActiveComps" dbtype="query">
 		SELECT *
 		FROM qGetALLCompRebates
 	</cfquery>
+</cfif>
 <!---D79237:  Rebate - OI and Redi END---->
 
 <FIELDSET STYLE="padding:10px; width:1150px; border: 1px solid Blue;margin-top:10px;">
@@ -605,12 +618,29 @@
 
 <cfif appSettings.getGL_Account_On()>
 
-	<cfquery name="GLQuery" datasource="#application.datasource#">
+	<cfset useLakebaseForGLQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_account")>
+<cfif useLakebaseForGLQuery>
+	<cftry>
+		<cfset GLQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_account", {
+				"deleted" = "eq.0",
+				"is_active" = "eq.1",
+				"select" = "gl_account,gl_account_desc,gl_account_id"
+			}), "gl_account,gl_account_desc,gl_account_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGLQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGLQuery>
+<cfquery name="GLQuery" datasource="#application.datasource#">
 		SELECT GL_Account, GL_Account_Desc ,GL_Account_ID
 		FROM GL_Account
 		WHERE Deleted = 0
 		AND Is_Active = 1
 	</cfquery>
+</cfif>
 	<cfif GLQuery.recordCount GT 1>
 		<TR id="ShowGLSearch" >
 			<td ALIGN="right" class="Orangline"><strong><cfoutput>#Application.GLAccountLabel#</cfoutput>s</strong></td><!---D42774 --->

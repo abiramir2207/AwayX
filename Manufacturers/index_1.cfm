@@ -31,11 +31,27 @@
 
 <cfif isDefined("Form.Distributor_List")>
 <CFIF len(trim(Form.Distributor_List)) GT 0>
-	<cfquery name="GetDist" datasource="#application.datasource#">
+	<cfset useLakebaseForGetDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGetDist>
+	<cftry>
+		<cfset GetDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Form.Distributor_List#",
+				"select" = "ship_to,name"
+			}), "ship_to,name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDist>
+<cfquery name="GetDist" datasource="#application.datasource#">
 		SELECT Ship_To, Name
 		FROM BSA_Foodservice_Customers
 		WHERE BSA_Foodservice_Customers_ID = '#Form.Distributor_List#' 
 	</cfquery>
+</cfif>
 	<h2>Distributor:</h2>
 	<CFDUMP var="#GetDist#">
 </CFIF>
@@ -43,11 +59,27 @@
 <BR><BR>
 <cfif isDefined("Form.Product_List")>
 <CFIF len(trim(Form.Product_List)) GT 0>
-	<cfquery name="GetProd" datasource="#application.datasource#">
+	<cfset useLakebaseForGetProd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGetProd>
+	<cftry>
+		<cfset GetProd = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#Form.Product_List#",
+				"select" = "item,upc,description"
+			}), "item,upc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetProd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetProd>
+<cfquery name="GetProd" datasource="#application.datasource#">
 		SELECT Item, UPC, Description
 		FROM BSA_Foodservice_Items_Master
 		WHERE BSA_Foodservice_Items_Master_ID = '#Form.Product_List#' 
 	</cfquery>
+</cfif>
 	<h2>Product:</h2>
 	<CFDUMP var="#GetProd#">
 </cfif>

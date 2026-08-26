@@ -51,19 +51,54 @@
 	<cfsilent>
 		<cfif cgi.request_method eq "post">
 			<cfif form.action eq "remove">
-				<cfquery name="qRemoval" datasource="#application.datasource#">
+				<cfset useLakebaseForqRemoval = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForqRemoval>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_attachments",
+			{
+				"program_id" = "eq.#url.programID#",
+				"doc_id" = "eq.#form.doc_id#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqRemoval = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqRemoval>
+<cfquery name="qRemoval" datasource="#application.datasource#">
 					UPDATE Contract_Attachments
 					   SET Deleted = 1
 					 WHERE Program_ID = #url.programID#
 					 		AND Doc_ID = '#form.doc_id#'
 				</cfquery>
+</cfif>
 			</cfif>
 		</cfif>
-		<cfquery name="qProgram" datasource="#application.datasource#">
+		<cfset useLakebaseForqProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqProgram>
+	<cftry>
+		<cfset qProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#url.programID#",
+				"select" = "contract_number,contract_title"
+			}), "contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqProgram>
+<cfquery name="qProgram" datasource="#application.datasource#">
 			SELECT Contract_Number, Contract_Title
 			  FROM Contract_Main
 			 WHERE Contract_Main_ID = #url.programID#
 		</cfquery>
+</cfif>
 		<cfquery name="qDocuments" datasource="#application.datasource#">
 			SELECT  Document_Details.Doc_Uni_Name
 			       ,Document_Details.Doc_Title

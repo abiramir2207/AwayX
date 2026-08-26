@@ -70,11 +70,26 @@ but when we start adding multiple components, the stored procs need to be change
 
 <CFIF len(trim(URL.CID)) GT 0>
 	<CF_Cryp type="de" key="#request.key#" string="#URL.CID#">
-	<cfquery name="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<cfquery name="GetContractInfo" datasource="#application.datasource#">
 		SELECT *
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</cfquery>
+</cfif>
 
 		<!--- D50074 :: Viewing and Editing prior program versions START --->
 		<cfinclude template="/get_access_profile.cfm">
@@ -282,13 +297,29 @@ Add Sort By
 	
 	<cfset Form.Product_List = listqualify(ValueList(TheQuery.BSA_Foodservice_Items_Master_ID), chr(39))>
 	
-	<cfquery name="qGetLevel_1_Products" dbtype="query">
+	<cfset useLakebaseForqGetLevel_1_Products = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("thequery")>
+<cfif useLakebaseForqGetLevel_1_Products>
+	<cftry>
+		<cfset qGetLevel_1_Products = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("thequery", {
+				"product_group_level_id" = "eq.1",
+				"select" = "product_group_id"
+			}), "product_group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetLevel_1_Products = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetLevel_1_Products>
+<cfquery name="qGetLevel_1_Products" dbtype="query">
 	
 		SELECT	DISTINCT Product_Group_ID
 		FROM	TheQuery
 		WHERE
 				Product_Group_Level_ID = 1
 	</cfquery>
+</cfif>
 	
 	<cfset FORM.Product_Level_1 = ValueList(qGetLevel_1_Products.Product_Group_ID) />	
 	
@@ -314,13 +345,29 @@ Add Sort By
 				
 			</cfquery>
 			
-			<cfquery name="qGetGroupLevelId" dbtype="query">
+			<cfset useLakebaseForqGetGroupLevelId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("thequery")>
+<cfif useLakebaseForqGetGroupLevelId>
+	<cftry>
+		<cfset qGetGroupLevelId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("thequery", {
+				"pricing_level_id" = "eq.#indx#",
+				"select" = "product_group_level_id"
+			}), "product_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetGroupLevelId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetGroupLevelId>
+<cfquery name="qGetGroupLevelId" dbtype="query">
 			
 				SELECT 	DISTINCT Product_Group_Level_ID
 				FROM	TheQuery
 				WHERE	Pricing_Level_ID = #indx#
 				
 			</cfquery>
+</cfif>
 			
 			<cfset "FORM.Level_#indx#" = ValueList(qGetLevel.BSA_Foodservice_Items_Master_ID) />
 		
@@ -2237,11 +2284,27 @@ Inorder to make sure that products in level 2 and level 3 are a sub set of Level
 				<cfif restrictLowerLevelBasedonLevel1 AND NOT currentGroupLevelIsGroup>
 					<cfset productGroupForThisProduct = "" />
 					<cfif qProductGroupValuesForItem.recordCount>
-						<cfquery name="qProductGroupForThisProduct" dbtype="query">
+						<cfset useLakebaseForqProductGroupForThisProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qproductgroupvaluesforitem")>
+<cfif useLakebaseForqProductGroupForThisProduct>
+	<cftry>
+		<cfset qProductGroupForThisProduct = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qproductgroupvaluesforitem", {
+				"product_id" = "eq.#BSA_Foodservice_Items_Master_ID#",
+				"select" = "group_id"
+			}), "group_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqProductGroupForThisProduct = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqProductGroupForThisProduct>
+<cfquery name="qProductGroupForThisProduct" dbtype="query">
 							SELECT 	Group_ID
 							FROM	qProductGroupValuesForItem
 							WHERE	Product_ID = '#BSA_Foodservice_Items_Master_ID#'
 						</cfquery>
+</cfif>
 						<cfset productGroupForThisProduct = qProductGroupForThisProduct.Group_ID />
 					</cfif>	
 					<input type="hidden" name="productGroupForThisProduct_#request.app_general_functions.replaceHyphen(BSA_Foodservice_Items_Master_ID)#" value="#productGroupForThisProduct#">

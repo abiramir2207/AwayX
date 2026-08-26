@@ -54,10 +54,25 @@
 		
 		
 	<!--- Retrieve the length of time before expiring --->	
-	<CFQUERY NAME="Get_Session_Window" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Session_Window = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForGet_Session_Window>
+	<cftry>
+		<cfset Get_Session_Window = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "session_expiration_length"
+			}), "session_expiration_length"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Window = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Window>
+<CFQUERY NAME="Get_Session_Window" datasource="#application.datasource#">
 		Select	Session_Expiration_Length
 		From	General_Settings
 	</CFQUERY>
+</cfif>
 
 	
 	<!--- If there is no data in the session expiration field, put 15 minutes in there --->
@@ -72,11 +87,27 @@
 	</CFIF>	
 
 	<CFSET session_time=Get_Session_Window.Session_Expiration_Length>
-	<CFQUERY NAME="Get_Session_Status" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_Session_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("session_tracker")>
+<cfif useLakebaseForGet_Session_Status>
+	<cftry>
+		<cfset Get_Session_Status = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("session_tracker", {
+				"session_user_id" = "eq.#request.AccessStructure.User_ID#",
+				"select" = "session_id,session_date_time_stamp"
+			}), "session_id,session_date_time_stamp"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Session_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Session_Status>
+<CFQUERY NAME="Get_Session_Status" datasource="#application.datasource#">
 		Select		Session_ID, Session_Date_Time_Stamp
 		From		Session_Tracker
 		Where		Session_User_ID	= '#request.AccessStructure.User_ID#'
 	</CFQUERY>
+</cfif>
 	
 	
 	<CFIF Get_Session_Status.recordCount GT 0>

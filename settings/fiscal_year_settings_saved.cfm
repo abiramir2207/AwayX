@@ -1,9 +1,26 @@
+<cfset useLakebaseForgetFiscalCalendar = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForgetFiscalCalendar>
+	<cftry>
+		<cfset getFiscalCalendar = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"deleted" = "eq.0",
+				"company_main_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"order" = "start_date.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFiscalCalendar = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFiscalCalendar>
 <CFQUERY NAME="getFiscalCalendar" datasource="#application.datasource#">
 	SELECT *
 	FROM Fiscal_Year
 	WHERE Deleted = 0 AND Company_Main_ID = '#request.AccessStructure.Company_Main_ID#'
 	ORDER BY Start_Date 
 </CFQUERY>
+</cfif>
 
 
 <SPAN CLASS="title2">Current Saved Settings<Span style="Color:red;font-size: 12pt;font-weight: bold;">*</Span><BR>

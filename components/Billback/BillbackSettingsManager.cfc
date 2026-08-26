@@ -34,11 +34,27 @@
 
 		<cfset var Search_Expired_Program_Within = 0 />
 
-		<CFQUERY NAME="qGetSearchExpiredProgramWithin" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForqGetSearchExpiredProgramWithin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqGetSearchExpiredProgramWithin>
+	<cftry>
+		<cfset qGetSearchExpiredProgramWithin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "search_expired_program_within"
+			}), "search_expired_program_within"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSearchExpiredProgramWithin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSearchExpiredProgramWithin>
+<CFQUERY NAME="qGetSearchExpiredProgramWithin" DATASOURCE="#application.datasource#">
 			SELECT	Search_Expired_Program_Within
 			FROM	Billback_Settings
 			WHERE	Billback_Settings.User_ID = '#request.AccessStructure.Company_Main_ID#'
 		</CFQUERY>
+</cfif>
 
 		<cfif isNumeric(qGetSearchExpiredProgramWithin.Search_Expired_Program_Within)>
 			<cfset Search_Expired_Program_Within = qGetSearchExpiredProgramWithin.Search_Expired_Program_Within />
@@ -60,10 +76,26 @@
 
 	<cffunction name="getAdjustment_Default" returntype="numeric">
 		<cfset var Adjustment_Default = 1 />
-		<CFQUERY NAME="qGetAdjustmentDefault" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForqGetAdjustmentDefault = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqGetAdjustmentDefault>
+	<cftry>
+		<cfset qGetAdjustmentDefault = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "adjustment_default"
+			}), "adjustment_default"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAdjustmentDefault = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAdjustmentDefault>
+<CFQUERY NAME="qGetAdjustmentDefault" DATASOURCE="#application.datasource#">
 			SELECT	Top 1 Adjustment_Default
 			FROM	Billback_Settings
 		</CFQUERY>
+</cfif>
 		<cfif isNumeric(qGetAdjustmentDefault.Adjustment_Default)>
 			<cfset Adjustment_Default = qGetAdjustmentDefault.Adjustment_Default />
 		</cfif>
@@ -71,19 +103,51 @@
 	</cffunction>
 
 	<cffunction name="getDefaultSortOptions" returntype="query">
-		<CFQUERY NAME="Default_sort_columns" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForDefault_sort_columns = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForDefault_sort_columns>
+	<cftry>
+		<cfset Default_sort_columns = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "default_sort_option_for_scorecard,default_sort_by"
+			}), "default_sort_option_for_scorecard,default_sort_by"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDefault_sort_columns = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDefault_sort_columns>
+<CFQUERY NAME="Default_sort_columns" DATASOURCE="#application.datasource#">
 			SELECT	Top 1 Default_Sort_option_for_Scorecard, Default_sort_By
 			FROM	Billback_Settings
 		</CFQUERY>
+</cfif>
 
 		<cfreturn Default_sort_columns />
 	</cffunction>
 	<!--- 98106 - Auto Deviations to consider if bb is beyond program budget START --->
 	<cffunction name="getBB_Status_for_Budget_Actual" returntype="numeric">
-		<CFQUERY NAME="qBB_Status_for_Budget_Actual" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForqBB_Status_for_Budget_Actual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForqBB_Status_for_Budget_Actual>
+	<cftry>
+		<cfset qBB_Status_for_Budget_Actual = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"limit" = "1",
+				"select" = "bb_status_for_budget_actual"
+			}), "bb_status_for_budget_actual"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBB_Status_for_Budget_Actual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBB_Status_for_Budget_Actual>
+<CFQUERY NAME="qBB_Status_for_Budget_Actual" DATASOURCE="#application.datasource#">
 			SELECT	Top 1 BB_Status_for_Budget_Actual
 			FROM	Billback_Settings
 		</CFQUERY>
+</cfif>
 	<cfif qBB_Status_for_Budget_Actual.recordcount>
 		<cfreturn qBB_Status_for_Budget_Actual.BB_Status_for_Budget_Actual />
 	<cfelse>
@@ -340,12 +404,28 @@
   </cffunction>
 <!--- 69678 :: Modify Auto Match logic to use Family and Reference only based on the Setting START---->
 	<cffunction name="GetFamilyNames" access="public" returntype="any" output="false" displayname="GetFamilyNames" hint="Gets the family names.">
-		<CFQUERY NAME="qGetFamilyList" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForqGetFamilyList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_family")>
+<cfif useLakebaseForqGetFamilyList>
+	<cftry>
+		<cfset qGetFamilyList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_family", {
+				"deleted" = "eq.0",
+				"order" = "family_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFamilyList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFamilyList>
+<CFQUERY NAME="qGetFamilyList" DATASOURCE="#Application.Datasource#">
 			SELECT *
 			FROM Distributor_Family
 			WHERE Deleted = 0
 			ORDER BY Family_Name
 		</CFQUERY>
+</cfif>
 		<cfreturn qGetFamilyList>
 	</cffunction>
 
@@ -378,11 +458,27 @@
 
 			<cfset Action_Notes="">
 
-			<CFQUERY NAME="qCheckFamily" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForqCheckFamily = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("auto_match_deviation_family")>
+<cfif useLakebaseForqCheckFamily>
+	<cftry>
+		<cfset qCheckFamily = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("auto_match_deviation_family", {
+				"family_id" = "eq.#Family#",
+				"select" = "auto_match_family,auto_deviation_family"
+			}), "auto_match_family,auto_deviation_family"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckFamily = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckFamily>
+<CFQUERY NAME="qCheckFamily" DATASOURCE="#Application.Datasource#">
 				SELECT Auto_Match_Family, Auto_Deviation_Family
 				FROM Auto_Match_Deviation_Family
 				WHERE Family_ID = '#Family#'
 			</CFQUERY>
+</cfif>
 
 			<cfif qCheckFamily.recordcount>
 

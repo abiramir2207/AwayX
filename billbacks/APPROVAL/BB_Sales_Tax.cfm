@@ -50,19 +50,54 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		</cfif>
 
 		<cfif NOT useLakebaseForTaxInfo>
-			<cfquery name="Get_Tax_Info" datasource="#application.datasource#">
+			<cfset useLakebaseForGet_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForGet_Tax_Info>
+	<cftry>
+		<cfset Get_Tax_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_tax_info", {
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Tax_Info>
+<cfquery name="Get_Tax_Info" datasource="#application.datasource#">
 				SELECT *
 				FROM BB_Tax_Info
 				where Billback_ID = '#Billback_ID#'
 				and deleted = 0
 			</cfquery>
+</cfif>
 			<cfif Get_Tax_Info.Recordcount>
-				<cfquery name="Update_Tax_Info" datasource="#application.datasource#">
+				<cfset useLakebaseForUpdate_Tax_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_info")>
+<cfif useLakebaseForUpdate_Tax_Info>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_tax_info",
+			{
+				"billback_id" = "eq.#Billback_ID#",
+				"deleted" = "eq.0"
+			},
+			{
+				"tax_code_1_id" = "#form.Billbacks_Sales_Tax#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdate_Tax_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdate_Tax_Info>
+<cfquery name="Update_Tax_Info" datasource="#application.datasource#">
 				UPDATE BB_Tax_Info
 				SET Tax_Code_1_ID = #form.Billbacks_Sales_Tax#
 				WHERE Billback_ID = '#Billback_ID#'
 				AND deleted = 0
 				</cfquery>
+</cfif>
 			<cfelse>
 				<cfquery name="Insert_Tax_Info" datasource="#application.datasource#">
 					INSERT INTO BB_Tax_Info (Billback_ID, Tax_Code_1_ID)

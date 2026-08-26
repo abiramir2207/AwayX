@@ -139,11 +139,27 @@ FUNCTIONALITY:
 	<!--- X1.) Let's grab our XML data typed variable representing THIS letter's DNA from STARTING Letter ... --->
     
 	<!--- D16774 8/14/08 [begin]
-    <cfquery name="thisTag.qGetXML" datasource="#application.datasource#">
+    <cfset useLakebaseForthisTag_qGetXML = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForthisTag_qGetXML>
+	<cftry>
+		<cfset thisTag.qGetXML = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#form.prior_program_letter_id#",
+				"select" = "letter_xml"
+			}), "letter_xml"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForthisTag_qGetXML = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForthisTag_qGetXML>
+<cfquery name="thisTag.qGetXML" datasource="#application.datasource#">
         SELECT	Letter_xml
         FROM	Program_Letters
         WHERE 	Program_Letters.Program_Letters_ID = #form.prior_program_letter_id#
     </cfquery>
+</cfif>
     --->
     <cfset thisTag.xInitialProgramLetterXML = application.oLetterManager.getLetterXML(form.prior_program_letter_id)>
     <!--- D16774 8/14/08 [end] --->
@@ -1549,11 +1565,26 @@ FUNCTIONALITY:
 
 	<!--- D16774 8/14/08 [begin]
 	<!--- Get info for initial Doc [begin] --->
-	<cfquery name="variables.qGetLetterInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForvariables_qGetLetterInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_letters")>
+<cfif useLakebaseForvariables_qGetLetterInfo>
+	<cftry>
+		<cfset variables.qGetLetterInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_letters", {
+				"program_letters_id" = "eq.#form.prior_program_letter_id#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qGetLetterInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qGetLetterInfo>
+<cfquery name="variables.qGetLetterInfo" datasource="#application.datasource#">
 	  SELECT 			*
 	  FROM 				program_letters
 	  WHERE 			program_letters.program_letters_id = #form.prior_program_letter_id# 
 	</cfquery>
+</cfif>
 	<!--- Get info for initial Doc [end] --->
 	--->
 	<cfset variables.qGetLetterInfo = application.oLetterManager.getAllLetterInfo(form.prior_program_letter_id)>

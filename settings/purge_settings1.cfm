@@ -36,11 +36,26 @@
 		where Purge_Log_Settings_id = '#cont#'
 		</CFQUERY>
 
+<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_PreviousSettings.User_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
 <CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 		Select		*
 		From		_Users
 		Where		User_ID		=		'#Get_PreviousSettings.User_ID#'
 </CFQUERY>
+</cfif>
 
 <CFSET fPhase_1_Period="">
 <CFSET fPhase_1_Message="">

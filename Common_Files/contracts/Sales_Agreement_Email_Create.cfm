@@ -122,11 +122,27 @@ function confirmCompletion(disableClickedButtonName)
 </cfif>
 
 <!--- Get the program number --->
+<cfset useLakebaseForGet_Program_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_sales_agreement")>
+<cfif useLakebaseForGet_Program_Details>
+	<cftry>
+		<cfset Get_Program_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_sales_agreement", {
+				"export_sales_agreement_id" = "eq.#URL.Export_Sales_Agreement_ID#",
+				"select" = "export_sales_agreement_id,export_sales_agreement_number,export_sales_agreement_name,contract_status_type_idx"
+			}), "export_sales_agreement_id,export_sales_agreement_number,export_sales_agreement_name,contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Program_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Program_Details>
 <CFQUERY NAME="Get_Program_Details" datasource="#application.datasource#">
 	SELECT	Export_Sales_Agreement_ID,Export_Sales_Agreement_Number,Export_Sales_Agreement_Name,contract_status_type_idx
 	FROM		Export_Sales_Agreement
 	WHERE		Export_Sales_Agreement_ID	=	#URL.Export_Sales_Agreement_ID#
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <FORM ACTION="sales_agreement_email_send.cfm" METHOD="post" NAME="Email" ID="Email">

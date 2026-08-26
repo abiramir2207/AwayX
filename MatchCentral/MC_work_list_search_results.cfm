@@ -347,11 +347,27 @@
 				<cfoutput query="session.Get_Data" maxrows="#pagingmaxrows#" startrow="#pagingstartrow#">
 
 					<cfif is_locked>
-						<cfquery name="GetLockedByName" datasource="#application.datasource#">
+						<cfset useLakebaseForGetLockedByName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetLockedByName>
+	<cftry>
+		<cfset GetLockedByName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#locked_by#",
+				"select" = "name_first + ' ' + name_last as lockedbyname"
+			}), "name_first + ' ' + name_last as lockedbyname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetLockedByName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetLockedByName>
+<cfquery name="GetLockedByName" datasource="#application.datasource#">
 							SELECT name_first + ' ' + name_last as LockedByName
 							FROM _Users
 							WHERE user_id = '#locked_by#'
 						</cfquery>
+</cfif>
 					</cfif>
 
 					<cfscript>

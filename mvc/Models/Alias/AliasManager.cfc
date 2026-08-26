@@ -479,11 +479,28 @@
 <cffunction name="getCompletedStatus" access="public" returntype="query">
 
 	<cfset var qgetCompletedStatus = "">
-	<cfquery name="qgetCompletedStatus" datasource="#application.datasource#">
+	<cfset useLakebaseForqgetCompletedStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alias_management_products_history")>
+<cfif useLakebaseForqgetCompletedStatus>
+	<cftry>
+		<cfset qgetCompletedStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alias_management_products_history", {
+				"order" = "alias_management_product_history_id.desc",
+				"limit" = "1",
+				"select" = "is_complete,upload_action_status"
+			}), "is_complete,upload_action_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetCompletedStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetCompletedStatus>
+<cfquery name="qgetCompletedStatus" datasource="#application.datasource#">
 	SELECT	TOP 1 Is_Complete, Upload_Action_Status
 	FROM Alias_Management_Products_History
 	ORDER BY Alias_Management_Product_History_ID DESC
 	</cfquery>
+</cfif>
 	<cfreturn qgetCompletedStatus />
 
 </cffunction>

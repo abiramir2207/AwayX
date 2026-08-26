@@ -115,11 +115,28 @@
  			<!--- 
 				46232: Reject Duplicate File names in the BB Upload process/Anand Rao/14-Nov-2014
 			--->
-			<cfquery name="getDuplicateUpload" datasource="#application.datasource#">
+			<cfset useLakebaseForgetDuplicateUpload = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_log")>
+<cfif useLakebaseForgetDuplicateUpload>
+	<cftry>
+		<cfset getDuplicateUpload = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_log", {
+				"header_file_name" = "eq.#cffile.serverFile#",
+				"limit" = "1",
+				"select" = "header_file_name"
+			}), "header_file_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDuplicateUpload = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDuplicateUpload>
+<cfquery name="getDuplicateUpload" datasource="#application.datasource#">
 				SELECT  top 1 header_file_name
 						FROM BB_Upload_log
 				WHERE 	header_file_name = '#cffile.serverFile#'	
 			</cfquery>
+</cfif>
 			
 			<cfif getDuplicateUpload.RecordCount GTE 1>
 				<!--- <cffile action="delete" file="#cffile.serverDirectory#\#cffile.serverFile#"> --->
@@ -387,9 +404,25 @@
 
 				</font>
 			<cfelseif (UploadSingleFileResult.Status EQ 3)>
-				<cfquery name="chkBBUploadLog" datasource="#application.datasource#">
+				<cfset useLakebaseForchkBBUploadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_upload_log")>
+<cfif useLakebaseForchkBBUploadLog>
+	<cftry>
+		<cfset chkBBUploadLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_upload_log", {
+				"upload_id" = "eq.#UploadID#",
+				"select" = "upload_status"
+			}), "upload_status"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForchkBBUploadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForchkBBUploadLog>
+<cfquery name="chkBBUploadLog" datasource="#application.datasource#">
 					SELECT Upload_Status FROM BB_Upload_Log where Upload_id = #UploadID#
 				</cfquery>
+</cfif>
 				<cfif chkBBUploadLog.Upload_Status EQ "Creation Complete" OR chkBBUploadLog.Upload_Status EQ "Validation Completed">
 					<br><br>
 					<strong>Billback is Queued for Creation!!</strong> 

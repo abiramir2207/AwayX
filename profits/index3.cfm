@@ -57,11 +57,26 @@
 <!--- If the pricing rule ID has been passed get the details for it --->
 <CFIF FORM.PRID NEQ "">
 
+<cfset useLakebaseForGet_Rule_Data = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pricing_rule")>
+<cfif useLakebaseForGet_Rule_Data>
+	<cftry>
+		<cfset Get_Rule_Data = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pricing_rule", {
+				"pricing_rule_id" = "eq.#FORM.PRID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Rule_Data = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Rule_Data>
 <CFQUERY NAME="Get_Rule_Data" datasource="#application.datasource#">
 	Select		*
 	From		Pricing_Rule
 	Where		Pricing_Rule_ID	=	'#FORM.PRID#'
 </CFQUERY>
+</cfif>
 <!--- Deserialize the XML packet --->
 <CFWDDX ACTION="wddx2cfml" INPUT="#Get_Rule_Data.Pricing_Rule_Data#" OUTPUT="struct_profit_rule_name">
 

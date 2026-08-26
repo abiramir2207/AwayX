@@ -8,11 +8,29 @@
 <cfset UsersIP = CGI.Remote_Addr>
 
 <!--- Reset the login status of this user --->
+<cfset useLakebaseForReset_Login_Status = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForReset_Login_Status>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_users",
+			{
+				"user_id" = "eq.#URL.ID#"
+			},
+			{
+				"login_status" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForReset_Login_Status = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForReset_Login_Status>
 <CFQUERY NAME="Reset_Login_Status" datasource="#application.datasource#">
 UPDATE	_Users
 SET 	Login_Status = 0
 WHERE	User_ID	=	'#URL.ID#'
 </CFQUERY>
+</cfif>
 
 <!--- 
 	Dev Notes: 23086/Anand Rao/24-May-10

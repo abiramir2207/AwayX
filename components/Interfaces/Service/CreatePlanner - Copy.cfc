@@ -550,11 +550,29 @@
 	<cffunction name="setProgramTemplate" access="public" returntype="void" output="false" >
 		<cfargument name="status" required="false" default="" type="string" />
 
-		<cfquery name="qGetProgramTemplate" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetProgramTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetProgramTemplate>
+	<cftry>
+		<cfset qGetProgramTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"created_type" = "eq.CBD RETAIL TRADE",
+				"isdominant" = "eq.1",
+				"select" = "programcontrol_panel_options_id"
+			}), "programcontrol_panel_options_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramTemplate>
+<cfquery name="qGetProgramTemplate" datasource="#application.datasource#">
 			SELECT ProgramControl_Panel_Options_ID
 			FROM Program_Control_Panel_Options
 			WHERE Deleted = 0 and created_type = 'CBD RETAIL TRADE' and isdominant = 1
 		</cfquery>
+</cfif>
 
 		<cfscript>
 			this.Program_Template_Id = qGetProgramTemplate.ProgramControl_Panel_Options_ID;

@@ -95,12 +95,29 @@
 
 <!--------------------------------------------------------------------------------------------------------------------->
 
+<cfset useLakebaseForqBillBack = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForqBillBack>
+	<cftry>
+		<cfset qBillBack = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"deleted" = "eq.0",
+				"billback_id" = "eq.#URL.Billback_ID#",
+				"select" = "bb_code,bb_title"
+			}), "bb_code,bb_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBillBack = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBillBack>
 <cfquery name="qBillBack" datasource="#application.datasource#">
 	SELECT BB_Code, BB_Title
 		FROM Billback
 	 WHERE Billback.Deleted = 0
 		 AND Billback.Billback_ID = '#URL.Billback_ID#'
 </cfquery>
+</cfif>
 
 <form method="post" name="email_statement" id="email_statement" action="#cgi.script_name#?#cgi.query_string#">
 <input type="hidden" name="submitted" value="#cgi.script_name#">

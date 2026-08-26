@@ -8,15 +8,45 @@
 	<cfprocresult name="qdiscrepancyreport">
 </cfstoredproc>
 
+<cfset useLakebaseForcustomersettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("customer_settings")>
+<cfif useLakebaseForcustomersettings>
+	<cftry>
+		<cfset customersettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("customer_settings", {
+				"select" = "shard_ship_to_label,item_label,type_code_label_singular"
+			}), "shard_ship_to_label,item_label,type_code_label_singular"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcustomersettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcustomersettings>
 <cfquery name="customersettings" datasource="#application.datasource#" >
 	SELECT shard_ship_to_label,item_label,type_code_label_singular
 	FROM customer_settings
 </cfquery>
+</cfif>
 
+<cfset useLakebaseForbusinesssegment = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForbusinesssegment>
+	<cftry>
+		<cfset businesssegment = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "business_segment_label"
+			}), "business_segment_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForbusinesssegment = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForbusinesssegment>
 <cfquery name="businesssegment" datasource="#application.datasource#" >
    select business_segment_label
 	from _application_settings
 </cfquery>
+</cfif>
   
       <cfset variables.fileOutStream = createObject("java","java.io.FileOutputStream").init("discrepancy_report.xls") />
 	  <cfset workBook = createObject("java","org.apache.poi.hssf.usermodel.HSSFWorkbook").init()/>

@@ -112,7 +112,27 @@
 			</CFQUERY>
 			
 			<CFLOOP QUERY="GetProgramsFund">
-				<CFQUERY NAME="GetBBAmountFund" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForGetBBAmountFund = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_fund_allocation_cal")>
+<cfif useLakebaseForGetBBAmountFund>
+	<cftry>
+		<cfset GetBBAmountFund = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_fixed_fund_allocation_cal", {
+				"billback_id" = "eq.#Billback_ID#",
+				"program_id" = "eq.#Program_ID#",
+				"allocation_method" = "eq.3",
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBAmountFund = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBAmountFund>
+<CFQUERY NAME="GetBBAmountFund" DATASOURCE="#Application.Datasource#">
 					SELECT 	Top 1 * 
 					FROM 	GL_Code_Fixed_Fund_Allocation_Cal
 					WHERE 	Billback_ID = '#Billback_ID#' AND 
@@ -122,6 +142,7 @@
 							Fiscal_Year = '#DISTFY#' AND
 							Deleted = 0
 				</CFQUERY>
+</cfif>
 				
 				<CFSET TotBBAmountFund = TotBBAmountFund + GetBBAmountFund.Approved_Amount>
 			</CFLOOP>
@@ -154,7 +175,25 @@
 				<TD><B>SCOA</B></TD>				
 				<TD><B>$ Amount</B></TD>
 			</TR>
-			<CFQUERY NAME="FundDistinctFund" DATASOURCE="#Application.Datasource#">
+			<cfset useLakebaseForFundDistinctFund = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_allocation")>
+<cfif useLakebaseForFundDistinctFund>
+	<cftry>
+		<cfset FundDistinctFund = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_code_allocation", {
+				"billback_id" = "eq.#Billback_ID#",
+				"allocation_method" = "eq.3",
+				"a_r" = "eq.#DistAR#",
+				"fiscal_year" = "eq.#DISTFY#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForFundDistinctFund = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForFundDistinctFund>
+<CFQUERY NAME="FundDistinctFund" DATASOURCE="#Application.Datasource#">
 				SELECT 	*
 				FROM 	Gl_Code_Allocation
 				WHERE 	Billback_ID = '#Billback_ID#' AND 
@@ -163,6 +202,7 @@
 						Fiscal_Year = '#DISTFY#' AND
 						Deleted = 0
 			</CFQUERY>
+</cfif>
 			<CFSET FundNumber_List = VALUELIST(FundDistinctFund.Fund_Number)>
 			<CFSET ThisTotal = 0>
 			<CFSET CheckPercentTot = 0>

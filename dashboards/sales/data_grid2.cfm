@@ -3,6 +3,21 @@
 <!--- ----------------------------------------------------------------------------------------- --->
 
 <!--- get the sub-regions for this region --->
+<cfset useLakebaseForget_sub_region = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dashboards_sales_summary")>
+<cfif useLakebaseForget_sub_region>
+	<cftry>
+		<cfset get_sub_region = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dashboards_sales_summary", {
+				"level_1_code" = "eq.#url.region#",
+				"select" = "level_2_code,level_2_description"
+			}), "level_2_code,level_2_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_sub_region = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_sub_region>
 <cfquery name="get_sub_region"  datasource="#application.datasource#">
 	Select		distinct
 				level_2_code,
@@ -10,6 +25,7 @@
 	From		dashboards_sales_summary
 	Where		level_1_code = '#url.region#'
 </cfquery>
+</cfif>
 
 
 

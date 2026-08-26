@@ -26,11 +26,27 @@
 			<!--- If competitiro name = other selected --->
 			<cfif application.oApplicationAppSettingsManager.getApplicationAppSettings().getUseFixedPriceType() and competitorNameID EQ -1>
 				<!--- see if "other" record exists --->
-				<cfquery name="getOtherWonBy" datasource="#application.datasource#">
+				<cfset useLakebaseForgetOtherWonBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_bid_won_by")>
+<cfif useLakebaseForgetOtherWonBy>
+	<cftry>
+		<cfset getOtherWonBy = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_bid_won_by", {
+				"program_bid_won_by_description" = "eq.#CompetitorSourceOther#",
+				"select" = "program_bid_won_by_description,program_bid_won_by_id"
+			}), "program_bid_won_by_description,program_bid_won_by_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetOtherWonBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetOtherWonBy>
+<cfquery name="getOtherWonBy" datasource="#application.datasource#">
 					SELECT Program_Bid_Won_By_Description,Program_Bid_Won_By_ID
 					FROM	Program_Bid_Won_By 
 					WHERE Program_Bid_Won_By_Description = '#CompetitorSourceOther#' 
 				</cfquery>
+</cfif>
 				<!--- Dont insert if it already exists --->
 				<cfif getOtherWonBy.RecordCount>
 					<cfset competitorNameID = getOtherWonBy.Program_Bid_Won_By_ID>	

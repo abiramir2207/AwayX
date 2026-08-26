@@ -16,12 +16,28 @@ FROM         dbo.Payables INNER JOIN
 </cfquery>
 
 
+<cfset useLakebaseForgetProducts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payable_products")>
+<cfif useLakebaseForgetProducts>
+	<cftry>
+		<cfset getProducts = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payable_products", {
+				"payable_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProducts = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProducts>
 <cfquery name="getProducts" datasource="#application.datasource#">
 	SELECT *
 	FROM Payable_Products
 	WHERE Payable_ID = '#cryp.value#'
 	AND Deleted = 0
 </cfquery>
+</cfif>
 
 <cfset adjustedmentTotal = getPayableInfo.Billback_Amt>
 <cfset approvedAmount = 0>

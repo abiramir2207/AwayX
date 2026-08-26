@@ -60,12 +60,30 @@
 		<!-----------------------------------------------------------------------
 		Get Email Address from DB
 		--------------------------------------------------------------------------->
-		<CFQUERY NAME="q_getEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForq_getEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForq_getEmail>
+	<cftry>
+		<cfset q_getEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_email" = "neq.",
+				"deleted" = "eq.0",
+				"order" = "user_email.asc",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForq_getEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForq_getEmail>
+<CFQUERY NAME="q_getEmail" datasource="#application.datasource#">
 		Select	User_Email
 		From	_Users
 		Where	User_Email<>'' AND Deleted=0
 		Order By User_Email
 		</CFQUERY>
+</cfif>
 		<!-----------------------------------------------------------------------
 		End - Get Email Address from DB
 		--------------------------------------------------------------------------->

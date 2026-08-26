@@ -20,22 +20,58 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 
 	  <cfset local.BestPlanOn = 0>
 
-	<cfquery name="qBestPLanprofileSetting" datasource="#application.datasource#">
+	<cfset useLakebaseForqBestPLanprofileSetting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("profiles_settings")>
+<cfif useLakebaseForqBestPLanprofileSetting>
+	<cftry>
+		<cfset qBestPLanprofileSetting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("profiles_settings", {
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#",
+				"deleted" = "eq.0",
+				"best_plan_program" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBestPLanprofileSetting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBestPLanprofileSetting>
+<cfquery name="qBestPLanprofileSetting" datasource="#application.datasource#">
 	  SELECT 1
 	  FROM Profiles_Settings
 	  WHERE Profiles_ID = '#request.AccessStructure.Profiles_ID#'
 	  AND deleted = 0
 	  AND Best_Plan_Program = 1
 	</cfquery>
+</cfif>
 
 	<cfif qBestPLanprofileSetting.recordcount GT 0>
-		<cfquery name="qgetIsBestPlanOn" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetIsBestPlanOn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqgetIsBestPlanOn>
+	<cftry>
+		<cfset qgetIsBestPlanOn = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"allow_best_plan_programs" = "eq.1",
+				"deleted" = "eq.0",
+				"isdominant" = "eq.1",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetIsBestPlanOn = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetIsBestPlanOn>
+<cfquery name="qgetIsBestPlanOn" datasource="#application.datasource#">
 		SELECT 1
 		FROM Program_Control_Panel_Options
 		WHERE 	allow_Best_Plan_Programs = 1
 		AND Deleted = 0
 		AND  IsDominant = 1
 		</cfquery>
+</cfif>
 
 		<cfif qgetIsBestPlanOn.recordcount GT 0>
 			 <cfset local.BestPlanOn = 1>
@@ -489,11 +525,27 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
     <cfargument name="Program_ID" type="numeric" required="true">
   	<cfset var renewal_message = "">
 
-	  <cfquery name="Is_Auto_Renew" datasource="#application.datasource#">
+	  <cfset useLakebaseForIs_Auto_Renew = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForIs_Auto_Renew>
+	<cftry>
+		<cfset Is_Auto_Renew = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.Program_ID#",
+				"select" = "auto_renew"
+			}), "auto_renew"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIs_Auto_Renew = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIs_Auto_Renew>
+<cfquery name="Is_Auto_Renew" datasource="#application.datasource#">
 		  SELECT Auto_Renew
 		  FROM Contract_Main
 		  WHERE Contract_Main_ID =  '#arguments.Program_ID#'
 	  </cfquery>
+</cfif>
 
     <cfif is_auto_renew.auto_renew eq 1>
 		  <cfquery name="Get_Auto_Renew_Info" datasource="#application.datasource#">
@@ -556,12 +608,29 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 			WHERE Contract_Main_ID =  '#arguments.Program_ID#'
 		</cfquery>
 
-		<cfquery name="GetAckIDs" datasource="#application.datasource#">
+		<cfset useLakebaseForGetAckIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("forge_erp_mapping")>
+<cfif useLakebaseForGetAckIDs>
+	<cftry>
+		<cfset GetAckIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("forge_erp_mapping", {
+				"program_number" = "eq.#Program_Info.Contract_Number#",
+				"deleted" = "eq.0",
+				"select" = "deal_id"
+			}), "deal_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAckIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAckIDs>
+<cfquery name="GetAckIDs" datasource="#application.datasource#">
 			SELECT DISTINCT Deal_ID
 			FROM Forge_ERP_Mapping
 			WHERE Program_Number  = '#Program_Info.Contract_Number#'
 			AND Deleted = 0
 		</cfquery>
+</cfif>
 		<cfif (GetAckIDs.RecordCount GT 0)>
 			<cfset DealIDs = Replace(ValueList(GetAckIDs.Deal_ID),",","; ","ALL") />
 			<cfset SapMessage = "#chr(13)##chr(10)#Ack ID's: #DealIDs#" />
@@ -1121,11 +1190,27 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		<cfif (arguments.selectedAction eq "CRA" AND (Left(arguments.selectedSalesPersonID, 8) neq "Show All" OR Left(arguments.selectedUserPositionID, 8) neq "Show All"))>
 			<cfset CRA_ProgramsForUser = 1>
 			<cfif Left(arguments.selectedSalesPersonID, 8) neq "Show All">
-				<cfquery name="getUserID" datasource="#application.datasource#">
+				<cfset useLakebaseForgetUserID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserID>
+	<cftry>
+		<cfset getUserID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"sales_person_id" = "eq.#arguments.selectedSalesPersonID#",
+				"select" = "user_id"
+			}), "user_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserID>
+<cfquery name="getUserID" datasource="#application.datasource#">
 					SELECT 	User_ID
 					FROM _Users
 					WHERE Sales_Person_ID = #arguments.selectedSalesPersonID#
 				</cfquery>
+</cfif>
 			<cfelse>
 				<cfset getUserID.User_ID = "">
 			</cfif>
@@ -1472,12 +1557,28 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		<cfset programmanager = createobject("component", "mvc.Models.Program.ProgramManager").init() />
 
 		<!--- COLUMN SIZE --->
-		<cfquery name="qGetData" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_search_grid_column_size")>
+<cfif useLakebaseForqGetData>
+	<cftry>
+		<cfset qGetData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_search_grid_column_size", {
+				"user_id" = "eq.#arguments.userId#",
+				"select" = "user_id,status,rfa_age,program,title,type,start_date,end_date,rsp,more_info,trade_dollars,payment_dollars,volume,business_segment"
+			}), "user_id,status,rfa_age,program,title,type,start_date,end_date,rsp,more_info,trade_dollars,payment_dollars,volume,business_segment"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetData>
+<cfquery name="qGetData" datasource="#application.datasource#">
 			SELECT  User_Id,Status,RFA_Age,Program,Title,Type,Start_Date,End_Date,RSP,More_Info,
 				Trade_Dollars,Payment_Dollars,Volume,Business_Segment
 			FROM  Program_Search_Grid_Column_Size
 			WHERE User_Id = '#arguments.userId#'
 		</cfquery>
+</cfif>
 
 		<!--- Default width based on 1024/768 resolution --->
 		<cfif qGetData.recordcount eq 0>

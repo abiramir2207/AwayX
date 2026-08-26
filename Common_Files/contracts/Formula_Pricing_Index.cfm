@@ -70,6 +70,23 @@ Default will be changed to Pre-Active rather than RFA
 	layerwidth=600;
 </CFSCRIPT>
 
+<cfset useLakebaseForgetCurrentPeriods = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_formula_pricing_periods")>
+<cfif useLakebaseForgetCurrentPeriods>
+	<cftry>
+		<cfset getCurrentPeriods = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_formula_pricing_periods", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "start_date.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCurrentPeriods = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCurrentPeriods>
 <CFQUERY NAME="getCurrentPeriods" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Formula_Pricing_Periods
@@ -80,6 +97,7 @@ Default will be changed to Pre-Active rather than RFA
 		ACTIVE = 1
 	ORDER BY Start_Date		
 </CFQUERY>
+</cfif>
    <span style="width=800px"> <B><FONT SIZE="2" COLOR="Navy">1. Pricing Periods</FONT></B>
 &nbsp;
 <A HREF="Contract_Formula_Pricing_Periods_step_1.cfm?CID=<CFOUTPUT>#URL.CID#</CFOUTPUT>" STYLE="<!--- font-size: 20px --->"><span STYLE="color: red; font-weight: bold;">[</span>Click here to establish new pricing periods<span STYLE="color: red; font-weight: bold;">]</span></A>

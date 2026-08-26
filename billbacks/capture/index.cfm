@@ -45,10 +45,25 @@
 
 <cfparam name="IsSplitChild" default="0">
 <cfset iBBDevOverridePrice = appSettings.BB_DEVIATIONS_OVERRIDE_PRICE />
+<cfset useLakebaseForgetBBSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForgetBBSettings>
+	<cftry>
+		<cfset getBBSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "enable_bb_dup_check"
+			}), "enable_bb_dup_check"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetBBSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetBBSettings>
 <cfquery name="getBBSettings" datasource="#application.datasource#">
 	SELECT 	Enable_BB_Dup_Check
 	FROM 		Billback_Settings
 </cfquery>
+</cfif>
 
 <!--- Get the Billback number --->
 <cfquery name="Get_Billback_Info" datasource="#application.datasource#">

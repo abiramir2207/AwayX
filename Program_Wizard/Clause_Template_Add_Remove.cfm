@@ -261,11 +261,27 @@
 		
 		
 		
-		<cfquery name="qGetDistinctClause" dbtype="query">
+		<cfset useLakebaseForqGetDistinctClause = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gettemplateclause")>
+<cfif useLakebaseForqGetDistinctClause>
+	<cftry>
+		<cfset qGetDistinctClause = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gettemplateclause", {
+				"order" = "clause_category_name.asc",
+				"select" = "clause_library_id,clause_category_id,clause_category_name"
+			}), "clause_library_id,clause_category_id,clause_category_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistinctClause = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistinctClause>
+<cfquery name="qGetDistinctClause" dbtype="query">
 			SELECT 	DISTINCT Clause_Library_ID, Clause_Category_ID, Clause_Category_Name
 			FROM	getTemplateClause
 			ORDER BY Clause_Category_Name
 		</cfquery>
+</cfif>
 
 		<table cellpadding="0" cellspacing="0" border="0" class="MainTable datagrid" width="100%" id="table98">	
 			<cfset discCount = (qGetAllDiscountTypes.recordCount + 1) * 2>

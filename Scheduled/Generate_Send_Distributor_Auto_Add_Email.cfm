@@ -17,11 +17,27 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 <cfset strFileURL = strFilePath & strCSVFile />
 <cfset vchFileContent = "" />
  
+<cfset useLakebaseForgetCompany = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("company_main")>
+<cfif useLakebaseForgetCompany>
+	<cftry>
+		<cfset getCompany = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("company_main", {
+				"deleted" = "eq.0",
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCompany = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCompany>
 <cfquery name="getCompany" datasource="#application.datasource#">
 	select company_main_id
 	from company_main
 	where deleted = 0
 </cfquery>
+</cfif>
 <CFSET request.AccessStructure.company_main_id = getCompany.company_main_id>
 <CFSET request.AccessStructure.user_id = "99999999"> 
  

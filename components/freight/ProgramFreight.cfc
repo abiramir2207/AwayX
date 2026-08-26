@@ -246,12 +246,28 @@
 			<cfset qGetProgramApprovalInfo = objProgram.getProgramApprovalInfo(programId = arguments.programId) />
 			<cfif qGetProgramApprovalInfo.Program_Approved eq 1>
 			
-				<CFQUERY NAME="qGetRevisionContractNumber" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetRevisionContractNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetRevisionContractNumber>
+	<cftry>
+		<cfset qGetRevisionContractNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "is_a_revision,contract_number"
+			}), "is_a_revision,contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRevisionContractNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRevisionContractNumber>
+<CFQUERY NAME="qGetRevisionContractNumber" datasource="#application.datasource#">
 					SELECT 	Is_A_Revision,
 							Contract_Number
 					FROM 	Contract_main
 					where 	Contract_Main_Id = #arguments.programId#
-				</CFQUERY> 
+				</CFQUERY>
+</cfif> 
 	
 				<cfif qGetRevisionContractNumber.Is_A_Revision EQ 1>
 					
@@ -343,12 +359,29 @@
 		<cfargument name="programId" required="true" type="numeric" />	
 				
 			<cfset ProgramDistributorFreightCount =  0>
-			<cfquery name="qGetProgramDistributorFreightCount" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetProgramDistributorFreightCount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_distributor_freight")>
+<cfif useLakebaseForqGetProgramDistributorFreightCount>
+	<cftry>
+		<cfset qGetProgramDistributorFreightCount = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_distributor_freight", {
+				"program_id" = "eq.#arguments.programId#",
+				"deleted" = "eq.0",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramDistributorFreightCount = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramDistributorFreightCount>
+<cfquery name="qGetProgramDistributorFreightCount" datasource="#application.datasource#">
 				SELECT 	program_ID
 				FROM 	Program_Distributor_Freight
 				WHERE 	Program_ID = '#arguments.programId#' 
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 				
 				<cfif qGetProgramDistributorFreightCount.RecordCount neq 0>
 					<cfset ProgramDistributorFreightCount = 1>

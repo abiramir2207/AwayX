@@ -23,11 +23,27 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the full name of the Commodity															 --->
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
+<cfset useLakebaseForGet_Commodity_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("commodities_symbol")>
+<cfif useLakebaseForGet_Commodity_Name>
+	<cftry>
+		<cfset Get_Commodity_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("commodities_symbol", {
+				"symbol" = "eq.#URL.Symbol#",
+				"select" = "symbol_description"
+			}), "symbol_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Commodity_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Commodity_Name>
 <CFQUERY NAME="Get_Commodity_Name" datasource="#application.datasource#">
 	Select	Symbol_Description
 	From	Commodities_Symbol
 	Where	Symbol	=	'#URL.Symbol#'
 </CFQUERY>
+</cfif>
 
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <!--- Get the data for this commodity for the period selected										 --->

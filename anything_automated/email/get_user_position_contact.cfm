@@ -100,6 +100,20 @@
 			</cfif>
 </cfquery>
 
+<cfset useLakebaseForgetGSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("general_settings")>
+<cfif useLakebaseForgetGSettings>
+	<cftry>
+		<cfset getGSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("general_settings", {
+				"select" = "send_daily_expiring_email,send_daily_expired_email,send_daily_active_email,send_daily_aging_billback_email,send_broker_email,send_approve_email,use_discount_id,number_of_days_for_summarized_weekly_expiring_email,send_program_starting_email,number_of_days_for_program_start"
+			}), "send_daily_expiring_email,send_daily_expired_email,send_daily_active_email,send_daily_aging_billback_email,send_broker_email,send_approve_email,use_discount_id,number_of_days_for_summarized_weekly_expiring_email,send_program_starting_email,number_of_days_for_program_start"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGSettings>
 <cfquery name="getGSettings" datasource="#application.datasource#">
 				SELECT
 					send_daily_expiring_email,
@@ -115,6 +129,7 @@
 				FROM
 					General_Settings
 </cfquery>
+</cfif>
 
 <!------ if the setting says send_broker_email, add the broker too to the list, if the position is a market ----->
 <cfif getGSettings.send_broker_email EQ 1>

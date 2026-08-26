@@ -3,10 +3,25 @@
 <!--- VARIABLE TO CUT THE LOOP IF FISCAL YEAR IS CURRENT --->
 <cfset anotherTry = 0>
 
+<cfset useLakebaseForgetCompanies = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fiscal_year")>
+<cfif useLakebaseForgetCompanies>
+	<cftry>
+		<cfset getCompanies = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fiscal_year", {
+				"select" = "company_main_id"
+			}), "company_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetCompanies = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetCompanies>
 <CFQUERY NAME="getCompanies" datasource="#application.datasource#" maxrows="3">
 	SELECT DISTINCT Company_Main_ID
 	FROM Fiscal_Year
 </CFQUERY>
+</cfif>
 
 <cfif getCompanies.recordcount GT 0>
 

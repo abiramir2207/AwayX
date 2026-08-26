@@ -173,11 +173,27 @@ Label 42223 - Unable to upload documents to Billbacks:
 </cfif>
 
 <CFIF Get_LastUpdated_Details.Recordcount GT 0>
+<cfset useLakebaseForgetUserName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForgetUserName>
+	<cftry>
+		<cfset getUserName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#Get_LastUpdated_Details.LastUpdated_UserId#",
+				"select" = "name_last as user_fullname"
+			}), "name_last as user_fullname"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUserName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUserName>
 <CFQUERY NAME="getUserName" datasource="#application.datasource#">
 	SELECT _Users.Name_First + ' ' + _Users.Name_Last AS User_FullName
 	FROM _Users
 	WHERE User_ID = '#Get_LastUpdated_Details.LastUpdated_UserId#'
 </CFQUERY>
+</cfif>
 </CFIF>
 	<!--- Dev Note:43575 - Remove "Last updated by" information.
 	<CFIF IsDefined("getUserName")>

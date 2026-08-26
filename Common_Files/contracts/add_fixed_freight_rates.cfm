@@ -225,10 +225,25 @@ function setSortHref(sortVal)
 </cfif>
 	 
 	<cfset getproducts = fixedCompObj.getproducts(form.CONTRACT_MAIN_ID,form.product_list,FORM.sql_Sort_By,FORM.sortorder,0,component_id_val,paidToNum)>
-	<cfquery name="getdistinctcustomers" dbtype="query">
+	<cfset useLakebaseForgetdistinctcustomers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getproducts")>
+<cfif useLakebaseForgetdistinctcustomers>
+	<cftry>
+		<cfset getdistinctcustomers = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getproducts", {
+				"select" = "bsa_foodservice_customers_id"
+			}), "bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetdistinctcustomers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetdistinctcustomers>
+<cfquery name="getdistinctcustomers" dbtype="query">
 	select distinct bsa_foodservice_customers_id
 	from getproducts
 	</cfquery>
+</cfif>
 	<cfset productlist = form.product_list>
 	<cfset distributor_list = Valuelist(getdistinctcustomers.bsa_foodservice_customers_id)>
 

@@ -9,11 +9,27 @@
 <!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->
 <BR><BR>
 
-<!--- <CFQUERY NAME="Get_Market_Area" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0,24,0,0)#">
+<!--- <cfset useLakebaseForGet_Market_Area = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
+<cfif useLakebaseForGet_Market_Area>
+	<cftry>
+		<cfset Get_Market_Area = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_brokers", {
+				"deleted" = "eq.0",
+				"select" = "market_area"
+			}), "market_area"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Market_Area = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Market_Area>
+<CFQUERY NAME="Get_Market_Area" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0,24,0,0)#">
 	SELECT DISTINCT Market_Area
 	FROM BSA_Foodservice_Brokers
 	WHERE deleted = 0
-</CFQUERY> --->
+</CFQUERY>
+</cfif> --->
 
 <CFQUERY NAME="Get_Market_Area" datasource="#application.datasource#" CACHEDWITHIN="#CreateTimeSpan(0,24,0,0)#">
 	SELECT *

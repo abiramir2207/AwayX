@@ -467,12 +467,28 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 				<!------ check whether a forecast exist already ----->
 				
 				<cfif this.forecastInfo.priorForecast>
-					<CFQUERY NAME="Check_Prior_Forecast" DATASOURCE="#application.datasource#">
+					<cfset useLakebaseForCheck_Prior_Forecast = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("forecast")>
+<cfif useLakebaseForCheck_Prior_Forecast>
+	<cftry>
+		<cfset Check_Prior_Forecast = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("forecast", {
+				"forecast_id" = "eq.#this.volumePacket.forecastId#",
+				"select" = "forecast_id"
+			}), "forecast_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheck_Prior_Forecast = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheck_Prior_Forecast>
+<CFQUERY NAME="Check_Prior_Forecast" DATASOURCE="#application.datasource#">
 						SELECT	Forecast_ID
 						FROM	Forecast
 						WHERE
 								Forecast_ID = #this.volumePacket.forecastId#
 					</CFQUERY>
+</cfif>
 					<cfif Check_Prior_Forecast.recordCount EQ 0>
 						<cfset this.forecastInfo.priorForecast = false>
 					</cfif>
@@ -2469,12 +2485,28 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 		<cfargument name="productId" type="string" required="true" default="">
 		<cfset productId = arguments.productId>
 		
-		<CFQUERY NAME="Get_Product_Info" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_Product_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForGet_Product_Info>
+	<cftry>
+		<cfset Get_Product_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#productId#",
+				"select" = "item,upc,description"
+			}), "item,upc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Product_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Product_Info>
+<CFQUERY NAME="Get_Product_Info" DATASOURCE="#application.datasource#">
 			SELECT	Item, UPC, Description
 			FROM	BSA_Foodservice_Items_Master
 			WHERE
 					BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = '#productId#'
 		</CFQUERY>
+</cfif>
 		
 		<cfquery name="get_Distributor_Invoice_Value" datasource="#application.datasource#">
 			SELECT	Product_Customer_Group.Cases_Invoiced AS Volume_CS,
@@ -2569,12 +2601,28 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 			WHERE
 					BSA_Foodservice_Items_Master.BSA_Foodservice_Items_Master_ID = '#Arguments.Product_ID#'
 		</CFQUERY>
-		<CFQUERY NAME="Get_Distributor_Info" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForGet_Distributor_Info = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForGet_Distributor_Info>
+	<cftry>
+		<cfset Get_Distributor_Info = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Arguments.Distributor_ID#",
+				"select" = "name,ship_to"
+			}), "name,ship_to"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Distributor_Info = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Distributor_Info>
+<CFQUERY NAME="Get_Distributor_Info" DATASOURCE="#application.datasource#">
 			SELECT	Name, Ship_to
 			FROM	BSA_Foodservice_Customers
 			WHERE
 					BSA_Foodservice_Customers.BSA_Foodservice_Customers_ID = '#Arguments.Distributor_ID#'
 		</CFQUERY>
+</cfif>
 		<CFQUERY NAME="Get_Invoice_Detail" DATASOURCE="#application.datasource#">
 			SELECT	
 					ISNULL(Cases_Invoiced,0) AS Volume_CS,

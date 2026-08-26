@@ -49,9 +49,22 @@ myOPTIONS= All the options available in Chapter 8 of the HTMLDOC documentation, 
 EXAMPLE:
 
 //--- do your query ---//
+<cfset useLakebaseFormyQuery = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mytable")>
+<cfif useLakebaseFormyQuery>
+	<cftry>
+		<cfset myQuery = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("mytable", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFormyQuery = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFormyQuery>
 <cfquery name="myQuery">
 Select * from myTable
 </cfquery>
+</cfif>
 
 //--- HTML2PDF3 opening tag to capture the dynamic data ---//
 <CF_HTML2PDF3 myHTMLDOC="c:\cfusion\htmldoc.exe" myOPTIONS="--landscape --fontsize 10pt">

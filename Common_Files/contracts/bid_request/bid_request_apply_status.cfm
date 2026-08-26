@@ -25,11 +25,27 @@
 	</cfstoredproc>
 </cfif>
 
+<cfset useLakebaseForqCheckProgramApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqCheckProgramApproved>
+	<cftry>
+		<cfset qCheckProgramApproved = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "approved"
+			}), "approved"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckProgramApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckProgramApproved>
 <cfquery name="qCheckProgramApproved" datasource="#application.datasource#">
 	SELECT	Approved
 	FROM	Contract_Main
 	WHERE	contract_main_id = #cryp.value#
 </cfquery>
+</cfif>
 <!---if the status is lost then relocate to home page--->
 <cfif qCheckProgramApproved.approved eq 1>
 	<cfif form.Bid_Request_Status_ID eq 4 or form.Bid_Request_Status_ID eq 2 or form.Bid_Request_Status_ID eq 3>

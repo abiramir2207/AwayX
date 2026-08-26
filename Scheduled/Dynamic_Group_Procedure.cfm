@@ -71,9 +71,28 @@
 		WHERE Is_processed = 0 AND Contract_Main_ID = '#Program_ID#' AND Deleted = 0
 	</CFQUERY>
 </cfloop>
+<cfset useLakebaseForResetUpdatedBit = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("group_members")>
+<cfif useLakebaseForResetUpdatedBit>
+	<cftry>
+		<cfset application.oLakebase.updateRows("group_members",
+			{
+				"updated_bit" = "eq.1",
+				"deleted" = "eq.0"
+			},
+			{
+				"updated_bit" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForResetUpdatedBit = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForResetUpdatedBit>
 <CFQUERY NAME="ResetUpdatedBit" DATASOURCE="#Application.Datasource#">
 	UPDATE Group_Members SET Updated_Bit = 0 WHERE Updated_Bit = 1 AND Deleted = 0
 </CFQUERY>
+</cfif>
 
 <CFQUERY NAME="ResetUpdatedBit" DATASOURCE="#Application.Datasource#">
 	UPDATE Customer_Group_Members SET Updated_Bit = 0 WHERE Updated_Bit = 1 AND Deleted = 0

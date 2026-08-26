@@ -17,10 +17,25 @@
 <cfparam name="form.Distributor_List" default="">
 <cfparam name="form.Product_List" default="">
 
+<cfset useLakebaseForGetExistingComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForGetExistingComponent>
+	<cftry>
+		<cfset GetExistingComponent = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"distributor_product_integrity_rule_id" = "eq.#compID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetExistingComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetExistingComponent>
 <cfquery name="GetExistingComponent" datasource="#application.datasource#">
 SELECT * from Distributor_Product_Integrity_Rule
 WHERE Distributor_Product_Integrity_Rule_ID = '#compID#'
 </cfquery>
+</cfif>
 
 <FIELDSET STYLE="padding:10px; width: 800px; border: 1px solid Blue;margin-top:10px;">
 	<LEGEND STYLE="font: bold 14px sans-serif; color: Red;"><cfoutput>#application.returned_customer_setting.distributor_label_singular#</cfoutput> Product Integrity Rules</LEGEND>

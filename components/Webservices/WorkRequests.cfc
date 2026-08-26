@@ -40,22 +40,69 @@
 	WHERE 	BA_Ticket_Number = #arguments.BA_Ticket_Number#
 	</cfquery>
 	
-	<cfquery name="GetUserCreated" datasource="#application.datasource#">
+	<cfset useLakebaseForGetUserCreated = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("work_request")>
+<cfif useLakebaseForGetUserCreated>
+	<cftry>
+		<cfset GetUserCreated = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("work_request", {
+				"ba_ticket_number" = "eq.#arguments.BA_Ticket_Number#",
+				"select" = "user_created"
+			}), "user_created"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserCreated = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserCreated>
+<cfquery name="GetUserCreated" datasource="#application.datasource#">
 		SELECT 	User_Created
 		FROM 	Work_Request
 		WHERE 	BA_Ticket_Number = #arguments.BA_Ticket_Number#
 	</cfquery>
+</cfif>
 	<!---	
 	<!--- Get user contact info --->
-		<cfquery name="GetUserInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForGetUserInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForGetUserInfo>
+	<cftry>
+		<cfset GetUserInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"user_id" = "eq.#GetUserCreated.User_Created#",
+				"select" = "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+			}), "name_first,name_last,user_email,user_code,work_phone_1,work_phone_2,work_phone_3"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetUserInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetUserInfo>
+<cfquery name="GetUserInfo" datasource="#application.datasource#">
 		SELECT Name_First, Name_Last, User_Email, User_Code, Work_Phone_1, Work_Phone_2, Work_Phone_3
 		FROM _Users WHERE User_ID = '#GetUserCreated.User_Created#'
 		</cfquery>
+</cfif>
 	
-	<cfquery name="SupportEmail" datasource="#application.datasource#">
+	<cfset useLakebaseForSupportEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_application_settings")>
+<cfif useLakebaseForSupportEmail>
+	<cftry>
+		<cfset SupportEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_application_settings", {
+				"select" = "ba_support_email"
+			}), "ba_support_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForSupportEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForSupportEmail>
+<cfquery name="SupportEmail" datasource="#application.datasource#">
 		SELECT BA_Support_Email
 		FROM _Application_Settings
 	</cfquery>
+</cfif>
 	
 	<cfoutput>
 					

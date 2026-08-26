@@ -174,13 +174,30 @@ TABLE.Maintable TD
 	<CFSET TotAmount = TotAmount + VAL(E_Total_Claimed_Amt)>
 	
 	<!---Check to see if there are any dups--->
-	<cfquery name="qCheckForDup" dbtype="query">
+	<cfset useLakebaseForqCheckForDup = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("detailinfo")>
+<cfif useLakebaseForqCheckForDup>
+	<cftry>
+		<cfset qCheckForDup = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("detailinfo", {
+				"upload_id" = "eq.#HeaderInfo.Upload_ID#",
+				"billback_upload_iii_ph_id" = "eq.#HeaderInfo.Billback_Upload_III_PH_ID#",
+				"pop_reason_code" = "eq.DUP"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckForDup = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckForDup>
+<cfquery name="qCheckForDup" dbtype="query">
 		SELECT	* 
 		FROM 	DetailInfo
 		WHERE	Upload_ID = #HeaderInfo.Upload_ID#
 		AND 	Billback_Upload_III_PH_ID = #HeaderInfo.Billback_Upload_III_PH_ID#
 		AND		PoP_Reason_Code = 'DUP'
 	</cfquery>
+</cfif>
 	
 	<cfset variables.hasDups = 0 />
 	

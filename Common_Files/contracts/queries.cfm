@@ -187,11 +187,26 @@
 </cfif>
 
 <!---Get Program Span--->
+<cfset useLakebaseForgetTemplateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetTemplateSettings>
+	<cftry>
+		<cfset getTemplateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#FORM.ProgramType_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetTemplateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetTemplateSettings>
 <cfquery name="getTemplateSettings" datasource="#application.datasource#">
 	SELECT *
 	FROM Program_Control_Panel_Options
 	WHERE ProgramControl_Panel_Options_ID = '#FORM.ProgramType_ID#'
 </cfquery>
+</cfif>
 <cfset templateFirstParentId = getTemplateSettings.First_Parent_ID />
 <!--- D50711 Program Date Changes START --->
 <cfset variables.check_Orphan = 0>
@@ -900,11 +915,27 @@
 				</cfif>
 
 				<!--- save comments --->
-				<cfquery name="recordCheck" datasource="#Application.Datasource#">
+				<cfset useLakebaseForrecordCheck = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main_aux_data")>
+<cfif useLakebaseForrecordCheck>
+	<cftry>
+		<cfset recordCheck = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main_aux_data", {
+				"contract_main_id" = "eq.#insert.Contract_Main_ID#",
+				"select" = "contract_main_id"
+			}), "contract_main_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrecordCheck = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrecordCheck>
+<cfquery name="recordCheck" datasource="#Application.Datasource#">
 					SELECT Contract_Main_ID
 					FROM Contract_Main_Aux_Data
 					WHERE Contract_Main_ID = '#insert.Contract_Main_ID#'
 				</cfquery>
+</cfif>
 				<CFIF recordCheck.recordcount EQ 0>
 					<cfquery name="insertRecord" datasource="#Application.Datasource#">
 						INSERT INTO Contract_Main_Aux_Data
@@ -1045,12 +1076,28 @@
 				<cfif Form.Auto_Renew IS 1>
 
 					<!----- check if we already have an entry in the auto renew queue table ----->
-					<cfquery name="IsAutoRenewThere" datasource="#application.datasource#">
+					<cfset useLakebaseForIsAutoRenewThere = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
+<cfif useLakebaseForIsAutoRenewThere>
+	<cftry>
+		<cfset IsAutoRenewThere = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_auto_renew", {
+				"program_id" = "eq.#cryp.value#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsAutoRenewThere = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsAutoRenewThere>
+<cfquery name="IsAutoRenewThere" datasource="#application.datasource#">
 						SELECT 	*
 						FROM 		Program_Auto_Renew
 						WHERE 	Program_ID = #cryp.value#
 							AND 	Deleted = 0
 					</cfquery>
+</cfif>
 
 					<!----- if no entry insert, else update ----->
 					<cfif IsAutoRenewThere.Recordcount IS 0>
@@ -1108,11 +1155,27 @@
 				<CFINCLUDE TEMPLATE="LockChecker.cfm">
 				<!--- lock checker --->
 
-				<cfquery name="getSDED" datasource="#application.datasource#">
+				<cfset useLakebaseForgetSDED = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetSDED>
+	<cftry>
+		<cfset getSDED = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "contract_start_date,contract_end_date"
+			}), "contract_start_date,contract_end_date"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetSDED = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetSDED>
+<cfquery name="getSDED" datasource="#application.datasource#">
 					SELECT Contract_Start_Date, Contract_End_Date
 					FROM Contract_Main
 					WHERE Contract_Main_ID = '#cryp.value#'
 				</cfquery>
+</cfif>
 				<CFSET oldSD = DateFormat(getSDED.Contract_Start_Date, 'mm/dd/yyyy')>
 				<CFSET oldED = DateFormat(getSDED.Contract_End_Date, 'mm/dd/yyyy')>
 
@@ -1120,11 +1183,27 @@
 				<CFSET newED = DateFormat(form.end_date, 'mm/dd/yyyy')>
 
 				<CFIF (oldSD NEQ newSD) OR (oldED NEQ newED)>
-					<cfquery name="getExclusionProgramID" datasource="#application.datasource#">
+					<cfset useLakebaseForgetExclusionProgramID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>
+<cfif useLakebaseForgetExclusionProgramID>
+	<cftry>
+		<cfset getExclusionProgramID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_exclusions", {
+				"original_program_id" = "eq.#cryp.value#",
+				"select" = "revision_program_id"
+			}), "revision_program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetExclusionProgramID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetExclusionProgramID>
+<cfquery name="getExclusionProgramID" datasource="#application.datasource#">
 						SELECT Revision_Program_ID
 						 FROM Program_Exclusions
 						 WHERE Original_Program_ID = '#cryp.value#'
 					</cfquery>
+</cfif>
 
 
 					<cfquery name="deleteExclusionsAndPrograms" datasource="#application.datasource#">

@@ -44,12 +44,30 @@ Remarks      :
 				       LEFT JOIN _Users _Users2 ON _Users2.User_ID = '#request.AccessStructure.user_id#'
 				 WHERE Planner_ID = <cfqueryparam value="#form.plannerID#">
 			</cfquery>
-			<cfquery name="qSystemAdmin" datasource="#application.datasource#">
+			<cfset useLakebaseForqSystemAdmin = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqSystemAdmin>
+	<cftry>
+		<cfset qSystemAdmin = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users", {
+				"is_system_administrator" = "eq.1",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "user_email"
+			}), "user_email"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSystemAdmin = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSystemAdmin>
+<cfquery name="qSystemAdmin" datasource="#application.datasource#">
 				SELECT	TOP 1 User_Email
 				  FROM  _Users
 				 WHERE 	Is_System_Administrator = 1
 						AND	Deleted = 0
 			</cfquery>
+</cfif>
 			<!--- send notes/reasons in email to planner's creator --->
 			<cfif len(form.notes)
 					and qPlanner.recordCount and len(trim(qPlanner.User_Email))

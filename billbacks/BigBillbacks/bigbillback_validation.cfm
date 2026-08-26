@@ -1,6 +1,25 @@
 <!--- Get top 100 errors --->
 <cfoutput><SCRIPT LANGUAGE="JavaScript" SRC="bigbillback.js"></SCRIPT></cfoutput>
 
+<cfset useLakebaseForTop100Errors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("big_billback")>
+<cfif useLakebaseForTop100Errors>
+	<cftry>
+		<cfset Top100Errors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("big_billback", {
+				"has_error" = "eq.1",
+				"billback_id" = "eq.#Billback_ID#",
+				"big_billback_summary_id" = "eq.#Big_Billback_Summary_ID#",
+				"deleted" = "eq.0",
+				"order" = "big_billback_id.asc",
+				"limit" = "100"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForTop100Errors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForTop100Errors>
 <cfquery name="Top100Errors" datasource="#application.datasource#">
 SELECT TOP 100 * 
 FROM Big_Billback 
@@ -10,6 +29,7 @@ AND Big_Billback_Summary_ID = '#Big_Billback_Summary_ID#'
 AND Deleted = 0
 ORDER BY Big_Billback_ID
 </cfquery>
+</cfif>
 
 <cfquery name="ErrorCount" datasource="#application.datasource#">
 SELECT count(Big_Billback_ID) AS ErrorCount

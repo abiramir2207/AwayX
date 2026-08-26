@@ -32,12 +32,29 @@
 		<cfelse>
 			
 			<!---get the payment type id--->
-			<cfquery name="qGetPaymentTypeId" datasource="#application.datasource#">
+			<cfset useLakebaseForqGetPaymentTypeId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetPaymentTypeId>
+	<cftry>
+		<cfset qGetPaymentTypeId = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"deleted" = "eq.0",
+				"contract_main_id" = "eq.#programId#",
+				"select" = "claimmechanics as payment_type_id"
+			}), "claimmechanics as payment_type_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPaymentTypeId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPaymentTypeId>
+<cfquery name="qGetPaymentTypeId" datasource="#application.datasource#">
 				SELECT 	ClaimMechanics as Payment_Type_ID
 				FROM	Contract_Main
 				WHERE	Deleted = 0
 				AND		Contract_Main_ID = #programId#
 			</cfquery>
+</cfif>
 			
 			<!---check to make sure the payment type id is numeric--->
 			<cfif isNumeric(qGetPaymentTypeId.Payment_Type_ID)>
@@ -64,7 +81,25 @@
 		<cfargument name="contractMainId" required="true" default="" />
 		
 		<!---delete first--->
-		<cfquery name="qDeleteProcessor" datasource="#application.datasource#">
+		<cfset useLakebaseForqDeleteProcessor = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_accounting_specialist")>
+<cfif useLakebaseForqDeleteProcessor>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_accounting_specialist",
+			{
+				"deleted" = "eq.0",
+				"program_id" = "eq.#arguments.contractMainId#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDeleteProcessor = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDeleteProcessor>
+<cfquery name="qDeleteProcessor" datasource="#application.datasource#">
 		
 			UPDATE 	Program_Accounting_Specialist
 			SET		Deleted = 1
@@ -72,6 +107,7 @@
 			AND		Program_ID = #arguments.contractMainId#
 
 		</cfquery>
+</cfif>
 		
 		<cfquery name="qInsertProcessor" datasource="#application.datasource#">
 		
