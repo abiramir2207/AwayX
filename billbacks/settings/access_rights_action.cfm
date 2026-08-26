@@ -232,11 +232,27 @@
 				)
 			</CFQUERY>
 			<!--- If Profile doesn't have a closing method by default we will insert an entry per profile with default closing method = deduction --->
-			<cfquery name="qCheckCM" datasource="#application.datasource#">
+			<cfset useLakebaseForqCheckCM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_profile_closing_methods")>
+<cfif useLakebaseForqCheckCM>
+	<cftry>
+		<cfset qCheckCM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_profile_closing_methods", {
+				"profile_id" = "eq.#LOOPCOUNT#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckCM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckCM>
+<cfquery name="qCheckCM" datasource="#application.datasource#">
 			  	  SELECT 1
 			  	  FROM BB_Profile_Closing_Methods
 				  WHERE Profile_ID = #LOOPCOUNT#
 			  </cfquery>
+</cfif>
 
 			<cfif qCheckCM.recordcount EQ 0>
 				<cfset useLakebaseForINSERTBPCM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_profile_closing_methods")>

@@ -173,11 +173,27 @@ WHERE     (User_Positions_ID IN (#GP_Supplied_Position#)) AND Deleted = 0
 	getUserInformation.Service_Market_ID 	EQ	""
 >
 	<CFSET Position_Type = "GOD">
-	<CFQUERY NAME="getGODPositions" datasource="#application.datasource#">
+	<cfset useLakebaseForgetGODPositions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForgetGODPositions>
+	<cftry>
+		<cfset getGODPositions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetGODPositions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetGODPositions>
+<CFQUERY NAME="getGODPositions" datasource="#application.datasource#">
 		SELECT User_Positions_ID
 		FROM User_Positions
 		WHERE Deleted = 0
 	</CFQUERY>
+</cfif>
 	<CFSET GP_Position_List_From_My_Position_Down = baseObj.listAppendIfNotExist (GP_Position_List_From_My_Position_Down, valuelist(getGODPositions.User_Positions_ID))>
 </CFIF>
 

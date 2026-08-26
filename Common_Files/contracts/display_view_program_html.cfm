@@ -972,11 +972,27 @@
 										<cfset getpositionabove = CreateObject("component", "components.geography.position").getFirstPositionAbove(CSLGetContractInfo.Creating_User_Position_ID) />
 							</cfif>
 							<cfif getpositionabove neq -1>
-										<cfquery name="PositionDescforManager" datasource="#application.datasource#">
+										<cfset useLakebaseForPositionDescforManager = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForPositionDescforManager>
+	<cftry>
+		<cfset PositionDescforManager = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#getpositionabove#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForPositionDescforManager = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForPositionDescforManager>
+<cfquery name="PositionDescforManager" datasource="#application.datasource#">
 												SELECT Position_Label
 												FROM User_Positions
 												WHERE User_Positions_ID = '#getpositionabove#'
 										</cfquery>
+</cfif>
 									<cfif PositionDescforManager.recordcount GT 0>
 											<cfquery name="getManagerDetails" datasource="#application.datasource#">
 													SELECT top 1 name_first, name_last, (work_phone_1 + '-' + work_phone_2 + '-' + work_phone_3) AS "Work_Phone",Work_Phone_Ext,user_email,title

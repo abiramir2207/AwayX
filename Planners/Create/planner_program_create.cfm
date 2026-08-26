@@ -1824,12 +1824,28 @@ a.scissor {
                     <cfset budgetReportMgr = CreateObject("component","mvc.models.Reports.BudgetReport")>
                     <cfset qbudgetReport   = budgetReportMgr.getBudgetLabels()>
 
-                    <cfquery name="qBudgets" datasource="#application.datasource#">
+                    <cfset useLakebaseForqBudgets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_program_selection") AND application.oLakebase.isTableMigrated("budget")>
+<cfif useLakebaseForqBudgets>
+	<cftry>
+		<cfset qBudgets = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("budget_program_selection", {
+				"program_id" = "eq.#form.programId#",
+				"select" = "budget_id"
+			}, "budget_id", "budget", "budget_id", "budget_desc"), "budget_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqBudgets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqBudgets>
+<cfquery name="qBudgets" datasource="#application.datasource#">
                         SELECT b.Budget_Desc
                             FROM Budget_Program_Selection bps
                             INNER JOIN Budget b ON b.Budget_ID = bps.Budget_ID
                             WHERE Program_ID = '#form.programId#'
                     </cfquery>
+</cfif>
 
                     <cfset budgetTotal = oPlannerProgram.getTotalBudget( form.contract_number )>
 
@@ -2692,11 +2708,27 @@ a.scissor {
                                 <cfif not form.bFormIsValid>
                                     <cfset input_value = 0 />
                                 <cfelseif form.bIsInDirect eq 1>
-                                    <cfquery name="qGetThisVolume" dbtype="query">
+                                    <cfset useLakebaseForqGetThisVolume = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductvolumeforindirect")>
+<cfif useLakebaseForqGetThisVolume>
+	<cftry>
+		<cfset qGetThisVolume = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductvolumeforindirect", {
+				"bsa_foodservice_items_master_id" = "eq.#qGetProducts.BSA_Foodservice_Items_Master_ID#",
+				"select" = "cases,pounds"
+			}), "cases,pounds"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetThisVolume = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetThisVolume>
+<cfquery name="qGetThisVolume" dbtype="query">
                                         SELECT 	Cases, Pounds
                                         FROM	qGetProductVolumeForIndirect
                                         WHERE	BSA_Foodservice_Items_Master_ID = '#qGetProducts.BSA_Foodservice_Items_Master_ID#'
                                     </cfquery>
+</cfif>
                                     <cfif prodUOM eq 2>
                                         <cfset input_value = qGetThisVolume.Pounds />
                                     <cfelse>
@@ -5018,11 +5050,26 @@ a.scissor {
     <cfargument name="discountType" type="numeric">
     <cfset returnValue = 0 />
     <cfif arguments.discountType eq 2>
-        <cfquery name="qGetEZRate" dbtype="query">
+        <cfset useLakebaseForqGetEZRate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetezbuttondefaultrebaterates")>
+<cfif useLakebaseForqGetEZRate>
+	<cftry>
+		<cfset qGetEZRate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetezbuttondefaultrebaterates", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.itemGUID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetEZRate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetEZRate>
+<cfquery name="qGetEZRate" dbtype="query">
             SELECT 	*
             FROM	qGetEZButtonDefaultRebateRates
             WHERE	BSA_Foodservice_Items_Master_ID = '#arguments.itemGUID#'
         </cfquery>
+</cfif>
         <cfset returnValue = qGetEZRate />
     </cfif>
     <cfreturn returnValue />

@@ -371,10 +371,26 @@ AND BB_Growth_Program.Paid_Amount IS NOT NULL
 <cfif Paid_Amount GT 0>
 <cfset GrowthDebit = GrowthDebit + Paid_Amount>
 		
-	<cfquery name="GetBBInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetBBInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForGetBBInfo>
+	<cftry>
+		<cfset GetBBInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"billback_id" = "eq.#Billback_ID#",
+				"select" = "bb_title,bb_date,bb_code,bb_reference"
+			}), "bb_title,bb_date,bb_code,bb_reference"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBBInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBBInfo>
+<cfquery name="GetBBInfo" datasource="#application.datasource#">
 	SELECT BB_Title, BB_Date, BB_Code, BB_Reference FROM Billback
 	WHERE Billback_ID = '#Billback_ID#'
 	</cfquery>
+</cfif>
 	
 	<cfset BB_Reference = GetBBInfo.BB_Reference>
 	

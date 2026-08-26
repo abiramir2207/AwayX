@@ -92,10 +92,26 @@
 		<cfset arguments.Unit_Of_Time = Get_Settings.Margin_UOT_ID>
 	</cfif>
 
-	<cfquery name="qsetMarginLogStatusInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForqsetMarginLogStatusInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_margin_log_status")>
+<cfif useLakebaseForqsetMarginLogStatusInfo>
+	<cftry>
+		<cfset application.oLakebase.insertRow("program_margin_log_status", {
+			"program_id" = "#arguments.Program_ID#",
+			"user_id" = "#arguments.User_ID#",
+			"status" = "#arguments.Status#",
+			"unit_of_time" = "#arguments.Unit_Of_Time#"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqsetMarginLogStatusInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqsetMarginLogStatusInfo>
+<cfquery name="qsetMarginLogStatusInfo" datasource="#application.datasource#">
 		INSERT INTO Program_Margin_Log_Status(Program_ID,User_ID,Status,Unit_Of_Time)
 		VALUES('#arguments.Program_ID#','#arguments.User_ID#','#arguments.Status#',#arguments.Unit_Of_Time#)
 	</cfquery>
+</cfif>
 	<cfreturn 1 />
 </cffunction>
 

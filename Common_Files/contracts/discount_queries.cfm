@@ -114,13 +114,31 @@ Revised:		This file queries each and every discount type to see if it is associa
 </cfif>
 	<!---Off Invoice--->
 <CFIF GetSettings.Generic_Type IS "Distributor Off-Invoice">
-	<cfquery name="Off_Invoice" datasource="#application.datasource#">
+	<cfset useLakebaseForOff_Invoice = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_offinvoice_product_data")>
+<cfif useLakebaseForOff_Invoice>
+	<cftry>
+		<cfset Off_Invoice = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_offinvoice_product_data", {
+				"program_id" = "eq.#Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForOff_Invoice = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForOff_Invoice>
+<cfquery name="Off_Invoice" datasource="#application.datasource#">
 	SELECT 	TOP 1 Program_ID
 	FROM 	Program_OffInvoice_Product_Data 
 	WHERE 	Program_ID = #Contract_Main_ID#
 			AND
 			Deleted = 0
 	</cfquery>
+</cfif>
 </cfif>
 
 <!--- Claim Mechanics --->

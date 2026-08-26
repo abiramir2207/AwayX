@@ -1,6 +1,8 @@
 import re
 from pathlib import Path
 root = Path(r"D:\Resers_AwayX\AwayX")
+# known human work-in-progress files this automation must never touch
+EXCLUDE_FILES = {"enter.cfm"}
 COMMENT_RE = re.compile(r"<!---.*?--->", re.DOTALL)
 WRAPPER_RE = re.compile(
     r"<cfset\s+(useLakebaseFor\w+)\s*=\s*application\.oLakebase\.isEnabled\(\).*?"
@@ -12,6 +14,8 @@ total = 0
 files_fixed = 0
 for f in list(root.rglob("*.cfm")) + list(root.rglob("*.cfc")):
     if "tools\\lakebase_migration" in str(f) or "tools/lakebase_migration" in str(f):
+        continue
+    if f.name in EXCLUDE_FILES:
         continue
     try:
         text = f.read_text(encoding="utf-8", errors="ignore")

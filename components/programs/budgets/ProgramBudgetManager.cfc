@@ -69,13 +69,33 @@
 			</cfquery>
 			
 			<cfif checkBudgetRelationship.bp_count GT 0>
-				<cfquery name="updateBudgets" datasource="#application.datasource#">
+				<cfset useLakebaseForupdateBudgets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_program")>
+<cfif useLakebaseForupdateBudgets>
+	<cftry>
+		<cfset application.oLakebase.updateRows("budget_program",
+			{
+				"program_id" = "eq.#arguments.program_id#",
+				"discount_type_id" = "eq.#arguments.discount_type_id#",
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupdateBudgets = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupdateBudgets>
+<cfquery name="updateBudgets" datasource="#application.datasource#">
 					UPDATE BUDGET_PROGRAM
 					SET	DELETED = 1
 					WHERE PROGRAM_ID = #arguments.program_id#
 					  AND discount_type_id = #arguments.discount_type_id#
 					  AND DELETED = 0
 				</cfquery>
+</cfif>
 			</cfif>
 				
 			<cfset useLakebaseForinsertBudgets = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_program")>

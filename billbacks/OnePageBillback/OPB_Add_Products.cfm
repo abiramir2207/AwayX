@@ -346,12 +346,28 @@
 <cfif (isDefined("form.DTPS_Program_ID") AND form.DTPS_Program_ID NEQ 0 AND GetSettings.First_Parent_ID NEQ 0) >
 	<cfset qGetProductGroupAttributesGroupTemplate = qGetProductGroupAttributesGroupTemplateAll />
 <cfelse>
-	<cfquery name="qGetProductGroupAttributesGroupTemplate" dbtype="query">
+	<cfset useLakebaseForqGetProductGroupAttributesGroupTemplate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproductgroupattributesgrouptemplateall")>
+<cfif useLakebaseForqGetProductGroupAttributesGroupTemplate>
+	<cftry>
+		<cfset qGetProductGroupAttributesGroupTemplate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproductgroupattributesgrouptemplateall", {
+				"pg_flag" = "eq.0",
+				"order" = "list_order.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProductGroupAttributesGroupTemplate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProductGroupAttributesGroupTemplate>
+<cfquery name="qGetProductGroupAttributesGroupTemplate" dbtype="query">
 		SELECT *
 		FROM qGetProductGroupAttributesGroupTemplateAll
 		WHERE PG_Flag = 0
 		ORDER BY List_Order
 	</cfquery>
+</cfif>
 </cfif>	
 	
 	<cfset stStruct.qGetProductGroupAttributesGroupTemplate = qGetProductGroupAttributesGroupTemplate>

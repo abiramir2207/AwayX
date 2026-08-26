@@ -105,12 +105,28 @@ function confirmCompletion(disableClickedButtonName)
 	<CFSET completepath_email = cryp.value>
 
 <!--- Get the customer info --->
+<cfset useLakebaseForGet_Customer_Details = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_customer") AND application.oLakebase.isTableMigrated("export_customer_details")>
+<cfif useLakebaseForGet_Customer_Details>
+	<cftry>
+		<cfset Get_Customer_Details = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("export_customer", {
+				"export_customer_id" = "eq.#URL.Export_Customer_ID#",
+				"select" = "export_customer_base_number,export_customer_id,export_customer_name"
+			}, "export_customer_id", "export_customer_details", "export_customer_id", "export_customer_status_type"), "export_customer_base_number,export_customer_id,export_customer_name,export_customer_status_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Customer_Details = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Customer_Details>
 <CFQUERY NAME="Get_Customer_Details" datasource="#application.datasource#">
 	SELECT	a.Export_Customer_ID,a.Export_Customer_Base_Number,a.Export_Customer_Name,b.Export_Customer_Status_Type
 	FROM		Export_Customer a INNER JOIN Export_Customer_Details b
 	ON a.Export_Customer_ID = b.Export_Customer_ID
 	WHERE		a.Export_Customer_ID	=	'#URL.Export_Customer_ID#'
 </CFQUERY>
+</cfif>
 
 <CFSET Fax_Number = Fax_List>
 

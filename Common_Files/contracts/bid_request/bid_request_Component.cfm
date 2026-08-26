@@ -1354,12 +1354,28 @@ Discount%
 					  <input type="text" size="3" <CFIF evaluate("form.Bidrequest_C#currentcompid#_P#reproduct_id#_#i#_rate") EQ 0 AND appSettings.getProgram_Allow_Null_Rate() EQ 1>value=""<CFELSE>value="#trim(numberformat(evaluate("form.Bidrequest_C#currentcompid#_P#reproduct_id#_#i#_rate"),"_____.____"))#"</CFIF> name="Bidrequest_C#currentcompid#_P#reproduct_id#_#i#_rate" ONKEYUP="clenseText(this,'0123456789.')" onChange="<CFIF appSettings.getProgram_Allow_Null_Rate() EQ 1>this.value = formatToDeciamalPlacesAllowNull(this.value,4,1);<CFELSE>this.value = formatToDeciamalPlaces(this.value,4);</CFIF><cfif appsettings.getshowfixedpriceadditionalfields() EQ 1>adjustdiscount('Bidrequest_C#currentcompid#_P#reproduct_id#_#i#','Bidrequest_P#reproduct_id#');</cfif>"/>
 					<cfelse>
 					<cfif EzButton_Disable EQ 1>
-					<cfquery name="getEZButtonRate" dbtype="query">
+					<cfset useLakebaseForgetEZButtonRate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getezbuttondefaultrates")>
+<cfif useLakebaseForgetEZButtonRate>
+	<cftry>
+		<cfset getEZButtonRate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getezbuttondefaultrates", {
+				"bsa_foodservice_items_master_id" = "eq.#Thequery.BSA_Foodservice_Items_Master_ID#",
+				"program_bidrequest_component_name_id" = "eq.#currentcompid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEZButtonRate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEZButtonRate>
+<cfquery name="getEZButtonRate" dbtype="query">
 						select * from
 						GetEZButtonDefaultRates
 						where BSA_Foodservice_Items_Master_ID = '#Thequery.BSA_Foodservice_Items_Master_ID#'
 						and Program_Bidrequest_Component_Name_Id = #currentcompid#
 					</cfquery>
+</cfif>
 					<cfset "form.Bidrequest_C#currentcompid#_P#reproduct_id#_#i#_rate" = getEZButtonRate.Bidrequest_Price_Value>
 					<cfset "form.Bidrequest_C#currentcompid#_P#reproduct_id#_#i#_uom" = getEZButtonRate.Unit_Of_Measure_ID>
 					</cfif>

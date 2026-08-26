@@ -76,11 +76,29 @@
 	<!--- clear Schedule --->
 	<cffunction name="clearSchedule" access="public" returntype="void">
 
-		<cfquery name="qqResetUploadSchedule" datasource="#application.datasource#">
+		<cfset useLakebaseForqqResetUploadSchedule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mass_price_schedule")>
+<cfif useLakebaseForqqResetUploadSchedule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("mass_price_schedule",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqqResetUploadSchedule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqqResetUploadSchedule>
+<cfquery name="qqResetUploadSchedule" datasource="#application.datasource#">
 			UPDATE 	Mass_Price_Schedule
 			SET		Deleted = 1
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 	</cffunction>
 
 	<!--- clear existing Data from data holding tables  --->

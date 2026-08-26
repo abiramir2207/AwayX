@@ -680,13 +680,29 @@
 			var qGetPreviousYear		= "";
 			
 		</cfscript>
-		<cfquery name="qGetPreviousYearFlag" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetPreviousYearFlag = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main") AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetPreviousYearFlag>
+	<cftry>
+		<cfset qGetPreviousYearFlag = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_main", {
+				"contract_main_id" = "eq.#arguments.Contract_Main_ID#",
+				"select" = "programtype_id"
+			}, "programtype_id", "program_control_panel_options", "programcontrol_panel_options_id", "previous_fiscal_year_volume"), "previous_fiscal_year_volume"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPreviousYearFlag = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPreviousYearFlag>
+<cfquery name="qGetPreviousYearFlag" datasource="#application.datasource#">
 			SELECT PCPO.Previous_Fiscal_Year_Volume
 			FROM 	Contract_Main CM
 			INNER JOIN	Program_Control_Panel_Options PCPO ON
 				CM.ProgramType_ID = PCPO.ProgramControl_Panel_Options_ID
 			WHERE CM.Contract_Main_Id = #arguments.Contract_Main_ID#
 		</cfquery>
+</cfif>
 	
 		<cfreturn qGetPreviousYearFlag.Previous_Fiscal_Year_Volume />
 	</cffunction>

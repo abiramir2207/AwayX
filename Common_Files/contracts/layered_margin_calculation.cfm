@@ -308,7 +308,24 @@
 			</CFSTOREDPROC>
 			<!--- if CM % Over Ride Field in Contract_Product_Margin_Override has data we need to update the Fixed_Price_Value (requested Price/CS)--->
 			<cfif margin_display_style eq 'custom_h'>
-				<cfquery name="qgetMarginOverRide" datasource="#application.datasource#">
+				<cfset useLakebaseForqgetMarginOverRide = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_product_margin_override")>
+<cfif useLakebaseForqgetMarginOverRide>
+	<cftry>
+		<cfset qgetMarginOverRide = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_product_margin_override", {
+				"contract_main_id" = "eq.#contract_main_id#",
+				"field_name" = "eq.variable_contribution_margin_cs",
+				"deleted" = "eq.0",
+				"select" = "contract_product_margin_override_id,new_value,bsa_foodservice_items_master_id"
+			}), "contract_product_margin_override_id,new_value,bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetMarginOverRide = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetMarginOverRide>
+<cfquery name="qgetMarginOverRide" datasource="#application.datasource#">
 					SELECT Contract_Product_Margin_Override_Id,
 							New_Value,
 							BSA_Foodservice_Items_Master_ID
@@ -317,6 +334,7 @@
 						AND Field_Name =  'variable_contribution_margin_cs'	<!--- THIS IS the CM % Over Ride Field in Contract_Product_Margin_Override--->
 						AND Deleted = 0
 				</cfquery>
+</cfif>
 				<!---
 						If there is an over ride for CM % we need to update the Requested Price/CS
 							Contract_Product_Margin.Program_Fixed_Price_CS

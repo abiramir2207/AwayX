@@ -86,13 +86,30 @@
 
 <cffunction name="insertBrackets" hint="Save Form Fields on Change" access="remote" output="false" returntype="string" returnformat="JSON">
     <cfargument name="contractId" type="numeric" required="false" default="0" />
-    <cfquery name="qGetExisting" datasource="#application.datasource#">
+    <cfset useLakebaseForqGetExisting = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("formula_program_bracket_data")>
+<cfif useLakebaseForqGetExisting>
+	<cftry>
+		<cfset qGetExisting = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("formula_program_bracket_data", {
+				"contract_main_id" = "eq.#arguments.contractId#",
+				"deleted" = "eq.0",
+				"select" = "contract_main_id,formula_program_bracket_data_id"
+			}), "contract_main_id,formula_program_bracket_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetExisting = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetExisting>
+<cfquery name="qGetExisting" datasource="#application.datasource#">
          select Contract_Main_ID,
                  Formula_Program_Bracket_Data_ID
         from Formula_Program_Bracket_Data
         where Contract_Main_ID = '#arguments.contractId#' AND
             Deleted = 0
     </cfquery>
+</cfif>
 
     <cfif qGetExisting.recordcount EQ 0>
         <cfquery name="qDropTable" datasource="#application.datasource#">

@@ -311,11 +311,29 @@
 		</cfif>
 		</cfif>
 </cfif>
-	<CFQUERY NAME="deletedCurrentOperators" datasource="#application.datasource#">
+	<cfset useLakebaseFordeletedCurrentOperators = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_operators")>
+<cfif useLakebaseFordeletedCurrentOperators>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_operators",
+			{
+				"contract_main_id" = "eq.#Form.Contract_Main_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeletedCurrentOperators = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeletedCurrentOperators>
+<CFQUERY NAME="deletedCurrentOperators" datasource="#application.datasource#">
 		UPDATE Contract_Operators
 		SET Deleted = 1
 		WHERE Contract_Main_ID = '#Form.Contract_Main_ID#'
 	</CFQUERY>
+</cfif>
 
 	<!---make sure the list of operators is distinct--->
 	<cfset operatorStruct = structNew() />

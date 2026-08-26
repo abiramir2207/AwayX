@@ -569,9 +569,27 @@ function showrevisiondetails(contractid,status)
 					<CFSET ShowLink_AckedSuccessfully = 0>
 				</CFIF>
 				<CFIF ShowLink_AckedSuccessfully EQ 1>
-					<cfquery name="IsALumpsum" datasource="#application.datasource#">
+					<cfset useLakebaseForIsALumpsum = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForIsALumpsum>
+	<cftry>
+		<cfset IsALumpsum = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#contract_main_id#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsALumpsum = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsALumpsum>
+<cfquery name="IsALumpsum" datasource="#application.datasource#">
 						SELECT Top 1 Program_ID FROM Program_Lump_Sums	WHERE Program_ID = #contract_main_id# AND Program_Lump_Sums.deleted = 0
 					</cfquery>
+</cfif>
 					<CFIF IsALumpsum.RecordCount GT 0>
 						<CFSET ShowLink_AckedSuccessfully = 0>
 					</CFIF>

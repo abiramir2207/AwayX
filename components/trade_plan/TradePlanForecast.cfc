@@ -108,11 +108,26 @@
 		
 		<cfargument name="forecastId" type="string" required="true">
 		
-		<cfquery name="qGetForecastDist" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetForecastDist = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("forecast_distributor")>
+<cfif useLakebaseForqGetForecastDist>
+	<cftry>
+		<cfset qGetForecastDist = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("forecast_distributor", {
+				"forecast_id" = "eq.#arguments.forecastId#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetForecastDist = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetForecastDist>
+<cfquery name="qGetForecastDist" datasource="#application.datasource#">
 			SELECT 	* 
 			FROM	Forecast_Distributor
 			WHERE	Forecast_Id = '#arguments.forecastId#'
-		</cfquery>	
+		</cfquery>
+</cfif>	
 	
 		<cfreturn qGetForecastDist>
 		

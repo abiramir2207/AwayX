@@ -801,7 +801,25 @@
 	<INPUT TYPE="hidden" NAME="new_lump_sum_volume" value="0"/>
 	<cfif appSettings.getPaymentCycleAtDiscountType() AND variables.bHideFromLSAutoPay EQ 0>
 
-		<cfquery name="GetCurrentPaymentCycle" datasource="#application.datasource#">
+		<cfset useLakebaseForGetCurrentPaymentCycle = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_payment_cycle")>
+<cfif useLakebaseForGetCurrentPaymentCycle>
+	<cftry>
+		<cfset GetCurrentPaymentCycle = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_payment_cycle", {
+				"program_id" = "eq.#form.Contract_Main_ID#",
+				"discount_type_id" = "eq.3",
+				"component_id" = "eq.#getAllLumpSums.Program_Lumps_Sum_Ext_ID#",
+				"deleted" = "eq.0",
+				"select" = "payment_cycle_id"
+			}), "payment_cycle_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetCurrentPaymentCycle = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetCurrentPaymentCycle>
+<cfquery name="GetCurrentPaymentCycle" datasource="#application.datasource#">
 			SELECT	DISTINCT Payment_Cycle_ID
 			FROM	Program_Payment_Cycle
 			WHERE 	Program_ID = '#form.Contract_Main_ID#'
@@ -809,6 +827,7 @@
 			AND 	Component_ID = '#getAllLumpSums.Program_Lumps_Sum_Ext_ID#'
 			AND 	Deleted = 0
 		</cfquery>
+</cfif>
 
 		<TR valign="top">
 			<TD align="right" nowrap>

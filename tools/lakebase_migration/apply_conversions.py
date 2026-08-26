@@ -24,6 +24,9 @@ PROPOSAL_BLOCK_RE = re.compile(
 )
 QUERY_TAG_RE_TMPL = r"(<cf(query|storedproc)\s+name\s*=\s*[\"']{name}[\"'][^>]*>.*?</cf\2>)"
 
+# known human work-in-progress files this automation must never touch
+EXCLUDE_FILES = {"enter.cfm"}
+
 
 def load_proposals(proposal_file: Path):
     text = proposal_file.read_text(encoding="utf-8", errors="ignore")
@@ -77,6 +80,8 @@ def main():
         if target_dir not in src_path.parents and src_path.parent != target_dir:
             continue
         if not src_path.exists():
+            continue
+        if src_path.name in EXCLUDE_FILES:
             continue
         proposals = load_proposals(proposal_file)
         if not proposals:

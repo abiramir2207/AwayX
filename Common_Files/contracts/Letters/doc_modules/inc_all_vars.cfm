@@ -404,6 +404,24 @@ So, we need to get the count from ##TMP_Rebate_Price_Details.
 <!--- Freight Bracket LIST [end] --->
 
 <!--- For HTML (cfdocument) based PDF Letters, check whether the distributors have groups. --->
+<cfset useLakebaseForvariables_qIsDistGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors")>
+<cfif useLakebaseForvariables_qIsDistGroups>
+	<cftry>
+		<cfset variables.qIsDistGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_distributors", {
+				"contract_main_id" = "eq.#variables.qProgramInfo.contract_main_id[1]#",
+				"is_group" = "eq.1",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "contract_distributors_id"
+			}), "contract_distributors_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvariables_qIsDistGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvariables_qIsDistGroups>
 <cfquery name="variables.qIsDistGroups" datasource="#application.datasource#">
  SELECT TOP 1 Contract_Distributors_ID
  FROM Contract_Distributors
@@ -411,6 +429,7 @@ So, we need to get the count from ##TMP_Rebate_Price_Details.
  AND Is_Group = 1
  AND deleted = 0
 </cfquery>
+</cfif>
 
 <cfquery datasource="#application.datasource#">
 		if object_id('tempdb..##TMP_qProgramAllDistributorInfo') is not null

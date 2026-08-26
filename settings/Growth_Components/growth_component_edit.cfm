@@ -341,7 +341,21 @@ Added/Changed: Added Below Form Fields--->
 
 				<!--- Insert GLs --->
 				<cfloop list="#form.ExistingGLList#" index="GL_Account_ID">
-					<cfquery name="InsertNewGLS" datasource="#application.datasource#">
+					<cfset useLakebaseForInsertNewGLS = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_component_mapping")>
+<cfif useLakebaseForInsertNewGLS>
+	<cftry>
+		<cfset application.oLakebase.insertRow("gl_component_mapping", {
+			"gl_account_id" = "#GL_Account_ID#",
+			"component_name_id" = "#qGetCompGrowth.Program_Growth_Components_Name_Id#",
+			"discount_type_id" = "4"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForInsertNewGLS = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForInsertNewGLS>
+<cfquery name="InsertNewGLS" datasource="#application.datasource#">
 						INSERT INTO GL_Component_Mapping
 						(
 							GL_Account_ID,
@@ -355,6 +369,7 @@ Added/Changed: Added Below Form Fields--->
 							4
 						)
 					</cfquery>
+</cfif>
 				</cfloop>
 			</cfif>
 

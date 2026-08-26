@@ -180,11 +180,27 @@
 			<cfset local_errorRecordID = arguments.errorRecordID />
 		</cfif>		
 
-		<cfquery name="qGetErrorDetails" datasource="#application.datasource#" >
+		<cfset useLakebaseForqGetErrorDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mpcu_errors")>
+<cfif useLakebaseForqGetErrorDetails>
+	<cftry>
+		<cfset qGetErrorDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("mpcu_errors", {
+				"mpcu_data_id" = "eq.#local_errorRecordID#",
+				"select" = "mpcu_data_id,error_column,error_msg"
+			}), "mpcu_data_id,error_column,error_msg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetErrorDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetErrorDetails>
+<cfquery name="qGetErrorDetails" datasource="#application.datasource#" >
 			SELECT	MPCU_Data_ID, ERROR_COLUMN, ERROR_MSG
 			FROM		MPCU_Errors
 			WHERE 	MPCU_Data_ID = #local_errorRecordID#
 		</cfquery>
+</cfif>
 		
 		<cfreturn queryconvertforgrid(qGetErrorDetails,arguments.page,arguments.pageSize) />
 			
@@ -521,11 +537,29 @@
 	<!--- clear Schedule --->
 	<cffunction name="clearSchedule" access="public" returntype="void">
 		
-		<cfquery name="qqResetUploadSchedule" datasource="#application.datasource#">
+		<cfset useLakebaseForqqResetUploadSchedule = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("mpcu_schedule")>
+<cfif useLakebaseForqqResetUploadSchedule>
+	<cftry>
+		<cfset application.oLakebase.updateRows("mpcu_schedule",
+			{
+				"deleted" = "eq.0"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqqResetUploadSchedule = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqqResetUploadSchedule>
+<cfquery name="qqResetUploadSchedule" datasource="#application.datasource#">
 			UPDATE 	MPCU_Schedule
 			SET		Deleted = 1
 			WHERE	Deleted = 0
 		</cfquery>
+</cfif>
 	</cffunction>
 	
 	<!--- clear Data --->

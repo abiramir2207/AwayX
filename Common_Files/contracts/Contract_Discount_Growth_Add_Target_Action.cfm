@@ -336,7 +336,28 @@
 
 
 	<!---Add to Component--->
-	<cfquery name="UpdateComponent" datasource="#application.datasource#">
+	<cfset useLakebaseForUpdateComponent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForUpdateComponent>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_components",
+			{
+				"program_growth_component_id" = "eq.#url.Child_ID#"
+			},
+			{
+				"component_name" = "#form.Component_Name#",
+				"component_uom" = "#Target_UOM#",
+				"comparison_type" = "#Comparison_Type#",
+				"sample_period" = "#Sample_Period#",
+				"program_growth_comparison_period_uom_id" = "#form.Program_Growth_Comparison_Period_UOM#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateComponent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateComponent>
+<cfquery name="UpdateComponent" datasource="#application.datasource#">
 		UPDATE 	Program_Growth_Components
 		SET 	Component_Name = '#form.Component_Name#', 
 				Component_UOM = '#Target_UOM#',
@@ -345,6 +366,7 @@
 				Program_Growth_Comparison_Period_UOM_ID = '#form.Program_Growth_Comparison_Period_UOM#'
 		WHERE 	Program_Growth_Components.Program_Growth_Component_ID = '#url.Child_ID#'
 	</cfquery>
+</cfif>
 	
 	<!---Add to tiers--->
 	<cfset useLakebaseForUpdateTiers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_tiers")>

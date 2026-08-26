@@ -466,7 +466,24 @@
 
     <cffunction name="getReasonCode" hint="Function used to get details of the Rebill package ID that gets passed.">
         <cfargument name="DD_Rebill_package_Hdr_ID" required="false" default="" />
-        <cfquery name="qGetReasonCode" datasource="#application.datasource#">
+        <cfset useLakebaseForqGetReasonCode = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_dtl") AND application.oLakebase.isTableMigrated("dd_reason_code")>
+<cfif useLakebaseForqGetReasonCode>
+	<cftry>
+		<cfset qGetReasonCode = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("dd_rebill_package_dtl", {
+				"dd_rebill_package_hdr_id" = "eq.#arguments.DD_Rebill_package_Hdr_ID#",
+				"dd_reason_code_id" = "not.is.null",
+				"deleted" = "eq.0",
+				"select" = "created_date,dd_classification_id,dd_reason_code_id,dd_rebill_package_dtl_id,deleted,is_default"
+			}, "dd_reason_code_id", "dd_reason_code", "dd_reason_code_id", "dd_reason_code"), "created_date,dd_classification_id,dd_reason_code_id,dd_rebill_package_dtl_id,deleted,is_default,dd_reason_code"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetReasonCode = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetReasonCode>
+<cfquery name="qGetReasonCode" datasource="#application.datasource#">
         SELECT 
           DDRPD.DD_Rebill_Package_Dtl_ID,
           DDRPD.DD_Reason_Code_ID,
@@ -481,12 +498,30 @@
         WHERE DDRPD.DD_Rebill_Package_Hdr_ID = #arguments.DD_Rebill_package_Hdr_ID#	AND DDRPD.DD_Reason_Code_ID IS NOT NULL
         AND   DDRPD.Deleted = 0
 		  </cfquery>
+</cfif>
 		  <cfreturn qGetReasonCode />    
     </cffunction>
 
     <cffunction name="getDDClassification" hint="Function used to get details of the Rebill package ID that gets passed.">
         <cfargument name="DD_Rebill_package_Hdr_ID" required="false" default="" />
-        <cfquery name="qGetDDClassification" datasource="#application.datasource#">
+        <cfset useLakebaseForqGetDDClassification = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_dtl") AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForqGetDDClassification>
+	<cftry>
+		<cfset qGetDDClassification = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("dd_rebill_package_dtl", {
+				"dd_rebill_package_hdr_id" = "eq.#arguments.DD_Rebill_package_Hdr_ID#",
+				"dd_classification_id" = "not.is.null",
+				"deleted" = "eq.0",
+				"select" = "created_date,dd_classification_id,dd_reason_code_id,dd_rebill_package_dtl_id,deleted,is_default"
+			}, "dd_classification_id", "dd_classification", "dd_classification_id", "dd_classification_desc"), "created_date,dd_classification_id,dd_reason_code_id,dd_rebill_package_dtl_id,deleted,is_default,dd_classification_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDDClassification = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDDClassification>
+<cfquery name="qGetDDClassification" datasource="#application.datasource#">
         SELECT 
           DDRPD.DD_Rebill_Package_Dtl_ID,
           DDRPD.DD_Reason_Code_ID,
@@ -501,6 +536,7 @@
         WHERE DDRPD.DD_Rebill_Package_Hdr_ID = #arguments.DD_Rebill_package_Hdr_ID#	AND DDRPD.DD_Classification_ID IS NOT NULL
         AND   DDRPD.Deleted = 0
 		  </cfquery>
+</cfif>
 		  <cfreturn qGetDDClassification />    
     </cffunction>
   
@@ -582,13 +618,33 @@ Deleted = 0
           <cfset val= evaluate("FORM.Std_Length_" & varID) />  
          
           <cfset varSize = val />
-          <cfquery name="qUpdRebillVariables" datasource="#application.datasource#">
+          <cfset useLakebaseForqUpdRebillVariables = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_variable")>
+<cfif useLakebaseForqUpdRebillVariables>
+	<cftry>
+		<cfset application.oLakebase.updateRows("dd_rebill_package_variable",
+			{
+				"dd_rebill_package_variable_id" = "eq.#varID#"
+			},
+			{
+				"std_length" = "#varSize#",
+				"last_updated_by" = "#arguments.User_ID#",
+				"last_updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdRebillVariables = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdRebillVariables>
+<cfquery name="qUpdRebillVariables" datasource="#application.datasource#">
             UPDATE DD_Rebill_Package_Variable
             SET Std_Length = #varSize#,
             Last_Updated_By = '#arguments.User_ID#',
             Last_Updated_Date = getDate() 
             WHERE DD_Rebill_package_Variable_ID = #varID#
          </cfquery>
+</cfif>
   
         </cfif>
         

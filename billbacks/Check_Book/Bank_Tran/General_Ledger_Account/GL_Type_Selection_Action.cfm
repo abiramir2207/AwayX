@@ -47,9 +47,24 @@
 		WHERE 			Billback.Billback_ID = '#FORM.BBID#' AND Deleted = 0
 	</CFQUERY>
 	</CFIF>
-	<CFQUERY NAME="GetPayeeInfo" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetPayeeInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("payment_transaction")>
+<cfif useLakebaseForGetPayeeInfo>
+	<cftry>
+		<cfset GetPayeeInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("payment_transaction", {
+				"payment_trans_id" = "eq.#FORM.RID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetPayeeInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetPayeeInfo>
+<CFQUERY NAME="GetPayeeInfo" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM Payment_Transaction WHERE Payment_Trans_ID = '#FORM.RID#'
 	</CFQUERY>
+</cfif>
 	GetPayeeInfo
 	<CFDUMP VAR="#GetPayeeInfo#">
 	<!--- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --->

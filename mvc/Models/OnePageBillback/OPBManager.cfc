@@ -1732,12 +1732,30 @@ INTO ##tmp_billbacks
 
 <cffunction name="getRebills" access="remote" returntype="any" output="false">
 
+<cfset useLakebaseForqGetRebills = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_package_hdr")>
+<cfif useLakebaseForqGetRebills>
+	<cftry>
+		<cfset qGetRebills = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_rebill_package_hdr", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"order" = "rebill_package_title.asc",
+				"select" = "dd_rebill_package_hdr_id,rebill_package_title"
+			}), "dd_rebill_package_hdr_id,rebill_package_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetRebills = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetRebills>
 <cfquery name="qGetRebills" datasource="#application.datasource#">
 	SELECT DD_Rebill_Package_Hdr_ID,Rebill_Package_Title
 	FROM DD_Rebill_Package_Hdr
 	WHERE Deleted = 0 AND Active = 1
 	ORDER BY Rebill_Package_Title
 </cfquery>
+</cfif>
 
 <cfreturn qGetRebills>
 

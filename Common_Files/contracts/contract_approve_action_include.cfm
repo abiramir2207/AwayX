@@ -126,11 +126,27 @@
 				</cfif>
 		</cfif>
 										
-				<CFQUERY NAME="getThisProgramsStatus" datasource="#application.datasource#">
+				<cfset useLakebaseForgetThisProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForgetThisProgramsStatus>
+	<cftry>
+		<cfset getThisProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#program_id#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title"
+			}), "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetThisProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetThisProgramsStatus>
+<CFQUERY NAME="getThisProgramsStatus" datasource="#application.datasource#">
 					SELECT Contract_Status_Type_IDX, Revision_Of_Contract_Main_ID, Broker_User_ID, Contract_Number, Contract_Title
 					FROM Contract_main
 					WHERE Contract_main_ID = '#program_id#'
 				</CFQUERY>
+</cfif>
 		
 <!--- <!--- <!--- <!--- <!--- <!--- <!--- <!--- <!--- THIS SECTION FOR PROGRAM EXCLUSION REVISIONS ONLY ---> ---> ---> ---> ---> ---> ---> ---> --->
 			<cfset useLakebaseForgetProgramExclusionData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_exclusions")>

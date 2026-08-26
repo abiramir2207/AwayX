@@ -21,13 +21,29 @@
 	  	<cfargument name="tablename" type="string" required="false">
 		<cfargument name="discountype" type="numeric" required="false" default="0">
 
-		<cfquery name="checkTemplateSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForcheckTemplateSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main") AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForcheckTemplateSettings>
+	<cftry>
+		<cfset checkTemplateSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_main", {
+				"contract_main_id" = "eq.#arguments.Program_ID#",
+				"select" = "programtype_id"
+			}, "programtype_id", "program_control_panel_options", "programcontrol_panel_options_id", "discount_fixed_group_level,discount_fixed_item_level,discount_rebates_group_level,discount_rebates_item_level"), "programtype_id,discount_fixed_group_level,discount_fixed_item_level,discount_rebates_group_level,discount_rebates_item_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheckTemplateSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheckTemplateSettings>
+<cfquery name="checkTemplateSettings" datasource="#application.datasource#">
 			SELECT PCPO.Discount_Rebates_Item_Level,  PCPO.Discount_Rebates_Group_Level , PCPO.Discount_Fixed_Group_Level, PCPO.Discount_Fixed_Item_Level, CM.ProgramType_ID
 			FROM Contract_Main CM
 			INNER JOIN Program_Control_Panel_Options PCPO
 			ON PCPO.ProgramControl_Panel_Options_ID = CM.ProgramType_ID
 			WHERE CM.Contract_Main_ID = #arguments.Program_ID#
 		</cfquery>
+</cfif>
 
 		<cfset profile = CreateObject("component","components.user.Profile").init() />
 		<cfset Get_Profile_Settings = profile.getProfileSettings(request.AccessStructure.Profiles_ID)>

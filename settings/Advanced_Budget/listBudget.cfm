@@ -65,6 +65,23 @@ th { text-align: left; }
 	</cfquery>
 </cfif>
 
+<cfset useLakebaseForvars_defaultClasses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_class")>
+<cfif useLakebaseForvars_defaultClasses>
+	<cftry>
+		<cfset vars.defaultClasses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_class", {
+				"deleted" = "eq.0",
+				"active" = "eq.1",
+				"default_filter" = "eq.1",
+				"select" = "budget_class_id"
+			}), "budget_class_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForvars_defaultClasses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForvars_defaultClasses>
 <cfquery name="vars.defaultClasses" datasource="#application.datasource#">
 	SELECT	Budget_Class_ID
 	FROM 	Budget_Class
@@ -72,6 +89,7 @@ th { text-align: left; }
 	AND 	Active = 1
 	AND	Default_Filter = 1
 </cfquery>
+</cfif>
 
 <cfif url.byClassIDs eq "" >
 	<cfset url.byClassIDs = ValueList(vars.defaultClasses.Budget_Class_ID) />

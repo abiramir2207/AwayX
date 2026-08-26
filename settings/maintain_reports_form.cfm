@@ -98,9 +98,26 @@
 	Where		report_id	like	'#URL.RID#'
 </CFQUERY>
 
+<cfset useLakebaseForGet_Report_Groups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_groups")>
+<cfif useLakebaseForGet_Report_Groups>
+	<cftry>
+		<cfset Get_Report_Groups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("report_groups", {
+				"deleted" = "neq.1",
+				"order" = "group_id.asc",
+				"select" = "group_id,group_label"
+			}), "group_id,group_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Report_Groups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Report_Groups>
 <CFQUERY NAME="Get_Report_Groups" datasource="#application.datasource#">
 	select group_id, group_label from report_groups where deleted <> 1 order by group_id ASC
 </CFQUERY>
+</cfif>
 
 <cfset useLakebaseForGet_Report_Access_Levels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("report_access_levels")>
 <cfif useLakebaseForGet_Report_Access_Levels>

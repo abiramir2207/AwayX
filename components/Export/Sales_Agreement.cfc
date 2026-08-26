@@ -533,12 +533,27 @@
 
 		<!--- Terms of Sale (Lookup) --->
 	<cffunction name="getLookupTermsOfSale" output="false" returntype="query">
-			<cfquery name="qrygetLookupTermsOfSale" datasource="#application.datasource#">
+			<cfset useLakebaseForqrygetLookupTermsOfSale = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_terms_of_sale") AND application.oLakebase.isTableMigrated("export_lookup_named_place_type")>
+<cfif useLakebaseForqrygetLookupTermsOfSale>
+	<cftry>
+		<cfset qrygetLookupTermsOfSale = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("export_lookup_terms_of_sale", {
+				"select" = "*,export_lookup_named_place_type_id"
+			}, "export_lookup_named_place_type_id", "export_lookup_named_place_type", "export_lookup_named_place_type_id", "export_lookup_named_place_type_desc"), "*,export_lookup_named_place_type_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetLookupTermsOfSale = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetLookupTermsOfSale>
+<cfquery name="qrygetLookupTermsOfSale" datasource="#application.datasource#">
 			 SELECT eltos.*,elnpt.Export_Lookup_Named_Place_Type_Desc
 			 FROM Export_Lookup_Terms_of_Sale eltos
 			 LEFT JOIN Export_Lookup_Named_Place_Type elnpt
 			 ON eltos.Export_Lookup_Named_Place_Type_ID = elnpt.Export_Lookup_Named_Place_Type_ID
 			</cfquery>
+</cfif>
 
 		<cfreturn qrygetLookupTermsOfSale />
 	</cffunction>

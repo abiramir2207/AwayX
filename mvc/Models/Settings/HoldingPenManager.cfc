@@ -60,9 +60,27 @@ Usage:			N/A
 				b=1;
 			}
 		</cfscript>	
-		<<cfquery name="qToggleInterface" datasource="#application.datasource#">
+		<<cfset useLakebaseForqToggleInterface = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_settings")>
+<cfif useLakebaseForqToggleInterface>
+	<cftry>
+		<cfset application.oLakebase.updateRows("_settings",
+			{
+				"input_name" = "eq.Interface_700_Is_On"
+			},
+			{
+				"value" = "#b#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqToggleInterface = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqToggleInterface>
+<cfquery name="qToggleInterface" datasource="#application.datasource#">
 			UPDATE _Settings SET Value = '#b#' WHERE Input_Name = 'Interface_700_Is_On'
-		</cfquery> 
+		</cfquery>
+</cfif> 
 		<cfset useLakebaseForqGetInterfaceOn = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_settings")>
 <cfif useLakebaseForqGetInterfaceOn>
 	<cftry>
@@ -350,7 +368,23 @@ Usage:			N/A
 	<cffunction name="fnReportDownloadLog" access="public" returntype="any" >
 		<cfargument name="BBUploadHoldScorecardID" type="string" required="false" default="0">
 		
-		<cfquery name="qryReportDownloadLog" datasource="#application.datasource#">
+		<cfset useLakebaseForqryReportDownloadLog = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("hp_download_upload_history") AND application.oLakebase.isTableMigrated("_users")>
+<cfif useLakebaseForqryReportDownloadLog>
+	<cftry>
+		<cfset qryReportDownloadLog = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("hp_download_upload_history", {
+				"bb_upload_hold_scorecard_id" = "eq.#arguments.BBUploadHoldScorecardID#",
+				"order" = "created_date.asc",
+				"select" = "created_by,created_date"
+			}, "created_by", "_users", "user_id", "name_first,name_last"), "created_date,name_first,name_last"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryReportDownloadLog = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryReportDownloadLog>
+<cfquery name="qryReportDownloadLog" datasource="#application.datasource#">
 			SELECT 	HPH.Created_Date,
 					U.Name_First,U.Name_Last 
 			FROM 	HP_Download_Upload_History HPH 
@@ -358,6 +392,7 @@ Usage:			N/A
 			WHERE HPH.BB_Upload_Hold_Scorecard_ID = #arguments.BBUploadHoldScorecardID#
 			ORDER BY HPH.Created_Date
 		</cfquery>
+</cfif>
 		
 		<cfreturn qryReportDownloadLog />
 	</cffunction>

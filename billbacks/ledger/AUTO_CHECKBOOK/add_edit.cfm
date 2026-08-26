@@ -328,11 +328,27 @@ NewWindow("/billbacks/search_screens/search_programs.cfm?FormName=program_form&S
 </cfquery>
 <cfset Contract_Title = Program_Name.Contract_Title>
 
+<cfset useLakebaseForDistributor_Name = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_customers")>
+<cfif useLakebaseForDistributor_Name>
+	<cftry>
+		<cfset Distributor_Name = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_customers", {
+				"bsa_foodservice_customers_id" = "eq.#Form.Distributor_List#",
+				"select" = "name,bsa_foodservice_customers_id"
+			}), "name,bsa_foodservice_customers_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForDistributor_Name = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForDistributor_Name>
 <cfquery name="Distributor_Name" datasource="#application.datasource#">
 	SELECT Name, BSA_Foodservice_Customers_ID
 	FROM BSA_Foodservice_Customers
 	WHERE BSA_Foodservice_Customers_ID = '#Form.Distributor_List#'
 	</cfquery>
+</cfif>
 
 <cfset DistributorName = Distributor_Name.Name>
 

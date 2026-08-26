@@ -126,7 +126,24 @@
 				WHERE 	Contract_Products_ID = #qGetContractProds.Contract_Products_ID#
 			</cfquery>
 
-			<cfquery name="check4Levels" datasource="#application.datasource#">
+			<cfset useLakebaseForcheck4Levels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_products")>
+<cfif useLakebaseForcheck4Levels>
+	<cftry>
+		<cfset check4Levels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_products", {
+				"pricing_level_id" = "eq.#qGetContractProds.Pricing_Level_ID#",
+				"contract_main_id" = "eq.#FORM.Program_ID#",
+				"deleted" = "eq.0",
+				"product_type_id" = "eq.3"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForcheck4Levels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForcheck4Levels>
+<cfquery name="check4Levels" datasource="#application.datasource#">
 				SELECT *
 				FROM Contract_Products
 				WHERE Pricing_Level_ID = #qGetContractProds.Pricing_Level_ID#
@@ -134,6 +151,7 @@
 				AND deleted = 0
 				AND product_type_id = 3
 			</cfquery>
+</cfif>
 
 			<cfif check4Levels.RecordCount EQ 0>
 				<cfloop from="#qGetContractProds.Pricing_Level_ID#" to="8" index="levels">

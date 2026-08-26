@@ -267,11 +267,27 @@ AND Deleted = 0
 	
 	<cfif (IsProductAlreadyThere.Recordcount LT 1)>
 		<!---Is the product on the program --->
-		<cfquery name="IsProductOnProgram" dbtype="query">
+		<cfset useLakebaseForIsProductOnProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("productsonprogram")>
+<cfif useLakebaseForIsProductOnProgram>
+	<cftry>
+		<cfset IsProductOnProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("productsonprogram", {
+				"bsa_foodservice_items_master_id" = "eq.#BigBillbackDetails.Product_ID#",
+				"select" = "bsa_foodservice_items_master_id"
+			}), "bsa_foodservice_items_master_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForIsProductOnProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForIsProductOnProgram>
+<cfquery name="IsProductOnProgram" dbtype="query">
 		SELECT BSA_Foodservice_Items_Master_ID
 		FROM ProductsOnProgram
 		WHERE ProductsOnProgram.BSA_Foodservice_Items_Master_ID = '#BigBillbackDetails.Product_ID#'
 		</cfquery>
+</cfif>
 		
 		<cfif IsProductOnProgram.Recordcount GT 0>
 			<cfset ProductOnProgram = 1>

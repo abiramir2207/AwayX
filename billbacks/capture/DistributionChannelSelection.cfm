@@ -34,7 +34,22 @@ function redirectToSummaryPage()
 		SELECT DISTINCT BS_Var_2 FROM Business_Segment WHERE Active = 1 AND Deleted = 0 AND BS_Var_2 IS NOT NULL
 	</cfquery>
 	--->
-	<cfquery name="getDSChannelForProgram" datasource="#application.datasource#">
+	<cfset useLakebaseForgetDSChannelForProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main") AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForgetDSChannelForProgram>
+	<cftry>
+		<cfset getDSChannelForProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_main", {
+				"contract_main_id" = "eq.#URL.PRGID#",
+				"select" = "business_segment_id,contract_number,contract_title"
+			}, "business_segment_id", "business_segment", "business_segment_id", "bs_var_2"), "business_segment_id,contract_number,contract_title,bs_var_2"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetDSChannelForProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetDSChannelForProgram>
+<cfquery name="getDSChannelForProgram" datasource="#application.datasource#">
 		SELECT 
 			BS.BS_Var_2,CM.Business_Segment_ID,CM.Contract_Number,CM.Contract_Title 
 		FROM 
@@ -44,6 +59,7 @@ function redirectToSummaryPage()
 			WHERE 
 				CM.Contract_Main_ID = #URL.PRGID#
 	</cfquery>
+</cfif>
 	<cfquery name="getDSChannelForDist" datasource="#application.datasource#">
 		SELECT BDC.Billback_ID,BDC.Billback_Program_ID,BDC.Billback_Distribution_Channel_ID,BDC.Distributor_ID,BDC.BS_Var_2,BSAFC.Name,BSAFC.Ship_To, BSAFC.Cust_Suffix, CM.Contract_Number 
 			FROM Billback_Distribution_Channel BDC

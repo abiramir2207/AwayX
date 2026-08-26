@@ -601,13 +601,30 @@ Start Search Form
 			
 			<TD>
 			<cfoutput><span ID="searchItemLabel"><B>#application.returned_customer_setting.buying_group_label_singular#</B></span><BR></cfoutput>
-			<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
+			<cfset useLakebaseForGetBuyingGroups = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_buying_groups")>
+<cfif useLakebaseForGetBuyingGroups>
+	<cftry>
+		<cfset GetBuyingGroups = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_buying_groups", {
+				"deleted" = "eq.0",
+				"active_code" = "eq.A",
+				"order" = "buying_group_name.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBuyingGroups = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBuyingGroups>
+<cfquery name="GetBuyingGroups" datasource="#application.datasource#">
 				SELECT *
 				FROM Distributor_Buying_Groups
 				WHERE Deleted = 0
 				AND	Active_Code = 'A'
 				ORDER BY Buying_Group_Name
 			</cfquery>
+</cfif>
 			<CFPARAM NAME="FORM.Buying_Group" DEFAULT="0">
 			<SPAN ID="SP_Buying_Group">
 			<SELECT NAME="Buying_Group">

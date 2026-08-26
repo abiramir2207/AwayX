@@ -925,11 +925,29 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 		<!---  Dev Notes: Ana 12447 End ------------------------------------------------------------- --->
 
 
-		<CFQUERY NAME="UpdateClose" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForUpdateClose = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
+<cfif useLakebaseForUpdateClose>
+	<cftry>
+		<cfset application.oLakebase.updateRows("deductions",
+			{
+				"deduction_id" = "eq.#arguments.Deduction_ID#"
+			},
+			{
+				"dd_closure_bbpaid" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateClose = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateClose>
+<CFQUERY NAME="UpdateClose" DATASOURCE="#Application.Datasource#">
 			UPDATE Deductions
 			SET DD_Closure_BBPaid = 1
 			WHERE Deduction_ID = '#arguments.Deduction_ID#'
 		</CFQUERY>
+</cfif>
 		<CFIF LEFT(application.returned_customer_setting.Customer_Keyword,1) EQ "H" AND GetClosureInfo.DD_Closure_Type EQ 1><!--- "H" --->
 			<CFLOOP QUERY = "AssociatedBB">
 				<CFSET Billback_ID = DD_Closure_ID>
@@ -1791,7 +1809,23 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 
 	<cffunction name="getActionAnalystProfile" returntype="query" access="remote" >
 		<cfargument name="DDStageID" type="numeric" required="true" />
-		<CFQUERY NAME="Get_Action_Selected_Analyst" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Action_Selected_Analyst = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_action_analyst") AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForGet_Action_Selected_Analyst>
+	<cftry>
+		<cfset Get_Action_Selected_Analyst = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("dd_action_analyst", {
+				"deleted" = "eq.0",
+				"dd_stage_id" = "eq.#arguments.DDStageID#",
+				"select" = "analyst_profiles_id"
+			}, "analyst_profiles_id", "profiles", "profiles_id", "profiles_desc,profiles_id"), "profiles_desc,profiles_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Action_Selected_Analyst = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Action_Selected_Analyst>
+<CFQUERY NAME="Get_Action_Selected_Analyst" datasource="#application.datasource#">
 			SELECT P.Profiles_Desc, P.Profiles_ID
 			FROM DD_Action_Analyst DAA
 			INNER JOIN Profiles P
@@ -1799,12 +1833,29 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			WHERE DAA.Deleted = 0
 			AND DAA.DD_Stage_ID = #arguments.DDStageID#
 		</CFQUERY>
+</cfif>
 		<cfreturn Get_Action_Selected_Analyst>
 	</cffunction>
 
 	<cffunction name="getClassificationAnalystProfile" returntype="query" access="remote" >
 		<cfargument name="DDClassificationID" type="numeric" required="true" />
-		<CFQUERY NAME="Get_Classification_Selected_Analyst_Profile" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Classification_Selected_Analyst_Profile = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification_analyst") AND application.oLakebase.isTableMigrated("profiles")>
+<cfif useLakebaseForGet_Classification_Selected_Analyst_Profile>
+	<cftry>
+		<cfset Get_Classification_Selected_Analyst_Profile = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("dd_classification_analyst", {
+				"deleted" = "eq.0",
+				"dd_classification_id" = "eq.#arguments.DDClassificationID#",
+				"select" = "analyst_profiles_id"
+			}, "analyst_profiles_id", "profiles", "profiles_id", "profiles_desc,profiles_id"), "profiles_desc,profiles_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Classification_Selected_Analyst_Profile = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Classification_Selected_Analyst_Profile>
+<CFQUERY NAME="Get_Classification_Selected_Analyst_Profile" datasource="#application.datasource#">
 			SELECT P.Profiles_Desc, P.Profiles_ID
 			FROM DD_Classification_Analyst DCA
 			INNER JOIN Profiles P
@@ -1812,6 +1863,7 @@ D40254 :: Event error The value returned from the getReminderTypeId function is 
 			WHERE DCA.Deleted = 0
 			AND DCA.DD_Classification_ID = #arguments.DDClassificationID#
 		</CFQUERY>
+</cfif>
 		<cfreturn Get_Classification_Selected_Analyst_Profile>
 	</cffunction>
 <!--- 70923 :: Create new feature for deduction workflow END --->

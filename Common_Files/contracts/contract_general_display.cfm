@@ -50,11 +50,27 @@
 	</cftry>
 </cfif>
 <cfif NOT useLakebaseForGetUOMDesc>
-	<CFQUERY NAME="Get_UOM_Desc" datasource="#application.datasource#">
+	<cfset useLakebaseForGet_UOM_Desc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForGet_UOM_Desc>
+	<cftry>
+		<cfset Get_UOM_Desc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#GetAllContractInfo.Contract_Quantity_UOM_IDX#",
+				"select" = "unit_of_measure_desc"
+			}), "unit_of_measure_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_UOM_Desc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_UOM_Desc>
+<CFQUERY NAME="Get_UOM_Desc" datasource="#application.datasource#">
 	Select		Unit_of_Measure_Desc
 	From		Units_Of_Measure
 	Where		Unit_of_Measure_ID		=	'#GetAllContractInfo.Contract_Quantity_UOM_IDX#'
 	</CFQUERY>
+</cfif>
 </cfif>
 
 	

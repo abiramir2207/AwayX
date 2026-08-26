@@ -1746,11 +1746,29 @@ Description:	This file is responsible for managing Billback data.
 
 	<cffunction name="getUserPosition" output="false" returntype="string">
 		<cfargument name="user_id" type="string" required="false"  />
-		<CFQUERY NAME="qryGetUserPosition" DATASOURCE="#application.datasource#">
+		<cfset useLakebaseForqryGetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_position_holders")>
+<cfif useLakebaseForqryGetUserPosition>
+	<cftry>
+		<cfset qryGetUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_position_holders", {
+				"user_id" = "eq.#arguments.user_id#",
+				"deleted" = "eq.0",
+				"user_positions_id" = "neq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryGetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryGetUserPosition>
+<CFQUERY NAME="qryGetUserPosition" DATASOURCE="#application.datasource#">
 			SELECT 	distinct User_Positions_ID
 			FROM 	User_Position_Holders
 			WHERE User_ID = '#arguments.user_id#' AND Deleted = 0 and user_positions_id <> 0
 		</CFQUERY>
+</cfif>
 		<cfreturn ValueList(qryGetUserPosition.User_Positions_ID) />
 	</cffunction>
 
@@ -2831,11 +2849,26 @@ Description:	This file is responsible for managing Billback data.
 
 	<!--- Get Sales Tax Type Information --->
 	<cffunction name="getBillbacksSalesTaxInfo" access="public" returntype="query">
-		<cfquery name="qGetBillbacksSalesTax" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetBillbacksSalesTax = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_tax_main")>
+<cfif useLakebaseForqGetBillbacksSalesTax>
+	<cftry>
+		<cfset qGetBillbacksSalesTax = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bb_tax_main", {
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBillbacksSalesTax = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBillbacksSalesTax>
+<cfquery name="qGetBillbacksSalesTax" datasource="#application.datasource#">
 			SELECT *
 			FROM BB_Tax_Main
 			WHERE deleted = 0
 		</cfquery>
+</cfif>
 		<cfreturn qGetBillbacksSalesTax />
 	</cffunction>
 

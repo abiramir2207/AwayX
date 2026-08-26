@@ -142,9 +142,27 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 	<cfelseif TemplateSettings.ByPass_Margin_Evaluation_Options EQ 1>
 	    <cfset doBypassMargin = 1 />
 	<cfelse>
-	    <cfquery name="qryIsLumpsumProgram" datasource="#application.datasource#">
+	    <cfset useLakebaseForqryIsLumpsumProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sums")>
+<cfif useLakebaseForqryIsLumpsumProgram>
+	<cftry>
+		<cfset qryIsLumpsumProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sums", {
+				"program_id" = "eq.#FORM.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"limit" = "1",
+				"select" = "program_id"
+			}), "program_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryIsLumpsumProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryIsLumpsumProgram>
+<cfquery name="qryIsLumpsumProgram" datasource="#application.datasource#">
 	      SELECT TOP 1 Program_ID FROM Program_Lump_Sums WHERE Program_ID = #FORM.Contract_Main_ID# and Deleted = 0
 	    </cfquery>
+</cfif>
 	    <cfif qryIsLumpsumProgram.RecordCount EQ 1>
 	      <cfset doBypassMargin = 1 />
 	    </cfif>
@@ -649,11 +667,27 @@ WHERE     (dbo.Contract_Products.Product_Type_ID = 4) AND (dbo.Program_Growth_Co
 
 			<CFSET thisCurrentRow = 1>
 			<cfloop query="getRebateProductsInformationForThisProgram">
-				<cfquery name="getParentRERLB" dbtype="query">
+				<cfset useLakebaseForgetParentRERLB = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getrebateproductsinformationforparentprogram")>
+<cfif useLakebaseForgetParentRERLB>
+	<cftry>
+		<cfset getParentRERLB = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getrebateproductsinformationforparentprogram", {
+				"bsa_foodservice_items_master_id" = "eq.#getRebateProductsInformationForThisProgram.BSA_Foodservice_Items_Master_ID#",
+				"select" = "rer_lb"
+			}), "rer_lb"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetParentRERLB = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetParentRERLB>
+<cfquery name="getParentRERLB" dbtype="query">
 					SELECT RER_LB
 					FROM getRebateProductsInformationForParentProgram
 					WHERE BSA_Foodservice_Items_Master_ID = '#getRebateProductsInformationForThisProgram.BSA_Foodservice_Items_Master_ID#'
 				</cfquery>
+</cfif>
 
 				<CFIF getParentRERLB.recordcount GT 0>
 					<CFSET temp = QuerySetCell(getRebateProductsInformationForThisProgram,"Parent_RER_LB",getParentRERLB.RER_LB,thisCurrentRow)>

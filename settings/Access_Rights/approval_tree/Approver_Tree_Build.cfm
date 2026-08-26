@@ -66,11 +66,27 @@ WHERE     (dbo.BSA_Foodservice_Brokers.Active_Code = 'A') AND (dbo.BSA_Foodservi
 		</CFLOOP>
 	</CFIF>
 
-	<CFQUERY NAME="getRegions" datasource="#application.datasource#">
+	<cfset useLakebaseForgetRegions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("service_regions")>
+<cfif useLakebaseForgetRegions>
+	<cftry>
+		<cfset getRegions = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("service_regions", {
+				"service_zone_id" = "eq.#DB_ServiceZone_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetRegions = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetRegions>
+<CFQUERY NAME="getRegions" datasource="#application.datasource#">
 		SELECT *
 		FROM Service_Regions
 		WHERE Service_Zone_ID = '#DB_ServiceZone_ID#' AND DELETED = 0
 	</CFQUERY>
+</cfif>
 	
 		<CFLOOP QUERY="getRegions">
 

@@ -160,10 +160,25 @@ TABLE.UNDERLINED TD
 		<CFSET Pref_Prod_GrpWithOutMatch_List = "">
 		<CFLOOP QUERY="DistItem">			
 			<CFIF Pref_Prod_Grp NEQ "">
-				<CFQUERY NAME="CheckProd_Grp" DATASOURCE="#Application.Datasource#">
+				<cfset useLakebaseForCheckProd_Grp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForCheckProd_Grp>
+	<cftry>
+		<cfset CheckProd_Grp = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#Product_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckProd_Grp = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckProd_Grp>
+<CFQUERY NAME="CheckProd_Grp" DATASOURCE="#Application.Datasource#">
 					SELECT * FROM BSA_Foodservice_Items_Master 
 					WHERE BSA_Foodservice_Items_Master_ID = '#Product_ID#'
 				</CFQUERY>
+</cfif>
 				<CFIF TRIM(CheckProd_Grp.Prod_Grp) EQ "">
 					<CFSET ValidProdGroup = 0>				
 					<CFSET ProductIDWithoutProd_Grp = "#ProductIDWithoutProd_Grp##Product_ID#,">				

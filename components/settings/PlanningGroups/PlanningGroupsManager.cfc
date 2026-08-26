@@ -2164,7 +2164,24 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
     <!--- Dev Note: Drachala; D27578: Planning Group setup - require business segment END--->
     <cffunction name="fnGetCoreCustomerPG" output="false" returntype="Query">
 		  <cfset var qGetCoreCustomerPG = "" />
-		  <cfquery name="qGetCoreCustomerPG" datasource="#application.datasource#">
+		  <cfset useLakebaseForqGetCoreCustomerPG = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("pg_customer_category")>
+<cfif useLakebaseForqGetCoreCustomerPG>
+	<cftry>
+		<cfset qGetCoreCustomerPG = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("pg_customer_category", {
+				"include_in_other_pg" = "eq.1",
+				"active" = "eq.1",
+				"deleted" = "eq.0",
+				"select" = "pg_customer_category_id,pg_type_id,pg_customer_category_code,pg_customer_category_name,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg"
+			}), "pg_customer_category_id,pg_type_id,pg_customer_category_code,pg_customer_category_name,active,deleted,created_date,updated_date,created_by,updated_by,include_in_other_pg"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetCoreCustomerPG = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetCoreCustomerPG>
+<cfquery name="qGetCoreCustomerPG" datasource="#application.datasource#">
   			SELECT
           PG_Customer_Category_ID,
           PG_Type_ID,
@@ -2182,6 +2199,7 @@ IF OBJECT_ID ('tempdb..##tmp_PG_View_Product_Members') IS NOT NULL
         AND Active = 1
         AND Deleted = 0
     	</cfquery>
+</cfif>
 		  <cfreturn qGetCoreCustomerPG />
 	  </cffunction>
 

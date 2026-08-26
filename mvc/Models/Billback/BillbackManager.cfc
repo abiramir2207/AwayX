@@ -354,12 +354,29 @@
 				)
 			</cfquery>
 
-			<cfquery name="getAllChildBBs" datasource="#Application.Datasource#">
+			<cfset useLakebaseForgetAllChildBBs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
+<cfif useLakebaseForgetAllChildBBs>
+	<cftry>
+		<cfset getAllChildBBs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback", {
+				"bb_parent_id" = "eq.#BBID#",
+				"deleted" = "eq.0",
+				"select" = "billback_id_int,billback_id"
+			}), "billback_id_int,billback_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllChildBBs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllChildBBs>
+<cfquery name="getAllChildBBs" datasource="#Application.Datasource#">
 				SELECT Billback_ID_Int,Billback_ID
 				FROM Billback
 				WHERE BB_parent_ID = '#BBID#'
 				AND Deleted = 0
 			</cfquery>
+</cfif>
 
 			<cfif getAllChildBBs.RecordCount GTE 1>
 				<cfloop query="getAllChildBBs">

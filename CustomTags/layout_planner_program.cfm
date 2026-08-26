@@ -196,11 +196,27 @@
 
                 <cfif appSettings.getBudgetsFunctionalityOn() and appSettings.getBudgetSelectionRequired()>
 
-                    <cfquery name="qGetBudget" datasource="#application.datasource#">
+                    <cfset useLakebaseForqGetBudget = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_program_selection")>
+<cfif useLakebaseForqGetBudget>
+	<cftry>
+		<cfset qGetBudget = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("budget_program_selection", {
+				"program_id" = "eq.#this.programId#",
+				"select" = "1"
+			}), "1"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetBudget = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetBudget>
+<cfquery name="qGetBudget" datasource="#application.datasource#">
                         SELECT  1
                         FROM    Budget_Program_Selection
                         WHERE   Program_ID = '#this.programId#'
                     </cfquery>
+</cfif>
 
                     <cfif not qGetBudget.recordCount>
                         <cfset letUserProceed = 0 />

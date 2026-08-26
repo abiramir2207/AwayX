@@ -380,9 +380,25 @@
 					<CFQUERY NAME="CheckActiveProcess" DATASOURCE="#Application.Datasource#">
 						SELECT * FROM Billback_Upload_Master WHERE (Process_Status_ID = 2 AND Deleted = 0) OR Alive_Upload = 1
 					</CFQUERY>
-					<CFQUERY NAME="CheckActiveProcess2" DATASOURCE="#Application.Datasource#">
+					<cfset useLakebaseForCheckActiveProcess2 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_details")>
+<cfif useLakebaseForCheckActiveProcess2>
+	<cftry>
+		<cfset CheckActiveProcess2 = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_upload_details", {
+				"d_process_status_id" = "eq.2",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckActiveProcess2 = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckActiveProcess2>
+<CFQUERY NAME="CheckActiveProcess2" DATASOURCE="#Application.Datasource#">
 						SELECT * FROM Billback_Upload_Details WHERE D_Process_Status_ID = 2 AND Deleted = 0
 					</CFQUERY>
+</cfif>
 					<CFIF CheckActiveProcess.RecordCount GT 0 OR CheckActiveProcess2.RecordCount GT 0>
 					<TR>
 						<TD></TD>

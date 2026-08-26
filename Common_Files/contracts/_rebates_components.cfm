@@ -308,11 +308,27 @@ and perhaps other issues as well. Added a margin so that the text does not overl
                      <cfset thisTmpAllowanceCode = 0 />
               </cfif>
               <!---TSF - Label 11426: Display Allowance Code in the Component Title--->
-              <cfquery name="qGetAllowanceCodeNumber" dbtype="query">
+              <cfset useLakebaseForqGetAllowanceCodeNumber = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetactivecomps")>
+<cfif useLakebaseForqGetAllowanceCodeNumber>
+	<cftry>
+		<cfset qGetAllowanceCodeNumber = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetactivecomps", {
+				"allowance_code_id" = "eq.#thisTmpAllowanceCode#",
+				"select" = "allowance_code_number"
+			}), "allowance_code_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetAllowanceCodeNumber = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetAllowanceCodeNumber>
+<cfquery name="qGetAllowanceCodeNumber" dbtype="query">
                      SELECT Allowance_Code_Number
                      FROM   qGetActiveComps
                      WHERE  Allowance_Code_ID = #thisTmpAllowanceCode#
               </cfquery>
+</cfif>
               <cfset componentTDLen = componentTDLen + 1 />
               <th class="header" nowrap>
                      <cfif URL.EZTemplate EQ 1>

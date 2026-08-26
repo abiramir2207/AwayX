@@ -32,11 +32,29 @@
 	<cfset Closing_Method_Type = qBillbackInfo.Closing_Method_Type />
 
 	<cfif isDefined("Form.NextAction") AND Form.NextAction EQ "SaveVendor">
-		<CFQUERY NAME="VendorID" DATASOURCE="#Application.Datasource#">
+		<cfset useLakebaseForVendorID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForVendorID>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_approved",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"vendor_master_id" = "#FORM.Vendor_Master_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForVendorID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForVendorID>
+<CFQUERY NAME="VendorID" DATASOURCE="#Application.Datasource#">
 			UPDATE 	BB_Approved
 			SET 			Vendor_Master_ID = '#FORM.Vendor_Master_ID#'
 			WHERE 		Billback_ID = '#Billback_ID#'
 		</CFQUERY>
+</cfif>
 			<!---D55703 :: Vendor required setting in closing method settings panel START--->	
 		<cfset useLakebaseForUpdateBillbackStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback")>
 <cfif useLakebaseForUpdateBillbackStatus>

@@ -522,13 +522,31 @@
 
 		<cfset Tier_Count = PreviousTiers.Recordcount>
 
-		<cfquery name="UpdateComponentTierInfo" datasource="#application.datasource#">
+		<cfset useLakebaseForUpdateComponentTierInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForUpdateComponentTierInfo>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_components",
+			{
+				"program_growth_component_id" = "eq.#Component_ID#"
+			},
+			{
+				"tier_count" = "#PreviousTiers.Recordcount#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdateComponentTierInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdateComponentTierInfo>
+<cfquery name="UpdateComponentTierInfo" datasource="#application.datasource#">
 
 			UPDATE 	Program_Growth_Components
 			SET 	Tier_Count = #PreviousTiers.Recordcount#
 			WHERE 	Program_Growth_Components.Program_Growth_Component_ID = '#Component_ID#'
 
 		</cfquery>
+</cfif>
 
 	</cfif>
 

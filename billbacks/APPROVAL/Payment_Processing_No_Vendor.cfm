@@ -30,11 +30,29 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		</cfquery>
  		
 		<cfif isDefined("selBillbackVendor") AND selBillbackVendor.RecordCount GTE 1 AND selBillbackVendor.Vendor_Master_ID NEQ "">
-			<cfquery name="UpdBBApproved" datasource="#Application.Datasource#">
+			<cfset useLakebaseForUpdBBApproved = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_approved")>
+<cfif useLakebaseForUpdBBApproved>
+	<cftry>
+		<cfset application.oLakebase.updateRows("bb_approved",
+			{
+				"billback_id" = "eq.#Billback_ID#"
+			},
+			{
+				"vendor_master_id" = "#selBillbackVendor.Vendor_Master_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForUpdBBApproved = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForUpdBBApproved>
+<cfquery name="UpdBBApproved" datasource="#Application.Datasource#">
 				UPDATE 	BB_Approved	 
 				SET Vendor_Master_ID = '#selBillbackVendor.Vendor_Master_ID#'
 				WHERE Billback_ID = '#Billback_ID#'	
 			</cfquery>
+</cfif>
 		</cfif>
 	</cfif>
 

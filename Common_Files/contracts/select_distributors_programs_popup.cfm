@@ -903,11 +903,27 @@ Added/Changed: Added value to busSegIdForProgram to filter Position Drop Down Fi
 					<cfset RestrictByRule = 0>
 					<cfset Rule_Name = "">
 					<cfif appsettings.getDistributor_Product_Integrity_On() IS 1 AND len(trim(getSettings.Distributor_Product_Integrity_Rule_ID)) GT 0>
-						<cfquery name="GetIntegrityRuleType" datasource="#application.datasource#">
+						<cfset useLakebaseForGetIntegrityRuleType = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("distributor_product_integrity_rule")>
+<cfif useLakebaseForGetIntegrityRuleType>
+	<cftry>
+		<cfset GetIntegrityRuleType = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("distributor_product_integrity_rule", {
+				"distributor_product_integrity_rule_id" = "eq.#getSettings.Distributor_Product_Integrity_Rule_ID#",
+				"select" = "inclusive_restriction,rule_name"
+			}), "inclusive_restriction,rule_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetIntegrityRuleType = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetIntegrityRuleType>
+<cfquery name="GetIntegrityRuleType" datasource="#application.datasource#">
 						SELECT Inclusive_Restriction, Rule_Name
 						FROM Distributor_Product_Integrity_Rule
 						WHERE Distributor_Product_Integrity_Rule_ID = #getSettings.Distributor_Product_Integrity_Rule_ID#
 						</cfquery>
+</cfif>
 						<!--- You only restrict the search if the rule is inclusive, otherwise your just pick it up on RFA --->
 						<cfif GetIntegrityRuleType.Inclusive_Restriction EQ 1>
 							<cfset RestrictByRule = 1>

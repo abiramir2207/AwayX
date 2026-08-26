@@ -227,10 +227,23 @@
 
         <!--- insert query into "request" scope to make it reusable --->
         <cfif !structKeyExists(request, "qUOM")>
-            <cfquery name="request.qUOM" datasource="#application.datasource#">
+            <cfset useLakebaseForrequest_qUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForrequest_qUOM>
+	<cftry>
+		<cfset request.qUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForrequest_qUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForrequest_qUOM>
+<cfquery name="request.qUOM" datasource="#application.datasource#">
                 select *
                   from Units_Of_Measure
             </cfquery>
+</cfif>
         </cfif>
 
         <cfquery name="local.qoq" dbtype="query">

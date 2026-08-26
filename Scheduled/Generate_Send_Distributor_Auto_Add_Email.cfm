@@ -154,7 +154,26 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 		</cf_EmailWrapper> 
 	
 	
-		<cfquery name="upd" datasource="#application.datasource#">
+		<cfset useLakebaseForupd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("log_bb_prg_autoadd_distributor")>
+<cfif useLakebaseForupd>
+	<cftry>
+		<cfset application.oLakebase.updateRows("log_bb_prg_autoadd_distributor",
+			{
+				"latest" = "eq.1",
+				"extracted" = "eq.0"
+			},
+			{
+				"latest" = "0",
+				"extracted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForupd = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForupd>
+<cfquery name="upd" datasource="#application.datasource#">
 			UPDATE 
 				Log_BB_PRG_AutoAdd_Distributor
 			SET 
@@ -166,6 +185,7 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 				Extracted = 0
 			
 		</cfquery>
+</cfif>
  
 	</cfif><!--- ENDS: <cfif getCurrentSettings.Send_Distributor_Auto_Add_Email NEQ "" AND  getDistributorAutoAddedToPrograms.RecordCount GTE 1> --->
 	 

@@ -625,10 +625,25 @@ WHERE 					Billback_ID = '#BBID#' AND
 		<CFIF CheckDetail.RecordCount GT 0>
 			
 			<!--- Copy over discount list --->
-			<cfquery name="GetDistinctProductsfromProgram" dbtype="query">
+			<cfset useLakebaseForGetDistinctProductsfromProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("checkdetail")>
+<cfif useLakebaseForGetDistinctProductsfromProgram>
+	<cftry>
+		<cfset GetDistinctProductsfromProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("checkdetail", {
+				"select" = "product_id"
+			}), "product_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetDistinctProductsfromProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetDistinctProductsfromProgram>
+<cfquery name="GetDistinctProductsfromProgram" dbtype="query">
 			SELECT DISTINCT Product_ID
 			FROM CheckDetail
 			</cfquery>
+</cfif>
 			
 			<cfset ProgramIDforloop = Program_ID>
 			<cfloop query="GetDistinctProductsfromProgram">
@@ -842,9 +857,26 @@ WHERE 					Billback_ID = '#BBID#' AND
 <!--- Copy attachments --->
 <!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
 <CFIF URL.copyAttachments EQ 1>
-	<CFQUERY NAME="CheckAttachments" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForCheckAttachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForCheckAttachments>
+	<cftry>
+		<cfset CheckAttachments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"billback_id" = "eq.#BBID#",
+				"deleted" = "eq.0",
+				"limit" = "1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckAttachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckAttachments>
+<CFQUERY NAME="CheckAttachments" DATASOURCE="#Application.Datasource#">
 		SELECT Top 1 * FROM Contract_Attachments WHERE Billback_ID = '#BBID#' AND Deleted = 0
 	</CFQUERY>
+</cfif>
 
 	<CFIF CheckAttachments.RecordCount GT 0>	
 		<CFQUERY NAME="InsertAttachments" DATASOURCE="#Application.Datasource#">

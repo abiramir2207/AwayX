@@ -3,13 +3,29 @@
 
 <cffunction name="getAllTargets" output="true" returntype="any" hint="this function used to show all existing margin target data.">
 			<cfargument name="download" type="boolean" default="0">
-		    <cfquery name="qMTInfo" datasource="#application.datasource#">
+		    <cfset useLakebaseForqMTInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("margin_targets_upload") AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqMTInfo>
+	<cftry>
+		<cfset qMTInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("margin_targets_upload", {
+				"order" = "item.asc",
+				"select" = "*,bsa_foodservice_items_master_id"
+			}, "bsa_foodservice_items_master_id", "bsa_foodservice_items_master", "bsa_foodservice_items_master_id", "brand_id,description,prod_var_a_id,q_brand_id,type_code_desc_id,type_group_desc_id"), "*,brand_id,description,prod_var_a_id,q_brand_id,type_code_desc_id,type_group_desc_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqMTInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqMTInfo>
+<cfquery name="qMTInfo" datasource="#application.datasource#">
 					SELECT MTU.*, BSA.Description, BSA.Prod_Var_A_ID, BSA.Type_Code_Desc_ID, BSA.Type_Group_Desc_ID, BSA.Brand_ID, BSA.Q_Brand_ID
 					FROM Margin_Targets_Upload MTU
 					INNER JOIN BSA_Foodservice_Items_Master BSA
 					ON BSA.BSA_Foodservice_Items_Master_ID = MTU.BSA_Foodservice_Items_Master_ID
 					ORDER BY item ASC
 		    </cfquery>
+</cfif>
 	
 	<cfif arguments.download>
 

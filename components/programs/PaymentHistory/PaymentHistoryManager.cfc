@@ -175,12 +175,27 @@
 		<cfreturn qgetFiscalDateInfo />
 	</cffunction>
 	<cffunction name="getProductGroupLevelForAccrual" output="false" returntype="query">
-			<cfquery name="qgetProductGroupLevelForAccrual" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetProductGroupLevelForAccrual = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings") AND application.oLakebase.isTableMigrated("product_group_level")>
+<cfif useLakebaseForqgetProductGroupLevelForAccrual>
+	<cftry>
+		<cfset qgetProductGroupLevelForAccrual = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("_users_settings", {
+				"select" = "accrual_product_group_level_id"
+			}, "accrual_product_group_level_id", "product_group_level", "product_group_level_id", "group_level_desc,product_group_level_id"), "group_level_desc,product_group_level_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetProductGroupLevelForAccrual = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetProductGroupLevelForAccrual>
+<cfquery name="qgetProductGroupLevelForAccrual" datasource="#application.datasource#">
 				SELECT pgl.Product_Group_Level_ID,pgl.Group_level_Desc
 					FROM _users_settings us
 				INNER JOIN Product_Group_Level pgl
 				ON us.Accrual_Product_group_Level_ID = pgl.Product_group_Level_ID
 			</cfquery>
+</cfif>
 		<cfreturn qgetProductGroupLevelForAccrual />
 	</cffunction>
 	<!--- D32973:Dates on Payment History END--->

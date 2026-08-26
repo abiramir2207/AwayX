@@ -80,11 +80,27 @@
 	<CFPARAM NAME="FORM.Program_Is_A_Revision" DEFAULT="0">
 	<CFPARAM NAME="FORM.Pay_Brokerage" DEFAULT="EMPTY">
 	
-	<CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
+	<cfset useLakebaseForGetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForGetContractInfo>
+	<cftry>
+		<cfset GetContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#cryp.value#",
+				"select" = "contract_start_date,contract_end_date,revision_of_contract_main_id,revision_version,contract_number"
+			}), "contract_start_date,contract_end_date,revision_of_contract_main_id,revision_version,contract_number"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetContractInfo>
+<CFQUERY NAME="GetContractInfo" datasource="#application.datasource#">
 		SELECT Contract_Start_Date, Contract_End_Date, Revision_Of_Contract_Main_ID, revision_version,contract_number
 		FROM Contract_Main
 		WHERE Contract_Main_ID = '#cryp.value#'
 	</CFQUERY>
+</cfif>
 
 	<!--- Dev Note(69720) - If the program is a revision and the template setting does not allow for "duplicate check" for revisions, then do not do "duplicate check". --->
 	<cfif ProgramIsARevision eq 1 AND getProgramTemplateInfo.Disable_Duplicate_Check_For_Revisions eq 1>

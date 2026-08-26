@@ -165,12 +165,31 @@
 			</cfquery>
 		</cfif>
 		<cfset FORM.Comp_Name_ID = qGetCompNameId.Growth_Component_Name_ID />
-		<cfquery name="qUpdateGrowthRevCompId" datasource="#application.datasource#">
+		<cfset useLakebaseForqUpdateGrowthRevCompId = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForqUpdateGrowthRevCompId>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_components",
+			{
+				"deleted" = "eq.0",
+				"program_growth_component_id" = "eq.#temp_Component_ID#"
+			},
+			{
+				"growth_revision_comp_id" = "#FORM.Comp_Name_ID#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateGrowthRevCompId = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateGrowthRevCompId>
+<cfquery name="qUpdateGrowthRevCompId" datasource="#application.datasource#">
 			UPDATE 	Program_Growth_Components
 			SET			Growth_Revision_Comp_ID = #FORM.Comp_Name_ID#
 			WHERE 	Deleted = 0
 			AND 	Program_Growth_Component_ID = '#temp_Component_ID#'
 		</cfquery>
+</cfif>
 	</cfif>
 <CFELSE>
 

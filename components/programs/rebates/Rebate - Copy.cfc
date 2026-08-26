@@ -3827,13 +3827,29 @@
 	<cffunction name="getUOMfromTemplate" output="false" returntype="query">
 		<cfargument name="programID" type="numeric" required="true" />
 
-		<cfquery name="qryUOM" datasource="#application.datasource#">
+		<cfset useLakebaseForqryUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main") AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryUOM>
+	<cftry>
+		<cfset qryUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_main", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "programtype_id"
+			}, "programtype_id", "program_control_panel_options", "programcontrol_panel_options_id", "ratetypedefault"), "ratetypedefault"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUOM>
+<cfquery name="qryUOM" datasource="#application.datasource#">
 			 SELECT PCPO.rateTypeDefault
 			 FROM
 			 Contract_Main CM
 			 INNER JOIN Program_Control_Panel_Options PCPO ON CM.ProgramType_ID = PCPO.ProgramControl_Panel_Options_ID
 			 WHERE CM.Contract_Main_ID = #arguments.programID#
 		</cfquery>
+</cfif>
 
 		<cfreturn qryUOM />
 	</cffunction>
@@ -4004,7 +4020,23 @@
 			Single component changes
 		--->
 		<cfif (getProgID.RecordCount GTE 1 AND bAutoAddComponent EQ 1)>
-			<cfquery name="getProductpresent" datasource="#application.datasource#">
+			<cfset useLakebaseForgetProductpresent = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_product_data") AND application.oLakebase.isTableMigrated("program_rebates_component_data")>
+<cfif useLakebaseForgetProductpresent>
+	<cftry>
+		<cfset getProductpresent = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("program_rebates_product_data", {
+				"program_id" = "eq.#getProgID.Contract_Main_ID#",
+				"deleted" = "eq.0",
+				"select" = "program_rebates_product_data_id"
+			}, "program_rebates_product_data_id", "program_rebates_component_data", "program_rebates_product_data_id", "program_rebates_product_data_id"), "program_rebates_product_data_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProductpresent = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProductpresent>
+<cfquery name="getProductpresent" datasource="#application.datasource#">
 				SELECT 	PRCD.Program_Rebates_Product_Data_ID
 				FROM 	Program_Rebates_Product_Data PRPD
 				INNER JOIN Program_Rebates_Component_Data PRCD ON
@@ -4012,6 +4044,7 @@
 	 			WHERE 	PRPD.Program_ID = #getProgID.Contract_Main_ID#
 				AND		PRPD.Deleted = 0
 			</cfquery>
+</cfif>
 			<cfif getProductpresent.Recordcount EQ 0>
 				<cfset useLakebaseForupdPrgRebComp = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_rebates_component")>
 <cfif useLakebaseForupdPrgRebComp>

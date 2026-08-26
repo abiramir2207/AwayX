@@ -79,10 +79,25 @@
 		
 		<cfset var arUOM = arrayNew(1) />
 		
-		<cfquery name="qGetUOM" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForqGetUOM>
+	<cftry>
+		<cfset qGetUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"select" = "unit_of_measure_id,unit_of_measure_desc,abbreviation"
+			}), "unit_of_measure_id,unit_of_measure_desc,abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetUOM>
+<cfquery name="qGetUOM" datasource="#application.datasource#">
 			SELECT	Unit_of_Measure_ID, Unit_Of_Measure_Desc, Abbreviation
 			FROM	Units_of_Measure			
 		</cfquery>
+</cfif>
 		
 		<cfloop query="qGetUOM">
 			<cfset arUOM[ArrayLen(arUOM) + 1] = Left(Abbreviation, 2) />

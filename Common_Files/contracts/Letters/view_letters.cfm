@@ -5,12 +5,28 @@
     <cfparam name="url.generate" 					default="0">
     <cfparam name="request.language" 			default="">
 
-        <cfquery name="qGetProgramLetterSettings" datasource="#application.datasource#">
+        <cfset useLakebaseForqGetProgramLetterSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main") AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqGetProgramLetterSettings>
+	<cftry>
+		<cfset qGetProgramLetterSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_main", {
+				"contract_main_id" = "eq.#URL.CID#",
+				"select" = "programtype_id"
+			}, "programtype_id", "program_control_panel_options", "programcontrol_panel_options_id", "custom_rfp_letter,distributor_letters_required,label_set_default,operator_letters_required"), "custom_rfp_letter,distributor_letters_required,label_set_default,operator_letters_required"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramLetterSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramLetterSettings>
+<cfquery name="qGetProgramLetterSettings" datasource="#application.datasource#">
         SELECT	pcpo.operator_letters_required, pcpo.distributor_letters_required, pcpo.Label_Set_Default, pcpo.Custom_RFP_Letter
         FROM	Contract_Main cm
                 inner join Program_Control_Panel_Options pcpo on pcpo.ProgramControl_Panel_Options_ID = cm.ProgramType_ID
         WHERE 	Contract_Main_ID = '#URL.CID#'
     </cfquery>
+</cfif>
 
     <cfif isDefined("cookie.googtrans") AND listGetAt(cookie.googtrans,2,'/') eq "Fr" 
         AND qGetProgramLetterSettings.Label_Set_Default eq "French">

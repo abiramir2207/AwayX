@@ -535,11 +535,27 @@ cannot use <cfflush> inside "cfsavecontent" tag.
 				<!--- call margin action to set the products / type code / program as agreed / approved --->
 				<cfinclude template="/common_files/contracts/contract_layered_Approve_Action.cfm">
 
-				<CFQUERY NAME="qGetProgramStatus" datasource="#application.datasource#">
+				<cfset useLakebaseForqGetProgramStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetProgramStatus>
+	<cftry>
+		<cfset qGetProgramStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#getRevisionData.Contract_Main_ID#",
+				"select" = "contract_status_type_idx"
+			}), "contract_status_type_idx"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetProgramStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetProgramStatus>
+<CFQUERY NAME="qGetProgramStatus" datasource="#application.datasource#">
 					SELECT	Contract_Status_Type_IDX
 					FROM	Contract_Main
 					WHERE 	Contract_Main_ID = '#getRevisionData.Contract_Main_ID#'
 				</CFQUERY>
+</cfif>
 
 				<!--- set the variable LetUserApprove so it can show the details --->
 				<cfif qGetProgramStatus.Contract_Status_Type_IDX GTE 3>

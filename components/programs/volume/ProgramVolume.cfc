@@ -2133,12 +2133,28 @@ components.programs.volume.ProgramVolume
    	<cffunction name="getProductVolumeCapInfo" output="false" hint="Get product volume cap">
 		<cfargument name="Product_ID" type="string" required="true">
 
-		<cfquery name="qProductVolumeCapInfo" dbtype="query">
+		<cfset useLakebaseForqProductVolumeCapInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_global_volume")>
+<cfif useLakebaseForqProductVolumeCapInfo>
+	<cftry>
+		<cfset qProductVolumeCapInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_global_volume", {
+				"bsa_foodservice_items_master_id" = "eq.#arguments.Product_ID#",
+				"select" = "volume_cap"
+			}), "volume_cap"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqProductVolumeCapInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqProductVolumeCapInfo>
+<cfquery name="qProductVolumeCapInfo" dbtype="query">
 			SELECT		Volume_Cap
 			FROM		Get_Global_Volume
 			WHERE
 						BSA_Foodservice_Items_Master_ID = '#arguments.Product_ID#'
 		</cfquery>
+</cfif>
 
 		<cfif not qProductVolumeCapInfo.recordCount>
 			<cfset QueryAddRow(qProductVolumeCapInfo) />

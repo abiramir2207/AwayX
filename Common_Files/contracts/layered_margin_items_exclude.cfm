@@ -128,12 +128,29 @@ So, <fieldset> was removed from here ans it was not needed.
 							<cfset fixed_price = "#qGetContractPrice.Fixed_Price_CS##multiplier##statMultiplier#" />
 							<cfset fixed_price = evaluate(fixed_price) />
 							<!--- do we have more than 1 fixed component for this program ? [begin] --->
-							<cfquery name="qGetFixedComponentIDs" datasource="#application.datasource#">
+							<cfset useLakebaseForqGetFixedComponentIDs = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component")>
+<cfif useLakebaseForqGetFixedComponentIDs>
+	<cftry>
+		<cfset qGetFixedComponentIDs = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component", {
+				"program_id" = "eq.#contract_main_id#",
+				"deleted" = "eq.0",
+				"select" = "program_fixed_component_id"
+			}), "program_fixed_component_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetFixedComponentIDs = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetFixedComponentIDs>
+<cfquery name="qGetFixedComponentIDs" datasource="#application.datasource#">
 			                    SELECT 	Program_Fixed_Component_ID
 			                    FROM 	Program_Fixed_Component
 			                    WHERE 	Program_ID = #contract_main_id#
 			                    AND		deleted = 0
 							</cfquery>
+</cfif>
 							<!--- do we have more than 1 fixed component for this program ? [end] --->
 						</cfsilent>
 						<!--- D17218 [begin] 

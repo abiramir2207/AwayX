@@ -246,11 +246,27 @@
 		<cfargument name="programId" type="numeric" required="true" />
 		
 		<!--- get the Search Sequence --->
-		<cfquery name="qGetSearchSequenceForProgram" datasource="#application.datasource#">			
+		<cfset useLakebaseForqGetSearchSequenceForProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqGetSearchSequenceForProgram>
+	<cftry>
+		<cfset qGetSearchSequenceForProgram = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.programId#",
+				"select" = "search_sequence_id"
+			}), "search_sequence_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetSearchSequenceForProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetSearchSequenceForProgram>
+<cfquery name="qGetSearchSequenceForProgram" datasource="#application.datasource#">			
 			SELECT 	Search_Sequence_ID 
 			FROM 	Contract_Main 
 			WHERE 	Contract_Main_ID= '#arguments.programId#'
 		</cfquery>
+</cfif>
 		<cfset returnValue = 0 />
 		<cfif Isnumeric(qGetSearchSequenceForProgram.Search_Sequence_ID)>
 			<cfset returnValue = qGetSearchSequenceForProgram.Search_Sequence_ID />

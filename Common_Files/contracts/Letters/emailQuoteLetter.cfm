@@ -16,6 +16,21 @@
 
 <cfparam name="URL.lang" default="">
 
+<cfset useLakebaseForgetContractInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main") AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForgetContractInfo>
+	<cftry>
+		<cfset getContractInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_main", {
+				"contract_main_id" = "eq.#url.contract_main_id#",
+				"select" = "contract_number,contract_title,programtype_id"
+			}, "programtype_id", "program_control_panel_options", "programcontrol_panel_options_id", "label_set_default"), "contract_number,contract_title,programtype_id,label_set_default"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractInfo>
 <CFQUERY NAME="getContractInfo" datasource="#application.datasource#">
 	SELECT 	a.Contract_Title
           ,a.Contract_Number
@@ -25,6 +40,7 @@
           INNER JOIN Program_Control_Panel_Options b ON b.ProgramControl_Panel_Options_ID = a.ProgramType_ID
 	 WHERE 	a.Contract_main_ID = '#url.contract_main_id#'
 </CFQUERY>
+</cfif>
 <cfset variables.translate = request.AccessStructure.User_Language eq "French"
                              AND getContractInfo.Label_Set_Default eq "French">
 

@@ -1330,12 +1330,28 @@
     <!--- D37372 Kraft Special Project - Program Qualificaitons START--->
     <cfif GetSettings.Enable_Program_Qualifications>
     <cfoutput><cfsavecontent variable="vars.qualifications">href="/Common_Files/contracts/qualifications.cfm?DisAllowAccessBasedOnLockStatus=#DisAllowAccessBasedOnLockStatus#&Program_ID=#CSL_Contract_Main_ID#" onClick="NewWindow(this.href,'help','850','600','Yes', 'Yes');return false;"</cfsavecontent></cfoutput>
-    <cfquery name="hasQualifications" datasource="#application.datasource#" >
+    <cfset useLakebaseForhasQualifications = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_qualifications_info")>
+<cfif useLakebaseForhasQualifications>
+	<cftry>
+		<cfset hasQualifications = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_qualifications_info", {
+				"program_id" = "eq.#CSL_Contract_Main_ID#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForhasQualifications = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForhasQualifications>
+<cfquery name="hasQualifications" datasource="#application.datasource#" >
         SELECT *
         FROM Program_Qualifications_Info
         WHERE program_id = #CSL_Contract_Main_ID#
         AND deleted = 0
     </cfquery>
+</cfif>
         <cfif hasQualifications.recordcount GT 0>
         <CFSET CSL_data = 1>
         <cfelse>

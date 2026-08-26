@@ -361,11 +361,27 @@
 	</cfif>
 	
 		<!--- contract_Attachments --->
-		<CFQUERY NAME="getContractAttachments" datasource="#application.datasource#">
+		<cfset useLakebaseForgetContractAttachments = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_attachments")>
+<cfif useLakebaseForgetContractAttachments>
+	<cftry>
+		<cfset getContractAttachments = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_attachments", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetContractAttachments = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetContractAttachments>
+<CFQUERY NAME="getContractAttachments" datasource="#application.datasource#">
 			SELECT *
 			FROM Contract_Attachments
 			WHERE Program_ID = #Program_ID_To_Replicate# AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		
 	 	<!--- Auto Renew --->
 		<cfif getContractTemplateDetails.Auto_Renew_Option EQ 1>
@@ -923,13 +939,29 @@
 		
 		<!--- Off-Invoice Products--->
 		<cfif getContractTemplateDetails.Generic_Type IS "Distributor Off-Invoice">
-		<CFQUERY NAME="get_OffInvoice_Components" datasource="#application.datasource#">
+		<cfset useLakebaseForget_OffInvoice_Components = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_offinvoice_component")>
+<cfif useLakebaseForget_OffInvoice_Components>
+	<cftry>
+		<cfset get_OffInvoice_Components = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_offinvoice_component", {
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"deleted" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_OffInvoice_Components = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_OffInvoice_Components>
+<CFQUERY NAME="get_OffInvoice_Components" datasource="#application.datasource#">
 			SELECT *
 			FROM Program_OffInvoice_Component
 			WHERE 
 			program_id = '#Program_ID_To_Replicate#'
 			AND Deleted = 0
 		</CFQUERY>
+</cfif>
 		
 		<CFQUERY NAME="getOffInvoice_Products" datasource="#application.datasource#">
 			CREATE TABLE ##Tmp_Program_Product
@@ -1203,12 +1235,29 @@
 		</CFQUERY>
 		<cfset Contract_Products_ID_Lump_Sum = ValueList(get_Lump_Sum_Component_Products.Contract_Products_ID) />
 		<!--- lumpsum component distributors --->
-		<CFQUERY NAME="get_Lump_Sum_Component_Distributors" datasource="#application.datasource#">
+		<cfset useLakebaseForget_Lump_Sum_Component_Distributors = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_distributor")>
+<cfif useLakebaseForget_Lump_Sum_Component_Distributors>
+	<cftry>
+		<cfset get_Lump_Sum_Component_Distributors = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_distributor", {
+				"deleted" = "eq.0",
+				"program_id" = "eq.#Program_ID_To_Replicate#",
+				"select" = "*"
+			}), "*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForget_Lump_Sum_Component_Distributors = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForget_Lump_Sum_Component_Distributors>
+<CFQUERY NAME="get_Lump_Sum_Component_Distributors" datasource="#application.datasource#">
 			SELECT 	Program_Lump_Sum_Distributor.*
 			FROM 	Program_Lump_Sum_Distributor						
 			WHERE 	Program_Lump_Sum_Distributor.Deleted = 0
 			AND		Program_ID = '#Program_ID_To_Replicate#'
 		</CFQUERY>
+</cfif>
 		
 		</cfif>
 		

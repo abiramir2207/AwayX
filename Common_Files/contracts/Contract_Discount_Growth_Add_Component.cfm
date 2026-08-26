@@ -116,12 +116,29 @@
 	<cfif getComponentInfo.Program_Growth_Component_Type_ID IS 1>
 
 		<!---See if there are any kids--->
-		<cfquery name="CheckforVolumePool" datasource="#application.datasource#">
+		<cfset useLakebaseForCheckforVolumePool = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>
+<cfif useLakebaseForCheckforVolumePool>
+	<cftry>
+		<cfset CheckforVolumePool = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_components", {
+				"deleted" = "eq.0",
+				"parent_id" = "eq.#URL.COMPONENT_ID#",
+				"select" = "component_name"
+			}), "component_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForCheckforVolumePool = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForCheckforVolumePool>
+<cfquery name="CheckforVolumePool" datasource="#application.datasource#">
 			SELECT 	Component_Name
 			FROM 	Program_Growth_Components
 			WHERE 	Deleted = 0
 			AND 	Parent_ID = '#URL.COMPONENT_ID#'
 		</cfquery>
+</cfif>
 		<cfparam name="Seperate_Volume_Pool" default=0>
 
 		<cfif CheckforVolumePool.Recordcount GT 0>
@@ -807,12 +824,28 @@
 	</cfif>
 
 	<!--- D45016 :: Restrict access at component level for all discount types START--->
-	<cfquery name="getAllGrowthComponentsAccess" datasource="#application.datasource#">
+	<cfset useLakebaseForgetAllGrowthComponentsAccess = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_profile")>
+<cfif useLakebaseForgetAllGrowthComponentsAccess>
+	<cftry>
+		<cfset getAllGrowthComponentsAccess = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_profile", {
+				"deleted" = "eq.0",
+				"profiles_id" = "eq.#request.AccessStructure.Profiles_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetAllGrowthComponentsAccess = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetAllGrowthComponentsAccess>
+<cfquery name="getAllGrowthComponentsAccess" datasource="#application.datasource#">
 			SELECT 	*
 			FROM		Program_Growth_Component_Profile
 			WHERE	Deleted = 0
 			AND 		Profiles_ID = #request.AccessStructure.Profiles_ID#
 	</cfquery>
+</cfif>
 	<cfset restictList = valuelist(getAllGrowthComponentsAccess.Program_Growth_Component_Name_ID)>
 <cfif listlen(restictList)>
 		<cfloop list ="#restictList#" index="rl">

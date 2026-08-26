@@ -41,9 +41,24 @@
 </CFOUTPUT>
 
 
+<cfset useLakebaseForAll_GL_Type = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_type")>
+<cfif useLakebaseForAll_GL_Type>
+	<cftry>
+		<cfset All_GL_Type = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("gl_type", {
+				"order" = "gl_type_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAll_GL_Type = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAll_GL_Type>
 <CFQUERY NAME="All_GL_Type" DATASOURCE="#Application.Datasource#">
 	SELECT * FROM GL_Type ORDER BY GL_Type_Desc
 </CFQUERY>
+</cfif>
 
 
 <SCRIPT LANGUAGE="JavaScript">

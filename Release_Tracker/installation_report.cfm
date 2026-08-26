@@ -130,11 +130,27 @@ PunchListObject = document.getElementById('PunchList_'+i)
 		AND AI.Patch_Number = '#getInstallationDates.Patch_Number#'
 		ORDER BY  AI.Object_Type, AI.File_Path,  AI.CF_Installation, AI.Installed_Date DESC
 	</CFQUERY>
-	<CFQUERY NAME="getInstallationLabels" datasource="#application.datasource#">
+	<cfset useLakebaseForgetInstallationLabels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_installation_label")>
+<cfif useLakebaseForgetInstallationLabels>
+	<cftry>
+		<cfset getInstallationLabels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_installation_label", {
+				"inserted_date" = "eq.#getInstallationDates.Installed_Date#",
+				"select" = "labels"
+			}), "labels"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetInstallationLabels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetInstallationLabels>
+<CFQUERY NAME="getInstallationLabels" datasource="#application.datasource#">
 		SELECT Labels
 		FROM Application_Installation_Label
 		WHERE Inserted_Date =  '#getInstallationDates.Installed_Date#'
 	</CFQUERY>
+</cfif>
 	<cfset AllOfLabels = ValueList(getInstallationLabels.Labels,",")>
 	
 	<cfif Len(AllOfLabels) GT 142>

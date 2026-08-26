@@ -964,13 +964,30 @@ Description
 <cfset comp_id_start = Find("_",i)>
 <CFSET comp_id = Left(#i#, (#comp_id_start#-1))>
 <CFSET paid_to = Mid(#i#,comp_id_start + 1,Len(comp_id))>
-	<CFQUERY NAME="getFixedComponentName" datasource="#application.datasource#">
+	<cfset useLakebaseForgetFixedComponentName = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_fixed_component_name")>
+<cfif useLakebaseForgetFixedComponentName>
+	<cftry>
+		<cfset getFixedComponentName = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_fixed_component_name", {
+				"program_fixed_component_name_id" = "eq.#comp_id#",
+				"deleted" = "eq.0",
+				"select" = "program_fixed_component_name,program_fixed_component_name_id"
+			}), "program_fixed_component_name,program_fixed_component_name_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetFixedComponentName = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetFixedComponentName>
+<CFQUERY NAME="getFixedComponentName" datasource="#application.datasource#">
 SELECT 	Program_Fixed_Component_Name.Program_Fixed_Component_Name,
 Program_Fixed_Component_Name_Id
 FROM 	Program_Fixed_Component_Name
 WHERE 	Program_Fixed_Component_Name_Id = #comp_id#
 		AND Program_Fixed_Component_Name.DELETED = 0
 </CFQUERY>
+</cfif>
 <cfset qGetCompRuleUoms = compBusRule.getCompRuleUoms(#comp_id#)>
 <td ID="header" width="#component_width#" nowrap  STYLE="font-size:9px;">
 <A STYLE="cursor: pointer;display:none;" ONCLICK="verifyDelete('#getFixedComponentName.Program_Fixed_Component_Name_Id#', '#replace(getFixedComponentName.Program_Fixed_Component_Name, "'", "\'")#',#j#)"><img src="/Images/scissor.gif"  title="delete this component" border="0"></A>

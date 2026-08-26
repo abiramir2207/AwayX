@@ -1666,11 +1666,27 @@ EDITED:   09/26/08  RBL [16314]
 </cffunction>
 
 <cffunction name="getcategories" output="false" returntype="Query">
-	<cfquery name="qlistcategories" datasource="#application.datasource#" >
+	<cfset useLakebaseForqlistcategories = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("application_setting_setting_category")>
+<cfif useLakebaseForqlistcategories>
+	<cftry>
+		<cfset qlistcategories = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("application_setting_setting_category", {
+				"order" = "name.asc",
+				"select" = "name"
+			}), "name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqlistcategories = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqlistcategories>
+<cfquery name="qlistcategories" datasource="#application.datasource#" >
 		SELECT  Name
 		FROM Application_Setting_Setting_Category
 		ORDER BY Name ASC
 	</cfquery>
+</cfif>
 	<cfreturn qlistcategories>
 </cffunction>
 

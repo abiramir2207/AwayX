@@ -140,12 +140,30 @@
 <cfset FileLocation2 = "/Deductions/Rebill/Rebill_Letters/">
 
 <!---Get Last rebill letter ID --->
+<cfset useLakebaseForGetRebillLogID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_rebill_log")>
+<cfif useLakebaseForGetRebillLogID>
+	<cftry>
+		<cfset GetRebillLogID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_rebill_log", {
+				"deduction_id" = "eq.#Deduction_ID#",
+				"order" = "dd_rebill_log_id.desc",
+				"limit" = "1",
+				"select" = "dd_rebill_log_id"
+			}), "dd_rebill_log_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRebillLogID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRebillLogID>
 <cfquery name="GetRebillLogID" datasource="#application.datasource#">
 SELECT TOP 1 DD_Rebill_Log_ID
 FROM DD_Rebill_Log
 WHERE Deduction_ID = '#Deduction_ID#'
 ORDER BY DD_Rebill_Log_ID DESC
 </cfquery>
+</cfif>
 
 <!---Not foolproof, but I'll make the file name unique --->
 <cfif GetRebillLogID.Recordcount IS 0>

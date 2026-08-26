@@ -82,11 +82,26 @@ ORDER BY dbo.Type_Group_Desc.Type_Group_Desc, dbo.Q_Brand_Desc.Q_Brand_Desc, dbo
 <CFSET ContractVolume = trim(getProgramInfo.Contract_Quantity)>
 <CFSET VolumePerProduct = ContractVolume/TotalProductCount>
 
+<cfset useLakebaseForgetProgramUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getuom")>
+<cfif useLakebaseForgetProgramUOM>
+	<cftry>
+		<cfset getProgramUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getuom", {
+				"unit_of_measure_id" = "eq.#getProgramInfo.Contract_Quantity_UOM_IDX#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetProgramUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetProgramUOM>
 <cfquery name="getProgramUOM" dbtype="query">
 	SELECT *
 	FROM GETUOM
 	WHERE Unit_Of_Measure_ID = '#getProgramInfo.Contract_Quantity_UOM_IDX#'
 </cfquery>
+</cfif>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 

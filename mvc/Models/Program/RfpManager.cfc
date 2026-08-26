@@ -49,9 +49,26 @@
 <cffunction name="getHQPositionId" hint="" access="public" output="false" returntype="numeric">
 	<cfset var HQ = 0 />
 
-	<cfquery name="qGetHQ" datasource="#application.datasource#">
+	<cfset useLakebaseForqGetHQ = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForqGetHQ>
+	<cftry>
+		<cfset qGetHQ = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"position_label" = "eq.Headquarters",
+				"deleted" = "eq.0",
+				"select" = "user_positions_id"
+			}), "user_positions_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetHQ = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetHQ>
+<cfquery name="qGetHQ" datasource="#application.datasource#">
 		SELECT User_positions_id FROM User_Positions WHERE Position_Label = 'Headquarters' and deleted = 0
 	</cfquery>
+</cfif>
 	<cfif qGetHQ.recordcount GT 0 >
 		<cfset HQ = qGetHQ.User_positions_id />
 	</cfif>

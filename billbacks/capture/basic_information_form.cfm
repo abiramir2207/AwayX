@@ -143,11 +143,27 @@ Description:	This file is responsible for creating/modifying billback basic info
 			<cfset FORM.Vendor_Only_Billback = LoadBillbackData.Vendor_Only_Billback />
 			<cfset DisableVendorOnlyBillback = LoadBillbackData.Billback_Payee_Type_ID>
 
-			<cfquery name="getUomDesc" datasource="#Application.Datasource#">
+			<cfset useLakebaseForgetUomDesc = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("units_of_measure")>
+<cfif useLakebaseForgetUomDesc>
+	<cftry>
+		<cfset getUomDesc = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("units_of_measure", {
+				"unit_of_measure_id" = "eq.#FORM.BB_Volume_UOM#",
+				"select" = "abbreviation"
+			}), "abbreviation"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetUomDesc = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetUomDesc>
+<cfquery name="getUomDesc" datasource="#Application.Datasource#">
 				Select Abbreviation
 				From Units_of_Measure
 				where unit_of_Measure_id  = '#FORM.BB_Volume_UOM#'
 			</cfquery>
+</cfif>
       <!---
       19441 Starts [Added, Uploaded_Billback to the above query]
       the checking <cfif bDisableLinks EQ 0>  is put on all the controls.

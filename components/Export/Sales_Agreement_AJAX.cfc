@@ -472,13 +472,31 @@
 		<cfargument name="Export_Sales_Agreement_ID" type="string" default="">
 			<cfset MiscCost = ArrayNew(1)>
 			<cfif arguments.Export_Sales_Agreement_ID neq "">
-				<cfquery name="qrygetMiscCost" datasource="#Application.Datasource#">
+				<cfset useLakebaseForqrygetMiscCost = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_misc_cost")>
+<cfif useLakebaseForqrygetMiscCost>
+	<cftry>
+		<cfset qrygetMiscCost = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("export_misc_cost", {
+				"export_sales_agreement_id" = "eq.#arguments.Export_Sales_Agreement_ID#",
+				"export_misc_cost" = "neq.0",
+				"order" = "show_order_sequence.asc",
+				"select" = "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+			}), "export_misc_cost_id,export_misc_cost_desc,export_misc_cost,show_order_sequence"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrygetMiscCost = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrygetMiscCost>
+<cfquery name="qrygetMiscCost" datasource="#Application.Datasource#">
 				SELECT Export_Misc_Cost_ID,Export_Misc_Cost_Desc,Export_Misc_Cost,Show_Order_Sequence
 				FROM Export_Misc_Cost
 				WHERE Export_Sales_Agreement_ID = '#arguments.Export_Sales_Agreement_ID#'
 				AND Export_Misc_Cost != 0
 				ORDER BY Show_Order_Sequence
 				</cfquery>
+</cfif>
 
 				<cfloop query="qrygetMiscCost">
 					<cfset MiscCost[currentrow] = Export_Misc_Cost>

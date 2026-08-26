@@ -200,7 +200,24 @@ WHERE	(dbo.Contract_Main.Contract_Main_ID = #Program_ID#)
 		<cfset CompName = ComponentName.Program_Rebates_Component_Name />
 		<cfset ProgramCompId = ComponentName.Program_Rebates_Component_ID />
 							
-		<cfquery name="qInsertRebateData" datasource="#application.datasource#">
+		<cfset useLakebaseForqInsertRebateData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program_rebate_component")>
+<cfif useLakebaseForqInsertRebateData>
+	<cftry>
+		<cfset application.oLakebase.insertRow("billback_program_rebate_component", {
+			"billback_id" = "#Form.Billback_ID#",
+			"billback_program_id" = "#Program_ID#",
+			"program_rebates_component_name" = "#CompName#",
+			"program_rebates_component_name_id" = "#Current_Program_Rebates_Component_ID#",
+			"program_rebates_component_id" = "#ProgramCompId#",
+			"checked" = "true"
+		})>
+		<cfcatch type="any">
+			<cfset useLakebaseForqInsertRebateData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqInsertRebateData>
+<cfquery name="qInsertRebateData" datasource="#application.datasource#">
 			INSERT INTO Billback_Program_Rebate_Component
 			(
 				Billback_ID, 
@@ -220,6 +237,7 @@ WHERE	(dbo.Contract_Main.Contract_Main_ID = #Program_ID#)
 				'true'
 			)
 		</cfquery>
+</cfif>
 		<cfset ShowRebate = 1>
 		
 	</cfloop><!---END Loop through selected rebate components--->

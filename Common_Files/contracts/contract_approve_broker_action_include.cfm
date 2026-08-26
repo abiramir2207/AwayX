@@ -239,11 +239,29 @@ if all are TRUE set bAutoApproveProgram = 1
 					internalComments = BUSINESS_CONSIDERATIONS) />
 	</cfif>
 
-	<CFQUERY NAME="saveRejected" datasource="#application.datasource#">
+	<cfset useLakebaseForsaveRejected = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForsaveRejected>
+	<cftry>
+		<cfset application.oLakebase.updateRows("contract_main",
+			{
+				"contract_main_id" = "eq.#cryp.value#"
+			},
+			{
+				"rejected" = "0"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForsaveRejected = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForsaveRejected>
+<CFQUERY NAME="saveRejected" datasource="#application.datasource#">
 		UPDATE 	Contract_Main
 		SET 	rejected = 0
 		WHERE 	Contract_Main_ID = '#cryp.value#'
 	</CFQUERY>
+</cfif>
 
 
 <!--- 	 Store All Approvable Positions

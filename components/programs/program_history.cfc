@@ -54,11 +54,27 @@
 	<cffunction name="getUserPosition" output="false" returntype="query">
 		<cfargument name="UserPositionID" type="string" required="true">
 
-			<cfquery name="qgetUserPosition" datasource="#application.datasource#">
+			<cfset useLakebaseForqgetUserPosition = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("user_positions")>
+<cfif useLakebaseForqgetUserPosition>
+	<cftry>
+		<cfset qgetUserPosition = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("user_positions", {
+				"user_positions_id" = "eq.#arguments.UserPositionID#",
+				"select" = "position_label"
+			}), "position_label"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetUserPosition = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetUserPosition>
+<cfquery name="qgetUserPosition" datasource="#application.datasource#">
 				SELECT Position_Label
 				FROM User_Positions
 				WHERE User_Positions_ID = '#arguments.UserPositionID#'
 			</cfquery>
+</cfif>
 			<cfreturn qgetUserPosition>
 	</cffunction>
 	<!---

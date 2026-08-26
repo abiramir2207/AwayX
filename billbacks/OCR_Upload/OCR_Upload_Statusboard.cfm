@@ -7,6 +7,22 @@ Description  :  Upload from home page
 ---------------------------------------------------------------------------------->
 
 
+<cfset useLakebaseForqGetOCRUploadStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log") AND application.oLakebase.isTableMigrated("ocr_status_lookup")>
+<cfif useLakebaseForqGetOCRUploadStatus>
+	<cftry>
+		<cfset qGetOCRUploadStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("ocr_upload_log", {
+				"deleted" = "eq.0",
+				"order" = "ocr_upload_date.desc",
+				"select" = "bb_upload_id,created_user_id,deleted,deleted_by,deleted_date,file_extension,file_name,file_size,ocr_amount,ocr_file_amount,ocr_step,ocr_upload_date,ocr_upload_id,ocr_upload_status,reprocess,reprocess_by,reprocess_date,source_template,upload_type"
+			}, "ocr_step", "ocr_status_lookup", "ocr_step", "ocr_status_lookup_id"), "bb_upload_id,created_user_id,deleted,deleted_by,deleted_date,file_extension,file_name,file_size,ocr_amount,ocr_file_amount,ocr_step,ocr_upload_date,ocr_upload_id,ocr_upload_status,reprocess,reprocess_by,reprocess_date,source_template,upload_type,ocr_status_lookup_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetOCRUploadStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetOCRUploadStatus>
 <cfquery name="qGetOCRUploadStatus" datasource="#application.datasource#">
 	SELECT 	OUL.OCR_Upload_ID,
 			OUL.File_Name,
@@ -35,7 +51,8 @@ Description  :  Upload from home page
 			OUL.Deleted = 0		
 	ORDER BY
 			OUL.OCR_Upload_Date DESC  		
-</cfquery>  
+</cfquery>
+</cfif>  
 
 <!--- START: Jquery DATATABLE STYLE --->
  

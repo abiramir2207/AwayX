@@ -294,12 +294,29 @@
 		<cfif appSettings.getPriceListByTemplate() EQ 1>
 		<td class="label extra">Select a Price list</td>
 		<td class="content">
-		<cfquery name="qGetPriceList" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetPriceList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("price_list_header")>
+<cfif useLakebaseForqGetPriceList>
+	<cftry>
+		<cfset qGetPriceList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("price_list_header", {
+				"deleted" = "eq.0",
+				"order" = "price_list_description.asc",
+				"select" = "price_list_id,price_list_description"
+			}), "price_list_id,price_list_description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPriceList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPriceList>
+<cfquery name="qGetPriceList" datasource="#application.datasource#">
 			select	Price_List_ID, Price_List_Description
 			from	price_list_header
 			where	deleted = 0
 			order by    Price_List_Description
 		</cfquery>
+</cfif>
 		<select name="Price_List_ID" <cfif ! qGetCreateBudget.Create_Budget>Disabled</cfif>>
 			<option value="" selected>Select a price list</option>
 			<cfloop query="qGetPriceList">

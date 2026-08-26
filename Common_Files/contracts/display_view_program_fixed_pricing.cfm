@@ -224,11 +224,26 @@
 							<cfelse>
 								<TD ID="header" WIDTH="130" ALIGN="RIGHT" valign="top"><B>Price</B></TD>
 							</cfif>
-							<cfquery name="isGroup_check" dbtype="query">
+							<cfset useLakebaseForisGroup_check = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getfixedpriceproducts")>
+<cfif useLakebaseForisGroup_check>
+	<cftry>
+		<cfset isGroup_check = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getfixedpriceproducts", {
+				"is_group" = "eq.1"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForisGroup_check = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForisGroup_check>
+<cfquery name="isGroup_check" dbtype="query">
 								SELECT *
 								FROM getFixedPriceProducts
 								WHERE Is_Group = 1
 							</cfquery>
+</cfif>
 							<!--- 39712 International Paper custom print column --->
 							<cfif CSLGetContractInfo.Custom_Print gt 0 AND  appSettings.get_Setting('Custom_RFP_Process',0) EQ 0>
 								<TD ID="header" valign="top"><B>Color<br>Digital<br>Graphic</B></TD>

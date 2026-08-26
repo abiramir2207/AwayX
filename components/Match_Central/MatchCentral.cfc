@@ -1826,10 +1826,25 @@
 
 		<cfset workItemInfo = this.DDMgr.getDeduction(arguments.workItemID)>
 
-		<cfquery name="AutoCloseReason" datasource="#application.datasource#">
+		<cfset useLakebaseForAutoCloseReason = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_auto_close")>
+<cfif useLakebaseForAutoCloseReason>
+	<cftry>
+		<cfset AutoCloseReason = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_auto_close", {
+				"select" = "dd_reason_code_id"
+			}), "dd_reason_code_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForAutoCloseReason = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForAutoCloseReason>
+<cfquery name="AutoCloseReason" datasource="#application.datasource#">
 			SELECT DD_Reason_Code_ID
 			FROM DD_Auto_Close
 		</cfquery>
+</cfif>
 		<cfquery name="GetReasonCodes" datasource="#application.datasource#">
 			SELECT *
 			FROM DD_Reason_Code

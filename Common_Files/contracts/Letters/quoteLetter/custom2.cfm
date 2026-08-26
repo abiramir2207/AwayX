@@ -230,7 +230,23 @@ table.Design2 thead th {
 </table>
 		<!--- START: D104511-Quote Letter - clauses/Anand Rao/ 10-Mar-2021 --->
 	<cfif ((OperatorOn EQ 1) OR (DistributorOn EQ 1))>
-		<cfquery name="qDisplayClauses" Datasource="#application.datasource#">
+		<cfset useLakebaseForqDisplayClauses = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqDisplayClauses>
+	<cftry>
+		<cfset qDisplayClauses = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"deleted" = "eq.0",
+				"programcontrol_panel_options_id" = "eq.#vars.qProgram.ProgramType_ID#",
+				"select" = "operator_customer_acceptance_block,distributor_customer_acceptance_block,*"
+			}), "operator_customer_acceptance_block,distributor_customer_acceptance_block,*"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqDisplayClauses = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqDisplayClauses>
+<cfquery name="qDisplayClauses" Datasource="#application.datasource#">
 			SELECT 
 				Operator_Customer_Acceptance_Block,
 				Distributor_Customer_Acceptance_Block,* 
@@ -240,6 +256,7 @@ table.Design2 thead th {
 				Deleted = 0 AND		
 				ProgramControl_Panel_Options_ID = #vars.qProgram.ProgramType_ID# 
 		</cfquery>
+</cfif>
 		
 		<cfif ((qDisplayClauses.Operator_Customer_Acceptance_Block EQ 1) or (qDisplayClauses.Distributor_Customer_Acceptance_Block EQ 1))>
 			<cfquery name="qDisplayClauses" Datasource="#application.datasource#">

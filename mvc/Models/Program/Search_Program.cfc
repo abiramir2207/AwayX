@@ -465,11 +465,27 @@ MODIFICATION HISTORY:	BY		DATE		DESCRIPTION OF CHANGE
 
 
  <!---D36174 Program volume --->
-		<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
+		<cfset useLakebaseForGet_Settings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("_users_settings")>
+<cfif useLakebaseForGet_Settings>
+	<cftry>
+		<cfset Get_Settings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("_users_settings", {
+				"user_id" = "eq.#request.AccessStructure.Company_Main_ID#",
+				"select" = "volume_uot_id"
+			}), "volume_uot_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_Settings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_Settings>
+<CFQUERY NAME="Get_Settings" datasource="#application.datasource#">
 				SELECT	 Volume_UOT_ID
 				FROM	_Users_Settings
 				WHERE User_ID		=		'#request.AccessStructure.Company_Main_ID#'
 		</CFQUERY>
+</cfif>
 
 		<cfset program_Span = Datediff('d',qgetprogramdetails.Contract_Start_Date, qgetprogramdetails.Contract_End_Date) + 1>
 		<cfset ProgVolQty 	= CreateObject("component", "components.programs.volume.ProgramVolume").getProgramQty(arguments.Program_ID, program_Span, Get_Settings.Volume_UOT_ID) />

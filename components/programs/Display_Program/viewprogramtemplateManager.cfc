@@ -276,7 +276,23 @@
 
 		<cfargument name="CSL_Contract_Main_ID" type="string" required="true" />
 
-		<cfquery name="qGetPerfRequirements" datasource="#application.datasource#">
+		<cfset useLakebaseForqGetPerfRequirements = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("one_program_perf_mapping") AND application.oLakebase.isTableMigrated("program_perf_req")>
+<cfif useLakebaseForqGetPerfRequirements>
+	<cftry>
+		<cfset qGetPerfRequirements = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("one_program_perf_mapping", {
+				"contract_main_id" = "eq.#arguments.CSL_Contract_Main_ID#",
+				"checked" = "eq.1",
+				"select" = "program_perf_req_id"
+			}, "program_perf_req_id", "program_perf_req", "program_perf_req_id", "requirement_name"), "requirement_name"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetPerfRequirements = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetPerfRequirements>
+<cfquery name="qGetPerfRequirements" datasource="#application.datasource#">
 
 			SELECT	PPR.Requirement_Name
 			FROM 	One_Program_Perf_Mapping OPPM
@@ -287,6 +303,7 @@
 
 
 		</cfquery>
+</cfif>
 
 		<cfreturn qGetPerfRequirements />
 
@@ -2589,11 +2606,27 @@ BSA_Foodservice_Items_Master.Description  /*dbo.UDF_REMOVE_NON_ASCIICharOnly(BSA
 	<cffunction name="getProgramTypeOnEmail" output="false" returntype="string">
 
 		<cfargument name="ProgramTypeID" required="true" type="numeric" />
-		<CFQUERY NAME="qgetProgramTypeOnEmail" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetProgramTypeOnEmail = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqgetProgramTypeOnEmail>
+	<cftry>
+		<cfset qgetProgramTypeOnEmail = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.ProgramTypeID#",
+				"select" = "created_type"
+			}), "created_type"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetProgramTypeOnEmail = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetProgramTypeOnEmail>
+<CFQUERY NAME="qgetProgramTypeOnEmail" datasource="#application.datasource#">
 			SELECT Created_Type
 			FROM Program_Control_Panel_Options
 			WHERE ProgramControl_Panel_Options_ID = '#arguments.ProgramTypeID#'
 		</CFQUERY>
+</cfif>
 		<cfreturn qgetProgramTypeOnEmail.Created_Type />
 
 	</cffunction>

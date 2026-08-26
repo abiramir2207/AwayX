@@ -1017,12 +1017,28 @@
 				</cfif>
 
 				<!--- D38536	:: Alternate recapture rates per component START--->
-					<cfquery name="ARSettings" datasource="#application.datasource#">
+					<cfset useLakebaseForARSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
+<cfif useLakebaseForARSettings>
+	<cftry>
+		<cfset ARSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("alternate_recapture_rate_setting", {
+				"program_rebates_component_name_id" = "eq.#Program_Rebates_Component_Name_ID#",
+				"status" = "eq.0"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForARSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForARSettings>
+<cfquery name="ARSettings" datasource="#application.datasource#">
 						SELECT *
 						FROM Alternate_Recapture_Rate_Setting
 						WHERE Program_Rebates_Component_Name_ID = #Program_Rebates_Component_Name_ID#
 						AND Status = 0
 					</cfquery>
+</cfif>
 				<!--- D38536	:: Alternate recapture rates per component END--->
 				<!---62343 START --->
 				<cfif appSettings.get_Setting('Blended_Rate') eq '1'>
@@ -4485,13 +4501,29 @@
 	<cffunction name="getUOMfromTemplate" output="false" returntype="query">
 		<cfargument name="programID" type="numeric" required="true" />
 
-		<cfquery name="qryUOM" datasource="#application.datasource#">
+		<cfset useLakebaseForqryUOM = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main") AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqryUOM>
+	<cftry>
+		<cfset qryUOM = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("contract_main", {
+				"contract_main_id" = "eq.#arguments.programID#",
+				"select" = "programtype_id"
+			}, "programtype_id", "program_control_panel_options", "programcontrol_panel_options_id", "ratetypedefault"), "ratetypedefault"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqryUOM = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqryUOM>
+<cfquery name="qryUOM" datasource="#application.datasource#">
 			 SELECT PCPO.rateTypeDefault
 			 FROM
 			 Contract_Main CM
 			 INNER JOIN Program_Control_Panel_Options PCPO ON CM.ProgramType_ID = PCPO.ProgramControl_Panel_Options_ID
 			 WHERE CM.Contract_Main_ID = #arguments.programID#
 		</cfquery>
+</cfif>
 
 		<cfreturn qryUOM />
 	</cffunction>

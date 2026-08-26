@@ -525,10 +525,23 @@
 		<cfargument name="Operator_Location_Is_Required" required="true">     <!--- 63222 --->
 		<cfargument name="Program_Picker_For_Trade" required="true">     <!--- 74377 --->
 
-		<cfquery name="qCheckBillbackUploadSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForqCheckBillbackUploadSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_upload_settings")>
+<cfif useLakebaseForqCheckBillbackUploadSettings>
+	<cftry>
+		<cfset qCheckBillbackUploadSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_upload_settings", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqCheckBillbackUploadSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqCheckBillbackUploadSettings>
+<cfquery name="qCheckBillbackUploadSettings" datasource="#application.datasource#">
 			SELECT	*
   			FROM	Billback_Upload_Settings
 		</cfquery>
+</cfif>
 <!--- Dev Note: drachala; D29378: Display Billback settings Use_UOM on the upload payables settings page  START--->
 		<cfquery name="qCheckBillbackSettings" datasource="#application.datasource#">
 			UPDATE Billback_Settings
@@ -663,7 +676,7 @@
 		<cfinvoke component="components.settings.ApplicationSettingsManager" method="get" returnvariable="vars.appSettings"> 
 		<!--- 
 		<cfset component="components.settings.ApplicationSettingsManager" method="get" returnvariable="vars.appSettings">  --->
-		<!---30227 when app settings “3rd party bb upload”  = Instill and “BB Approve Expected Rate Less Tolerance” = ON turn on audit report--->
+		<!---30227 when app settings 3rd party bb upload  = Instill and BB Approve Expected Rate Less Tolerance = ON turn on audit report--->
 		<cfset vars.audit_rpt_on = ( vars.appSettings.ThirdPartyBbUpload eq "1" and vars.appSettings.Bb_Approve_Expected_Rate_Less_Tolerance eq "1" )>
 		
 		<!--- get max month and year from log --->

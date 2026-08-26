@@ -1346,9 +1346,25 @@ Description  :  Manager for Planner Program
 						strLumpSumExternalId = "";
 					</cfscript>
 
-					<cfquery name="qLumpSumPriceCompExternalID" datasource="#application.datasource#">
+					<cfset useLakebaseForqLumpSumPriceCompExternalID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_lump_sum_name")>
+<cfif useLakebaseForqLumpSumPriceCompExternalID>
+	<cftry>
+		<cfset qLumpSumPriceCompExternalID = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_lump_sum_name", {
+				"program_lump_sum_name_id" = "eq.#local.lump_sum_id#",
+				"select" = "external_id"
+			}), "external_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqLumpSumPriceCompExternalID = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqLumpSumPriceCompExternalID>
+<cfquery name="qLumpSumPriceCompExternalID" datasource="#application.datasource#">
 						SELECT External_ID from Program_Lump_Sum_Name WHERE Program_Lump_Sum_Name_ID = '#local.lump_sum_id#'
 					</cfquery>
+</cfif>
 
 					<cfset strLumpSumExternalId = qLumpSumPriceCompExternalID.External_ID />
 					<cfset strVendorMasterID = listFirst( stData[ "lump_sum_Vendor_Master_ID_" & local.element_postfix ] ) />

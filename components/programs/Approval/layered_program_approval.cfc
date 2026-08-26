@@ -2688,11 +2688,27 @@ and deleted = 0
 		<cfloop list="#arguments.Approvelist#" index="BSAID">
 
 			<cfif evaluate("arguments.#replace(BSAID,'-','_','ALL')#_Fixed_Price_Change")>
-				<cfquery name="BSAInfo" datasource="#application.datasource#">
+				<cfset useLakebaseForBSAInfo = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForBSAInfo>
+	<cftry>
+		<cfset BSAInfo = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"bsa_foodservice_items_master_id" = "eq.#BSAID#",
+				"select" = "item,description"
+			}), "item,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForBSAInfo = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForBSAInfo>
+<cfquery name="BSAInfo" datasource="#application.datasource#">
 					SELECT Item	, Description
 					FROM BSA_Foodservice_Items_Master
 					WHERE BSA_Foodservice_Items_Master_ID = '#BSAID#'
 				</cfquery>
+</cfif>
 				<cfset info = #BSAInfo.item#&'  '&#BSAInfo.Description#&'  '&'Fixed Price Update'>
 				<cfset FixedPrice  = evaluate("arguments.#replace(BSAID,'-','_','ALL')#_Fixed_Price")>
 

@@ -108,11 +108,26 @@ td.mid { align: center; }
 <!---load previously entered template recaptures into form--->
 <cfloop query="qTemplates">
   <cfset set_template_elements( qTemplates.First_Parent_ID )>
-  <cfquery name="qData" dbtype="query">
+  <cfset useLakebaseForqData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qrecaptures")>
+<cfif useLakebaseForqData>
+	<cftry>
+		<cfset qData = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qrecaptures", {
+				"template_first_parent_id" = "eq.#qTemplates.First_Parent_ID#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqData = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqData>
+<cfquery name="qData" dbtype="query">
     SELECT *
       FROM qRecaptures
      WHERE Template_First_Parent_ID = #qTemplates.First_Parent_ID#
   </cfquery>
+</cfif>
   <cfif qData.RecordCount>
     <cfset form['#template_elements.recapture#'] = qData.Budget_Recapture>
     <cfset form['#template_elements.overlay#']   = qData.Overlay_Recapture>

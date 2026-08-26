@@ -1034,10 +1034,25 @@ function save_Documents()
 						<cfset restrictOnProductGroupList = ValueList(qGetProductHierarchyMaxLevel.Product_Group_ID)>
 					</cfif>
 				</cfif>
-				<cfquery name="qGetDistinctLevels" dbtype="query">
+				<cfset useLakebaseForqGetDistinctLevels = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("qgetproducthierarchy")>
+<cfif useLakebaseForqGetDistinctLevels>
+	<cftry>
+		<cfset qGetDistinctLevels = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("qgetproducthierarchy", {
+				"select" = "hierarchy_level"
+			}), "hierarchy_level"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistinctLevels = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistinctLevels>
+<cfquery name="qGetDistinctLevels" dbtype="query">
 					SELECT	DISTINCT Hierarchy_Level
 					FROM	qGetProductHierarchy
 				</cfquery>
+</cfif>
 				<cfset productHierarchyLevelList = ValueList(qGetDistinctLevels.Hierarchy_Level, ",") />
 				</cfsilent>
 				<!--- Dev Note: (48721) - Product hierarchy dropdown is already included in "product attributes" below in the code (If it is active). --->

@@ -1585,12 +1585,29 @@ start date of the parent.
 			WHERE	Contract_Main_ID = '#Contract_ID#'
 			AND		Checked = 1
 		</cfquery>
-		<cfquery name="NotProgramsRequirements" datasource="#application.datasource#">
+		<cfset useLakebaseForNotProgramsRequirements = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("one_program_perf_mapping")>
+<cfif useLakebaseForNotProgramsRequirements>
+	<cftry>
+		<cfset NotProgramsRequirements = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("one_program_perf_mapping", {
+				"contract_main_id" = "eq.#Contract_ID#",
+				"checked" = "eq.0",
+				"select" = "program_perf_req_id"
+			}), "program_perf_req_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForNotProgramsRequirements = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForNotProgramsRequirements>
+<cfquery name="NotProgramsRequirements" datasource="#application.datasource#">
 			SELECT 	Program_Perf_Req_ID
 			FROM 	One_Program_Perf_Mapping
 			WHERE 	Contract_Main_ID = '#Contract_ID#'
 			AND 	Checked = 0
 		</cfquery>
+</cfif>
 		<cfif isDefined("FORM.CONTRACT_RENEWAL_PACKETS_ID") AND NOT ISREVISIONOFEXISTINGCONTRACT>
 			<cfset AllRequirements = "">
 			<cfset NotRequirements = "">

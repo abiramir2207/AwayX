@@ -44,6 +44,17 @@ DELETE_RE = re.compile(
     r"DELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:WHERE\s+(.*?))?\s*;?\s*$",
     re.IGNORECASE | re.DOTALL,
 )
+# Single "belongs-to" join: main table joined to exactly one lookup/reference table
+# on a simple equality, with WHERE/ORDER BY only referencing the main table's alias.
+JOIN_SELECT_RE = re.compile(
+    r"SELECT\s+(?:(?:DISTINCT|TOP\s+\d+)\s+)*(.*?)\s+FROM\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*)\s+"
+    r"(INNER|LEFT(?:\s+OUTER)?)\s+JOIN\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*)\s+"
+    r"ON\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)"
+    r"(?:\s+WHERE\s+(.*?))?(?:\s+ORDER\s+BY\s+(.*?))?\s*;?\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def extract_paren_group(s: str, open_idx: int) -> tuple[str, int]:
@@ -241,6 +252,112 @@ def gen_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     return wrapper, None
 
 
+def gen_join_select_wrapper(query_name: str, sql: str) -> tuple[str, str]:
+    """Handles exactly one supported shape: SELECT ... FROM main a JOIN lookup b
+    ON a.fk = b.pk [WHERE <a-only conditions>] [ORDER BY <a-only column>].
+    Uses application.oLakebase.selectRowsJoin() - a two-query belongs-to join that
+    doesn't depend on any server-side FK/embed configuration. Rejects anything with
+    more than one JOIN, aggregates/DISTINCT/GROUP BY, or WHERE/ORDER BY referencing
+    the lookup table's alias (those need a human to decide semantics)."""
+    sql = strip_sql_comments(strip_cf_comments(sql))
+    if EMBEDDED_CFML_RE.search(sql):
+        return None, "query body contains embedded CFML tags (dynamic SQL) - review manually"
+    sql_stripped = sql.strip()
+    if len(re.findall(r"\bJOIN\b", sql_stripped, re.IGNORECASE)) != 1:
+        return None, "more than one JOIN - review manually"
+    if re.search(r"\bGROUP\s+BY\b|\bDISTINCT\b|\bUNION\b|\bHAVING\b", sql_stripped, re.IGNORECASE):
+        return None, "GROUP BY/DISTINCT/UNION/HAVING with a join - review manually"
+    m = JOIN_SELECT_RE.search(sql_stripped)
+    if not m:
+        return None, "JOIN SELECT pattern did not match parser (multi-condition ON, self-join, etc.) - review manually"
+    (cols_raw, table1, alias1, jointype, table2, alias2,
+     on_a, on_a_col, on_b, on_b_col, where, order_by) = m.groups()
+    if UNSAFE_RE.search(cols_raw):
+        return None, "SELECT column list contains functions/CASE - review manually"
+    if re.search(r"\bAS\b", cols_raw, re.IGNORECASE) or '"' in cols_raw:
+        return None, "SELECT column list uses aliasing (AS) - review manually"
+    if has_dynamic_identifier(table1, table2, cols_raw):
+        return None, "table/column name is a dynamic CFML variable (#...#) - review manually"
+    if alias1.lower() == alias2.lower():
+        return None, "ambiguous aliases - review manually"
+
+    # figure out which alias is on which side of the ON condition
+    if on_a.lower() == alias1.lower() and on_b.lower() == alias2.lower():
+        fk_col, lookup_key_col = on_a_col, on_b_col
+    elif on_a.lower() == alias2.lower() and on_b.lower() == alias1.lower():
+        fk_col, lookup_key_col = on_b_col, on_a_col
+    else:
+        return None, "ON condition does not reference both aliases directly - review manually"
+
+    # WHERE/ORDER BY must only touch the main table's alias
+    if where and re.search(rf"\b{re.escape(alias2)}\.", where, re.IGNORECASE):
+        return None, "WHERE clause references the joined/lookup table - review manually"
+    if order_by and re.search(rf"\b{re.escape(alias2)}\.", order_by, re.IGNORECASE):
+        return None, "ORDER BY references the joined/lookup table - review manually"
+
+    cols = [c.strip() for c in cols_raw.split(",")]
+    main_cols, lookup_cols = [], []
+    for c in cols:
+        if "." not in c:
+            return None, "SELECT column without a table alias prefix - review manually"
+        c_alias, c_col = c.split(".", 1)
+        if c_alias.lower() == alias1.lower():
+            main_cols.append(c_col.strip())
+        elif c_alias.lower() == alias2.lower():
+            lookup_cols.append(c_col.strip())
+        else:
+            return None, "SELECT column references an unknown alias - review manually"
+    if not lookup_cols:
+        return None, "no columns selected from the joined table - review manually"
+    main_col_names = {col_name(c) for c in main_cols}
+    lookup_col_names = {col_name(c) for c in lookup_cols}
+    if main_col_names & lookup_col_names:
+        return None, "main/lookup column name collision - review manually"
+
+    filters = {}
+    if where:
+        filters = parse_where_to_filters(where)
+        if filters is None:
+            return None, "WHERE clause too complex (OR/parens/functions) - review manually"
+    if order_by:
+        order_by = order_by.strip()
+        if UNSAFE_RE.search(order_by) or "," in order_by or has_dynamic_identifier(order_by):
+            return None, "ORDER BY too complex - review manually"
+        parts = order_by.split()
+        ocol = col_name(parts[0].split(".")[-1])
+        odir = "desc" if len(parts) > 1 and parts[1].upper() == "DESC" else "asc"
+        filters["order"] = f'"{ocol}.{odir}"'
+
+    fk_col_pg = col_name(fk_col)
+    all_main_select_cols = sorted(main_col_names | {fk_col_pg})
+    filters["select"] = '"' + ",".join(all_main_select_cols) + '"'
+
+    var_name = f"useLakebaseFor{query_name.replace('.', '_')}"
+    pg_table1 = table1.lower()
+    pg_table2 = table2.lower()
+    params_lines = "\n".join(f'\t\t\t\t"{k}" = {v},' for k, v in filters.items())
+    params_block = "{\n" + params_lines.rstrip(",") + "\n\t\t\t}" if filters else "{}"
+    all_cols = sorted(main_col_names) + sorted(lookup_col_names)
+    to_query_cols = ', "' + ",".join(all_cols) + '"'
+    lookup_select = ",".join(sorted(lookup_col_names))
+
+    wrapper = f'''<cfset {var_name} = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("{pg_table1}") AND application.oLakebase.isTableMigrated("{pg_table2}")>
+<cfif {var_name}>
+\t<cftry>
+\t\t<cfset {query_name} = application.oLakebase.toQuery(
+\t\t\tapplication.oLakebase.selectRowsJoin("{pg_table1}", {params_block}, "{fk_col_pg}", "{pg_table2}", "{col_name(lookup_key_col)}", "{lookup_select}"){to_query_cols}
+\t\t)>
+\t\t<cfcatch type="any">
+\t\t\t<cfset {var_name} = false>
+\t\t</cfcatch>
+\t</cftry>
+</cfif>
+<cfif NOT {var_name}>
+-- ORIGINAL QUERY BLOCK GOES HERE (kept from source) --
+</cfif>'''
+    return wrapper, None
+
+
 def gen_update_wrapper(query_name: str, sql: str) -> tuple[str, str]:
     sql = strip_sql_comments(strip_cf_comments(sql))
     if EMBEDDED_CFML_RE.search(sql):
@@ -411,7 +528,10 @@ def process_file(root: Path, out_root: Path, file_rel: str, query_names: list[st
         sql = m.group(2)
         sql_stripped = sql.strip()
         if re.match(r"SELECT", sql_stripped, re.IGNORECASE):
-            wrapper, reason = gen_select_wrapper(qname, sql_stripped)
+            if re.search(r"\bJOIN\b", sql_stripped, re.IGNORECASE):
+                wrapper, reason = gen_join_select_wrapper(qname, sql_stripped)
+            else:
+                wrapper, reason = gen_select_wrapper(qname, sql_stripped)
         elif re.match(r"UPDATE", sql_stripped, re.IGNORECASE):
             wrapper, reason = gen_update_wrapper(qname, sql_stripped)
         elif re.match(r"INSERT", sql_stripped, re.IGNORECASE):
@@ -456,6 +576,12 @@ def main():
     with csv_path.open(encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
             if row["verdict"] == "SAFE_TO_CONVERT":
+                rel = str(Path(row["file"]).relative_to(root))
+                by_file.setdefault(rel, []).append(row["query_name"])
+            elif row["verdict"] == "DEFER_JOIN_OR_UNION" and row["has_subquery"] != "True":
+                # let gen_join_select_wrapper's strict regex decide if this is the one
+                # supported single-belongs-to-join shape; everything else safely falls
+                # through to NEEDS_MANUAL_REVIEW without side effects.
                 rel = str(Path(row["file"]).relative_to(root))
                 by_file.setdefault(rel, []).append(row["query_name"])
 

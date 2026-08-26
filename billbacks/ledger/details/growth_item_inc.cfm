@@ -143,12 +143,29 @@
 		<!---It has a seperate volume pool--->
 		</cfif>
 			
-				<cfquery name="GetRateForTierItem" datasource="#application.datasource#">
+				<cfset useLakebaseForGetRateForTierItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_product_tier_data")>
+<cfif useLakebaseForGetRateForTierItem>
+	<cftry>
+		<cfset GetRateForTierItem = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_growth_component_product_tier_data", {
+				"program_growth_component_tier_id" = "eq.#Tier#",
+				"program_growth_component_product_data_id" = "eq.#Program_Growth_Component_Product_Data_ID#",
+				"select" = "rate,unit_of_measure_id"
+			}), "rate,unit_of_measure_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetRateForTierItem = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetRateForTierItem>
+<cfquery name="GetRateForTierItem" datasource="#application.datasource#">
 				SELECT Rate, Unit_of_Measure_ID
 				FROM Program_Growth_Component_Product_Tier_Data
 				WHERE Program_Growth_Component_Tier_ID = '#Tier#'
 				AND Program_Growth_Component_Product_Data_ID = '#Program_Growth_Component_Product_Data_ID#'
-				</cfquery> 
+				</cfquery>
+</cfif> 
 								
 				<cfif  GetRateForTierItem.Unit_of_Measure_ID NEQ UOM>
 					<cfif GetRateForTierItem.Unit_of_Measure_ID IS 1>

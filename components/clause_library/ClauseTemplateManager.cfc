@@ -121,11 +121,27 @@ condition. Please refer to label 25647.
 	
 		<cfargument name="templateId" required="true" type="numeric" />
 		
-		<cfquery name="qgetClauseAllProgramsSettings" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetClauseAllProgramsSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqgetClauseAllProgramsSettings>
+	<cftry>
+		<cfset qgetClauseAllProgramsSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("program_control_panel_options", {
+				"programcontrol_panel_options_id" = "eq.#arguments.templateId#",
+				"select" = "apply_clause_all_programs"
+			}), "apply_clause_all_programs"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetClauseAllProgramsSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetClauseAllProgramsSettings>
+<cfquery name="qgetClauseAllProgramsSettings" datasource="#application.datasource#">
 			SELECT Apply_Clause_All_Programs	
 			FROM Program_Control_Panel_Options
 			WHERE ProgramControl_Panel_Options_ID = #arguments.templateId#					
 		</cfquery>
+</cfif>
 		
 		<cfreturn qgetClauseAllProgramsSettings />
 	

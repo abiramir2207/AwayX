@@ -43,10 +43,25 @@
 	</CFQUERY>
 </CFIF>
 <!--- Check to see if default program is on billback D11756--->
+<cfset useLakebaseForGetBillbackSettings = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_settings")>
+<cfif useLakebaseForGetBillbackSettings>
+	<cftry>
+		<cfset GetBillbackSettings = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("billback_settings", {
+				"select" = "default_program"
+			}), "default_program"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetBillbackSettings = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetBillbackSettings>
 <Cfquery name="GetBillbackSettings" datasource="#application.datasource#">
 SELECT Default_Program
 FROM Billback_Settings
 </CFQUERY>
+</cfif>
 <!--- 61486 : Default program only when $'s equal to $0.00 START--->
 <cfset HasDefaultProgram = BillbackSummaryManager.DummyProgram(Billback_ID)>
 <!---61486 : Default program only when $'s equal to $0.00 END--->

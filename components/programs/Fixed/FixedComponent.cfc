@@ -1229,11 +1229,29 @@
 
 	<cfargument name="ProgramControl_Panel_Options_ID" type="numeric" required="true" />
 	<cfargument name="IsFreightProgram" type="numeric" required="true" />
-	<cfquery name="qrySetIsFreightProgram" datasource="#application.datasource#">
+	<cfset useLakebaseForqrySetIsFreightProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqrySetIsFreightProgram>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#arguments.ProgramControl_Panel_Options_ID#"
+			},
+			{
+				"freight_program" = "#arguments.IsFreightProgram#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqrySetIsFreightProgram = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqrySetIsFreightProgram>
+<cfquery name="qrySetIsFreightProgram" datasource="#application.datasource#">
 		UPDATE Program_Control_Panel_Options
 		SET Freight_Program = #arguments.IsFreightProgram#
 		WHERE ProgramControl_Panel_Options_ID = #arguments.ProgramControl_Panel_Options_ID#
 	</cfquery>
+</cfif>
 
    	</cffunction>
 

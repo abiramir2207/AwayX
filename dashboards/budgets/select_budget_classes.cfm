@@ -38,6 +38,21 @@
 	</cfif>
 </cfif>
 
+<cfset useLakebaseForGet_budget_Class_Selection = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("budget_class_selection") AND application.oLakebase.isTableMigrated("budget_class")>
+<cfif useLakebaseForGet_budget_Class_Selection>
+	<cftry>
+		<cfset Get_budget_Class_Selection = application.oLakebase.toQuery(
+			application.oLakebase.selectRowsJoin("budget_class_selection", {
+				"user_id" = "eq.#request.AccessStructure.user_id#",
+				"select" = "budget_class_id"
+			}, "budget_class_id", "budget_class", "budget_class_id", "budget_class_desc"), "budget_class_id,budget_class_desc"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_budget_Class_Selection = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_budget_Class_Selection>
 <cfquery name="Get_budget_Class_Selection" datasource="#Application.Datasource#">
 	SELECT  BCS.Budget_Class_ID,
 			 BC.Budget_Class_Desc
@@ -46,6 +61,7 @@
 		BC.Budget_Class_ID = BCS.Budget_Class_ID
 	WHERE User_Id = '#request.AccessStructure.user_id#'
 </cfquery>
+</cfif>
 
 
 <cfquery name="Get_budget_classes" datasource="#Application.Datasource#">

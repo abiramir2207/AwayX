@@ -188,12 +188,29 @@
 				<!---get distributor list if pagePhase eq 1--->
 				<cfif arguments.pagePhase eq 1 OR arguments.pagePhase EQ 0>
 				
-					<cfquery name="qGetDistList" datasource="#application.datasource#">
+					<cfset useLakebaseForqGetDistList = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("fp_distributor")>
+<cfif useLakebaseForqGetDistList>
+	<cftry>
+		<cfset qGetDistList = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("fp_distributor", {
+				"deleted" = "eq.0",
+				"fp_request_master_id" = "eq.#arguments.id#",
+				"select" = "distributor_id"
+			}), "distributor_id"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqGetDistList = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqGetDistList>
+<cfquery name="qGetDistList" datasource="#application.datasource#">
 						SELECT	Distributor_ID 
 						FROM 	FP_Distributor
 						WHERE	Deleted = 0
 						AND 	FP_Request_Master_ID = #arguments.id#
 					</cfquery>
+</cfif>
 					
 					<!---set the list of distributor id's--->
 					<cfset this.request.setLDistributorIds(ValueList(qGetDistList.Distributor_ID)) />

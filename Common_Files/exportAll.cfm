@@ -2935,10 +2935,23 @@
 </cffunction>
 
 <cffunction name="Segment_Report" output="false">
-	<cfquery name="qSegmentReport" datasource="#application.datasource#">
+	<cfset useLakebaseForqSegmentReport = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("business_segment")>
+<cfif useLakebaseForqSegmentReport>
+	<cftry>
+		<cfset qSegmentReport = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("business_segment", {})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqSegmentReport = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqSegmentReport>
+<cfquery name="qSegmentReport" datasource="#application.datasource#">
 		SELECT *
 		FROM Business_Segment
 	</cfquery>
+</cfif>
 	<cfreturn qSegmentReport>
 </cffunction>
 

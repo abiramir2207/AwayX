@@ -98,11 +98,29 @@
 	</CFQUERY>
 </CFIF>
 
+<cfset useLakebaseFordeleteComponentTiers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_tiers")>
+<cfif useLakebaseFordeleteComponentTiers>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_growth_component_tiers",
+			{
+				"program_growth_component_id" = "eq.#Form.Comp_ID#"
+			},
+			{
+				"deleted" = "1"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseFordeleteComponentTiers = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseFordeleteComponentTiers>
 <CFQUERY NAME="deleteComponentTiers" datasource="#application.datasource#">
 	UPDATE Program_Growth_Component_Tiers
 	SET Deleted = 1
 	WHERE Program_Growth_Component_ID = '#Form.Comp_ID#'
 </CFQUERY>
+</cfif>
 
 <!---Delete targets and volume pools--->
 <cfset useLakebaseForFindChildren = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_components")>

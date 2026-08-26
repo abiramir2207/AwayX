@@ -1017,12 +1017,31 @@ First rebate component has a claim mechanics which is not auto pay
 			<!--- Tim Ford - WR 45899: 45899 - Planning Groups and EZ Button Settings - Last Saved By and Date.
 			Set Updated By and Updated Date for EZ Button when modifying EZ Button Data --->
 			<cfif form.action eq "updSave" and url.EZTemplate eq 1>
-				<cfquery name="qUpdateEZButtonUpdatedBy" datasource="#application.datasource#">
+				<cfset useLakebaseForqUpdateEZButtonUpdatedBy = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
+<cfif useLakebaseForqUpdateEZButtonUpdatedBy>
+	<cftry>
+		<cfset application.oLakebase.updateRows("program_control_panel_options",
+			{
+				"programcontrol_panel_options_id" = "eq.#GetContractInfo.ProgramType_ID#"
+			},
+			{
+				"ez_button_last_updated_by" = "#request.AccessStructure.User_ID#",
+				"ez_button_last_updated_date" = "#now()#"
+			}
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqUpdateEZButtonUpdatedBy = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqUpdateEZButtonUpdatedBy>
+<cfquery name="qUpdateEZButtonUpdatedBy" datasource="#application.datasource#">
 					UPDATE	Program_Control_Panel_Options
 					SET		EZ_Button_Last_Updated_By	= '#request.AccessStructure.User_ID#',
 							EZ_Button_Last_Updated_Date	= getDate()
 					WHERE	ProgramControl_Panel_Options_ID	=	'#GetContractInfo.ProgramType_ID#'
 				</cfquery>
+</cfif>
 			</cfif>
 
 			<script>

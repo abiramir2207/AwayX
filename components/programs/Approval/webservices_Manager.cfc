@@ -619,11 +619,27 @@ Growth_Component_Name_Id NOT IN (select distinct Component_Name_ID from Program_
 
 <cffunction name="getThisProgramsStatus" access="public" returntype="query">
 <cfargument name="program_id" type="string" required="true" />
+<cfset useLakebaseForqgetThisProgramsStatus = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_main")>
+<cfif useLakebaseForqgetThisProgramsStatus>
+	<cftry>
+		<cfset qgetThisProgramsStatus = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("contract_main", {
+				"contract_main_id" = "eq.#arguments.program_id#",
+				"select" = "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+			}), "contract_status_type_idx,revision_of_contract_main_id,broker_user_id,contract_number,contract_title,adv_spending_amount"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetThisProgramsStatus = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetThisProgramsStatus>
 <CFQUERY NAME="qgetThisProgramsStatus" datasource="#application.datasource#">
 			SELECT Contract_Status_Type_IDX, Revision_Of_Contract_Main_ID, Broker_User_ID, Contract_Number, Contract_Title,Adv_Spending_Amount
 			FROM Contract_main
 			WHERE Contract_main_ID = #arguments.program_id#
 		</CFQUERY>
+</cfif>
 	<cfreturn qgetThisProgramsStatus />
 </cffunction>
 

@@ -52,7 +52,23 @@
 		
 		<cfset var qgetAllDivestedItemsDetails = "" />
 		
-		<cfquery name="qgetAllDivestedItemsDetails" datasource="#application.datasource#">
+		<cfset useLakebaseForqgetAllDivestedItemsDetails = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_items_master")>
+<cfif useLakebaseForqgetAllDivestedItemsDetails>
+	<cftry>
+		<cfset qgetAllDivestedItemsDetails = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("bsa_foodservice_items_master", {
+				"is_divested" = "eq.1",
+				"order" = "item.asc",
+				"select" = "bsa_foodservice_items_master_id,item,upc,description"
+			}), "bsa_foodservice_items_master_id,item,upc,description"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForqgetAllDivestedItemsDetails = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForqgetAllDivestedItemsDetails>
+<cfquery name="qgetAllDivestedItemsDetails" datasource="#application.datasource#">
 			SELECT DISTINCT BSA_Foodservice_Items_Master_ID,
 							Item,
 							UPC,
@@ -61,6 +77,7 @@
 			WHERE 	Is_Divested = 1
 			ORDER BY Item
 		</cfquery>
+</cfif>
 		
 		<cfreturn qgetAllDivestedItemsDetails />	
 	</cffunction>

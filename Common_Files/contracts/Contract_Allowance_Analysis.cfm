@@ -621,9 +621,24 @@
 		</tr>
 		</CFLOOP>
 		</table>
-		<CFQUERY NAME="getbasesales" dbtype="query">
+		<cfset useLakebaseForgetbasesales = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("thequery")>
+<cfif useLakebaseForgetbasesales>
+	<cftry>
+		<cfset getbasesales = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("thequery", {
+				"select" = "base_sales"
+			}), "base_sales"
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetbasesales = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetbasesales>
+<CFQUERY NAME="getbasesales" dbtype="query">
 			select distinct base_sales from TheQuery
 		</CFQUERY>
+</cfif>
 		<table BORDER="0" CELLPADDING="3" CELLSPACING="0" ALIGN="Center">
 		<tr>
 			<td colspan="2">&nbsp;</td>

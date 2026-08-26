@@ -570,6 +570,22 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 </cfscript>
 <CFLOOP QUERY="getCommData">
 <!--------------------------------Compounded Calculations Query--------------------------------->
+<cfset useLakebaseForGet_This_Compounded_Commodity_Overage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
+<cfif useLakebaseForGet_This_Compounded_Commodity_Overage>
+	<cftry>
+		<cfset Get_This_Compounded_Commodity_Overage = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("get_all_commodity_overage", {
+				"program_formula_pricing_rule_comm_data_id" = "eq.#Program_Formula_Pricing_Rule_Comm_Data_ID#",
+				"calc_type" = "eq.2",
+				"order" = "overage_index.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGet_This_Compounded_Commodity_Overage = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGet_This_Compounded_Commodity_Overage>
 <cfquery name="Get_This_Compounded_Commodity_Overage" DBTYPE="query">
 	SELECT	*
 	FROM	Get_All_Commodity_Overage
@@ -579,6 +595,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---->
 			Calc_Type = 2
 	ORDER BY Overage_Index
 </cfquery>
+</cfif>
 <!--------------------------------Compounded Independent Query--------------------------------->
 <cfset useLakebaseForGet_This_Independent_Commodity_Overage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("get_all_commodity_overage")>
 <cfif useLakebaseForGet_This_Independent_Commodity_Overage>

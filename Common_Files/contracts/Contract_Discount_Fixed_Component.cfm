@@ -3478,12 +3478,28 @@ function editfreightrates(prodid,compId,num,paidTo)
 	            			<cfelse>
 		        					<!--- Set values if EZ Button --->
 		        					<cfif EzButton_Disable EQ 1>
-			      						<cfquery name="getEZButtonRate" dbtype="query">
+			      						<cfset useLakebaseForgetEZButtonRate = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("getezbuttondefaultrates")>
+<cfif useLakebaseForgetEZButtonRate>
+	<cftry>
+		<cfset getEZButtonRate = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("getezbuttondefaultrates", {
+				"bsa_foodservice_items_master_id" = "eq.#Thequery.BSA_Foodservice_Items_Master_ID#",
+				"program_fixed_component_name_id" = "eq.#currentcompid#"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForgetEZButtonRate = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForgetEZButtonRate>
+<cfquery name="getEZButtonRate" dbtype="query">
 											SELECT *
 											FROM 	GetEZButtonDefaultRates
 											WHERE 	BSA_Foodservice_Items_Master_ID = '#Thequery.BSA_Foodservice_Items_Master_ID#'
 											AND 	Program_Fixed_Component_Name_Id = #currentcompid#
 			      						</cfquery>
+</cfif>
 			      						<cfset "form.fixed_C#currentcompid#_P#reproduct_id#_#i#_rate" = getEZButtonRate.Fixed_Price_Value>
 			      						<cfset "form.fixed_C#currentcompid#_P#reproduct_id#_#i#_uom" = getEZButtonRate.Unit_Of_Measure_ID>
 		        					</cfif>

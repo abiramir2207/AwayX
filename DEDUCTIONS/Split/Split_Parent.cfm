@@ -254,9 +254,25 @@ input, select
 		<CFSET SetTRCount = Record_count + 1>
 	</CFIF>
 			
-	<CFQUERY NAME="GetAllClass" DATASOURCE="#Application.Datasource#">
+	<cfset useLakebaseForGetAllClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("dd_classification")>
+<cfif useLakebaseForGetAllClass>
+	<cftry>
+		<cfset GetAllClass = application.oLakebase.toQuery(
+			application.oLakebase.selectRows("dd_classification", {
+				"deleted" = "eq.0",
+				"order" = "dd_classification_desc.asc"
+			})
+		)>
+		<cfcatch type="any">
+			<cfset useLakebaseForGetAllClass = false>
+		</cfcatch>
+	</cftry>
+</cfif>
+<cfif NOT useLakebaseForGetAllClass>
+<CFQUERY NAME="GetAllClass" DATASOURCE="#Application.Datasource#">
 		SELECT * FROM DD_Classification WHERE Deleted = 0 ORDER BY DD_Classification_Desc
 	</CFQUERY>
+</cfif>
 	<cfset useLakebaseForSavedClass = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("deductions")>
 	<cfif useLakebaseForSavedClass>
 		<cftry>
