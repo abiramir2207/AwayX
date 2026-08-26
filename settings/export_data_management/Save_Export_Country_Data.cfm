@@ -8,31 +8,12 @@
 		<cfset Export_Lookup_Destination_Country_ID = Mid(i, Find("_",i)+ 1,len(i))>
 		<cfparam name="txtLookupAllowPallets_#Export_Lookup_Destination_Country_ID#" default="0">
 		<cfif Left(i,27) eq "txtLookupDestinationCountry">
-				<cfset useLakebaseForUpdCountryData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_destination_country")>
-<cfif useLakebaseForUpdCountryData>
-	<cftry>
-		<cfset application.oLakebase.updateRows("export_lookup_destination_country",
-			{
-				"export_lookup_destination_country_id" = "eq.#Export_Lookup_Destination_Country_ID#"
-			},
-			{
-				"export_lookup_max_weight" = "#val(Evaluate("txtLookupMaxWeight_"&Export_Lookup_Destination_Country_ID))#",
-				"export_lookup_allow_pallets" = "#val(Evaluate("txtLookupAllowPallets_"&Export_Lookup_Destination_Country_ID))#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdCountryData = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdCountryData>
-<CFQUERY NAME="UpdCountryData" datasource="#application.datasource#">
+				<CFQUERY NAME="UpdCountryData" datasource="#application.datasource#">
 					UPDATE Export_Lookup_Destination_Country
 					SET Export_Lookup_Max_Weight = '#val(Evaluate("txtLookupMaxWeight_"&Export_Lookup_Destination_Country_ID))#'
 					,Export_Lookup_Allow_Pallets = '#val(Evaluate("txtLookupAllowPallets_"&Export_Lookup_Destination_Country_ID))#'
 					WHERE Export_Lookup_Destination_Country_ID = '#Export_Lookup_Destination_Country_ID#'
 				</CFQUERY>
-</cfif>
 			</cfif>
 	</cfloop>
 

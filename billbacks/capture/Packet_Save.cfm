@@ -233,21 +233,7 @@
 			<CFIF not isdefined("Program.BILLBACK_PROGRAM_ID")>
 				
 					
-						<cfset useLakebaseForInsertProgram = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_program")>
-<cfif useLakebaseForInsertProgram>
-	<cftry>
-		<cfset application.oLakebase.insertRow("billback_program", {
-			"billback_id" = "#Billback.Billback_ID#",
-			"display_product_hierarchy" = "#evaluate("Program_#Program.Program_ID#_ShowProductsInGroupLevel")#",
-			"program_id" = "#Program.Program_ID#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertProgram = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertProgram>
-<cfquery name="InsertProgram" datasource="#Application.Datasource#">
+						<cfquery name="InsertProgram" datasource="#Application.Datasource#">
 							INSERT INTO Billback_Program
 							(
 								Billback_ID,
@@ -261,7 +247,6 @@
 								'#Program.Program_ID#'
 							)
 						</cfquery>
-</cfif>
 					
 			<CFELSE>
 				<CFSET InsertProgram = QueryNew("Billback_Program_ID")>
@@ -1269,27 +1254,7 @@
 						
 						
 					<CFELSE>
-						<cfset useLakebaseForUpdateProductd = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
-<cfif useLakebaseForUpdateProductd>
-	<cftry>
-		<cfset application.oLakebase.updateRows("billback_product_detail",
-			{
-				"billback_id" = "eq.#Billback.Billback_ID#",
-				"billback_product_id" = "eq.#Product.Billback_Product_ID#",
-				"deleted" = "eq.0",
-				"bb_product_type_id" = "eq.#tempRateData[2]#"
-			},
-			{
-				"bb_rate" = "#evaluate("Product.Rate_#tempRateData[1]#")#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdateProductd = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdateProductd>
-<cfquery name="UpdateProductd" datasource="#Application.Datasource#">
+						<cfquery name="UpdateProductd" datasource="#Application.Datasource#">
 							UPDATE Billback_Product_Detail
 								SET 
 									BB_Rate = '#evaluate("Product.Rate_#tempRateData[1]#")#'
@@ -1300,7 +1265,6 @@
 									AND
 									BB_Product_Type_ID = '#tempRateData[2]#'
 						</cfquery>
-</cfif>
 					</CFIF>
 					
 				  </cfif>

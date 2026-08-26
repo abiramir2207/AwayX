@@ -979,22 +979,7 @@
 		<cfif arguments.alternate_recapture_rate>
 				<cfloop from ="1" to="3" index="i">
 						<cfif Evaluate("arguments.rate#i#")>
-								<cfset useLakebaseForalternateRateInsert = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("alternate_recapture_rate_setting")>
-<cfif useLakebaseForalternateRateInsert>
-	<cftry>
-		<cfset application.oLakebase.insertRow("alternate_recapture_rate_setting", {
-			"program_rebates_component_name_id" = "#arguments.compId#",
-			"alternate_recapture_rate_index" = "#i#",
-			"alternate_recapture_rate_label" = "#Evaluate("arguments.description#i#")#",
-			"status" = "0"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForalternateRateInsert = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForalternateRateInsert>
-<cfquery name="alternateRateInsert" datasource="#application.datasource#">
+								<cfquery name="alternateRateInsert" datasource="#application.datasource#">
 										INSERT INTO Alternate_Recapture_Rate_Setting
 															(Program_Rebates_Component_Name_ID
 															,Alternate_Recapture_Rate_Index
@@ -1006,7 +991,6 @@
 														,0
 													)
 								</cfquery>
-</cfif>
 
 								<cfloop list="#Evaluate("arguments.AlternateRateTemplateList#i#")#" index="t" delimiters=",">
 										<cfif len(t)>

@@ -658,28 +658,12 @@
 				<cfset thisOverageAmountUOM = evaluate("currentnode_overage.Group_Overage_#x#_UOM")>
 				<cfswitch expression="#currentnode.action#">
 					<cfcase value="1"><!--- insert --->
-						<cfset useLakebaseForinsertOverage = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bid_rule_item_group_amounts")>
-<cfif useLakebaseForinsertOverage>
-	<cftry>
-		<cfset application.oLakebase.insertRow("bid_rule_item_group_amounts", {
-			"bid_rule_group_id" = "#evaluate("Bid_Rule_Group_ID_#x#")#",
-			"bid_rule_item_id" = "#currentnode.Bid_Rule_Item_ID#",
-			"amount" = "#thisOverageAmount#",
-			"uom" = "#thisOverageAmountUOM#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForinsertOverage = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForinsertOverage>
-<cfquery name="insertOverage" datasource="#application.datasource#">
+						<cfquery name="insertOverage" datasource="#application.datasource#">
 							INSERT INTO Bid_Rule_Item_Group_Amounts
 							(Bid_Rule_Group_ID,Bid_Rule_Item_ID,Amount, uom)
 							VALUES
 							('#evaluate("Bid_Rule_Group_ID_#x#")#','#currentnode.Bid_Rule_Item_ID#','#thisOverageAmount#', '#thisOverageAmountUOM#')
 						</cfquery>
-</cfif>
 					</cfcase>
 
 					<cfcase value="2"><!--- update --->

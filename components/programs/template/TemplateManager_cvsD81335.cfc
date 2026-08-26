@@ -1619,28 +1619,7 @@ DEPENDENCIES:
 	<cffunction name="saveApprovalMetrics" output="false">
 		<cfargument name="templateId" required="true" type="numeric" />
 		<cfargument name="formScope" required="true" type="struct" />
-			<cfset useLakebaseForsaveApprovalMetrics = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_control_panel_options")>
-<cfif useLakebaseForsaveApprovalMetrics>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_control_panel_options",
-			{
-				"programcontrol_panel_options_id" = "eq.#arguments.templateId#"
-			},
-			{
-				"approval_margin_item" = "#Evaluate("arguments.formScope.approval_margin_item")#",
-				"approval_spend_item" = "#Evaluate("arguments.formScope.approval_spend_item")#",
-				"approval_program_margin" = "#Evaluate("arguments.formScope.approval_program_margin")#",
-				"approval_program_spend" = "#Evaluate("arguments.formScope.approval_program_spend")#",
-				"approval_uom" = "#Evaluate("arguments.formScope.approval_uom")#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForsaveApprovalMetrics = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForsaveApprovalMetrics>
-<cfquery name="saveApprovalMetrics" datasource="#application.datasource#">
+			<cfquery name="saveApprovalMetrics" datasource="#application.datasource#">
 				update Program_Control_Panel_Options
 				set approval_margin_item = #Evaluate("arguments.formScope.approval_margin_item")#,
 				approval_spend_item = #Evaluate("arguments.formScope.approval_spend_item")#,
@@ -1649,7 +1628,6 @@ DEPENDENCIES:
 				approval_uom = #Evaluate("arguments.formScope.approval_uom")#
 				where ProgramControl_Panel_Options_ID = '#arguments.templateId#'
 			</cfquery>
-</cfif>
 	</cffunction>
 
 		<cffunction name="getApprovalMetrics" output="false">

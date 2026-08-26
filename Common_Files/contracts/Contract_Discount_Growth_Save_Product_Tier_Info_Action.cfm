@@ -69,28 +69,7 @@
 		<cfif (isDefined("FORM.TierCount") and FORM.TierCount NEQ "")>
 			<cfloop index="LoopCount" from="1" to="#FORM.TierCount#" step="1">
 				<cfif (isDefined("FORM.Discount_Amount_#LoopCount#") AND evaluate("FORM.Discount_Amount_#LoopCount#") NEQ "")>
-					<cfset useLakebaseForqUpdateTierTable = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_growth_component_tiers")>
-<cfif useLakebaseForqUpdateTierTable>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_growth_component_tiers",
-			{
-				"program_id" = "eq.#FORM.Program_ID#",
-				"tier_number" = "eq.#LoopCount#",
-				"deleted" = "eq.0",
-				"program_growth_component_id" = "eq.#FORM.Component_ID#"
-			},
-			{
-				"default_rate" = "#evaluate("FORM.Discount_Amount_#LoopCount#")#",
-				"default_uom" = "#Default_UOM_Val#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForqUpdateTierTable = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqUpdateTierTable>
-<cfquery name="qUpdateTierTable" datasource="#application.datasource#">
+					<cfquery name="qUpdateTierTable" datasource="#application.datasource#">
 						UPDATE
 							Program_Growth_Component_Tiers
 						SET
@@ -102,7 +81,6 @@
 							Deleted = 0 AND
 							Program_Growth_Component_ID= '#FORM.Component_ID#'
 					</cfquery>
-</cfif>
 				</cfif>
 			</cfloop>
 		</cfif>

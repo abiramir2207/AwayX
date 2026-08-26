@@ -135,27 +135,7 @@
 				<cfelse>
 				<!---Just insert--->
 				
-				<cfset useLakebaseForInsertIntoBillbackProduct = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
-<cfif useLakebaseForInsertIntoBillbackProduct>
-	<cftry>
-		<cfset application.oLakebase.insertRow("billback_product", {
-			"billback_id" = "#Billback_ID#",
-			"product_id" = "#IsItARealItem.BSA_Foodservice_Items_Master_ID#",
-			"billback_program_id" = "#Billback_Program_ID#",
-			"bb_product_quantity" = "#evaluate("Volume_#Row_CM_Partnering#")#",
-			"bb_product_uom" = "1",
-			"product_type_id" = "#ProductTypeID#",
-			"created_date" = "#Now()#",
-			"distributor_id" = "#evaluate("Distributor_#Row_CM_Partnering#")#",
-			"deleted" = "0"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertIntoBillbackProduct = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertIntoBillbackProduct>
-<cfquery name="InsertIntoBillbackProduct" datasource="#application.datasource#">
+				<cfquery name="InsertIntoBillbackProduct" datasource="#application.datasource#">
 				INSERT INTO Billback_Product
 				(
 					Billback_ID,
@@ -181,7 +161,6 @@
 					0
 				)
 				</cfquery>
-</cfif>
 				
 				<cfset Billback_Product_ID = InsertIntoBillbackProduct.Billback_Product_ID>
 				
@@ -384,25 +363,7 @@
 			
 			<cfelse>
 			<!---Just insert--->
-				<cfset useLakebaseForInsertBBProductData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product_detail")>
-<cfif useLakebaseForInsertBBProductData>
-	<cftry>
-		<cfset application.oLakebase.insertRow("billback_product_detail", {
-			"billback_product_id" = "#Billback_Product_ID#",
-			"bb_product_type_id" = "#Product_Type_ID#",
-			"bb_rate" = "#AmountforThisDiscount#",
-			"billback_id" = "#Billback_ID#",
-			"created_date" = "#now()#",
-			"distributor_id_earned" = "#evaluate("Distributor_#Row_CM_Partnering#")#",
-			"deleted" = "0"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertBBProductData = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertBBProductData>
-<cfquery name="InsertBBProductData" datasource="#application.datasource#">
+				<cfquery name="InsertBBProductData" datasource="#application.datasource#">
 				INSERT INTO Billback_Product_Detail
 				(
 					Billback_Product_ID,
@@ -424,7 +385,6 @@
 					0
 				)
 				</cfquery>
-</cfif>
 			</cfif>
 		</cfloop>
 	<!---It's not a real item -- enter into unknown item table--->
@@ -436,27 +396,7 @@
 		<cfparam name="Notes_#Row_CM_Partnering#" 	default=" ">
 
 		<!---Insert unknown--->
-		<cfset useLakebaseForInsertUnknownItem = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("billback_product")>
-<cfif useLakebaseForInsertUnknownItem>
-	<cftry>
-		<cfset application.oLakebase.insertRow("billback_product", {
-			"billback_id" = "#Billback_ID#",
-			"billback_program_id" = "#Billback_Program_ID#",
-			"bb_unknown_product_item_number" = "#evaluate("Item_#Row_CM_Partnering#")#",
-			"bb_unknown_product_description" = "#evaluate("Desc_#Row_CM_Partnering#")#",
-			"bb_unknown_product_notes" = "#evaluate("Notes_#Row_CM_Partnering#")#",
-			"bb_product_quantity" = "#evaluate("Volume_#Row_CM_Partnering#")#",
-			"bb_product_uom" = "1",
-			"product_type_id" = "3",
-			"distributor_id" = "#evaluate("Distributor_#Row_CM_Partnering#")#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertUnknownItem = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertUnknownItem>
-<cfquery name="InsertUnknownItem" datasource="#application.datasource#"> 
+		<cfquery name="InsertUnknownItem" datasource="#application.datasource#"> 
 		INSERT INTO Billback_Product
 		(
 			Billback_ID,
@@ -482,7 +422,6 @@
 			'#evaluate("Distributor_#Row_CM_Partnering#")#'
 		)
 		</cfquery>
-</cfif>
 	
 	
 		<cfset NumberofRecords = 4>

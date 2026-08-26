@@ -114,29 +114,11 @@ Modes: URL.Mode Sets the Eval Action of the Form.
 		<cfif trim(form.notes) neq "">
 			<!--- When a record is edited, update notes --->
 			<cfif editRecord gt 0>
-				<cfset useLakebaseForeditSaveEvaluationNotes = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bb_business_consideration")>
-<cfif useLakebaseForeditSaveEvaluationNotes>
-	<cftry>
-		<cfset application.oLakebase.updateRows("bb_business_consideration",
-			{
-				"bb_business_consideration_id" = "eq.#editRecord#"
-			},
-			{
-				"notes" = "#REReplaceNoCase(trim(form.notes),"\r","<br>","ALL")#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForeditSaveEvaluationNotes = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForeditSaveEvaluationNotes>
-<cfquery name="editSaveEvaluationNotes" datasource="#application.datasource#">
+				<cfquery name="editSaveEvaluationNotes" datasource="#application.datasource#">
 					UPDATE BB_Business_Consideration
 					SET Notes = '#REReplaceNoCase(trim(form.notes),"\r","<br>","ALL")#'
 					WHERE BB_Business_Consideration_ID = #editRecord#
 				</cfquery>
-</cfif>
 				<!--- Reset "editRecord" back to 0 as update is complete. --->
 				<cfset editRecord = 0>
 

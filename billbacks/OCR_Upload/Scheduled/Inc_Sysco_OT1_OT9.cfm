@@ -390,27 +390,7 @@ Description  :  Include template for Sysco OT1 & OT9
 		</cfquery>      
 		
  
-	<cfset useLakebaseForupdateOCRUploadLogStatus4 = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
-<cfif useLakebaseForupdateOCRUploadLogStatus4>
-	<cftry>
-		<cfset application.oLakebase.updateRows("ocr_upload_log",
-			{
-				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
-			},
-			{
-				"ocr_step" = "4",
-				"ocr_upload_status" = "Transferred file to DB processing",
-				"debug_dev_status" = "Transferred file to DB processing. DBLocation "#DBDest#"",
-				"updated_date" = "#now()#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateOCRUploadLogStatus4 = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateOCRUploadLogStatus4>
-<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
+	<cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
 		UPDATE OCR_Upload_Log 
 			SET 
 				/* Pages_Extracted = '#pageCount#', */
@@ -419,8 +399,7 @@ Description  :  Include template for Sysco OT1 & OT9
 				Debug_Dev_Status = 'Transferred file to DB processing. DBLocation "#DBDest#"',
 				Updated_Date = getDate()
 		WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-	</cfquery>
-</cfif>	  
+	</cfquery>	  
 
 <cfelse>
 	  <cfquery name="updateOCRUploadLogStatus4" datasource="#application.datasource#">
@@ -436,33 +415,13 @@ Description  :  Include template for Sysco OT1 & OT9
 </cfif>
  
 <cfelse>
-	<cfset useLakebaseForupdateOCRUploadLogUpdateTries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
-<cfif useLakebaseForupdateOCRUploadLogUpdateTries>
-	<cftry>
-		<cfset application.oLakebase.updateRows("ocr_upload_log",
-			{
-				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
-			},
-			{
-				"debug_dev_status" = "Docparser is still processing the file and returning half the results.",
-				"processtries" = "ProcessTries + 1",
-				"updated_date" = "#now()#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateOCRUploadLogUpdateTries = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateOCRUploadLogUpdateTries>
-<cfquery name="updateOCRUploadLogUpdateTries" datasource="#application.datasource#">
+	<cfquery name="updateOCRUploadLogUpdateTries" datasource="#application.datasource#">
 		UPDATE OCR_Upload_Log 
 				SET 
 					Debug_Dev_Status = 'Docparser is still processing the file and returning half the results.',
 					ProcessTries = ProcessTries + 1,
 					Updated_Date = getDate()
 			WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-	</cfquery>
-</cfif>	
+	</cfquery>	
 </cfif>   
  

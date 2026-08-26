@@ -445,34 +445,14 @@ Description  :  Include template for PFG OT1
 	</cfif> <!--- <cfif (StructKeyExists(structFileContent[1], "distributor_location")  AND  --->
 
 <cfelse>
-	<cfset useLakebaseForupdateOCRUploadLogUpdateTries = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("ocr_upload_log")>
-<cfif useLakebaseForupdateOCRUploadLogUpdateTries>
-	<cftry>
-		<cfset application.oLakebase.updateRows("ocr_upload_log",
-			{
-				"ocr_upload_id" = "eq.#qGetOCRUploadExtracted.OCR_Upload_ID#"
-			},
-			{
-				"debug_dev_status" = "Docparser is still processing the file and returning half the results.",
-				"processtries" = "ProcessTries + 1",
-				"updated_date" = "#now()#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForupdateOCRUploadLogUpdateTries = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForupdateOCRUploadLogUpdateTries>
-<cfquery name="updateOCRUploadLogUpdateTries" datasource="#application.datasource#">
+	<cfquery name="updateOCRUploadLogUpdateTries" datasource="#application.datasource#">
 		UPDATE OCR_Upload_Log 
 				SET 
 					Debug_Dev_Status = 'Docparser is still processing the file and returning half the results.',
 					ProcessTries = ProcessTries + 1,
 					Updated_Date = getDate()
 			WHERE OCR_Upload_ID = '#qGetOCRUploadExtracted.OCR_Upload_ID#'
-	</cfquery>
-</cfif>	
+	</cfquery>	
  </cfif>  <!--- <cfif (isCompletelyParsed EQ 1)>	 --->
 
 </cfoutput>					

@@ -1040,28 +1040,7 @@
 				<!---Save Auto-Renewal Data--->
 				<cfif Form.Auto_Renew IS 1>
 
-					<cfset useLakebaseForInsertAutoRenewData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
-<cfif useLakebaseForInsertAutoRenewData>
-	<cftry>
-		<cfset application.oLakebase.insertRow("program_auto_renew", {
-			"ar_notification_date" = "#dateFormat(AR_Notification_Date,"short")#",
-			"ar_start_date" = "#dateFormat(AR_Start_Date,"short")#",
-			"ar_end_date" = "#dateFormat(AR_End_Date,"short")#",
-			"ar_renewal_type" = "#Form.AR_Renewal_Type#",
-			"program_id" = "#insert.Contract_Main_ID#",
-			"renewed" = "0",
-			"renewal_lead_time" = "#Form.Renewal_Lead_Time#",
-			"ar_start_period" = "#AR_Start_Period#",
-			"ar_end_period" = "#AR_End_Period#",
-			"ar_fiscal_year" = "#AR_Fiscal_Year#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForInsertAutoRenewData = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForInsertAutoRenewData>
-<cfquery name="InsertAutoRenewData" datasource="#application.datasource#">
+					<cfquery name="InsertAutoRenewData" datasource="#application.datasource#">
 						INSERT INTO Program_Auto_Renew
 						(
 							AR_Notification_Date,
@@ -1089,7 +1068,6 @@
 							'#AR_Fiscal_Year#'
 						)
 					</cfquery>
-</cfif>
 
 				</cfif>
 
@@ -1205,31 +1183,7 @@
 
 					<cfelseif IsAutoRenewThere.Recordcount IS 1>
 
-						<cfset useLakebaseForUpdateAutoRenewData = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("program_auto_renew")>
-<cfif useLakebaseForUpdateAutoRenewData>
-	<cftry>
-		<cfset application.oLakebase.updateRows("program_auto_renew",
-			{
-				"program_id" = "eq.#cryp.value#"
-			},
-			{
-				"ar_notification_date" = "#dateFormat(AR_Notification_Date,"short")#",
-				"ar_start_date" = "#dateFormat(AR_Start_Date,"short")#",
-				"ar_end_date" = "#dateFormat(AR_End_Date,"short")#",
-				"ar_renewal_type" = "#Form.AR_Renewal_Type#",
-				"renewal_lead_time" = "#Form.Renewal_Lead_Time#",
-				"ar_start_period" = "#AR_Start_Period#",
-				"ar_end_period" = "#AR_End_Period#",
-				"ar_fiscal_year" = "#AR_Fiscal_Year#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdateAutoRenewData = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdateAutoRenewData>
-<cfquery name="UpdateAutoRenewData" datasource="#application.datasource#">
+						<cfquery name="UpdateAutoRenewData" datasource="#application.datasource#">
 							UPDATE 	Program_Auto_Renew
 							SET 		AR_Notification_Date = '#dateFormat(AR_Notification_Date,"short")#',
 											AR_Start_Date = '#dateFormat(AR_Start_Date,"short")#',
@@ -1241,7 +1195,6 @@
 											AR_Fiscal_Year = '#AR_Fiscal_Year#'
 							WHERE 	Program_ID = #cryp.value#
 						</cfquery>
-</cfif>
 
 					</cfif>
 

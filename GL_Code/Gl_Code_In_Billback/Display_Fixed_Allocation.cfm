@@ -252,29 +252,7 @@
 		</CFLOOP>	
 		<!--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv --->
 		
-		<cfset useLakebaseForCalAmount = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("gl_code_fixed_allocation_makeup")>
-<cfif useLakebaseForCalAmount>
-	<cftry>
-		<cfset application.oLakebase.updateRows("gl_code_fixed_allocation_makeup",
-			{
-				"billback_id" = "eq.#Billback_ID#",
-				"program_id_list" = "eq.#SameARProgs#",
-				"a_r" = "eq.#DistAR#",
-				"fiscal_year" = "eq.#DISTFY#",
-				"allocation_method" = "eq.2",
-				"deleted" = "eq.0"
-			},
-			{
-				"calculated_amount" = "Progs_Sum_Amt * Allocation"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForCalAmount = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForCalAmount>
-<CFQUERY NAME="CalAmount" DATASOURCE="#Application.Datasource#">
+		<CFQUERY NAME="CalAmount" DATASOURCE="#Application.Datasource#">
 			UPDATE 	GL_Code_Fixed_Allocation_MakeUp
 		
 			SET 	Calculated_Amount = Progs_Sum_Amt * Allocation
@@ -286,7 +264,6 @@
 					Allocation_Method = 2 AND
 					Deleted = 0
 		</CFQUERY>
-</cfif>
 		</CFIF>
 		<CFQUERY NAME="GetAllocationSum" DATASOURCE="#Application.Datasource#">
 			SELECT 	SUM(Allocation) CheckTotAllocation

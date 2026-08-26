@@ -2,27 +2,11 @@
 
 	<cffunction name="saveScheduledJob" output="false">
 	<cfargument name="formScope" required="true" type="struct" />
-	<cfset useLakebaseForqsavejobsscheduled = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("noi_month_end_reports_schedule")>
-<cfif useLakebaseForqsavejobsscheduled>
-	<cftry>
-		<cfset application.oLakebase.insertRow("noi_month_end_reports_schedule", {
-			"job_name" = "#arguments.formScope.monthend_report_job_name#",
-			"invoice_start_date" = "#dateformat(arguments.formScope.start_date,"mm/dd/yyyy")#",
-			"invoice_end_date" = "#dateformat(arguments.formScope.end_date,"mm/dd/yyyy")#",
-			"job_scheduled_date" = "#dateformat(arguments.formScope.Schedule_Date,"mm/dd/yyyy")#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForqsavejobsscheduled = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForqsavejobsscheduled>
-<cfquery name="qsavejobsscheduled" datasource="#application.datasource#">
+	<cfquery name="qsavejobsscheduled" datasource="#application.datasource#">
 	Insert Into NOI_Month_End_Reports_Schedule
 	(job_name,invoice_start_date,invoice_end_date,Job_scheduled_Date)
 	values ('#arguments.formScope.monthend_report_job_name#','#dateformat(arguments.formScope.start_date,"mm/dd/yyyy")#','#dateformat(arguments.formScope.end_date,"mm/dd/yyyy")#','#dateformat(arguments.formScope.Schedule_Date,"mm/dd/yyyy")#')
 	</cfquery>
-</cfif>
 	</cffunction>
 	
 	<cffunction name="checkifjobschedule" output="false" returntype="query">

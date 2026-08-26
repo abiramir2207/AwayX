@@ -5,29 +5,11 @@
 	<cfloop collection="#Form#" item="i">
 		<cfset Export_Lookup_Cost_ID = Mid(i, Find("_",i)+ 1,len(i))>
 		<cfif Left(i,26) eq "TxtLookupStandardCostsDesc">
-				<cfset useLakebaseForUpdCosts = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("export_lookup_costs")>
-<cfif useLakebaseForUpdCosts>
-	<cftry>
-		<cfset application.oLakebase.updateRows("export_lookup_costs",
-			{
-				"export_lookup_cost_id" = "eq.#Export_Lookup_Cost_ID#"
-			},
-			{
-				"export_lookup_cost" = "#val(Evaluate("TxtLookupStandardCosts_"&Export_Lookup_Cost_ID))#"
-			}
-		)>
-		<cfcatch type="any">
-			<cfset useLakebaseForUpdCosts = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForUpdCosts>
-<CFQUERY NAME="UpdCosts" datasource="#application.datasource#">
+				<CFQUERY NAME="UpdCosts" datasource="#application.datasource#">
 					UPDATE Export_Lookup_Costs
 					SET Export_Lookup_Cost = '#val(Evaluate("TxtLookupStandardCosts_"&Export_Lookup_Cost_ID))#'
 					WHERE Export_Lookup_Cost_ID = '#Export_Lookup_Cost_ID#'
 				</CFQUERY>
-</cfif>
 			</cfif>
 	</cfloop>
 

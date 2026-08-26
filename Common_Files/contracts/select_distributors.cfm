@@ -484,26 +484,12 @@ Note: "form.excludeDistributor" is saved to to different table - "Contract_Distr
 
 		<CFIF IsDefined("form.excludeDistributor") AND form.excludeDistributor neq "">
 			<CFLOOP INDEX="ListDistributor_ID" LIST="#request.app_general_functions.listRemoveDupes(excludeDistributor,",")#" DELIMITERS=",">
-				<cfset useLakebaseForSaveDistributorExceptions = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("contract_distributors_exceptions")>
-<cfif useLakebaseForSaveDistributorExceptions>
-	<cftry>
-		<cfset application.oLakebase.insertRow("contract_distributors_exceptions", {
-			"bsa_foodservice_customers_id" = "#Replace(ListDistributor_ID,"_","-", "ALL")#",
-			"contract_main_id" = "#FORM.Contract_Main_ID#"
-		})>
-		<cfcatch type="any">
-			<cfset useLakebaseForSaveDistributorExceptions = false>
-		</cfcatch>
-	</cftry>
-</cfif>
-<cfif NOT useLakebaseForSaveDistributorExceptions>
-<cfquery name="SaveDistributorExceptions" datasource="#application.datasource#">
+				<cfquery name="SaveDistributorExceptions" datasource="#application.datasource#">
 					INSERT INTO Contract_Distributors_Exceptions
 					(BSA_Foodservice_Customers_ID, Contract_Main_ID)
 					VALUES
 					('#Replace(ListDistributor_ID,"_","-", "ALL")#', '#FORM.Contract_Main_ID#')
 				</cfquery>
-</cfif>
 			</CFLOOP>
 		</CFIF>
 		<!--- (end) DISTRIBUTOR EXCEPTIONS --->

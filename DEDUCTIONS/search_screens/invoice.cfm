@@ -446,25 +446,9 @@ application.oLakebase.selectRows("service_regions", {
 						</SELECT>	
 					</TD>					
 					<!--- Get Foodservice Line Of Business ID --->
-					<cfset useLakebaseForGetFoodserviceLOBID = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("line_of_business")>
-<cfif useLakebaseForGetFoodserviceLOBID>
-<cftry>
-<cfset GetFoodserviceLOBID = application.oLakebase.toQuery(
-application.oLakebase.selectRows("line_of_business", {
-"select" = "line_of_business_id",
-"line_of_business" = "in.(#ListQualify(application.returned_customer_setting.Line_Business_Default, "'", ",")#)"
-}),
-"line_of_business_id"
-)>
-<cfcatch type="any">
-<cfset useLakebaseForGetFoodserviceLOBID = false>
-</cfcatch>
-</cftry>
-</cfif>
-<cfif NOT useLakebaseForGetFoodserviceLOBID><CFQUERY NAME="GetFoodserviceLOBID" Datasource="#application.datasource#">
+					<CFQUERY NAME="GetFoodserviceLOBID" Datasource="#application.datasource#">
 						SELECT Line_Of_Business_ID FROM Line_Of_Business WHERE Line_Of_Business IN (#ListQualify(application.returned_customer_setting.Line_Business_Default, "'", ",")#)
 					</CFQUERY>
-</cfif>
 					<TD><!--- Brokers --->
 						<span ID="searchItemLabel">Broker</span><BR>
 						<cfset useLakebaseForGetBrokers = application.oLakebase.isEnabled() AND application.oLakebase.isTableMigrated("bsa_foodservice_brokers")>
